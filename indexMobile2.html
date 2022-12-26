@@ -1,0 +1,586 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="theHTML">
+	<head>
+		<title>簡易決鬥王卡牌效果搜尋器(Author:Ether/Picture Source:gathe.jp,takaratomy.co.jp,dmvault.ath.cx)</title>
+		<meta name="viewport" content="text/html, charset=utf-8,width=device-width, height=device-height, initial-scale=1, user-scalable=0">
+		<script src="https://code.jquery.com/jquery-1.11.0.min.js" id="jqueryJS"></script>
+		<script>
+			function gotoPC(){
+				location.href = "./index.html"+window.location.search;
+			}
+		</script>
+		<style type="text/css">			
+			table {
+				font-size:11px;
+				background-color: #FFFFFF;
+			}
+			
+			body {
+				font-size:11px;
+				margin:0;
+				background-color:#bebefa;
+			}
+			
+			input {
+				font-size:11px;
+			}
+			
+			.mainBlock{
+				background-color:#bebefa;
+				overflow-y:auto;
+				text-align:center;
+				display:none;
+				font-size:11px;
+				height: 100%;
+				width:100%;
+			}
+
+			.pageBar{
+				height:100%;
+				line-height:40px;
+				text-align:center;
+				vertical-align:middle;
+				cursor:pointer;
+				background-color:#beffff;
+				float: left;
+				font-size:14px;
+			}
+
+			.footerBar{
+				width:16.666%;
+				height:100%;
+				line-height:40px;
+				text-align:center;
+				vertical-align:middle;
+				cursor:pointer;
+				font-weight:bold;
+				background-color:#000000;
+				color: #FFFFFF;
+				float: left;
+			}
+			.bbfw {  
+				background : #000;
+				color: #FFFFFF;
+				font-weight : bold;
+			}
+			.h36{
+				height : 32px;
+			}
+			.tvc{
+				text-align:center;
+			}
+			.pointer{
+				cursor : pointer;
+			}
+			.filterColumnTitle{
+				width:53px;
+				vertical-align:center;
+			}
+
+			#header { 
+				position: fixed; 
+				top: 0; 
+				left: 0; 
+				height: 40px; 
+				width:100%;
+			}
+			#footer { 
+				position: fixed; 
+				bottom: 0; 
+				left: 0; 
+				height: 40px; 
+				width:100%;
+			}
+			#content { 
+				width:98%;
+				padding-right: 10px;
+				padding-top: 50px;
+			}
+			.btnClick{
+				background : #FDFDAB;
+			}
+			.btnUnClick{
+				background : #EDEDED;
+			}
+			
+		</style>
+		<script>
+			var mVersion = true;
+		</script>
+		<script src="./tw_cn.js" id="tc2cJS"></script>
+		<script src="./functions.js?v=20221222"></script>
+		<script src="./moment.js"></script>
+		<script src="./fuse.js"></script>
+		<script src="./basicDatas.js?v=20221222"></script>
+		<script src="./basicDatas_abilities.js?v=20221222"></script>
+		<script src="./basicDatas_raceList.js?v=20221222"></script>
+		<script src="./parseDMVault.js?v=20221222"></script>
+
+		<script src="./AllCards.js?v=20221222"></script>
+		<script src="./OfficeSets.js?v=20221222"></script>
+		<script src="./OriginalSets.js?v=20221222"></script>
+		<script src="./NewCards.js?v=20221222"></script>
+	</head>
+	<body>
+		<div id="container">
+			<div id="header">
+				<div id="filterBar" class="pageBar" style="width:40%" onclick="changePage(this);">
+					<span class="filterTitle">基本搜尋</span>[<span id="filter_plus" onclick="filter_adv(this);" style="cursor:pointer;">＋</span>]
+				</div>
+				<div id="listBar" class="pageBar" style="width:20%" onclick="changePage(this);">
+					列表
+				</div>
+				<div id="detailBar" class="pageBar" style="width:20%" onclick="changePage(this);">
+					資料
+				</div>
+				<div id="fbBar" class="pageBar" style="width:20%" onclick="changePage(this);">
+					FB留言
+				</div>
+			</div>
+			<div id="content"><center>
+				<div id="filterBlock" class="mainBlock">
+					<form id="queryForm">
+						<table style="width:98%;background-color:transparent;">
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">卡種</td>
+								<td>
+									<span id="carTypeSpan" style="display:flex;flex-wrap:wrap;max-width:280px;;">
+										<div><input type="checkbox" id="skipType" onclick="clearCTAll();" checked><span onclick="checkedBrother(this,true);clearCTAll();" style="cursor:pointer;"><b>不指定</b></span></div>
+									</span>
+									<input id="ctaF" type="button" value="全取消" onclick="clearCTAll();clearSkipType();" style="display:none;">
+									<input id="ctaT" type="button" value="全勾選" onclick="checkedCTAll();clearSkipType();">
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">雙極</td>
+								<td>
+									<input type="radio" name="wType" value="W"><span onclick="checkedBrother(this,true);" class="pointer">雙極</span> 
+									<input type="radio" name="wType" value="NW" ><span onclick="checkedBrother(this,true);" class="pointer">非雙極</span> 
+									<input type="radio" name="wType" value="ALL" checked ><span onclick="checkedBrother(this,true);" class="pointer">都找</span> 
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">費用</td>
+								<td>
+<!--								
+									<select id="cost_calc" style="width:40px;display:none;">
+										<option value="e">＝</option>
+										<option value="m">＞</option>
+										<option value="em">≧</option>
+										<option value="l">＜</option>
+										<option value="el">≦</option>
+									</select>
+-->									
+									<select id="cost" style="width:80px;">
+										<option value="">全部</option>
+									</select>
+									<span class="cost2" style="display:none;">~</span>
+									<span class="cost2" style="display:none;">
+										<select id="cost2" style="width:80px;">
+											<option value="">全部</option>
+										</select>
+									</span>
+							</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">攻擊力</td>
+								<td>
+<!--
+									<select id="power_calc" style="width:40px;display:none;">
+										<option value="e">＝</option>
+										<option value="m">＞</option>
+										<option value="em">≧</option>
+										<option value="l">＜</option>
+										<option value="el">≦</option>
+									</select>
+-->									
+									<select id="power" style="width:80px;">
+										<option value="">全部</option>
+									</select>
+									<span class="power2" style="display:none;">~</span>
+									<span class="power2" style="display:none;">
+										<select id="power2" style="width:80px;">
+											<option value="">全部</option>
+										</select>
+									</span>
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">允許</td>
+								<td>
+									<span>
+										<table>
+											<tr>
+												<td civil="16" name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">光</td>
+												<td civil="8"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">水</td>
+												<td civil="4"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">闇</td>
+												<td civil="2"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">火</td>
+												<td civil="1"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">自</td>
+												<td civil="32" name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">無</td>
+												<td allowType="S" name="allowType" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:25px;cursor:pointer;text-align:center;">單色</td>
+												<td allowType="M" name="allowType" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:25px;cursor:pointer;text-align:center;">多色</td>
+											</tr>
+										</table>
+<!--										
+										<input type="button" value="光" civil="16" name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="水" civil="8"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="闇" civil="4"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="火" civil="2"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="自" civil="1"  name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="無" civil="32" name="allowCivil" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;"><BR>
+										<input type="button" value="單色" allowType="S" name="allowType" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="多色" allowType="M" name="allowType" onclick="changeClass(this);" class="btnClick" style="padding:3px;width:35px;">
+-->										
+									</span>
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">必須</td>
+								<td>
+									<span>
+										<table>
+											<tr>
+												<td civil="16" name="civil" onclick="changeClass(this);" class="btnUnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">光</td>
+												<td civil="8"  name="civil" onclick="changeClass(this);" class="btnUnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">水</td>
+												<td civil="4"  name="civil" onclick="changeClass(this);" class="btnUnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">闇</td>
+												<td civil="2"  name="civil" onclick="changeClass(this);" class="btnUnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">火</td>
+												<td civil="1"  name="civil" onclick="changeClass(this);" class="btnUnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">自</td>
+												<td civil="32" name="civil" onclick="changeClass(this);" class="btnUnClick" style="padding:3px;width:20px;cursor:pointer;text-align:center;">無</td>
+												<td allowType="A" name="civilType" onclick="changeClass(this,true);" class="btnClick" style="padding:3px;width:25px;cursor:pointer;text-align:center;">AND</td>
+												<td allowType="O" name="civilType" onclick="changeClass(this,true);" class="btnUnClick" style="padding:3px;width:25px;cursor:pointer;text-align:center;">OR</td>
+											</tr>
+										</table>
+<!--
+										<input type="button" value="光" civil="16" name="civil" onclick="changeClass(this);" class="" style="padding:3px;width:35px;">
+										<input type="button" value="水" civil="8"  name="civil" onclick="changeClass(this);" class="" style="padding:3px;width:35px;">
+										<input type="button" value="闇" civil="4"  name="civil" onclick="changeClass(this);" class="" style="padding:3px;width:35px;">
+										<input type="button" value="火" civil="2"  name="civil" onclick="changeClass(this);" class="" style="padding:3px;width:35px;">
+										<input type="button" value="自" civil="1"  name="civil" onclick="changeClass(this);" class="" style="padding:3px;width:35px;">
+										<input type="button" value="無" civil="32" name="civil" onclick="changeClass(this);" class="" style="padding:3px;width:35px;"><BR>
+										<input type="button" value="AND" allowType="A" name="civilType" onclick="changeClass(this,true);" class="btnClick" style="padding:3px;width:35px;">
+										<input type="button" value="OR" allowType="O" name="civilType" onclick="changeClass(this,true);" class="" style="padding:3px;width:35px;">
+-->										
+									</span>
+								</td>
+							</tr>
+							<tr style="width:98%;display:none;" id="filter_tr_soul">
+								<td style="width:53px;vertical-align:top;">魂</td>
+								<td>
+									<span>
+										<input name="soul" type="checkbox" value="H" ><span onclick="checkedBrother(this,true);" class="pointer">H</span> 
+										<input name="soul" type="checkbox" value="M" ><span onclick="checkedBrother(this,true);" class="pointer">M</span> 
+										<input name="soul" type="checkbox" value="E" ><span onclick="checkedBrother(this,true);" class="pointer">E</span> 
+										<input name="soul" type="checkbox" value="K" ><span onclick="checkedBrother(this,true);" class="pointer">K</span> 
+										<input name="soul" type="checkbox" value="W" ><span onclick="checkedBrother(this,true);" class="pointer">W</span> 
+										<input name="soul" type="checkbox" value="B" ><span onclick="checkedBrother(this,true);" class="pointer">B</span> 
+										<input name="soul" type="checkbox" value="U" ><span onclick="checkedBrother(this,true);" class="pointer">U</span> 
+									</span>
+								</td>
+							</tr>
+							<tr style="width:98%;display:none;" id="filter_tr_rarility">
+								<td style="width:53px;vertical-align:top;">稀有度</td>
+								<td>
+									<span style="font-size:13.5px;display:flex;flex-wrap:wrap;max-width:280px;">
+										<div><input name="rarility" type="checkbox" value="OR" ><span onclick="checkedBrother(this,true);" class="pointer">OR</span> </div>
+										<div><input name="rarility" type="checkbox" value="KGM" ><span onclick="checkedBrother(this,true);" class="pointer">KGM</span> </div>
+										<div><input name="rarility" type="checkbox" value="MAS" ><span onclick="checkedBrother(this,true);" class="pointer">MAS</span> </div>
+										<div><input name="rarility" type="checkbox" value="FL"  ><span onclick="checkedBrother(this,true);" class="pointer">FL</span> </div>
+										<div><input name="rarility" type="checkbox" value="L"   ><span onclick="checkedBrother(this,true);" class="pointer">L</span> </div>
+										<div><input name="rarility" type="checkbox" value="VVC" ><span onclick="checkedBrother(this,true);" class="pointer">VVC</span> </div>
+										<div><input name="rarility" type="checkbox" value="VC"  ><span onclick="checkedBrother(this,true);" class="pointer">VC</span> </div>
+										<div><input name="rarility" type="checkbox" value="SR"  ><span onclick="checkedBrother(this,true);" class="pointer">SR</span> </div>
+										<div><input name="rarility" type="checkbox" value="VR"  ><span onclick="checkedBrother(this,true);" class="pointer">VR</span> </div>
+										<div><input name="rarility" type="checkbox" value="R"   ><span onclick="checkedBrother(this,true);" class="pointer">R</span> </div>
+										<div><input name="rarility" type="checkbox" value="UC"  ><span onclick="checkedBrother(this,true);" class="pointer">UC</span> </div>
+										<div><input name="rarility" type="checkbox" value="C"   ><span onclick="checkedBrother(this,true);" class="pointer">C</span> </div>
+										<div><input name="rarility" type="checkbox" value=""    ><span onclick="checkedBrother(this,true);" class="pointer">--</span> </div>
+									</span>
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle" style="vertical-align:center;">種族</td>
+								<td>
+									<HR>
+									<input type="radio" name="rLan" value="Jap" onclick="changeRaceLan();changeKeyWordLan();" checked><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">日文</span>
+									<input type="radio" name="rLan" value="Chi" onclick="changeRaceLan();changeKeyWordLan();" ><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">中文</span>
+									<input type="radio" name="rLan" value="Eng" onclick="changeRaceLan();changeKeyWordLan();" ><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">英文</span>
+									<BR>
+									<select id="race" class="raceSelector" name="filter_race" style="width:164px;" NT="1">
+									</select>
+									<input type="checkbox" id="absoluteRace" name="filter_absoluteRace" value="Y">全符合
+									<BR>
+									<span id="race2Span" style="display:none;">
+										<select id="race2" class="raceSelector" name="filter_race" style="width:164px;">
+										</select>
+										<input type="checkbox" id="absoluteRace2" name="filter_absoluteRace" value="Y">全符合
+									</span>
+								</td>
+							</tr>
+							<tr style="width:98%;display:none;" id="filter_tr_abilities">
+								<td style="width:53px;vertical-align:top;">能力文</td>
+								<td>
+									<select name="abilities" style="width:164px;">
+									</select><BR>
+									<select name="abilities" style="width:164px;">
+									</select><BR>
+									<select id="ab_race" class="raceSelector" name="ab_race" style="width:164px;">
+									</select> (種族)<BR>
+									<select id="ab_name" name="ab_name" style="width:164px;">
+									</select> (卡名)
+								</td>
+							</tr>
+							<tr style="width:98%;" id="setCodeSpan">
+								<td class="filterColumnTitle" style="vertical-align:bottom;">系列</td>
+								<td>
+									<HR>
+									<select id="setCodeType" style="width:60px;" onchange="changeSetCode(this.value);">
+										<option value=""></option>
+										<option value="DM22-">DM22</option>
+										<option value="DMRP">DMRP</option>
+										<option value="DMEX">DMEX</option>
+										<option value="DMBD">DMBD</option>
+										<option value="DMSD">DMSD</option>
+										<option value="DMPCD">DMPCD</option>
+										<option value="DMR-">DMR</option>
+										<option value="DMX">DMX</option>
+										<option value="DMD">DMD</option>
+										<option value="DM-">DM-</option>
+										<option value="OF-">OF-</option>
+										<option value="TW-">台灣卡池</option>
+										<option value="NET,RUT,SEL,PS-,deck">NET</option>
+									</select>
+									<select id="setCode" style="width:160px;" onchange="changeSetSetting(this.value);" NT="1">
+									</select>
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td class="filterColumnTitle">卡名</td>
+								<td>
+									<input type="text" name="cardName" id="cardName" style="width:172px;">
+									<input type="button" value="清除" onclick="gobi('cardName').value='';">
+								</td>
+							</tr>
+							<tr style="width:98%;display:none;">
+								<td style="width:53px;vertical-align:top;">排序</td>
+								<td>
+									<input type="radio" name="sortBy" value="" checked><span onclick="checkedBrother(this,true);" class="pointer">不指定</span>
+									<input type="radio" name="sortBy" value="cost"><span onclick="checkedBrother(this,true);" class="pointer">費用</span>
+									<input type="radio" name="sortBy" value="power"><span onclick="checkedBrother(this,true);" class="pointer">攻擊力</span>
+								</td>
+							</tr>
+							<tr style="width:98%;height:20px;">
+								<td class="filterColumnTitle">&nbsp;</td>
+								<td>
+									<span id="HKSpan">
+										<input type="checkbox" value="Y" id="HK" onclick="openDataBlock();"><span onclick="checkedBrother(this,true);" class="pointer">數學名詞港化</span>
+										<input type="checkbox" value="Y" id="TWSD"><span onclick="checkedBrother(this,true);" class="pointer">只找台灣代理卡</span>
+									</span>&nbsp;
+								</td>
+							</tr>
+							<tr style="width:98%;height:20px;display:none;">
+								<td class="filterColumnTitle">清單顯示方式</td>
+								<td>
+									<input type="radio" name="listType" value="name" onclick="query();" checked >卡名
+									<input type="radio" name="listType" value="picture" onclick="query();" >卡圖
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td colspan="2" style="width:98%;text-align:center;">
+									<input type="button" value="條件初始化" onclick="limitsReset();" style="width:120px;height:30px;">
+									<input type="button" value="進行查詢" onclick="query();" style="width:120px;height:30px;background:#91FF66;"><BR>
+									<input type="button" value="指定卡牌編號" style="width:120px;height:30px;" onclick="queryByCode(null,true);">
+									<input type="button" value="文字匯入牌庫" style="width:120px;height:30px;" onclick="openPDBSBlock();" id="importStringDeckBtn"><BR>
+									<input type="button" value="開啟歷史查詢" style="width:120px;height:30px;" onclick="showQueryHistory();" id="queryHistoryBtn">
+									<input type="button" value="更新日誌" style="width:120px;height:30px;" onclick="updateLog.showLastLogContent();" id="logBtn" ><BR>
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td colspan="2" style="width:98%;text-align:center;font-size:12px;" id="newest">
+								</td>
+							</tr>
+							<tr style="width:98%;">
+								<td colspan="2" style="width:98%;height:20px;text-align:center;">
+									<!-- 使用人次 -->
+									<script language="Javascript">
+										document.write('<a href="http://www.f-counter.com/"></a>');
+									</script>
+									<noscript>
+										<a href="http://hjx.f-counter.com/">counter</a>
+									</noscript>
+									<a href=http://www.free-counter.jp/><img src="http://www.f-counter.net/j/21/1414393183/" alt="AccessCounter" border="0"></a>
+								</td>
+							</tr>
+						</table>
+					</form>
+				</div>
+				<div id="listBlock" class="mainBlock">
+					<div style="height:98%;" id="td_names_list">
+						<table id="names" border="1" cellpadding="1" cellspacing="1" width="100%;height:100%;" style="background-color:#FFFFFF;">
+							<tr><td style="text-align:center;">您所查詢的卡牌資料將會顯示在此</td></tr>
+						</table>
+						<input type="button" id="popList1" style="display:none;width:24%;height:24px;" value="匯(日)" onclick="popList('J');">
+						<input type="button" id="popList2" style="display:none;width:24%;height:24px;" value="匯(中)" onclick="popList('C');">
+						<input type="button" id="popList3" style="display:none;width:24%;height:24px;" value="匯(英)" onclick="popList('E');">
+						<input type="button" id="popList4" style="display:none;width:24%;height:24px;" value="匯(圖)" onclick="popList('P',false);">
+					</div>
+				</div>
+				<div id="card_data_rPart" class="mainBlock">
+					<table style="display:none;width:98%;" id="cardDataBlock" border="1" cellpadding="1" cellspacing="1">
+						<tr style="height:50px;">
+							<td colspan="2" id="card_name_header" style="font-weight:bold;color:#000000;vertical-align:middle;width:98%;padding-left:45px;">
+								<span id="card_rarity"></span>
+								<span id="card_name" style="text-align:left;cursor:pointer;" 
+									title="點擊查看DMValut資料"
+									onmouseover="this.style.textDecoration='underline';"
+									onmouseout="this.style.textDecoration='none';">
+								</span>
+							</td>
+						</tr>
+						<tr>
+							<td style="vertical-align:top;" colspan="2">
+								<center>
+									<span id="card_picture" style="display:none;position:relative;" ></span>
+									<span id="card_picture_empty" style="background:'Empty200.png'" >
+										<img src="Empty200.png" style="position:relative;">
+									</span>
+									<span id="card_picture_aa" style="display:none;width:200px;" >
+										<table width="100%" style="font-size:10px;" >
+											<tr>
+												<td style="text-align:left;width:25%;">
+													<span onclick="parent.shiftAA(parent.gobi('lastAAIndex').value);" id="lastAATd" style="cursor:pointer;text-decoration:underline;color:blue;">
+														&lt;&lt;
+														<input type="hidden" id="lastAAIndex">
+														&nbsp;
+													</span>
+												</td>
+												<td style="width:50%;text-align:center;">
+													版本：<span id="aaIndexHint" >查看其他版本</span>
+												</td>
+												<td style="text-align:right;width:25%;">
+													&nbsp;
+													<span onclick="parent.shiftAA(parent.gobi('nextAAIndex').value);" id="nextAATd" style="cursor:pointer;text-decoration:underline;color:blue;">
+														&gt;&gt;
+														<input type="hidden" id="nextAAIndex">
+													</span>
+												</td>
+											</tr>
+										</table>
+									</span>
+								</center>
+							</td>
+						</tr>
+						<tr>
+							<td class="bbfw h36" style="width:60px;">種類</td>
+							<td id="card_type" class="tvc"></td>
+						</tr>
+						<tr id="tr_cost">
+							<td class="bbfw h36">費用</td>
+							<td id="card_cost" class="tvc"></td>
+						</tr>
+						<tr>
+							<td class="bbfw h36">文明</td>
+							<td id="card_civil" class="tvc"></td>
+						</tr>
+						<tr id="tr_race">
+							<td class="bbfw h36">種族</td>
+							<td id="card_race" class="tvc"></td>
+						</tr>
+						<tr id="tr_soul">
+							<td class="bbfw h36">魂</td>
+							<td id="card_soul" class="tvc"></td>
+						</tr>
+						<tr id="tr_power">
+							<td class="bbfw h36">攻擊力</td>
+							<td id="card_power" class="tvc"></td>
+						</tr>
+						<tr>
+							<td class="bbfw">特殊能力</td>
+							<td id="card_abilities" style="padding-top:8px;padding-bottom:8px;" ></td>
+						</tr>
+						<tr id="tr_mana">
+							<td class="bbfw h36">魔力支付</td>
+							<td id="card_mana" class="tvc"></td>
+						</tr>
+						<tr id="tr_back">
+							<td class="bbfw h36">翻面／合體</td>
+							<td id="card_back" class="tvc"></td>
+						</tr>
+						<tr id="tr_card_sanctuary">
+							<td class="bbfw h36">殿堂</td>
+							<td id="card_sanctuary" class="tvc"></td>
+						</tr>
+						<tr id="tr_flavor">
+							<td class="bbfw h36">敘述</td>
+							<td id="card_flavor" style="font-size:10px;"></td>
+						</tr>
+						<tr id="tr_sets">
+							<td class="bbfw h36">官方收錄</td>
+							<td id="card_sets" class="tvc" style="font-size:10px;" NT="1"></td>
+						</tr>
+					</table>
+				</div>
+				<div id="fbBlock" class="mainBlock">
+					<div style="height:98%;" id="td_names_list">
+						<div id="fb-root"></div>
+						<script>
+							(function(d, s, id) {
+								var js, fjs = d.getElementsByTagName(s)[0];
+								if (d.getElementById(id)) return;
+								js = d.createElement(s); js.id = id;
+								js.src = "//connect.facebook.net/zh_TW/sdk.js#xfbml=1&version=v2.4";
+								fjs.parentNode.insertBefore(js, fjs);
+							}(document, 'script', 'facebook-jssdk'));
+						</script>
+						<div class="fb-comments" data-href="http://dmsearch.byethost7.com/indexMobile2.html" data-width="300" data-numposts="100"></div>
+					</div>
+				</div>
+				</center>
+			</div>
+			<div id="footer">
+				<div id="thanks" class="footerBar" style="width:100%;">
+					【<a href="#" style="color:#AAAAFF;" onclick="gotoPC();" >桌機</a>/行動+<span id="tran_tw">臺繁</span>/<span id="tran_hk">港繁</span>/<span id="tran_cn">中簡</span>】
+					<span onclick="window.open('http://dmvault.ath.cx/');" style="cursor:pointer;color:white;text-decoration:underline;">Vault</span>&nbsp;
+					<span onclick="window.open('http://dm.takaratomy.co.jp');" style="cursor:pointer;color:white;text-decoration:underline;">TT社</span>
+				</div>
+				<div id="functionArrow" style="width:100%;">
+					<div id="arrow_his_last" class="footerBar" onclick="goLastNext(true);" style="color:#000000;cursor:arrow;">
+						上頁
+					</div>
+					<div id="arrow_last" class="footerBar" onclick="doKeybordFunction(38);">
+						▲
+					</div>
+					<div id="arrow_left" class="footerBar" onclick="doKeybordFunction(37);">
+						◄
+					</div>
+					<div id="arrow_right" class="footerBar" onclick="doKeybordFunction(39);">
+						►
+					</div>
+					<div id="arrow_next" class="footerBar" onclick="doKeybordFunction(40);">
+						▼
+					</div>
+					<div id="arrow_his_next" class="footerBar" onclick="goLastNext(false);" style="color:#000000;cursor:arrow;">
+						下頁
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		changePage();
+	</script>
+	<script src="./dataTail.js"></script>
+	<script>
+		$(document).ready(function(){  
+		   resizeContent();
+		   $(window).resize(function() {
+			   resizeContent();
+			});
+		});
+		if ( !isMobile() ){
+			if ( confirm(translateText("請問是否要轉去桌機版以達到更佳的畫面體驗？",isTC2C)) ){
+				gotoPC();
+			}
+		}
+		checkUpdate("20221222");
+	</script>
+</html>
