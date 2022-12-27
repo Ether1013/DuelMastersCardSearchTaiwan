@@ -1327,3 +1327,21 @@
 		{		name : "熱血星龍 ガイギンガ",											count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "TW-016"
+	var setName = "十番龍TW＠Sky"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "カタパルト・チャージ",				count : 4,	},
+		{		name : "とこしえの超人",					count : 4,	},
+		{		name : "ベイB セガーレ",					count : 4,	},
+		{		name : "極楽鳥",							count : 4,	},
+		{		name : "式神オーダーメイド",				count : 2,	},
+		{		name : "地割呪文「ドゴル」",				count : 2,	},
+		{		name : "空間型無限収納ストラトバッグ",		count : 4,	},
+		{		name : "衝突型加速3番ブースト・ドライバー",	count : 4,	},
+		{		name : "原始 サンナップ",					count : 4,	},
+		{		name : "環嵐！ホールインワン・ヘラクレス",	count : 4,	},
+		{		name : "十番龍 オービーメイカー Par100",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
