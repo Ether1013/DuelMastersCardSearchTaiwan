@@ -79028,6 +79028,20 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-047.jpg",
 		},
+		{
+			name : "コッコ・ルピア GS",
+			type :	"C",
+			civil : 2,
+			race : [ "ファイアー・バード" ],
+			power : 1000,
+			cost : 3,
+			mana : 1,
+			sp : [
+					"(K)G・ストライク(/K)。",
+					"自己的(R)ドラゴン(/R)的召喚費用少2，但是不能降到比2少。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-006.jpg",
+		},
 		/*
 		{
 			name : "",

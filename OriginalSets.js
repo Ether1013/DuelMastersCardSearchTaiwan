@@ -1345,3 +1345,21 @@
 		{		name : "十番龍 オービーメイカー Par100",	count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-050"
+	var setName = "赤単バラフィオル＠秋月さん"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "マルルの炎杖",	count : 4,	},
+		{		name : "チッタ・ペロルの冠",	count : 4,	},
+		{		name : "轟炎の竜皇 ボルシャック・カイザー",	count : 4,	},
+		{		name : "ボルシャック・ローレン・ドラゴン",	count : 4,	},
+		{		name : "ボルシャック・フォース・ドラゴン",	count : 4,	},
+		{		name : "ボルシャック・バラフィオル",	count : 4,	},
+		{		name : "ボルシャック・テイル・ドラゴン",	count : 4,	},
+		{		name : "コッコ・ルピア GS",	count : 4,	},
+		{		name : "暴竜のギフト",	count : 3,	},
+		{		name : "ボルシャック・ヴァルケリー",	count : 3,	},
+		{		name : "ボルシャック・メカ・ドラゴン",	count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
