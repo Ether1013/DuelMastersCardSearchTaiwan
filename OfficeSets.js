@@ -17878,7 +17878,7 @@
 			id : "P49/Y21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, false );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-RP2X";
 	var setName = "「轟炎の竜皇」超刺激パック";
