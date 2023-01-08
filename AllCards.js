@@ -5911,7 +5911,7 @@
 					"當這張(T)ドラグハート(/T)出場時，你可以選擇戰鬥場上1隻對手生物。並讓該生物與裝備此卡的生物進行戰鬥。",
 					"(K)龍解(/K)－當有我方的(R)ガイアール・コマンド・ドラゴン(/R)或是名中帶有《(N)ガイアール(/N)》的生物發動攻擊時，將這張(T)ドラグハート(/T)翻到生物那一面、並且重置。",
 			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmd18-002b.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmd18-002a.jpg",
 		},
 		{
 			name : "猛烈将龍 ガイバーン",
@@ -5925,7 +5925,7 @@
 					"每當此生物發動攻擊時，破壞戰鬥場上1隻攻擊力比此生物小的對手生物。",
 					"(K)W・ブレイカー(/K)",
 			],
-			pic : "5/5a/Dmd18-2a",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmd18-002b.jpg",
 		},
 		{
 			name : "熱血龍 バトクロス・バトル",
