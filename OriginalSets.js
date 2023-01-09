@@ -1361,3 +1361,20 @@
 		{		name : "ボルシャック・メカ・ドラゴン",	count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "TW-017"
+	var setName = "RedZoneKindom＠Richard"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "覇帝なき侵略 レッドゾーンF",			count : 4,	},
+		{		name : "影速 ザ・トリッパー",					count : 4,	},
+		{		name : "轟速 ザ・Re:ッド",						count : 4,	},
+		{		name : "轟速 ザ・レッド / 超次元キル・ホール",	count : 4,	},
+		{		name : "バサラ",								count : 4,	},
+		{		name : "「貪」の鬼 バクロ法師",					count : 4,	},
+		{		name : "月砂 フロッガ-１",						count : 4,	},
+		{		name : "斬斬人形コダマンマ GS",					count : 4,	},
+		{		name : "カンゴク入道",							count : 4,	},
+		{		name : "「大蛇」の鬼 ジャドク丸",				count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
