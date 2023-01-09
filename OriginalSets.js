@@ -757,23 +757,21 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "NET-038"
-	var setName = "獸人型禁斷龍王"
+	var setName = "獸人邪王VV8＠Ether"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "禁断竜王 Vol-Val-8",					count : 3,	},
-		{		name : "爆蓮電融 キリュウイン・バト",			count : 4,	},
-		{		name : "無頼剣兵ドラグイノセント",				count : 4,	},
-		{		name : "イメンズ・サイン",						count : 4,	},
-		{		name : "百鬼の邪王門",							count : 4,	},
-		{		name : "炎龍神ヴォルジャアク",					count : 1,	},
-		{		name : "切札勝太&カツキング ー熱血の物語ー",	count : 4,	},
-		{		name : "ボルシャック・栄光・ルピア",			count : 3,	},
-		{		name : "フェアリー・ライフ",					count : 4,	},
-		{		name : "無頼 ミランダ-2",						count : 2,	},
-		{		name : "ヴィオラの黒像",						count : 3,	},
-		{		name : "悪魔龍 ダークマスターズ",				count : 2,	},
-		{		name : "蒼き団長 ドギラゴン剣",					count : 1,	},
-		{		name : "燃える革命 ドギラゴン",					count : 1,	},
+		{		name : "禁断竜王 Vol-Val-8",			count : 4,	},
+		{		name : "爆蓮電融 キリュウイン・バト",	count : 4,	},
+		{		name : "無頼剣兵ドラグイノセント",		count : 4,	},
+		{		name : "イメンズ・サイン",				count : 4,	},
+		{		name : "百鬼の邪王門",					count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",	count : 4,	},
+		{		name : "悪縁 ガクブッチ＝リッチーモア",	count : 4,	},
+		{		name : "コッコ・武・ルピア",			count : 4,	},
+		{		name : "ヴィオラの黒像",				count : 3,	},
+		{		name : "蒼き団長 ドギラゴン剣",			count : 1,	},
+		{		name : "悪魔龍 ダークマスターズ",		count : 2,	},
+		{		name : "燃える革命 ドギラゴン",			count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
