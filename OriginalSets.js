@@ -1363,7 +1363,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "TW-017"
-	var setName = "RedZoneKindom＠Richard"
+	var setName = "RedZoneKindom＠Richard From Malaysia"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "覇帝なき侵略 レッドゾーンF",			count : 4,	},
@@ -1376,5 +1376,44 @@
 		{		name : "斬斬人形コダマンマ GS",					count : 4,	},
 		{		name : "カンゴク入道",							count : 4,	},
 		{		name : "「大蛇」の鬼 ジャドク丸",				count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "TW-018"
+	var setName = "火單波夏克＠柚子 From 這裡有桌遊"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "NEXの手甲",										count : 4,	},
+		{		name : "ボルシャック・フォース・ドラゴン",				count : 4,	},
+		{		name : "ボルシャック・バラフィオル",					count : 4,	},
+		{		name : "ボルシャック・テイル・ドラゴン",				count : 4,	},
+		{		name : "アニー・ルピア",								count : 4,	},
+		{		name : "マルルの炎杖",									count : 4,	},
+		{		name : "轟炎の竜皇 ボルシャック・カイザー",				count : 4,	},
+		{		name : "ボルシャック・ドラゴン / 決闘者・チャージャー",	count : 4,	},
+		{		name : "ボルシャック・ローレン・ドラゴン",				count : 3,	},
+		{		name : "ボルシャック・クリスド",						count : 3,	},
+		{		name : "コッコ・武・ルピア",							count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "TW-019"
+	var setName = "深淵＠文聖 From 一刻館"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "アビスベル=ジャシン帝",			count : 4,	},
+		{		name : "邪龍 ジャブラッド",				count : 4,	},
+		{		name : "邪侵入",						count : 4,	},
+		{		name : "ベル＝ゲルエール",				count : 4,	},
+		{		name : "悪灯 トーチ＝トートロット",		count : 4,	},
+		{		name : "ブルーム＝プルーフ",			count : 4,	},
+		{		name : "フォーク＝フォック",			count : 4,	},
+		{		name : "ハンマ＝ダンマ",				count : 4,	},
+		{		name : "深淵の三咆哮 バウワウジャ",		count : 3,	},
+		{		name : "深淵の壊炉 マーダン=ロウ",		count : 1,	},
+		{		name : "シャンデリア＝ベリア",			count : 1,	},
+		{		name : "悪縁 ガクブッチ＝リッチーモア",	count : 1,	},
+		{		name : "ナイフ＝アライフ",				count : 1,	},
+		{		name : "セリヴィエット＝エリー",		count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
