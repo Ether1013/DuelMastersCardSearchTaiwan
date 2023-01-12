@@ -760,18 +760,17 @@
 	var setName = "獸人邪王VV8＠Ether"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "禁断竜王 Vol-Val-8",			count : 4,	},
-		{		name : "爆蓮電融 キリュウイン・バト",	count : 4,	},
-		{		name : "無頼剣兵ドラグイノセント",		count : 4,	},
-		{		name : "イメンズ・サイン",				count : 4,	},
-		{		name : "百鬼の邪王門",					count : 4,	},
-		{		name : "ボルシャック・栄光・ルピア",	count : 4,	},
-		{		name : "悪縁 ガクブッチ＝リッチーモア",	count : 4,	},
-		{		name : "コッコ・武・ルピア",			count : 4,	},
-		{		name : "ヴィオラの黒像",				count : 3,	},
-		{		name : "蒼き団長 ドギラゴン剣",			count : 1,	},
-		{		name : "悪魔龍 ダークマスターズ",		count : 2,	},
-		{		name : "燃える革命 ドギラゴン",			count : 2,	},
+		{		name : "禁断竜王 Vol-Val-8",					count : 4,	},
+		{		name : "爆蓮電融 キリュウイン・バト",			count : 4,	},
+		{		name : "無頼剣兵ドラグイノセント",				count : 4,	},
+		{		name : "イメンズ・サイン",						count : 4,	},
+		{		name : "百鬼の邪王門",							count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",			count : 4,	},
+		{		name : "悪縁 ガクブッチ＝リッチーモア",			count : 4,	},
+		{		name : "コッコ・武・ルピア",					count : 4,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",	count : 4,	},
+		{		name : "悪魔龍 ダークマスターズ",				count : 2,	},
+		{		name : "燃える革命 ドギラゴン",					count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
@@ -1017,49 +1016,7 @@
 		{		name : "月砂 フロッガ-１",				count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
-	
-	var setCode = "TW-008"
-	var setName = "黑智縫合(腦內構成)＠Ether"
-	var isDeck = true;
-	var setCardList = [
-		{		name : "黒智縫合 レディオブ・ローゼルド",											count : 2,	},
-		{		name : "The邪悪 寄成ギョウ",														count : 2,	},
-		{		name : "SSS級天災 デッドダムド",													count : 2,	},
-		{		name : "龍素記号ｗD サイクルペディア",												count : 2,	},
-		{		name : "猛菌 キューティ-２",														count : 4,	},
-		{		name : "神徒 メイプル-１",															count : 4,	},
-		{		name : "妖精 アジサイ-２",															count : 4,	},
-		{		name : "天災 デドダム",																count : 4,	},
-		{		name : "悪魔妖精ベラドンナ",														count : 4,	},
-		{		name : "【マニフェスト】チームウェイブを救いたい【聞け】",							count : 3,	},
-		{		name : "俺神（シェン）豚（トン） ブリタニア /「カツキング、俺とお前の勝負だ！」",	count : 3,	},
-		{		name : "ドンドン選べナウ",															count : 2,	},
-		{		name : "フェアリー・Re:ライフ",														count : 4,	},
-	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
-	
-	var setCode = "TW-009"
-	var setName = "DOOM(腦內構成)＠Ether"
-	var isDeck = true;
-	var setCardList = [
-		{		name : "超神星DOOM・ドラゲリオン",								count : 3,	},
-		{		name : "The邪悪 寄成ギョウ",									count : 2,	},
-		{		name : "地封龍 ギャイア",										count : 2,	},
-		{		name : "SSS級天災 デッドダムド",								count : 1,	},
-		{		name : "Disジルコン",											count : 4,	},
-		{		name : "天災 デドダム",											count : 4,	},
-		{		name : "悪魔妖精ベラドンナ",									count : 4,	},
-		{		name : "地龍神の魔陣",											count : 4,	},
-		{		name : "ネ申・マニフェスト",									count : 3,	},
-		{		name : "とこしえの超人",										count : 3,	},
-		{		name : "腐敗妖精ダチュラ",										count : 2,	},
-		{		name : "終末王秘伝オリジナルフィナーレ",						count : 3,	},
-		{		name : "キユリのASMラジオ",										count : 3,	},
-		{		name : "俺神（シェン）豚（トン） ブリタニア /「カツキング、俺とお前の勝負だ！」",	count : 2,	},
 		
-	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
-	
 	var setCode = "TW-010"
 	var setName = "WaveStriker令和＠元丰"
 	var isDeck = true;
