@@ -17841,7 +17841,7 @@
 			rarity : "R",
 			flavor : [ "ユーの優勝の証、邪侵入っていう賞！" ],
 			id : "P50/Y21",
-		},		{
+		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
