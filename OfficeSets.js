@@ -17824,6 +17824,27 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
+	var setCode = "OF-Y22";
+	var setName = "第22期プロモーション・カード";
+	var isDeck = false;
+	var setCardList = [
+		{
+			name : "衝突型加速3番ブースト・ドライバー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-041.jpg",
+			rarity : "R",
+			flavor : [ "勝利に向かってかっ飛ばせ！！" ],
+			id : "P41/Y21",
+		},
+		{
+			name : "邪侵入",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-050.jpg",
+			rarity : "R",
+			flavor : [ "ユーの優勝の証、邪侵入っていう賞！" ],
+			id : "P50/Y21",
+		},		{
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "OF-Y22 SPP-1";
 	var setName = "スペシャルプロモパック2022 vol.1";
 	var isDeck = false;
