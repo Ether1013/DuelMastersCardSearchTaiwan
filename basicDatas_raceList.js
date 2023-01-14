@@ -222,7 +222,7 @@
 				{	Jap : "アビスロイヤル",						Eng : "Abyss Royal",			Chi : "深淵皇家",		isCategory : false,	},
 				{	Jap : "レクスターズ",						Eng : "Rex Stars",				Chi : "王星",			isCategory : false,	},
 				{	Jap : "鬼レクスターズ",						Eng : "Oni Rex Stars",			Chi : "鬼王星",			isCategory : false,	},
-				{	Jap : "ディスペクター",						Eng : "Dispector",				Chi : "合體獸",			isCategory : false,	},
+				{	Jap : "ディスペクター",						Eng : "Dispector",				Chi : "褻瀆者",			isCategory : false,	},
 				{	Jap : "禁断",								Eng : "Forbidden",				Chi : "禁斷",			isCategory : false,	},
 				{	Jap : "ディスタス",							Eng : "Distas",					Chi : "合獸兵",			isCategory : false,	},
 				{	Jap : "ファイブ・オリジン・ドラゴン",		Eng : "Five Origin Dragon",		Chi : "五源龍",			isCategory : false,	},
