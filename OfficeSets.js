@@ -17654,7 +17654,7 @@
 			id : ["22RP2 T12/T20",""],
 		},
 		{
-			name : "テック団の波壊Go！",
+			name : "テック団の波壊Go!",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-T13.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-TF13.jpg"],
 			rarity : ["R","R"],
 			flavor : [ "","" ],
@@ -44280,7 +44280,7 @@
 			id : [ "22RP1 TF11/TF20","22RP1 T11/T20" ],
 		},
 		{
-			name : "テック団の波壊Go！",
+			name : "テック団の波壊Go!",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF12.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-T12.jpg" ],
 			rarity : "R",
 			flavor : [ "","" ],

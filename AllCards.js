@@ -57223,19 +57223,6 @@
 			pic : "2/23/Dmr23-23",
 		},
 		{
-			name : "テック団の波壊Go!",
-			type : "S",
-			civil : 12,
-			cost : 7,
-			mana : 1,
-			sp : [
-					
-					"(K)S・トリガー(/K)",
-					"下列能力擇一發動：##將戰鬥場上所有費用5以下的對手卡牌拿回至其持有者的手牌中。##破壞戰鬥場上1隻費用6以上的對手生物。",
-			],
-			pic : "2/20/Dmr23-24",
-		},
-		{
 			name : "第3種 ベロリンガM",
 			type : "C",
 			civil : 6,
@@ -69679,7 +69666,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-9A.jpg",
 		},
 		{
-			name : "テック団の波壊Go！",
+			name : "テック団の波壊Go!",
 			type : "S",
 			civil : 12,
 			cost : 7,
