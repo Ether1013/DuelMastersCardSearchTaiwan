@@ -1208,8 +1208,8 @@
 	
 	//最新推薦
 	var newestSets = [
+		"NET-048",
 		"TW-018",
-		"TW-019",
 		"DM22-RP2",
 		"DM22-BD1",
 	]
@@ -1238,6 +1238,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/01/31",
+				log : [ 
+						"新增NET-048【天災十番龍＠kurakuros】",
+				],	
+			},
 			{	
 				date : "2023/01/16",
 				log : [ 

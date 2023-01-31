@@ -79029,6 +79029,22 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-006.jpg",
 		},
+		{
+			name : "若き大長老 アプル",
+			type : "C",
+			civil : 1,
+			race : [ "グランセクト" ],
+			power : 3000,
+			cost : 2,
+			mana : 1,
+			sp : [
+					"(K)G・ストライク(/K)",
+					"(K)ガードマン(/K)",
+					"對手的卡牌不能離開魔力區或墓地。",
+					"對手不能從魔力區或墓地使用咒文。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-042.jpg",
+		},
 		/*
 		{
 			name : "",
