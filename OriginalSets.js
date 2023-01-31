@@ -1379,17 +1379,17 @@
 	var setName = "天災十番龍＠kurakuros"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "応援妖精エール /「みんな一緒に応援してね！」",	count : 4,	},
+		{		name : "十番龍 オービーメイカー Par100",				count : 4,	},
+		{		name : "∞龍 ゲンムエンペラー",							count : 2,	},
+		{		name : "ダンディ・ナスオ",								count : 1,	},
+		{		name : "S級原始 サンマッド",							count : 1,	},
+		{		name : "キユリのASMラジオ",								count : 4,	},
 		{		name : "若き大長老 アプル",								count : 4,	},
 		{		name : "桜風妖精ステップル",							count : 4,	},
 		{		name : "極楽鳥",										count : 4,	},
-		{		name : "ダンディ・ナスオ",								count : 1,	},
-		{		name : "Disジルコン",									count : 4,	},
+		{		name : "応援妖精エール /「みんな一緒に応援してね！」",	count : 4,	},
 		{		name : "原始 サンナップ",								count : 4,	},
-		{		name : "S級原始 サンマッド",							count : 1,	},
 		{		name : "天災 デドダム",									count : 4,	},
-		{		name : "キユリのASMラジオ",								count : 4,	},
-		{		name : "十番龍 オービーメイカー Par100",				count : 4,	},
-		{		name : "∞龍 ゲンムエンペラー",							count : 2,	},
+		{		name : "Disジルコン",									count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
