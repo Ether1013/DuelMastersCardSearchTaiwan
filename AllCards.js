@@ -46256,7 +46256,7 @@
 					"我方生物如果有3隻以上的話，則此生物獲得(K)T・ブレイカー(/K)能力。",
 					"此生物出場時，如果戰鬥場上有4隻以上的生物的話，就從中選擇1隻生物、並將之置入其持有者的魔力區中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr19-s09.jpg",
 		},		
 		{
 			name : "Katta's Crew Is Coming To Town（勝太が街にやってきた）",
