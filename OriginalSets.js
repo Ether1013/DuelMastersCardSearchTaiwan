@@ -761,14 +761,14 @@
 	var isDeck = true;
 	var setCardList = [
 		{		name : "禁断竜王 Vol-Val-8",					count : 4,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",	count : 4,	},
 		{		name : "爆蓮電融 キリュウイン・バト",			count : 4,	},
 		{		name : "無頼剣兵ドラグイノセント",				count : 4,	},
 		{		name : "イメンズ・サイン",						count : 4,	},
 		{		name : "百鬼の邪王門",							count : 4,	},
-		{		name : "ボルシャック・栄光・ルピア",			count : 4,	},
 		{		name : "悪縁 ガクブッチ＝リッチーモア",			count : 4,	},
 		{		name : "コッコ・武・ルピア",					count : 4,	},
-		{		name : "切札勝太&カツキング ー熱血の物語ー",	count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",			count : 4,	},
 		{		name : "ヴィオラの黒像",						count : 2,	},
 		{		name : "燃える革命 ドギラゴン",					count : 2,	},
 	];
