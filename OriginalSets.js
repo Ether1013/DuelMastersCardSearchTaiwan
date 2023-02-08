@@ -769,7 +769,7 @@
 		{		name : "悪縁 ガクブッチ＝リッチーモア",			count : 4,	},
 		{		name : "コッコ・武・ルピア",					count : 4,	},
 		{		name : "切札勝太&カツキング ー熱血の物語ー",	count : 4,	},
-		{		name : "悪魔龍 ダークマスターズ",				count : 2,	},
+		{		name : "ヴィオラの黒像",						count : 2,	},
 		{		name : "燃える革命 ドギラゴン",					count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
