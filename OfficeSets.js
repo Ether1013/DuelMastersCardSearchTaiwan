@@ -51146,6 +51146,97 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DMSP-02";
+	var setName = "超獣王来烈伝";
+	var isDeck = false;
+	var setCardList = [		
+		{
+			name : "ボルシャック・ドラゴン GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-001.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 1/12",
+		},
+		{
+			name : "ボルメテウス・ホワイト・ドラゴン GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-002.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 2/12",
+		},
+		{
+			name : "聖霊王アルファディオス GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-003.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 3/12",
+		},
+		{
+			name : "破壊龍神ヘヴィ・デス・メタル GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-004.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 4/12",
+		},
+		{
+			name : "邪眼皇ロマノフⅠ世 GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-005.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 5/12",
+		},
+		{
+			name : "神帝ルナティック・ゴッド GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-006.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 6/12",
+		},
+		{
+			name : "ガイアール・カイザー GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-007.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 7/12",
+		},
+		{
+			name : "「俺」の頂 ライオネル GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-008.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 8/12",
+		},
+		{
+			name : "武闘将軍 カツキング GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-009.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 9/12",
+		},
+		{
+			name : "熱血星龍 ガイギンガ GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-010.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 10/12",
+		},
+		{
+			name : "伝説の禁断 ドキンダムX GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-011.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 11/12",
+		},
+		{
+			name : "未来王龍 モモキング",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-012.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP02 12/12",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DM22-BD1";
 	var setName = "レジェンドスーパーデッキ 龍覇爆炎";
 	var isDeck = true;
