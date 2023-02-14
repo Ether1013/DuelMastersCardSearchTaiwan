@@ -51237,6 +51237,244 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DMSD-18";
+	var setName = "ジェンドルのディスペクター";
+	var isDeck = true;
+	var setCardList = [		
+		{
+			name : "滅将連結 パギャラダイダ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-002.jpg",
+			rarity : "SR",
+			flavor : [ "ディスペクターを操っているのは、はたして何者なのか!? その目的は、どうやら超獣王来烈伝に関係しているようだが……真相やいかに!?" ],
+			id : "SD18 2/14",
+			count : 2,
+		},
+		{
+			name : "DNA・スパーク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-007.jpg",
+			rarity : "R",
+			flavor : [ "S・トリガーは防御の要！どんな大軍も１枚で止まるこのカードが発動したら、総攻撃で大逆転だ!!" ],
+			id : "SD18 7/14",
+			count : 3,
+		},
+		{
+			name : "炎機混成 ボルスレン・バスター",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-008.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "SD18 8/14",
+			count : 2,
+		},
+		{
+			name : "浄黒接続 ウルガーン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-009.jpg",
+			rarity : "U",
+			flavor : [ "ディスペクターは簡単にはやられない！EXライフによって追加したシールドを墓地に置けば、バトルゾーンに残って恐怖を与え続けるのだ!!" ],
+			id : "SD18 9/14",
+			count : 2,
+		},
+		{
+			name : "勇愛の天秤",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-010.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "SD18 10/14",
+			count : 3,
+		},
+		{
+			name : "腐聖 ブラッドウ-２",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-011.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "SD18 11/14",
+			count : 4,
+		},
+		{
+			name : "悪夢 ルドバット-１",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-012.jpg",
+			rarity : "C",
+			flavor : [ "ディスペクターを召喚する時に、ササゲールを持ったクリーチャーを好きな数生贄にささげてコストを下げることができるぞ！大型ディスペクターを早出ししよう!!" ],
+			id : "SD18 12/14",
+			count : 4,
+		},
+		{
+			name : "ボーンおどり・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-013.jpg",
+			rarity : "C",
+			flavor : [ "このデッキの切り札、バロディアスは天使と悪魔という相容れない二つの力を両方兼ね備えた破壊の申し子！出た時と追加シールドが離れた時の２回もクリーチャーを破壊できるぞ！ササゲールで早出しして破壊の力を見せつけろ!!" ],
+			id : "SD18 13/14",
+			count : 2,
+		},
+		{
+			name : "勇騎 バクアイラ-１",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-014.jpg",
+			rarity : "C",
+			flavor : [ "序盤はササゲールを持つクリーチャーをどんどん展開していこう！貯めたマナとバトルゾーンに並べたササゲールを足せばコストの大きいディスペクターでも召喚できるぞ！巨大パワーで相手を押しつぶせ!!" ],
+			id : "SD18 14/14",
+			count : 4,
+		},
+		{
+			name : "黙示 ゲンシャコ-１",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-003.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SD18 3/14",
+			count : 3,
+		},
+		{
+			name : "冥光連結 ピカガジラ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-004.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SD18 4/14",
+			count : 2,
+		},
+		{
+			name : "霊峰 メテオザ-１",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-005.jpg",
+			rarity : "",
+			flavor : [ "ディスペクターとは、過去の強力なクリーチャーたちが無理やり合体させられてしまった存在！切り札級のクリーチャーたちの力が合わさり、歴代最強最大最悪の敵となってモモキングの前に立ちはだかるのだ!!" ],
+			id : "SD18 5/14",
+			count : 4,
+		},
+		{
+			name : "腐勇 ドルマーク-２",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-006.jpg",
+			rarity : "",
+			flavor : [ "G・ストライクとは、シールドから手札に加える時に相手に見せることで発動する能力！クリーチャー1体の攻撃を止めつつ、見せたカードはそのまま手札に残るので、超おトクだぞ!!" ],
+			id : "SD18 6/14",
+			count : 4,
+		},
+		{
+			name : "聖魔連結王 バロディアス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-001.jpg",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "SD18 1/14",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMSD-17";
+	var setName = "ジョーのスター進化";
+	var isDeck = true;
+	var setCardList = [		
+		{
+			name : "モモキング -始丸-",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-002.jpg",
+			rarity : "SR",
+			flavor : [ "超獣王来烈伝に触れたモモキングは、英雄たちの伝説の力を身にまとって戦うという、新たな能力を手に入れたのだ!!" ],
+			id : "SD17 2/14",
+			count : 2,
+		},
+		{
+			name : "進化設計図",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-009.jpg",
+			rarity : "R",
+			flavor : [ "このカードを使えばめくれただけスター進化クリーチャーを手札に加えられるぞ！手札がたくさん増えれば、その分スター進化しまくれるぞ!!" ],
+			id : "SD17 9/14",
+			count : 3,
+		},
+		{
+			name : "モモダチトレーニング!!!",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-010.jpg",
+			rarity : "R",
+			flavor : [ "S・トリガーは防御の要！発動したら、まだ攻撃ができる相手のクリーチャーを破壊して、一発逆転を狙おう!!" ],
+			id : "SD17 10/14",
+			count : 3,
+		},
+		{
+			name : "モエル・モヒッチ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-011.jpg",
+			rarity : "C",
+			flavor : [ "超獣王来烈伝とは！数々の強敵と戦い、幾度となく世界の危機を救ってきた切札家に伝わる、英雄や宿敵の名を記した秘伝の書！それをモモキングが発見したところから、王来篇の物語は始まるのだ!!" ],
+			id : "SD17 11/14",
+			count : 4,
+		},
+		{
+			name : "チョートッQ ＜グレガリ.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-012.jpg",
+			rarity : "C",
+			flavor : [ "スター進化クリーチャーは、破壊されようが手札に戻されようが進化元がバトルゾーンに残るから攻撃の手が止まらない！相手の反撃を恐れず攻撃し続けられるすごい能力なのだ！" ],
+			id : "SD17 12/14",
+			count : 4,
+		},
+		{
+			name : "パーリギリス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-013.jpg",
+			rarity : "C",
+			flavor : [ "スター進化クリーチャーは、同じ文明のクリーチャーだけでなくどんな文明のレクスターズの上にも進化できる！序盤はレクスターズをどんどん展開して、スター進化の準備を整えよう!!" ],
+			id : "SD17 13/14",
+			count : 4,
+		},
+		{
+			name : "フェアリー・Re:ライフ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-014.jpg",
+			rarity : "C",
+			flavor : [ "G・ストライクは、シールドから手札に加える時に相手に見せるだけでクリーチャー1体の攻撃を止められるぞ!! カードはそのまま手札に入るからお得に防御だ！" ],
+			id : "SD17 14/14",
+			count : 2,
+		},
+		{
+			name : "ボルシャック・モモキング",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-003.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SD17 3/14",
+			count : 2,
+		},
+		{
+			name : "ドツキ万次郎 ＜GENJI.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-004.jpg",
+			rarity : "",
+			flavor : [ "現代のクリーチャーが、過去の英雄たちの力をその身にまとって超絶パワーアップする！英雄の魂と心を通わせた者のみが可能な絶技！それがスター進化なのだ!!" ],
+			id : "SD17 4/14",
+			count : 2,
+		},
+		{
+			name : "ツタンカーネン ＜カゲキリ.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-005.jpg",
+			rarity : "",
+			flavor : [ "序盤は小型クリーチャーを出してスター進化したら攻撃を始めよう！スター進化獣は出したターンに攻撃できる上に、除去されても進化元がバトルゾーンに残るぞ！とにかくスター進化を使って恐れることなく攻める、それがこのデッキの戦略だ!!" ],
+			id : "SD17 5/14",
+			count : 2,
+		},
+		{
+			name : "コッコ・ルピア GS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-006.jpg",
+			rarity : "",
+			flavor : [ "このデッキの切り札、ボルシャック・大和・モモキングは墓地の火のカードの分だけパワーもブレイク数も増えていくぞ！墓地を増やせるモモキング -始丸-と組み合わせて一撃大量ブレイクを狙おう!!" ],
+			id : "SD17 6/14",
+			count : 4,
+		},
+		{
+			name : "ブッパ・ハート",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-007.jpg",
+			rarity : "",
+			flavor : [ "シンカパワーは、進化する時に発動するボーナス能力！スター進化する時も、シンカパワーを持ったクリーチャーからすれば、シンカパワーをぶっ放せるぞ!!" ],
+			id : "SD17 7/14",
+			count : 4,
+		},
+		{
+			name : "ヘットルとフエートル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-008.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SD17 8/14",
+			count : 3,
+		},
+		{
+			name : "ボルシャック・大和・モモキング",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-001.jpg",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "SD17 1/14",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DM22-BD1";
 	var setName = "レジェンドスーパーデッキ 龍覇爆炎";
 	var isDeck = true;

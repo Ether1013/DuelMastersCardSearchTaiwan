@@ -229,6 +229,7 @@
 			{ Jap : "パンドラ・シフト",		Eng : "Pandora Shift",			Chi : "潘朵拉轉移",			descript : "你可以取代原始消費、使用替代消費以將此卡置入超次元區中",},
 			{ Jap : "飛行",					Eng : "Flying",					Chi : "飛行",				descript : "此生物不會被沒有持有飛行能力的生物攻擊或阻擋",},
 			{ Jap : "パワード・ブロッカー",	Eng : "Powered Blocker",		Chi : "威力阻擋者",			descript : "當此生物進行阻擋時，增加攻擊力",},
+			{ Jap : "シールドセイバー",		Eng : "Shield Saver",			Chi : "護盾保護者",			descript : "當我方的一張護盾被擊破時，你可以取而代之、破壞此生物",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},

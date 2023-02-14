@@ -79061,7 +79061,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-001.jpg",
 		},
-
 		{
 			name : "ボルメテウス・ホワイト・ドラゴン GS",
 			type : "C",
@@ -79077,7 +79076,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-002.jpg",
 		},
-
 		{
 			name : "聖霊王アルファディオス GS",
 			type : "EC",
@@ -79094,7 +79092,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-003.jpg",
 		},
-
 		{
 			name : "破壊龍神ヘヴィ・デス・メタル GS",
 			type : "C",
@@ -79111,7 +79108,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-004.jpg",
 		},
-
 		{
 			name : "邪眼皇ロマノフⅠ世 GS",
 			type : "C",
@@ -79127,7 +79123,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-005.jpg",
 		},
-
 		{
 			name : "神帝ルナティック・ゴッド GS",
 			type : "C",
@@ -79145,7 +79140,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-006.jpg",
 		},
-
 		{
 			name : "ガイアール・カイザー GS",
 			type : "C",
@@ -79162,7 +79156,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-007.jpg",
 		},
-
 		{
 			name : "「俺」の頂 ライオネル GS",
 			type : "C",
@@ -79180,7 +79173,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-008.jpg",
 		},
-
 		{
 			name : "武闘将軍 カツキング GS",
 			type : "C",
@@ -79199,7 +79191,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-009.jpg",
 		},
-
 		{
 			name : "熱血星龍 ガイギンガ GS",
 			type : "C",
@@ -79219,7 +79210,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-010.jpg",
 		},
-
 		{
 			name : "伝説の禁断 ドキンダムX GS",
 			type : "C",
@@ -79237,7 +79227,6 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-011.jpg",
 		},
-
 		{
 			name : "未来王龍 モモキング",
 			type : "C",
@@ -79254,7 +79243,262 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp02-012.jpg",
 		},
-
+		{
+			name : "モモキング -始丸-",
+			type : "C",
+			civil : 3,
+			race : ["ヒーロー・ドラゴン","ジョーカーズ","レクスターズ"],
+			power : 4000,
+			pc : true,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"(K)スピードアタッカー(/K)",
+				"此生物出場時，觀看我方牌堆頂4張牌，你可以將其中1隻生物拿給對手確認、之後加入手牌。將剩餘卡牌置入墓地。",
+				"(K)シンカパワー(/K)－此生物進化時，該回合中、此生物攻擊力+4000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-002.jpg",
+		},
+		{
+			name : "モエル・モヒッチ",
+			type : "C",
+			civil : 2,
+			race : ["ファイアー・バード","レクスターズ"],
+			power : 1000,
+			pc : true,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"此生物出場時，你可以選擇1隻對手生物。將該生物與此生物進行戰鬥。",
+				"戰鬥中、此生物攻擊力+3000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-011.jpg",
+		},
+		{
+			name : "パーリギリス",
+			type : "C",
+			civil : 1,
+			race : ["ジョーカーズ","レクスターズ"],
+			power : 3000,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"(K)シンカパワー(/K)－此生物進化時，將我方牌庫頂第一張牌置入我方魔力區中。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-013.jpg",
+		},
+		{
+			name : "ボルシャック・モモキング",
+			type : "SEC",
+			civil : 2,
+			race : ["ジョーカーズ","アーマード・ドラゴン","レクスターズ"],
+			power : 6000,
+			pc : true,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)G・ストライク(/K)",
+				"(K)スター進化(/K)－進化在1隻(R)レクスターズ(/R)或是火文明的生物之上。",
+				"(K)パワード・ブレイカー(/K)",
+				"攻擊中，此生物的攻擊力會隨著我方墓地中每1張火文明的卡牌而+1000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-003.jpg",
+		},
+		{
+			name : "ドツキ万次郎 ＜GENJI.Star＞",
+			type : "SEC",
+			civil : 2,
+			race : ["ジョーカーズ","アーマード・ドラゴン","レクスターズ"],
+			power : 7000,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"(K)スター進化(/K)－進化在1隻(R)レクスターズ(/R)或是火文明的生物之上。",
+				"(K)W・ブレイカー(/K)",
+				"此生物發動攻擊時，破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-004.jpg",
+		},
+		{
+			name : "ツタンカーネン ＜カゲキリ.Star＞",
+			type : "SEC",
+			civil : 2,
+			race : ["ジョーカーズ","ファイアー・バード","レクスターズ"],
+			power : 5000,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"(K)スター進化(/K)－進化在1隻(R)レクスターズ(/R)或是火文明的生物之上。",
+				"各回合中，於此生物第一次發動攻擊時，重置此生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-005.jpg",
+		},
+		{
+			name : "ブッパ・ハート",
+			type : "C",
+			civil : 2,
+			race : ["ファイアー・バード","レクスターズ"],
+			power : 2000,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"(K)シンカパワー(/K)－此生物進化時，破壞1隻攻擊力3000以下的對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-007.jpg",
+		},
+		{
+			name : "ボルシャック・大和・モモキング",
+			type : "SEC",
+			civil : 2,
+			race : ["ジョーカーズ","アーマード・ドラゴン","レクスターズ"],
+			power : 7000,
+			pc : true,
+			cost : 6,
+			mana : 1,
+			sp : [
+				"(K)スター進化(/K)－進化在1隻(R)レクスターズ(/R)或是火文明的生物之上。",
+				"(K)パワード・ブレイカー(/K)",
+				"此生物發動攻擊時，作廢我方牌堆頂2張牌。之後破壞1隻對手生物。但是該生物的費用不能高於那2張卡的合計費用。",
+				"攻擊中，此生物的攻擊力會隨著我方墓地中每1張火文明的卡牌而+2000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd17-001.jpg",
+		},
+		{
+			name : "滅将連結 パギャラダイダ",
+			type : "C",
+			civil : 20,
+			race : ["ディスペクター","デーモン・コマンド","エンジェル・コマンド"],
+			power : 9000,
+			cost : 7,
+			mana : 1,
+			sp : [
+				"(K)EXライフ(/K)",
+				"(K)W・ブレイカー(/K)",
+				"此生物出場時，從我方墓地打出1隻費用4以下的生物出場。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-002.jpg",
+		},
+		{
+			name : "浄黒接続 ウルガーン",
+			type : "C",
+			civil : 16,
+			race : ["ディスペクター","エンジェル・コマンド","デーモン・コマンド"],
+			power : 6500,
+			cost : 6,
+			mana : 1,
+			sp : [
+				"(K)EXライフ(/K)",
+				"(K)W・ブレイカー(/K)",
+				"我方回合結束時，重置此生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-009.jpg",
+		},
+		{
+			name : "腐聖 ブラッドウ-２",
+			type : "C",
+			civil : 20,
+			race : ["イニシエート","ゴースト","ディスタス"],
+			power : 3500,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"(K)ブロッカー(/K)",
+				"此生物不能攻擊玩家。",
+				"此生物出場時，抽1張牌。",
+				"(K)ササゲール(/K)２",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-011.jpg",
+		},
+		{
+			name : "勇騎 バクアイラ-１",
+			type : "C",
+			civil : 2,
+			race : ["ヒューマノイド爆","ディスタス"],
+			power : 1000,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"此生物出場時，你可以作廢1張手牌。那樣的話，就抽1張牌。",
+				"(K)ササゲール(/K)１",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-014.jpg",
+		},
+		{
+			name : "黙示 ゲンシャコ-１",
+			type : "C",
+			civil : 16,
+			race : ["ライトブリンガー","ディスタス"],
+			power : 1500,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー(/K)",
+				"此生物出場時，橫置1隻對手生物，下個對手回合初時，該生物不能重置。",
+				"(K)ササゲール(/K)１",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-003.jpg",
+		},
+		{
+			name : "冥光連結 ピカガジラ",
+			type : "C",
+			civil : 4,
+			race : ["ディスペクター","デーモン・コマンド","エンジェル・コマンド"],
+			power : 7000,
+			cost : 7,
+			mana : 1,
+			sp : [
+				"(K)G・ストライク(/K)",
+				"(K)EXライフ(/K)",
+				"(K)W・ブレイカー(/K)",
+				"(K)ブロッカー(/K)",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-004.jpg",
+		},
+		{
+			name : "霊峰 メテオザ-１",
+			type : "C",
+			civil : 2,
+			race : ["ロック・ビースト","ディスタス"],
+			power : 1000,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"此生物出場時，破壞1隻攻擊力2000以下的對手生物。",
+				"(K)ササゲール(/K)１",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-005.jpg",
+		},
+		{
+			name : "腐勇 ドルマーク-２",
+			type : "C",
+			civil : 6,
+			race : ["ゴースト","ヒューマノイド","ディスタス"],
+			power : 2000,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"(K)G・ストライク(/K)",
+				"(K)スレイヤー(/K)",
+				"(K)ササゲール(/K)２",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-006.jpg",
+		},
+		{
+			name : "聖魔連結王 バロディアス",
+			type : "C",
+			civil : 22,
+			race : ["ディスペクター","デーモン・コマンド","エンジェル・コマンド"],
+			power : 13000,
+			cost : 8,
+			mana : 1,
+			sp : [
+				"(K)EXライフ(/K)",
+				"(K)T・ブレイカー(/K)",
+				"當對手因非多色的咒文效果選擇生物時，不能選擇此生物。",
+				"此生物出場時、或是此生物的「(K)EXライフ(/K)」護盾離開護盾區時，破壞1隻對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-001.jpg",
+		},
 		/*
 		{
 			name : "",
