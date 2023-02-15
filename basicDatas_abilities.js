@@ -230,6 +230,8 @@
 			{ Jap : "飛行",					Eng : "Flying",					Chi : "飛行",				descript : "此生物不會被沒有持有飛行能力的生物攻擊或阻擋",},
 			{ Jap : "パワード・ブロッカー",	Eng : "Powered Blocker",		Chi : "威力阻擋者",			descript : "當此生物進行阻擋時，增加攻擊力",},
 			{ Jap : "シールドセイバー",		Eng : "Shield Saver",			Chi : "護盾保護者",			descript : "當我方的一張護盾被擊破時，你可以取而代之、破壞此生物",},
+			{ Jap : "マスターB・A・D",		Eng : "Master Bad Action Dynamite",		
+																			Chi : "王者惡行炸彈",		descript : "召喚此生物時，你可以少支付2點費用，且這回合每已召喚1隻火文明生物、此生物的召喚費用就可以再少2點。那樣的話，則於我方回合結束時破壞1隻我方生物",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},

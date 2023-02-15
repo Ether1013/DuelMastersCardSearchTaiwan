@@ -1,0 +1,258 @@
+<html>
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="./basicDatas.js?v=20170807"></script>
+	<script src="./basicDatas_abilities.js?v=20170807"></script>
+	<script src="./basicDatas_raceList.js?v=20170807"></script>
+	<script src="./AllCards.js?v=20170807"></script>
+
+	<script>
+		function addDMDatas(){
+			var rarities = prompt().split(",");
+			for ( var i = 0 ; i < rarities.length ; i++ ){
+				var rarity = rarities[i].split(":")[0];
+				var num = parseInt( rarities[i].split(":")[1] );
+				
+				for ( var n = 0 ; n < num ; n++ ){
+					var clone = $($("[name=main]")[0]).clone();
+					clone.find("[name=rarity]").val( rarity );
+					clone.show();
+					$(".theBody").append( clone );
+					
+				}
+			}
+		}
+		
+		function autoCoding(){
+			var isDeck = confirm("是否為牌組");
+			var allNames = [];
+			var newCardData = [];
+			var newSetData = [];
+			for ( var m = 0 ; m < cardDatas.map.length ; m++ ){
+				allNames.push( cardDatas.map[m].name.replace(/\s/g,"") );
+			}
+			$("[name=main]").each(function(){
+				if ( $(this).is(":visible") ){
+					var name = $(this).find("[name=namdAndId]").val();
+					var id = name.replace(/.*\((.*)\)/g,"$1").replace(/^DM/,"");
+					name = name.replace(/\(.*\)/g,"");
+					
+					//判斷是不是新卡
+					var addCardData = true;
+					var clearName = name.replace(/\s/g,"");
+					for ( var n = 0 ; n < allNames.length ; n++ ){
+						if ( allNames[n] == clearName ){
+							addCardData = false;
+							break;
+						}
+					}
+					if ( addCardData ){
+						allNames.push( clearName );
+					}
+					
+					var pic = $(this).find("[name=pic]").val();
+					var civil = 0;
+					$(this).find("[name=civil]:checked").each(function(){
+						civil = civil | parseInt( $(this).val() );
+					});
+					if ( civil == 0 )
+						civil = 32;
+					var type = $(this).find("[name=type]").val();
+					var rarity = $(this).find("[name=rarity]").val();
+					var power = $(this).find("[name=power]").val();
+					var pc = $(this).find("[name=pc]").val();
+					var cost = $(this).find("[name=cost]").val();
+					var races = $(this).find("[name=races]").val().split("/");
+					var abilities = $(this).find("[name=abilities]").val().split(/\s/g);
+					var flavor = $(this).find("[name=flavor]").val();
+					var versions = $(this).find("[name=versions]").val();
+					
+					if ( addCardData ){
+						var cardData  = "\r\n\t\t{";
+							cardData += "\r\n\t\t\tname : \"" + name + "\",";
+							cardData += "\r\n\t\t\ttype : \"" + type + "\",";
+							cardData += "\r\n\t\t\tcivil : " + civil + ",";
+							if ( races[0] != "" ){
+								cardData += "\r\n\t\t\trace : [";
+								for ( var r = 0 ; r < races.length ; r++ ){
+									cardData += ( r > 0 ? "," : "" ) + "\"" + races[r] + "\"";
+								}
+								cardData += "],";
+							}
+							if ( power != "" ){
+								cardData += "\r\n\t\t\tpower : " + power + ",";
+								if ( pc != "" ){
+									cardData += "\r\n\t\t\tpc : " + pc + ",";
+								}
+							}
+							cardData += "\r\n\t\t\tcost : " + cost + ",";
+							cardData += "\r\n\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
+							cardData += "\r\n\t\t\tsp : [";
+							for ( var s = 0 ; s < abilities.length ; s++ ){
+								if ( abilities[s] != "" ){
+									cardData += "\r\n\t\t\t\t\"" + abilities[s] + "\",";
+								}
+							}
+							cardData += "\r\n\t\t\t],";
+							cardData += "\r\n\t\t\tpic : \"" + pic + "\",";
+							cardData += "\r\n\t\t},";
+						newCardData.push( cardData );
+					}
+						
+					var setData = "\r\n\t\t{";
+					setData += "\r\n\t\t\tname : \"" + name + "\",";
+					if ( versions == 1 ){
+						setData += "\r\n\t\t\tpic : \"" + pic + "\",";
+						setData += "\r\n\t\t\trarity : \"" + rarity + "\",";
+						setData += "\r\n\t\t\tflavor : [ \"" + flavor + "\" ],";
+						setData += "\r\n\t\t\tid : \"" + id + "\",";
+					} else if ( versions == 2 ){
+						setData += "\r\n\t\t\tpic : [\"" + pic + "\",\"\"],";
+						setData += "\r\n\t\t\trarity : [\"" + rarity + "\",\"" + rarity + "\"],";
+						setData += "\r\n\t\t\tflavor : [ \"" + flavor + "\",\"\" ],";
+						setData += "\r\n\t\t\tid : [\"" + id + "\",\"\"],";
+					} else if ( versions == 3 ){
+						setData += "\r\n\t\t\tpic : [\"" + pic + "\",\"\",\"\"],";
+						setData += "\r\n\t\t\trarity : [\"" + rarity + "\",\"" + rarity + "\",\"" + rarity + "\"],";
+						setData += "\r\n\t\t\tflavor : [ \"" + flavor + "\",\"\",\"\" ],";
+						setData += "\r\n\t\t\tid : [\"" + id + "\",\"\",\"\"],";
+					}
+					if ( isDeck ){
+						setData += "\r\n\t\t\tcount : ,";
+					}
+					setData += "\r\n\t\t},";
+					
+					newSetData.push( setData );
+				}
+			});
+			for ( var i = 0 ; i < newCardData.length ; i++ ){
+				$(".theBody").append($("<span><XMP>" + newCardData[i] + "</XMP></span>"));
+			}
+			$(".theBody").append($("<HR>"));
+			for ( var i = 0 ; i < newSetData.length ; i++ ){
+				$(".theBody").append($("<span><XMP>" + newSetData[i] + "</XMP></span>"));
+			}
+		}
+		
+		function parseHTML(){
+		
+			//匯入HTML
+			$("[name=code]").html( $("[name=codeText]").val() );
+			
+			//複製一個輸入組合
+			var clone = $($("[name=main]")[0]).clone();
+			clone.show();
+			$(".theBody").append( clone );
+			
+			clone.find("[name=namdAndId]").val( $("[name=code]").find(".card-name").text() );
+			clone.find("[name=rarity]").val( $("[name=code]").find(".rarelity").text() );
+			clone.find("[name=pic]").val( "https://dm.takaratomy.co.jp/" + $("[name=code]").find(".card-img").find("img").prop("src").replace("file:///F:/","") );
+			if ( $("[name=code]").find(".civil").text().indexOf("光") > -1 ){
+				clone.find("[name=civil][value=16]").prop("checked","checked");
+			}
+			if ( $("[name=code]").find(".civil").text().indexOf("水") > -1 ){
+				clone.find("[name=civil][value=8]").prop("checked","checked");
+			}
+			if ( $("[name=code]").find(".civil").text().indexOf("闇") > -1 ){
+				clone.find("[name=civil][value=4]").prop("checked","checked");
+			}
+			if ( $("[name=code]").find(".civil").text().indexOf("火") > -1 ){
+				clone.find("[name=civil][value=2]").prop("checked","checked");
+			}
+			if ( $("[name=code]").find(".civil").text().indexOf("自然") > -1 ){
+				clone.find("[name=civil][value=1]").prop("checked","checked");
+			}
+			clone.find("[name=power]").val( $("[name=code]").find(".power").text() );
+			clone.find("[name=cost]").val( $("[name=code]").find(".cost").text() );
+			clone.find("[name=races]").val( $("[name=code]").find(".race").text() );
+			clone.find("[name=abilities]").val( $("[name=code]").find(".skills").html().replace(/\<[^\<\>]*\>/g,"\t") );
+			clone.find("[name=flavor]").val( $("[name=code]").find(".flavor").text() );
+		}
+	</script>
+	<style>
+		.table{
+			display: table;
+		}
+		.tr{
+			display: table-row;
+		}
+		.td{
+			display: table-cell;
+		}
+	</style>
+</head>
+<body>
+	<div class="table">
+		<div class="tr">
+			<div class="td theBody" width="60%">
+				<input type="button" value="+" onclick="addDMDatas();"><input type="button" value="CODEING" onclick="autoCoding();"><BR>
+				<div name="main" style="display:none;">
+					<div class="table">
+						<div class="tr">
+							<div class="td" style="width:20%;">卡名與編號</div><div class="td"><input type="text" name="namdAndId" size="50"></div>
+						</div>
+						<div class="tr">
+							<div class="td">卡圖</div><div class="td"><input type="text" name="pic" size="50"></div>
+						</div>
+						<div class="tr">
+							<div class="td">文明</div>
+							<div class="td">
+								<input type="checkbox" name="civil" value="16">光
+								<input type="checkbox" name="civil" value="8">水
+								<input type="checkbox" name="civil" value="4">闇
+								<input type="checkbox" name="civil" value="2">火
+								<input type="checkbox" name="civil" value="1">自然
+							</div>
+						</div>
+						<div class="tr">
+							<div class="td">卡種</div><div class="td"><input type="text" name="type" size="2"></div>
+						</div>
+						<div class="tr">
+							<div class="td">稀有度</div><div class="td"><input type="text" name="rarity" size="2"></div>
+						</div>
+						<div class="tr">
+							<div class="td">攻擊力</div><div class="td">
+								<input type="text" name="power" size="10">
+								<select name="pc">
+									<option value=""></option>
+									<option value="true">+</option>
+									<option value="false">-</option>
+								</select>
+							</div>
+						</div>
+						<div class="tr">
+							<div class="td">費用</div><div class="td"><input type="text" name="cost" size="2"></div>
+						</div>
+						<div class="tr">
+							<div class="td">種族</div><div class="td"><input type="text" name="races" size="50"></div>
+						</div>
+						<div class="tr">
+							<div class="td">能力</div><div class="td"><input type="text" name="abilities" size="50"></div>
+						</div>
+						<div class="tr">
+							<div class="td">敘述</div><div class="td"><input type="text" name="flavor" size="50"></div>
+						</div>
+						<div class="tr">
+							<div class="td">版本數</div>
+							<div class="td">
+								<select name="versions">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<hr>
+				</div>			
+			</div>
+			<div class="td" style="vertical-align:top;" width="40%">
+				<textarea style="width:400px;height:250px;" name="codeText" onfocus="$(this).select();"></textarea><br>
+				<input type="button" value="↓" onclick="parseHTML();" style="width:400px;height:40px;">
+				<div name="code">
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
