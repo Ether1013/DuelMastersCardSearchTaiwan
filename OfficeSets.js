@@ -44348,7 +44348,7 @@
 		{
 			name : "王来英雄 モモキングRX",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-SP1.jpg",
-			rarity : "MAS",
+			rarity : "KGM",
 			flavor : [ "" ],
 			id : "22RP1 SP1/SP5",
 		},
