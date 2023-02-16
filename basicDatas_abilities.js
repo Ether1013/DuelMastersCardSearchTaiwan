@@ -232,6 +232,13 @@
 			{ Jap : "シールドセイバー",		Eng : "Shield Saver",			Chi : "護盾保護者",			descript : "當我方的一張護盾被擊破時，你可以取而代之、破壞此生物",},
 			{ Jap : "マスターB・A・D",		Eng : "Master Bad Action Dynamite",		
 																			Chi : "王者惡行炸彈",		descript : "召喚此生物時，你可以少支付2點費用，且這回合每已召喚1隻火文明生物、此生物的召喚費用就可以再少2點。那樣的話，則於我方回合結束時破壞1隻我方生物",},
+			{ Jap : "ダブル・シンパシー",	Eng : "Double Sympathy",		Chi : "雙倍共鳴",			descript : "戰鬥場上每有1隻指定生物，此生物的召喚費用就少2。但是不能降到0以下",},
+			{ Jap : "マスターG・G・G",		Eng : "Master Gogogo Gangan Galaxy",	
+																			Chi : "王者拉轉衝鋒銀河",	descript : "當我方手牌只有此卡時，則你可以不支付消費使用此卡牌",},
+			{ Jap : "破天九語",				Eng : "Hatenkokonotsugatari",	Chi : "破天九語",			descript : "當此生物戰鬥獲勝時，擊破9張對手護盾",},
+			{ Jap : "罠金乱舞",				Eng : "Trip Trip Panic",		Chi : "陷阱亂舞",			descript : "當有生物發動攻擊時，如果那是該回合第一次的攻擊的話，則你可以不支付消費、使用一張手牌中名有《トラップ》的咒文",},
+			{ Jap : "5.S.D.",				Eng : "Five Sence Down",		Chi : "五感劇落",			descript : "此生物所擊破的護盾不會回到手牌、取而代之、將之以橫向方式置入對手牌庫頂第四張牌的位置",},
+			{ Jap : "ミノまじかる",			Eng : "Mi's Miracle",			Chi : "米諾奇蹟",			descript : "我方回合初時，你可以將此生物橫置置入我方魔力區中，然後從我方魔力區中打出1隻非進化生物。但是該生物的召喚費用不能比我方魔力區中的卡牌張數多",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},

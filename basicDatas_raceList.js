@@ -281,6 +281,9 @@
 				{	Jap : "アーマード・ファイアー・バード",		Eng : "Armored Fire Bird",		Chi : "裝甲火鳥",		isCategory : false,	},
 				{	Jap : "メカ・デル・ステラ",					Eng : "Mecha Del Stella",		Chi : "金屬星星",		isCategory : false,	},
 				{	Jap : "マジック・サイバーロード",			Eng : "Magic Cyber Lord",		Chi : "魔法電子領主",	isCategory : false,	},
+				{	Jap : "メガ・アーマード・コマンド・ドラゴン",
+																Eng : "Mega Armored Command Dragon",
+																								Chi : "百萬裝甲指揮龍",	isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

@@ -1325,7 +1325,7 @@
 			//卡圖
 			var t_w = 200;
 			var t_h = null;
-			if ( selectedCardDats.type.include("DHF") || selectedCardDats.type.include("D2F") || selectedCardDats.type.include("FFF") || selectedCardDats.type.include("HF") ){
+			if ( selectedCardDats.type.include("DHF") || selectedCardDats.type.include("D2F") || selectedCardDats.type.include("DF") || selectedCardDats.type.include("DMF") || selectedCardDats.type.include("FFF") || selectedCardDats.type.include("HF") ){
 //			if ( selectedCardDats.type == "DHF" || selectedCardDats.type == "D2F" || selectedCardDats.type == "FFF" || selectedCardDats.type == "HF" ){
 //				if ( !selectedCardDats.pic.match(  /\w\/\w{2}\/[\w\-]+/) ){
 					t_w = null;
@@ -2750,7 +2750,7 @@
 			//圖片
 			if ( showPicture && !popCData.noLocalDataButVaultLink ){
 //				var isVertical = ( popCData.type == "DHF" || popCData.type == "D2F" || popCData.type == "FFF" || popCData.type == "HF" );// && !popCData.pic.match(  /\w\/\w{2}\/[\w\-]+/);
-				var isVertical = ( popCData.type.include("DHF") || popCData.type.include("D2F") || popCData.type.include("FFF") || popCData.type.include("HF") );
+				var isVertical = ( popCData.type.include("DHF") || popCData.type.include("D2F") || popCData.type.include("DMF") || popCData.type.include("DF") || popCData.type.include("FFF") || popCData.type.include("HF") );
 
 				singleCardHTML += "<div style='display:inline-block;'>";
 				for ( var pc = 0 ; pc < ( popCData.count == null ? 1 : popCData.count ) ; pc++ ){

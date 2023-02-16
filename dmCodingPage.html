@@ -66,36 +66,83 @@
 					var abilities = $(this).find("[name=abilities]").val().split(/\s/g);
 					var flavor = $(this).find("[name=flavor]").val();
 					var versions = $(this).find("[name=versions]").val();
+					var _double = $(this).find("[name=double]").prop("checked");
 					
 					if ( addCardData ){
-						var cardData  = "\r\n\t\t{";
-							cardData += "\r\n\t\t\tname : \"" + name + "\",";
-							cardData += "\r\n\t\t\ttype : \"" + type + "\",";
-							cardData += "\r\n\t\t\tcivil : " + civil + ",";
-							if ( races[0] != "" ){
-								cardData += "\r\n\t\t\trace : [";
-								for ( var r = 0 ; r < races.length ; r++ ){
-									cardData += ( r > 0 ? "," : "" ) + "\"" + races[r] + "\"";
+						
+						if ( !_double ){
+							var cardData  = "\r\n\t\t{";
+								cardData += "\r\n\t\t\tname : \"" + name + "\",";
+								cardData += "\r\n\t\t\ttype : \"" + type + "\",";
+								cardData += "\r\n\t\t\tcivil : " + civil + ",";
+								if ( races[0] != "" ){
+									cardData += "\r\n\t\t\trace : [";
+									for ( var r = 0 ; r < races.length ; r++ ){
+										cardData += ( r > 0 ? "," : "" ) + "\"" + races[r] + "\"";
+									}
+									cardData += "],";
 								}
-								cardData += "],";
-							}
-							if ( power != "" ){
-								cardData += "\r\n\t\t\tpower : " + power + ",";
-								if ( pc != "" ){
-									cardData += "\r\n\t\t\tpc : " + pc + ",";
+								if ( power != "" ){
+									cardData += "\r\n\t\t\tpower : " + power + ",";
+									if ( pc != "" ){
+										cardData += "\r\n\t\t\tpc : " + pc + ",";
+									}
 								}
-							}
-							cardData += "\r\n\t\t\tcost : " + cost + ",";
-							cardData += "\r\n\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
-							cardData += "\r\n\t\t\tsp : [";
-							for ( var s = 0 ; s < abilities.length ; s++ ){
-								if ( abilities[s] != "" ){
-									cardData += "\r\n\t\t\t\t\"" + abilities[s] + "\",";
+								cardData += "\r\n\t\t\tcost : " + cost + ",";
+								cardData += "\r\n\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
+								cardData += "\r\n\t\t\tsp : [";
+								for ( var s = 0 ; s < abilities.length ; s++ ){
+									if ( abilities[s] != "" ){
+										cardData += "\r\n\t\t\t\t\"" + abilities[s] + "\",";
+									}
 								}
-							}
-							cardData += "\r\n\t\t\t],";
-							cardData += "\r\n\t\t\tpic : \"" + pic + "\",";
-							cardData += "\r\n\t\t},";
+								cardData += "\r\n\t\t\t],";
+								cardData += "\r\n\t\t\tpic : \"" + pic + "\",";
+								cardData += "\r\n\t\t},";
+						} else {
+							var cardData  = "\r\n\t\t{";
+								cardData += "\r\n\t\t\tname : \"" + name + "\",";
+								cardData += "\r\n\t\t\tpic : \"" + pic + "\",";
+								cardData += "\r\n\t\t\twData : [";
+								cardData += "\r\n\t\t\t\t{";
+								cardData += "\r\n\t\t\t\t\ttype : \"" + type + "\",";
+								cardData += "\r\n\t\t\t\t\tcivil : " + civil + ",";
+								if ( races[0] != "" ){
+									cardData += "\r\n\t\t\t\t\trace : [";
+									for ( var r = 0 ; r < races.length ; r++ ){
+										cardData += ( r > 0 ? "," : "" ) + "\"" + races[r] + "\"";
+									}
+									cardData += "],";
+								}
+								if ( power != "" ){
+									cardData += "\r\n\t\t\t\t\tpower : " + power + ",";
+									if ( pc != "" ){
+										cardData += "\r\n\t\t\t\t\tpc : " + pc + ",";
+									}
+								}
+								cardData += "\r\n\t\t\t\t\tcost : " + cost + ",";
+								cardData += "\r\n\t\t\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
+								cardData += "\r\n\t\t\t\t\tsp : [";
+								for ( var s = 0 ; s < abilities.length ; s++ ){
+									if ( abilities[s] != "" ){
+										cardData += "\r\n\t\t\t\t\t\t\"" + abilities[s] + "\",";
+									}
+								}
+								cardData += "\r\n\t\t\t\t\t],";
+								cardData += "\r\n\t\t\t\t},";
+								cardData += "\r\n\t\t\t\t{";
+								cardData += "\r\n\t\t\t\t\ttype : \"S\",";
+								cardData += "\r\n\t\t\t\t\tcivil : " + civil + ",";
+								cardData += "\r\n\t\t\t\t\tcost : " + cost + ",";
+								cardData += "\r\n\t\t\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
+								cardData += "\r\n\t\t\t\t\tsp : [";
+								cardData += "\r\n\t\t\t\t\t\t\"\",";
+								cardData += "\r\n\t\t\t\t\t\t\"\",";
+								cardData += "\r\n\t\t\t\t\t]";
+								cardData += "\r\n\t\t\t\t},";
+								cardData += "\r\n\t\t\t],";
+								cardData += "\r\n\t\t},";
+						}
 						newCardData.push( cardData );
 					}
 						
@@ -145,6 +192,7 @@
 			$(".theBody").append( clone );
 			
 			clone.find("[name=namdAndId]").val( $("[name=code]").find(".card-name").text() );
+			clone.find("[name=type]").val( cardTypeMapping.getObjByJap( $("[name=code]").find(".type").text() ).value );
 			clone.find("[name=rarity]").val( $("[name=code]").find(".rarelity").text() );
 			clone.find("[name=pic]").val( "https://dm.takaratomy.co.jp/" + $("[name=code]").find(".card-img").find("img").prop("src").replace("file:///F:/","") );
 			if ( $("[name=code]").find(".civil").text().indexOf("光") > -1 ){
@@ -167,6 +215,9 @@
 			clone.find("[name=races]").val( $("[name=code]").find(".race").text() );
 			clone.find("[name=abilities]").val( $("[name=code]").find(".skills").html().replace(/\<[^\<\>]*\>/g,"\t") );
 			clone.find("[name=flavor]").val( $("[name=code]").find(".flavor").text() );
+			if ( $("[name=code]").find(".card-name").text().indexOf( " / " ) != -1 || $("[name=code]").find(".card-name").text().indexOf( "/ " ) != -1 || $("[name=code]").find(".card-name").text().indexOf( " /" ) != -1 ){
+				clone.find("[name=double]").prop("checked","checked");
+			}
 		}
 	</script>
 	<style>
@@ -231,6 +282,9 @@
 						</div>
 						<div class="tr">
 							<div class="td">敘述</div><div class="td"><input type="text" name="flavor" size="50"></div>
+						</div>
+						<div class="tr">
+							<div class="td">雙極</div><div class="td"><input type="checkbox" name="double"></div>
 						</div>
 						<div class="tr">
 							<div class="td">版本數</div>

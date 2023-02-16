@@ -403,6 +403,7 @@
 				{	value : "DHF",	text : "龍心要塞",			Jap : "ドラグハート・フォートレス",			main:false,	},
 				{	value : "D2F",	text : "D2領域",			Jap : "D2フィールド",						main:true,	},
 				{	value : "DF",	text : "龍領域",			Jap : "ドラゴニック・フィールド",			main:false,	},
+				{	value : "DMF",	text : "DM領域",			Jap : "DM・フィールド",						main:false,	},
 				{	value : "DGF",	text : "DG領域",			Jap : "DGフィールド",						main:false,	},
 				{	value : "SI",	text : "禁斷的鼓動",		Jap : "禁断の鼓動",							main:false,	},
 				{	value : "SC",	text : "禁斷生物",			Jap : "禁断クリーチャー",					main:false,	},
@@ -780,6 +781,7 @@
 			"蒼狼",
 			"創世神",
 			"起源神",
+			"ジョニー",
 		],
 		
 		isCategory : function( name ){
@@ -1208,10 +1210,10 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DMEX-15",
 		"DMRP-17",
 		"DMSD-18",
 		"DMSD-17",
-		"DMSP-02",
 	]
 	
 	//系統更新日誌
@@ -1238,6 +1240,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/02/16",
+				log : [ 
+						"新增DMEX-15【メモリアルパック 魂の章 名場面BEST】的內容",
+				],	
+			},
 			{	
 				date : "2023/02/15",
 				log : [ 
