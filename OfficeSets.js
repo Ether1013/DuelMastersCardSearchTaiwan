@@ -45452,7 +45452,119 @@
 			id : "EX15 100/100",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMRP-18";
+	var setName = "禁時王の凶来";
+	var isDeck = false;
+	var setCardList = [	
+		{
+			name : "ウェイボール ＜バイロン.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s01.jpg",
+			rarity : "SR",
+			flavor : [ "誰よりも波乗りに長けたものだけが、伝説のリヴァイアサンの力を纏う資格を得る。" ],
+			id : "RP18 S1/S11",
+		},
+		{
+			name : "ビシャモンス ＜ハンニバル.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s02.jpg",
+			rarity : "SR",
+			flavor : [ "死者の魂を操るビシャモンス・デーケンがあらゆる生者を殲滅するハンニバルZの魂と共鳴し、無敵の剣豪が誕生した。" ],
+			id : "RP18 S2/S11",
+		},
+		{
+			name : "ガヨウ神 ＜シューマッハ.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s03.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "RP18 S3/S11",
+		},
+		{
+			name : "モンキッド ＜ライゾウ.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s04.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "RP18 S4/S11",
+		},
+		{
+			name : "テラ・スザーク ＜ナーガ.Star＞",
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s05.jpg","",""],
+			rarity : ["SR","SR","SR"],
+			flavor : [ "","","" ],
+			id : ["RP18 S5/S11","",""],
+		},
+		{
+			name : "アアルカイト ＜ペガサ.Star＞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s06.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "RP18 S6/S11",
+		},
+		{
+			name : "白蒼混成 B・W・M",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s07.jpg",
+			rarity : "SR",
+			flavor : [ "百万回の死の後には千万回の絶望と億万回の敗北が待っている。" ],
+			id : "RP18 S7/S11",
+		},
+		{
+			name : "熱核連結 ガイアトム・シックス",
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s08.jpg","",""],
+			rarity : ["SR","SR","SR"],
+			flavor : [ "本来あるべきものの代わりに神核に収まったのは、冷たき熱血だった。","","" ],
+			id : ["RP18 S8/S11","",""],
+		},
+		{
+			name : "砕慄接続 グレイトフル・ベン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s09.jpg",
+			rarity : "SR",
+			flavor : [ "運命の鐘は鳴った。大地崩壊の旋律とともに。" ],
+			id : "RP18 S9/S11",
+		},
+		{
+			name : "悪撃縫合 ドルゲペイン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s10.jpg",
+			rarity : "SR",
+			flavor : [ "怒りと恨みと呪いを仲間にまき散らす、絆の対極に位置する存在。" ],
+			id : "RP18 S10/S11",
+		},
+		{
+			name : "偽爆電融 ゾルネードシヴァ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s11.jpg",
+			rarity : "SR",
+			flavor : [ "その一挙手一投足はことごとく「偽り」だった。" ],
+			id : "RP18 S11/S11",
+		},
+		{
+			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a11a.jpg",""],
+			rarity : ["SR","SR"],
+			flavor : [ "","" ],
+			id : ["RP18 11A/20",""],
+		},
+		{
+			name : "聖竜ボルシャック・ウルフェウス",
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a14.jpg",""],
+			rarity : ["SR","SR"],
+			flavor : [ "武者とウルフェウスの魂はハンターへと受け継がれた。そうやって受け継がれた魂が歴史として紡がれていくのだ!!","" ],
+			id : ["RP18 14A/20",""],
+		},
+		{
+			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a15a.jpg",""],
+			rarity : ["SR","SR"],
+			flavor : [ "","" ],
+			id : ["RP18 15A/20",""],
+		},
+		{
+			name : "水上第九院 シャコガイル",
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a17.jpg",""],
+			rarity : ["SR","SR"],
+			flavor : [ "","" ],
+			id : ["RP18 17A/20",""],
+		},	
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-SP1";
 	var setName = "「伝説の邪神」深淵からの招待状";
