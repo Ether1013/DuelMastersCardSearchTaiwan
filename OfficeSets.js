@@ -45488,10 +45488,10 @@
 		},
 		{
 			name : "テラ・スザーク ＜ナーガ.Star＞",
-			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s05.jpg","",""],
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s05.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a07.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b07.jpg"],
 			rarity : ["SR","SR","SR"],
 			flavor : [ "","","" ],
-			id : ["RP18 S5/S11","",""],
+			id : ["RP18 S5/S11","RP18 7A/20","RP18 7B/20"],
 		},
 		{
 			name : "アアルカイト ＜ペガサ.Star＞",
@@ -45509,10 +45509,10 @@
 		},
 		{
 			name : "熱核連結 ガイアトム・シックス",
-			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s08.jpg","",""],
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-s08.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a06.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b06.jpg"],
 			rarity : ["SR","SR","SR"],
 			flavor : [ "本来あるべきものの代わりに神核に収まったのは、冷たき熱血だった。","","" ],
-			id : ["RP18 S8/S11","",""],
+			id : ["RP18 S8/S11","RP18 6A/20","RP18 6B/20"],
 		},
 		{
 			name : "砕慄接続 グレイトフル・ベン",
@@ -45537,31 +45537,31 @@
 		},
 		{
 			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
-			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a11a.jpg",""],
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a11a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b11a.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "","" ],
-			id : ["RP18 11A/20",""],
+			id : ["RP18 11A/20","RP18 11B/20"],
 		},
 		{
 			name : "聖竜ボルシャック・ウルフェウス",
-			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a14.jpg",""],
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a14.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b14.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "武者とウルフェウスの魂はハンターへと受け継がれた。そうやって受け継がれた魂が歴史として紡がれていくのだ!!","" ],
-			id : ["RP18 14A/20",""],
+			id : ["RP18 14A/20","RP18 14B/20"],
 		},
 		{
 			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
-			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a15a.jpg",""],
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a15a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b15a.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "","" ],
-			id : ["RP18 15A/20",""],
+			id : ["RP18 15A/20","RP18 15B/20"],
 		},
 		{
 			name : "水上第九院 シャコガイル",
-			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a17.jpg",""],
+			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a17.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b17.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "","" ],
-			id : ["RP18 17A/20",""],
+			id : ["RP18 17A/20","RP18 17B/20"],
 		},	
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
