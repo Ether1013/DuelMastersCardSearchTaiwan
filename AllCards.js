@@ -81973,7 +81973,8 @@
 			type : "C",
 			civil : 26,
 			race : ["ディスペクター","アーマード・ドラゴン","ガーディアン"],
-			power : 6000+,
+			power : 6000,
+			pc : true,
 			cost : 8,
 			mana : 1,
 			sp : [
@@ -82006,7 +82007,8 @@
 			type : "C",
 			civil : 13,
 			race : ["ディスペクター","デーモン・コマンド","ジャイアント"],
-			power : 5000+,
+			power : 5000,
+			pc : true,
 			cost : 6,
 			mana : 1,
 			sp : [
