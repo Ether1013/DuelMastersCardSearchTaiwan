@@ -285,6 +285,9 @@
 																Eng : "Mega Armored Command Dragon",
 																								Chi : "百萬裝甲指揮龍",	isCategory : false,	},
 				{	Jap : "ペガサス",							Eng : "Pegasus",				Chi : "天馬",			isCategory : false,	},
+				{	Jap : "マスター・ドルスザク",				Eng : "Master Dol Suzaku",		Chi : "王者朱雀",		isCategory : false,	},
+				{	Jap : "ジャイアント・ファンキー・ナイトメア",
+																Eng : "Giant Funky Nightmare",	Chi : "巨大怪異夢魘",	isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

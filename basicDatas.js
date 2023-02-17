@@ -387,6 +387,8 @@
 				{	value : "SEC",	text : "星進化生物",		Jap : "スター進化クリーチャー",				main:true,	},
 				{	value : "SMEC",	text : "S-MAX進化生物",		Jap : "S-MAX進化クリーチャー",				main:true,	},
 				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
+				{	value : "GRC",	text : "GR生物",			Jap : "GRクリーチャー",						main:false,	},
+				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
 				{	value : "S",	text : "咒文",				Jap : "呪文",								main:true,	},
 				{	value : "CG",	text : "交叉武裝",			Jap : "クロスギア",							main:false,	descript : "裝備，第一次支付費用時僅出現在戰鬥場上，再次支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
 				{	value : "PCG",	text : "精神交叉武裝",		Jap : "超次元クロスギア",					main:false,	descript : "裝備，支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
@@ -1212,10 +1214,10 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM22-EX2",
 		"DMSD-19",
 		"DMBD-17",
 		"DMBD-16",
-		"DMEX-16",
 	]
 	
 	//系統更新日誌
@@ -1250,6 +1252,7 @@
 						"新增DMBD-16【決闘!! ボルシャック･デュエル】的內容",
 						"新增DMBD-17【熱血!! アウトレイジ・ビクトリー】的內容",
 						"新增DMSD-19【ハイドのディスペクターN・EXT】的內容",
+						"DM22-EX2【ヒーローズ・ダークサイド・パック ～闇のキリフダたち～】的內容",
 				],	
 			},
 			{	
