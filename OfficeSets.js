@@ -46295,7 +46295,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-16";
-	var setName = "技の章 英雄戦略パーフェクト20";
+	var setName = "メモリアルパック 技の章 英雄戦略パーフェクト20";
 	var isDeck = false;
 	var setCardList = [	
 		{
