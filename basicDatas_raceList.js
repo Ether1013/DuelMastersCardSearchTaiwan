@@ -284,6 +284,7 @@
 				{	Jap : "メガ・アーマード・コマンド・ドラゴン",
 																Eng : "Mega Armored Command Dragon",
 																								Chi : "百萬裝甲指揮龍",	isCategory : false,	},
+				{	Jap : "ペガサス",							Eng : "Pegasus",				Chi : "天馬",			isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
