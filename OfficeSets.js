@@ -56586,6 +56586,27 @@
 			flavor : [ "" ],
 			id : "22EX2 75/75",
 		},		
+		{
+			name : "轟く侵略 レッドゾーン",
+			pic : "./cardPic/10115.jpg",
+			rarity : "LEG",
+			flavor : [ "" ],
+			id : "22EX2 秘1/秘3",
+		},
+		{
+			name : "卍 デ・スザーク 卍",
+			pic : "./cardPic/10116.jpg",
+			rarity : "MDS",
+			flavor : [ "" ],
+			id : "22EX2 秘2/秘3",
+		},		
+		{
+			name : "暗黒凰ゼロ・フェニックス",
+			pic : "./cardPic/20230218_6f4dd5.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "22EX2 秘3/秘3",
+		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
