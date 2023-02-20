@@ -83895,6 +83895,7 @@
 				{
 					type : "S",
 					civil : 8,
+					race : ["魔導具","チーム零"],
 					cost : 2,
 					mana : 1,
 					sp : [
@@ -85274,6 +85275,7 @@
 				{
 					type : "S",
 					civil : 8,
+					race : ["魔導具"],
 					cost : 2,
 					mana : 1,
 					sp : [
