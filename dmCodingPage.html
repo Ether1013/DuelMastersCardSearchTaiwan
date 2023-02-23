@@ -193,7 +193,11 @@
 			
 			clone.find("[name=namdAndId]").val( $("[name=code]").find(".card-name").text() );
 			clone.find("[name=type]").val( cardTypeMapping.getObjByJap( $("[name=code]").find(".type").text() ).value );
-			clone.find("[name=rarity]").val( $("[name=code]").find(".rarelity").text() );
+			var rarity = $("[name=code]").find(".rarelity").text();
+			if ( rarity == '-' ){
+				rarity = '';
+			}
+			clone.find("[name=rarity]").val( rarity );
 			clone.find("[name=pic]").val( "https://dm.takaratomy.co.jp/" + $("[name=code]").find(".card-img").find("img").prop("src").replace("file:///F:/","") );
 			if ( $("[name=code]").find(".civil").text().indexOf("光") > -1 ){
 				clone.find("[name=civil][value=16]").prop("checked","checked");
@@ -210,7 +214,13 @@
 			if ( $("[name=code]").find(".civil").text().indexOf("自然") > -1 ){
 				clone.find("[name=civil][value=1]").prop("checked","checked");
 			}
-			clone.find("[name=power]").val( $("[name=code]").find(".power").text() );
+			var p_pc = $("[name=code]").find(".power").text();
+			if ( p_pc.includes( "+" ) || p_pc.includes( "-" ) ){
+				clone.find("[name=power]").val( p_pc.substr(0,p_pc.length-1) );
+				clone.find("[name=pc]").val( p_pc.substr(-1)=="+"?'true':'false' );
+			} else {
+				clone.find("[name=power]").val( p_pc );
+			}
 			clone.find("[name=cost]").val( $("[name=code]").find(".cost").text() );
 			clone.find("[name=races]").val( $("[name=code]").find(".race").text() );
 			clone.find("[name=abilities]").val( $("[name=code]").find(".skills").html().replace(/\<[^\<\>]*\>/g,"\t") );
