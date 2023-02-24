@@ -88536,7 +88536,51 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-003.jpg",
 		},
-				
+		{
+			name : "神歌の歌姫 アマテラス・キリコ",
+			type : "EC",
+			civil : 8,
+			race : ["サイバー・コマンド","オリジン"],
+			power : 13000,
+			cost : 8,
+			mana : 1,
+			sp : [
+				"(K)進化(/K)－進化在戰鬥場上1隻我方的(R)サイバー(/R)或是(R)オリジン(/R)之上。",
+				"(K)T・ブレイカー(/K)",
+				"此生物發動攻擊時，將我方其他生物放回牌庫洗牌。之後公開我方牌庫頂10張牌，從中打出所有費用10以上的生物出場。其餘卡牌則洗牌之後置入牌庫底。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-001.jpg",
+		},
+		{
+			name : "神歌と繚嵐の扉",
+			type : "S",
+			civil : 9,
+			cost : 8,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー(/K)",
+				"觀看我方牌庫頂4張牌。由對手選擇其中1隻生物。打出該生物、並將其餘卡牌依喜好順序置入我方牌庫底。此回合結束時，將該生物置入我方牌庫底。",
+				"你可以選擇1隻我方生物與1隻對手生物，並讓他們進行戰鬥。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-005.jpg",
+		},
+		{
+			name : "暴嵐竜 Susano-O-Dragon",
+			type : "C",
+			civil : 11,
+			race : ["キング・コマンド・ドラゴン","オリジン"],
+			power : 21000,
+			cost : 10,
+			mana : 1,
+			sp : [
+				"(K)Q・ブレイカー(/K)",
+				"我方生物一律獲得「(K)スピードアタッカー(/K)」能力。",
+				"對手生物發動攻擊時，可能的話就要攻擊生物。",
+				"當因咒文效果而使對手選擇我方生物時，不能選擇此生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-006.jpg",
+		},
+		
 		/*
 		{
 			name : "",
