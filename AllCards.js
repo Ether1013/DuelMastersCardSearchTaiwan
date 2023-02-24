@@ -87784,6 +87784,7 @@
 				{
 					type : "S",
 					civil : 4,
+					race : ["ナイト"],
 					cost : 4,
 					mana : 1,
 					sp : [
@@ -88106,6 +88107,7 @@
 				{
 					type : "S",
 					civil : 8,
+					race : ["ナイト"],
 					cost : 5,
 					mana : 1,
 					sp : [
@@ -88254,6 +88256,7 @@
 				{
 					type : "S",
 					civil : 1,
+					race : ["ナイト"],
 					cost : 4,
 					mana : 1,
 					sp : [
