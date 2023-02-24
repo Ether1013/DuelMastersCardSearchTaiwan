@@ -2756,7 +2756,7 @@
 			if ( showPicture && !popCData.noLocalDataButVaultLink ){
 //				var isVertical = ( popCData.type == "DHF" || popCData.type == "D2F" || popCData.type == "FFF" || popCData.type == "HF" );// && !popCData.pic.match(  /\w\/\w{2}\/[\w\-]+/);
 //				var isVertical = ( popCData.type.include("DHF") || popCData.type.include("D2F") || popCData.type.include("DMF") || popCData.type.include("DF") || popCData.type.include("FFF") || popCData.type.include("FF") || popCData.type.include("MF") || popCData.type.include("HF") || popCData.type.include("OA") );
-				var isHorizontal = cardTypeMapping.getDataByValue( selectedCardDats.type ).horizontal;
+				var isHorizontal = cardTypeMapping.getDataByValue( popCData.type ).horizontal;
 
 				singleCardHTML += "<div style='display:inline-block;'>";
 				for ( var pc = 0 ; pc < ( popCData.count == null ? 1 : popCData.count ) ; pc++ ){
