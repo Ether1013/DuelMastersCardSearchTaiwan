@@ -216,8 +216,8 @@
 			}
 			var p_pc = $("[name=code]").find(".power").text();
 			if ( p_pc.includes( "+" ) || p_pc.includes( "-" ) ){
-				clone.find("[name=power]").val( p_pc.substr(0,p_pc.length-1) );
-				clone.find("[name=pc]").val( p_pc.substr(-1)=="+"?'true':'false' );
+				clone.find("[name=power]").val( p_pc.replace(/\D/g,'') );
+				clone.find("[name=pc]").val( p_pc.replace(/\d/g,'')=="+"?'true':'false' );
 			} else {
 				clone.find("[name=power]").val( p_pc );
 			}

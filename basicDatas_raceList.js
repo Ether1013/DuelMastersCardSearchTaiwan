@@ -288,6 +288,11 @@
 				{	Jap : "マスター・ドルスザク",				Eng : "Master Dol Suzaku",		Chi : "王者朱雀",		isCategory : false,	},
 				{	Jap : "ジャイアント・ファンキー・ナイトメア",
 																Eng : "Giant Funky Nightmare",	Chi : "巨大怪異夢魘",	isCategory : false,	},
+				{	Jap : "マスター・ドラゴンZ",				Eng : "Master Dragon Z",		Chi : "王龍Z",			isCategory : false,	},
+				{	Jap : "ドラゴン・オーブ",					Eng : "Dragon Orb",				Chi : "龍珠",			isCategory : false,	},
+				{	Jap : "ワンダフォース",						Eng : "Wonderful",				Chi : "萬歲",			isCategory : false,	},
+				{	Jap : "デリートロン",						Eng : "Deletron",				Chi : "深海魷魚",		isCategory : false,	},
+				{	Jap : "裁きの紋章Z",						Eng : "Judgment Emblem Z",		Chi : "制裁紋章Z",		isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

@@ -1325,7 +1325,8 @@
 			//卡圖
 			var t_w = 200;
 			var t_h = null;
-			if ( selectedCardDats.type.include("DHF") || selectedCardDats.type.include("D2F") || selectedCardDats.type.include("DF") || selectedCardDats.type.include("DMF") || selectedCardDats.type.include("FFF") || selectedCardDats.type.include("HF") ){
+			if ( cardTypeMapping.getDataByValue( selectedCardDats.type ).horizontal ){
+//			if ( selectedCardDats.type.include("DHF") || selectedCardDats.type.include("D2F") || selectedCardDats.type.include("DF") || selectedCardDats.type.include("DMF") || selectedCardDats.type.include("FFF") || selectedCardDats.type.include("FF") ||selectedCardDats.type.include("MF") || selectedCardDats.type.include("OA") || selectedCardDats.type.include("HF") ){
 //			if ( selectedCardDats.type == "DHF" || selectedCardDats.type == "D2F" || selectedCardDats.type == "FFF" || selectedCardDats.type == "HF" ){
 //				if ( !selectedCardDats.pic.match(  /\w\/\w{2}\/[\w\-]+/) ){
 					t_w = null;
@@ -1521,8 +1522,12 @@
 			if ( selectedCardDats.power == null ){
 				gobi( "tr_power" ).style.display = "none";
 			} else {
-				var power = "" + ( selectedCardDats.power == Number.MAX_SAFE_INTEGER ? "∞" : selectedCardDats.power );
-				if ( selectedCardDats.pc != null ){
+				var power = "";
+				if ( selectedCardDats.pc != null && selectedCardDats.type == "OA" ){
+					power += ( selectedCardDats.pc ? "+" : "-" );
+				}
+				power += "" + ( selectedCardDats.power == Number.MAX_SAFE_INTEGER ? "∞" : selectedCardDats.power );
+				if ( selectedCardDats.pc != null && selectedCardDats.type != "OA" ){
 					power += ( selectedCardDats.pc ? "+" : "-" );
 				}
 				gobi( "card_power" ).appendChild( document.createTextNode( power ) );
@@ -2750,7 +2755,8 @@
 			//圖片
 			if ( showPicture && !popCData.noLocalDataButVaultLink ){
 //				var isVertical = ( popCData.type == "DHF" || popCData.type == "D2F" || popCData.type == "FFF" || popCData.type == "HF" );// && !popCData.pic.match(  /\w\/\w{2}\/[\w\-]+/);
-				var isVertical = ( popCData.type.include("DHF") || popCData.type.include("D2F") || popCData.type.include("DMF") || popCData.type.include("DF") || popCData.type.include("FFF") || popCData.type.include("HF") );
+//				var isVertical = ( popCData.type.include("DHF") || popCData.type.include("D2F") || popCData.type.include("DMF") || popCData.type.include("DF") || popCData.type.include("FFF") || popCData.type.include("FF") || popCData.type.include("MF") || popCData.type.include("HF") || popCData.type.include("OA") );
+				var isHorizontal = cardTypeMapping.getDataByValue( selectedCardDats.type ).horizontal;
 
 				singleCardHTML += "<div style='display:inline-block;'>";
 				for ( var pc = 0 ; pc < ( popCData.count == null ? 1 : popCData.count ) ; pc++ ){
@@ -2763,7 +2769,7 @@
 							isBackReadData = true;
 						}
 					}
-					singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( loadPic ) + "' onload='setPicObjSize( this, this.id , " + ( isVertical ? " null , 200 " : " 200 , null " ) + " , this.title );' title='" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;" + ( isBackReadData ? "Opacity: 0.6;" : "" ) + "' >";
+					singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( loadPic ) + "' onload='setPicObjSize( this, this.id , " + ( isHorizontal ? " null , 200 " : " 200 , null " ) + " , this.title );' title='" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;" + ( isBackReadData ? "Opacity: 0.6;" : "" ) + "' >";
 				}
 				singleCardHTML += "</div>";
 			}
@@ -2771,7 +2777,7 @@
 				if ( popCData.noLocalDataButVaultLink ){
 					for ( var pc = 0 ; pc < ( popCData.count == null ? 1 : popCData.count ) ; pc++ ){
 						singleCardHTML += "<div style='display:inline-block;'>";
-						singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( null ) + "' onload='setPicObjSize( this, this.id , " + ( isVertical ? " null , 200 " : " 200 , null " ) + " , this.title );' title = '" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;' >";
+						singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( null ) + "' onload='setPicObjSize( this, this.id , " + ( isHorizontal ? " null , 200 " : " 200 , null " ) + " , this.title );' title = '" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;' >";
 						singleCardHTML += clearSubName( popCData.name );
 						singleCardHTML += "</div>";
 					}
