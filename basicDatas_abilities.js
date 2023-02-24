@@ -257,6 +257,7 @@
 			{ Jap : "OMGデッキ進化",		Eng : "Ω Deck Evolution",		Chi : "Ω牌組進化",			descript : "此生物進化在裏側的牌庫頂卡牌之上",},
 			{ Jap : "B・A・D・S",			Eng : "Bad Action Dynamite Spell",	
 																			Chi : "惡行炸彈咒",			descript : "使用此咒文時，你可以少支付指定數量的費用，那樣的話，則作廢1張手牌",},
+			{ Jap : "Jトルネード",			Eng : "Jockers Tornado",		Chi : "小丑旋風",			descript : "將戰鬥場上1隻我方其他的ジョーカーズ拿回到手牌中",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},

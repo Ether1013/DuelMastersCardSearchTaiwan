@@ -57408,6 +57408,97 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DMSP-04";
+	var setName = "デュエマ・ストロング・ドリーム ジョーカーズGR";
+	var isDeck = false;
+	var setCardList = [		
+		{
+			name : "ポクタマたま",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-001.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP04 1/12",
+		},
+		{
+			name : "バツトラの父",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-002.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP04 2/12",
+		},
+		{
+			name : "オレちんレンジ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-003.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "SP04 3/12",
+		},
+		{
+			name : "ゴッド・ガヨンダム",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-004.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "SP04 4/12",
+		},
+		{
+			name : "無限合体 ダンダルダBB",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-005.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "SP04 5/12",
+		},
+		{
+			name : "せんすいカンちゃん",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-006.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "SP04 6/12",
+		},
+		{
+			name : "全能ゼンノー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-007.jpg",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "SP04 7/12",
+		},
+		{
+			name : "バイナラシャッター",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-008.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "SP04 8/12",
+		},
+		{
+			name : "パッパラパーリ騎士",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-009.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "SP04 9/12",
+		},
+		{
+			name : "ツタンメカーネン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-010.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "SP04 10/12",
+		},
+		{
+			name : "マシンガン・トーク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-011.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "SP04 11/12",
+		},
+		{
+			name : "ジェイ-SHOCKER",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-012.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "SP04 12/12",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DMRP-19";
 	var setName = "禁断龍VS禁断竜";
 	var isDeck = false;
