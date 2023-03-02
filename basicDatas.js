@@ -141,6 +141,7 @@
 				this.map.push( setDatas );
 				//如果是台灣環境的話，就把卡名記起來
 				if ( isTWSurroundings ){
+					twsdSets.push( setCode );
 					for ( var m = 0 ; m < setDatas.length ; m++ ){
 						var cardName = setDatas[m].name;
 						if ( !twsdCards.include( cardName ) ){
@@ -1208,6 +1209,9 @@
 	
 	//記錄台灣環境卡表
 	var twsdCards = [];
+	
+	//記錄台灣卡包
+	var twsdSets = [];
 
 	//更新日誌按鍵最後更新時間
 	function setButtonValueOfUpdateLog(){
@@ -1254,6 +1258,13 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/03/02",
+				log : [ 
+						"處理魂種生物無法顯示資料的BUG",
+						"新增台灣卡池在露天找卡的功能",
+				],	
+			},
 			{	
 				date : "2023/02/24",
 				log : [ 

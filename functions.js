@@ -1307,6 +1307,7 @@
 		clearChildren( gobi( "card_flavor" ) );
 		gobi( "tr_flavor" ).style.display = "";
 		clearChildren( gobi( "card_sets" ) );
+		gobi( "tr_ruten" ).style.display = "";
 		gobi( "lastAAIndex" ).value = "";
 		gobi( "nextAAIndex" ).value = "";
 		if ( isVM() ){
@@ -1325,7 +1326,13 @@
 			//卡圖
 			var t_w = 200;
 			var t_h = null;
-			if ( cardTypeMapping.getDataByValue( selectedCardDats.type ).horizontal ){
+			var isHorizontal = true;
+			for ( var t = 0 ; t < selectedCardDats.type.length ; t++ ){
+				if ( !cardTypeMapping.getDataByValue( selectedCardDats.type[t] ).horizontal ){
+					isHorizontal = false;
+				}
+			}
+			if ( isHorizontal ){
 //			if ( selectedCardDats.type.include("DHF") || selectedCardDats.type.include("D2F") || selectedCardDats.type.include("DF") || selectedCardDats.type.include("DMF") || selectedCardDats.type.include("FFF") || selectedCardDats.type.include("FF") ||selectedCardDats.type.include("MF") || selectedCardDats.type.include("OA") || selectedCardDats.type.include("HF") ){
 //			if ( selectedCardDats.type == "DHF" || selectedCardDats.type == "D2F" || selectedCardDats.type == "FFF" || selectedCardDats.type == "HF" ){
 //				if ( !selectedCardDats.pic.match(  /\w\/\w{2}\/[\w\-]+/) ){
@@ -1682,6 +1689,11 @@
 					inSet.appendChild( document.createTextNode( inSetName ) );
 					inSetTd.appendChild( inSet );					
 				}
+			}
+			//露天
+			if ( lastSelectedSetCode != null && lastSelectedSetCode != '' && twsdSets.includes( lastSelectedSetCode ) ){
+			} else {
+				gobi( "tr_ruten" ).style.display = "none";
 			}
 			if ( isVM() && !inSetTd.firstChild ){
 				inSetTd.appendChild( document.createTextNode("--") );
@@ -2756,7 +2768,12 @@
 			if ( showPicture && !popCData.noLocalDataButVaultLink ){
 //				var isVertical = ( popCData.type == "DHF" || popCData.type == "D2F" || popCData.type == "FFF" || popCData.type == "HF" );// && !popCData.pic.match(  /\w\/\w{2}\/[\w\-]+/);
 //				var isVertical = ( popCData.type.include("DHF") || popCData.type.include("D2F") || popCData.type.include("DMF") || popCData.type.include("DF") || popCData.type.include("FFF") || popCData.type.include("FF") || popCData.type.include("MF") || popCData.type.include("HF") || popCData.type.include("OA") );
-				var isHorizontal = cardTypeMapping.getDataByValue( popCData.type ).horizontal;
+				var isHorizontal = true;
+				for ( var t = 0 ; t < popCData.type.length ; t++ ){
+					if ( !cardTypeMapping.getDataByValue( popCData.type[t] ).horizontal ){
+						isHorizontal = false;
+					}
+				}
 
 				singleCardHTML += "<div style='display:inline-block;'>";
 				for ( var pc = 0 ; pc < ( popCData.count == null ? 1 : popCData.count ) ; pc++ ){
@@ -3513,6 +3530,14 @@
 			str = str.substring(ie+4);
 		}
 		return tags;
+	}
+	
+	function findRuten(){
+		if ( !twsdCards.includes( lastSelectedCardName ) )
+			return;
+		var selectedCardDats = cardDatas.getDataByName( lastSelectedCardName , lastSelectedSetCode , lastSelectedAAIndex, lastSelectedUdIndex );
+		var idNum = selectedCardDats.id.split( " " )[1].split("/")[0];
+		window.open( "https://www.ruten.com.tw/find/?q=%E6%B1%BA%E9%AC%A5%E7%8E%8B+"+lastSelectedSetCode+"+"+idNum, '_blank');
 	}
 
 	/**
