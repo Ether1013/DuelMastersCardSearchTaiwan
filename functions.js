@@ -3536,7 +3536,7 @@
 		if ( !twsdCards.includes( lastSelectedCardName ) )
 			return;
 		var selectedCardDats = cardDatas.getDataByName( lastSelectedCardName , lastSelectedSetCode , lastSelectedAAIndex, lastSelectedUdIndex );
-		var idNum = selectedCardDats.id.split( " " )[1].split("/")[0];
+		var idNum = selectedCardDats.id.split( " " )[1];
 		window.open( "https://www.ruten.com.tw/find/?q=%E6%B1%BA%E9%AC%A5%E7%8E%8B+"+lastSelectedSetCode+"+"+idNum, '_blank');
 	}
 
