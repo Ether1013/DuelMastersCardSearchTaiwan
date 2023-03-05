@@ -88580,6 +88580,32 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-006.jpg",
 		},
+		{
+			name : "ナゾの光・リリアング",
+			type : "C",
+			civil : 16,
+			race : ["メタリカ","スペシャルズ"],
+			power : 2000,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"(K)キズナ(/K)",
+				"(K)[P](/K)－你可以不支付費用、從手牌使用1張費用3以下的光文明咒文。",
+				"(K)エスケープ(/K)",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s7.jpg",
+		},
+		{
+			name : "瞬閃と疾駆と双撃の決断",
+			type : "S",
+			civil : 2,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"下列能力擇二發動(可以選擇同一條)－##從手牌打出1隻費用3以下的生物出場。##此回合、場上1隻我方生物獲得「(K)スピードアタッカー(/K)」能力。##選擇1隻我方生物，此回合、於該生物第一次攻擊後重置該生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-012.jpg",
+		},
 		
 		/*
 		{

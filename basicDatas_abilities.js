@@ -258,6 +258,8 @@
 			{ Jap : "B・A・D・S",			Eng : "Bad Action Dynamite Spell",	
 																			Chi : "惡行炸彈咒",			descript : "使用此咒文時，你可以少支付指定數量的費用，那樣的話，則作廢1張手牌",},
 			{ Jap : "Jトルネード",			Eng : "Jockers Tornado",		Chi : "小丑旋風",			descript : "將戰鬥場上1隻我方其他的ジョーカーズ拿回到手牌中",},
+			{ Jap : "キズナ",				Eng : "Fetters",				Chi : "羈絆",				descript : "當此生物出場時，你可以使用戰鬥場上1隻我方生物的[P]能力。",},
+			{ Jap : "[P]",					Eng : "Fetters[P]",				Chi : "羈絆(主效果)",		descript : "名有\"羈絆\"能力的主要效果",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
