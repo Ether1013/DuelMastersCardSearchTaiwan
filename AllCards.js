@@ -66794,7 +66794,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp15-009.jpg",
 		},
 		{
-			name : "魂狩」の鬼 ガシャド髑髏",
+			name : "「魂狩」の鬼 ガシャド髑髏",
 			type : "C",
 			civil : 6,
 			race : ["デモニオ","鬼札王国"],
