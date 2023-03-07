@@ -10689,7 +10689,7 @@
 					"(K)T・ブレイカー(/K)",
 					"(K)エターナル・Ω(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-058.jpg",
 		},
 		{
 			name : "黄金龍 鬼丸「王牙」",
@@ -12566,7 +12566,7 @@
 					"當此卡於對手回合、從我方手牌中被作廢時，你可以取而代之、將此生物打出至戰鬥場上。那樣的話，就選擇戰鬥場上1隻生物、並將之拿回到其持有者的手牌中。",
 					"每當我方的(R)シノビ(/R)發動(K)ニンジャ・ストライク(/K)能力時，你可以抽1張牌。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp11-g01.jpg",
 		},
 		{
 			name : "凶戦士ブレイズ・クロー",
@@ -27586,7 +27586,7 @@
 			spTagExtends : [
 				"＿シールド追加",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmx13-009.jpg",
 		},
 		{
 			name : "真実の名 ハデスギル・スキル",
@@ -43902,7 +43902,7 @@
 					"此生物出場時，橫置戰鬥場上所有對手生物。那些生物都不能在下的對手的回合初中重置。",
 					"(K)革命(/K)0－如果我方如果沒有護盾的話，則對手不能召喚生物。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr18-l01.jpg",
 		},
 		{
 			name : "魔の革命 デス・ザ・ロスト",
@@ -43921,7 +43921,7 @@
 			spTagExtends : [
 				"＿ハンデス",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr18-l02.jpg",
 		},
 		{
 			name : "超九極 チュートピア",
@@ -45055,7 +45055,7 @@
 					"此生物出場時，選擇1張對手護盾並將之置入對手墓地。",
 					"(K)革命(/K)2－如果我方護盾在2張以下的話，則我方所有闇文明生物一律獲得(K)ブロッカー(/K)與(K)スレイヤー(/K)能力。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr19-006.jpg",
 		},
 		{
 			name : "爆革命 グレンモルト",
@@ -48508,7 +48508,7 @@
 					"(K)W・ブレイカー(/K)",
 					"此生物出場時，選擇戰鬥場上1隻生物，對手要自行在該生物之上放置1個封印。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-027.jpg",
 		},		
 		{
 			name : "無敵の咆哮",
@@ -55274,7 +55274,7 @@
 					"此生物出場時，破壞戰鬥場上所有(R)デーモン・コマンド(/R)以外的生物。",
 					"每當對手不支付費用打出生物出場時，取而代之、該生物直接置入其持有者的魔力區中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-S10.jpg",
 		},
 		{
 			name : "無敵死神ヘックスペイン",
@@ -56126,7 +56126,7 @@
 					"(K)S・トリガー(/K)",
 					"抽3張牌。之後作廢2張我方手牌。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex06-090.jpg",
 		},
 		{
 			name : "黒速 The ZERO",
@@ -88605,6 +88605,18 @@
 				"下列能力擇二發動(可以選擇同一條)－##從手牌打出1隻費用3以下的生物出場。##此回合、場上1隻我方生物獲得「(K)スピードアタッカー(/K)」能力。##選擇1隻我方生物，此回合、於該生物第一次攻擊後重置該生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-012.jpg",
+		},
+		{
+			name : "東京ミステリーサーカスからの挑戦状",
+			type : "S",
+			civil : 32,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー(/K)",
+				"你可以不支付費用，從手中使用一張名有《(N)ミステリー(/N)》、《(N)ナゾ(/N)》、《(N)謎(/N)》或是《(N)クエスチョン(/N)》的卡牌。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-225.jpg",
 		},
 		
 		/*

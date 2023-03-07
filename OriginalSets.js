@@ -1319,6 +1319,69 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-051"
+	var setName = "港台交流賽2023-[Z-File]＠Ether"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "「謎」の頂 Z（ゼータ）－ファイル",	count : 4,	},
+		{		name : "東京ミステリーサーカスからの挑戦状",	count : 4,	},
+		{		name : "悪魔神バロム・クエイク",	count : 2,	},
+		{		name : "聖魔連結王 ドルファディロム",	count : 2,	},
+		{		name : "龍頭星雲人 / 零誕祭",	count : 3,	},
+		{		name : "革命龍 ガビュート",	count : 1,	},
+		{		name : "滅界の魔将バフォロメア",	count : 2,	},
+		{		name : "斬隠蒼頭龍バイケン",	count : 2,	},
+		{		name : "偽りの悪魔神王 デス・マリッジ",	count : 1,	},
+		{		name : "偽りの羅刹 ゼキア・エクス・マキナ",	count : 1,	},
+		{		name : "月と破壊と魔王と天使",	count : 1,	},
+		{		name : "ポジトロン・サイン",	count : 1,	},
+		{		name : "AQ NETWORK",	count : 4,	},
+		{		name : "剥楯！月光MAX",	count : 4,	},
+		{		name : "サイバー・チューン",	count : 4,	},
+		{		name : "エマージェンシー・タイフーン",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-052"
+	var setName = "港台交流賽2023-[神官邪王門＠衛君]"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "魔の革命 デス・ザ・ロスト",	count : 4,	},
+		{		name : "魔光神官ルドルフ・アルカディア",	count : 4,	},
+		{		name : "アルカディアス・モモキング",	count : 3,	},
+		{		name : "時の革命 ミラダンテ",	count : 1,	},
+		{		name : "魔獣星樹ギガゲドー",	count : 4,	},
+		{		name : "ボルシャック・スーパーヒーロー / 超英雄タイム",	count : 3,	},
+		{		name : "デビル・ドレーン",	count : 1,	},
+		{		name : "「大蛇」の鬼 ジャドク丸",	count : 4,	},
+		{		name : "赤い稲妻 テスタ・ロッサ",	count : 4,	},
+		{		name : "カンゴク入道",	count : 4,	},
+		{		name : "百鬼の邪王門",	count : 4,	},
+		{		name : "秩序の意志",	count : 2,	},
+		{		name : "新世界王の権威",	count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-053"
+	var setName = "港台交流賽2023-[赤青阿波羅＠顆同學]"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "超神羅星アポロヌス・ドラゲリオン",	count : 4,	},
+		{		name : "禁断の轟速 レッドゾーンX",	count : 4,	},
+		{		name : "覇帝なき侵略 レッドゾーンF",	count : 1,	},
+		{		name : "超次元の王家",	count : 3,	},
+		{		name : "終末の時計 ザ・クロック",	count : 4,	},
+		{		name : "轟く侵略 レッドゾーン",	count : 1,	},
+		{		name : "蒼狼の大王 イザナギテラス",	count : 3,	},
+		{		name : "ネ申・マニフェスト",	count : 4,	},
+		{		name : "ダイナボルト ＜ドギラ.Star＞",	count : 1,	},
+		{		name : "R.S.S. アアルカイト",	count : 3,	},
+		{		name : "アストラルの海幻",	count : 4,	},
+		{		name : "瞬閃と疾駆と双撃の決断",	count : 4,	},
+		{		name : "カチコミ入道 ＜バトライ.鬼＞",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "TW-017"
 	var setName = "RedZoneKindom＠Richard From Malaysia"
 	var isDeck = true;
