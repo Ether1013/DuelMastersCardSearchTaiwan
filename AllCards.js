@@ -5551,7 +5551,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmx12b-078.jpg",
 		},
 		{
-			name : "陰陽（ミステリー）の舞",
+			name : "陰陽の舞（ミステリー・ヒッポ）",
 			type :	"C",
 			civil : 1,
 			race : [ "ビーストフォーク" ],
