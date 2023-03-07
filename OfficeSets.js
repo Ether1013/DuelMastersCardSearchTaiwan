@@ -58538,6 +58538,51 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DM22-BD2";
+	var setName = "開発部セレクションデッキ 「光水火鬼羅.Star」(先行版)";
+	var isDeck = true;
+	var setCardList = [		
+		{		name : "我我我ガイアール・ブランド",	count : 2,	},
+		{		name : "単騎連射 マグナム",	count : 1,	},
+		{		name : "エヴォ・ルピア",	count : 4,	},
+		{		name : "その子供、可憐につき",	count : 2,	},
+		{		name : "「正義星帝」 ＜鬼羅.Star＞",	count : 4,	},
+		{		name : "ナゾの光・リリアング",	count : 2,	},
+		{		name : "ブランド-MAX",	count : 2,	},
+		{		name : "キャンベロ ＜レッゾ.Star＞",	count : 2,	},
+		{		name : "超次元の王家",	count : 2,	},
+		{		name : "正義の煌き オーリリア",	count : 1,	},
+		{		name : "機術士ディール/「本日のラッキーナンバー！」",	count : 1,	},
+		{		name : "蒼狼の大王 イザナギテラス",	count : 2,	},
+		{		name : "奇天烈 シャッフ",	count : 1,	},
+		{		name : "瞬閃と疾駆と双撃の決断",	count : 2,	},
+		{		name : "奇石 ミクセル / ジャミング・チャフ",	count : 4,	},
+		{		name : "T・T・T",	count : 4,	},
+		{		name : "赤い稲妻 テスタ・ロッサ",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DM22-BD3";
+	var setName = "開発部セレクションデッキ 「7軸ガチロボ」(先行版)";
+	var isDeck = true;
+	var setCardList = [		
+		{		name : "キング・マニフェスト",	count : 2,	},
+		{		name : "レレディ・バ・グーバ / ツインパクト・マップ",	count : 4,	},
+		{		name : "ガチャンコ  ガチロボ",	count : 4,	},
+		{		name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",	count : 1,	},
+		{		name : "DOOOPPLER・マクーレ",	count : 4,	},
+		{		name : "ボルバルザーク・エクス",	count : 1,	},
+		{		name : "轟く革命 レッドギラゾーン",	count : 2,	},
+		{		name : "R.S.F.K. / オールイン・チャージャー",	count : 4,	},
+		{		name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",	count : 4,	},
+		{		name : "覚醒連結 XX（ダブルクロス）DDZ（ゼータ）",	count : 2,	},
+		{		name : "サイバー・I・チョイス",	count : 1,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",	count : 4,	},
+		{		name : "SMAPON",	count : 3,	},
+		{		name : "イチゴッチ・タンク / レッツ・ゴイチゴ",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DM22-EX2";
 	var setName = "ヒーローズ・ダークサイド・パック ～闇のキリフダたち～";
 	var isDeck = false;

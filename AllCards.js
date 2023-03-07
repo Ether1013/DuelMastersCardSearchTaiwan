@@ -40079,7 +40079,7 @@
 				"＿ブロックされない",
 				"＿攻撃されない",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp09-g02.jpg",
 		},
 		{
 			name : "革命魔王 キラー・ザ・キル",
@@ -40447,7 +40447,7 @@
 					"(K)S・トリガー(/K)",
 					"此生物出場時，你可以不支付費用、使用1張手牌中持有(K)S・トリガー(/K)能力的卡牌。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr17-017.jpg",
 		},
 		{
 			name : "奇天烈 ベガス",
