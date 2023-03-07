@@ -5551,7 +5551,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmx12b-078.jpg",
 		},
 		{
-			name : "陰陽の舞",
+			name : "陰陽（ミステリー）の舞",
 			type :	"C",
 			civil : 1,
 			race : [ "ビーストフォーク" ],
@@ -58085,7 +58085,7 @@
 			pic : "6/67/Dmr23-s7",
 		},
 		{
-			name : "完璧問題 オーパーツ",
+			name : "完璧問題（ラストクエスチョン） オーパーツ",
 			type : "C",
 			civil : 12,
 			race : ["クリスタル・コマンド・ドラゴン","革命軍","テック団"],
