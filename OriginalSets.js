@@ -1343,7 +1343,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-052"
-	var setName = "港台交流賽2023-[神官邪王門＠衛君]"
+	var setName = "港台交流賽2023-[神官邪王門]＠衛君"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "魔の革命 デス・ザ・ロスト",	count : 4,	},
@@ -1363,7 +1363,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-053"
-	var setName = "港台交流賽2023-[赤青阿波羅＠顆同學]"
+	var setName = "港台交流賽2023-[赤青阿波羅]＠顆同學"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "超神羅星アポロヌス・ドラゲリオン",	count : 4,	},
