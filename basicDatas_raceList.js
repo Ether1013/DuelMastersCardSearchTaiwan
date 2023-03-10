@@ -302,6 +302,8 @@
 				{	Jap : "ナイトメア",							Eng : "Nightmare",				Chi : "夢魘",			isCategory : true,	},
 				{	Jap : "マジック",							Eng : "Magic",					Chi : "魔法",			isCategory : true,	},
 				{	Jap : "アビス",								Eng : "Abyss",					Chi : "深淵",			isCategory : true,	},
+				{	Jap : "アーマード",							Eng : "Armored",				Chi : "裝甲",			isCategory : true,	},
+				{	Jap : "メカ",								Eng : "Mecha",					Chi : "機械",			isCategory : true,	},
 				
 				/*
 				{	Jap : "",						Eng : "",					Chi : "",			isCategory : false,	},
