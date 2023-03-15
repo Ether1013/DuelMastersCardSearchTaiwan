@@ -2665,6 +2665,24 @@
 		w.document.close();
 		returnHTMLStr = null;
 	}
+	
+	//截圖
+	function doWriteCanvas2(){
+			
+		html2canvas(gobi("cardDataBlockMain"), { useCORS: true })
+		  .then(canvas => { 
+			canvas.id = "canvas3";
+			document.body.appendChild(canvas);
+			var img = new Image();
+			img.src = "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TR9.jpg";
+			img.onload = function(){
+				var context = gobi("canvas3").getContext('2d');
+				context.globalAlpha = 1.0;
+				context.drawImage( img , 0, -200 , 200 , 280 );
+			}
+		});
+
+	}
 
 	//將圖片進行合併
 	function doWriteCanvas( w ){

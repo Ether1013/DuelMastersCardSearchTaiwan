@@ -260,6 +260,7 @@
 			{ Jap : "Jトルネード",			Eng : "Jockers Tornado",		Chi : "小丑旋風",			descript : "將戰鬥場上1隻我方其他的ジョーカーズ拿回到手牌中",},
 			{ Jap : "キズナ",				Eng : "Fetters",				Chi : "羈絆",				descript : "當此生物出場時，你可以使用戰鬥場上1隻我方生物的[P]能力。",},
 			{ Jap : "[P]",					Eng : "Fetters[P]",				Chi : "羈絆(主效果)",		descript : "名有\"羈絆\"能力的主要效果",},
+			{ Jap : "メクレイド",			Eng : "Involvoid",				Chi : "捲襲者",				descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
