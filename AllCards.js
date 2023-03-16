@@ -91388,6 +91388,78 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-005a.jpg",
 		},
+		{
+			name : "堕魔 ヴォガイガ",
+			type : "C",
+			civil : 4,
+			race : ["マフィ・ギャング","魔導具"],
+			power : 4000,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"此生物出場時，作廢我方牌庫頂4張牌。之後，將1張我方墓地中的闇文明卡牌拿回到手牌中。",
+				"我方的(R)魔導具(/R)的召喚費用一律少1。但是不能降到0以下。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-005.jpg",
+		},
+		{
+			name : "堕魔 ドゥポイズ",
+			type : "C",
+			civil : 4,
+			race : ["マフィ・ギャング","魔導具"],
+			power : 8000,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"(K)W・ブレイカー(/K)",
+				"此生物出場時，破壞2隻我方生物。之後，對手自行破壞戰鬥場上1隻他自己的生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-006.jpg",
+		},
+		{
+			name : "堕魔 グリギャン",
+			type : "C",
+			civil : 4,
+			race : ["マフィ・ギャング","魔導具"],
+			power : 2000,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"(K)ブロッカー(/K)",
+				"此生物不能發動攻擊。",
+				"此生物出場時，你可以作廢牌庫頂3張牌。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-012.jpg",
+		},
+		{
+			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-003a.jpg",
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : ["マスター・ドルスザク","マフィ・ギャング"],
+					power : 11000,
+					cost : 9,
+					mana : 1,
+					sp : [
+						"(K)無月の門・絶(/K)",
+						"對手回合初時，對手只能重置3張卡牌。",
+						"(K)W・ブレイカー(/K)",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 9,
+					mana : 1,
+					sp : [
+						"破壞所有生物。",
+						"當所有墓地的卡牌合計在13張以上、且此咒文在護盾區裡的話，則此咒文獲得(K)S・トリガー(/K)",
+					]
+				},
+			],
+		},
 		/*
 		{
 			name : "",

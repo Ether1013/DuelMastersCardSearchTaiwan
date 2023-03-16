@@ -391,19 +391,19 @@
 				{	value : "GRC",	text : "GR生物",			Jap : "GRクリーチャー",						horizontal : false,	main:false,	},
 				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
 				{	value : "S",	text : "咒文",				Jap : "呪文",								horizontal : false,	main:true,	},
+				{	value : "CA",	text : "城",				Jap : "城",									horizontal : false,	main:false,	},
+				{	value : "HF",	text : "幸福領域",			Jap : "幸せのフィールド",					horizontal : true,	main:false,	},
 				{	value : "CG",	text : "交叉武裝",			Jap : "クロスギア",							horizontal : false,	main:false,	descript : "裝備，第一次支付費用時僅出現在戰鬥場上，再次支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
 				{	value : "PCG",	text : "精神交叉武裝",		Jap : "超次元クロスギア",					horizontal : false,	main:false,	descript : "裝備，支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
-				{	value : "CA",	text : "城",				Jap : "城",									horizontal : false,	main:false,	},
+				{	value : "DHW",	text : "龍心武裝",			Jap : "ドラグハート・ウエポン",				horizontal : false,	main:true,	},
+				{	value : "DHC",	text : "龍心生物",			Jap : "ドラグハート・クリーチャー",			horizontal : false,	main:true,	},
+				{	value : "EDHC",	text : "進化龍心生物",		Jap : "進化ドラグハート・クリーチャー",		horizontal : false,	main:false,	},
+				{	value : "DHF",	text : "龍心要塞",			Jap : "ドラグハート・フォートレス",			horizontal : true,	main:false,	},
 				{	value : "XC",	text : "放浪生物",			Jap : "エグザイル・クリーチャー",			horizontal : false,	main:false,	},
 				{	value : "EXC",	text : "進化放浪生物",		Jap : "進化エグザイル・クリーチャー",		horizontal : false,	main:false,	},
 				{	value : "PC",	text : "精神生物",			Jap : "サイキック・クリーチャー",			horizontal : false,	main:true,	},
 				{	value : "EPC",	text : "精神進化生物",		Jap : "進化サイキック・クリーチャー",		horizontal : false,	main:false,	},
 				{	value : "SPC",	text : "精神超級生物",		Jap : "サイキック・スーパー・クリーチャー",	horizontal : false,	main:false,	},
-				{	value : "HF",	text : "幸福領域",			Jap : "幸せのフィールド",					horizontal : true,	main:false,	},
-				{	value : "DHW",	text : "龍心武裝",			Jap : "ドラグハート・ウエポン",				horizontal : false,	main:true,	},
-				{	value : "DHC",	text : "龍心生物",			Jap : "ドラグハート・クリーチャー",			horizontal : false,	main:true,	},
-				{	value : "EDHC",	text : "進化龍心生物",		Jap : "進化ドラグハート・クリーチャー",		horizontal : false,	main:false,	},
-				{	value : "DHF",	text : "龍心要塞",			Jap : "ドラグハート・フォートレス",			horizontal : true,	main:false,	},
 				{	value : "D2F",	text : "D2領域",			Jap : "D2フィールド",						horizontal : true,	main:true,	},
 				{	value : "DF",	text : "龍領域",			Jap : "ドラゴニック・フィールド",			horizontal : true,	main:false,	},
 				{	value : "DMF",	text : "DM領域",			Jap : "DM・フィールド",						horizontal : true,	main:false,	},
@@ -1243,6 +1243,8 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DMBD-20",
+		"DMBD-19",
 		"DMSD-21",
 		"DMSD-20",
 		"DMEX-18",
@@ -1276,6 +1278,8 @@
 			{	
 				date : "2023/03/16",
 				log : [ 
+						"新增「DMBD-20 開発部セレクションデッキ 「水闇魔導具」」的資料",
+						"新增「DMBD-19 開発部セレクションデッキ 「火水覇道」」的資料",
 						"新增「DMEX-18 メモリアルパック 裏の章 パラレル･マスターズ」的資料",
 						"新增「DMSD-20 ジョーのS-MAX進化」的資料",
 						"新增「DMSD-21 アバクの鬼レクスターズ」的資料",

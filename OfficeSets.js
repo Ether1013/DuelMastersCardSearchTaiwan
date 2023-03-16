@@ -61286,6 +61286,227 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
+	var setCode = "DMBD-20";
+	var setName = "開発部セレクションデッキ 「水闇魔導具」";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "絶望と反魂と滅殺の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-004.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "BD20 4/12",
+			count : 2,
+		},
+		{
+			name : "堕魔 ヴォガイガ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-005.jpg",
+			rarity : "VR",
+			flavor : [ "このデッキの目標は、ラビリピトがいる状態でドルスザク３種の無月の条件を達成してバトルゾーンに出し、盤面を作りつつ相手の手札を全て捨てさせることです。まずは積極的に墓地を増やしましょう。ラビリピトが墓地に落ちてしまってもヴォガイガで回収できるので心配ありません。" ],
+			id : "BD20 5/12",
+			count : 4,
+		},
+		{
+			name : "堕魔 ドゥポイズ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-006.jpg",
+			rarity : "R",
+			flavor : [ "ガ・リュザークとラビリピトが揃っている状態で手札にドゥポイズがある時がこのデッキの攻撃のチャンスです。あらかじめガ・リュザークをドゥポイズで破壊しておいてからブレイクし、ターン終了時に再びガ・リュザークを呼び戻すことで相手に手札を与えずにシールドを減らすことができます。ただし、S・トリガーのリスクはあるので欲張らず最小限のブレイクにとどめ、少しずつ相手を追い詰めていきましょう。" ],
+			id : "BD20 6/12",
+			count : 4,
+		},
+		{
+			name : "堕呪 エアヴォ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-007.jpg",
+			rarity : "U",
+			flavor : [ "相手のカードを戻すだけでなく、無月によってドルスザクの下に重ねた魔導具も自分に戻すことができます。組み合わせることで墓地に落ちたドゥポイズやヴォガイガのような有用な魔導具を回収できるコンボとなります。" ],
+			id : "BD20 7/12",
+			count : 3,
+		},
+		{
+			name : "堕魔 ドゥリンリ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-008.jpg",
+			rarity : "U",
+			flavor : [ "ドゥリンリがバトルゾーンにあり、墓地に５枚の魔導具とガ・リュザークがある場合は条件を満たしていなくても無月の門・絶を宣言しておきましょう。先にドゥリンリの能力を解決することで、墓地の魔導具が６枚になればガ・リュザークをバトルゾーンに出すことが可能です。" ],
+			id : "BD20 8/12",
+			count : 4,
+		},
+		{
+			name : "追憶人形ラビリピト",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-009.jpg",
+			rarity : "U",
+			flavor : [ "ラビリピトは能力を使う前に除去されないように、ドルスザクとのコンボを確実に決められるターンまでは手札に温存しましょう。" ],
+			id : "BD20 9/12",
+			count : 3,
+		},
+		{
+			name : "堕呪 バレッドゥ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-010.jpg",
+			rarity : "C",
+			flavor : [ "墓地に魔導具が２枚しかない状況でも、バレッドゥを使うときはガル・ラガンザークの無月を宣言しておきましょう。手札から魔導具を捨てることにより、使用後に墓地に落ちたバレッドゥとあわせて４枚の無月の条件を達成することができます。" ],
+			id : "BD20 10/12",
+			count : 4,
+		},
+		{
+			name : "堕呪 カージグリ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-011.jpg",
+			rarity : "C",
+			flavor : [ "無月の条件を満たしていれば、相手のターンでもS・トリガーによってガル・ラガンザークをバトルゾーンに出し、追加のブロッカーを用意することが可能です。" ],
+			id : "BD20 11/12",
+			count : 4,
+		},
+		{
+			name : "堕魔 グリギャン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-012.jpg",
+			rarity : "C",
+			flavor : [ "グリギャンの墓地を増やす能力は任意なので、自分のデッキの残り枚数が少ない場合は山札切れを避けるために能力を使わないことも可能です。" ],
+			id : "BD20 12/12",
+			count : 4,
+		},
+		{
+			name : "ガル・ラガンザーク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-001.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "BD20 1/12",
+			count : 4,
+		},
+		{
+			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-003a.jpg",
+			rarity : "MAS",
+			flavor : [ "" ],
+			id : "BD20 3/12",
+			count : 3,
+		},
+		{
+			name : "卍 デ・スザーク 卍",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-002.jpg",
+			rarity : "MDS",
+			flavor : [ "" ],
+			id : "BD20 2/12",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMBD-19";
+	var setName = "開発部セレクションデッキ 「火水覇道」";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "勝利龍装 クラッシュ“覇道”",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-003.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "BD19 3/14",
+			count : 4,
+		},
+		{
+			name : "ウマキン☆プロジェクト",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-004.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "BD19 4/14",
+			count : 2,
+		},
+		{
+			name : "奇天烈 シャッフ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-005.jpg",
+			rarity : "VR",
+			flavor : [ "とどめを刺す場面でシャッフを使う時は相手のマナゾーンや墓地を見て最も多そうなS・トリガーのマナコストを宣言しましょう。ちなみに、ブロッカーのマナコストを宣言して、ブロックを防ぐこともできるので状況に応じて使い分けましょう。" ],
+			id : "BD19 5/14",
+			count : 2,
+		},
+		{
+			name : "伝説演者 カメヲロォル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-006.jpg",
+			rarity : "VR",
+			flavor : [ "“覇道”の追加ターンは盤面にアタッカーが揃っているほど、攻撃できる回数が増えリターンが大きくなります。ドローで2枚コンボをそろえる助けになりつつアタッカーにもなれるカメヲロォルは序盤に優先的に召喚したいクリーチャーです。" ],
+			id : "BD19 6/14",
+			count : 4,
+		},
+		{
+			name : "終末の時計 ザ・クロック",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-007.jpg",
+			rarity : "R",
+			flavor : [ "もはや相手に対応しきれない時は、ザ・クロックがS・トリガーする前提で行動するのが勝利に結びつくことがあります。「運に頼る」ことを嫌うのではなく、運も戦略に組み込みましょう。" ],
+			id : "BD19 7/14",
+			count : 4,
+		},
+		{
+			name : "“必駆”蛮触礼亞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-008.jpg",
+			rarity : "R",
+			flavor : [ "“覇道”が手に入る前に負けてしまいそうな時、手札の“必駆”蛮触礼亞を使わざるを得ない場合もあります。“覇道”以外のビートジョッキーも出せることは覚えておきましょう。" ],
+			id : "BD19 8/14",
+			count : 4,
+		},
+		{
+			name : "Disノメノン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-009.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "BD19 9/14",
+			count : 4,
+		},
+		{
+			name : "ドンドン火噴くナウ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-010.jpg",
+			rarity : "R",
+			flavor : [ "ゲームが中盤以降にもつれ込んだ時は、単体で“覇道”をB・A・Dの８マナで召喚する選択肢もあります。序盤にコンボを決め損ねた時は、マナを増やしていくことも意識していきましょう。" ],
+			id : "BD19 10/14",
+			count : 4,
+		},
+		{
+			name : "異端流し オニカマス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-011.jpg",
+			rarity : "U",
+			flavor : [ "相手の妨害をするカードは「出せる時に出す」のではなく、妨害したいカードが出る前のターンに出すことを考えましょう。出す必要がないターンであれば、コンボパーツを探したり盤面を作るのにマナを使う方が有用です。" ],
+			id : "BD19 11/14",
+			count : 4,
+		},
+		{
+			name : "サイバー・ブレイン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-012.jpg",
+			rarity : "U",
+			flavor : [ "このデッキの基本は“必駆”蛮触礼亞とクラッシュ“覇道”の2枚コンボで早期に追加ターンを得ることです。この2枚を手札に揃えるために、まずは優先的にドローを使いましょう。" ],
+			id : "BD19 12/14",
+			count : 1,
+		},
+		{
+			name : "海底鬼面城",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-013.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "BD19 13/14",
+			count : 1,
+		},
+		{
+			name : "龍装者 バルチュリス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-014.jpg",
+			rarity : "U",
+			flavor : [ "“覇道”の能力によって２ターン連続で攻撃する時、１ターン目に全力でブレイクするべきではない場合もあります。手札にバルチュリスがいるなら、２ターン目の２回のアタックで全部ブレイクできるように調整することで、S・トリガーに邪魔されずにバルチュリスでとどめをさすことができるからです。" ],
+			id : "BD19 14/14",
+			count : 4,
+		},
+		{
+			name : "“轟轟轟”ブランド",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-002.jpg",
+			rarity : "MAS",
+			flavor : [ "" ],
+			id : "BD19 2/14",
+			count : 1,
+		},
+		{
+			name : "切札勝太&カツキング ー熱血の物語ー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd19-001.jpg",
+			rarity : "DSR",
+			flavor : [ "" ],
+			id : "BD19 1/14",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = queryHistorySetCode;
 	var setName = "【歷史查詢】";
