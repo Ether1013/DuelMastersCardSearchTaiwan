@@ -293,6 +293,11 @@
 				{	Jap : "ワンダフォース",						Eng : "Wonderful",				Chi : "萬歲",			isCategory : false,	},
 				{	Jap : "デリートロン",						Eng : "Deletron",				Chi : "深海魷魚",		isCategory : false,	},
 				{	Jap : "裁きの紋章Z",						Eng : "Judgment Emblem Z",		Chi : "制裁紋章Z",		isCategory : false,	},
+				{	Jap : "∞・ドラゴン",						Eng : "Infinity・Dragon",		Chi : "無限・龍",		isCategory : false,	},
+				{	Jap : "エルドラージ",						Eng : "Eldrazi",				Chi : "奧札奇",			isCategory : false,	},
+				{	Jap : "スリヴァー",							Eng : "Sliver",					Chi : "裂片妖",			isCategory : false,	},
+				{	Jap : "フィオナ・ガーディアン",				Eng : "Fiona Guardian",			Chi : "菲歐娜守護者",	isCategory : false,	},
+				{	Jap : "猫",									Eng : "Cat",					Chi : "貓",			isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

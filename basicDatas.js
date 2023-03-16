@@ -409,6 +409,7 @@
 				{	value : "DMF",	text : "DM領域",			Jap : "DM・フィールド",						horizontal : true,	main:false,	},
 				{	value : "DGF",	text : "DG領域",			Jap : "DGフィールド",						horizontal : true,	main:false,	},
 				{	value : "FF",	text : "禁斷領域",			Jap : "禁断フィールド",						horizontal : true,	main:false,	},
+				{	value : "FeF",	text : "妖精領域",			Jap : "フェアリー・フィールド",				horizontal : true,	main:false,	},
 				{	value : "SI",	text : "禁斷的鼓動",		Jap : "禁断の鼓動",							horizontal : false,	main:false,	},
 				{	value : "SC",	text : "禁斷生物",			Jap : "禁断クリーチャー",					horizontal : false,	main:false,	},
 				{	value : "FSC",	text : "最終禁斷生物",		Jap : "最終禁断クリーチャー",				horizontal : false,	main:false,	},
@@ -420,6 +421,9 @@
 				{	value : "OA",	text : "自靈氣",			Jap : "オレガ・オーラ",						horizontal : true,	main:false,	},
 				{	value : "MA",	text : "神器",				Jap : "Mono Artifact",						horizontal : false,	main:false,	},
 				{	value : "LD",	text : "土地",				Jap : "土地",								horizontal : false,	main:false,	},
+				{	value : "PF",	text : "精神領域",			Jap : "サイキック・フィールド",				horizontal : true,	main:false,	},
+				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						horizontal : false,	main:false,	},
+				{					text : "決鬥者",			Jap : "デュエリスト",						descript : "這是甚麼沒人知道，官方至今都沒有做出說明"									},
 				{					text : "龍心",				Jap : "ドラグハート",						descript : "泛指龍心生物、龍心武裝、與龍心要塞"											},
 				{					text : "武裝",				Jap : "ウエポン",							descript : "泛指龍心武裝"																},
 				{					text : "≡V≡",				Jap : "≡V≡",								descript : "指稀有度為Victory以上、卡牌上有≡V≡記號的卡"									},
@@ -803,6 +807,7 @@
 			"謎",
 			"クエスチョン",
 			"モモキング",
+			"グレンオー",
 		],
 		
 		isCategory : function( name ){
@@ -1236,7 +1241,7 @@
 	
 	//最新推薦
 	var newestSets = [
-		"DMPCD-02",
+		"DMEX-18",
 		"DM22-BD2",
 		"DM22-BD3",
 		"DM22-EX2",
@@ -1266,6 +1271,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/03/16",
+				log : [ 
+						"新增「DMEX-18 メモリアルパック 裏の章 パラレル･マスターズ」的資料",
+				],	
+			},
 			{	
 				date : "2023/03/15",
 				log : [ 
