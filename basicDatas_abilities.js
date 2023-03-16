@@ -265,6 +265,7 @@
 			{ Jap : "キッカー",				Eng : "Kicker",					Chi : "蹴者",				descript : "使用此咒文時，你可以追加支付指定費用以追加後續效果",},
 			{ Jap : "G.R.D.",				Eng : "Gacha Range Down",		Chi : "GR重沉",				descript : "當此生物發動攻擊時，對手要將其GR牌庫頂第四張牌橫置",},
 			{ Jap : "サイキック・チャンス",	Eng : "Psychic Chance",			Chi : "精神機會",			descript : "當我方指定生物發動攻擊時，你可以將此卡置入超次元區以使用以下能力",},
+			{ Jap : "零龍卍誕",				Eng : "Zero Dragn Birth",		Chi : "零龍卍誕",			descript : "當第四張零龍星雲與此卡連接時，將5張卡牌全數翻面並連結成1隻生物。",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},

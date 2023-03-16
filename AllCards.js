@@ -90697,7 +90697,6 @@
 			name : "Library of Alexandria",
 			type : "LD",
 			civil : 32,
-			cost : 0,
 			mana : 1,
 			sp : [
 				"我方回合中、攻擊前、我方手牌如果剛好7張的話，則你可以橫置魔力區中的此卡牌。那樣的話，就抽1張牌。",
@@ -91320,6 +91319,75 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd21-001.jpg",
 		},		
+		{
+			name : "零龍",
+			back : [ "滅亡の起源 零無","手札の儀","墓地の儀","破壊の儀","復活の儀", ],
+			type : "ZC",
+			civil : 4,
+			race : [ "マスター・ドラゴンZ" ],
+			power : 0,
+			cost : 0,
+			sp : [
+				"(K)ワールド・ブレイカー(/K)",
+				"當此生物完成(K)零龍卍誕(/K)時，該回合、對手生物攻擊力一律變成0。",
+				"當此生物攻擊力在0以下時，此生物不會離場、且戰鬥必勝。",
+				"當此卡移至戰鬥場以外的地方時，我方輸掉這場遊戲。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-001b.jpg",
+		},
+		{
+			name : "滅亡の起源 零無",
+			back : "零龍",
+			type : "ZCL",
+			civil : 4,
+			sp : [
+				"遊戲開始時，將四張不同的零龍星雲分開放在戰鬥場上。",
+				"遊戲開始時，對手多抽1張牌。",
+				"零龍卡牌不會離場。",
+				"(K)零龍卍誕(/K)－當第四張零龍星雲與此卡連接時，將5張卡牌全數翻面並連結成1隻生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-001a.jpg",
+		},
+		{
+			name : "手札の儀",
+			back : "零龍",
+			type : "ZCL",
+			civil : 4,
+			sp : [
+				"我方回合結束時，如果有任一玩家沒有任何手牌的話，則你可以將這張零龍星雲跟《(N)滅亡の起源 零無(/N)》連結。這樣的話，就執行GR召喚。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-002a.jpg",
+		},
+		{
+			name : "墓地の儀",
+			back : "零龍",
+			type : "ZCL",
+			civil : 4,
+			sp : [
+				"當卡牌置入我方墓地時，如果我方墓地有8張以上的卡牌的話，則你可以將這張零龍星雲跟《(N)滅亡の起源 零無(/N)》連結。這樣的話，就選擇1隻對手生物，此回合中，該生物攻擊力-3000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-003a.jpg",
+		},
+		{
+			name : "破壊の儀",
+			back : "零龍",
+			type : "ZCL",
+			civil : 4,
+			sp : [
+				"當生物被破壞時，如果該回合已經先破壞了2隻以上的生物的話，則你可以將這張零龍星雲跟《(N)滅亡の起源 零無(/N)》連結。這樣的話，就從我方墓地將1張闇文明卡牌拿回手牌。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-004a.jpg",
+		},
+		{
+			name : "復活の儀",
+			back : "零龍",
+			type : "ZCL",
+			civil : 4,
+			sp : [
+				"當卡牌從我方墓地移至戰鬥場上時，你可以將這張零龍星雲跟《(N)滅亡の起源 零無(/N)》連結。這樣的話，就作廢我方牌庫頂2張牌。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-005a.jpg",
+		},
 		/*
 		{
 			name : "",

@@ -423,6 +423,8 @@
 				{	value : "LD",	text : "土地",				Jap : "土地",								horizontal : false,	main:false,	},
 				{	value : "PF",	text : "精神領域",			Jap : "サイキック・フィールド",				horizontal : true,	main:false,	},
 				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						horizontal : false,	main:false,	},
+				{	value : "ZC",	text : "零龍生物",			Jap : "零龍クリーチャー",					horizontal : true,	main:false,	},
+				{	value : "ZCL",	text : "零龍星雲",			Jap : "零龍星雲",							horizontal : false,	main:false,	},
 				{					text : "決鬥者",			Jap : "デュエリスト",						descript : "這是甚麼沒人知道，官方至今都沒有做出說明"									},
 				{					text : "龍心",				Jap : "ドラグハート",						descript : "泛指龍心生物、龍心武裝、與龍心要塞"											},
 				{					text : "武裝",				Jap : "ウエポン",							descript : "泛指龍心武裝"																},
@@ -1277,6 +1279,7 @@
 						"新增「DMEX-18 メモリアルパック 裏の章 パラレル･マスターズ」的資料",
 						"新增「DMSD-20 ジョーのS-MAX進化」的資料",
 						"新增「DMSD-21 アバクの鬼レクスターズ」的資料",
+						"新增【零龍】與「零龍星雲」卡牌資料"
 				],	
 			},
 			{	
