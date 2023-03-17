@@ -73946,7 +73946,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-048a.jpg",
 			wData : [
 				{
-					type : "C",
+					type : "XC",
 					civil : 32,
 					race : ["アウトレイジMAX","オラクル"],
 					power : 6000,
