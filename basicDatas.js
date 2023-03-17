@@ -1243,11 +1243,9 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DMRP-21",
 		"DMBD-20",
 		"DMBD-19",
-		"DMSD-21",
-		"DMSD-20",
-		"DMEX-18",
 		"DM22-EX2",
 	]
 	
@@ -1275,6 +1273,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/03/17",
+				log : [ 
+						"新增「DMRP-21 王来MAX第1弾 鬼ヤバ逆襲S-MAX!!」的資料",
+				],	
+			},
 			{	
 				date : "2023/03/16",
 				log : [ 
