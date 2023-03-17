@@ -60724,7 +60724,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-BD3";
 	var setName = "開発部セレクションデッキ 「7軸ガチロボ」";
@@ -60843,7 +60843,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-EX2";
 	var setName = "ヒーローズ・ダークサイド・パック ～闇のキリフダたち～";
