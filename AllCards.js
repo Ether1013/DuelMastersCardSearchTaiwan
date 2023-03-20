@@ -9295,7 +9295,7 @@
 					"(K)T・ブレイカー(/K)",
 					"當(R)ドラゴン(/R)以外的生物出場時，不會進到戰鬥場上，取而代之、直接置入其持有者的墓地。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-se02.jpg",
 		},
 		{
 			name : "ジャックポット・バトライザー",
@@ -11019,7 +11019,7 @@
 					"(K)スピードアタッカー(/K)",
 					"此生物可以於他出場的回合中，攻擊重置狀態的生物。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr04-v03a.jpg",
 		},
 		{
 			name : "唯我独尊ガイアール・オレドラゴン",
@@ -12204,7 +12204,7 @@
 					"(K)メテオバーン覚醒(/K)－我方回合初時，將此生物將此生物下方所有的卡牌置入墓地，之後將此生物翻至費用較大的一面。",
 					"(K)Q・ブレイカー(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex01-041a.jpg",
 		},
 		{
 			name : "超覚醒ラスト・ストームXX（ダブルクロス）",
@@ -12223,7 +12223,7 @@
 				"＿超次元",
 				"＿クリーチャーを選ぶことはできない",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex01-041b.jpg",
 		},
 		{
 			name : "クリスタル・メモリー",
@@ -46117,7 +46117,7 @@
 					"(K)T・ブレイカー(/K)",
 					"當此生物出場或是發動攻擊時，你可以選擇戰鬥場上1隻對手生物、並讓該生物與此生物進行戰鬥。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-002.jpg",
 		},
 		{
 			name : "革命聖龍 ウルトラスター",
