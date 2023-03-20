@@ -266,7 +266,7 @@
 			{ Jap : "G.R.D.",				Eng : "Gacha Range Down",		Chi : "GR重沉",				descript : "當此生物發動攻擊時，對手要將其GR牌庫頂第四張牌橫置",},
 			{ Jap : "サイキック・チャンス",	Eng : "Psychic Chance",			Chi : "精神機會",			descript : "當我方指定生物發動攻擊時，你可以將此卡置入超次元區以使用以下能力",},
 			{ Jap : "零龍卍誕",				Eng : "Zero Dragn Birth",		Chi : "零龍卍誕",			descript : "當第四張零龍星雲與此卡連接時，將5張卡牌全數翻面並連結成1隻生物。",},
-			{ Jap : "マスターG・O・D・S",	Eng : "God Over Dynamite Spell",Chi : "超神炸彈咒",			descript : "你可以捨棄1張手牌以使用此咒文，那樣的話，則此咒文的使用費用會隨著本回合每一張已捨棄的手牌兒少2，但是不能降到0以下",},
+			{ Jap : "マスターG・O・D・S",	Eng : "God Over Dynamite Spell",Chi : "超神炸彈咒",			descript : "你可以捨棄1張手牌以使用此咒文，那樣的話，則此咒文的使用費用會隨著本回合每一張已捨棄的手牌而少2，但是不能降到0以下",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
