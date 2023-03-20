@@ -1580,7 +1580,6 @@
 		{		name : "新世界王の権威",										count : 2,	},
 		{		name : "BAKUOOON・ミッツァイル",								count : 1,	},
 		{		name : "龍月 ドラグ・スザーク / 龍・獄・殺",					count : 2,	},
-		{		name : "CRYMAX ジャオウガ",										count : 2,	},
 		{		name : "暗黒神星アポロデス・フェニックス",						count : 2,	},
 		{		name : "時空の禁断 レッドゾーンX",								count : 2,	},
 		{		name : "終焉の覚醒者 レッドゾーンBSR",							count : 2,	},
