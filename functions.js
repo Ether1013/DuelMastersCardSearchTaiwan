@@ -265,13 +265,17 @@
 					tdNum.style.width = "30px";
 					tdNum.style.textAlign = "center";
 					if ( theSet.isDeck ){
+						//如果下一張就是這張的背面的話，則共用張數欄
 						if ( i+1 < cardDataBySort.length && cardDataBySort[i+1].back == cardDataBySort[i].name ){
 							tdNum.setAttribute("rowspan",2);
 							tr.appendChild( tdNum );
+						//目前不處理多張翻面合體的併欄
 						} else if ( cardDataBySort[i].back instanceof Array && cardDataBySort[i].back.length > 1 ){
 							tr.appendChild( tdNum );
+						//如果前一張就是這張的背面的話，則因共用張數欄位而不插入tr
 						} else if ( i-1 > 0 && cardDataBySort[i-1].back == cardDataBySort[i].name ){
 							//
+						//沒有背面則直接顯示張數
 						} else {
 							tr.appendChild( tdNum );
 						}
@@ -337,12 +341,14 @@
  					};
 				})();
 				tr.style.cursor = "pointer";
+
+				var theLocation = cardTypeMapping.getDataByValue( ( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type : [ cardDataBySort[i].type ] )[0] ).Location;
 				//牌庫+沒排序+超次元牌庫的話就塞超次元TR暫存陣列
-				if ( theSet != null && theSet.isDeck && sort == "" && cardTypeMapping.getDataByValue( cardDataBySort[i].type ).Location == "I" ){
+				if ( theSet != null && theSet.isDeck && sort == "" && theLocation == "I" ){
 					tableTrExistList.push( tr );
-				} else if ( theSet != null && theSet.isDeck && sort == "" && cardTypeMapping.getDataByValue( cardDataBySort[i].type ).Location == "P" ){
+				} else if ( theSet != null && theSet.isDeck && sort == "" && theLocation == "P" ){
 					tableTrExList.push( tr );
-				} else if ( theSet != null && theSet.isDeck && sort == "" && cardTypeMapping.getDataByValue( cardDataBySort[i].type ).Location == "G" ){
+				} else if ( theSet != null && theSet.isDeck && sort == "" && theLocation == "G" ){
 					tableTrGrList.push( tr );
 				//其他直接塞
 				} else {

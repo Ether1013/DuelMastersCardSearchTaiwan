@@ -1456,3 +1456,135 @@
 		{		name : "Disジルコン",									count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-054"
+	var setName = "台灣俺嘉年華2023 1st-[5C万軍投]＠彥誠"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "クリスマⅢ",												count : 2,	},
+		{		name : "続召の意志 マーチス",									count : 2,	},
+		{		name : "カット 丙-二式",										count : 2,	},
+		{		name : "天啓 CX-20",											count : 2,	},
+		{		name : "回収 TE-10",											count : 2,	},
+		{		name : "サザン・エー",											count : 1,	},
+		{		name : "全能ゼンノー",											count : 1,	},
+		{		name : "天災 デドダム",											count : 4,	},
+		{		name : "CRYMAX ジャオウガ",										count : 2,	},
+		{		name : "新世界王の闘気",										count : 3,	},
+		{		name : "新世界王の思想",										count : 2,	},
+		{		name : "新世界王の権威",										count : 2,	},
+		{		name : "〝魔神轟怒”万軍投",										count : 4,	},
+		{		name : "とこしえの超人",										count : 4,	},
+		{		name : "BAKUOOON・ミッツァイル",								count : 1,	},
+		{		name : "龍月 ドラグ・スザーク / 龍・獄・殺",					count : 2,	},
+		{		name : "龍素記号ｗD サイクルペディア",							count : 3,	},
+		{		name : "イデア・パラドックス",									count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",	count : 4,	},
+		{		name : "終末王秘伝オリジナルフィナーレ",						count : 2,	},
+		{		name : "地龍神の魔陣",											count : 3,	},
+		{		name : "時空の禁断 レッドゾーンX",								count : 2,	},
+		{		name : "終焉の覚醒者 レッドゾーンBSR",							count : 2,	},
+		{		name : "轟く覚醒 レッドゾーン・バスター",						count : 2,	},
+		{		name : "蒼き覚醒 ドギラゴンX",									count : 2,	},
+		{		name : "勝利のガイアール・カイザー",							count : 1,	},
+		{		name : "時空の戦猫シンカイヤヌス",								count : 1,	},
+		{		name : "時空の戦猫ヤヌスグレンオー",							count : 1,	},
+		{		name : "時空の英雄アンタッチャブル",							count : 1,	},
+		{		name : "変幻の覚醒者アンタッチャブル・パワード",				count : 1,	},
+		{		name : "超時空ストームG（ゲンジ）・XX（ダブルクロス）",			count : 1,	},
+		{		name : "超覚醒ラスト・ストームXX（ダブルクロス）",				count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-055"
+	var setName = "台灣俺嘉年華2023 2nd-[5CモルトNEXT]＠德爾塔"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "禁断竜王 Vol-Val-8",											count : 2,	},
+		{		name : "インフェル星樹",												count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",									count : 4,	},
+		{		name : "メンデルスゾーン",												count : 3,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",							count : 3,	},
+		{		name : "超戦龍覇 モルトNEXT（ネクスト）",								count : 4,	},
+		{		name : "次世代龍覇 グレングラッサ /「ここはまかせて、お姉ちゃん！」",	count : 4,	},
+		{		name : "ボルシャック・ドギラゴン",										count : 4,	},
+		{		name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",					count : 4,	},
+		{		name : "龍世界 ドラゴ大王",												count : 1,	},
+		{		name : "「鎮魂」の頂 ベートーベン・ソレムニス",							count : 1,	},
+		{		name : "爆炎龍覇 モルトSAGA",											count : 3,	},
+		{		name : "禁断～封印されしX～",											count : 1,	},
+		{		name : "伝説の禁断 ドキンダムX",										count : 1,	},
+		{		name : "将龍剣 ガイアール",												count : 1,	},
+		{		name : "猛烈将龍 ガイバーン",											count : 1,	},
+		{		name : "爆炎大剣 ガイサーガ",											count : 1,	},
+		{		name : "爆炎覇龍 ガイフレア",											count : 1,	},
+		{		name : "闘将銀河城 ハートバーン",										count : 1,	},
+		{		name : "超戦覇龍 ガイNEXT（ネクスト）",									count : 1,	},
+		{		name : "無敵剣 プロト・ギガハート",										count : 1,	},
+		{		name : "最強龍 オウギンガ・ゼロ",										count : 1,	},
+		{		name : "無敵王剣 ギガハート",											count : 1,	},
+		{		name : "最強熱血 オウギンガ",											count : 1,	},
+		{		name : "銀河大剣 ガイハート",											count : 1,	},
+		{		name : "熱血星龍 ガイギンガ",											count : 1,	},
+		{		name : "爆銀王剣 バトガイ刃斗",											count : 2,	},
+		{		name : "爆熱王ＤＸ バトガイ銀河",										count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-056"
+	var setName = "台灣俺嘉年華2023 3rd-[5C万軍投]＠國洋"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "クリスマⅢ",												count : 2,	},
+		{		name : "続召の意志 マーチス",									count : 2,	},
+		{		name : "カット 丙-二式",										count : 2,	},
+		{		name : "天啓 CX-20",											count : 2,	},
+		{		name : "回収 TE-10",											count : 2,	},
+		{		name : "全能ゼンノー",											count : 2,	},
+		{		name : "とこしえの超人",										count : 4,	},
+		{		name : "イデア・パラドックス",									count : 4,	},
+		{		name : "地龍神の魔陣",											count : 3,	},
+		{		name : "天災 デドダム",											count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",	count : 4,	},
+		{		name : "龍素記号ｗD サイクルペディア",							count : 3,	},
+		{		name : "終末王秘伝オリジナルフィナーレ",						count : 2,	},
+		{		name : "〝魔神轟怒”万軍投",										count : 4,	},
+		{		name : "新世界王の闘気",										count : 3,	},
+		{		name : "新世界王の思想",										count : 2,	},
+		{		name : "新世界王の権威",										count : 2,	},
+		{		name : "BAKUOOON・ミッツァイル",								count : 1,	},
+		{		name : "龍月 ドラグ・スザーク / 龍・獄・殺",					count : 2,	},
+		{		name : "CRYMAX ジャオウガ",										count : 2,	},
+		{		name : "暗黒神星アポロデス・フェニックス",						count : 2,	},
+		{		name : "時空の禁断 レッドゾーンX",								count : 2,	},
+		{		name : "終焉の覚醒者 レッドゾーンBSR",							count : 2,	},
+		{		name : "轟く覚醒 レッドゾーン・バスター",						count : 1,	},
+		{		name : "蒼き覚醒 ドギラゴンX",									count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-057"
+	var setName = "台灣俺嘉年華2023 4th-[水魂種]＠Norman"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "バイケンの海幻",								count : 4,	},
+		{		name : "ギュウジン丸の海幻",							count : 3,	},
+		{		name : "アストラルの海幻",								count : 4,	},
+		{		name : "斬隠蒼頭龍バイケン",							count : 2,	},
+		{		name : "轟く革命 レッドギラゾーン",						count : 2,	},
+		{		name : "Drache der'Zen",								count : 4,	},
+		{		name : "AQ NETWORK",									count : 4,	},
+		{		name : "Law儿-怪Hawk",									count : 2,	},
+		{		name : "邪杯と魔術の決断",								count : 3,	},
+		{		name : "テック団の波壊Go!",								count : 2,	},
+		{		name : "Dの博才 サイバーダイス・ベガス",				count : 3,	},
+		{		name : "勝熱と弾丸と自由の決断",						count : 1,	},
+		{		name : "神の試練",										count : 1,	},
+		{		name : "魂の再動",										count : 1,	},
+		{		name : "機術士ディール/「本日のラッキーナンバー！」",	count : 1,	},
+		{		name : "神ナル機カイ「亜堕無」",						count : 1,	},
+		{		name : "ストリーミング・シェイパー",					count : 1,	},
+		{		name : "瞬閃と疾駆と双撃の決断",						count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );

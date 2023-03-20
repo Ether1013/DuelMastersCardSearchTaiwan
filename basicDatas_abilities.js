@@ -260,12 +260,13 @@
 			{ Jap : "Jトルネード",			Eng : "Jockers Tornado",		Chi : "小丑旋風",			descript : "將戰鬥場上1隻我方其他的ジョーカーズ拿回到手牌中",},
 			{ Jap : "キズナ",				Eng : "Fetters",				Chi : "羈絆",				descript : "當此生物出場時，你可以使用戰鬥場上1隻我方生物的[P]能力。",},
 			{ Jap : "[P]",					Eng : "Fetters[P]",				Chi : "羈絆(主效果)",		descript : "名有\"羈絆\"能力的主要效果",},
-			{ Jap : "メクレイド",			Eng : "Involvoid",				Chi : "捲襲者",				descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",},
+			{ Jap : "メクレイド",			Eng : "Revolve Great",			Chi : "大捲襲",				descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",},
 			{ Jap : "アッパー・ゴー",		Eng : "Upper Go",				Chi : "提升猛進",			descript : "當生物被破壞時、此生物下方沒有裏側卡牌的話，則將我方牌庫頂第一張牌以裏側方式置入此生物之下",},
 			{ Jap : "キッカー",				Eng : "Kicker",					Chi : "蹴者",				descript : "使用此咒文時，你可以追加支付指定費用以追加後續效果",},
 			{ Jap : "G.R.D.",				Eng : "Gacha Range Down",		Chi : "GR重沉",				descript : "當此生物發動攻擊時，對手要將其GR牌庫頂第四張牌橫置",},
 			{ Jap : "サイキック・チャンス",	Eng : "Psychic Chance",			Chi : "精神機會",			descript : "當我方指定生物發動攻擊時，你可以將此卡置入超次元區以使用以下能力",},
 			{ Jap : "零龍卍誕",				Eng : "Zero Dragn Birth",		Chi : "零龍卍誕",			descript : "當第四張零龍星雲與此卡連接時，將5張卡牌全數翻面並連結成1隻生物。",},
+			{ Jap : "マスターG・O・D・S",	Eng : "God Over Dynamite Spell",Chi : "超神炸彈咒",			descript : "你可以捨棄1張手牌以使用此咒文，那樣的話，則此咒文的使用費用會隨著本回合每一張已捨棄的手牌兒少2，但是不能降到0以下",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
