@@ -325,11 +325,11 @@
 				})();
 				tr.style.cursor = "pointer";
 				//牌庫+沒排序+超次元牌庫的話就塞超次元TR暫存陣列
-				if ( theSet != null && theSet.isDeck && sort == "" && ( cardDataBySort[i].type == "ZC" || cardDataBySort[i].type == "ZCL" || cardDataBySort[i].type == "FSC" || cardDataBySort[i].type == "FFF" ) ){
+				if ( theSet != null && theSet.isDeck && sort == "" && cardTypeMapping.getDataByValue( cardDataBySort[i].type ).Location == "I" ){
 					tableTrExistList.push( tr );
-				} else if ( theSet != null && theSet.isDeck && sort == "" && cardDataBySort[i].back != null ){
+				} else if ( theSet != null && theSet.isDeck && sort == "" && cardTypeMapping.getDataByValue( cardDataBySort[i].type ).Location == "P" ){
 					tableTrExList.push( tr );
-				} else if ( theSet != null && theSet.isDeck && sort == "" && ( cardDataBySort[i].type == "GRC" || cardDataBySort[i].type == "NGRC" ) ){
+				} else if ( theSet != null && theSet.isDeck && sort == "" && cardTypeMapping.getDataByValue( cardDataBySort[i].type ).Location == "G" ){
 					tableTrGrList.push( tr );
 				//其他直接塞
 				} else {
