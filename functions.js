@@ -188,6 +188,8 @@
 			//先把tr物件記在陣列裡以方便非超次元/超次元的排序
 			var tableTrList = [];
 			var tableTrExList = [];
+			var tableTrGrList = [];
+			var tableTrExistList = [];
 			//如果有限定牌庫的話就找出牌庫資訊
 			var theSet = null;
 			if ( lastSelectedSetCode != null ){
@@ -323,8 +325,12 @@
 				})();
 				tr.style.cursor = "pointer";
 				//牌庫+沒排序+超次元牌庫的話就塞超次元TR暫存陣列
-				if ( theSet != null && theSet.isDeck && sort == "" && ( cardDataBySort[i].back != null ) && ( cardDataBySort[i].type != "SI" && cardDataBySort[i].type != "SC" ) ){
+				if ( theSet != null && theSet.isDeck && sort == "" && ( cardDataBySort[i].type == "ZC" || cardDataBySort[i].type == "ZCL" || cardDataBySort[i].type == "FSC" || cardDataBySort[i].type == "FFF" ) ){
+					tableTrExistList.push( tr );
+				} else if ( theSet != null && theSet.isDeck && sort == "" && cardDataBySort[i].back != null ){
 					tableTrExList.push( tr );
+				} else if ( theSet != null && theSet.isDeck && sort == "" && ( cardDataBySort[i].type == "GRC" || cardDataBySort[i].type == "NGRC" ) ){
+					tableTrGrList.push( tr );
 				//其他直接塞
 				} else {
 					tableTrList.push( tr );
@@ -403,6 +409,36 @@
 			//塞進TABLE裡
 			for ( var i = 0 ; i < tableTrExList.length ; i++ ){
 				nameTable.appendChild( tableTrExList[i] );
+			}
+			//插進一個"以下GR區"的分隔用TR
+			if ( tableTrGrList.length > 0 ){
+				var tr = document.createElement('tr');
+				tr.style.backgroundColor = "#000000";
+				tr.style.height = "10px;";
+		
+				var td = document.createElement('td');
+				td.setAttribute("colspan","2");
+				tr.appendChild( td );
+				nameTable.appendChild( tr );
+			}
+			//塞進TABLE裡
+			for ( var i = 0 ; i < tableTrGrList.length ; i++ ){
+				nameTable.appendChild( tableTrGrList[i] );
+			}
+			//插進一個"以下初始區"的分隔用TR
+			if ( tableTrExistList.length > 0 ){
+				var tr = document.createElement('tr');
+				tr.style.backgroundColor = "#000000";
+				tr.style.height = "10px;";
+		
+				var td = document.createElement('td');
+				td.setAttribute("colspan","2");
+				tr.appendChild( td );
+				nameTable.appendChild( tr );
+			}
+			//塞進TABLE裡
+			for ( var i = 0 ; i < tableTrExistList.length ; i++ ){
+				nameTable.appendChild( tableTrExistList[i] );
 			}
 			changeListCSS();
 		}
