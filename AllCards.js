@@ -57472,7 +57472,7 @@
 			pic : "6/65/Dmr23-42",
 		},
 		{
-			name : "終断δ ドルハカバ",
+			name : "終断Δ ドルハカバ",
 			type : "C",
 			civil : 6,
 			race : ["ソニック・コマンド","イニシャルズX"],
@@ -92738,7 +92738,197 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-016.jpg",
 		},
-		
+		{
+			name : "時空の鼓動 ブラックX",
+			back : "黒断の覚醒者 ドキンダムBLACK",
+			type : "PC",
+			civil : 6,
+			race : ["禁断ソニック・コマンド","イニシャルズX"],
+			power : 9999,
+			cost : 9,
+			mana : 1,
+			sp : [
+				"(K)ブロッカー(/K)",
+				"(K)W・ブレイカー(/K)",
+				"當對手因為費用5以下的生物能力或是咒文效果選擇生物時、不能選擇此生物。",
+				"我方回合初時，如果對手場上有封印的話，則將此生物翻至費用較大的一面。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-007a.jpg",
+		},
+		{
+			name : "黒断の覚醒者 ドキンダムBLACK",
+			back : "時空の鼓動 ブラックX",
+			type : "PC",
+			civil : 6,
+			race : ["禁断ソニック・コマンド","イニシャルズX"],
+			power : 99999,
+			cost : 99,
+			mana : 1,
+			sp : [
+				"(K)ブロッカー(/K)",
+				"(K)T・ブレイカー(/K)",
+				"此生物發動攻擊時，如果對手場上有封印的話，則你可以不支付費用、從我方墓地召喚1隻闇文明或是火文明的(R)コマンド(/R)。",
+				"當對手因為費用5以下的生物能力或是咒文效果選擇生物時、不能選擇名有《(N)禁断(/N)》的我方生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-007b.jpg",
+		},
+		{
+			name : "STARSCREAM -ALT MODE-",
+			back : "STARSCREAM -BOT MODE-",
+			type : "PC",
+			civil : 6,
+			race : ["ソニック・コマンド","エイリアン"],
+			power : 4000,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"(K)スピードアタッカー(/K)",
+				"當此生物發動攻擊時，與對手進行(K)ガチンコ・ジャッジ(/K)。我方獲勝的話，則將此生物翻至《(N)STARSCREAM -BOT MODE-(/N)》那一面。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-008a.jpg",
+		},
+		{
+			name : "STARSCREAM -BOT MODE-",
+			back : "STARSCREAM -ALT MODE-",
+			type : "PC",
+			civil : 6,
+			race : ["ソニック・コマンド","エイリアン"],
+			power : 6000,
+			cost : 6,
+			mana : 1,
+			sp : [
+				"(K)W・ブレイカー(/K)",
+				"當此生物被攻擊時，你可以將此生物翻轉至《(N)STARSCREAM -ALT MODE-(/N)》那一面。那樣的話，就終止該攻擊。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-008b.jpg",
+		},
+		{
+			name : "D２V３ 終断のデッドトロン / デッドリー・ビッグバン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-012a.jpg",
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : ["ソニック・コマンド","マスター・イニシャルズX"],
+					power : 8000,
+					cost : 8,
+					mana : 1,
+					sp : [
+						"(K)W・ブレイカー(/K)",
+						"我方墓地每有1張闇文明或是火文明的卡牌，此生物的召喚費用就少1。但是不能降到0以下。",
+						"當對手不支付費用打出生物時，對手要自行破壞他1隻生物。",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 2,
+					mana : 1,
+					sp : [
+						"作廢我方牌庫頂第一張牌。",
+						"場上有我方的(T)フィールド(/T)的話，則抽1張牌。",
+					]
+				},
+			],
+		},
+		{
+			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-013a.jpg",
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : ["ソニック・コマンド","イニシャルズX"],
+					power : 3000,
+					cost : 5,
+					mana : 1,
+					sp : [
+						"(K)S・トリガー(/K)",
+						"(K)ブロッカー(/K)",
+						"於此生物戰鬥獲勝時破壞此生物。",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 3,
+					mana : 1,
+					sp : [
+						"作廢我方牌庫頂2張牌。",
+						"(K)チャージャー(/K)",
+					]
+				},
+			],
+		},
+		{
+			name : "D２V３ 終断のレッドトロン / フォビドゥン・ハンド",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-014a.jpg",
+			wData : [
+				{
+					type : "C",
+					civil : 2,
+					race : ["ソニック・コマンド","マスター・イニシャルズX"],
+					power : 5000,
+					cost : 5,
+					mana : 1,
+					sp : [
+						"召喚此生物時，你可以作廢1張手牌。那樣的話，則此生物的召喚費用少2。",
+						"此生物出場時，你可以選擇1隻對手生物。並讓該生物與此生物進行戰鬥。",
+					],
+				},
+				{
+					type : "S",
+					civil : 2,
+					cost : 9,
+					mana : 1,
+					sp : [
+						"(K)S・トリガー(/K)",
+						"破壞1隻攻擊力9999以下的對手生物。",
+						"場上有我方的(T)フィールド(/T)的話，則選擇1隻對手生物並給予1個封印。",
+					]
+				},
+			],
+		},
+		{
+			name : "終断χ ベガスランチャー",
+			type : "C",
+			civil : 2,
+			race : ["マジック・コマンド","ゲリラ・コマンド","イニシャルズX","シノビ"],
+			power : 4000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)ニンジャ・ストライク(/K)４",
+				"此生物出場時，破壞1隻攻擊力3000以下的對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-015.jpg",
+		},
+		{
+			name : "超次元バサラ・ホール",
+			type : "S",
+			civil : 6,
+			cost : 6,
+			mana : 1,
+			sp : [
+				"當場上有我方的闇文明或是火文明(R)コマンド(/R)、且此咒文在我方護盾區裡的話，則此咒文獲得「(K)S・トリガー(/K)」能力」",
+				"選擇1隻對手生物，給予1個封印。",
+				"從我方超次元區打出1隻費用9以下、且為闇文明或是火文明的精神生物出場。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-016.jpg",
+		},
+		{
+			name : "Dの終断 ドルマゲドン・エリア",
+			type : "D2F",
+			civil : 4,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"我方(R)コマンド(/R)一律獲得「(K)スレイヤー(/K)」能力。",
+				abilitiesHintHeader + "當有其他(T)D2フィールド(/T)出場時，將此卡牌置入我方墓地",
+				"(K)Dスイッチ(/K)－我方回合結束時，你可以將這張(T)D２フィールド(/T)上下翻轉。那樣的話，就從我方墓地或是超次元區中召喚1隻費用6以下、且為闇文明或是火文明的(R)コマンド(/R)出場。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-017.jpg",
+		},		
 		/*
 		{
 			name : "",
