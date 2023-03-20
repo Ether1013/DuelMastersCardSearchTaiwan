@@ -268,6 +268,8 @@
 						if ( i+1 < cardDataBySort.length && cardDataBySort[i+1].back == cardDataBySort[i].name ){
 							tdNum.setAttribute("rowspan",2);
 							tr.appendChild( tdNum );
+						} else if ( cardDataBySort[i].back instanceof Array && cardDataBySort[i].back.length > 1 ){
+							tr.appendChild( tdNum );
 						} else if ( i-1 > 0 && cardDataBySort[i-1].back == cardDataBySort[i].name ){
 							//
 						} else {
