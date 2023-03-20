@@ -264,7 +264,18 @@
 					tdNum.appendChild( idSpan );
 					tdNum.style.width = "30px";
 					tdNum.style.textAlign = "center";
-					tr.appendChild( tdNum );
+					if ( theSet.isDeck ){
+						if ( i+1 < cardDataBySort.length && cardDataBySort[i+1].back == cardDataBySort[i].name ){
+							tdNum.setAttribute("rowspan",2);
+							tr.appendChild( tdNum );
+						} else if ( i-1 > 0 && cardDataBySort[i-1].back == cardDataBySort[i].name ){
+							//
+						} else {
+							tr.appendChild( tdNum );
+						}
+					} else {
+						tr.appendChild( tdNum );
+					}
 				//沒有的話，則新增一個流水號TD
 				} else {
 					var tdNum = document.createElement('td');
