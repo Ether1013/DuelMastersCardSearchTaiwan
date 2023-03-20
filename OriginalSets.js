@@ -1533,7 +1533,32 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-056"
-	var setName = "台灣俺嘉年華2023 3rd-[5C万軍投]＠國洋"
+	var setName = "台灣俺嘉年華2023 3rd-[水魂種]＠Norman"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "バイケンの海幻",								count : 4,	},
+		{		name : "ギュウジン丸の海幻",							count : 3,	},
+		{		name : "アストラルの海幻",								count : 4,	},
+		{		name : "斬隠蒼頭龍バイケン",							count : 2,	},
+		{		name : "轟く革命 レッドギラゾーン",						count : 2,	},
+		{		name : "Drache der'Zen",								count : 4,	},
+		{		name : "AQ NETWORK",									count : 4,	},
+		{		name : "Law儿-怪Hawk",									count : 2,	},
+		{		name : "邪杯と魔術の決断",								count : 3,	},
+		{		name : "テック団の波壊Go!",								count : 2,	},
+		{		name : "Dの博才 サイバーダイス・ベガス",				count : 3,	},
+		{		name : "勝熱と弾丸と自由の決断",						count : 1,	},
+		{		name : "神の試練",										count : 1,	},
+		{		name : "魂の再動",										count : 1,	},
+		{		name : "機術士ディール/「本日のラッキーナンバー！」",	count : 1,	},
+		{		name : "神ナル機カイ「亜堕無」",						count : 1,	},
+		{		name : "ストリーミング・シェイパー",					count : 1,	},
+		{		name : "瞬閃と疾駆と双撃の決断",						count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-057"
+	var setName = "台灣俺嘉年華2023 4th-[5C万軍投]＠國洋"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "クリスマⅢ",												count : 2,	},
@@ -1564,27 +1589,3 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-057"
-	var setName = "台灣俺嘉年華2023 4th-[水魂種]＠Norman"
-	var isDeck = true;
-	var setCardList = [
-		{		name : "バイケンの海幻",								count : 4,	},
-		{		name : "ギュウジン丸の海幻",							count : 3,	},
-		{		name : "アストラルの海幻",								count : 4,	},
-		{		name : "斬隠蒼頭龍バイケン",							count : 2,	},
-		{		name : "轟く革命 レッドギラゾーン",						count : 2,	},
-		{		name : "Drache der'Zen",								count : 4,	},
-		{		name : "AQ NETWORK",									count : 4,	},
-		{		name : "Law儿-怪Hawk",									count : 2,	},
-		{		name : "邪杯と魔術の決断",								count : 3,	},
-		{		name : "テック団の波壊Go!",								count : 2,	},
-		{		name : "Dの博才 サイバーダイス・ベガス",				count : 3,	},
-		{		name : "勝熱と弾丸と自由の決断",						count : 1,	},
-		{		name : "神の試練",										count : 1,	},
-		{		name : "魂の再動",										count : 1,	},
-		{		name : "機術士ディール/「本日のラッキーナンバー！」",	count : 1,	},
-		{		name : "神ナル機カイ「亜堕無」",						count : 1,	},
-		{		name : "ストリーミング・シェイパー",					count : 1,	},
-		{		name : "瞬閃と疾駆と双撃の決断",						count : 1,	},
-	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
