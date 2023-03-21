@@ -342,7 +342,7 @@
 				})();
 				tr.style.cursor = "pointer";
 
-				var theLocation = cardTypeMapping.getDataByValue( ( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type : [ cardDataBySort[i].type ] )[0] ).Location;
+				var theLocation = cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ).Location;
 				//牌庫+沒排序+超次元牌庫的話就塞超次元TR暫存陣列
 				if ( theSet != null && theSet.isDeck && sort == "" && theLocation == "I" ){
 					tableTrExistList.push( tr );

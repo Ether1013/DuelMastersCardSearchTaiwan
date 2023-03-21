@@ -297,7 +297,12 @@
 				{	Jap : "エルドラージ",						Eng : "Eldrazi",				Chi : "奧札奇",			isCategory : false,	},
 				{	Jap : "スリヴァー",							Eng : "Sliver",					Chi : "裂片妖",			isCategory : false,	},
 				{	Jap : "フィオナ・ガーディアン",				Eng : "Fiona Guardian",			Chi : "菲歐娜守護者",	isCategory : false,	},
-				{	Jap : "猫",									Eng : "Cat",					Chi : "貓",			isCategory : false,	},
+				{	Jap : "猫",									Eng : "Cat",					Chi : "貓",				isCategory : false,	},
+				{	Jap : "ドルスザク・ドラゴン",				Eng : "Dol Suzaku Dragon",		Chi : "朱雀龍",			isCategory : false,	},
+				{	Jap : "マスター・イニシャルズX",			Eng : "Master Initials X",		Chi : "王者字首X",		isCategory : false,	},
+				{	Jap : "スプリガン",							Eng : "Spriggan",				Chi : "守寶妖精",		isCategory : false,	},
+				{	Jap : "ムーゲッツ",							Eng : "Moonless",				Chi : "無月",			isCategory : false,	},
+				{	Jap : "マスター・ＤＧ",						Eng : "Masters DG",				Chi : "王者DG",			isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
