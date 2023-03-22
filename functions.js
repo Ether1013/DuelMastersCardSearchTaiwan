@@ -3787,7 +3787,7 @@
 	}
 
 	function findCardRush(){
-		var keyword = lastSelectedCardName.replace( /\s/g,"+" );
+		var keyword = clearSubName( lastSelectedCardName ).replace( /\s/g,"+" );
 		window.open( "https://www.cardrush-dm.jp/product-list?keyword="+keyword+"&Submit=%E6%A4%9C%E7%B4%A2", '_blank');
 	}
 
