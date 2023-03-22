@@ -47886,7 +47886,7 @@
 					"(K)W・ブレイカー(/K)",
 					"此生物出場時，你可以作廢我方牌庫頂5張牌。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-037.jpg",
 		},
 		{
 			name : "不死（ゾンビ） マトメル",
@@ -47902,7 +47902,7 @@
 					"於此生物戰鬥獲勝時破壞此生物。",
 					"當此生物被破壞時，作廢我方牌庫頂6張牌。",
 			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-037.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr20-033.jpg",
 		},
 		{
 			name : "残酷の悪魔龍 ヴォチ・イデール",
