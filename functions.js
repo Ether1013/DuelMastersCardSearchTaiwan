@@ -341,7 +341,11 @@
  					};
 				})();
 				tr.style.cursor = "pointer";
-
+/*
+				if ( cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ) == null ){
+					alert( cardDataBySort[i].name + ":" + cardDataBySort[i].type + "/" + cardDataBySort[i].type[ );
+				}
+*/
 				var theLocation = cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ).Location;
 				//牌庫+沒排序+超次元牌庫的話就塞超次元TR暫存陣列
 				if ( theSet != null && theSet.isDeck && sort == "" && theLocation == "I" ){
@@ -2310,6 +2314,156 @@
 					event.preventDefault();
 					doKeybordFunction( event.keyCode );
 					break;
+				
+			//O=條件初始化
+			case 79 : 
+					limitsReset();	
+					gobi('filterBar').onclick();
+					break;
+					
+			//C=清除文明選項
+			case 67 : 
+					var civilBtns = gosbn("allowCivil");
+					for ( var i = 0 ; i < civilBtns.length ; i++ ){
+						civilBtns[i].setAttribute("class","btnUnClick");
+					}
+					var allowTypes = gosbn("allowType");
+					for ( var i = 0 ; i < allowTypes.length ; i++ ){
+						allowTypes[i].setAttribute("class","btnUnClick");
+					}
+					gobi('filterBar').onclick();
+					break;
+					
+			//L=光文明
+			case 76 : 
+					getCivilBtn(16).click();
+					gobi('filterBar').onclick();					
+					break;
+					
+			//W=水文明
+			case 87 : 
+					getCivilBtn(8).click();
+					gobi('filterBar').onclick();					
+					break;
+					
+			//D=闇文明
+			case 68 :
+					getCivilBtn(4).click();
+					gobi('filterBar').onclick();					
+					break;
+					
+			//F=火文明
+			case 70 :
+					getCivilBtn(2).click();
+					gobi('filterBar').onclick();					
+					break;
+					
+			//N=自文明
+			case 78 :
+					getCivilBtn(1).click();
+					gobi('filterBar').onclick();					
+					break;
+					
+			//Z=無色文明
+			case 90 :
+					getCivilBtn(32).click();
+					gobi('filterBar').onclick();					
+					break;
+					
+			//R=多色
+			case 82 : 
+					var allowType = gosbn("allowType");
+					for ( var i = 0 ; i < allowType.length ; i++ ){
+						if ( allowType[i].getAttribute("allowType") == "M" ){
+							allowType[i].click();
+						}
+					}
+					gobi('filterBar').onclick();		
+					break;
+					
+			//S=單色
+			case 83 :
+					var allowType = gosbn("allowType");
+					for ( var i = 0 ; i < allowType.length ; i++ ){
+						if ( allowType[i].getAttribute("allowType") == "S" ){
+							allowType[i].click();
+						}
+					}
+					gobi('filterBar').onclick();		
+					break;
+											
+			case 48 :
+			case 49 :
+			case 50 :
+			case 51 :
+			case 52 :
+			case 53 :
+			case 54 : 
+			case 55 :
+			case 56 :
+			case 57 :
+			case 96 :
+			case 97 :
+			case 98 :
+			case 99 :
+			case 100:
+			case 101:
+			case 102:
+			case 103:
+			case 104:
+			case 105:
+			case 110:
+			case 190:
+					saveString( event.key );
+					break;
+						
+			case 13 :
+					event.preventDefault();
+					query();
+					break;
+						
+		}
+	}
+	
+	var _saveString = '';
+	var _ss = '';
+	function saveString( code ){
+		_saveString += code;
+		setTimeout( "_ss+='"+code+"';checkSS();",500 );
+	}
+	
+	function checkSS(){
+		if ( _saveString == _ss ){
+			var cost = null;
+			var power = null;
+			var nums = _saveString.split(".");
+			if ( nums.length == 1 ){
+				if ( nums[0].length >= 3 ){
+					power = parseInt( nums[0] )+'';
+				} else {
+					cost = parseInt( nums[0] )+'';
+				}
+			} else if ( nums.length == 2 ){
+				var cost = Math.min( parseInt( nums[0] ), parseInt( nums[1] ) )+'';
+				var power = Math.max( parseInt( nums[0] ), parseInt( nums[1] ) )+'';
+			}
+			if ( cost != null ){
+				if ( cost == '0' ){
+					gobi("cost").value = '';
+				} else {
+				gobi("cost").value = cost;
+				}
+			}
+			if ( power != null ){
+				if ( power == '0' ){
+					gobi("power").value = '';
+				} else {
+					gobi("power").value = power;
+				}
+			}
+			gobi('filterBar').onclick();
+			_saveString = '';
+			_ss = '';
 		}
 	}
 	
@@ -3574,6 +3728,16 @@
 		null
 	);
 	*/
+	
+	function getCivilBtn( civil ){
+		var allowedCivilBtns = gosbn("allowCivil");
+		for ( var i = 0 ; i < allowedCivilBtns.length ; i++ ){
+			var btn = allowedCivilBtns[i];
+			if ( btn.getAttribute("civil") == civil )
+				return btn;
+		}
+		return null;
+	}
 	
 	function changeClass( obj, likeRadio ){
 		if ( obj.getAttribute("class") == "btnUnClick" ){
