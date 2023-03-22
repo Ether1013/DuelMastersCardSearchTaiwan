@@ -3786,6 +3786,11 @@
 		window.open( "https://www.ruten.com.tw/find/?q=%E6%B1%BA%E9%AC%A5%E7%8E%8B+"+lastSelectedSetCode+"+"+idNum, '_blank');
 	}
 
+	function findCardRush(){
+		var keyword = lastSelectedCardName.replace( /\s/g,"+" );
+		window.open( "https://www.cardrush-dm.jp/product-list?keyword="+keyword+"&Submit=%E6%A4%9C%E7%B4%A2", '_blank');
+	}
+
 	/**
 		檢查有沒有遺漏的能力標籤
 	*/
