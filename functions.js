@@ -2331,7 +2331,7 @@
 					break;
 					
 			//C=清除文明選項
-			case 67 : 
+			case 69 : 
 					var civilBtns = gosbn("allowCivil");
 					for ( var i = 0 ; i < civilBtns.length ; i++ ){
 						civilBtns[i].setAttribute("class","btnUnClick");
