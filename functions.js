@@ -342,7 +342,7 @@
 				})();
 				tr.style.cursor = "pointer";
 				tr.ondblclick = function(){
-					const value = this.getAttribute("tr_cardName");
+					const value = clearSubName( this.getAttribute("tr_cardName") );
 					const el = document.createElement('textarea');
 					el.value = value;
 					document.body.appendChild(el);
