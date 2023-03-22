@@ -47902,7 +47902,7 @@
 					"於此生物戰鬥獲勝時破壞此生物。",
 					"當此生物被破壞時，作廢我方牌庫頂6張牌。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-037.jpg",
 		},
 		{
 			name : "残酷の悪魔龍 ヴォチ・イデール",
@@ -84953,22 +84953,6 @@
 				"你不能打出其他名有《(XN)制服（スクール）(/XN)》的放浪生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-036.jpg",
-		},
-		{
-			name : "不死 ゾンビーバー",
-			type : "EC",
-			civil : 4,
-			race : ["デーモン・コマンド","侵略者"],
-			power : 6000,
-			cost : 5,
-			mana : 1,
-			sp : [
-				"(K)進化(/K)－闇のクリーチャー１体の上に置く。",
-				"(K)侵略(/K)－費用3以上的闇文明生物",
-				"(K)W・ブレイカー(/K)",
-				"此生物出場時，你可以作廢我方牌庫頂5張牌。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-037.jpg",
 		},
 		{
 			name : "虚無の守護者グリ・ラ / 無情の光",

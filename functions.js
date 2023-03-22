@@ -341,6 +341,15 @@
  					};
 				})();
 				tr.style.cursor = "pointer";
+				tr.ondblclick = function(){
+					const value = this.getAttribute("tr_cardName");
+					const el = document.createElement('textarea');
+					el.value = value;
+					document.body.appendChild(el);
+					el.select();
+					document.execCommand('copy');
+					document.body.removeChild(el);
+				}
 /*
 				if ( cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ) == null ){
 					alert( cardDataBySort[i].name + ":" + cardDataBySort[i].type + "/" + cardDataBySort[i].type[ );
