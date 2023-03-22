@@ -28469,7 +28469,7 @@
 					"每當此生物發動攻擊時，破壞戰鬥場上1隻對手生物、並觀看我方牌庫。你可以從中選擇1隻(R)ドラゴン(/R)或是(R)コマンド(/R)，並將之打出至戰鬥場上。最後將牌庫洗牌。",
 					"(K)ワールド・ブレイカー(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-022.jpg",
 		},
 		{
 			name : "神羅サンダー・ムーン",
@@ -87026,22 +87026,6 @@
 				"當對手生物發動攻擊時，可能的話就要攻擊此生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-019.jpg",
-		},
-		{
-			name : "竜魔神王バルカディア・NEX",
-			type : "EC",
-			civil : 22,
-			race : ["エンジェル・コマンド","デーモン・コマンド","アーマード・ドラゴン"],
-			power : 25000,
-			cost : 15,
-			mana : 1,
-			sp : [
-				"(K)進化GV(/K)－進化在戰鬥場上我方的(R)エンジェル・コマンド(/R)、(R)デーモン・コマンド(/R)、或是(R)アーマード・ドラゴン(/R)當中任意3隻之上。",
-				"(K)ワールド・ブレイカー(/K)",
-				"對手不能使用咒文。",
-				"此生物發動攻擊時，破壞1隻對手生物。觀看我方牌庫，你可以從中打出1隻(R)ドラゴン(/R)或是(R)コマンド(/R)。之後將牌庫洗牌。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-022.jpg",
 		},
 		{
 			name : "Duplicates of G.O.D.",
