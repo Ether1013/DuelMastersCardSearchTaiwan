@@ -1793,7 +1793,7 @@
 	var isDeck = false;
 	var setCardList = [
 		{
-			name : "激沸騰!オンセン・ガロウズ",
+			name : "激沸騰！オンセン・ガロウズ",
 			pic : "",
 			rarity : "VC",
 			flavor : "",
@@ -28753,7 +28753,7 @@
 			id : "DMX-25 V9/V12",
 		},
 		{
-			name : "激沸騰!オンセン・ガロウズ",
+			name : "激沸騰！オンセン・ガロウズ",
 			pic : "6/69/Dmx25-v10a",
 			rarity : "VC",
 			flavor : "",

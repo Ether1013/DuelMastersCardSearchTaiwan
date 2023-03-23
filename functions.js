@@ -1375,7 +1375,10 @@
 		clearChildren( gobi( "card_flavor" ) );
 		gobi( "tr_flavor" ).style.display = "";
 		clearChildren( gobi( "card_sets" ) );
-		gobi( "tr_ruten" ).style.display = "";
+		var rutenSpans = gosbcn( "sell_ruten" );
+		for ( var r = 0 ; r < rutenSpans.length ; r++ ){
+			rutenSpans[r].style.display = "";
+		}
 		gobi( "lastAAIndex" ).value = "";
 		gobi( "nextAAIndex" ).value = "";
 		if ( isVM() ){
@@ -1761,7 +1764,10 @@
 			//露天
 			if ( lastSelectedSetCode != null && lastSelectedSetCode != '' && twsdSets.includes( lastSelectedSetCode ) ){
 			} else {
-				gobi( "tr_ruten" ).style.display = "none";
+				var rutenSpans = gosbcn( "sell_ruten" );
+				for ( var r = 0 ; r < rutenSpans.length ; r++ ){
+					rutenSpans[r].style.display = "none";
+				}
 			}
 			if ( isVM() && !inSetTd.firstChild ){
 				inSetTd.appendChild( document.createTextNode("--") );
@@ -3789,6 +3795,11 @@
 	function findCardRush(){
 		var keyword = clearSubName( lastSelectedCardName ).replace( /\s/g,"+" );
 		window.open( "https://www.cardrush-dm.jp/product-list?keyword="+keyword+"&Submit=%E6%A4%9C%E7%B4%A2", '_blank');
+	}
+
+	function findYuyutei(){
+		var keyword = clearSubName( lastSelectedCardName ).replace( /\s/g,"+" );
+		window.open( "https://yuyu-tei.jp/game_dm/sell/sell_price.php?name="+keyword, '_blank');
 	}
 
 	/**
