@@ -264,7 +264,7 @@
 					tdNum.appendChild( idSpan );
 					tdNum.style.width = "30px";
 					tdNum.style.textAlign = "center";
-					if ( theSet.isDeck ){
+					if ( theSet.isDeck && lastSelectedSetCode != queryHistorySetCode ){
 						//如果下一張就是這張的背面的話，則共用張數欄
 						if ( i+1 < cardDataBySort.length && cardDataBySort[i+1].back == cardDataBySort[i].name ){
 							tdNum.setAttribute("rowspan",2);
@@ -2373,7 +2373,7 @@
 					gobi('filterBar').onclick();					
 					break;
 					
-			//N=自文明
+			//N=自然文明
 			case 78 :
 					getCivilBtn(1).click();
 					gobi('filterBar').onclick();					
