@@ -1588,3 +1588,29 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-058"
+	var setName = "台灣俺嘉年華2023 主辦-[龍月絕望神]＠紹睿"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "Disジルコン",												count : 2,	},
+		{		name : "禁断竜王 Vol-Val-8",										count : 2,	},
+		{		name : "キユリのASMラジオ",											count : 4,	},
+		{		name : "悪魔妖精ベラドンナ",										count : 4,	},
+		{		name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",	count : 3,	},
+		{		name : "天災 デドダム",												count : 4,	},
+		{		name : "龍月 ドラグ・スザーク / 龍・獄・殺",						count : 3,	},
+		{		name : "絶望と反魂と滅殺の決断",									count : 2,	},
+		{		name : "絶望神サガ",												count : 4,	},
+		{		name : "若き大長老 アプル",											count : 4,	},
+		{		name : "秩序の意志",												count : 3,	},
+		{		name : "B.F.F. モーメント",											count : 2,	},
+		{		name : "黙示賢者ソルハバキ",										count : 1,	},
+		{		name : "超神星DOOM・ドラゲリオン",									count : 2,	},
+		{		name : "ブレイン・テンタクル",										count : 2,	},
+		{		name : "全能ゼンノー",												count : 2,	},
+		{		name : "カット 丙-二式",											count : 2,	},
+		{		name : "回収 TE-10",												count : 2,	},
+		{		name : "クリスマⅢ",													count : 2,	},
+		{		name : "天啓 CX-20",												count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
