@@ -61048,6 +61048,7 @@
 		{
 			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-006a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -61056,7 +61057,7 @@
 					power : 6000,
 					pc : true,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"當此生物出場時，觀看自己的牌庫。你可以從中找出1張名有《(N)ルピア(/N)》的生物出場。之後將牌庫洗牌。",
 						"此生物會隨著自己墓地中每1張(R)ファイアー・バード(/R)而獲得(K)パワーアタッカー(/K)+1000。",
@@ -61067,7 +61068,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 							"(K)S・トリガー(/K)",
 							"橫置戰鬥場上所有對手生物。",
@@ -61078,6 +61079,7 @@
 		{
 			name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-020a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -61085,7 +61087,7 @@
 					race : [ "エンジェル・コマンド・ドラゴン","ドレミ団","革命軍" ],
 					power : 7000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)革命チェンジ(/K)－光文明或是水文明的(R)ドラゴン(/R)",
 						"(K)W・ブレイカー(/K)",
@@ -61096,7 +61098,7 @@
 					type :	"S",
 					civil : 24,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 							"抽3張牌，然後你可以使用一張手牌中、費用5以下的咒文。",
 					],
@@ -61106,12 +61108,13 @@
 		{
 			name : "エターナル・ブレイン / ブレイン珊瑚の仙樹",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-018a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "S",
 					civil : 8,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 							"觀看我方牌庫頂2張牌，並依自己喜好順序放回牌庫頂。",
 							"此咒文用完之後不會置入墓地，取而代之、將此咒文拿回到手牌中。",
@@ -61121,7 +61124,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 							"抽3張牌。然後你可以不支付費用、從手牌使用一張其費用在手牌張數以下的水文明卡牌。",
 					],
@@ -61131,12 +61134,13 @@
 		{
 			name : "計略の手 / 陰謀の手",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-051a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "S",
 					civil : 8,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 							"(K)ワンダブル(/K)",
 							"選擇戰鬥場上一隻非進化的對手生物，並將之拿回到其持有者的手牌中。",
@@ -61146,7 +61150,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 							"隨機作廢一張對手手牌。",
 					],
@@ -64386,6 +64390,7 @@
 		{
 			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s08a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64393,7 +64398,7 @@
 					race : ["ドラゴンギルド","ムートピア"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"當此生物出場或是發動攻擊時，抽2張牌，然後作廢1張手牌。",
@@ -64404,7 +64409,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 							"(K)S・トリガー(/K)",
 							"下個我方回合開始前，對手各回合只能進行一次攻擊或阻擋。",
@@ -64447,6 +64452,7 @@
 		{
 			name : "龍装鬼 オブザ08号 / 終焉の開闢",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s11a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64454,7 +64460,7 @@
 					race : ["ドラゴンギルド","マフィ・ギャング"],
 					power : 9000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"此生物的召喚費用會隨著我方墓地裡的每1隻生物而少1，但是不能降到0以下。",
 						"當此生物出場時，選擇戰鬥場上1隻對手生物。開生物的攻擊力會隨著我方墓地裡的每1隻生物而-1000。",
@@ -64465,7 +64471,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"作廢我方牌庫頂3張牌，然後將1隻生物從我方墓地拿回到手牌中。",
 					],
@@ -64475,6 +64481,7 @@
 		{
 			name : "紅に染まりし者「王牙」/クリムゾン・ビクトリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s13a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64482,7 +64489,7 @@
 					race : ["ヒューマノイド・ドラゴン","ハンター","エイリアン"],
 					power : 8000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)スピードアタッカー(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -64493,7 +64500,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞戰鬥場上所有攻擊力2000以下的生物。",
@@ -64504,6 +64511,7 @@
 		{
 			name : "ゴリガン砕車 ゴルドーザ / ダイナマウス・スクラッパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s14a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64511,7 +64519,7 @@
 					race : ["ビートジョッキー"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)スピードアタッカー(/K)",
 						"各回合中、於此生物第一次橫置時重置此生物。",
@@ -64522,7 +64530,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"破壞戰鬥場上任意隻攻擊力合計在6000以下的對手生物。",
 					],
@@ -64674,6 +64682,7 @@
 		{
 			name : "カツラデランス /「アフロ行きま～す!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-008a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64681,7 +64690,7 @@
 					race : ["ジョーカーズ"],
 					power : 7000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"當此生物出場時，作廢我方牌庫底第一張牌。如果那是費用6以下的(R)ジョーカーズ(/R)生物的話，則打出至戰鬥場上。",
@@ -64691,7 +64700,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"作廢1張手牌，然後抽2張牌。",
 					],
@@ -64742,6 +64751,7 @@
 		{
 			name : "黒豆だんしゃく / 白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-012a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64749,7 +64759,7 @@
 					race : ["グランセクト","スペシャルズ"],
 					power : 12000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)T・ブレイカー(/K)",
 						"對手持有「當此生物出場時」為起始的能力的生物出場時，將該生物置入其持有者的魔力區中。",
@@ -64759,7 +64769,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂第一張牌置入魔力區中，然後你可以將我方魔力區中1張牌拿回到手牌中。",
 					],
@@ -64799,6 +64809,7 @@
 		{
 			name : "天体妖精エスメル /「お茶はいかがですか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-016a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64806,7 +64817,7 @@
 					race : ["スノーフェアリー"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"當此生物出場時，你可以將1張我方護盾置入我方魔力區中。",
 					],
@@ -64815,7 +64826,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將我方牌庫頂第一張牌以裏側方式(K)護盾化<=>シールド化(/K)。下個我方回合開始時，將1張我方護盾拿回到手牌中。但是你不能使用其(K)S・トリガー(/K)能力。",
@@ -64954,6 +64965,7 @@
 		{
 			name : "奇石 ミクセル / ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-026a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -64961,7 +64973,7 @@
 					race : ["メタリカ"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"當對手打出費用比其魔力區卡牌張數還大的生物時，對手要將該生物置入其牌庫底。",
 					],
@@ -64970,7 +64982,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"下個我方回合初之前，對手不能使用咒文。",
 						"抽1張牌。",
@@ -65038,6 +65050,7 @@
 		{
 			name : "スニーク戦車 オーリー / トゲ玉・キャノンボール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-038a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65045,7 +65058,7 @@
 					race : ["ビートジョッキー"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場或是攻擊時，該回合中、給予戰鬥場上1隻我方其他生物「(K)スピードアタッカー(/K)」能力。",
 					],
@@ -65054,7 +65067,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"破壞戰鬥場上所有對手的(K)ブロッカー(/K)。",
 					],
@@ -65064,6 +65077,7 @@
 		{
 			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-041a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65071,7 +65085,7 @@
 					race : ["ジュラシック・コマンド・ドラゴン","ハンター"],
 					power : 9000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -65082,7 +65096,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫第一張牌置入魔力區中。",
 						"你可以從任一玩家的墓地中選擇1張以上的牌，該玩家將所有被選到的牌放進其持有者的牌庫中洗牌。",
@@ -65093,6 +65107,7 @@
 		{
 			name : "青銅のバンビシカット /「我が力、しかと見よ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-045a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65100,7 +65115,7 @@
 					race : ["ドリームメイト","ハンター"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"當此生物出場時，與對手進行(K)ガチンコ・ジャッジ(/K)，我方獲勝的話，則將我方牌庫頂第一張牌置入我方魔力區中。",
 					],
@@ -65109,7 +65124,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞戰鬥場上1隻攻擊力12000以下的對手生物。",
@@ -65176,6 +65191,7 @@
 		{
 			name : "透明妖精リリン / 妖精のプレリュード",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-052a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65183,7 +65199,7 @@
 					race : ["オラクル","スノーフェアリー"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"我方無色生物的召喚費用一律少1，但是不能降到0以下。",
 						"我方魔力區中所有的(R)スノーフェアリー(/R)一律持有所有文明。",
@@ -65193,7 +65209,7 @@
 					type :	"S",
 					civil : 32,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此回合、下個召喚的我方無色生物的召喚費用最多可以少5。",
 					],
@@ -65203,6 +65219,7 @@
 		{
 			name : "綺羅王女プリン / ハンター☆エイリアン仲良しビーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-054a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65211,7 +65228,7 @@
 					power : 3000,
 					pc : true,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)ハンティング(/K)",
@@ -65222,7 +65239,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將戰鬥場丄1隻對手生物置入其持有者的魔力區中。",
@@ -65263,6 +65280,7 @@
 		{
 			name : "パーロックJr. / 新たなる旅立ち",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-059a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65270,7 +65288,7 @@
 					race : ["オラクル","サイバーロード"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 					],
 				},
@@ -65278,7 +65296,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"對手自行將他戰鬥場上2隻生物置入其魔力區中。",
@@ -65289,6 +65307,7 @@
 		{
 			name : "カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-060a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65296,7 +65315,7 @@
 					race : ["スプラッシュ・クイーン"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，觀看我方牌庫頂2張牌。將任意張牌依喜好順序置入牌庫底，再將剩餘張數依喜好順序放回牌庫頂。",
 					],
@@ -65305,7 +65324,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"抽2張牌。",
@@ -65316,6 +65335,7 @@
 		{
 			name : "レイノ・ウッシ /「また引きずり込まれる～」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-063a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65323,7 +65343,7 @@
 					race : ["ファンキー・ナイトメア"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"我方回合結束時，作廢我方牌庫頂第一張牌。",
 					],
@@ -65332,7 +65352,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"選擇戰鬥場上1隻對手生物，此回合，該生物攻擊力-2000。",
@@ -65375,6 +65395,7 @@
 		{
 			name : "レレディ・バ・グーバ / ツインパクト・マップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-068a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65382,7 +65403,7 @@
 					race : ["グランセクト"],
 					power : 9000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"此生物出場時，你可以選擇戰鬥場上1隻對手生物。讓該生物與此生物進行戰鬥。",
@@ -65393,7 +65414,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"公開我方牌庫頂3張牌。你可以將當中1張(T)ツインパクトカード(/T)加入手牌、並將其餘卡牌以喜好方式置入我方牌庫底。",
 					],
@@ -65403,6 +65424,7 @@
 		{
 			name : "コンダマ / 魂フエミドロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-069a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65410,7 +65432,7 @@
 					race : ["グランセクト"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"每當有(T)ツインパクトカード(/T)置入我方魔力區時，重置1張我方魔力區中的卡牌。",
 					],
@@ -65419,7 +65441,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫第一張牌置入魔力區中。如果那張是(T)ツインパクトカード(/T)的話，則再將我方牌庫頂第一張牌置入我方魔力區中。",
 					],
@@ -65457,6 +65479,7 @@
 		{
 			name : "応援妖精エール /「みんな一緒に応援してね！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-074a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65464,7 +65487,7 @@
 					race : ["スノーフェアリー"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，最多重置2張我方魔力區中的卡牌。",
 					],
@@ -65473,7 +65496,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"作廢1張我方手牌，然後破壞戰鬥場上1隻攻擊力6000以下的對手生物。如果作廢的卡牌是(R)スノーフェアリー(/R)的話，則再破壞戰鬥場上1隻攻擊力6000以下的對手生物。",
@@ -65539,6 +65562,7 @@
 		{
 			name : "ソプラノ裁徒 / メロディアス・メロディ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-082a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65546,7 +65570,7 @@
 					race : ["メタリカ","サバキスト"],
 					power : 3500,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"此生物不能攻擊玩家。",
@@ -65557,7 +65581,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"橫置戰鬥場上2隻對手生物。",
@@ -65596,6 +65620,7 @@
 		{
 			name : "カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-090a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65603,7 +65628,7 @@
 					race : ["スプラッシュ・クイーン"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"此生物不能發動攻擊。",
@@ -65614,7 +65639,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將戰鬥場上1隻我方生物拿回到手牌中。然後，選擇戰鬥場上1隻對手生物，並將該隻生物拿回到其持有者的手牌中。",
@@ -65625,6 +65650,7 @@
 		{
 			name : "水面護り ハコフ /蓄積された魔力の縛り",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-092a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65632,7 +65658,7 @@
 					race : ["ムートピア"],
 					power : 2000,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"此生物不能發動攻擊。",
@@ -65642,7 +65668,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"最多選擇戰鬥場上2隻對手生物，到下個我方回合開始前、被選擇的生物不能攻擊或是阻擋。",
@@ -65697,6 +65723,7 @@
 		{
 			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-101a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65704,7 +65731,7 @@
 					race : ["グランセクト"],
 					power : 12000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)T・ブレイカー(/K)",
 					],
@@ -65713,7 +65740,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫第一張牌置入魔力區中。",
 					],
@@ -65767,6 +65794,7 @@
 		{
 			name : "ハリケーン・クロウラー /ブレイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-009a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65774,7 +65802,7 @@
 					race : ["アースイーター"],
 					power : 4000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，將我方手牌全數置入魔力區中。然後，將相同張數的卡從我方魔力區拿回到手牌中。",
 					],
@@ -65783,7 +65811,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"抽1張牌。",
 						"(K)チャージャー(/K)",
@@ -65886,6 +65914,7 @@
 		{
 			name : "全員集合！アクア・三兄弟 / 超次元ジェイシーエイ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-012a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65893,7 +65922,7 @@
 					race : ["リキッド・ピープル","ハンター"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"每當對手不支付費用打出生物時，你可以將該生物拿回到其持有者的手牌中。",
 					],
@@ -65902,7 +65931,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"抽2張牌，然後將1張手牌置入我方牌庫底中。",
@@ -65914,6 +65943,7 @@
 		{
 			name : "最終決戦だ！鬼丸ボーイ / 超次元オニシュラ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-013a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65921,7 +65951,7 @@
 					race : ["ヒューマノイド","ハンター","エイリアン"],
 					power : 2000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"此生物出場時，破壞戰鬥場上1張費用4以下的對手卡牌。",
@@ -65931,7 +65961,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"破壞戰鬥場上所有攻擊力2000以下的對手生物。",
 						"從我方超次元區中打出1隻費用7以下的火文明精神生物至戰鬥場上。",
@@ -65942,6 +65972,7 @@
 		{
 			name : "The 大親分 鬼流院 刃 /「アンノウンがナンボのモンじゃ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-014a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -65949,7 +65980,6 @@
 					race : ["ビーストフォーク","ハンター"],
 					power : 9000,
 					cost : 7,
-					mana : 1,
 					sp : [
 						"(K)マッハファイター(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -65960,7 +65990,6 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
 					sp : [
 						"將我方牌庫頂第一張牌置入我方魔力區中。如果該卡牌是名有《(N)超次元(/N)》的卡牌的話，則再將我方牌庫頂第一張牌置入我方魔力區中。",
 					],
@@ -65998,6 +66027,7 @@
 		{
 			name : "龍装の調べ 初不 /ホーリー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd14-008a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -66005,7 +66035,7 @@
 					race : ["ドラゴンギルド","メタリカ"],
 					power : 7500,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -66016,7 +66046,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"橫置戰鬥場上所有對手生物。",
@@ -66167,6 +66197,7 @@
 		{
 			name : "爆龍覇 リンクウッド /「お前の相手はオレだ、ザ=デッドマン！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd14-015a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -66174,7 +66205,7 @@
 					race : ["ヒューマノイド爆","ドラグナー"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，公開我方牌庫頂第一張牌，如果那是(R)ドラグナー(/R)或是(R)ドラゴン(/R)的話，則加入手牌。",
 					],
@@ -66183,7 +66214,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"選擇戰鬥場上1隻我方生物，然後從超次元區中打出1張費用4以下、且文明與我方魔力區卡牌相同的(T)ドラグハート・ウエポン(/T)並裝備在該生物身上。",
 					],
@@ -68584,6 +68615,7 @@
 		{
 			name : "無双の縛り 達閃 /パシフィック・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-s05a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -68591,7 +68623,7 @@
 					race : ["メタリカ"],
 					power : 4500,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"對手一回合只能打出1隻生物。",
@@ -68603,7 +68635,7 @@
 					civil : 16,
 					race : ["メタリカ"],
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"橫置戰鬥場上所有對手生物。",
 					],
@@ -68722,6 +68754,7 @@
 		{
 			name : "水晶の記録 ゼノシャーク / クリスタル・メモリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-011a.jpg",
+			mana : 1,
 			wData : 
 			[
 				{
@@ -68730,7 +68763,7 @@
 					race : ["ムートピア"],
 					power : 1000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)スマッシュ・バースト(/K)",
 					],
@@ -68739,7 +68772,7 @@
 					type : "S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"觀看我方牌庫，從中選擇1張牌加入手牌。然後將牌庫洗牌。",
@@ -68776,6 +68809,7 @@
 		{
 			name : "西南の超人 /断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-017a.jpg",
+			mana : 1,
 			wData : 
 			[
 				{
@@ -68784,7 +68818,7 @@
 					race : ["ジャイアント","サムライ"],
 					power : 3000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"我方的(R)ジャイアント(/R)的召喚費用最多可以少2，但是不能降到0以下。",
 						"(K)セイバー(/K)－(R)ジャイアント(/R)",
@@ -68794,7 +68828,7 @@
 					type : "S",
 					civil : 1,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"橫置戰鬥場上1隻我方生物，下個我方回合開始前，對手生物若要發動攻擊，可能的話就要攻擊此生物。",
@@ -69276,6 +69310,7 @@
 		{
 			name : "フェルナンド・ソシュール /プライマル・スクリーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TR4a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -69283,7 +69318,7 @@
 					race : ["マフィ・ギャング"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"當此生物出場或是發動攻擊時，你可以作廢我方牌庫頂2張牌。之後，你可以從我方墓地中打出1隻費用3以下的生物出場。",
@@ -69293,7 +69328,7 @@
 					type : "S",
 					civil : 4,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"作廢我方牌庫頂4張牌。之後你可以將1隻生物從我方墓地中拿回到手牌中。",
@@ -70256,6 +70291,7 @@
 		{
 			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF16a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70263,7 +70299,7 @@
 					race : ["サイバー・ウイルス","ナイト"],
 					power : 2000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"每當我方使用咒文時，你可以抽1張牌。",
 					],
@@ -70272,7 +70308,7 @@
 					type : "S",
 					civil : 8,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"最多抽2張牌，然後作廢1張手牌。",
@@ -70608,6 +70644,7 @@
 		{
 			name : "冥界の不死帝 ブルース /「迷いはない。俺の成すことは決まった」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF1a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70615,7 +70652,7 @@
 					race : ["アウトレイジMAX"],
 					power : 13000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)T・ブレイカー(/K)",
 						"當我方墓地中卡牌張數少於13張時，此生物不能發動攻擊。",
@@ -70626,7 +70663,7 @@
 					type : "S",
 					civil : 4,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"從我方墓地中打出1隻費用3以下的生物出場。",
@@ -70637,6 +70674,7 @@
 		{
 			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF2a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70645,7 +70683,7 @@
 					power : 6000,
 					pc : true,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"攻擊中，此生物的攻擊力會隨著我方墓地中每張火文明的卡牌而+1000。",
@@ -70656,7 +70694,7 @@
 					civil : 2,
 					pc : true,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"公開我方牌庫頂3張牌。從中將所有名有《(N)ボルシャック(/N)》的卡牌全部加入手牌，並將其餘卡牌以喜好方式置入我方牌庫底。",
 						"(K)チャージャー(/K)",
@@ -70667,6 +70705,7 @@
 		{
 			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF3a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70674,7 +70713,7 @@
 					race : ["アーマード・ドラゴン","ハンター"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，破壞戰鬥場上所有攻擊力3000以下的非精神生物。然後，破壞戰鬥場上所有攻擊力5000以下的精神生物。",
@@ -70684,7 +70723,7 @@
 					type : "S",
 					civil : 2,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"破壞戰鬥場上1張費用3以下的對手卡牌。",
 					],
@@ -70694,6 +70733,7 @@
 		{
 			name : "ラ・ズーネヨマ・パンツァー / 逆転のオーロラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF4a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70701,7 +70741,7 @@
 					race : ["グランセクト"],
 					power : 12000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)ガードマン(/K)",
 						"此生物不能攻擊玩家。",
@@ -70712,7 +70752,7 @@
 					type : "S",
 					civil : 1,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"將任意張數的我方護盾置入我方魔力區中。",
 					],
@@ -70852,6 +70892,7 @@
 		{
 			name : "アドレック・ワークマン/バイス・スクラッパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp12-007a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70859,7 +70900,7 @@
 					race : ["マフィ・ギャング"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"每當有其他生物被破壞時，對手就要自己作廢他1張手牌。",
 					],
@@ -70868,7 +70909,7 @@
 					type : "S",
 					civil : 2,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞戰鬥場上任意隻、且攻擊力合計在5000以下的對手生物。",
@@ -70920,6 +70961,7 @@
 		{
 			name : "龍頭星雲人 / 零誕祭",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-015a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70927,7 +70969,7 @@
 					race : [ "デーモン・コマンド","ゼロリスト" ],
 					power : 12000,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"我方墓地中每有1張闇文明或水文明卡牌、此生物的召喚費用就少1，但是不能降到0以下。",
 						"當此生物出場或發動攻擊時，對手要自行作廢他2張手牌。",
@@ -70938,7 +70980,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 							"(K)S・トリガー(/K)",
 							"破壞1隻我方生物。之後，破壞1隻對手生物。",
@@ -70962,6 +71004,7 @@
 		{
 			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s6a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -70969,7 +71012,7 @@
 					race : ["ドラゴンギルド","メタリカ"],
 					power : 9500,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -70980,7 +71023,7 @@
 					type : "S",
 					civil : 8,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"你可以從手牌中打出1隻費用7以下的非進化生物出場，然後將該生物拿回到手牌中。",
@@ -71031,6 +71074,7 @@
 		{
 			name : "機術士ディール/「本日のラッキーナンバー！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp05-003a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -71038,7 +71082,7 @@
 					race : ["マジック・コマンド"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，宣言1個數字，將戰鬥場上所有費用數值等同於該數字的對手生物全數拿回到其持有者的手牌中。",
@@ -71048,7 +71092,7 @@
 					type : "S",
 					civil : 8,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"選擇1個數字，下個我方回合開始前，對手不能召喚或使用費用數字與該數字相同的生物或咒文。",
 					],
@@ -71403,6 +71447,7 @@
 		{
 			name : "マグナム・ルピア / クリムゾン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se3a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -71410,7 +71455,7 @@
 					race : ["ファイアー・バード"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"當對手打出費用比其魔力區域卡牌張數還大的生物時，破壞該生物。",
 					],
@@ -71419,7 +71464,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"破壞1隻攻擊力2000以下的對手生物。",
 						"(K)チャージャー(/K)",
@@ -71444,6 +71489,7 @@
 		{
 			name : "鳳翔竜騎ソウルピアレイジ / 高貴なる魂炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-004a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "NC",
@@ -71451,7 +71497,7 @@
 					race : ["ファイアー・バード","アーマード・ドラゴン"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)NEO進化(/K)－你可以將此生物置於1隻我方的火文明生物之上。",
 						"(K)スマッシュ・バースト(/K)",
@@ -71461,7 +71507,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞所有攻擊力3000以下的對手生物。",
@@ -73306,6 +73352,7 @@
 		{
 			name : "地龍仙ロマネアース / 仙なる大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-014a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73313,7 +73360,7 @@
 					race : ["アース・ドラゴン"],
 					power : 12000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)ガードマン(/K)",
 						"(K)T・ブレイカー(/K)",
@@ -73325,7 +73372,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"將1隻我方生物置入魔力區中，那樣的話，就從手牌打出1隻費用不超過我方魔力區卡牌張數的生物出場。",
 					],
@@ -73443,6 +73490,7 @@
 		{
 			name : "偽りの王 ナンバーナイン / 歓喜の歌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-022a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73450,7 +73498,7 @@
 					race : ["キング・コマンド・ドラゴン","アンノウン"],
 					power : 9000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"對手不能使用咒文。",
@@ -73460,7 +73508,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"觀看我方牌庫頂9張牌。你可以從中選擇1張費用9的卡牌，在給對手確認之後加入手牌。並將剩餘卡牌洗牌之後置入牌庫底。",
 					],
@@ -73530,6 +73578,7 @@
 		{
 			name : "R.S.F.K. / オールイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-030a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73537,7 +73586,6 @@
 					race : ["レッド・コマンド・ドラゴン","ハンター","エイリアン"],
 					power : 5000,
 					cost : 7,
-					mana : 1,
 					sp : [
 						"(K)スピードアタッカー(/K)",
 						"此生物發動攻擊時，持續與對手進行(K)ガチンコ・ジャッジ(/K)直到落敗或我方主動停止為止。之後，每因此獲勝一次(K)ガチンコ・ジャッジ(/K)，此生物就擊破1張對手護盾。",
@@ -73547,7 +73595,6 @@
 					type :	"S",
 					civil : 2,
 					cost : 3,
-					mana : 1,
 					sp : [
 						"與對手進行(K)ガチンコ・ジャッジ(/K)，我方獲勝的話，則抽1張牌。",
 						"(K)チャージャー(/K)",
@@ -73590,6 +73637,7 @@
 		{
 			name : "八頭竜 ACE-Yamata / 神秘の宝剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-033a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73597,7 +73645,7 @@
 					race : ["アース・ドラゴン","オリジン"],
 					power : 16000,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"(K)T・ブレイカー(/K)",
@@ -73609,7 +73657,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"觀看我方牌庫，你可以從中選擇1張非自然文明的卡牌、以橫置方式置入魔力區中。之後將牌庫洗牌。",
 					],
@@ -73660,6 +73708,7 @@
 		{
 			name : "アクア・スペルブルー / インビンシブル・オーラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-038a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73667,7 +73716,7 @@
 					race : ["リキッド・ピープル","ハンター"],
 					power : 2000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"此生物出場時，將自己的牌庫洗牌。然後公開牌庫頂第一張牌。如果那是咒文的話，則你可以不支付費用使用該咒文，不然的話，則加入手牌。",
@@ -73677,7 +73726,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 13,
-					mana : 1,
+
 					sp : [
 							"最多將我方牌庫頂3張牌以裏側方式(K)護盾化<=>シールド化(/K)。",
 					],
@@ -73731,6 +73780,7 @@
 		{
 			name : "偽りの名 スネーク / アンノウン・プログラム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-042a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73738,7 +73788,7 @@
 					race : ["アンノウン"],
 					power : 11000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"我方生物出場時，抽1張牌。然後將我方牌庫頂第一張牌置入魔力區中。",
@@ -73749,7 +73799,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"破壞1隻我方生物，然後從我方墓地中打出1隻比該生物費用多1的生物出場。",
 					],
@@ -73845,6 +73895,7 @@
 		{
 			name : "「武」の頂 マキシマム・ザ・マックス / 極頂秘伝ゼニス・シンフォニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-043a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73853,7 +73904,6 @@
 					power : 12000,
 					pc : true,
 					cost : 10,
-					mana : 1,
 					sp : [
 						"(K)パワーアタッカー(/K)+12000",
 						"(K)ワールド・ブレイカー(/K)",
@@ -73864,7 +73914,6 @@
 					type :	"S",
 					civil : 32,
 					cost : 9,
-					mana : 1,
 					sp : [
 						"(K)アタック・チャンス(/K)－(R)アンノウン(/R)",
 						"你可以不支付費用、從手牌中召喚1隻同時為(R)アンノウン(/R)與(R)ゼニス(/R)的生物。該回合結束時，將該生物拿回到手牌中。",
@@ -73875,6 +73924,7 @@
 		{
 			name : "霊騎コルテオ / プロテクション・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-044a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -73882,7 +73932,7 @@
 					race : ["アーク・セラフィム","オリジン"],
 					power : 2000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"此生物出場時，我方每有1隻生物，就橫置1隻對手生物。",
@@ -73892,7 +73942,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將1張我方手牌(K)護盾化<=>シールド化(/K)。",
 						"我方護盾比對手多的話，你就可以抽1張牌。",
@@ -73931,6 +73981,7 @@
 		{
 			name : "俺神（シェン）豚（トン） ブリタニア /「カツキング、俺とお前の勝負だ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-048a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "XC",
@@ -73938,7 +73989,7 @@
 					race : ["アウトレイジMAX","オラクル"],
 					power : 6000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，從我方墓地將任意數量的(R)アウトレイジ(/R)跟無色咒文拿回到手牌中。",
@@ -73950,7 +74001,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"作廢我方牌庫頂4張牌。然後破壞1隻費用數字在我方墓地卡牌張數以下的對手生物。",
@@ -74013,6 +74064,7 @@
 		{
 			name : "キャベッジ・セッションズ / ソイルピンプ・キャベッジ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-052a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "NC",
@@ -74020,7 +74072,7 @@
 					race : ["グランセクト"],
 					power : 12000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)NEO進化(/K)－你可以進化在1隻我方的自然文明生物之上。",
 						"(K)T・ブレイカー(/K)",
@@ -74031,7 +74083,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此回合中，下個我方所召喚、攻擊力12000以上的自然文明生物的召喚費用最最多可以少8。但是不能降到0以下。",
 					],
@@ -74041,6 +74093,7 @@
 		{
 			name : "偽りの名 13 / 種族選別",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-053a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74048,7 +74101,7 @@
 					race : ["アンノウン"],
 					power : 24000,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"(K)ワールド・ブレイカー(/K)",
 					],
@@ -74057,7 +74110,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"公開我方牌庫頂3張牌。從中選擇任意隻不同種族的生物並加入手牌。並將其餘卡牌依喜好順序置入牌庫底。",
 					],
@@ -74067,6 +74120,7 @@
 		{
 			name : "薔薇の使者 / ガイアズ・ソング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-055a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74074,7 +74128,7 @@
 					race : ["ビーストフォーク","オリジン"],
 					power : 4000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，將我方牌庫頂2張牌置入魔力區中。",
 						"此生物離場時，將我方魔力區中2張牌依喜好順序置入牌庫頂。",
@@ -74084,7 +74138,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"將1隻我方生物置入魔力區中。",
 					],
@@ -74094,6 +74148,7 @@
 		{
 			name : "コレンココ・タンク / ボント・プラントボ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-056a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74101,7 +74156,7 @@
 					race : ["グランセクト"],
 					power : 12000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)ガードマン(/K)",
 						"此生物不能攻擊玩家。",
@@ -74112,7 +74167,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂第一張牌置入魔力區中。如果那ˋ攻擊力12000以上的生物的話，則再將我方牌庫頂第一張牌置入魔力區中。",
 					],
@@ -74137,6 +74192,7 @@
 		{
 			name : "偽りの名 iFormula X / クリスティナ・フォール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-059a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74144,7 +74200,7 @@
 					race : ["グレートメカオー","アンノウン"],
 					power : 6000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"我方回合結束時，如果此生物為橫置狀態、且我方手牌有10張以上的話，則我方贏得這場遊戲。",
@@ -74154,7 +74210,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"橫置1隻我方生物，然後橫置所有攻擊力比該生物低的對手生物。",
 					],
@@ -74176,6 +74232,7 @@
 		{
 			name : "暴発秘宝ベンゾ / 星龍の暴発",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-061a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74183,7 +74240,7 @@
 					race : ["パンドラボックス"],
 					power : 2000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，擊破1張我方護盾。",
 					],
@@ -74192,7 +74249,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"下個我方回合開始前，加入我方手牌的護盾卡牌一律獲得「(K)S・トリガー(/K)」能力。如果現在是玩家的回合的話，則打出此卡的生物側至戰鬥場上。",
@@ -74203,6 +74260,7 @@
 		{
 			name : "閃光の神官 ヴェルベット / フェアリー・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-062a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74210,7 +74268,7 @@
 					race : ["オラクル"],
 					power : 11000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"對手生物一律以橫置方式出場。",
@@ -74221,7 +74279,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂第一張牌置入魔力區中。如果那是攻擊力6000以上的生物的話，則抽1張牌。",
 					],
@@ -74231,6 +74289,7 @@
 		{
 			name : "星雲の精霊キルスティン / 神秘の石柱",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-063a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74239,7 +74298,7 @@
 					power : 5000,
 					pc : true,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－##我方生物攻擊一律+5000、並獲得「(K)ブロッカー(/K)」與「(K)W・ブレイカー(/K)」。",
 					],
@@ -74248,7 +74307,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂2張牌以橫置方式置入魔力區中。然後將我方魔力區1張卡牌置入墓地。",
 					],
@@ -74258,6 +74317,7 @@
 		{
 			name : "セブ・コアクマン / マインド・リセット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-064a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74265,7 +74325,7 @@
 					race : ["サイバーロード","エイリアン"],
 					power : 2000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，你可以公開我方牌庫頂3張牌。從將所有光文明與闇文明的卡牌加入手牌，並將其餘卡牌置入墓地。",
 					],
@@ -74274,7 +74334,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"觀看對手手牌，選擇1張咒文作廢。",
 					],
@@ -74284,6 +74344,7 @@
 		{
 			name : "戦武の無限皇 ジャッキー /「俺たちの夢は終わらねぇ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-065a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74291,7 +74352,7 @@
 					race : ["アウトレイジMAX"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"對手使用咒文時需支付無限的魔力。",
@@ -74301,7 +74362,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"你可以從我方手牌中打出1隻費用8以下的(R)アウトレイジ(/R)。然後你可以選擇1隻對手生物，那樣的話，就讓該生物與打出來的生物進行戰鬥。",
@@ -74312,6 +74373,7 @@
 		{
 			name : "キング・シビレアシダケ / インビンシブル・テクノロジー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-066a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74319,7 +74381,7 @@
 					race : ["バルーン・マッシュルーム"],
 					power : 2000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，你可以將任意張手牌以橫置方式置入魔力區中。",
 					],
@@ -74328,7 +74390,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 13,
-					mana : 1,
+
 					sp : [
 						"觀看我方牌庫，並將任意張卡牌給對手確認之後加入手牌。之後將牌庫洗牌。",
 					],
@@ -74374,6 +74436,7 @@
 		{
 			name : "緑神龍ディルガベジーダ / 偶発と弾幕の要塞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-070a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74381,7 +74444,7 @@
 					race : ["アース・ドラゴン"],
 					power : 23000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)Q・ブレイカー(/K)",
 						"此生物被破壞時，取而代之、將此生物放進牌庫裡洗牌。",
@@ -74391,7 +74454,7 @@
 					type :	"S",
 					civil : 10,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"持續公開我方牌庫頂直到翻出生物為止。破壞所有攻擊力比該生物低的生物。之後作廢所有公開卡牌。",
 					],
@@ -74506,6 +74569,7 @@
 		{
 			name : "光器ペトローバ / ソーラー・コミューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-073a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74513,7 +74577,7 @@
 					race : ["メカ・デル・ソル"],
 					power : 3500,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，選擇一個(R)メカ・デル・ソル(/R)以外的種族，該種族攻擊力一律+4000。",
 						"對手選擇生物時，不能選擇此生物。",
@@ -74523,7 +74587,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"選擇1個種族，我方場上每有1隻該種族生物，就橫置1隻對手生物。",
@@ -74534,6 +74598,7 @@
 		{
 			name : "予言者ラメール / マスター・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-074a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74542,7 +74607,7 @@
 					power : 1500,
 					pc : true,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－我方生物攻擊力一律+1000。",
 					],
@@ -74551,7 +74616,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"橫置對手所有生物。",
@@ -74599,6 +74664,7 @@
 		{
 			name : "神（シェン）豚（トン） ブータンPUNK / ブータン両成敗",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-080a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "XC",
@@ -74606,7 +74672,7 @@
 					race : ["アウトレイジMAX","オラクル"],
 					power : 4000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ウルトラ・ドロン・ゴー(/K)－此生物離場時，你可以從手牌打出1隻名有《(XN)神（シェン）豚（トン）(/XN)》的(T)放浪生物<=>エグザイル・クリーチャー(/T)。",
 						"你不能打出名有《(XN)神（シェン）(/XN)》的(T)放浪生物<=>エグザイル・クリーチャー(/T)出場。",
@@ -74616,7 +74682,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"對手自行破壞他1隻生物。然後破壞1隻我方生物。",
@@ -74627,6 +74693,7 @@
 		{
 			name : "学校男 / ゾンビ・カーニバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-081a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74634,7 +74701,7 @@
 					race : ["へドリアン","エイリアン"],
 					power : 8000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，破壞2隻我方生物。然後對手自行破壞他1隻生物。",
 						"(K)W・ブレイカー(/K)",
@@ -74644,7 +74711,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"選擇1個種族。最多從我方墓地中選擇3張該種族生物並將之拿回到手牌中。",
@@ -74655,6 +74722,7 @@
 		{
 			name : "骨折人形トロンボ / デビル・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-082a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74662,7 +74730,7 @@
 					race : ["デスパペット"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－此生物出場時，你可以從我方墓地中選擇1隻生物並將之拿回到手牌中。",
 					],
@@ -74671,7 +74739,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻對手生物。",
@@ -74747,6 +74815,7 @@
 		{
 			name : "斬神兵グランドルメス / バースト・ワンショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-088a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74754,7 +74823,7 @@
 					race : ["アーマロイド"],
 					power : 2000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－破壞戰鬥場上所有攻擊力2000以下的生物。",
 					],
@@ -74763,7 +74832,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞所有攻擊力3000以下的對手生物。",
@@ -74806,6 +74875,7 @@
 		{
 			name : "アラーム・ラディッシュ / ナチュラトゥルー・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-093a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74813,7 +74883,7 @@
 					race : ["ワイルド・ベジーズ"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－此生物出場時，將我方牌庫頂第一張牌置入魔力區中，然後將1隻生物從我方魔力區中拿回到手牌中。",
 					],
@@ -74822,7 +74892,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將1隻對手生物置入其持有者的魔力區中。",
@@ -74897,6 +74967,7 @@
 		{
 			name : "天雷龍姫エリザベス / インビンシブル・フォートレス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-098a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74904,7 +74975,7 @@
 					race : ["アポロニア・ドラゴン","メカ・デル・ソル","ナイト"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"從我方護盾加入手牌的咒文一律獲得「(K)S・トリガー(/K)」能力。",
 					],
@@ -74913,7 +74984,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 13,
-					mana : 1,
+
 					sp : [
 						"最多選擇對手3張護盾並將之置入其持有者的墓地中。",
 					],
@@ -74923,6 +74994,7 @@
 		{
 			name : "第六戦街 ラヴ・ガトラー / インビンシブル・アビス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-099a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74930,7 +75002,7 @@
 					race : ["ムートピア","サイバー・コマンド"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -74942,7 +75014,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 13,
-					mana : 1,
+
 					sp : [
 						"破壞所有對手生物。",
 					],
@@ -74952,6 +75024,7 @@
 		{
 			name : "雪溶の鎖 / 堕牛の一撃",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-100a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -74959,7 +75032,7 @@
 					race : ["ビーストフォーク"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"當此生物被破壞時，取而代之、將此生物置入魔力區中。",
 					],
@@ -74968,7 +75041,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"破壞1隻我方生物，然後抽2張牌。",
 					],
@@ -75016,6 +75089,7 @@
 		{
 			name : "堅防の使徒アースラ / グローリー・ストーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-101a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75024,7 +75098,7 @@
 					power : 2000,
 					pc : true,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－此生物攻擊力+4000、並獲得「(K)ブロッカー(/K)」能力。",
 					],
@@ -75033,7 +75107,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"如果對手魔力區中的卡牌比我方多的話，則將我方牌庫堆頂第一張牌置入魔力區中。",
@@ -75084,6 +75158,7 @@
 		{
 			name : "パーロック / 蓄積された魔力の渦",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-105a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75091,7 +75166,7 @@
 					race : ["サイバーロード","オリジン"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 					],
 				},
@@ -75099,7 +75174,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"選擇1隻生物，將該生物與其他持有同名的生物全數拿回到其持有者的手牌中。",
@@ -75139,6 +75214,7 @@
 		{
 			name : "薔薇公爵ハザリア / ファントム・ベール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-109a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75146,7 +75222,7 @@
 					race : ["ダークロード"],
 					power : 2000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－此生物出場時，對手自行破壞他1隻生物。",
 					],
@@ -75155,7 +75231,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"下個對手回合中，對手生物只要可以的話就要發動攻擊。",
 					],
@@ -75192,6 +75268,7 @@
 		{
 			name : "轟速 ザ・レッド / 超次元キル・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-112a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75199,7 +75276,7 @@
 					race : ["ソニック・コマンド","侵略者"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)スピードアタッカー(/K)",
 					],
@@ -75208,7 +75285,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"破壞1隻攻擊力4000以下並持有「(K)ブロッカー(/K)」能力的對手生物。",
 						"從超次元區打出1隻費用2以下的超次元生；或是打出1隻費用4以下、且為火文明或自然文明的精神生物。",
@@ -75219,6 +75296,7 @@
 		{
 			name : "炎舞闘士サピエント・アーク / 無限掌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-113a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75227,7 +75305,7 @@
 					power : 2000,
 					pc : true,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－此生物攻擊力+4000、且可以攻擊重置狀態的對手生物。",
 					],
@@ -75236,7 +75314,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"選擇1隻我方生物，此回合中、於該生物戰鬥獲勝時重置該生物。",
 					],
@@ -75324,6 +75402,7 @@
 		{
 			name : "ニンジャ・パンプキン / グローリー・マッスル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-119a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75332,7 +75411,7 @@
 					power : 2000,
 					pc : true,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ウェーブストライカー(/K)－此生物攻擊力+4000、且不會被攻擊力5000以下的生物阻擋。",
 					],
@@ -75341,7 +75420,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"此回合中、戰鬥場上1隻我方生物攻擊力+4000。",
 					],
@@ -75446,12 +75525,13 @@
 		{
 			name : "超次元エナジー・ホール / 超次元サプライズ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-127a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "S",
 					civil : 8,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"抽1張牌。",
 						"下列能力擇一發動：##從自己的超次元區中選出任意隻費用合計5以下的精神生物出場。##從自己的超次元區中選出1隻水文明、且費用7以下的精神生物出場。",
@@ -75461,7 +75541,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"下列能力擇一發動：##從自己的超次元區中選出1隻費用2以下的精神生物出場。##從自己的超次元區中選出1隻光文明或是水文明、且費用4以下的精神生物出場。",
@@ -75472,6 +75552,7 @@
 		{
 			name : "牙神兵ガンガン・マンモス / ブレイン・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-128a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -75479,7 +75560,7 @@
 					race : ["アーマロイド"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此生物發動攻擊時，你可以從手牌作廢1張多色卡牌，那樣的話，則重置此生物。",
 					],
@@ -75488,7 +75569,7 @@
 					type :	"S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"最多抽3張牌，然後作廢1張手牌。",
 					],
@@ -77208,6 +77289,7 @@
 		{
 			name : "奇石 ベイブレンラ/スーパー・エターナル・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp08-003a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -77215,7 +77297,7 @@
 					race : [ "メタリカ" ],
 					power : 3500,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)スマッシュ・バースト(/K)",
 						"我方手牌不會因為對手的生物或咒文效果而捨棄。",
@@ -77225,7 +77307,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 							"(K)S・トリガー(/K)",
 							"將戰鬥場上1張費用6以下的卡牌、以裏側方式(K)護盾化<=>シールド化(/K)",
@@ -77236,6 +77318,7 @@
 		{
 			name : "龍聖霊ウルフェウス/ヘブンの衝撃",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex04-036a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -77243,7 +77326,6 @@
 					race : [ "アポロニア・ドラゴン","エンジェル・コマンド" ],
 					power : 6000,
 					cost : 7,
-					mana : 1,
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，如果我方墓地有(R)エンジェル・コマンド(/R)或是(R)ドラゴン(/R)的話，則我方可以不支付費用、使用1張手牌中持有「(K)S・トリガー(/K)」能力的咒文。",
@@ -77253,7 +77335,6 @@
 					type :	"S",
 					civil : 16,
 					cost : 7,
-					mana : 1,
 					sp : [
 							"(K)S・トリガー(/K)",
 							"選擇1隻非進化的對手生物，並將其以裏側方式(K)護盾化<=>シールド化(/K)",
@@ -77401,6 +77482,7 @@
 		{
 			name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-011a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -77408,7 +77490,7 @@
 					race : ["ガイアール・コマンド・ドラゴン","ヒューマノイド爆","ドラグナー"],
 					power : 5000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"此生物出場時，你可以選擇1隻對手生物。並讓此生物與該生物進行戰鬥。",
@@ -77418,7 +77500,7 @@
 					type :	"S",
 					civil : 2,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"從手牌中打出1隻(R)ドラグナー(/R)。",
 					],
@@ -77428,6 +77510,7 @@
 		{
 			name : "次世代龍覇 グレングラッサ /「ここはまかせて、お姉ちゃん！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-012a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -77435,7 +77518,7 @@
 					race : ["ガイアール・コマンド・ドラゴン","ヒューマノイド爆","ドラグナー"],
 					power : 4000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，破壞1隻費用2以下的對手生物。之後，從超次元區打出1張費用3以下的(T)ドラグハート(/T)。(如果是(T)ウエポン(/T)的話，則裝備在此生物之上）",
 					],
@@ -77443,7 +77526,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"橫置對手所有生物。",
@@ -77455,6 +77538,7 @@
 		{
 			name : "爆龍覇 グレンリベット /「爆流秘術、暴龍の大地！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-013a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -77462,7 +77546,7 @@
 					race : ["ガイアール・コマンド・ドラゴン","ヒューマノイド爆","ドラグナー"],
 					power : 12000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)T・ブレイカー(/K)",
 						"此生物召喚出場時、或是因對手卡牌效果從手牌中被捨棄時、就公開我方牌庫頂3張牌。從中選擇1隻(R)ドラゴン(/R)並打出場。並將剩餘卡牌依喜好順序置入牌庫底。",
@@ -77471,7 +77555,7 @@
 					type :	"S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂第一張牌以橫置方式置入魔力區。如果那是(R)ドラゴン(/R)的話，則此咒文使用完後不會置入墓地、取而代之、拿回到手牌中。",
 					],
@@ -78963,6 +79047,7 @@
 		{
 			name : "天地命動 バラギアラ / 輪廻暴聖",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-SP2a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -78970,7 +79055,7 @@
 					race : ["マスター・ハザード","グランセクト"],
 					power : 17000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"此生物召喚出場時，重置我方魔力區中所有卡牌。",
 						"(K)輪廻∞(/K)",
@@ -78992,6 +79077,7 @@
 		{
 			name : "天地命動 バラギアラ / 輪廻暴冥",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR2a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -78999,7 +79085,7 @@
 					race : ["マスター・ハザード","グランセクト"],
 					power : 17000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"此生物召喚出場時，重置我方魔力區中所有卡牌。",
 						"(K)輪廻∞(/K)",
@@ -79009,7 +79095,7 @@
 					type :	"S",
 					civil : 4,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 							"(K)S・トリガー(/K)",
 							"選擇1隻對手生物，此回合中、該生物攻擊力-4000。。",
@@ -80851,6 +80937,7 @@
 		{
 			name : "悪魔神バロム / バロム砲",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a024a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "EC",
@@ -80858,7 +80945,7 @@
 					race : ["デーモン・コマンド"],
 					power : 12000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)進化(/K)－進化在1隻我方的(R)デーモン・コマンド(/R)之上。",
 						"(K)W・ブレイカー(/K)",
@@ -80869,7 +80956,7 @@
 					type : "S",
 					civil : 4,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"所有玩家各自將其魔力區中所有闇文明以外的卡牌置入墓地。",
 					],
@@ -80879,6 +80966,7 @@
 		{
 			name : "ボルメテウス・ホワイト・ドラゴン / ボルメテウス・レジェンド・フレア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a027a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -80886,7 +80974,7 @@
 					race : ["アーマード・ドラゴン"],
 					power : 7000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物擊破護盾時，取而代之、將該護盾置入墓地。",
@@ -80896,7 +80984,7 @@
 					type : "S",
 					civil : 2,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"破壞戰鬥場上所有攻擊力3000以下的對手生物",
 						"選擇一張對手護盾並將之置入其持有者的墓地。",
@@ -80935,6 +81023,7 @@
 		{
 			name : "白騎士の聖霊王アルカディアス / 完全決闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b004a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "EC",
@@ -80942,7 +81031,7 @@
 					race : ["エンジェル・コマンド"],
 					power : 12500,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)進化(/K)－進化在1隻我方的(R)エンジェル・コマンド(/R)之上。",
 						"(K)T・ブレイカー(/K)",
@@ -80953,7 +81042,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"如果我方護盾在4張以下的話，則在我方護盾變成5張之前，持續將我方牌庫頂第一張牌(K)護盾化<=>シールド化(/K)。",
 						"下個我方回合開始前，我方護盾不會被擊破。",
@@ -80964,6 +81053,7 @@
 		{
 			name : "天海の精霊シリウス / W・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b005a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -80971,7 +81061,7 @@
 					race : ["エンジェル・コマンド"],
 					power : 12000,
 					cost : 11,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)T・ブレイカー(/K)",
@@ -80981,7 +81071,7 @@
 					type :	"S",
 					civil : 16,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"選擇2隻我方生物，於此回合結束時重置那些生物。",
 						"(K)チャージャー(/K)",
@@ -81051,6 +81141,7 @@
 		{
 			name : "浄化の精霊ウルス / 精霊・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b012a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81058,7 +81149,7 @@
 					race : ["エンジェル・コマンド"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"我方回合結束時，你可以重置此生物。",
@@ -81068,7 +81159,7 @@
 					type : "S",
 					civil : 16,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"選擇一個文明，橫置所有該文明的對手生物",
@@ -81095,6 +81186,7 @@
 		{
 			name : "魔刻の騎士オルゲイト /「全員、地獄送りだ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b015a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "",
@@ -81102,7 +81194,7 @@
 					race : ["デーモン・コマンド"],
 					power : 6000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"我方生物被破壞時，你可以重置此生物。",
@@ -81112,7 +81204,7 @@
 					type : "S",
 					civil : 4,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻對手生物。",
@@ -81195,6 +81287,7 @@
 		{
 			name : "ムシ無視のんのん / 灰になるほどヒート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b068a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81203,7 +81296,7 @@
 					power : 4000,
 					pc : true,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"戰鬥中、此生物攻擊力+4000。",
 						"當此生物戰鬥獲勝時，你可以從手牌中打出1隻費用5以下的(R)ジョーカーズ(/R)生物。",
@@ -81213,7 +81306,7 @@
 					type : "S",
 					civil : 2,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"你可以從手牌打出1隻費用6以下的(R)ジョーカーズ(/R)生物。那樣的話，則你可以選擇1隻對手生物。讓這兩隻生物進行戰鬥。",
@@ -81289,6 +81382,7 @@
 		{
 			name : "超幽龍アブゾ・ドルバ / 切り札をねらう悪魔!!",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b022a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "EC",
@@ -81297,7 +81391,7 @@
 					power : 11000,
 					pc : true,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)進化(/K)－進化在戰鬥場上1隻我方的(R)ドラゴン(/R)之上。",
 						"(K)パワード・ブレイカー(/K)",
@@ -81308,7 +81402,7 @@
 					type : "S",
 					civil : 4,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"作廢我方牌庫頂3張牌。",
@@ -81320,6 +81414,7 @@
 		{
 			name : "黒神龍アマデウス /「ぼくだって！決闘者なんだ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b023a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81327,7 +81422,7 @@
 					race : ["ドラゴン・ゾンビ"],
 					power : 15000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)T・ブレイカー(/K)",
 						"我方魔力區或是墓地中如果擁有兩張以上的同名卡的話，則破壞此生物。",
@@ -81337,7 +81432,7 @@
 					type : "S",
 					civil : 1,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將我方牌庫頂第一張牌置入我方魔力區中。如果那張牌的費用與我方魔力區中每一張其他的卡牌都不同的話，則再將我方牌庫頂第一張牌置入我方魔力區中。",
@@ -81371,6 +81466,7 @@
 		{
 			name : "勝舞の機神装甲ヴァルボーグ / 火炎ヴァルバスター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b026a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "EC",
@@ -81379,7 +81475,7 @@
 					power : 5000,
 					pc : true,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)進化(/K)－進化在戰鬥場上1隻我方的(R)ヒューマノイド(/R)之上。",
 						"攻擊中、此生物的攻擊力會隨著戰鬥場上每一隻我方其他的火文明生物而+1000。",
@@ -81390,7 +81486,7 @@
 					type : "S",
 					civil : 2,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"下列能力擇一發動－##破壞戰鬥場上1隻攻擊力3000以下的對手生物。##破壞1張不是生物的對手卡牌。",
 					]
@@ -81436,6 +81532,7 @@
 		{
 			name : "だべべ村の大昆虫ギガマンティス /「虫虫大行進!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b031a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "EC",
@@ -81443,7 +81540,6 @@
 					race : ["ジャイアント・インセクト"],
 					power : 5000,
 					cost : 4,
-					mana : 1,
 					sp : [
 						"(K)進化(/K)－進化在戰鬥場上1隻我方的(R)ジャイアント・インセクト(/R)之上。",
 						"我方的自然文明生物被破壞時，取而代之、將之置入我方魔力區中。",
@@ -81453,7 +81549,6 @@
 					type : "S",
 					civil : 1,
 					cost : 7,
-					mana : 1,
 					sp : [
 						"(K)S・トリガー(/K)",
 						"選擇1隻對手生物並將之置入對手的魔力區中。之後，從我方魔力區中打出1隻費用比該生物低的(R)ジャイアント・インセクト(/R)。",
@@ -81464,6 +81559,7 @@
 		{
 			name : "シビレアシダケ / インビンシブル・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b032a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81471,7 +81567,7 @@
 					race : ["バルーン・マッシュルーム"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，你可以將1張手牌置入我方魔力區中。",
 					],
@@ -81480,7 +81576,7 @@
 					type : "S",
 					civil : 1,
 					cost : 13,
-					mana : 1,
+
 					sp : [
 						"此回合中、戰鬥場上所有我方生物的攻擊力一律+8000、並獲得(K)T・ブレイカー(/K)能力。",
 					]
@@ -81700,6 +81796,7 @@
 		{
 			name : "キングダム・オウ禍武斗 / 轟破天九十九語",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a018a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81707,7 +81804,7 @@
 					race : ["グランセクト"],
 					power : 14000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"(K)T・ブレイカー(/K)",
@@ -81718,7 +81815,7 @@
 					type : "S",
 					civil : 1,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"所有玩家將其魔力區中的所有生物打出至戰鬥場上。因此而出場的生物、無視其出場時所觸發的所有效果。",
 					]
@@ -81728,6 +81825,7 @@
 		{
 			name : "超機動罠 デンジャデオン / 地獄極楽トラップ黙示録",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a019a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81735,7 +81833,7 @@
 					race : ["グランセクト"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"我方回合初時，你可以將此卡從我方魔力區中拿回到手牌中。",
@@ -81746,7 +81844,7 @@
 					type : "S",
 					civil : 1,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將1隻對手生物或1張對手護盾置入其持有者的魔力區中。",
@@ -81757,6 +81855,7 @@
 		{
 			name : "Q.Q.QX / 終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a020a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -81764,7 +81863,6 @@
 					race : ["グランセクト"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
 					sp : [
 						"(K)5.S.D.(/K)",
 						"對手將其牌庫中的橫向卡牌加入手牌時，就會輸掉這場遊戲。",
@@ -81776,7 +81874,6 @@
 					type : "S",
 					civil : 1,
 					cost : 8,
-					mana : 1,
 					sp : [
 						"選擇1隻對手生物，對手邀將其以橫向方式放進棋牌庫第四章的位置。",
 						"打出此生物。",
@@ -81865,6 +81962,7 @@
 		{
 			name : "レアカードハンター ウサギ団 / ラビットハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b030a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "NC",
@@ -81872,7 +81970,7 @@
 					race : [ "ドリームメイト","ヒューマノイド","ハンター" ],
 					power : 6000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)G・ゼロ(/K)－當我方魔力區擁有所有文明的卡牌時，你可以不支付消費召喚此生物。",
 						"(K)NEO進化(/K)－你可以將此卡置於戰鬥場上1隻我方的多色生物之上。",
@@ -81883,7 +81981,7 @@
 					type : "S",
 					civil : 4,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"隨機作廢1張對手手牌。如果那張卡牌是生物的話，則抽1張牌。",
 					],
@@ -83530,6 +83628,7 @@
 		{
 			name : "反逆龍 5000typeR / 無法頂上会談",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-006a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -83537,7 +83636,7 @@
 					race : ["アウトレイジMAX"],
 					power : 12000,
 					cost : 12,
-					mana : 1,
+
 					sp : [
 						"此生物的召喚費用會隨著我方墓地的每一隻生物而少1，但是不能降到0以下。",
 						"此生物出場時，破壞所有攻擊力5000以下的生物。",
@@ -83550,7 +83649,7 @@
 					type : "S",
 					civil : 8,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"抽3張牌，然後作廢2張手牌",
 					]
@@ -83560,6 +83659,7 @@
 		{
 			name : "勇気と知識 テスタ・ロッサ&アリス /「行くぜアリス!」「行けるわテスタ!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-009a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -83567,7 +83667,7 @@
 					race : ["アウトレイジMAX"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，抽1張牌，然後作廢1張手牌。",
 					],
@@ -83576,7 +83676,7 @@
 					type : "S",
 					civil : 2,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻攻擊力7000以下的對手生物。",
@@ -83762,6 +83862,7 @@
 		{
 			name : "残虐覇王デスカール / ロスト・ソウル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-039a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -83769,7 +83870,7 @@
 					race : ["ダークロード"],
 					power : 4000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"你可以取代攻擊動作、直接橫置此生物已發動以下能力－##隨機作廢對手2張手牌。。",
 					],
@@ -83778,7 +83879,7 @@
 					type : "S",
 					civil : 4,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"對手自行作廢他所有手牌。",
 					]
@@ -83895,6 +83996,7 @@
 		{
 			name : "罪無 ズゴブ垓 / 堕呪 バケドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-062a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -83902,7 +84004,7 @@
 					race : ["マフィ・ギャング","魔導具","チーム零"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)ムゲンクライム(/K)(闇2)",
 						"(K)スレイヤー(/K)",
@@ -83913,7 +84015,7 @@
 					civil : 8,
 					race : ["魔導具","チーム零"],
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將1隻費用5以下的生物拿回至其持有者的手牌中。",
@@ -83985,6 +84087,7 @@
 		{
 			name : "幻緑の双月 / 母なる星域",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-078a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -83992,7 +84095,7 @@
 					race : ["ビーストフォーク"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，你可以將1張手牌置入我方魔力區中。",
 					],
@@ -84001,7 +84104,7 @@
 					type : "S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將戰鬥場上1隻我方的非進化生物置入魔力區中。之後，從自己的魔力區中選擇1隻進化生物、打出至戰鬥場上。但是該生物的召喚費用數字、不得超過我方魔力區中的卡牌張數數字。",
 					]
@@ -84011,6 +84114,7 @@
 		{
 			name : "全虹帝 ミノガミ / ハザード・パクト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-081a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84018,7 +84122,7 @@
 					race : ["グランセクト"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"此生物出場時，將一張我方墓地中的雙極卡置入我方魔力區中。",
@@ -84029,7 +84133,7 @@
 					type : "S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂第一張牌置入我方魔力區中。如果那張是雙極卡的話，則再將我方牌庫頂第一張牌置入我方魔力區中。",
 					]
@@ -84087,6 +84191,7 @@
 		{
 			name : "ボルシャック・クロス・NEX（ネックス） / ボルシャック英雄譚",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-005a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84095,7 +84200,7 @@
 					power : 12000,
 					pc : true,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)スピードアタッカー(/K)",
 						"(K)パワーアタッカー(/K)+5000",
@@ -84107,7 +84212,7 @@
 					type : "S",
 					civil : 2,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"觀看我方牌庫頂6張牌，你可以從中打出任意隻名有《(N)ボルシャック(/N)》的(R)ドラゴン(/R)。之後將剩餘卡牌依喜好順序置入牌庫底。",
 					]
@@ -84156,6 +84261,7 @@
 		{
 			name : "ボルシャック・大和・ドラゴン / 大和ザンゲキ剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-001a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84164,7 +84270,7 @@
 					power : 6000,
 					pc : true,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)スピードアタッカー(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -84176,7 +84282,7 @@
 					type : "S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞攻擊力4000以下的對手生物。如果戰鬥場上有我方的(R)ドラゴン(/R)的話，則取而代之、改為破壞1隻攻擊力12000以下的對手生物。",
@@ -84204,6 +84310,7 @@
 		{
 			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-008a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84212,7 +84319,7 @@
 					power : 11000,
 					pc : true,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)パワーアタッカー(/K)+4000。",
 						"(K)T・ブレイカー(/K)",
@@ -84222,7 +84329,7 @@
 					type : "S",
 					civil : 1,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂第一張牌置入我方魔力區中。",
 					]
@@ -84248,6 +84355,7 @@
 		{
 			name : "電脳の女王 アリス / 不埒な再侵入",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-007a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84255,7 +84363,7 @@
 					race : ["アウトレイジMAX"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，觀看我方牌庫頂3張牌。將其中1張加入手牌、1張置入墓地、最後1張則放回牌庫頂。",
 					],
@@ -84264,7 +84372,7 @@
 					type : "S",
 					civil : 4,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻對手生物。",
@@ -84671,6 +84779,7 @@
 		{
 			name : "ゲオルグ・バーボシュタイン / ゴースト・タッチ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-005a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84678,7 +84787,7 @@
 					race : ["マフィ・ギャング"],
 					power : 3000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)スマッシュ・バースト(/K)",
 						"對手作廢手牌時，選擇1隻對手生物，此回合中，該生物攻擊力-3000。",
@@ -84688,7 +84797,7 @@
 					type : "S",
 					civil : 4,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"隨機作廢1張對手手牌。",
@@ -84944,6 +85053,7 @@
 		{
 			name : "虚無の守護者グリ・ラ / 無情の光",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-041a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -84951,7 +85061,7 @@
 					race : ["ガーディアン"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，作廢牌庫頂3張牌。之後，你可將我方墓地中拿1張持有「(K)S・トリガー(/K)」能力的卡牌加入手牌。",
 					],
@@ -84960,7 +85070,7 @@
 					type : "S",
 					civil : 16,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將1張手牌(K)護盾化<=>シールド化(/K)",
@@ -85067,6 +85177,7 @@
 		{
 			name : "目覚めのファミリア キナコ / ムボー日和",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-052a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -85074,7 +85185,7 @@
 					race : ["デスパペット","オラクル","ディスタス"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"(K)スレイヤー(/K)",
 						"你可以從我方墓地召喚此生物。",
@@ -85084,7 +85195,7 @@
 					type : "S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"將1張我方魔力區中的卡牌置入墓地。然後將我方牌庫頂2張牌以橫置方式加入魔力區中。",
 					]
@@ -85108,6 +85219,7 @@
 		{
 			name : "メルゲ否男 / 「今も我らの願いはただひとつ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-059a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -85115,7 +85227,7 @@
 					race : ["ヘドリアン"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"你可以從我方墓地召喚此生物。",
 						"(K)スマッシュ・バースト(/K)",
@@ -85125,7 +85237,7 @@
 					type : "S",
 					civil : 2,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"作廢1張手牌，然後抽1張牌。",
 					]
@@ -85231,6 +85343,7 @@
 		{
 			name : "罪無 バスダク極 / ダックス奮闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-069a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -85238,7 +85351,7 @@
 					race : ["マフィ・ギャング","チーム零"],
 					power : 5000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)ムゲンクライム(/K)(闇3)",
 						"此生物出場時，破壞1隻重置狀態的對手生物。",
@@ -85248,7 +85361,7 @@
 					type : "S",
 					civil : 8,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"選擇1隻我方生物，到下個我方回合開始前，該生物不會被攻擊、也不會被對手選擇。",
 					]
@@ -85258,6 +85371,7 @@
 		{
 			name : "凶鬼98号 ガシャゴン / 堕呪 ブラッドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-070a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -85265,7 +85379,7 @@
 					race : ["マフィ・ギャング","魔導具"],
 					power : 5000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)スレイヤー(/K)",
@@ -85277,7 +85391,7 @@
 					civil : 8,
 					race : ["魔導具"],
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"選擇1名玩家，該玩家將他墓地所有卡牌置入牌庫洗牌。",
 						"抽1張牌。",
@@ -85288,6 +85402,7 @@
 		{
 			name : "コオニ小町 / 「世界はジャオウガ様のモノ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-072a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -85295,7 +85410,7 @@
 					race : ["デモニオ"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，所有玩家各自作廢自己1張手牌。",
 					],
@@ -85304,7 +85419,7 @@
 					type : "S",
 					civil : 2,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"作廢自己所有手牌，然後抽3張牌。",
 					]
@@ -85719,6 +85834,7 @@
 		{
 			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-a12a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -85726,7 +85842,7 @@
 					race : ["ブルー・コマンド・ドラゴン","ハンター"],
 					power : 7000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"對手生物出場時，該回合中、對手生物不能發動攻擊。",
@@ -85737,7 +85853,7 @@
 					type : "S",
 					civil : 16,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"最多橫置2隻對手生物。下個對手回合初、那些生物不能重置。",
@@ -86956,6 +87072,7 @@
 		{
 			name : "ほめほめ老 / ホメホメ老句",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-015a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -86963,7 +87080,6 @@
 					race : ["ジョーカーズ"],
 					power : 7000,
 					cost : 7,
-					mana : 1,
 					sp : [
 						"(K)J・O・E(/K)２",
 						"(K)スピードアタッカー(/K)",
@@ -86975,7 +87091,6 @@
 					type : "S",
 					civil : 2,
 					cost : 3,
-					mana : 1,
 					sp : [
 						"抽3張牌，然後對手隨機選擇我方2張手牌並將之作廢。",
 					]
@@ -87033,6 +87148,7 @@
 		{
 			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-025a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87040,7 +87156,7 @@
 					race : ["エンジェル・コマンド"],
 					power : 10500,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -87051,7 +87167,7 @@
 					type : "S",
 					civil : 16,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"從我方手牌中打出1隻持有「(K)ブロッカー(/K)」能力的光文明非進化生物。",
 					]
@@ -87090,6 +87206,7 @@
 		{
 			name : "遣宮使 ネオンクス / ネオ・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-028a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87097,7 +87214,7 @@
 					race : ["ムートピア","サイバー・コマンド"],
 					power : 9000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，或是我方使用了名有《(N)ブレイン(/N)》的咒文時，就作廢我方牌庫頂第一張牌。如果那是咒文的話，則可以不支付費用使用該咒文。",
@@ -87107,7 +87224,7 @@
 					type : "S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"抽2張牌。",
@@ -87145,6 +87262,7 @@
 		{
 			name : "魔光帝フェルナンドVII世 / 魔弾デュアル・ザンジバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-031a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87152,7 +87270,7 @@
 					race : ["デーモン・コマンド","ナイト"],
 					power : 11000,
 					cost : 11,
-					mana : 1,
+
 					sp : [
 						"此生物的召喚費用會隨著我方墓地中的每一張咒文而少1，但是不能降到0以下。",
 						"此生物發動攻擊時，選擇1隻對手生物，此回合中，該生物的攻擊力會隨著我方墓地中的每一張咒文而-1000。",
@@ -87164,7 +87282,7 @@
 					civil : 4,
 					race : ["ナイト"],
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)KM(/K)－選擇1隻對手生物，此回合中、該生物攻擊力-2000。",
 						"(K)ナイト・マジック(/K)",
@@ -87207,6 +87325,7 @@
 		{
 			name : "龍装医 ルギヌス / 地獄のゴッド・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-034a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87214,7 +87333,7 @@
 					race : ["ドラゴンギルド","マフィ・ギャング"],
 					power : 11000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場或是發動攻擊時，就從我方墓地中打出1隻費用7以下的非進化生物出場。",
@@ -87224,7 +87343,7 @@
 					type : "S",
 					civil : 4,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"破壞1隻對手生物。",
 					]
@@ -87297,6 +87416,7 @@
 		{
 			name : "オブラディ・ホーネット / 「Let it Bee！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-041a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87304,7 +87424,7 @@
 					race : ["グランセクト"],
 					power : 5000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"此生物被破壞時，取而代之、置入我方魔力區中。",
@@ -87314,7 +87434,7 @@
 					type : "S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"抽1張牌，然後將1張我方手牌置入我方魔力區中。",
 					]
@@ -87355,6 +87475,7 @@
 		{
 			name : "サイバー・K・ウォズレック / ウォズレックの審問",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-046a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87362,7 +87483,7 @@
 					race : ["サイバー・コマンド"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，你最多可以從雙方墓地中選擇2張費用3以下的咒文、並不支付費用使用該咒文。之後，持有者將該咒文置入其牌庫底。",
@@ -87372,7 +87493,7 @@
 					type : "S",
 					civil : 4,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"觀看對手手牌，選擇當中1張費用3以下的卡牌並將之置入墓地。",
 					]
@@ -87382,6 +87503,7 @@
 		{
 			name : "スゴ腕プロジューサー / りんご娘はさんにんっ娘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-047a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87389,7 +87511,7 @@
 					race : ["ジョーカーズ","ワンダフォース"],
 					power : 3000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"當此生物出場或是離場時，進行(K)GR召喚(/K)。",
@@ -87399,7 +87521,7 @@
 					type : "S",
 					civil : 1,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"打出此卡至戰鬥場上。",
@@ -87600,6 +87722,7 @@
 		{
 			name : "天雷の導士アヴァラルド公 / 魔弾アルカディア・エッグ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-070a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87607,7 +87730,7 @@
 					race : ["アーク・セラフィム","ナイト"],
 					power : 1000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，公開牌庫頂3張牌，將當中所有咒文加入手牌、並將其餘卡牌依喜好順序置入我方牌庫底。",
 					],
@@ -87617,7 +87740,7 @@
 					civil : 4,
 					race : ["ナイト"],
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻重置狀態的對手生物。",
@@ -87629,6 +87752,7 @@
 		{
 			name : "ベイビー「刃鬼」/「俺たちも必ず勝つ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-071a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87636,7 +87760,7 @@
 					race : ["レッド・コマンド・ドラゴン","ハンター"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"對手生物出場時，如果該回合對手已經打出2隻以上的其他生物的話，則該生物不會出場、取而代之、置入墓地。",
 					],
@@ -87645,7 +87769,7 @@
 					type : "S",
 					civil : 1,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"將我方牌庫頂3張牌以橫置方式置入我方魔力區中。",
 					]
@@ -87655,6 +87779,7 @@
 		{
 			name : "爆獣マチュー・スチュアート / 超銀河弾 HELL",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-072a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87662,7 +87787,7 @@
 					race : ["ドリームメイト","ナイト"],
 					power : 2000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"每當我方使用咒文時，你可以將我方牌庫頂第一張牌置入我方魔力區中。",
 					],
@@ -87672,7 +87797,7 @@
 					civil : 1,
 					race : ["ナイト"],
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"破壞戰鬥場上任意隻攻擊力合計在9000以下的對手生物。每因此破壞1隻生物，就選擇1張對手護盾並將之置入其持有者的墓地中。",
 					]
@@ -87697,6 +87822,7 @@
 		{
 			name : "魔光王機デ・バウラ伯 / 魔弾グローリー・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-074a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87704,7 +87830,7 @@
 					race : ["グレートメカオー","ナイト"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)ブロッカー(/K)",
 						"此生物不能攻擊玩家。",
@@ -87716,7 +87842,7 @@
 					civil : 16,
 					race : ["ナイト"],
 					cost : 16,
-					mana : 1,
+
 					sp : [
 						"(K)KM(/K)－公開我方牌庫頂3張牌。從中選擇1張(R)ナイト(/R)加入手牌，並將其餘卡牌依喜好順序置入牌庫底。",
 						"(K)ナイト・マジック(/K)",
@@ -87755,6 +87881,7 @@
 		{
 			name : "魔光ドラム・トレボール / 魔弾バレット・バイス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-083a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87762,7 +87889,7 @@
 					race : ["ガーゴイル","ナイト"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"我方持有「(K)ナイト・マジック(/K)」能力的咒文的使用費用可以少1，但是不能降到0以下。",
 					],
@@ -87772,7 +87899,7 @@
 					civil : 4,
 					race : ["ナイト"],
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)KM(/K)－對手自行作廢他1張手牌。",
 						"(K)ナイト・マジック(/K)",
@@ -87849,6 +87976,7 @@
 		{
 			name : "傀儡将ボルギーズ / ジェニコの知らない世界",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-089a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -87856,7 +87984,7 @@
 					race : ["デーモン・コマンド"],
 					power : 4000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，選擇1隻對手生物，此回合中、該生物攻擊力-4000。",
 					],
@@ -87865,7 +87993,7 @@
 					type : "S",
 					civil : 4,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"隨機作廢1張對手手牌。",
 					]
@@ -87983,6 +88111,7 @@
 		{
 			name : "超七極 Gio / 巨大設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-105a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "EC",
@@ -87990,7 +88119,7 @@
 					race : ["エンジェル・コマンド","侵略者"],
 					power : 11500,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)進化(/K)－進化在戰鬥場上1隻我方的光文明生物之上。",
 						"召喚此生物時，你可以自由公開手上其他費用9的卡牌，每公開1張卡牌，此生物的召喚費用就少1，但是不能降到0以下。",
@@ -88002,7 +88131,7 @@
 					type : "S",
 					civil : 1,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 							"公開我方牌庫頂4張牌。將當中所有費用7以上的生物加入手牌。其餘卡牌則依自己喜好順序置入我方牌庫底。",
 					],
@@ -88051,6 +88180,7 @@
 		{
 			name : "緊急機装エクス・コプター / 合身秘伝メカ・マシーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-110a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -88058,7 +88188,7 @@
 					race : ["グレートメカオー"],
 					power : 3000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)ジャストダイバー(/K)",
 						"(K)スマッシュ・バースト(/K)",
@@ -88068,7 +88198,7 @@
 					type : "S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)アタック・チャンス(/K)－(R)グレートメカオー(/R)",
 						"抽2張牌。",
@@ -88079,6 +88209,7 @@
 		{
 			name : "氷牙フランツI世 / 魔弾オープン・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-112a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -88086,7 +88217,7 @@
 					race : ["サイバーロード","ナイト"],
 					power : 2000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"我方咒文的使用費用可以少1，但是不能降到0以下。",
 					],
@@ -88096,7 +88227,7 @@
 					civil : 8,
 					race : ["ナイト"],
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"(K)KM(/K)－最多抽2張牌。",
@@ -88172,6 +88303,7 @@
 		{
 			name : "熱血姫様プリン / 狩人秘伝ハンター・ファイア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-124a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -88179,7 +88311,7 @@
 					race : ["ハンター","エイリアン"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"(K)スマッシュ・バースト(/K)",
@@ -88189,7 +88321,7 @@
 					type : "S",
 					civil : 2,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)アタック・チャンス(/K)－(R)ハンター(/R)",
 						"選擇1隻我方的(R)ハンター(/R)生物與對手生物，並讓他們進行戰鬥。",
@@ -88228,6 +88360,7 @@
 		{
 			name : "爆獣パンダ・ブーリン / 魔弾パンダフル・ライフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-130a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -88235,7 +88368,7 @@
 					race : ["ドリームメイト","ナイト"],
 					power : 6000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"此生物的召喚費用會隨著我方墓地中的每1張咒文而少1，但是不能降到0以下。",
 						"(K)W・ブレイカー(/K)",
@@ -88246,7 +88379,7 @@
 					civil : 1,
 					race : ["ナイト"],
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"(K)KM(/K)－將我方牌庫頂第一張牌置入我方魔力區中。",
 						"(K)ナイト・マジック(/K)",
@@ -88257,6 +88390,7 @@
 		{
 			name : "味息子サン・グリル / 千切秘伝ワイルド・ベジタブル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-131a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -88264,7 +88398,7 @@
 					race : ["ワイルド・ベジーズ"],
 					power : 3000,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)スマッシュ・バースト(/K)",
 					],
@@ -88273,7 +88407,7 @@
 					type : "S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)アタック・チャンス(/K)－(R)ワイルド・ベジーズ(/R)",
 						"此回合、戰鬥場上1隻我方生物攻擊力+6000、並多擊破1張護盾。",
@@ -88770,6 +88904,7 @@
 		{
 			name : "バーンメア・ザ・シルバー / オラオラ・スラッシュ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-a12a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -88777,7 +88912,7 @@
 					race : ["ジョーカーズ","ワンダフォース"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，執行2次(K)GR召喚(/K)。此回合、那些GR生物獲得「(K)スピードアタッカー(/K)」能力。",
@@ -88787,7 +88922,7 @@
 					type : "S",
 					civil : 1,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"下個我方回合開始前，對手生物發動攻擊時，可能的話就要以生物為攻擊目標。",
@@ -90881,6 +91016,7 @@
 		{
 			name : "Disマスター /「己の弱さが敗北させるのだよ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-054a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -90888,7 +91024,6 @@
 					race : ["リキッド・ピープル","ディスタス"],
 					power : 1000,
 					cost : 2,
-					mana : 1,
 					sp : [
 						"(K)ササゲール(/K)１",
 						"(K)ラスト・バースト(/K)",
@@ -90898,7 +91033,6 @@
 					type : "S",
 					civil : 8,
 					cost : 2,
-					mana : 1,
 					sp : [
 						"(K)S・トリガー(/K)",
 						"你可以觀看1張對手護盾內容。",
@@ -91018,6 +91152,7 @@
 		{
 			name : "未来妖精ミクル / ミラクル・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-069a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -91025,7 +91160,7 @@
 					race : ["スノーフェアリー","ハンター"],
 					power : 1000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，將我方牌庫頂第一張牌置入我方魔力區中。",
 						"(K)マナ武装(/K)４－此生物出場時，如果我方魔力區中有4張以上的多色卡牌的話，則將我方牌庫頂第一張牌置入我方魔力區中。",
@@ -91035,7 +91170,7 @@
 					type : "S",
 					civil : 8,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"我方魔力區中每有1個文明就抽1張牌。",
 					]
@@ -91418,6 +91553,7 @@
 		{
 			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-003a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -91425,7 +91561,7 @@
 					race : ["マスター・ドルスザク","マフィ・ギャング"],
 					power : 11000,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"(K)無月の門・絶(/K)",
 						"對手回合初時，對手只能重置3張卡牌。",
@@ -91436,7 +91572,7 @@
 					type : "S",
 					civil : 4,
 					cost : 9,
-					mana : 1,
+
 					sp : [
 						"破壞所有生物。",
 						"當所有墓地的卡牌合計在13張以上、且此咒文在護盾區裡的話，則此咒文獲得(K)S・トリガー(/K)",
@@ -91447,6 +91583,7 @@
 		{
 			name : "龍罠 エスカルデン / マクスカルゴ・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR4a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -91454,7 +91591,7 @@
 					race : ["ドラゴンギルド","グランセクト"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，公開牌庫頂2張牌。你可以從中選擇1隻生物加入手牌。將其餘卡牌置入魔力區中。",
 					],
@@ -91463,7 +91600,7 @@
 					type : "S",
 					civil : 1,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"將1隻對手生物置入其持有者的魔力區中。",
 						"從我方魔力區中打出1隻費用6以下的生物出場。",
@@ -92479,6 +92616,7 @@
 		{
 			name : "めっちゃ！デンヂャラスG３ / ケッシング・ゼロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF1a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -92486,7 +92624,6 @@
 					race : ["ジョーカーズ"],
 					power : 21300,
 					cost : 10,
-					mana : 1,
 					sp : [
 						"(K)G・ブレイカー(/K)",
 						"此生物出場時，你可以喊出「シールドいらねえー！」，那樣的話，則此回合、給予我方3隻生物「(K)G・ブレイカー(/K)」能力。",
@@ -92496,7 +92633,7 @@
 					type : "S",
 					civil : 32,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"你可以喊出「気に入らねぇやつは消す」。那樣的話，則此回合、無視所有對手生物的能力。",
@@ -92652,6 +92789,7 @@
 		{
 			name : "龍月 ドラグ・スザーク / 龍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-014a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -92659,7 +92797,7 @@
 					race : ["ドルスザク・ドラゴン","チーム零"],
 					power : 11000,
 					cost : 10,
-					mana : 1,
+
 					sp : [
 						"(K)ムゲンクライム(/K)(闇4)",
 						"(K)W・ブレイカー(/K)",
@@ -92670,7 +92808,7 @@
 					type : "S",
 					civil : 8,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"抽1張牌，然後作廢1張手牌。",
 						"執行(K)GR召喚(/K)。",
@@ -92760,6 +92898,7 @@
 		{
 			name : "D２V３ 終断のデッドトロン / デッドリー・ビッグバン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-012a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -92767,7 +92906,6 @@
 					race : ["ソニック・コマンド","マスター・イニシャルズX"],
 					power : 8000,
 					cost : 8,
-					mana : 1,
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"我方墓地每有1張闇文明或是火文明的卡牌，此生物的召喚費用就少1。但是不能降到0以下。",
@@ -92778,7 +92916,6 @@
 					type : "S",
 					civil : 4,
 					cost : 2,
-					mana : 1,
 					sp : [
 						"作廢我方牌庫頂第一張牌。",
 						"場上有我方的(T)フィールド(/T)的話，則抽1張牌。",
@@ -92789,6 +92926,7 @@
 		{
 			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-013a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -92796,7 +92934,7 @@
 					race : ["ソニック・コマンド","イニシャルズX"],
 					power : 3000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"(K)ブロッカー(/K)",
@@ -92807,7 +92945,7 @@
 					type : "S",
 					civil : 4,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"作廢我方牌庫頂2張牌。",
 						"(K)チャージャー(/K)",
@@ -92818,6 +92956,7 @@
 		{
 			name : "D２V３ 終断のレッドトロン / フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-014a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -92825,7 +92964,6 @@
 					race : ["ソニック・コマンド","マスター・イニシャルズX"],
 					power : 5000,
 					cost : 5,
-					mana : 1,
 					sp : [
 						"召喚此生物時，你可以作廢1張手牌。那樣的話，則此生物的召喚費用少2。",
 						"此生物出場時，你可以選擇1隻對手生物。並讓該生物與此生物進行戰鬥。",
@@ -92835,7 +92973,6 @@
 					type : "S",
 					civil : 2,
 					cost : 9,
-					mana : 1,
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻攻擊力9999以下的對手生物。",
@@ -94137,6 +94274,7 @@
 		{
 			name : "勇気と知識 テスタ・ロッサ＆アリス /「行くぜアリス!」「行けるわテスタ!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TF2a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94144,7 +94282,7 @@
 					race : ["アウトレイジMAX"],
 					power : 2000,
 					cost : 2,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，抽1張牌，然後作廢1張手牌。",
 					],
@@ -94153,7 +94291,7 @@
 					type : "S",
 					civil : 2,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"破壞1隻攻擊力7000以下的對手生物。",
@@ -94211,6 +94349,7 @@
 		{
 			name : "始全虹帝 ミノガミ / 自然の肯定",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s14a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94218,7 +94357,7 @@
 					race : ["グランセクト"],
 					power : 6000,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"(K)W・ブレイカー(/K)",
@@ -94229,7 +94368,7 @@
 					type : "S",
 					civil : 1,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"將我方墓地所有雙極卡置入魔力區中。之後，從我方魔力區中打出1隻生物。但是該生物的費用不能超過我方魔力區中的卡牌張數。",
 					]
@@ -94272,6 +94411,7 @@
 		{
 			name : "ナ・チュラルゴ・デンジャー / ナチュラル・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s17a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94279,7 +94419,7 @@
 					race : ["グランセクト","ジャイアント"],
 					power : 12000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)マッハファイター(/K)",
 						"(K)T・ブレイカー(/K)",
@@ -94290,7 +94430,7 @@
 					type : "S",
 					civil : 1,
 					cost : 6,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"將1隻對手生物置入魔力區中。",
@@ -94301,6 +94441,7 @@
 		{
 			name : "キング・ザ・スロットン７/ 7777777",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s3a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94308,7 +94449,7 @@
 					race : ["ジョーカーズ"],
 					power : 7777,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"此生物出場時，公開我方牌庫頂三張牌。如果他們全都是(R)ジョーカーズ(/R)的話，就從中打出1隻生物。此回合、該生物可以攻擊玩家。將剩餘卡牌依喜好順序置入牌庫底。",
@@ -94318,7 +94459,7 @@
 					type : "S",
 					civil : 32,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"對手公開其牌庫頂三張牌。我方從中選擇一張牌。對手要將戰鬥場上所有費用與該卡牌相同的對手生物跟公開的三張牌一起依喜好順序置入牌庫底。",
@@ -94362,6 +94503,7 @@
 		{
 			name : "卍 ギ・ルーギリン 卍 / 卍獄ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s9a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94369,7 +94511,7 @@
 					race : ["ムートピア","ドルスザク"],
 					power : 9000,
 					cost : 8,
-					mana : 1,
+
 					sp : [
 						"(K)虚無月の門(/K)",
 						"(K)ブロッカー(/K)",
@@ -94381,7 +94523,7 @@
 					type : "S",
 					civil : 8,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"抽1張牌。",
 					]
@@ -94404,6 +94546,7 @@
 		{
 			name : "奇石 トランキー / アイ・オブ・ザ・タイガー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-004a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94411,7 +94554,7 @@
 					race : ["メタリカ"],
 					power : 6500,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)W・ブレイカー(/K)",
 						"無視1隻持有「(K)ブロッカー(/K)」能力的我方生物、其身上無法發動攻擊的能力。",
@@ -94422,7 +94565,7 @@
 					type : "S",
 					civil : 16,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"抽1張牌。然後你可以從手牌打出1隻費用5以下、且持有「(K)ブロッカー(/K)」能力的生物出場。",
 					]
@@ -94461,6 +94604,7 @@
 		{
 			name : "龍装05号 イヴィルヴィ / イーヴィル・フォース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-009a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94468,7 +94612,7 @@
 					race : ["ドラゴンギルド","マフィ・ギャング","デーモン・コマンド"],
 					power : 4000,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"此生物出場時，你可以破壞1隻我方生物，那樣的話，則對手要破壞戰鬥場上1隻對手自己的生物。",
 					],
@@ -94477,7 +94621,7 @@
 					type : "S",
 					civil : 4,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"你可以從手牌中打出1隻費用4以下、且為火文明或是闇文明的生物出場。此回合、該生物獲得「(K)スピードアタッカー(/K)」能力。且於此回合結束時，破壞該生物。",
 					]
@@ -94728,6 +94872,7 @@
 		{
 			name : "審絆の鎮り 新蓮 / ジャスティス・シェイパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-040a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "NC",
@@ -94735,7 +94880,7 @@
 					race : ["メタリカ"],
 					power : 6000,
 					cost : 7,
-					mana : 1,
+
 					sp : [
 						"(K)シンパシー(/K)－生物。",
 						"(K)NEO進化(/K)－你可以將此生物進化在戰鬥場上1隻我方的光文明生物之上。",
@@ -94746,7 +94891,7 @@
 					type : "S",
 					civil : 8,
 					cost : 3,
-					mana : 1,
+
 					sp : [
 						"公開我方牌庫頂3張牌。將當中所有光文明的卡牌加入手牌。其餘則置入墓地。",
 					]
@@ -94852,6 +94997,7 @@
 		{
 			name : "バリスイトーヨー / 水筒の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-059a.jpg",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -94859,7 +95005,7 @@
 					race : ["ジョーカーズ","ワンダフォース"],
 					power : 3000,
 					cost : 5,
-					mana : 1,
+
 					sp : [
 						"(K)S・トリガー(/K)",
 						"(K)ブロッカー(/K)",
@@ -94869,7 +95015,7 @@
 					type : "S",
 					civil : 8,
 					cost : 4,
-					mana : 1,
+
 					sp : [
 						"執行2次(K)GR召喚(/K)",
 					]
@@ -98185,6 +98331,7 @@
 		{
 			name : "",
 			pic : "",
+			mana : 1,
 			wData : [
 				{
 					type : "C",
@@ -98192,7 +98339,7 @@
 					race : [ "" ],
 					power : 000,
 					cost : 0,
-					mana : 1,
+
 					sp : [
 						"",
 					],
@@ -98201,7 +98348,7 @@
 					type : "S",
 					civil : 16,
 					cost : 1,
-					mana : 1,
+
 					sp : [
 						"",
 					],

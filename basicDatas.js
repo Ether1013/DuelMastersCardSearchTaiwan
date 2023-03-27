@@ -111,6 +111,7 @@
 				var rtnData = clone( mapData.wData[ udIndex ] );
 				rtnData.name = mapData.name;
 				rtnData.pic = mapData.pic;
+				rtnData.mana = mapData.mana;
 				rtnData.ws = [];
 				for ( var w = 0 ; w < mapData.wData.length ; w++ ){
 					rtnData.ws.push( mapData.wData[w].type );
@@ -1301,6 +1302,7 @@
 						"新增「DM-03 超戦士襲撃」資料",
 						"新增「DM-04 闇騎士団の逆襲」資料",
 						"調整卡圖顯示邏輯",
+						"訂正雙極卡的MANA支付資料顯示",
 				],	
 			},
 			{	
