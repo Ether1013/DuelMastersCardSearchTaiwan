@@ -16977,6 +16977,241 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DMART-05";
+	var setName = "神アート 五人祭でドラゴン♡サマー";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "メガ・マグマ・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart05-002.jpg",
+			rarity : "SR",
+			flavor : [ "ボクと勝負しよっ！  — 真久間メガ" ],
+			id : "ART05 2/5",
+			count : 1,
+		},
+		{
+			name : "地封龍 ギャイア",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart05-003.jpg",
+			rarity : "SR",
+			flavor : [ "いただきぃっ！  — 地封院ギャイぎゃびーん！  — 真久間メガ" ],
+			id : "ART05 3/5",
+			count : 1,
+		},
+		{
+			name : "流星のガイアッシュ・カイザー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart05-004.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART05 4/5",
+			count : 1,
+		},
+		{
+			name : "悪魔龍 ダークマスターズ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart05-005.jpg",
+			rarity : "VR",
+			flavor : [ "わらわの一撃、受けてみよっ！  — 熊田すずあらあら、すごいのね～。 — 流星アーシュ" ],
+			id : "ART05 5/5",
+			count : 1,
+		},
+		{
+			name : "煌龍　サッヴァーク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart05-001.jpg",
+			rarity : "MDG",
+			flavor : [ "コノ世デ最モ正シイモノハ何カ？……答エハ朕！ — サーヴァ・K・ゼオス" ],
+			id : "ART05 1/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMART-04";
+	var setName = "神アート 超獣創造 ～松本しげのぶの世界～";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "絶望と反魂と滅殺の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart04-001.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART04 1/6",
+			count : 1,
+		},
+		{
+			name : "生命と大地と轟破の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart04-002.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART04 2/6",
+			count : 1,
+		},
+		{
+			name : "知識と流転と時空の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart04-005.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART04 5/6",
+			count : 1,
+		},
+		{
+			name : "神楯と天門と正義の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart04-006.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART04 6/6",
+			count : 1,
+		},
+		{
+			name : "瞬閃と疾駆と双撃の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart04-003.jpg",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART04 3/6",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMART-01";
+	var setName = "神アート 鬼札覇王絵巻";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "一王二命三眼槍",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart01-002.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART01 2/5",
+			count : 1,
+		},
+		{
+			name : "「魂狩」の鬼 ガシャド髑髏",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart01-003.jpg",
+			rarity : "VR",
+			flavor : [ "髑髏の頭を持つ鬼が、生者の魂を刈り取っては空洞の懐に貯め込んでいたそうな。" ],
+			id : "ART01 3/5",
+			count : 1,
+		},
+		{
+			name : "襲来、鬼札王国！",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart01-004.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART01 4/5",
+			count : 1,
+		},
+		{
+			name : "百鬼の邪王門",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart01-005.jpg",
+			rarity : "R",
+			flavor : [ "門の先にあるのは、死と怨念が渦巻く鬼の世界。" ],
+			id : "ART01 5/5",
+			count : 1,
+		},
+		{
+			name : "鬼ヶ大王 ジャオウガ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart01-001.jpg",
+			rarity : "KGM",
+			flavor : [ "太古の時代、国や村を滅ぼしては略奪の限りを尽くす恐ろしい妖怪が存在した。それは「鬼」と呼ばれていた。" ],
+			id : "ART01 1/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMART-02";
+	var setName = "神アート Bolshack by Toshiaki Takayama";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart02-004a.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART02 4/5",
+			count : 1,
+		},
+		{
+			name : "ボルシャック・栄光・ルピア",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart02-005.jpg",
+			rarity : "C",
+			flavor : [ "ドラゴンが戦う時、傍らには常にファイアー・バードの姿があった。ドラゴンを支え、ドラゴンに尽くし、ドラゴンと同じ歴史を歩み続ける。いつの時代も、ドラゴンの最高の相棒。" ],
+			id : "ART02 5/5",
+			count : 1,
+		},
+		{
+			name : "龍騎旋竜ボルシャック・バルガ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart02-001.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "ART02 1/5",
+			count : 1,
+		},
+		{
+			name : "ボルシャック・決闘・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart02-002.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "ART02 2/5",
+			count : 1,
+		},
+		{
+			name : "ボルシャック・ドギラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart02-003.jpg",
+			rarity : "LEG",
+			flavor : [ "" ],
+			id : "ART02 3/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMART-03";
+	var setName = "神アート フェアリー・ライブラリー";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "天体妖精エスメル /「お茶はいかがですか？」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart03-001a.jpg",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART03 1/5",
+			count : 1,
+		},
+		{
+			name : "ドンドン火噴くナウ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart03-002.jpg",
+			rarity : "R",
+			flavor : [ "行くよっ、アジサイちゃん！ — 情熱妖精ヒガンナはい、お姉様！ — 恋愛妖精アジサイ" ],
+			id : "ART03 2/5",
+			count : 1,
+		},
+		{
+			name : "フェアリー・ミラクル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart03-003.jpg",
+			rarity : "C",
+			flavor : [ "すごいもの、見せてあげる！ — 未来妖精ミクル" ],
+			id : "ART03 3/5",
+			count : 1,
+		},
+		{
+			name : "フェアリーの火の子祭",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart03-004.jpg",
+			rarity : "C",
+			flavor : [ "も～えろよもえろ～よ～！ — 双子妖精ハイビ年に一度のお祭り、楽しんじゃうよっ！ — 双子妖精ビスカ" ],
+			id : "ART03 4/5",
+			count : 1,
+		},
+		{
+			name : "フェアリー・Re:ライフ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart03-005.jpg",
+			rarity : "C",
+			flavor : [ "また会えて、嬉しいよ！ — 白銀妖精コユキ" ],
+			id : "ART03 5/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DM22-RP2";
 	var setName = "「轟炎の竜皇」";
 	var isDeck = false;
