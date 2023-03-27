@@ -68,15 +68,36 @@
 			for ( var i = 0 ; i < this.map.length ; i++ ){	
 				//去掉注音之後符合也允許
 				if ( ( this.map[i].name == name ) || ( clearSubName( this.map[i].name ) == name ) ){
+					var rtn = null;
 					if ( setData != null ){
 						var cardDataInSet = setData.getCardData( name , aaIndex );
 						if ( cardDataInSet != null ){
 //							return cloneCardData( this.map[i] , cardDataInSet );
-							return cloneCardData( this.getSelectedCardByUdIndex( this.map[i], udIndex ) , cardDataInSet );
+							rtn = cloneCardData( this.getSelectedCardByUdIndex( this.map[i], udIndex ) , cardDataInSet );
 						}
 					}
 //					return this.map[i];
-					return this.getSelectedCardByUdIndex( this.map[i], udIndex );
+					if ( rtn == null ){
+						rtn = this.getSelectedCardByUdIndex( this.map[i], udIndex );
+					}
+					//如果原始資料沒有卡圖的話，就去SET資料裡面找專屬卡圖
+					if ( rtn != null && lastSelectedSetCode == null && rtn.pic == "" ){
+						for ( var s = 0 ; s < setDatas.map.length ; s++ ){
+							for ( var c = 0 ; c < setDatas.map[s].length ; c++ ){
+								var tdis = (setDatas.map[s])[c];
+								var sps = tdis.pic instanceof Array ? tdis.pic : [ tdis.pic ];
+								for ( var p = 0 ; p < sps.length ; p++ ){
+									if ( tdis.name == rtn.name && sps[p] != null && sps[p] != "" ){
+										rtn.pic = sps[p];
+										c = setDatas.map[s].length-1;
+										s = setDatas.map.length-1;
+										break;
+									}
+								}
+							}
+						}
+					}
+					return rtn;
 				}
 			}
 			return null;
@@ -1244,8 +1265,8 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM-04",
 		"DMPCD-03",
-		"DM-02",
 		"DM22-BD3",
 		"DM22-BD2",
 	]
@@ -1274,6 +1295,14 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/03/27",
+				log : [ 
+						"新增「DM-03 超戦士襲撃」資料",
+						"新增「DM-04 闇騎士団の逆襲」資料",
+						"調整卡圖顯示邏輯",
+				],	
+			},
 			{	
 				date : "2023/03/25",
 				log : [ 

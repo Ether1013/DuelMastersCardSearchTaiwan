@@ -744,7 +744,8 @@
 		} else if ( dmCard.match( /\w\/\w{2}\/[\w\-\(\)%]+/ ) ){
 			return "http://vignette.wikia.nocookie.net/duelmasters/images/" + dmCard + ".jpg/revision/latest/scale-to-width-down/450";
 		} else {
-			return "http://gathe.jp/" + dmCard + ".jpg";	
+//			return "http://gathe.jp/" + dmCard + ".jpg";	
+			return "./noPic.png";
 		}
 	}
 	
