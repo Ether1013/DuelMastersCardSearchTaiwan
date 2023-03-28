@@ -352,7 +352,7 @@
 				}
 /*
 				if ( cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ) == null ){
-					alert( cardDataBySort[i].name + ":" + cardDataBySort[i].type + "/" + cardDataBySort[i].type[ );
+					alert( cardDataBySort[i].name + ":" + cardDataBySort[i].type + "/" + cardDataBySort[i].type );
 				}
 */
 				var theLocation = cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ).Location;

@@ -81183,7 +81183,7 @@
 			mana : 1,
 			wData : [
 				{
-					type : "",
+					type : "C",
 					civil : 4,
 					race : ["デーモン・コマンド"],
 					power : 6000,
