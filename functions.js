@@ -2333,12 +2333,16 @@
 				
 			//O=條件初始化
 			case 79 : 
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					limitsReset();	
 					gobi('filterBar').onclick();
 					break;
 					
 			//C=清除文明選項
 			case 69 : 
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					var civilBtns = gosbn("allowCivil");
 					for ( var i = 0 ; i < civilBtns.length ; i++ ){
 						civilBtns[i].setAttribute("class","btnUnClick");
@@ -2352,42 +2356,56 @@
 					
 			//L=光文明
 			case 76 : 
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					getCivilBtn(16).click();
 					gobi('filterBar').onclick();					
 					break;
 					
 			//W=水文明
 			case 87 : 
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					getCivilBtn(8).click();
 					gobi('filterBar').onclick();					
 					break;
 					
 			//D=闇文明
 			case 68 :
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					getCivilBtn(4).click();
 					gobi('filterBar').onclick();					
 					break;
 					
 			//F=火文明
 			case 70 :
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					getCivilBtn(2).click();
 					gobi('filterBar').onclick();					
 					break;
 					
 			//N=自然文明
 			case 78 :
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					getCivilBtn(1).click();
 					gobi('filterBar').onclick();					
 					break;
 					
 			//Z=無色文明
 			case 90 :
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					getCivilBtn(32).click();
 					gobi('filterBar').onclick();					
 					break;
 					
 			//R=多色
 			case 82 : 
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					var allowType = gosbn("allowType");
 					for ( var i = 0 ; i < allowType.length ; i++ ){
 						if ( allowType[i].getAttribute("allowType") == "M" ){
@@ -2399,6 +2417,8 @@
 					
 			//S=單色
 			case 83 :
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					var allowType = gosbn("allowType");
 					for ( var i = 0 ; i < allowType.length ; i++ ){
 						if ( allowType[i].getAttribute("allowType") == "S" ){
@@ -2430,10 +2450,14 @@
 			case 105:
 			case 110:
 			case 190:
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					saveString( event.key );
 					break;
 						
 			case 13 :
+					if ( document.activeElement.id == 'cardName' )
+						break;
 					event.preventDefault();
 					query();
 					break;
