@@ -2456,8 +2456,6 @@
 					break;
 						
 			case 13 :
-					if ( document.activeElement.id == 'cardName' )
-						break;
 					event.preventDefault();
 					query();
 					break;
