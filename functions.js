@@ -163,8 +163,19 @@
 		lastSelectedAAIndex = null;
 		
 		//依照條件進行過濾、並依照指定進行排序
+		var fuzzyName = null;
 		var cardDataBySort = getSortList( sort , desc , twsd );
 		var noQueryData = cardDataBySort == null || cardDataBySort.length == 0;
+		if ( noQueryData ){
+			var filterByName = gobi("cardName").value;
+			if ( filterByName != '' ){
+				fuzzyName = searchForCardByName( filterByName );
+				if ( fuzzyName != null ){
+					cardDataBySort = [ cardDatas.getDataByName( fuzzyName ) ];
+					noQueryData = false;
+				}
+			}
+		}
 		if ( noQueryData ){
 			var noQueryDataMsg = translateText( "查無資料" , isTC2C );
 			clearListAndSetOneLine( noQueryDataMsg );	
@@ -473,6 +484,10 @@
 				nameTable.appendChild( tableTrExistList[i] );
 			}
 			changeListCSS();
+			
+			if ( fuzzyName != null ){
+				alert( translateText( "查無正確資料，請參考【】" , isTC2C ).replace("【】","【"+fuzzyName+"】") );
+			}
 		}
 		//繁轉簡
 		if ( isTC2C ){
