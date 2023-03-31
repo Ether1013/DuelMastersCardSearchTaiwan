@@ -16977,6 +16977,125 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DM23-SD1";
+	var setName = "竜軍・オブ・ボルシャック(先行版)";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "強襲竜 ボルシャック・レイダー / レイド・エントリー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/01.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "23SD1 1/14",
+			count : 2,
+		},
+		{
+			name : "ボルシャック・モルナルク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/02.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "23SD1 2/14",
+			count : 1,
+		},
+		{
+			name : "メテオキャノン・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/03.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD1 3/14",
+			count : 2,
+		},
+		{
+			name : "翔竜提督ザークピッチ",
+			pic : "",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD1 4/14",
+			count : 3,
+		},
+		{
+			name : "ボルシャック・テイル・ドラゴン",
+			pic : "",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD1 5/14",
+			count : 3,
+		},
+		{
+			name : "アニー・ルピア",
+			pic : "",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD1 6/14",
+			count : 3,
+		},
+		{
+			name : "ボルシャック・ヒート・ドラゴン / ヒートブレス・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/07.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD1 7/14",
+			count : 3,
+		},
+		{
+			name : "ボルシャック・ローレン・ドラゴン",
+			pic : "",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD1 8/14",
+			count : 3,
+		},
+		{
+			name : "ボルシャック・バディ・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/09.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD1 9/14",
+			count : 3,
+		},
+		{
+			name : "コッコ・ルピア GS",
+			pic : "",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD1 10/14",
+			count : 4,
+		},
+		{
+			name : "ザーク・砲・ピッチ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/11.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD1 11/14",
+			count : 4,
+		},
+		{
+			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/12.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "23SD1 12/14",
+			count : 2,
+		},
+		{
+			name : "ボルシャック・爆・ルピア",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/13.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "23SD1 13/14",
+			count : 3,
+		},
+		{
+			name : "アシスター・コッピ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/14.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "23SD1 14/14",
+			count : 4,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DMART-05";
 	var setName = "神アート 五人祭でドラゴン♡サマー";
 	var isDeck = true;

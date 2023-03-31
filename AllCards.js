@@ -30992,7 +30992,7 @@
 					"對手回合中，如果這隻生物從我方手牌中被丟棄時，你可以不將此生物置入墓地，取而代之、將此生物打出至戰鬥場上。",
 					"(K)W・ブレイカー(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmc45-023.jpg",
 		},
 		{
 			name : "獣鬼クーガ",
@@ -98307,7 +98307,178 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm04-055.jpg",
 		},
-				
+		{
+			name : "強襲竜 ボルシャック・レイダー / レイド・エントリー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/01.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 2,
+					race : ["アーマード・ドラゴン"],
+					power : 8000,
+					cost : 8,
+					sp : [
+						"(K)スピードアタッカー(/K)",
+						"(K)W・ブレイカー(/K)",
+						"此生物發動攻擊時，執行(R)アーマード(/R)・(K)メクレイド(/K)８",
+					],
+				},
+				{
+					type : "S",
+					race : ["アーマード・アーツ"],
+					civil : 2,
+					cost : 6,
+					sp : [
+						"將此卡置入牌庫中洗牌。",
+						"執行(R)アーマード(/R)・(K)メクレイド(/K)８",
+					]
+				},
+			],
+		},
+		{
+			name : "ボルシャック・モルナルク",
+			type : "C",
+			civil : 2,
+			race : ["アーマード・ドラゴン","アーマード・ファイアー・バード"],
+			power : 13000,
+			cost : 8,
+			mana : 1,
+			sp : [
+				"(K)T・ブレイカー(/K)",
+				"此生物出場時，將我方墓地所有(R)ファイアー・バード(/R)拿回到手牌中。",
+				"各回合一次，當我方的(R)アーマード・ドラゴン(/R)被破壞時，你可以取而代之、從手牌打出一隻(R)ファイアー・バード(/R)。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/02.jpg",
+		},
+		{
+			name : "メテオキャノン・ドラゴン",
+			type : "C",
+			civil : 2,
+			race : ["アーマード・ドラゴン"],
+			power : 6000,
+			cost : 8,
+			mana : 1,
+			sp : [
+				"(K)W・ブレイカー(/K)",
+				"當此生物在對手回合裡從手牌中被丟棄時、取而代之、打出此生物。",
+				"此生物出場時，破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/03.jpg",
+		},
+		{
+			name : "ボルシャック・ヒート・ドラゴン / ヒートブレス・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/07.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 2,
+					race : ["アーマード・ドラゴン","アーマード・ファイアー・バード"],
+					power : 6000,
+					cost : 6,
+					sp : [
+						"(K)スピードアタッカー(/K)",
+						"(K)W・ブレイカー(/K)",
+					],
+				},
+				{
+					type : "S",
+					race : ["アーマード・アーツ"],
+					civil : 2,
+					cost : 3,
+					sp : [
+						"公開我方牌庫頂第一張牌。如果那是(R)アーマード(/R)的話則加入手牌。",
+						"(K)チャージャー(/K)",
+					]
+				},
+			],
+		},
+		{
+			name : "ボルシャック・バディ・ドラゴン",
+			type : "C",
+			civil : 2,
+			race : ["アーマード・ドラゴン"],
+			power : 3000,
+			pc : true,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"此生物出場時，觀看我方牌庫頂5張牌。你可以從中選擇1隻(R)ファイアー・バード(/R)給對手確認並加入手牌。最後將牌庫洗牌。",
+				"攻擊中、此生物的攻擊力會隨著我方墓地中每一隻(R)ファイアー・バード(/R)而+1000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/09.jpg",
+		},
+		{
+			name : "ザーク・砲・ピッチ",
+			type : "C",
+			civil : 2,
+			race : ["アーマード・ファイアー・バード"],
+			power : 1000,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー(/K)",
+				"此生物出場時，破壞1個費用3以下的單位。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/11.jpg",
+		},
+		{
+			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/12.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 2,
+					race : ["アーマード・ファイアー・バード"],
+					power : 1000,
+					cost : 3,
+					mana : 1,
+					sp : [
+						"(K)スピードアタッカー(/K)",
+					],
+				},
+				{
+					type : "S",
+					race : ["アーマード・アーツ"],
+					civil : 2,
+					cost : 4,
+					sp : [
+						"執行(R)アーマード(/R)・(K)メクレイド(/K)５",
+					]
+				},
+			],
+		},
+		{
+			name : "ボルシャック・爆・ルピア",
+			type : "C",
+			civil : 2,
+			race : ["アーマード・ファイアー・バード"],
+			power : 3000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)スピードアタッカー(/K)",
+				"此生物被破壞時，執行(R)アーマード(/R)・(K)メクレイド(/K)８",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/13.jpg",
+		},
+		{
+			name : "アシスター・コッピ",
+			type : "C",
+			civil : 2,
+			race : ["アーマード・ファイアー・バード"],
+			power : 3000,
+			pc : true,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"(K)パワーアタッカー(/K)+2000",
+				"各回合一次，使用(R)アーマード(/R)的費用可以少1。但是不能降到0以下。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/14.jpg",
+		},				
 		/*
 		{
 			name : "",
