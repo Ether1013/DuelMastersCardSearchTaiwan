@@ -2338,6 +2338,8 @@
 			case 37 :
 			//→
 			case 39 :
+					if ( document.activeElement.type == 'text' )
+						break;
 			//↓
 			case 40 :
 			//↑	
