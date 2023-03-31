@@ -3420,6 +3420,8 @@
 		if ( !eValue ){
 			setSelectValue( "setCode" , lastSelectedSetCode );
 			setCodeSelector.onchange();
+		} else {
+			lastSelectedSetCode = null;
 		}
 	}
 	
