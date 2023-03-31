@@ -54,6 +54,38 @@
 		}
 		return false;
 	};
+	Array.prototype.or = function( arrayObject ){
+		if ( !(arrayObject instanceof Array) ){
+			arrayObject = [ arrayObject ];
+		}
+		var rtn = [];
+		for ( var i = 0 ; i < this.length ; i++ ){
+			if ( arrayObject.include( this[i] ) ){
+				rtn.push( this[i] );
+			}
+		}
+		return rtn;
+	};
+	Array.prototype.and = function( arrayObject ){
+		if ( !(arrayObject instanceof Array) ){
+			arrayObject = [ arrayObject ];
+		}
+		for ( var a = 0 ; a < arrayObject.length ; a++ ){
+			if ( !this.include( arrayObject[a] ) ){
+				this.push( arrayObject[a] );
+			}
+		}
+		return this;
+	};
+	Array.prototype.equals = function( arr ){
+		if ( !(arr instanceof Array) )
+			return false;
+		if ( this.length != arr.length )
+			return false;
+		if ( this.length == ( arr.or( this ) ).length )
+			return true;
+		return false;
+	};
 	//讓IMAGE可以增加多重onload
 	Image.prototype.addLoadEvent = function( func ){
 		var oldonload = this.onload;
@@ -207,6 +239,7 @@
 				var theSet = setDatas.getSetDatas( lastSelectedSetCode );
 			}
 //			var bgSettingList = civilMapping.getListBGSetting_List();
+			var rowSpan = 1;
 			for ( var i = 0 ; i < cardDataBySort.length ; i++ ){
 		
 				var tr = document.createElement('tr');
@@ -276,8 +309,45 @@
 					tdNum.style.width = "30px";
 					tdNum.style.textAlign = "center";
 					if ( theSet.isDeck && lastSelectedSetCode != queryHistorySetCode ){
+						
+						var addTdNum = true;
+						if ( rowSpan != 1 ){
+							addTdNum = false;
+						} else if ( cardDataBySort[i].back == null ){
+							addTdNum = true;
+						} else {
+							addTdNum = false;
+							var names = [];
+							var backs = [];
+							for ( n = i ; n < cardDataBySort.length ; n++ ){
+								
+								names.push( cardDataBySort[n].name );
+								backs = backs.and( cardDataBySort[n].back );
+								
+								if ( names.equals( backs ) ){
+									rowSpan = names.length;
+									addTdNum = true;
+									break;
+								}
+							}
+							
+							if ( !addTdNum && !names.equals( backs ) ){
+								addTdNum = true;
+							}
+						}
+						if ( addTdNum ){
+							tdNum.setAttribute("rowspan",rowSpan);
+							rowSpan++;
+							tr.appendChild( tdNum );
+						}
+						if ( rowSpan > 1 ){
+							rowSpan--;
+						}
+
+						/*
+						
 						//如果下一張就是這張的背面的話，則共用張數欄
-						if ( i+1 < cardDataBySort.length && cardDataBySort[i+1].back == cardDataBySort[i].name ){
+						if ( i+1 < cardDataBySort.length && cardDataBySort[i+1].back == cardDataBySort[i].name && !(cardDataBySort[i+1].back instanceof Array) && !(cardDataBySort[i].back instanceof Array)  ){
 							tdNum.setAttribute("rowspan",2);
 							tr.appendChild( tdNum );
 						//目前不處理多張翻面合體的併欄
@@ -290,6 +360,7 @@
 						} else {
 							tr.appendChild( tdNum );
 						}
+						*/
 					} else {
 						tr.appendChild( tdNum );
 					}
@@ -506,6 +577,10 @@
 		//估價功能初始化
 		priceBtnInit( listCardNCs );
 		return cardDataBySort.length;
+	}
+	
+	function singleToArray( objs ){
+		return objs instanceof Array ? objs : [ objs ];
 	}
 	
 	function priceBtnInit( listCardNCs ){
