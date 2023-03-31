@@ -694,7 +694,7 @@
 			sp : [
 					"當此生物出場時，破壞戰鬥場上1隻攻擊力比此生物小的對手生物。",
 			],
-			pic : "d/d8/Dmx22b-121a",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmx25-039a.jpg",
 		},
 		{
 			name : "時空の踊り子マティーニ",
