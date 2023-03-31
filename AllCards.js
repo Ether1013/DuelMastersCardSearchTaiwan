@@ -68184,7 +68184,6 @@
 			back : [ "Volzeos-Balamord" ],
 			type : "KCL",
 			civil : 11,
-			cost : 0,
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
@@ -68197,7 +68196,6 @@
 			back : [ "Volzeos-Balamord" ],
 			type : "KCL",
 			civil : 21,
-			cost : 0,
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
@@ -68210,7 +68208,6 @@
 			back : [ "Volzeos-Balamord" ],
 			type : "KCL",
 			civil : 22,
-			cost : 0,
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
@@ -68223,7 +68220,6 @@
 			back : [ "新世界秩序" ],
 			type : "KCL",
 			civil : 26,
-			cost : 0,
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
@@ -68236,7 +68232,6 @@
 			back : [ "新世界秩序" ],
 			type : "KCL",
 			civil : 13,
-			cost : 0,
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
