@@ -2327,21 +2327,23 @@
 			case 40 :
 			//↑	
 			case 38 :
+					if ( document.activeElement.tagName == 'SELECT' )
+						break;
 					event.preventDefault();
 					doKeybordFunction( event.keyCode );
 					break;
 				
 			//O=條件初始化
 			case 79 : 
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					limitsReset();	
 					gobi('filterBar').onclick();
 					break;
 					
-			//C=清除文明選項
+			//O=文明選項初始化
 			case 69 : 
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					var civilBtns = gosbn("allowCivil");
 					for ( var i = 0 ; i < civilBtns.length ; i++ ){
@@ -2356,7 +2358,7 @@
 					
 			//L=光文明
 			case 76 : 
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					getCivilBtn(16).click();
 					gobi('filterBar').onclick();					
@@ -2364,7 +2366,7 @@
 					
 			//W=水文明
 			case 87 : 
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					getCivilBtn(8).click();
 					gobi('filterBar').onclick();					
@@ -2372,7 +2374,7 @@
 					
 			//D=闇文明
 			case 68 :
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					getCivilBtn(4).click();
 					gobi('filterBar').onclick();					
@@ -2380,7 +2382,7 @@
 					
 			//F=火文明
 			case 70 :
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					getCivilBtn(2).click();
 					gobi('filterBar').onclick();					
@@ -2388,7 +2390,7 @@
 					
 			//N=自然文明
 			case 78 :
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					getCivilBtn(1).click();
 					gobi('filterBar').onclick();					
@@ -2396,7 +2398,7 @@
 					
 			//Z=無色文明
 			case 90 :
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					getCivilBtn(32).click();
 					gobi('filterBar').onclick();					
@@ -2404,7 +2406,7 @@
 					
 			//R=多色
 			case 82 : 
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					var allowType = gosbn("allowType");
 					for ( var i = 0 ; i < allowType.length ; i++ ){
@@ -2417,7 +2419,7 @@
 					
 			//S=單色
 			case 83 :
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					var allowType = gosbn("allowType");
 					for ( var i = 0 ; i < allowType.length ; i++ ){
@@ -2450,7 +2452,7 @@
 			case 105:
 			case 110:
 			case 190:
-					if ( document.activeElement.id == 'cardName' )
+					if ( document.activeElement.type == 'text' )
 						break;
 					saveString( event.key );
 					break;
