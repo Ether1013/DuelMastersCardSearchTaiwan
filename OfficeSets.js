@@ -16978,123 +16978,135 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-SD1";
-	var setName = "竜軍・オブ・ボルシャック(先行版)";
+	var setName = "竜軍・オブ・ボルシャック";
 	var isDeck = true;
 	var setCardList = [
 		{
 			name : "強襲竜 ボルシャック・レイダー / レイド・エントリー",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/01.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-001a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
 			id : "23SD1 1/14",
 			count : 2,
 		},
+
 		{
 			name : "ボルシャック・モルナルク",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/02.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-002.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
 			id : "23SD1 2/14",
 			count : 1,
 		},
+
 		{
 			name : "メテオキャノン・ドラゴン",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/03.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-003.jpg",
 			rarity : "R",
-			flavor : [ "" ],
+			flavor : [ "メクレイドは種族を持っているなら呪文でも唱えられる！クリーチャーと呪文が合わさったカードであるツインパクトがめくれた時、どちら側を使うかで腕が試されるぞ!!" ],
 			id : "23SD1 3/14",
 			count : 2,
 		},
+
 		{
 			name : "翔竜提督ザークピッチ",
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-004.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23SD1 4/14",
 			count : 3,
 		},
+
 		{
 			name : "ボルシャック・テイル・ドラゴン",
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-005.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23SD1 5/14",
 			count : 3,
 		},
+
 		{
 			name : "アニー・ルピア",
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-006.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23SD1 6/14",
 			count : 3,
 		},
+
 		{
 			name : "ボルシャック・ヒート・ドラゴン / ヒートブレス・チャージャー",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/07.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-007a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23SD1 7/14",
 			count : 3,
 		},
+
 		{
 			name : "ボルシャック・ローレン・ドラゴン",
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-008.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23SD1 8/14",
 			count : 3,
 		},
+
 		{
 			name : "ボルシャック・バディ・ドラゴン",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/09.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-009.jpg",
 			rarity : "U",
-			flavor : [ "" ],
+			flavor : [ "このデッキの切り札、ボルシャック・レイダーはメクレイドで大型ドラゴンを呼び出しまくれる！メクレイドから次のメクレイドにつなげて、ドラゴンでバトルゾーンを埋め尽くそう!!" ],
 			id : "23SD1 9/14",
 			count : 3,
 		},
+
 		{
 			name : "コッコ・ルピア GS",
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-010.jpg",
 			rarity : "U",
-			flavor : [ "" ],
+			flavor : [ "ファイアー・バードはドラゴンをサポートする種族！様々なファイアー・バードを使いこなすのがドラゴンを使いこなすコツだ!!" ],
 			id : "23SD1 10/14",
 			count : 4,
 		},
 		{
 			name : "ザーク・砲・ピッチ",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/11.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-011.jpg",
 			rarity : "U",
-			flavor : [ "" ],
+			flavor : [ "S・トリガーは防御の切り札！相手の攻撃を止めたら逆転のチャンスだ!!" ],
 			id : "23SD1 11/14",
 			count : 4,
 		},
+
 		{
 			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/12.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-012a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "23SD1 12/14",
 			count : 2,
 		},
+
 		{
 			name : "ボルシャック・爆・ルピア",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/13.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-013.jpg",
 			rarity : "C",
-			flavor : [ "" ],
+			flavor : [ "メクレイドが発動したら、強力なクリーチャーを山札の上からマナを支払わずに召喚できるぞ！大型クリーチャーを呼び出して、一発逆転だ!!" ],
 			id : "23SD1 13/14",
 			count : 3,
 		},
+
 		{
 			name : "アシスター・コッピ",
-			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/14.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-014.jpg",
 			rarity : "C",
-			flavor : [ "" ],
+			flavor : [ "このデッキの基本の動きは、序盤にファイアー・バードたちを並べ、中盤にメクレイドでアーマードを山札からどんどん召喚！終盤は大型アーマードでトドメだ!!" ],
 			id : "23SD1 14/14",
 			count : 4,
-		},
+		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMART-05";
 	var setName = "神アート 五人祭でドラゴン♡サマー";
