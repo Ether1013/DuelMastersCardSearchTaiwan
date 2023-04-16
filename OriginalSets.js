@@ -1614,3 +1614,21 @@
 		{		name : "天啓 CX-20",												count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-059"
+	var setName = "DMGP2023-1st 『ラッカ鬼羅スターライオネル』＠ナオ@すずの音"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "「正義星帝」 ＜ライオネル.Star＞",	count : 4,	},
+		{		name : "「正義星帝」 ＜鬼羅.Star＞",		count : 4,	},
+		{		name : "超次元の王家",						count : 4,	},
+		{		name : "スロットンの心絵",					count : 4,	},
+		{		name : "エヴォ・ルピア",					count : 4,	},
+		{		name : "赤い稲妻 テスタ・ロッサ",			count : 4,	},
+		{		name : "T・T・T",							count : 4,	},
+		{		name : "ブランド-MAX",						count : 3,	},
+		{		name : "カーネンの心絵",					count : 3,	},
+		{		name : "奇天烈 シャッフ",					count : 3,	},
+		{		name : "終末の時計 ザ・クロック",			count : 3,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
