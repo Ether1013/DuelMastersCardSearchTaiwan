@@ -2588,7 +2588,7 @@
 				if ( cost == '0' ){
 					gobi("cost").value = '';
 				} else {
-				gobi("cost").value = cost;
+					gobi("cost").value = cost;
 				}
 			}
 			if ( power != null ){

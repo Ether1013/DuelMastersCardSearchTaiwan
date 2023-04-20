@@ -18190,6 +18190,147 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
+	var setCode = "OF-ThankYou20th!!";
+	var setName = "ThankYou20th!!";
+	var isDeck = false;
+	var setCardList = [
+		{
+			name : "Thank you for Duel Masters 20th!!",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy20-ThankYou20th.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "ThankYou20th!!",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "OF-COROCOROY19";
+	var setName = "デュエマGR爆速スタート52枚デッキセット";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "The ジョラゴンGS",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d01.jpg",
+			rarity : "",
+			flavor : [ "仲間のジョーカーズの力でパワーアップ！それが新しいジョラゴンの力だ！" ],
+			id : "COROCOROY19 1/15",
+			count : 2,
+		},
+		{
+			name : "メタルポンの助",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d02.jpg",
+			rarity : "",
+			flavor : [ "ジョラゴンじゃなくて、メタルヨノゥ～！こいつを他のGRクリーチャーと入れ替えていけばデッキが簡単に強化できるぞ！" ],
+			id : "COROCOROY19 2/15",
+			count : 6,
+		},
+		{
+			name : "プラモデ～ル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d03.jpg",
+			rarity : "",
+			flavor : [ "スピードアタッカーで攻撃しつつさらに仲間を増やせ。仲間と一緒に全員で攻撃するのが新世界のジョーカーズだ！" ],
+			id : "COROCOROY19 3/15",
+			count : 2,
+		},
+		{
+			name : "ツタンメカーネン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d04.jpg",
+			rarity : "U",
+			flavor : [ "こいつが出たら1枚引けて超ラッキー！君の使いたいクリーチャーを詰め込んだ君だけの超GRゾーンを作り上げよう！" ],
+			id : "COROCOROY19 4/15",
+			count : 2,
+		},
+		{
+			name : "カリー・ポッター",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d05.jpg",
+			rarity : "U",
+			flavor : [ "GRクリーチャーはカリー・ポッターで強化できる！相手とのバトルに負けないGRクリーチャーを作り出せ。" ],
+			id : "COROCOROY19 5/15",
+			count : 4,
+		},
+		{
+			name : "The カップラー漢",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d06.jpg",
+			rarity : "C",
+			flavor : [ "GRクリーチャーの使い方！まず12枚のGRクリーチャーをまぜて裏向きで超GRゾーンに用意しよう！そして、GR召喚を持ったカードを使った時、超GRの一番上のカードを表向きにしてバトルゾーンに出せば完了だ！ね、簡単でしょ？" ],
+			id : "COROCOROY19 6/15",
+			count : 2,
+		},
+		{
+			name : "DOKIDOKI・ザイナマ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d07.jpg",
+			rarity : "C",
+			flavor : [ "破壊されればまさかのGRクリーチャー２体！一気に連続GR召喚がねらえるぞ！" ],
+			id : "COROCOROY19 7/15",
+			count : 4,
+		},
+		{
+			name : "八艘剣士ヨシツネ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d08.jpg",
+			rarity : "C",
+			flavor : [ "超GRゾーン！それは、ガチ誕したばかりの新ゾーン！12枚のGRクリーチャーをGR召喚でバトルゾーンに呼び出せ！君の天運が強力クリーチャーを引き寄せる！" ],
+			id : "COROCOROY19 8/15",
+			count : 4,
+		},
+		{
+			name : "ワンキャノン・ワイバーン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d09.jpg",
+			rarity : "C",
+			flavor : [ "バトルゾーンに出たクリーチャーは「召喚酔い」になっていて攻撃できない……だけど、スピードアタッカーを持ったこいつなら、すぐにアタックできる。" ],
+			id : "COROCOROY19 9/15",
+			count : 4,
+		},
+		{
+			name : "“LES”のスパナ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d10.jpg",
+			rarity : "C",
+			flavor : [ "クリーチャーで相手のシールドを５つブレイクしよう！シールドがなくなった相手にダイレクトアタックを決めれば君の勝利だ！" ],
+			id : "COROCOROY19 10/15",
+			count : 4,
+		},
+		{
+			name : "凶戦士ブレイズ・クロー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d11.jpg",
+			rarity : "C",
+			flavor : [ "１ターン目に手札にあれば迷わずこいつ！序盤から相手のシールドをブレイクしていくのが勝利の近道だ！" ],
+			id : "COROCOROY19 11/15",
+			count : 4,
+		},
+		{
+			name : "イフリート・ハンド",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d12.jpg",
+			rarity : "C",
+			flavor : [ "S・トリガーは相手のブレイクで発動する逆転カード！どんなクリーチャーもこいつで一撃だ！" ],
+			id : "COROCOROY19 12/15",
+			count : 4,
+		},
+		{
+			name : "メリコミ・フィスト",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d13.jpg",
+			rarity : "C",
+			flavor : [ "S・トリガーで相手のクリーチャーを倒す時は、まだアタックしてきてないヤツを狙おう！" ],
+			id : "COROCOROY19 13/15",
+			count : 4,
+		},
+		{
+			name : "KAMASE-BURN!",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d14.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "COROCOROY19 14/15",
+			count : 4,
+		},
+		{
+			name : "スチーム・ハエタタキ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy18-sp6d15.jpg",
+			rarity : "C",
+			flavor : [ "余った１マナで相手のクリーチャーを倒せるニクいヤツ！相手の数を減らしていくのも勝利の方程式だぞ。" ],
+			id : "COROCOROY19 15/15",
+			count : 2,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "OF-Y22";
 	var setName = "第22期プロモーション・カード";
 	var isDeck = false;
