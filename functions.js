@@ -891,6 +891,7 @@
 
 		var pic = new Image();
 		pic.src = img.src;
+		pic.crossorigin="anonymous";
 		if ( index != null ){
 			img.style.display = 'none';
 			if ( isBackReadData ){
@@ -2407,6 +2408,10 @@
 	
 	//按方向鍵時進行版本更換或換卡
 	function keybordFunction(){
+		
+		if ( document.activeElement.type == 'textarea' )
+			return;
+		
 		switch( event.keyCode ){
 
 			//←
@@ -3012,16 +3017,63 @@
 			
 		html2canvas(gobi("cardDataBlockMain"), { useCORS: true })
 		  .then(canvas => { 
+			document.body.append(canvas);
+/*
+			var img = gobi("card_picture").firstChild;
+			var context = canvas.getContext('2d');
+			context.globalAlpha = 1.0;
+			context.drawImage( img , 0, 0 , 251 , 180 );
+*/			
+		});
+/*
+			var canvas = document.getElementsByTagName("canvas")[0];
+			var img = gobi("card_picture").firstChild;
+			var context = canvas.getContext('2d');
+			context.globalAlpha = 1.0;
+			context.drawImage( img , 0, 0 , 251 , 180 );
+/*			
+		html2canvas(gobi("cardDataBlockMain"), { useCORS: true })
+		  .then(canvas => { 
 			canvas.id = "canvas3";
 			document.body.appendChild(canvas);
-			var img = new Image();
-			img.src = "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TR9.jpg";
-			img.onload = function(){
-				var context = gobi("canvas3").getContext('2d');
-				context.globalAlpha = 1.0;
-				context.drawImage( img , 0, -200 , 200 , 280 );
-			}
+			var img = gobi("card_picture").firstChild;
+			var context = gobi("canvas3").getContext('2d');
+			context.globalAlpha = 1.0;
+			context.drawImage( img , 0, 200 , 200 , 280 );
 		});
+*/
+	}
+
+	//截圖
+	function doWriteCanvas3(){
+			
+		var canvas = document.createElement("canvas");
+		document.body.append( canvas );
+		var img = gobi("card_picture").firstChild;
+		var context = canvas.getContext('2d');
+		context.width = img.clientWidth;
+		context.height = img.clientheight;
+		context.globalAlpha = 1.0;
+		context.drawImage( img , 0, 0 , img.clientWidth , img.clientHeight );
+
+	}
+
+	//截圖
+	function doWriteCanvas4(){
+			
+		var canvas = document.createElement("canvas");
+		document.body.append( canvas );
+		
+		var imgObj = gobi("card_picture").firstChild;
+		
+		var img = new Image();
+		img.crossOrigin = '';
+		img.src = imgObj.src;
+		var context = canvas.getContext('2d');
+		context.width = imgObj.clientWidth;
+		context.height = imgObj.clientheight;
+		context.globalAlpha = 1.0;
+		context.drawImage( img , 0, 0 , imgObj.clientWidth , imgObj.clientHeight );
 
 	}
 
