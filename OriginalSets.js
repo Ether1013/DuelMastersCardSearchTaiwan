@@ -1632,3 +1632,21 @@
 		{		name : "終末の時計 ザ・クロック",			count : 3,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-060"
+	var setName = "DMGP2023-1st 『赤單我我我』＠いっぺこ"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "こたつむり",					count : 4,	},
+		{		name : "一番隊 チュチュリス",			count : 4,	},
+		{		name : "カンゴク入道",					count : 4,	},
+		{		name : "ダチッコ・チュリス",			count : 4,	},
+		{		name : "U・S・A・BRELLA",				count : 4,	},
+		{		name : "パイセン・チュリス",			count : 4,	},
+		{		name : "烈火大聖 ソンクン",				count : 4,	},
+		{		name : "“罰怒“ブランド",				count : 4,	},
+		{		name : "我我我ガイアール・ブランド",	count : 4,	},
+		{		name : "クミタテ・チュリス",			count : 3,	},
+		{		name : "“轟轟轟”ブランド",				count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );

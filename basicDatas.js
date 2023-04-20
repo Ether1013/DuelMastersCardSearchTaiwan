@@ -1265,6 +1265,7 @@
 	
 	//最新推薦
 	var newestSets = [
+		"NET-060",
 		"OF-COROCOROY19",
 		"NET-059",
 		"DM23-SD1",
@@ -1300,6 +1301,7 @@
 						"調整牌組輸入功能",
 						"新增「OF-COROCOROY19 デュエマGR爆速スタート52枚デッキセット」的資料",
 						"新增【Thank you for Duel Masters 20th!!】的資料",
+						"新增「DMGP2023-1st 『赤單我我我』＠いっぺこ」的資料",
 				],	
 			},
 			{	

@@ -83837,7 +83837,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-036.jpg",
 		},
 		{
-			name : "スクリーム・(K)チャージャー(/K)",
+			name : "スクリーム・チャージャー",
 			type : "S",
 			civil : 4,
 			cost : 4,
