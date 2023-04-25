@@ -303,6 +303,14 @@
 				{	Jap : "スプリガン",							Eng : "Spriggan",				Chi : "守寶妖精",		isCategory : false,	},
 				{	Jap : "ムーゲッツ",							Eng : "Moonless",				Chi : "無月",			isCategory : false,	},
 				{	Jap : "マスター・ＤＧ",						Eng : "Masters DG",				Chi : "王者DG",			isCategory : false,	},
+				{	Jap : "ノワールアビス",						Eng : "Noir　Abyss",			Chi : "黑深淵",			isCategory : false,	},
+				{	Jap : "マジック・リヴァイアサン",			Eng : "Magic Leviathan",		Chi : "魔法海怪",		isCategory : false,	},
+				{	Jap : "マジック・ムートピア",				Eng : "Magic Mutopia",			Chi : "魔法烏托邦",		isCategory : false,	},
+				{	Jap : "マジック・サイバー・コマンド",		Eng : "Magic Cyber Command",	Chi : "魔法電子指揮",	isCategory : false,	},
+				{	Jap : "メカ・デル・テック",					Eng : "Mecha Del Tech",			Chi : "機械科技",		isCategory : false,	},
+				{	Jap : "アーマード・アーツ",					Eng : "Armored Arts",			Chi : "裝甲藝術",		isCategory : false,	},
+				{	Jap : "アビスへの誘い",						Eng : "Lure to Abyss",			Chi : "深淵的誘惑",		isCategory : false,	},
+				{	Jap : "ジャイアント・スキル",				Eng : "Giant Skill",			Chi : "巨人奇技",		isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
