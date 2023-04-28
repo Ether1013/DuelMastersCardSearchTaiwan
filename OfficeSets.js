@@ -66319,6 +66319,30 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DM23-SP1";
+	var setName = "スタートWIN・スーパーデッキ 深淵の邪襲(先行版)";
+	var isDeck = true;
+	var setCardList = [
+		{		name : "スパトー:ド:スパトゥー / 邪暴乱舞",	count : 2,	},
+		{		name : "アビスベル=ジャシン帝",	count : 2,	},
+		{		name : "ソファ＝ソフティソニア / 「どんな夢がお望みだ？」",	count : 1,	},
+		{		name : "深淵の壊炉 マーダン=ロウ",	count : 1,	},
+		{		name : "絶望と反魂と滅殺の決断",	count : 2,	},
+		{		name : "深淵の三咆哮 バウワウジャ",	count : 1,	},
+		{		name : "悪灯 トーチ＝トートロット",	count : 2,	},
+		{		name : "ドアノッカ＝ノアドッカ / 「…開けるか？」",	count : 3,	},
+		{		name : "イード＝ミード / 「奈落を見たいか？」",	count : 2,	},
+		{		name : "ブルーム＝プルーフ",	count : 2,	},
+		{		name : "フットレス＝トレース / 「力が欲しいか？」",	count : 2,	},
+		{		name : "ド:スモンマー",	count : 2,	},
+		{		name : "グ:ボガメン",	count : 3,	},
+		{		name : "ハンマ＝ダンマ",	count : 4,	},
+		{		name : "フォーク＝フォック",	count : 3,	},
+		{		name : "ベル＝ゲルエール",	count : 4,	},
+		{		name : "ド:ノラテップ",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DMBD-19";
 	var setName = "開発部セレクションデッキ 「火水覇道」";
 	var isDeck = true;

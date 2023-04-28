@@ -61143,7 +61143,7 @@
 				{
 					type :	"S",
 					civil : 4,
-					cost : 8,
+					cost : 2,
 					sp : [
 							"隨機作廢一張對手手牌。",
 					],
@@ -93114,21 +93114,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TR5.jpg",
 		},
 		{
-			name : "完璧問題（ラストクエスチョン） オーパーツ",
-			type : "C",
-			civil : 12,
-			race : ["クリスタル・コマンド・ドラゴン","革命軍","テック団"],
-			power : 11000,
-			cost : 8,
-			mana : 1,
-			sp : [
-				"(K)革命チェンジ(/K)－費用5以上、且為水文明或闇文明的(R)ドラゴン(/R)。",
-				"(K)W・ブレイカー(/K)",
-				"此生物出場時，抽2張牌。之後，對手要從他戰鬥場上或是手牌中選擇合計2張卡牌、並依喜好順序置入牌庫底。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TR9.jpg",
-		},
-		{
 			name : "ホワイト・スワン",
 			type : "C",
 			civil : 16,
@@ -100190,6 +100175,128 @@
 				"將1個費用5以下的元素置入其持有者的魔力區中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-074.jpg",
+		},
+		{
+			name : "スパトー:ド:スパトゥー / 邪暴乱舞",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/01.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : [ "ノワールアビス" ],
+					power : 8000,
+					cost : 5,
+					sp : [
+						"(K)アビスラッシュ(/K)",
+						"(K)W・ブレイカー(/K)",
+						"當此生物離場時，執行(R)アビス(/R)・(K)メクレイド(/K)８",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 6,
+					sp : [
+						"執行(R)アビス(/R)・(K)メクレイド(/K)８",
+						"作廢我方牌庫頂2張牌。",
+					],
+				}
+			]
+		},
+		{
+			name : "ソファ＝ソフティソニア / 「どんな夢がお望みだ？」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/04.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : [ "アビスロイヤル" ],
+					power : 14000,
+					cost : 8,
+					sp : [
+						"(K)アビスラッシュ(/K)",
+						"(K)ブロッカー(/K)",
+						"(K)T・ブレイカー(/K)",
+						"當此生物橫置時，作廢我方牌庫頂2張牌。之後破壞最多2隻對手生物。但是那些生物的費用合計必須比我方剛剛作廢的卡牌的費用合計少。",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 4,
+					sp : [
+						"從我方墓地選擇2隻(R)アビス(/R)生物並將之拿回到手牌中。",
+					],
+				}
+			]
+		},
+		{
+			name : "ドアノッカ＝ノアドッカ / 「…開けるか？」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/09.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : [ "アビスロイヤル" ],
+					power : 4000,
+					cost : 7,
+					sp : [
+						"(K)S・トリガー(/K)",
+						"下列能力執行2次－##選擇1隻對手生物，此回合中、該生物攻擊力-4000。",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 2,
+					sp : [
+						"選擇1隻對手生物，此回合中、該生物攻擊力-4000。",
+					],
+				}
+			]
+		},
+		{
+			name : "フットレス＝トレース / 「力が欲しいか？」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/12.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 4,
+					race : [ "アビスロイヤル" ],
+					power : 4000,
+					cost : 4,
+					sp : [
+						"(K)ブロッカー(/K)",
+						"我方回合結束時，作廢牌庫頂第一張牌。之後，你可以將我方墓地中1張闇文明卡牌拿回到手牌中。",
+					],
+				},
+				{
+					type : "S",
+					civil : 4,
+					cost : 4,
+					sp : [
+						"執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+					],
+				}
+			]
+		},
+		{
+			name : "グ:ボガメン",
+			type : "C",
+			civil : 4,
+			race : [ "ノワールアビス" ],
+			power : 4000,
+			cost : 4,
+			mana : 1,
+			sp : [
+				"(K)アビスラッシュ(/K)",
+				"當此生物發動攻擊時，你可以破壞1隻我方其他生物，那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/14.jpg",
 		},
 				
 		/*
