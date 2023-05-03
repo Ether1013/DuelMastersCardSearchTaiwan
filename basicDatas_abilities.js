@@ -3,7 +3,7 @@
 	var abilityMapping = {
 	
 		map : [
-			{ Jap : "S・トリガー",			Eng : "Shield Trigger",			Chi : "護盾觸發",			descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用直接召喚此生物或是使用此咒文",},
+			{ Jap : "S・トリガー",			Eng : "Shield Trigger",			Chi : "護盾觸發",			descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用使用此卡",},
 			{ Jap : "S・トリガーX",			Eng : "Shield Trigger X",		Chi : "護盾觸發X",			descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用直接將此卡打出至戰鬥場上、並裝備至戰鬥場上1隻我方生物之上",},
 			{ Jap : "フォートE",			Eng : "Fort Energy",			Chi : "要塞能量",			descript : "當你以橫置魔力、支付費用的方式來召喚此生物時，如果橫置的卡牌有符合指定條件的話，則發動此能力",},
 			{ Jap : "O・ドライブ",			Eng : "Over Drive",				Chi : "超越進擊",			descript : "當召喚此生物/使用此咒文時，你可以額外橫置自己魔力區中指定條件的卡片，這樣的話，發動追加能力",},
@@ -292,7 +292,7 @@
 											Eng : "Dragon Triple Breaker",	Chi : "龍三重擊破者",		descript : "此生物擊破3張護盾。在各擊破前，可以將牌庫頂第一張牌以裏側方式置入護盾、或是以表側方式置於1張我方護盾之上。",},
 			{ Jap : "P’S覚醒リンク",		Eng : "Play's Psychic Link",	Chi : "Play's 覺醒聯結",	descript : "若於自己回合初、或是指定生物出場時，若滿足指定條件的話，則將戰鬥場上所指定的超次元生物一起翻面，並結合成一隻生物",},
 			{ Jap : "メガメテオバーン10",	Eng : "Mega Meteor Burn 10",	Chi : "隕石重擊10",			descript : "作廢此生物下方10張卡牌以發動指定能力",},
-			{ Jap : "S・トリガー・プラス",	Eng : "Shield Trigger Plus",	Chi : "護盾觸發追擊",		descript : "若現在是對手的回合、且我方護盾已被擊破2張以上時，追加以下能力",},
+			{ Jap : "S・トリガー・プラス",	Eng : "Shield Trigger Plus",	Chi : "護盾觸發追擊",		descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用使用此卡。若現在是對手的回合、且我方護盾已被擊破2張以上時，追加以下能力",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
