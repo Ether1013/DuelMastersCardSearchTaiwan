@@ -3,8 +3,8 @@
 	var abilityMapping = {
 	
 		map : [
-			{ Jap : "S・トリガー",			Eng : "Shield Trigger",			Chi : "護盾觸發",			descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用使用此卡",},
-			{ Jap : "S・トリガーX",			Eng : "Shield Trigger X",		Chi : "護盾觸發X",			descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用直接將此卡打出至戰鬥場上、並裝備至戰鬥場上1隻我方生物之上",},
+			{ Jap : "S・トリガー",			Eng : "Shield Trigger",			Chi : "護盾觸發",			descript : "當此卡從護盾區中回到手牌時，你可以不支付費用使用此卡",},
+			{ Jap : "S・トリガーX",			Eng : "Shield Trigger X",		Chi : "護盾觸發X",			descript : "當此卡從護盾區中回到手牌時，你可以不支付費用直接將此卡打出至戰鬥場上、並裝備至戰鬥場上1隻我方生物之上",},
 			{ Jap : "フォートE",			Eng : "Fort Energy",			Chi : "要塞能量",			descript : "當你以橫置魔力、支付費用的方式來召喚此生物時，如果橫置的卡牌有符合指定條件的話，則發動此能力",},
 			{ Jap : "O・ドライブ",			Eng : "Over Drive",				Chi : "超越進擊",			descript : "當召喚此生物/使用此咒文時，你可以額外橫置自己魔力區中指定條件的卡片，這樣的話，發動追加能力",},
 			{ Jap : "バイオ・T",			Eng : "Bio Tackle",				Chi : "生化捕獲",			descript : "當指定種族的我方生物發動攻擊進入戰鬥時，你可以將此卡從手牌中丟棄，這樣的話，該回合結束前，發動攻擊的生物獲得指定能力",},
@@ -177,7 +177,7 @@
 			{ Jap : "マスター・W・ブレイカー",		
 											Eng : "Master Double Breaker",	Chi : "王者雙重擊破者",		descript : "此生物擊破兩張護盾。當此生物於出場的回合擊破護盾時，則於各擊破前破壞戰鬥場上1隻對手生物。",},
 			{ Jap : "NEO進化",				Eng : "Neo Evolution",			Chi : "新進化",				descript : "你可以將此生物置放在戰鬥場上1隻指定條件的生物之上。若此生物下方有生物卡牌的話，則將此生物視為NEO進化生物",},
-			{ Jap : "スーパー・S・トリガー",Eng : "Super Shield Trigger",	Chi : "超級護盾觸發",		descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用直接召喚此生物或是使用此咒文。倘若此時我方沒有護盾的話，則追加指定效果。",},
+			{ Jap : "スーパー・S・トリガー",Eng : "Super Shield Trigger",	Chi : "超級護盾觸發",		descript : "當此卡從護盾區中回到手牌時，你可以不支付費用直接召喚此生物或是使用此咒文。倘若此時我方沒有護盾的話，則追加指定效果。",},
 			{ Jap : "B・A・D",				Eng : "Bad Action Dynamite",	Chi : "惡行炸彈",			descript : "召喚此生物時，你可以少支付指定數量的費用，那樣的話，於我方回合結束時破壞此生物",},
 			{ Jap : "キリフダッシュ",		Eng : "Kirifudash",				Chi : "王牌衝刺",			descript : "當有我方生物擊破護盾時，你可以支付指定費用使用此卡。",},
 			{ Jap : "マッハファイター",		Eng : "Macha Fighter",			Chi : "音速鬥士",			descript : "此生物可以於出場的回合攻擊戰鬥場上橫置或是重置狀態的對手生物。",},
@@ -292,7 +292,7 @@
 											Eng : "Dragon Triple Breaker",	Chi : "龍三重擊破者",		descript : "此生物擊破3張護盾。在各擊破前，可以將牌庫頂第一張牌以裏側方式置入護盾、或是以表側方式置於1張我方護盾之上。",},
 			{ Jap : "P’S覚醒リンク",		Eng : "Play's Psychic Link",	Chi : "Play's 覺醒聯結",	descript : "若於自己回合初、或是指定生物出場時，若滿足指定條件的話，則將戰鬥場上所指定的超次元生物一起翻面，並結合成一隻生物",},
 			{ Jap : "メガメテオバーン10",	Eng : "Mega Meteor Burn 10",	Chi : "隕石重擊10",			descript : "作廢此生物下方10張卡牌以發動指定能力",},
-			{ Jap : "S・トリガー・プラス",	Eng : "Shield Trigger Plus",	Chi : "護盾觸發追擊",		descript : "當此卡從護盾區中回到手牌時，你可以不加入手牌、而是不支付費用使用此卡。若現在是對手的回合、且我方護盾已被擊破2張以上時，追加以下能力",},
+			{ Jap : "S・トリガー・プラス",	Eng : "Shield Trigger Plus",	Chi : "護盾觸發追擊",		descript : "當此卡從護盾區中回到手牌時，你可以不支付費用使用此卡。若現在是對手的回合、且我方護盾已被擊破2張以上時，追加以下能力",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
