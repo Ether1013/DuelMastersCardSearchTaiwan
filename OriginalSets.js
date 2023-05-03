@@ -1650,3 +1650,23 @@
 		{		name : "“轟轟轟”ブランド",				count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-061"
+	var setName = "水火サガ超神羅星"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "カツラデランス /「アフロ行きま～す!!」",						count : 4,	},
+		{		name : "冥界の不死帝 ブルース /「迷いはない。俺の成すことは決まった」",	count : 2,	},
+		{		name : "死神覇王 XENARCH",												count : 2,	},
+		{		name : "カチコミ入道 ＜バトライ.鬼＞",									count : 4,	},
+		{		name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",		count : 4,	},
+		{		name : "絶望神サガ",													count : 4,	},
+		{		name : "ネ申・マニフェスト",											count : 4,	},
+		{		name : "瞬閃と疾駆と双撃の決断",										count : 4,	},
+		{		name : "蒼狼の大王 イザナギテラス",										count : 4,	},
+		{		name : "超神羅星アポロヌス・ドラゲリオン",								count : 3,	},
+		{		name : "単騎連射 マグナム",												count : 1,	},
+		{		name : "機術士ディール/「本日のラッキーナンバー！」",					count : 1,	},
+		{		name : "禁断の轟速 ブラックゾーン",										count : 3,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
