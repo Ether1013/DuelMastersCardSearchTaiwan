@@ -1675,18 +1675,18 @@
 	var setName = "DOOM HEAVEN＠國洋"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "とこしえの超人",					count : 4,	},
-		{		name : "絶望神サガ",						count : 4,	},
-		{		name : "天災 デドダム",						count : 4,	},
-		{		name : "キユリのASMラジオ",					count : 4,	},
-		{		name : "悪魔妖精ベラドンナ",				count : 3,	},
-		{		name : "極楽鳥",							count : 2,	},
-		{		name : "Disジルコン",						count : 3,	},
-		{		name : "魔光神官ルドルフ・アルカディア",	count : 3,	},
-		{		name : "テック団の波壊Go!",					count : 2,	},
-		{		name : "白騎士の聖霊王 ℵHEAVEN",			count : 3,	},
-		{		name : "撃髄医 スパイナー",					count : 3,	},
-		{		name : "禁断竜王 Vol-Val-8",				count : 2,	},
-		{		name : "超神星DOOM・ドラゲリオン",			count : 3,	},
+		{		name : "とこしえの超人",											count : 4,	},
+		{		name : "絶望神サガ",												count : 4,	},
+		{		name : "天災 デドダム",												count : 4,	},
+		{		name : "キユリのASMラジオ",											count : 4,	},
+		{		name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",	count : 4,	},
+		{		name : "グ:ルナグーシ",												count : 4,	},
+		{		name : "荒廃と豊穣の決断",											count : 4,	},
+		{		name : "魔光神官ルドルフ・アルカディア",							count : 2,	},
+		{		name : "白騎士の聖霊王 ℵHEAVEN",									count : 2,	},
+		{		name : "蒼狼の大王 イザナギテラス",									count : 1,	},
+		{		name : "Disジルコン",												count : 3,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",		count : 2,	},
+		{		name : "超神星DOOM・ドラゲリオン",									count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
