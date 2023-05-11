@@ -68,7 +68,7 @@
 			{ Jap : "光臨",					Eng : "Koulin",					Chi : "光臨",				descript : "自己回合結束時，如果此生物為橫置狀態的話，則可以從我方牌庫中找出指定條件的生物、並將之打出至戰鬥場上",},
 			{ Jap : "墓地光臨",				Eng : "Gravyard Koulin",		Chi : "墓地光臨",			descript : "自己回合結束時，如果此生物為橫置狀態的話，則可以從自己墓地裡打出指定條件的生物",},
 			{ Jap : "ガードマン",			Eng : "Guard Man",				Chi : "防禦者",				descript : "當對手生物攻擊我方生物時，你可以橫置此生物，這樣的話，則改由此生物與發動攻擊的生物進入戰鬥",},
-			{ Jap : "∞パワーアタッカー",	Eng : "Infinity Power Attacker",Chi : "無限攻擊手",			descript : "當此生物發動攻擊時，攻擊力+無限大",},
+			{ Jap : "∞パワーアタッカー",	Eng : "Infinity Power Attacker",Chi : "無限攻擊手",			descript : "當此生物發動攻擊時，攻擊力變成無限大",},
 			{ Jap : "∞ブレイカー",			Eng : "Infinity Breaker",		Chi : "無限擊破者",			descript : "此生物可以擊破對手任意數量的護盾",},
 			{ Jap : "マナ爆誕",				Eng : "Mana Reburst",			Chi : "魔力爆誕",			descript : "你可以支付指定的費用數字，讓此生物從魔力區召喚",},
 			{ Jap : "ハンティング",			Eng : "Hunting",				Chi : "狩獵",				descript : "戰鬥時，此生物的攻擊力會隨著戰鬥場上每一隻我方的ハンター而+1000",},
