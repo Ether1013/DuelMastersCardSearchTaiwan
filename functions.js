@@ -3851,6 +3851,24 @@
 			return null; 
 		} 
 	} 
+
+	/** 全形轉半形*/
+	function ToCDB(str) { 
+		var tmp = ""; 
+		for(var i=0;i<str.length;i++){ 
+			if (str.charCodeAt(i) == 12288){
+				tmp += String.fromCharCode(str.charCodeAt(i)-12256);
+				continue;
+			}
+			if(str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375){ 
+				tmp += String.fromCharCode(str.charCodeAt(i)-65248); 
+			} 
+			else{ 
+				tmp += String.fromCharCode(str.charCodeAt(i)); 
+			} 
+		} 
+		return tmp 
+	} 
 	
 	/**外部連結用工具
 	 * Param:
@@ -3953,6 +3971,17 @@
 			str = str.substring(ie+4);
 		}
 		return tags;
+	}
+	
+	function findTrade(){
+		var keyword = null;;
+		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
+		if ( cardData.id != null ){
+			keyword = cardData.id;
+		} else {
+			keyword = clearSubName( ToCDB( lastSelectedCardName ) ).replace( /\//g,"／" );
+		}
+		window.open( "https://torekakaku.com/dm/search/?q="+keyword, '_blank' );
 	}
 	
 	function findRuten(){
