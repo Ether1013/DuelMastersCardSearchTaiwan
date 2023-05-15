@@ -3232,17 +3232,17 @@
 			id : "DMR06 9/55",
 		},
 		{
-			name : "偽りの名 iFormulaX",
+			name : "偽りの名 iFormula X",
 			pic : "",
 			rarity : "R",
-			flavor : "如同其別名「戰略的Innovator(革新者)」、(N)偽りの名 iFormulaX(/N)打造出了嶄新的戰略。",
+			flavor : "如同其別名「戰略的Innovator(革新者)」、(N)偽りの名 iFormula X(/N)打造出了嶄新的戰略。",
 			id : "DMR06 10/55",
 		},
 		{
 			name : "破壊機装デリート・タンク",
 			pic : "",
 			rarity : "R",
-			flavor : "被植入(R)トライストーン(/R)的(N)デリート・タンク<=>破壊機装デリート・タンク(/N)，與(N)偽りの名 iFormulaX(/N)一樣、擁有將知識化為力量的能力。",
+			flavor : "被植入(R)トライストーン(/R)的(N)デリート・タンク<=>破壊機装デリート・タンク(/N)，與(N)偽りの名 iFormula X(/N)一樣、擁有將知識化為力量的能力。",
 			id : "DMR06 11/55",
 		},
 		{
@@ -3339,7 +3339,7 @@
 			name : "衝撃機装エスケープ・フィアット",
 			pic : "",
 			rarity : "UC",
-			flavor : "(N)エスケープ・フィアット<=>衝撃機装エスケープ・フィアット(/N)……快將你的力量灌注到(R)トライストーン(/R)裡……(N)偽りの名 iFormulaX(/N)",
+			flavor : "(N)エスケープ・フィアット<=>衝撃機装エスケープ・フィアット(/N)……快將你的力量灌注到(R)トライストーン(/R)裡……(N)偽りの名 iFormula X(/N)",
 			id : "DMR06 24/55",
 		},
 		{
@@ -3456,7 +3456,7 @@
 			rarity : "C",
 			flavor : [ 
 				"獲得變型能力的(R)グレートメカオー(/R)們，為了追求更進一步的知識，嘗試著進入水文明的心臟地帶「サイバー・H・チューブ」。",
-				"為了完成我的戰略，需要要拿到更進一步的知識…現在開始侵略「サイバー・H・チューブ」……－(N)偽りの名 iFormulaX(/N)" 
+				"為了完成我的戰略，需要要拿到更進一步的知識…現在開始侵略「サイバー・H・チューブ」……－(N)偽りの名 iFormula X(/N)" 
 			],
 			id : [ "DMR06 40/55","DMR06 40m/55" ],
 		},
@@ -4132,7 +4132,7 @@
 			name : "真実の巨兵 サンダーバード Re:",
 			pic : "",
 			rarity : "VR",
-			flavor : "(N)イノベーター<=>偽りの名 iFormulaX(/N)還是エレベーター甚麼的我不認識。戰鬥不是只靠頭腦，自己的身體也也要用上啊！－(N)真実の巨兵 サンダーバード Re:(/N)",
+			flavor : "(N)イノベーター<=>偽りの名 iFormula X(/N)還是エレベーター甚麼的我不認識。戰鬥不是只靠頭腦，自己的身體也也要用上啊！－(N)真実の巨兵 サンダーバード Re:(/N)",
 			id : "DMR08 3/55",
 		},
 		{
@@ -17108,6 +17108,104 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
+	var setCode = "DMART-06";
+	var setName = "神アート スーパー・ヴィジュアル・ショック ドラゴン編";
+	var isDeck = true;
+	var setCardList = [
+		{		
+			name : "勝利宣言 鬼丸「覇」",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg05_pc.png",
+			rarity : "VC",
+			flavor : [ "" ],
+			id : "ART06 1/5",
+			count : 1,
+		},
+		{		
+			name : "蒼き団長 ドギラゴン剣",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg06_pc.png",
+			rarity : "L",
+			flavor : [ "" ],
+			id : "ART06 2/5",
+			count : 1,
+		},
+		{		
+			name : "超竜バジュラ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg07_pc.png",
+			rarity : "SR",
+			flavor : [ "万象を撃滅する、超越の竜。" ],
+			id : "ART06 3/5",
+			count : 1,
+		},
+		{		
+			name : "メガ・マナロック・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg08_pc.png",
+			rarity : "SR",
+			flavor : [ "その龍が踏みしめた大地は、ことごとく荒地となる。" ],
+			id : "ART06 4/5",
+			count : 1,
+		},
+		{		
+			name : "ボルバルザーク・エクス",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg09_pc.png",
+			rarity : "SR",
+			flavor : [ "ボルバルザークの名は不滅なり。" ],
+			id : "ART06 5/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "DMART-07";
+	var setName = "神アート COLORFUL＊SNOW";
+	var isDeck = true;
+	var setCardList = [
+		{		
+			name : "その子供、可憐につき",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg17_pc.png",
+			rarity : "",
+			flavor : [ 
+				"ほら華蓮もう行くよ！―水村園子",
+				"待って、もう1枚撮らせて……あ！ねぇニッキー見て、雪！積もったら雪合戦しよっ！！―炎城寺華蓮",
+				"もう、子供じゃないんだから……。―光本二貴", 
+			],
+			id : "ART07 1/5",
+			count : 1,
+		},
+		{		
+			name : "天災 デドダム",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg18_pc.png",
+			rarity : "",
+			flavor : [ "7万1000パターンの反応を予想していたが……君の反応は実に面白い。―出戸環" ],
+			id : "ART07 2/5",
+			count : 1,
+		},
+		{		
+			name : "聖魔連結王 ドルファディロム",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg19_pc.png",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "ART07 3/5",
+			count : 1,
+		},
+		{		
+			name : "霊宝 ヒャクメ-４",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg20_pc.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART07 4/5",
+			count : 1,
+		},
+		{		
+			name : "Disノメノン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg21_pc.png",
+			rarity : "R",
+			flavor : [ "に、似合う……？―能美のん" ],
+			id : "ART07 5/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "DMART-05";
 	var setName = "神アート 五人祭でドラゴン♡サマー";
 	var isDeck = true;
@@ -21531,7 +21629,7 @@
 			name : "特警機装パトロール・ファンクション",
 			pic : "",
 			rarity : "",
-			flavor : "誰會想的到啊！(N)iFormulaX<=>偽りの名 iFormulaX(/N)大人跟(N)エクスキュベーター MS<=>合身巨兵エクスキュベーター MS(/N)大人竟然會對立起來！－(N)特警機装パトロール・ファンクション(/N)",
+			flavor : "誰會想的到啊！(N)iFormulaX<=>偽りの名 iFormula X(/N)大人跟(N)エクスキュベーター MS<=>合身巨兵エクスキュベーター MS(/N)大人竟然會對立起來！－(N)特警機装パトロール・ファンクション(/N)",
 			id : "DMX11 71/84",
 		},
 		{
@@ -21545,7 +21643,7 @@
 			name : "救急機装レスキュー・スペース",
 			pic : "",
 			rarity : "",
-			flavor : "「戰略的Innovator」(N)iFormulaX<=>偽りの名 iFormulaX(/N)大人！不管您到何處，在下都會追隨著您的。－(N)救急機装レスキュー・スペース(/N)",
+			flavor : "「戰略的Innovator」(N)iFormulaX<=>偽りの名 iFormula X(/N)大人！不管您到何處，在下都會追隨著您的。－(N)救急機装レスキュー・スペース(/N)",
 			id : "DMX11 73/84",
 		},
 		{
@@ -21559,7 +21657,7 @@
 			name : "暴走機械オーバースキル",
 			pic : "",
 			rarity : "R",
-			flavor : "(N)iFormulaX<=>偽りの名 iFormulaX(/N)所創造出來的新戰略、因(N)オーバースキル<=>暴走機械オーバースキル(/N)的關係而進入了暴走狀態。",
+			flavor : "(N)iFormulaX<=>偽りの名 iFormula X(/N)所創造出來的新戰略、因(N)オーバースキル<=>暴走機械オーバースキル(/N)的關係而進入了暴走狀態。",
 			id : "DMX11 75/84",
 		},
 		{
