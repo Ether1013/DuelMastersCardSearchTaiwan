@@ -17110,7 +17110,7 @@
 
 	var setCode = "DMART-06";
 	var setName = "神アート スーパー・ヴィジュアル・ショック ドラゴン編";
-	var isDeck = true;
+	var isDeck = false;
 	var setCardList = [
 		{		
 			name : "勝利宣言 鬼丸「覇」",
@@ -17118,7 +17118,6 @@
 			rarity : "VC",
 			flavor : [ "" ],
 			id : "ART06 1/5",
-			count : 1,
 		},
 		{		
 			name : "蒼き団長 ドギラゴン剣",
@@ -17126,7 +17125,6 @@
 			rarity : "L",
 			flavor : [ "" ],
 			id : "ART06 2/5",
-			count : 1,
 		},
 		{		
 			name : "超竜バジュラ",
@@ -17134,7 +17132,6 @@
 			rarity : "SR",
 			flavor : [ "万象を撃滅する、超越の竜。" ],
 			id : "ART06 3/5",
-			count : 1,
 		},
 		{		
 			name : "メガ・マナロック・ドラゴン",
@@ -17142,7 +17139,6 @@
 			rarity : "SR",
 			flavor : [ "その龍が踏みしめた大地は、ことごとく荒地となる。" ],
 			id : "ART06 4/5",
-			count : 1,
 		},
 		{		
 			name : "ボルバルザーク・エクス",
@@ -17150,14 +17146,47 @@
 			rarity : "SR",
 			flavor : [ "ボルバルザークの名は不滅なり。" ],
 			id : "ART06 5/5",
-			count : 1,
+		},
+		{		
+			name : "終末の時計 ザ・クロック",
+			pic : [ 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg23_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg24_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg25_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg26_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg27_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg28_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg29_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg30_pc.png", 
+			],
+			rarity : [ "R","R","R","R","R","R","R","R" ],
+			flavor : [ 
+					"朝日を浴びながら時計は時を刻み続ける。一日の始まりを待ちきれぬように。", 
+					"日差しが強くなる昼も時計は時を刻み続ける。街の喧騒を意に介さないかのように。", 
+					"日が沈む夕日も時計は時を刻み続ける。人々の家路を見守るかのように。", 
+					"一日が終わる夜にも時計は時を刻み続ける。穏やかな眠りを慈しむかのように。", 
+					"朝日を浴びながら時計は時を刻み続ける。一日の始まりを待ちきれぬように。", 
+					"日差しが強くなる昼も時計は時を刻み続ける。街の喧騒を意に介さないかのように。", 
+					"日が沈む夕日も時計は時を刻み続ける。人々の家路を見守るかのように。", 
+					"一日が終わる夜にも時計は時を刻み続ける。穏やかな眠りを慈しむかのように。", 
+			],
+			id : [ 
+					"神P9/Y22", 
+					"神P10/Y22", 
+					"神P11/Y22", 
+					"神P12/Y22", 
+					"神P13/Y22", 
+					"神P14/Y22", 
+					"神P15/Y22", 
+					"神P16/Y22", 
+			],
 		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMART-07";
 	var setName = "神アート COLORFUL＊SNOW";
-	var isDeck = true;
+	var isDeck = false;
 	var setCardList = [
 		{		
 			name : "その子供、可憐につき",
@@ -17169,7 +17198,6 @@
 				"もう、子供じゃないんだから……。―光本二貴", 
 			],
 			id : "ART07 1/5",
-			count : 1,
 		},
 		{		
 			name : "天災 デドダム",
@@ -17177,7 +17205,6 @@
 			rarity : "",
 			flavor : [ "7万1000パターンの反応を予想していたが……君の反応は実に面白い。―出戸環" ],
 			id : "ART07 2/5",
-			count : 1,
 		},
 		{		
 			name : "聖魔連結王 ドルファディロム",
@@ -17185,7 +17212,6 @@
 			rarity : "KGM",
 			flavor : [ "" ],
 			id : "ART07 3/5",
-			count : 1,
 		},
 		{		
 			name : "霊宝 ヒャクメ-４",
@@ -17193,7 +17219,6 @@
 			rarity : "R",
 			flavor : [ "" ],
 			id : "ART07 4/5",
-			count : 1,
 		},
 		{		
 			name : "Disノメノン",
@@ -17201,7 +17226,40 @@
 			rarity : "R",
 			flavor : [ "に、似合う……？―能美のん" ],
 			id : "ART07 5/5",
-			count : 1,
+		},
+		{		
+			name : "終末の時計 ザ・クロック",
+			pic : [ 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg23_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg24_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg25_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg26_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg27_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg28_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg29_pc.png", 
+					"https://dm.takaratomy.co.jp/product/kamiart03/image/kamiartImg30_pc.png", 
+			],
+			rarity : [ "R","R","R","R","R","R","R","R" ],
+			flavor : [ 
+					"朝日を浴びながら時計は時を刻み続ける。一日の始まりを待ちきれぬように。", 
+					"日差しが強くなる昼も時計は時を刻み続ける。街の喧騒を意に介さないかのように。", 
+					"日が沈む夕日も時計は時を刻み続ける。人々の家路を見守るかのように。", 
+					"一日が終わる夜にも時計は時を刻み続ける。穏やかな眠りを慈しむかのように。", 
+					"朝日を浴びながら時計は時を刻み続ける。一日の始まりを待ちきれぬように。", 
+					"日差しが強くなる昼も時計は時を刻み続ける。街の喧騒を意に介さないかのように。", 
+					"日が沈む夕日も時計は時を刻み続ける。人々の家路を見守るかのように。", 
+					"一日が終わる夜にも時計は時を刻み続ける。穏やかな眠りを慈しむかのように。", 
+			],
+			id : [ 
+					"神P9/Y22", 
+					"神P10/Y22", 
+					"神P11/Y22", 
+					"神P12/Y22", 
+					"神P13/Y22", 
+					"神P14/Y22", 
+					"神P15/Y22", 
+					"神P16/Y22", 
+			],
 		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
