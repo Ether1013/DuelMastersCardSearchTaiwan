@@ -101398,6 +101398,21 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm06-108.jpg",
 		},
+		{
+			name : "閻魔大王",
+			type : "C",
+			civil : 4,
+			race : [ "デーモン・コマンド" ],
+			power : 7000,
+			cost : 7,
+			mana : 1,
+			sp : [
+				"(K)墓地進化(/K)－從自己的墓地選擇1隻闇文明的生物，並將此生物重疊在該生物身上出場。",
+				"(K)W・ブレイカー(/K)",
+				"此生物出場時，將戰鬥場上所有對手非生物的表面卡牌、以及對手護盾區中所有的表側卡牌置入墓地。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-093.jpg",
+		},
 						
 		/*
 		{
