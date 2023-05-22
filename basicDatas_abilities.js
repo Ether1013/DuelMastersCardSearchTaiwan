@@ -187,7 +187,7 @@
 			{ Jap : "マジボンバー",			Eng : "Serious Bomber",			Chi : "認真炸客",			descript : "當此生物攻擊時，觀看我方牌庫頂第一張牌。之後你可以從我方手牌或是牌庫頂打出一隻指定費用以下的生物出場。",},
 			{ Jap : "パワード・ブレイカー",	Eng : "Powered Breaker",		Chi : "馬力擊破者",			descript : "此生物攻擊力每有6000，就多擊破一張護盾。",},
 			{ Jap : "ワンダブル",			Eng : "Wondouble",				Chi : "完美雙擊",			descript : "你可以同時支付上下兩側的費用以使用兩邊的效果。",},
-			{ Jap : "Jチェンジ",			Eng : "Jockers Change",			Chi : "鬼牌交替",			descript : "當此生物發動攻擊時，你可以將此生物與魔力區中指定費用的ジョーカーズ進行交換、並繼承其攻擊。",},
+			{ Jap : "Jチェンジ",			Eng : "Jockers Change",			Chi : "鬼牌交替",			descript : "當此生物發動攻擊時，你可以將此生物與魔力區中不超過指定費用的ジョーカーズ進行交換、並繼承其攻擊。",},
 			{ Jap : "W・マジボンバー",		Eng : "Double Serious Bomber",	Chi : "雙重認真炸客",		descript : "當此生物攻擊時，觀看我方牌庫頂前兩張牌。之後你可以從我方手牌或是牌庫頂打出兩隻指定費用以下的生物出場。",},
 			{ Jap : "ラスト・バースト",		Eng : "Last Burst",				Chi : "最後一擊",			descript : "當此生物被破壞時，你可以使用此生物的咒文面。",},
 			{ Jap : "J・O・E",				Eng : "Jockers over Exlode",	Chi : "喬卡極限爆炸",		descript : "召喚此生物時，你可以減少指定費用，那樣的話，則於此回合結束時將此生物置入我方牌庫底，然後抽1張牌。",},
