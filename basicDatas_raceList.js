@@ -178,6 +178,7 @@
 				{	Jap : "スターライト・ツリー",				Eng : "Starlight Tree",			Chi : "星光樹",			isCategory : false,	},
 				{	Jap : "ヒューマノイド邪",					Eng : "Human Jya",				Chi : "人類・邪",		isCategory : false,	},
 				{	Jap : "ミルクボーイ",						Eng : "Milk Boy",				Chi : "嬰孩",			isCategory : false,	},
+				{	Jap : "ミルクガール",						Eng : "Milk Girl",				Chi : "女嬰",			isCategory : false,	},
 				{	Jap : "ガーディアン・コマンド・ドラゴン",	Eng : "Guardian Command Dragon",Chi : "守護者指揮龍",	isCategory : false,	},
 				{	Jap : "マスター革命軍",						Eng : "Master Revolution Army",	Chi : "王者革命軍",		isCategory : false,	},
 				{	Jap : "侵略者ZERO",							Eng : "Invader ZERO",			Chi : "零式侵略者",		isCategory : false,	},

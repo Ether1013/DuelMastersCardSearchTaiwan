@@ -427,6 +427,7 @@
 				{	value : "EPC",	text : "精神進化生物",		Jap : "進化サイキック・クリーチャー",		Location : "P", horizontal : false,	main:false,	},
 				{	value : "SPC",	text : "精神超級生物",		Jap : "サイキック・スーパー・クリーチャー",	Location : "P", horizontal : false,	main:false,	},
 				{	value : "D2F",	text : "D2領域",			Jap : "D2フィールド",						Location : "M", horizontal : true,	main:true,	},
+				{	value : "T2F",	text : "T2領域",			Jap : "T2フィールド",						Location : "M", horizontal : true,	main:false,	},
 				{	value : "DF",	text : "龍領域",			Jap : "ドラゴニック・フィールド",			Location : "M", horizontal : true,	main:false,	},
 				{	value : "DMF",	text : "DM領域",			Jap : "DM・フィールド",						Location : "M", horizontal : true,	main:false,	},
 				{	value : "DGF",	text : "DG領域",			Jap : "DGフィールド",						Location : "M", horizontal : true,	main:false,	},
@@ -833,6 +834,11 @@
 			"モモキング",
 			"グレンオー",
 			"トラップ",
+			"漢（メン）",
+			"アクア・アタック",
+			"アクア・カスケード",
+			"・",
+			"名人",
 		],
 		
 		isCategory : function( name ){
@@ -1265,8 +1271,8 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DMEX-08",
 		"DMBD-07",
-		"DM-06",
 		"DM23-SP1",
 		"DM23-RP1",
 	]
@@ -1296,6 +1302,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2023/05/31",
+				log : [ 
+						"新增「DMEX-08 謎のブラックボックスパック」的內容。",
+				],	
+			},
+			{	
 				date : "2023/05/26",
 				log : [ 
 						"訂正「一王二命三眼槍」的效果。",
@@ -1306,33 +1318,6 @@
 				log : [ 
 						"將「DM23-SP1」的資料改成台灣卡池",
 						"新增「DMBD-07 超誕!!ツインヒーローデッキ80 Jの超機兵 VS 聖剣神話†」的卡牌資料",
-				],	
-			},
-			{	
-				date : "2023/05/19",
-				log : [ 
-						"將「DM23-SP1」的資料改成正式版",
-						"新增「閻魔大王」的卡牌資料",
-				],	
-			},
-			{	
-				date : "2023/05/18",
-				log : [ 
-						"新增「DM-06 闘魂編」的資料",
-						"統一重複的能力(フォートＥ)",
-				],	
-			},
-			{	
-				date : "2023/05/17",
-				log : [ 
-						"調整「DMART-06、DMART-07 神アート」的資料",
-				],	
-			},
-			{	
-				date : "2023/05/15",
-				log : [ 
-						"新增「DMART-06 神アート スーパー・ヴィジュアル・ショック ドラゴン編」的資料",
-						"新增「DMART-07 神アート COLORFUL＊SNOW」的資料",
 				],	
 			},
 		],
