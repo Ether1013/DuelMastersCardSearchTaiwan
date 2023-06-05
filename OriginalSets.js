@@ -1715,6 +1715,44 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-063"
+	var setName = "帥狗盃DM大賽2nd【龍霸VV8＠家華】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "メンデルスゾーン",												count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",									count : 3,	},
+		{		name : "インフェル星樹",												count : 4,	},
+		{		name : "次世代龍覇 グレングラッサ /「ここはまかせて、お姉ちゃん！」",	count : 4,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",							count : 3,	},
+		{		name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",					count : 4,	},
+		{		name : "メガ・マナロック・ドラゴン",									count : 1,	},
+		{		name : "超戦龍覇 モルトNEXT（ネクスト）",								count : 4,	},
+		{		name : "ボルシャック・ドギラゴン",										count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",			count : 1,	},
+		{		name : "爆炎龍覇 モルトSAGA",											count : 3,	},
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "時の法皇 ミラダンテⅫ",											count : 1,	},
+		{		name : "禁断竜王 Vol-Val-8",											count : 2,	},
+		{		name : "禁断～封印されしX～",											count : 1,	},
+		{		name : "伝説の禁断 ドキンダムX",										count : 1,	},
+
+		{		name : "無敵剣 プロト・ギガハート",										count : 1,	},
+		{		name : "最強龍 オウギンガ・ゼロ",										count : 1,	},
+		{		name : "爆炎大剣 ガイサーガ",											count : 1,	},
+		{		name : "爆炎覇龍 ガイフレア",											count : 1,	},
+		{		name : "銀河大剣 ガイハート",											count : 1,	},
+		{		name : "熱血星龍 ガイギンガ",											count : 1,	},
+		{		name : "将龍剣 ガイアール",												count : 1,	},
+		{		name : "猛烈将龍 ガイバーン",											count : 1,	},
+		{		name : "闘将銀河城 ハートバーン",										count : 1,	},
+		{		name : "超戦覇龍 ガイNEXT（ネクスト）",									count : 1,	},
+		{		name : "爆銀王剣 バトガイ刃斗",											count : 2,	},
+		{		name : "爆熱王ＤＸ バトガイ銀河",										count : 2,	},
+		{		name : "無敵王剣 ギガハート",											count : 1,	},
+		{		name : "最強熱血 オウギンガ",											count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
 	var setCode = "NET-065"
 	var setName = "帥狗盃DM大賽4th【4C邪王門＠元丰】"
 	var isDeck = true;
