@@ -84575,6 +84575,7 @@
 			name : "漆黒の深淵 ジャシン帝",
 			type : "C/TS",
 			civil : 4,
+			race : ["アビスドラゴン","ACE"],
 			cost : 3,
 			power : 8000,
 			mana : 1,

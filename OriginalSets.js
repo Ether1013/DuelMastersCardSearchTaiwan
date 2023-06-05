@@ -1753,6 +1753,25 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-064"
+	var setName = "帥狗盃DM大賽3rd【深淵＠可樂薯條】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "ド:ノラテップ",				count : 1,	},
+		{		name : "ベル＝ゲルエール",			count : 4,	},
+		{		name : "ブルーム＝プルーフ",		count : 4,	},
+		{		name : "邪龍 ジャブラッド",			count : 4,	},
+		{		name : "漆黒の深淵 ジャシン帝",		count : 2,	},
+		{		name : "邪侵入",					count : 4,	},
+		{		name : "深淵の壊炉 マーダン=ロウ",	count : 3,	},
+		{		name : "深淵の三咆哮 バウワウジャ",	count : 2,	},
+		{		name : "アビスベル=ジャシン帝",		count : 4,	},
+		{		name : "ハンマ＝ダンマ",			count : 4,	},
+		{		name : "撃髄医 スパイナー",			count : 4,	},
+		{		name : "悪灯 トーチ＝トートロット",	count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
 	var setCode = "NET-065"
 	var setName = "帥狗盃DM大賽4th【4C邪王門＠元丰】"
 	var isDeck = true;
