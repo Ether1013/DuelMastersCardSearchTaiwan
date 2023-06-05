@@ -1690,3 +1690,52 @@
 		{		name : "超神星DOOM・ドラゲリオン",									count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-062"
+	var setName = "帥狗盃DM大賽1st【5C龍風＠致舜】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "とこしえの超人",										count : 4,	},
+		{		name : "天災 デドダム",											count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",	count : 3,	},
+		{		name : "極智呪文「ゼンブレイン」",								count : 2,	},
+		{		name : "SSS級天災 デッドダムド",								count : 1,	},
+		{		name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",			count : 4,	},
+		{		name : "ドンドン火噴くナウ",									count : 4,	},
+		{		name : "龍風混成 ザーディクリカ",								count : 4,	},
+		{		name : "ブレイン・スラッシュ",									count : 4,	},
+		{		name : "聖魔連結王 ドルファディロム",							count : 3,	},
+		{		name : "悪魔龍 ダークマスターズ",								count : 3,	},
+		{		name : "テック団の波壊Go!",										count : 2,	},
+		{		name : "配球の超人 / 記録的剛球",								count : 2,	},
+		{		name : "時空の禁断 レッドゾーンX",								count : 2,	},
+		{		name : "終焉の覚醒者 レッドゾーンBSR",							count : 2,	},
+		{		name : "蒼き覚醒 ドギラゴンX",									count : 1,	},
+		{		name : "轟く覚醒 レッドゾーン・バスター",						count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-065"
+	var setName = "帥狗盃DM大賽4th【4C邪王門＠元丰】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "とこしえの超人",												count : 3,	},
+		{		name : "イデア・パラドックス",											count : 1,	},
+		{		name : "豊潤フォージュン",												count : 3,	},
+		{		name : "天災 デドダム",													count : 4,	},
+		{		name : "ドンドン吸い込むナウ",											count : 2,	},
+		{		name : "勝熱と弾丸と自由の決断",										count : 1,	},
+		{		name : "絶望と反魂と滅殺の決断",										count : 1,	},
+		{		name : "鬼ヶ大王 ジャオウガ",											count : 3,	},
+		{		name : "一王二命三眼槍",												count : 2,	},
+		{		name : "龍素記号ｗD サイクルペディア",									count : 3,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",							count : 4,	},
+		{		name : "ボルシャック・スーパーヒーロー / 超英雄タイム",					count : 1,	},
+		{		name : "黒神龍ブライゼナーガ",											count : 1,	},
+		{		name : "百鬼の邪王門",													count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",			count : 3,	},
+		{		name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",	count : 2,	},
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "時の法皇 ミラダンテⅫ",											count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );

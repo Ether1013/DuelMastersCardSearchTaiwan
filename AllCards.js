@@ -14869,7 +14869,7 @@
 			sp : [
 					"將我方牌庫頂第一張牌置入魔力區中。之後，如果我方魔力區中的卡牌在5張以下的話，則抽1張牌。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmr14-055.jpg",
 		},
 		{
 			name : "大いなる銀河 巨星城",
@@ -21668,7 +21668,7 @@
 					"當此生物出場時，將我方所有護盾拿回到手牌中。(你可以使用其(K)S・トリガー(/K)能力。)",
 					"(K)W・ブレイカー(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex01-012.jpg",
 		},
 		{
 			name : "涙の終撃オニナグリ",
@@ -46852,7 +46852,7 @@
 					"(K)エイジ・ブレイカー(/K)",
 					"(K)エターナル・Ω(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmx22b-018.jpg",
 		},
 		{
 			name : "バックベアード",
@@ -103186,7 +103186,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"此生物出場時，你可以唸出此生物的故事敘述文。如果再10秒以內唸完的話，則下個我方回合開始前，我方生物不會被攻擊也不會被阻擋。",
+				"此生物出場時，你可以唸出此生物的故事敘述文。如果在10秒以內唸完的話，則下個我方回合開始前，我方生物不會被攻擊也不會被阻擋。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-205.jpg",
 		},
