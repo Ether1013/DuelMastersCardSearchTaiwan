@@ -71196,6 +71196,125 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DM23-SD2";
+	var setName = "スタートWINデッキ 聖沌・クノイチ・チェンジ";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "聖なる混沌 クノイチマントラ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-001.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "23SD2 1/14",
+			count : 2,
+		},
+		{
+			name : "聖沌大忍者 ハラギャティ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-002.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "23SD2 2/14",
+			count : 1,
+		},
+		{
+			name : "水雲の聖沌 5u170n",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-003.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD2 3/14",
+			count : 2,
+		},
+		{
+			name : "星姫械 シリエス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-004.jpg",
+			rarity : "R",
+			flavor : [ "シノビのオキテ：メカを展開しながらカードを引いて、手札にニンジャ・ストライク持ちやニンジャ・チェンジ持ちのシノビを大量に抱えて相手の攻撃に備えるべし!!" ],
+			id : "23SD2 4/14",
+			count : 2,
+		},
+		{
+			name : "警鐘の聖沌 n4rc0",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-005.jpg",
+			rarity : "R",
+			flavor : [ "シノビのオキテ：このデッキの切り札、クノイチマントラは相手の攻撃やブロックに対してバトルゾーンのメカまたはシノビと入れ替わっていきなり出てくるニンジャ・チェンジ持ち！代わりにこいつを手札に戻して、能力を再利用すべし!!" ],
+			id : "23SD2 5/14",
+			count : 4,
+		},
+		{
+			name : "忍縛の聖沌 3n9375u",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-006.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD2 6/14",
+			count : 3,
+		},
+		{
+			name : "煙幕の聖沌 k3mur1 / 聖沌忍法 メカくしの術",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-007a.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD2 7/14",
+			count : 4,
+		},
+		{
+			name : "光牙忍ライデン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-008.jpg",
+			rarity : "U",
+			flavor : [ "シノビのオキテ：ニンジャ・ストライクの直後はニンジャ・チェンジできぬぞ！" ],
+			id : "23SD2 8/14",
+			count : 3,
+		},
+		{
+			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-009a.jpg",
+			rarity : "C",
+			flavor : [ "シノビのオキテ：序盤はシリエスを、中盤以降はクノイチマントラを探すべし！" ],
+			id : "23SD2 9/14",
+			count : 3,
+		},
+		{
+			name : "忍瞬の聖沌 53nju",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-010.jpg",
+			rarity : "C",
+			flavor : [ "シノビのオキテ：このカードはこのデッキのエースアタッカー！クノイチマントラを手札に構えてどんどん攻撃すべし！そして、相手が殴り返してきたらこいつを戻してニンジャ・チェンジ！すぐ出し直して攻め続けるべし!!" ],
+			id : "23SD2 10/14",
+			count : 4,
+		},
+		{
+			name : "光牙忍ハヤブサマル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-011.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "23SD2 11/14",
+			count : 1,
+		},
+		{
+			name : "アシスター・アルデ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-012.jpg",
+			rarity : "C",
+			flavor : [ "シノビのオキテ：メカをどんどん展開してガンガン攻めるべし！そして相手が反撃してきたところを、ニンジャ・チェンジやニンジャ・ストライクで切り返すべし!!" ],
+			id : "23SD2 12/14",
+			count : 4,
+		},
+		{
+			name : "忍防の聖沌 h4990u",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-013.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "23SD2 13/14",
+			count : 4,
+		},
+		{
+			name : "聖沌忍法 7r0y",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-014.jpg",
+			rarity : "C",
+			flavor : [ "シノビのオキテ：マナを使わず召喚できる53njuは、手札に戻ってもすぐにまた出し直せる！シリエスがいればさらにドローもできるので、メカをどんどん出して戻すべし!!" ],
+			id : "23SD2 14/14",
+			count : 3,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "DM-01";
 	var setName = "DM-01";
 	var isDeck = false;

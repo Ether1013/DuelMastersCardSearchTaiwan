@@ -103586,6 +103586,173 @@
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-255.jpg",
 		},
+		{
+			name : "聖なる混沌 クノイチマントラ",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ステラ","シノビ"],
+			power : 7000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)ニンジャ・チェンジ(/K)３",
+				"(K)ブロッカー(/K)",
+				"(K)W・ブレイカー(/K)",
+				"此生物出場時，到下個我方回合開始前，所有我方其他生物的攻擊力一律+3000。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-001.jpg",
+		},
+		{
+			name : "聖沌大忍者 ハラギャティ",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ソル","シノビ"],
+			power : 10000,
+			cost : 9,
+			mana : 1,
+			sp : [
+				"(K)シンパシー(/K)－生物",
+				"(K)W・ブレイカー(/K)",
+				"此生物出場或發動攻擊時，執行(R)メカ(/R)・(K)メクレイド(/K)５する。",
+				"每當我方生物被破壞時，你可以取而代之、破壞1隻我方的其他(R)シノビ(/R)。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-002.jpg",
+		},
+		{
+			name : "水雲の聖沌 5u170n",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ステラ","シノビ"],
+			power : 4000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー・プラス(/K)－##此生物出場時，你可以從手牌打出1隻持有「(K)ブロッカー(/K)」能力的非進化光文明生物出場。",
+				"此生物出場時，橫置1隻對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-003.jpg",
+		},
+		{
+			name : "警鐘の聖沌 n4rc0",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ステラ","シノビ"],
+			power : 3000,
+			cost : 3,
+			mana : 1,
+			sp : [
+				"此生物出場時，觀看我方牌庫頂5張牌。你可以從中將1張(R)メカ(/R)或是(R)シノビ(/R)給對手確認並加入手牌。將剩餘卡牌依喜好順序置入牌庫底。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-005.jpg",
+		},
+		{
+			name : "忍縛の聖沌 3n9375u",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ステラ","シノビ"],
+			power : 1000,
+			cost : 1,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー・プラス(/K)－##此生物出場時，最多橫置2隻對手生物。",
+				"(K)ブロッカー(/K)",
+				"此生物不能攻擊玩家。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-006.jpg",
+		},
+		{
+			name : "煙幕の聖沌 k3mur1 / 聖沌忍法 メカくしの術",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-007a.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 16,
+					race : ["メカ・デル・ステラ","シノビ"],
+					power : 4000,
+					cost : 3,
+					sp : [
+						"此生物發動攻擊時，你可以橫置1隻我方其他的(R)メカ(/R)或是(R)シノビ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)５。",
+					],
+				},
+				{
+					type : "S",
+					civil : 16,
+					cost : 3,
+					sp : [
+						"(K)S・トリガー(/K)",
+						"橫置或重置1隻生物。",
+						"抽1張牌。",
+					]
+				},
+			],
+		},
+		{
+			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-009a.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 16,
+					race : ["メカ・デル・ステラ"],
+					power : 7500,
+					cost : 5,
+					sp : [
+						"(K)ブロッカー(/K)",
+						"(K)W・ブレイカー(/K)",
+					],
+				},
+				{
+					type : "S",
+					civil : 16,
+					cost : 1,
+					sp : [
+						"觀看我方牌庫頂3張牌。你可以從中將1張(R)メカ(/R)給對手確認並加入手牌。將剩餘卡牌依喜好順序置入牌庫底。",
+					]
+				},
+			],
+		},
+		{
+			name : "忍瞬の聖沌 53nju",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ステラ","シノビ"],
+			power : 2000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)G・ゼロ(/K)－當我方魔力區中有2張以上的光文明卡牌、且戰鬥場上有我方的(R)シノビ(/R)時，你可以不支付費用召喚此生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-010.jpg",
+		},
+		{
+			name : "忍防の聖沌 h4990u",
+			type : "C",
+			civil : 16,
+			race : ["メカ・デル・ステラ","シノビ"],
+			power : 2500,
+			cost : 2,
+			mana : 1,
+			sp : [
+				"(K)S・トリガー・プラス(/K)－##此生物出場時，重置所有我方生物。且此回合、我方生物不會被破壞。",
+				"(K)ブロッカー(/K)",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-013.jpg",
+		},
+		{
+			name : "聖沌忍法 7r0y",
+			type : "S",
+			civil : 16,
+			race : ["メカ・デル・テック","シノビ"],
+			cost : 4,
+			mana : 1,
+			sp : [
+				"將1個(R)メカ(/R)或是(R)シノビ(/R)拿回到手牌中。那樣的話，你就可以從手牌打出1隻費用5以下的(R)メカ(/R)或是(R)シノビ(/R)生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-014.jpg",
+		},
+
 		/*
 		{
 			name : "",
