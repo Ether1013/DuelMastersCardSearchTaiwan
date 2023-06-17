@@ -179,7 +179,7 @@
 	//是否進行簡體化
 	var isTC2C = "isTC2C" == getParameter("tran");
 	//特殊符號
-	var spHeader = [ "✪","⌂","✚" ];
+	var spHeader = [ "✪","⌂","✚","✡" ];
 	
 	//依照過濾條件找出相符資料
 	function query(){
