@@ -178,6 +178,8 @@
 	var isHK = "isHK" == getParameter("tran");
 	//是否進行簡體化
 	var isTC2C = "isTC2C" == getParameter("tran");
+	//特殊符號
+	var spHeader = [ "✪","⌂","✚" ];
 	
 	//依照過濾條件找出相符資料
 	function query(){
@@ -1718,7 +1720,7 @@
 					var ulBlock = document.createElement('ul');
 					ulBlock.style.margin = "0px";
 					for ( var spl = 0 ; spl < spLines.length ; spl++ ){
-						var abis = ( spl == 0 && !isHint ? "■" : "" ) + spLines[spl];
+						var abis = ( spl == 0 && !isHint && !spHeader.include( spLines[spl].substring(0,1) ) ? "■" : "" ) + spLines[spl];
 						if ( isHK ){
 							abis = transHK_MathWords( abis );
 						}
@@ -3318,7 +3320,8 @@
 							if ( abl > 0 ){
 								singleCardHTML += "<li>";
 							}
-							singleCardHTML += ( abl == 0 && !isHint ? "■" : "" );
+							
+							singleCardHTML += ( abl == 0 && !isHint && !spHeader.include( abLines[abl].substring(0,1) ) ? "■" : "" );
 							var getAbilityWithTag = keyWords.transTags( abLines[abl] );
 							for ( var abo = 0 ; abo < getAbilityWithTag.length ; abo++ ){
 								var theText = getAbilityWithTag[abo].innerText;
