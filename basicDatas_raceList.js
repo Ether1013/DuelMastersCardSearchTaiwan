@@ -312,6 +312,18 @@
 				{	Jap : "アーマード・アーツ",					Eng : "Armored Arts",			Chi : "裝甲藝術",		isCategory : false,	},
 				{	Jap : "アビスへの誘い",						Eng : "Lure to Abyss",			Chi : "深淵的誘惑",		isCategory : false,	},
 				{	Jap : "ジャイアント・スキル",				Eng : "Giant Skill",			Chi : "巨人奇技",		isCategory : false,	},
+				{	Jap : "ニート",								Eng : "NEET",					Chi : "家裡蹲",			isCategory : false,	},
+				{	Jap : "ギャング",							Eng : "Gang",					Chi : "幫派",			isCategory : false,	},
+				{	Jap : "ゴブリン",							Eng : "Goblin",					Chi : "哥布林",			isCategory : false,	},
+				{	Jap : "ルリグ",								Eng : "Rurigu",					Chi : "利爾格",			isCategory : false,	},
+				{	Jap : "アビスキマイラ",						Eng : "Abyss Chimera",			Chi : "深淵奇美拉",		isCategory : false,	},
+				{	Jap : "マジック・マーメイド",				Eng : "Magic Mermaid",			Chi : "魔法美人魚",		isCategory : false,	},
+				{	Jap : "マジック・アウトレイジMAX",			Eng : "Magic Outrage MAX",		Chi : "魔法無法者MAX",	isCategory : false,	},
+				{	Jap : "マジック・クリスタル・コマンド・ドラゴン",	
+																Eng : "Magic Crystal Command Dragon",
+																								Chi : "魔法水晶指揮龍",	isCategory : false,	},
+				{	Jap : "マジック・ポセイディア・ドラゴン",	Eng : "Magic Posedia Dragon",	Chi : "魔法海王龍",	isCategory : false,	},
+				{	Jap : "アーマード・ドラゴノイド",			Eng : "Armored Dragonoid",		Chi : "裝甲龍人",		isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
