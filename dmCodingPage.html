@@ -103,6 +103,7 @@
 							var cardData  = "\r\n\t\t{";
 								cardData += "\r\n\t\t\tname : \"" + name + "\",";
 								cardData += "\r\n\t\t\tpic : \"" + pic + "\",";
+								cardData += "\r\n\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
 								cardData += "\r\n\t\t\twData : [";
 								cardData += "\r\n\t\t\t\t{";
 								cardData += "\r\n\t\t\t\t\ttype : \"" + type + "\",";
@@ -121,7 +122,6 @@
 									}
 								}
 								cardData += "\r\n\t\t\t\t\tcost : " + cost + ",";
-								cardData += "\r\n\t\t\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
 								cardData += "\r\n\t\t\t\t\tsp : [";
 								for ( var s = 0 ; s < abilities.length ; s++ ){
 									if ( abilities[s] != "" ){
@@ -134,7 +134,6 @@
 								cardData += "\r\n\t\t\t\t\ttype : \"S\",";
 								cardData += "\r\n\t\t\t\t\tcivil : " + civil + ",";
 								cardData += "\r\n\t\t\t\t\tcost : " + cost + ",";
-								cardData += "\r\n\t\t\t\t\tmana : " + ( civil == 47 ? "0" : "1" ) + ",";
 								cardData += "\r\n\t\t\t\t\tsp : [";
 								cardData += "\r\n\t\t\t\t\t\t\"\",";
 								cardData += "\r\n\t\t\t\t\t\t\"\",";
@@ -163,6 +162,11 @@
 						setData += "\r\n\t\t\trarity : [\"" + rarity + "\",\"" + rarity + "\",\"" + rarity + "\"],";
 						setData += "\r\n\t\t\tflavor : [ \"" + flavor + "\",\"\",\"\" ],";
 						setData += "\r\n\t\t\tid : [\"" + id + "\",\"\",\"\"],";
+					} else if ( versions == 4 ){
+						setData += "\r\n\t\t\tpic : [\"" + pic + "\",\"\",\"\",\"\"],";
+						setData += "\r\n\t\t\trarity : [\"" + rarity + "\",\"" + rarity + "\",\"" + rarity + "\",\"" + rarity + "\"],";
+						setData += "\r\n\t\t\tflavor : [ \"" + flavor + "\",\"\",\"\",\"\" ],";
+						setData += "\r\n\t\t\tid : [\"" + id + "\",\"\",\"\",\"\"],";
 					}
 					if ( isDeck ){
 						setData += "\r\n\t\t\tcount : ,";
@@ -303,6 +307,7 @@
 									<option value="1">1</option>
 									<option value="2">2</option>
 									<option value="3">3</option>
+									<option value="4">4</option>
 								</select>
 							</div>
 						</div>
