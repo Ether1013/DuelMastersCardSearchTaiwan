@@ -324,6 +324,10 @@
 																								Chi : "魔法水晶指揮龍",	isCategory : false,	},
 				{	Jap : "マジック・ポセイディア・ドラゴン",	Eng : "Magic Posedia Dragon",	Chi : "魔法海王龍",	isCategory : false,	},
 				{	Jap : "アーマード・ドラゴノイド",			Eng : "Armored Dragonoid",		Chi : "裝甲龍人",		isCategory : false,	},
+				{	Jap : "ジャイアント・ハンター",				Eng : "Giant Hunter",			Chi : "巨大獵人",		isCategory : false,	},
+				{	Jap : "アーマード・サムライ",				Eng : "Armored Samurai",		Chi : "裝甲武士",		isCategory : false,	},
+				{	Jap : "メカ・ゴッド・ノヴァOMG",			Eng : "Mecha God Nova Omega",	Chi : "機械神星Ω",		isCategory : false,	},
+				{	Jap : "ゼニス・ハザード",					Eng : "Zenith Hazard",			Chi : "天頂災害",		isCategory : false,	},
 				
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

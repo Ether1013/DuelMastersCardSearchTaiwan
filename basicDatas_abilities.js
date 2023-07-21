@@ -260,7 +260,7 @@
 			{ Jap : "Jトルネード",			Eng : "Jockers Tornado",		Chi : "小丑旋風",			descript : "將戰鬥場上1隻我方其他的ジョーカーズ拿回到手牌中",},
 			{ Jap : "キズナ",				Eng : "Fetters",				Chi : "羈絆",				descript : "當此生物出場時，你可以使用戰鬥場上1隻我方生物的⌂能力。",},
 //			{ Jap : "[P]",					Eng : "Fetters[P]",				Chi : "羈絆(主效果)",		descript : "名有\"羈絆\"能力的主要效果",},
-			{ Jap : "メクレイド",			Eng : "Revolve Great",			Chi : "豪捲奇襲",			descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",},
+			{ Jap : "メクレイド",			Eng : "Revolve Great",			Chi : "命驅強襲",			descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",},
 			{ Jap : "アッパー・ゴー",		Eng : "Upper Go",				Chi : "提升猛進",			descript : "當生物被破壞時、此生物下方沒有裏側卡牌的話，則將我方牌庫頂第一張牌以裏側方式置入此生物之下",},
 			{ Jap : "キッカー",				Eng : "Kicker",					Chi : "蹴者",				descript : "使用此咒文時，你可以追加支付指定費用以追加後續效果",},
 			{ Jap : "G.R.D.",				Eng : "Gacha Range Down",		Chi : "GR重沉",				descript : "當此生物發動攻擊時，對手要將其GR牌庫頂第四張牌橫置",},
@@ -306,7 +306,8 @@
 											Eng : "Hold Nothing Back",		Chi : "物盡不歸",			descript : "此生物出場時，此回合中、我方所有其他生物都可以攻擊重置狀態生物、且攻擊生物時不會被阻擋",},
 			{ Jap : "ニンジャ・チェンジ",	Eng : "Ninja Change",			Chi : "忍變",				descript : "當對手生物攻擊或是阻擋時，該此攻擊中如果還沒使用過ニンジャ能力的話，則你可從手牌中將此卡與指定費用以上的メカ或是シノビ進行交換",},
 			{ Jap : "フレンド・バースト",	Eng : "Friend Burst",			Chi : "友情爆裂",			descript : "此生物出場時，你可以橫置戰鬥場上1隻我方其他的指定生物，那樣的話，就使用此卡的咒文側",},
-			{ Jap : "W・メクレイド",		Eng : "Double Revolve Great",	Chi : "雙重豪捲奇襲",		descript : "觀看牌庫頂六張牌，使用兩張指定種族與指定費用以下的卡牌",},
+			{ Jap : "W・メクレイド",		Eng : "Double Revolve Great",	Chi : "雙重命驅強襲",		descript : "觀看牌庫頂六張牌，使用兩張指定種族與指定費用以下的卡牌",},
+			{ Jap : "ゼロ輪廻∞",			Eng : "Zero Rinne Infinity",	Chi : "零之輪迴無限",		descript : "當此生物召喚出場或是發動攻擊時，你可以不支付費用、使用此生物的咒文側。那樣的話，就將我方牌庫頂5張牌置入我方魔力區中",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
