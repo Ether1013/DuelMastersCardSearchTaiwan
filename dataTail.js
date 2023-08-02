@@ -325,6 +325,12 @@
 		//如果有指定自動匯出的話，就清除body並寫入卡表
 		if ( popListOnly ){
 			popList( getParameter("justPop") , false , true );
+			var spans = document.getElementsByTagName("span");
+			for ( var i = 0 ; i < spans.length ; i++ ){
+				if ( spans[i].title != null && spans[i].title != 'undefined' && spans[i].title != '' ){
+					setTitleAlert( spans[i] );
+				}
+			}
 		}
 	}
 	

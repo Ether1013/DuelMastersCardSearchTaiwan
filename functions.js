@@ -3257,6 +3257,7 @@
 						if ( r > 0 ){
 							c_rs += ".";
 						}
+						/*
 						if ( theRace == null ){
 							c_rs += popCData.race[r];
 						} else if ( language == 'E' ){
@@ -3265,6 +3266,13 @@
 							c_rs += theRace.Chi;
 						} else if ( language == 'J' ){
 							c_rs += theRace.Jap;
+						}
+						*/
+						if ( theRace == null ){
+							c_rs += popCData.race[r];
+						} else {
+							var getRaceWithTag = keyWords.transTags( "(R)"+theRace.Jap+"(/R)" );
+							c_rs += getRaceWithTag[1].outerHTML;
 						}
 					}
 				}
@@ -3357,7 +3365,12 @@
 								if ( language == "C" || !isNoTrans( getAbilityWithTag[abo] ) ){
 									theText = translateText( theText, isTC2C );
 								}
-								singleCardHTML += theText;
+								if ( getAbilityWithTag[abo].innerHTML == null ){
+									singleCardHTML += theText;
+								} else {
+//									singleCardHTML += theText;
+									singleCardHTML += getAbilityWithTag[abo].outerHTML.replace( getAbilityWithTag[abo].innerText, theText );
+								}
 							}
 							if ( abl > 0 ){
 								singleCardHTML += "</li>";
