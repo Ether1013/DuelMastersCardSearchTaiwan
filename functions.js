@@ -2903,7 +2903,8 @@
 					}
 				}
 			}
-			var versions = ( popCData.id == null ) ? 1 : ( popCData.id instanceof Array ? popCData.id.length : 1 );
+			//牌組不匯出多版本清單
+			var versions = isDeck ? 1 : (( popCData.id == null ) ? 1 : ( popCData.id instanceof Array ? popCData.id.length : 1 ));
 			for ( var v = 0 ; v < versions ; v++ ){
 			
 				//判斷有沒有雙極
