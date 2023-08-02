@@ -3225,11 +3225,14 @@
 			}
 			//ID
 			if ( popCData.id != null ){
-				if ( showPicture ){
-					singleCardHTML += "<BR>";
+				var showId = ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex];
+				if ( showId != null && showId != 'undefined' ){
+					if ( showPicture ){
+						singleCardHTML += "<BR>";
+					}
+					singleCardHTML += "( " + showId + " )";
+					hasCountOrId = true;
 				}
-				singleCardHTML += "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )";
-				hasCountOrId = true;
 			}
 			if ( hasCountOrId ){
 				singleCardHTML += "<BR>";
