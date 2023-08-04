@@ -65780,6 +65780,14 @@
 			count : 2,
 		},
 		{
+			name : "Volzeos-Balamord",
+			pic : "./cardPic/OSHIN35.jpeg",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "23BD1 3/18",
+			count : 2,
+		},
+		{
 			name : "頂災混成 セーゼン・ザ・フメイト",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd1-004.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd1-BE002.jpg"],
 			rarity : ["SR","SR"],
