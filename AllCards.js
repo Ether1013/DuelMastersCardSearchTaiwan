@@ -83677,7 +83677,7 @@
 			],
 		},
 		{
-			name : "勇気と知識 テスタ・ロッサ&アリス /「行くぜアリス!」「行けるわテスタ!」",
+			name : "勇気と知識 テスタ・ロッサ＆アリス /「行くぜアリス!」「行けるわテスタ!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-009a.jpg",
 			mana : 1,
 			wData : [
@@ -94281,34 +94281,6 @@
 				"各回合中、我方第一次使用咒文時，執行(K)GR召喚(/K)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TF1.jpg",
-		},
-		{
-			name : "勇気と知識 テスタ・ロッサ＆アリス /「行くぜアリス!」「行けるわテスタ!」",
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TF2a.jpg",
-			mana : 1,
-			wData : [
-				{
-					type : "C",
-					civil : 8,
-					race : ["アウトレイジMAX"],
-					power : 2000,
-					cost : 2,
-
-					sp : [
-						"此生物出場時，抽1張牌，然後作廢1張手牌。",
-					],
-				},
-				{
-					type : "S",
-					civil : 2,
-					cost : 5,
-
-					sp : [
-						"(K)S・トリガー(/K)",
-						"破壞1隻攻擊力7000以下的對手生物。",
-					]
-				},
-			],
 		},
 		{
 			name : "ジョリー・ザ・ジョニー Final",

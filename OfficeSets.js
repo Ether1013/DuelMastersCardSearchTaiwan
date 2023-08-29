@@ -52205,7 +52205,7 @@
 			id : "EX16 8/100",
 		},
 		{
-			name : "勇気と知識 テスタ・ロッサ&アリス /「行くぜアリス!」「行けるわテスタ!」",
+			name : "勇気と知識 テスタ・ロッサ＆アリス /「行くぜアリス!」「行けるわテスタ!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-009a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -73400,7 +73400,7 @@
 			id : "23EX1 62/84",
 		},
 		{
-			name : "勇気と知識 テスタ・ロッサ&アリス /「行くぜアリス!」「行けるわテスタ!」",
+			name : "勇気と知識 テスタ・ロッサ＆アリス /「行くぜアリス!」「行けるわテスタ!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-063a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
