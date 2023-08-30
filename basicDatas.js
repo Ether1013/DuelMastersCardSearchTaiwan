@@ -570,13 +570,13 @@
 				if ( hTag == this.raceHeaderTag ){
 					var raceObject = raceMapping.getDataByJap( kWord );
 					if ( raceObject != null ){
-						keywordSpan.setAttribute( "title" , ( ( raceObject.isCategory ? "(類別種族) " : "" ) + raceObject.Chi + " / " + raceObject.Eng ) );
+						keywordSpan.setAttribute( "title" , ( ( raceObject.isCategory ? "(類別種族) " : "" ) + raceObject.Jap + " / " + raceObject.Chi + " / " + raceObject.Eng ) );
 						keywordSpan.setAttribute( "sTagType" , "R" );
 					}
 				} else if ( hTag == this.keywordHeaderTag ){
 					var abilityObject = abilityMapping.getDataByJap( kWord );
 					if ( abilityObject != null ){
-						keywordSpan.setAttribute( "title" , abilityObject.Chi + " / " + abilityObject.Eng + "\n" + abilityObject.descript );
+						keywordSpan.setAttribute( "title" , abilityObject.Jap + " / " + abilityObject.Chi + " / " + abilityObject.Eng + "\n" + abilityObject.descript );
 						keywordSpan.setAttribute( "sTagType" , "K" );
 					}
 				} else if ( hTag == this.nameHeaderTag || hTag == this.absoluteNameHeaderTag ){
@@ -1303,6 +1303,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/08/30",
+				log : [ 
+						"訂正並調整匯出功能的關鍵字語言BUG與敘述內容",
+				],	
+			},
 			{	
 				date : "2023/08/29",
 				log : [ 
