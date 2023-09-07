@@ -20174,6 +20174,69 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
+	var setCode = "OF-Y22 SPP-2";
+	var setName = "スペシャルプロモパック2022 vol.2";
+	var isDeck = false;
+	var setCardList = [
+		{
+			name : "ボルシャック・ローレン・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-068.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "PROMOY21 P68/Y21",
+		},
+		{
+			name : "ディッシュ＝ウィッシュ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-069.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "PROMOY21 P69/Y21",
+		},
+		{
+			name : "シル＝シャルロット",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-070.jpg",
+			rarity : "C",
+			flavor : [ "邪龍 ジャブラッド、それはジャシン帝が生み出したアビスなドラゴンなのだ！" ],
+			id : "PROMOY21 P70/Y21",
+		},
+		{
+			name : "轟龍のギフト",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-071.jpg",
+			rarity : "C",
+			flavor : [ "ドラン・ゴルギーニには、ルベル・ゴルギーニの他にも兄弟がいるらしい。" ],
+			id : "PROMOY21 P71/Y21",
+		},
+		{
+			name : "大地門ライフ・ゲート",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-072.jpg",
+			rarity : "U",
+			flavor : [ "君の勝利で、新たな人生の扉が開く！" ],
+			id : "PROMOY21 P72/Y21",
+		},
+		{
+			name : "超竜キング・ボルシャック",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-073.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "PROMOY21 P73/Y21",
+		},
+		{
+			name : "クール・ビューティー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-074.jpg",
+			rarity : "R",
+			flavor : [ "君の勝利に、クール・ビューティーもニッコリだ！" ],
+			id : "PROMOY21 P74/Y21",
+		},
+		{
+			name : "密かで華麗なるカイタイ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy21-075.jpg",
+			rarity : "C",
+			flavor : [ "華麗に相手の手札を奪い去れ!!" ],
+			id : "PROMOY21 P75/Y21",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "DM22-RP2X";
 	var setName = "「轟炎の竜皇」超刺激パック";
 	var isDeck = false;
