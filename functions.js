@@ -3180,7 +3180,7 @@
 		if ( writePCNCPPart ){
 			var picWidth = 200;
 			if ( isMobile() ){
-				picWidth = 160;
+				picWidth = 85;
 			}
 			//圖片
 			if ( showPicture && !popCData.noLocalDataButVaultLink ){
