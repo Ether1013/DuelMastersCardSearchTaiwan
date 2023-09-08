@@ -89235,7 +89235,7 @@
 			sp : [
 				"(K)EXライフ(/K)",
 				"(K)W・ブレイカー(/K)",
-				"對手回合結束時，對手要作廢他所有手牌。之後我方抽取相同張數的牌。",
+				"對手回合結束時，對手要作廢他所有手牌。之後我方可以抽取相同張數的牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-022.jpg",
 		},
@@ -102484,7 +102484,7 @@
 			sp : [
 				"當有音樂時，護盾區中的此生物獲得「(K)S・トリガー(/K)」能力。",
 				"(K)スレイヤー(/K)",
-				"此生物出場時，抽3張牌。之後將2張手牌依喜好順序置入牌庫頂。接著，如果今天沒有下過雨的話，則將此生物置入牌庫底。",
+				"此生物出場時，抽3張牌。之後將2張手牌依喜好順序置入牌庫頂。接著，如果今天這條街沒有下過雨的話，則將此生物置入牌庫底。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-045.jpg",
 		},
@@ -106080,6 +106080,183 @@
 				"此生物出場時，將我方牌庫頂第一張牌以橫置方式置入我方魔力區中。如果那是多色卡的話，則再將我方牌庫頂第一張牌以橫置方式置入我方魔力區中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd1-017.jpg",
+		},
+		{
+			name : "芸魔龍王 アメイジン",
+			type : "C",
+			civil : 10,
+			race : ["マジック・ドラゴン","ゲーム・コマンド"],
+			power : 7000,
+			cost : 7,
+			mana : 1,
+			sp : [
+				"(K)革命チェンジ(/K)－費用5以上的(R)マジック(/R)",
+				"(K)W・ブレイカー(/K)",
+				"此生物出場時，你可以將我方墓地中任意張數的咒文拿回到手牌中。下個我方回合開始前，所有費用值不超過我方手牌張數的對手生物一律不能進行攻擊或是阻擋。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-001.jpg",
+		},
+		{
+			name : "踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-003a.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 8,
+					race : ["マジック・マーメイド"],
+					power : 4000,
+					cost : 6,
+					sp : [
+						"(K)S・トリガー(/K)",
+						"(K)ブロッカー(/K)",
+						"(K)メガ・ラスト・バースト(/K)",
+					],
+				},
+				{
+					type : "S",
+					civil : 8,
+					cost : 3,
+					sp : [
+						"最多選擇2隻對手生物，下個我方回合開始前，那些生物一律不能進行攻擊或是阻擋。",
+					]
+				},
+			],
+		},
+		{
+			name : "調律師ピーカプ / ♪音速で 本番中に チューニング",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-005a.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 2,
+					race : ["マジック・マシン・イーター"],
+					power : 4000,
+					cost : 4,
+					sp : [
+						"(K)スピードアタッカー(/K)",
+						"(K)メガ・ラスト・バースト(/K)",
+					],
+				},
+				{
+					type : "S",
+					civil : 2,
+					cost : 4,
+					sp : [
+						"此回合、1隻我方生物獲得「(K)スピードアタッカー(/K)」能力、並於該生物的第一次攻擊後重置。",
+					]
+				},
+			],
+		},
+		{
+			name : "芸魔悪狼 ヘルギャモン",
+			type : "C",
+			civil : 10,
+			race : ["マジック・モンスター","ゲーム・コマンド"],
+			power : 5000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)革命チェンジ(/K)－(R)マジック(/R)",
+				"(K)ジャストダイバー(/K)",
+				"此生物出場時，破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-006.jpg",
+		},
+		{
+			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-007a.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 8,
+					race : ["マジック・アウトレイジ"],
+					power : 2000,
+					cost : 3,
+					sp : [
+						"(K)ブロッカー(/K)",
+						"(K)メガ・ラスト・バースト(/K)",
+					],
+				},
+				{
+					type : "S",
+					civil : 8,
+					cost : 2,
+					sp : [
+						"觀看我方牌庫頂4張牌，將其中1張加入手牌，之後將剩餘卡牌依喜好順序置入我方牌庫底。",
+					]
+				},
+			],
+		},
+		{
+			name : "紅奏龍メルダウ",
+			type : "C",
+			civil : 2,
+			race : ["マジック・ボルケーノ・ドラゴン"],
+			power : 5000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)スピードアタッカー(/K)",
+				"此生物出場時，破壞所有攻擊力3000以下的對手生物。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-009.jpg",
+		},
+		{
+			name : "芸魔土車 チャトランガ",
+			type : "C",
+			civil : 10,
+			race : ["マジック・ドラゴン","ゲーム・コマンド"],
+			power : 9000,
+			cost : 7,
+			mana : 1,
+			sp : [
+				"(K)革命チェンジ(/K)－費用5以上的(R)マジック(/R)",
+				"(K)W・ブレイカー(/K)",
+				"此生物不會被攻擊或是阻擋。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-010.jpg",
+		},
+		{
+			name : "AQsabbath / ♪このギター グシャっとすれば グシャっとなる",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-012a.jpg",
+			mana : 1,
+			wData : [
+				{
+					type : "C",
+					civil : 8,
+					race : ["マジック・リキッド・ピープル"],
+					power : 3000,
+					cost : 3,
+					sp : [
+						"此生物出場時，將1隻對手生物拿回到其持有者的手牌中。",
+					],
+				},
+				{
+					type : "S",
+					civil : 2,
+					cost : 2,
+					sp : [
+						"破壞1個費用3以下的對手元素。",
+					]
+				},
+			],
+		},
+		{
+			name : "芸魔山鷹 トリノドミノ",
+			type : "C",
+			civil : 10,
+			race : ["マジック・モンスター","ゲーム・コマンド"],
+			power : 5000,
+			cost : 5,
+			mana : 1,
+			sp : [
+				"(K)革命チェンジ(/K)－(R)マジック(/R)",
+				"此生物出場時，抽3張牌，然後作廢2張手牌。",
+			],
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-011.jpg",
 		},
 		
 		/*

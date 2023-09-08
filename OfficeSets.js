@@ -20237,7 +20237,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 	
-	var setCode = "OF-Y22 SPP2023-1";
+	var setCode = "OF-Y23 SPP2023-1";
 	var setName = "スペシャルプロモパック2023 vol.1";
 	var isDeck = false;
 	var setCardList = [
@@ -73796,6 +73796,133 @@
 			rarity : "C",
 			flavor : [ "シノビのオキテ：マナを使わず召喚できる53njuは、手札に戻ってもすぐにまた出し直せる！シリエスがいればさらにドローもできるので、メカをどんどん出して戻すべし!!" ],
 			id : "23SD2 14/14",
+			count : 3,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "DM23-SD3";
+	var setName = "スタートWINデッキ 革命・アメイジン・マジック";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "芸魔龍王 アメイジン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-001.jpg",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "23SD3 1/15",
+			count : 2,
+		},
+		{
+			name : "瞬閃と疾駆と双撃の決断",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-002.jpg",
+			rarity : "VR",
+			flavor : [ "コスト３以下のクリーチャーを出しつつそいつにスピードアタッカーを与えれば、すぐに革命チェンジできるぞ！" ],
+			id : "23SD3 2/15",
+			count : 1,
+		},
+		{
+			name : "踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-003a.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD3 3/15",
+			count : 2,
+		},
+		{
+			name : "B.F.F. モーメント",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-004.jpg",
+			rarity : "R",
+			flavor : [ "S・トリガーは防御の要だ！相手の攻撃を押しとどめ、ターンが返ってきたら大逆転を狙おう!!" ],
+			id : "23SD3 4/15",
+			count : 3,
+		},
+		{
+			name : "調律師ピーカプ / ♪音速で 本番中に チューニング",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-005a.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD3 5/15",
+			count : 4,
+		},
+		{
+			name : "芸魔悪狼 ヘルギャモン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-006.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "23SD3 6/15",
+			count : 3,
+		},
+		{
+			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-007a.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD3 7/15",
+			count : 2,
+		},
+		{
+			name : "タカスギ・ワヲンチョッパー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-008.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "23SD3 8/15",
+			count : 3,
+		},
+		{
+			name : "紅奏龍メルダウ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-009.jpg",
+			rarity : "U",
+			flavor : [ "メガ・ラスト・バーストはクリーチャーがバトルゾーンから手札やマナ、墓地に行った時に発動し、呪文側をタダ打ちできる能力だ！使い終わったら墓地に行くぞ!!" ],
+			id : "23SD3 9/15",
+			count : 2,
+		},
+		{
+			name : "芸魔土車 チャトランガ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-010.jpg",
+			rarity : "U",
+			flavor : [ "革命チェンジとは、攻撃時に手札のクリーチャーとタダで入れ替えられる能力！入れ替えは一度の攻撃につき一回だけだから、毎ターンどんどんチェンジしていくのだ!!" ],
+			id : "23SD3 10/15",
+			count : 2,
+		},
+		{
+			name : "AQsabbath / ♪このギター グシャっとすれば グシャっとなる",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-012a.jpg",
+			rarity : "U",
+			flavor : [ "ツインパクトが手札にある時には、クリーチャーと呪文、どちらとしても使用できるぞ！" ],
+			id : "23SD3 12/15",
+			count : 3,
+		},
+		{
+			name : "芸魔山鷹 トリノドミノ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-011.jpg",
+			rarity : "C",
+			flavor : [ "このデッキの切り札、アメイジンは墓地から呪文を大量に回収できる！こいつに革命チェンジして、アメイジンを探しながら呪文をあらかじめ墓地に捨てておこう!!" ],
+			id : "23SD3 11/15",
+			count : 3,
+		},
+		{
+			name : "詠み人-シラズ-Machine / 招水呪文「マジックル」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-013a.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "23SD3 13/15",
+			count : 3,
+		},
+		{
+			name : "アシスター・Mogi林檎",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-014.jpg",
+			rarity : "C",
+			flavor : [ "エレメントとは、バトルゾーンにある表向きのカードのことだぞ！クリーチャーだけじゃなく、タマシードやフィールドなど色々あるから調べてみよう!!" ],
+			id : "23SD3 14/15",
+			count : 4,
+		},
+		{
+			name : "AQvibrato",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-015.jpg",
+			rarity : "C",
+			flavor : [ "このデッキの基本的な動きは、２マナクリーチャーを５マナへと革命チェンジし、さらに５マナクリーチャーをアメイジンへとチェンジさせるというもの！クリーチャーを出してチェンジ、を繰り返すのだ!!" ],
+			id : "23SD3 15/15",
 			count : 3,
 		},
 	];

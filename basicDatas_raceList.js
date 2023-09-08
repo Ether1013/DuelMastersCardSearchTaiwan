@@ -328,7 +328,13 @@
 				{	Jap : "アーマード・サムライ",				Eng : "Armored Samurai",		Chi : "裝甲武士",		isCategory : false,	},
 				{	Jap : "メカ・ゴッド・ノヴァOMG",			Eng : "Mecha God Nova Omega",	Chi : "機械神星Ω",		isCategory : false,	},
 				{	Jap : "ゼニス・ハザード",					Eng : "Zenith Hazard",			Chi : "天頂災害",		isCategory : false,	},
-				
+				{	Jap : "マジック・ドラゴン",					Eng : "Magic Dragon",			Chi : "魔法龍",			isCategory : false,	},
+				{	Jap : "ゲーム・コマンド",					Eng : "Game Command",			Chi : "競賽指揮",		isCategory : false,	},
+				{	Jap : "マジック・マシン・イーター",			Eng : "Magic Machine Eater",	Chi : "魔法嗜機者",		isCategory : false,	},
+				{	Jap : "マジック・モンスター",				Eng : "Magic Monster",			Chi : "魔法獸",			isCategory : false,	},
+				{	Jap : "マジック・アウトレイジ",				Eng : "Magic Outrage",			Chi : "魔法無法者",		isCategory : false,	},
+				{	Jap : "マジック・ボルケーノ・ドラゴン",		Eng : "Magic Volcano Dragon",	Chi : "魔法火山龍",		isCategory : false,	},
+
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
 				{	Jap : "コマンド・ドラゴン",					Eng : "Command Dragon",			Chi : "指揮龍",			isCategory : true,	},
