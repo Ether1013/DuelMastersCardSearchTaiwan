@@ -3179,7 +3179,7 @@
 		//是否寫出圖片、張數、卡名、文明、攻擊力
 		if ( writePCNCPPart ){
 			var picWidth = 200;
-			if ( isMobile() ){
+			if ( isMobile() && getParameter("justPop") != null ){
 				picWidth = 85;
 			}
 			//圖片
