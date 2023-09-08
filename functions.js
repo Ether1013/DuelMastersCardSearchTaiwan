@@ -3178,6 +3178,10 @@
 		var singleCardHTML = "";
 		//是否寫出圖片、張數、卡名、文明、攻擊力
 		if ( writePCNCPPart ){
+			var picWidth = 200;
+			if ( isMobile() ){
+				picWidth = 160;
+			}
 			//圖片
 			if ( showPicture && !popCData.noLocalDataButVaultLink ){
 //				var isVertical = ( popCData.type == "DHF" || popCData.type == "D2F" || popCData.type == "FFF" || popCData.type == "HF" );// && !popCData.pic.match(  /\w\/\w{2}\/[\w\-]+/);
@@ -3200,7 +3204,7 @@
 							isBackReadData = true;
 						}
 					}
-					singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( loadPic ) + "' onload='setPicObjSize( this, this.id , " + ( isHorizontal ? " null , 200 " : " 200 , null " ) + " , this.title );' title='" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;" + ( isBackReadData ? "Opacity: 0.6;" : "" ) + "' >";
+					singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( loadPic ) + "' onload='setPicObjSize( this, this.id , " + ( isHorizontal ? " null , " + picWidth : picWidth + " , null " ) + " , this.title );' title='" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;" + ( isBackReadData ? "Opacity: 0.6;" : "" ) + "' >";
 				}
 				singleCardHTML += "</div>";
 			}
@@ -3208,7 +3212,7 @@
 				if ( popCData.noLocalDataButVaultLink ){
 					for ( var pc = 0 ; pc < ( popCData.count == null ? 1 : popCData.count ) ; pc++ ){
 						singleCardHTML += "<div style='display:inline-block;'>";
-						singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( null ) + "' onload='setPicObjSize( this, this.id , " + ( isHorizontal ? " null , 200 " : " 200 , null " ) + " , this.title );' title = '" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;' >";
+						singleCardHTML += "<img id='pop_pic_"+listIndex+"_"+pc+"_"+aaIndex+"' src='" + getImgSrc( null ) + "' onload='setPicObjSize( this, this.id , " + ( isHorizontal ? " null , " + picWidth : picWidth + " , null " ) + " , this.title );' title = '" + ( popCData.name + ( popCData.id != null ? "( " + ( popCData.id instanceof Array ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" ) ) + "' style='float:left;' >";
 						singleCardHTML += clearSubName( popCData.name );
 						singleCardHTML += "</div>";
 					}
