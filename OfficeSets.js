@@ -20118,7 +20118,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
-	var setCode = "OF-Y22 SPP-1";
+	var setCode = "OF-Y22 SPP2022-1";
 	var setName = "スペシャルプロモパック2022 vol.1";
 	var isDeck = false;
 	var setCardList = [
@@ -20174,7 +20174,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
-	var setCode = "OF-Y22 SPP-2";
+	var setCode = "OF-Y22 SPP2022-2";
 	var setName = "スペシャルプロモパック2022 vol.2";
 	var isDeck = false;
 	var setCardList = [
@@ -20233,6 +20233,69 @@
 			rarity : "C",
 			flavor : [ "華麗に相手の手札を奪い去れ!!" ],
 			id : "PROMOY21 P75/Y21",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	
+	var setCode = "OF-Y22 SPP2023-1";
+	var setName = "スペシャルプロモパック2023 vol.1";
+	var isDeck = false;
+	var setCardList = [
+		{
+			name : "ザーク・砲・ピッチ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-002.jpg",
+			rarity : "U",
+			flavor : [ "暴竜爵様が戦場に来る前に、邪魔な物はお片付けしておくッピ！ —ザーク・砲・ピッチ" ],
+			id : "PROMOY22 P2/Y22",
+		},
+		{
+			name : "グ:ムユキバ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-003.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "PROMOY22 P3/Y22",
+		},
+		{
+			name : "マジック・A・セミプーロ / ♪閑かさや とにかくブレイン 蝉ミンミン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-004a.jpg",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "PROMOY22 P4/Y22",
+		},
+		{
+			name : "チアサンライト コハク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-005.jpg",
+			rarity : "U",
+			flavor : [ "おいでませ、切り札！ —チアサンライト コハク" ],
+			id : "PROMOY22 P5/Y22",
+		},
+		{
+			name : "フェアリー・Re:ライフ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-006.jpg",
+			rarity : "C",
+			flavor : [ "草花は何度でも蘇る。妖精たちの助けがある限り。" ],
+			id : "PROMOY22 P6/Y22",
+		},
+		{
+			name : "虹速 ザ・ヴェルデ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-007.jpg",
+			rarity : "",
+			flavor : [ "君がイベントに来てくれて、ザ・ヴェルデもザ・ニッコリだ！" ],
+			id : "PROMOY22 P7/Y22",
+		},
+		{
+			name : "護天！銀河MAX",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-008.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "PROMOY22 P8/Y22",
+		},
+		{
+			name : "赤い稲妻 テスタ・ロッサ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-009.jpg",
+			rarity : "C",
+			flavor : [ "龍の歴史と鬼の歴史の闘いを通じて、テスタ・ロッサは新たな仲間を見つけることができた。" ],
+			id : "PROMOY22 P9/Y22",
 		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
