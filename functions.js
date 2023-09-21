@@ -2910,9 +2910,9 @@
 				//判斷有沒有雙極
 				var udCData = popCData.ws == null ? null : cardDatas.getDataByName( popCData.name , lastSelectedSetCode, v, 1 );
 				
-				var singleCardHTML = getPopListHTMLCode( true, showPicture, true, language, popCData, i, v );
+				var singleCardHTML = getPopListHTMLCode( true, showPicture, true, isDeck, language, popCData, i, v );
 				if ( udCData != null ){
-					var udSingleCardHTML = getPopListHTMLCode( true, false, true, language, udCData, i, v );
+					var udSingleCardHTML = getPopListHTMLCode( true, false, true, isDeck, language, udCData, i, v );
 					singleCardHTML += ( language == "P" ? "" : "↑↓<BR>" ) + udSingleCardHTML;
 				}
 				resultHTML.push( singleCardHTML );
@@ -2994,7 +2994,7 @@
 							}
 							wCRSpan.innerHTML = " ( " + wCrWords + " ) ";
 							//其他
-							wBodySpan.innerHTML = getPopListHTMLCode( false, false, true, wLanguage, parseCData, null, null );
+							wBodySpan.innerHTML = getPopListHTMLCode( false, false, true, isDeck, wLanguage, parseCData, null, null );
 						};
 					})(),
 					[ 
@@ -3174,12 +3174,12 @@
 		w.alert( translateText( "已成功轉為一張圖片！", isTC2C ) );
 	}
 	
-	function getPopListHTMLCode( writePCNCPPart, showPicture, writeDataPart , language, popCData , listIndex, aaIndex ){
+	function getPopListHTMLCode( writePCNCPPart, showPicture, writeDataPart , isDeck, language, popCData , listIndex, aaIndex ){
 		var singleCardHTML = "";
 		//是否寫出圖片、張數、卡名、文明、攻擊力
 		if ( writePCNCPPart ){
 			var picWidth = 200;
-			if ( isMobile() && getParameter("justPop") != null ){
+			if ( isMobile() && isDeck && getParameter("justPop") != null ){
 				picWidth = 85;
 			}
 			//圖片
