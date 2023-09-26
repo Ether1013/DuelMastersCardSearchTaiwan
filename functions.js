@@ -4025,7 +4025,7 @@
 
 	function findYuyutei(){
 		var keyword = clearSubName( lastSelectedCardName ).replace( /\s/g,"+" );
-		window.open( "https://yuyu-tei.jp/game_dm/sell/sell_price.php?name="+keyword, '_blank');
+		window.open( "https://yuyu-tei.jp/sell/dm/s/search?search_word="+keyword, '_blank');
 	}
 
 	/**
