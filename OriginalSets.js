@@ -1796,3 +1796,90 @@
 		{		name : "時の法皇 ミラダンテⅫ",											count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-066"
+	var setName = "衛君盃DM大賽1st【5C龍風＠致舜】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "天災 デドダム",											count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",	count : 3,	},
+		{		name : "裏斬隠 カクシ・レシピ",									count : 3,	},
+		{		name : "秩序の意志",											count : 2,	},
+		{		name : "ドンドン火噴くナウ",									count : 2,	},
+		{		name : "Disアイ・チョイス",										count : 3,	},
+		{		name : "ブレイン・スラッシュ",									count : 4,	},
+		{		name : "禁呪と聖句の決断",										count : 2,	},
+		{		name : "大地門ライフ・ゲート",									count : 1,	},
+		{		name : "神聖龍 エモーショナル・ハードコア",						count : 1,	},
+		{		name : "CRYMAX ジャオウガ",										count : 1,	},
+		{		name : "悪魔龍 ダークマスターズ",								count : 3,	},
+		{		name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",			count : 4,	},
+		{		name : "龍風混成 ザーディクリカ",								count : 4,	},
+		{		name : "聖魔連結王 ドルファディロム",							count : 2,	},
+		{		name : "SSS級天災 デッドダムド",								count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-067"
+	var setName = "衛君盃DM大賽2nd【赤綠波夏克＠崇銘】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "メンデルスゾーン",												count : 4,	},
+		{		name : "ボルシャック・スーパーヒーロー / 超英雄タイム",					count : 2,	},
+		{		name : "ボルシャック・栄光・ルピア",									count : 4,	},
+		{		name : "ボルシャック・ドラゴン / 決闘者・チャージャー",					count : 4,	},
+		{		name : "王来英雄 モモキングRX",											count : 4,	},
+		{		name : "ボルシャック・秘伝・ドラゴン",									count : 2,	},
+		{		name : "ボルシャック・モモキングNEX（ネックス）",						count : 4,	},
+		{		name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",			count : 4,	},
+		{		name : "ボルシャック・クロス・NEX（ネックス） / ボルシャック英雄譚",	count : 3,	},
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "ボルシャック・決闘・ドラゴン",									count : 4,	},
+		{		name : "革命の絆",														count : 2,	},
+		{		name : "勝利宣言 鬼丸「覇」",											count : 1,	},
+		{		name : "龍騎旋竜ボルシャック・バルガ",									count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-068"
+	var setName = "衛君盃DM大賽3rd【黑綠深淵＠元丰】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "フェアリー・ギフト",								count : 1,	},
+		{		name : "フェアリー・Re:ライフ",								count : 4,	},
+		{		name : "ドミー=ゾー / 「倒したいか？」",					count : 4,	},
+		{		name : "ア:グンテ",											count : 4,	},
+		{		name : "ア:エヌ:マクア",									count : 4,	},
+		{		name : "トング＝ゴング / 「世界をつかませてやろうか？」",	count : 2,	},
+		{		name : "深淵の壊炉 マーダン=ロウ",							count : 4,	},
+		{		name : "アビスベル＝覇＝ロード",							count : 3,	},
+		{		name : "フットレス＝トレース / 「力が欲しいか？」",			count : 2,	},
+		{		name : "秩序の意志",										count : 2,	},
+		{		name : "謀遠 テレスコ=テレス",								count : 4,	},
+		{		name : "邪幽 ジャガイスト",									count : 4,	},
+		{		name : "CRYMAX ジャオウガ",									count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-069"
+	var setName = "衛君盃DM大賽4th【5C龍風＠佑昀】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "とこしえの超人",								count : 4,	},
+		{		name : "天災 デドダム",									count : 4,	},
+		{		name : "ドンドン火噴くナウ",							count : 4,	},
+		{		name : "ブレイン・スラッシュ",							count : 4,	},
+		{		name : "機術士ディール/「本日のラッキーナンバー！」",	count : 1,	},
+		{		name : "灰燼と天門の儀式",								count : 1,	},
+		{		name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",	count : 4,	},
+		{		name : "龍風混成 ザーディクリカ",						count : 4,	},
+		{		name : "竹馬の超人 / テイクバック・チャージャー",		count : 2,	},
+		{		name : "CRYMAX ジャオウガ",								count : 1,	},
+		{		name : "ロスト・Re:ソウル",								count : 4,	},
+		{		name : "神聖龍 エモーショナル・ハードコア",				count : 1,	},
+		{		name : "飛翔龍 5000VT",									count : 2,	},
+		{		name : "聖魔連結王 ドルファディロム",					count : 3,	},
+		{		name : "超球の超人 / 父なるタッチダウン",				count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
