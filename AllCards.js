@@ -28976,7 +28976,7 @@
 			spTagExtends : [
 				"＿リアニメイト",
 			],
-			pic : "極・魔壊王 デスゴロス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-TR1b.jpg",
 		},
 		{
 			name : "罪英雄 クロノパギャラ",
