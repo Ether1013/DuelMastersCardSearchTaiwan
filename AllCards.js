@@ -74791,7 +74791,7 @@
 				"(K)クロスギア(/K)",
 				"裝備此卡的生物可以不發動攻擊、而是取而代之、直接橫置此生物，並使用下列能力－##破壞所有攻擊力不超過此生物的生物。",
 			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-083a.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-083b.jpg",
 		},
 		{
 			name : "略奪秘宝ジャギラ",
