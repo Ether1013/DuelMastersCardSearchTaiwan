@@ -1821,7 +1821,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-067"
-	var setName = "衛君盃DM大賽2nd【赤綠波夏克＠崇銘】"
+	var setName = "衛君盃DM大賽2nd【赤綠波夏克切札家＠崇銘】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "メンデルスゾーン",												count : 4,	},
