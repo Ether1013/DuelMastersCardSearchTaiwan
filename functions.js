@@ -3595,6 +3595,16 @@
 		}
 	}
 	
+	/**
+		清空系列選擇
+	*/
+	function cleanSetCode(){
+		setSelectValue( "setCodeType" , '' );
+		gobi("setCodeType").onchange();
+		setSelectValue( "setCode" , '' );
+		gobi("setCode").onchange();
+	}
+	
 	//開啟/關閉進階過濾器
 	function filter_adv( obj ){
 		var doOpen = "＋" == obj.innerText;
