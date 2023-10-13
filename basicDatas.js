@@ -445,7 +445,7 @@
 				{	value : "MA",	text : "神器",				Jap : "Mono Artifact",						Location : "M", horizontal : false,	main:false,	},
 				{	value : "LD",	text : "土地",				Jap : "土地",								Location : "M", horizontal : false,	main:false,	},
 				{	value : "PF",	text : "精神領域",			Jap : "サイキック・フィールド",				Location : "M", horizontal : true,	main:false,	},
-				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						Location : "M", horizontal : false,	main:false,	},
+				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						Location : "P", horizontal : false,	main:false,	},
 				{	value : "ZC",	text : "零龍生物",			Jap : "零龍クリーチャー",					Location : "I", horizontal : true,	main:false,	},
 				{	value : "ZCL",	text : "零龍星雲",			Jap : "零龍星雲",							Location : "I", horizontal : false,	main:false,	},
 				{					text : "決鬥者",			Jap : "デュエリスト",						descript : "這是甚麼沒人知道，官方至今都沒有做出說明"									},
@@ -1304,6 +1304,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2023/10/13",
+				log : [ 
+						"將卡種區分為主牌組區與非主牌組區",
+				],	
+			},
+			{	
 				date : "2023/10/12",
 				log : [ 
 						"新增清除系列按鈕",
@@ -1313,24 +1319,6 @@
 				date : "2023/09/27",
 				log : [ 
 						"新增衛君DM大賽前四強牌組(NET-66~NET-69)",
-				],	
-			},
-			{	
-				date : "2023/09/26",
-				log : [ 
-						"修改遊遊亭的搜尋連結",
-				],	
-			},
-			{	
-				date : "2023/09/21",
-				log : [ 
-						"調整資料匯出功能的卡牌大小顯示",
-				],	
-			},
-			{	
-				date : "2023/09/20",
-				log : [ 
-						"訂正【ノラディ:ド:スルーザ】的能力",
 				],	
 			},
 		],

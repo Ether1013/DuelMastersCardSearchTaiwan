@@ -61382,8 +61382,8 @@
 			mana : 1,
 			sp : [
 					"(K)S・トリガー(/K)",
-					"破壞戰鬥場上1隻攻擊力6000以下的對手生物，",
-					"橫置戰鬥場上所有對手生物，",
+					"破壞戰鬥場上1隻攻擊力6000以下的對手生物。",
+					"橫置戰鬥場上所有對手生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp13-051.jpg",
 		},
@@ -90584,7 +90584,7 @@
 		},
 		{
 			name : "覚醒竜機ボルバルザークJr.",
-			back : "殿堂王来空間.",
+			back : "殿堂王来空間",
 			type : "PC",
 			civil : 3,
 			race : ["アーマード・ドラゴン","アース・ドラゴン"],
@@ -90598,7 +90598,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-010a.jpg",
 		},
 		{
-			name : "殿堂王来空間.",
+			name : "殿堂王来空間",
 			back : "覚醒竜機ボルバルザークJr.",
 			type : "PF",
 			civil : 8,

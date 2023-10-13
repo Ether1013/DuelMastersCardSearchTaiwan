@@ -160,6 +160,7 @@
 
 	//產生卡種checkbox
 	var carTypeSpan = gobi( "carTypeSpan" );
+	var carTypeSpanEx = gobi( "carTypeSpanEx" );
 //	var spanLineLength = 0;
 	for ( var i = 0 ; i < cardTypeMapping.map.length ; i++ ){
 		if ( cardTypeMapping.map[i].value == null ){
@@ -199,7 +200,11 @@
 //		cbSpan.setAttribute( "title" , cardTypeMapping.map[i].Jap );
 		cbSpan.appendChild( document.createTextNode( cardTypeMapping.map[i].text ) );
 		checkDIV.appendChild( cbSpan );
-		carTypeSpan.appendChild( checkDIV );
+		if ( cardTypeMapping.map[i].Location == 'M' ){
+			carTypeSpan.appendChild( checkDIV );
+		} else {
+			carTypeSpanEx.appendChild( checkDIV );
+		}
 //		spanLineLength += ( 1 + cardTypeMapping.map[i].text.length );
 	}
 

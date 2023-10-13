@@ -45882,7 +45882,7 @@
 			id : "EX18 10a/75",
 		},
 		{
-			name : "殿堂王来空間.",
+			name : "殿堂王来空間",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-010b.jpg",
 			rarity : "VR",
 			flavor : [ "王来大戦の終了後、殿堂王来空間は戦いから解放された英雄たちの安らぎの土地となった。" ],
