@@ -416,7 +416,7 @@
 				{	value : "CA",	text : "城",				Jap : "城",									Location : "M", horizontal : false,	main:false,	},
 				{	value : "HF",	text : "幸福領域",			Jap : "幸せのフィールド",					Location : "M", horizontal : true,	main:false,	},
 				{	value : "CG",	text : "交叉武裝",			Jap : "クロスギア",							Location : "M", horizontal : false,	main:false,	descript : "裝備，第一次支付費用時僅出現在戰鬥場上，再次支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
-				{	value : "PCG",	text : "精神交叉武裝",		Jap : "超次元クロスギア",					Location : "P", horizontal : false,	main:false,	descript : "裝備，支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
+				{	value : "PCG",	text : "精神交叉武裝",		Jap : "サイキック・クロスギア",				Location : "P", horizontal : false,	main:false,	descript : "精神裝備，支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
 				{	value : "DHW",	text : "龍心武裝",			Jap : "ドラグハート・ウエポン",				Location : "P", horizontal : false,	main:true,	},
 				{	value : "DHC",	text : "龍心生物",			Jap : "ドラグハート・クリーチャー",			Location : "P", horizontal : false,	main:true,	},
 				{	value : "EDHC",	text : "進化龍心生物",		Jap : "進化ドラグハート・クリーチャー",		Location : "P", horizontal : false,	main:false,	},
@@ -427,6 +427,8 @@
 				{	value : "EPC",	text : "精神進化生物",		Jap : "進化サイキック・クリーチャー",		Location : "P", horizontal : false,	main:false,	},
 				{	value : "SPC",	text : "精神超級生物",		Jap : "サイキック・スーパー・クリーチャー",	Location : "P", horizontal : false,	main:false,	},
 				{	value : "D2F",	text : "D2領域",			Jap : "D2フィールド",						Location : "M", horizontal : true,	main:true,	},
+				{	value : "HTF",	text : "歷史領域",			Jap : "ヒストリック・フィールド",			Location : "M", horizontal : true,	main:false,	},
+				{	value : "LF",	text : "月神領域",			Jap : "ルナティック・フィールド",			Location : "M", horizontal : true,	main:false,	},
 				{	value : "T2F",	text : "T2領域",			Jap : "T2フィールド",						Location : "M", horizontal : true,	main:false,	},
 				{	value : "DF",	text : "龍領域",			Jap : "ドラゴニック・フィールド",			Location : "M", horizontal : true,	main:false,	},
 				{	value : "DMF",	text : "DM領域",			Jap : "DM・フィールド",						Location : "M", horizontal : true,	main:false,	},
@@ -1273,10 +1275,10 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM23-EX2",
 		"NET-068",
 		"DM23-RP3",
 		"DM23-SD3",
-		"DM23-BD1",
 	]
 	
 	//系統更新日誌
@@ -1303,6 +1305,13 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/10/21",
+				log : [ 
+						"新增【DM23-EX2 頂上決戦!!デュエキングMAX 2023】的內容",
+						"移除GR生物的MANA供應數字",
+				],	
+			},
 			{	
 				date : "2023/10/13",
 				log : [ 

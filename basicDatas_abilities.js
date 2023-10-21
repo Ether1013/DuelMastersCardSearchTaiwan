@@ -140,6 +140,7 @@
 			{ Jap : "超無限進化",			Eng : "Super Infinite Evolution",			Chi : "超無限進化",		descript : "將此生物疊在戰鬥場上1隻以上指定條件的我方生物之上出場",},
 			{ Jap : "超無限墓地進化",		Eng : "Super Infinite Graveyard Evolution",	Chi : "超無限墓地進化",	descript : "將此生物疊在墓地中1隻以上指定條件的我方生物之上出場",},
 			{ Jap : "超無限進化Ω",			Eng : "Super Infinite Evolution Ω",			Chi : "超無限進化Ω",	descript : "將此生物疊在我方戰鬥場上、魔力區中、以及墓地中任意隻指定條件的我方生物之上出場",},
+			{ Jap : "墓地呪文進化",			Eng : "Graveyard Spell Evolution",			Chi : "墓地咒文進化",	descript : "將此生物疊在我方墓地中1張咒文之上出場",},
 			{ Jap : "サバイバー",			Eng : "Survivor",				Chi : "倖存者",				descript : "戰鬥場上所有我方種族為サバイバー的生物，一律獲得此卡的✡能力",},
 			{ Jap : "超サバイバー",			Eng : "Super Survivor",			Chi : "超倖存者",			descript : "所有區域中、所有我方種族為サバイバー的生物，一律獲得此卡的✡能力",},
 			{ Jap : "自然・光スレイヤー",	Eng : "Nature.Light Slayer",	Chi : "自然、光殺手",		descript : "當此生物與自然文明生物或是光文明生物戰鬥時，於戰鬥之後破壞破壞該生物",},
