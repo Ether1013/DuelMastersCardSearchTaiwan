@@ -343,6 +343,7 @@
 				{	Jap : "アーマード・ヒューマノイド",			Eng : "Armored Human",			Chi : "裝甲人類",		isCategory : false,	},
 				{	Jap : "アーマード・コスモ・ウォーカー",		Eng : "Armored Cosmo Walker",	Chi : "裝甲宙行者",		isCategory : false,	},
 				{	Jap : "ジャイアント・ビーストフォーク",		Eng : "Giant Beastfolk",		Chi : "巨大獸人",		isCategory : false,	},
+				{	Jap : "アーマードン",						Eng : "Armoredon",				Chi : "裝甲噸",			isCategory : false,	},
 
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

@@ -446,7 +446,7 @@
 				{	value : "OA",	text : "自靈氣",			Jap : "オレガ・オーラ",						Location : "M", horizontal : true,	main:false,	},
 				{	value : "MA",	text : "神器",				Jap : "Mono Artifact",						Location : "M", horizontal : false,	main:false,	},
 				{	value : "LD",	text : "土地",				Jap : "土地",								Location : "M", horizontal : false,	main:false,	},
-				{	value : "PF",	text : "精神領域",			Jap : "サイキック・フィールド",				Location : "M", horizontal : true,	main:false,	},
+				{	value : "PF",	text : "精神領域",			Jap : "サイキック・フィールド",				Location : "P", horizontal : true,	main:false,	},
 				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						Location : "P", horizontal : false,	main:false,	},
 				{	value : "ZC",	text : "零龍生物",			Jap : "零龍クリーチャー",					Location : "I", horizontal : true,	main:false,	},
 				{	value : "ZCL",	text : "零龍星雲",			Jap : "零龍星雲",							Location : "I", horizontal : false,	main:false,	},
