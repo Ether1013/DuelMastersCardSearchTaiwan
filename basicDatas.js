@@ -315,7 +315,7 @@
 			return "http://dmvault.ath.cx/images/" + picName + ".gif";
 		},
 		
-		//取得動態背景建層CSS
+		//取得動態背景漸層CSS
 		getBackgroundCSS : function( value ){
 			var civils = this.getDatasByValue( value );
 			if ( civils == null || civils.length == 0 )
@@ -1275,10 +1275,10 @@
 	
 	//最新推薦
 	var newestSets = [
+		"NET-070",
+		"NET-072",
 		"DM23-EX2",
-		"NET-068",
 		"DM23-RP3",
-		"DM23-SD3",
 	]
 	
 	//系統更新日誌
@@ -1305,6 +1305,13 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2023/11/09",
+				log : [ 
+						"新增山田盃DM大賽1st【7軸天使機器人＠山田】的內容",
+						"新增山田盃DM大賽3rd【MMM退化＠元丰】",
+				],	
+			},
 			{	
 				date : "2023/10/21",
 				log : [ 

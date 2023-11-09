@@ -1883,3 +1883,44 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-070"
+	var setName = "山田盃DM大賽1st【7軸天使機器人＠山田】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "ガチャンコ  ガチロボ",											count : 4,	},
+		{		name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",	count : 4,	},
+		{		name : "覚醒の精霊ダイヤモンド・エイヴン",								count : 4,	},
+		{		name : "龍風混成 ザーディクリカ",										count : 4,	},
+		{		name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",			count : 4,	},
+		{		name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",	count : 4,	},
+		{		name : "R.S.F.K. / オールイン・チャージャー",							count : 4,	},
+		{		name : "革命の絆",														count : 4,	},
+		{		name : "頂上連結 ロッド・ゾージア5th",									count : 4,	},
+		{		name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",					count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-072"
+	var setName = "山田盃DM大賽3rd【MMM退化＠元丰】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "禁断英雄 モモキングダムX",										count : 4,	},
+		{		name : "MMM-ジョーキング",												count : 4,	},
+		{		name : "Disカルセ・ドニー",												count : 4,	},
+		{		name : "ブランド-MAX",													count : 4,	},
+		{		name : "雪溶の鎖 / 堕牛の一撃",											count : 4,	},
+		{		name : "「正義星帝」 ＜鬼羅.Star＞",									count : 2,	},
+		{		name : "キャンベロ ＜レッゾ.Star＞",									count : 2,	},
+		{		name : "進化設計図",													count : 3,	},
+		{		name : "シャドウ・ラブ",												count : 3,	},
+		{		name : "カダブランプー",												count : 2,	},
+		{		name : "大地門ライフ・ゲート",											count : 1,	},
+		{		name : "次元の霊峰",													count : 1,	},
+		{		name : "阿修羅ムカデ ＜デスシラズ.Star＞",								count : 1,	},
+		{		name : "ガヨウ神 ＜シューマッハ.Star＞",								count : 1,	},
+		{		name : "EVE-鬼MAX",														count : 1,	},
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",	count : 1,	},
+		{		name : "新世界王の闘気",												count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
