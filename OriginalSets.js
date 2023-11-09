@@ -1900,6 +1900,26 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-071"
+	var setName = "山田盃DM大賽1st【青綠巨人＠菜虫】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "銀河竜 ゴルファンタジスタ",									count : 4,	},
+		{		name : "チアスペース アカネ",										count : 4,	},
+		{		name : "スナイプ・モスキート",										count : 4,	},
+		{		name : "キャディ・ビートル",										count : 4,	},
+		{		name : "異端流し オニカマス",										count : 4,	},
+		{		name : "同期の妖精 / ド浮きの動悸",									count : 4,	},
+		{		name : "罠の超人",													count : 4,	},
+		{		name : "飛翔龍 5000VT",												count : 2,	},
+		{		name : "宇宙の頑強者",												count : 2,	},
+		{		name : "テック団の波壊Go!",											count : 3,	},
+		{		name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",	count : 3,	},
+		{		name : "スペースインワン・ヘラクレス",								count : 1,	},
+		{		name : "電脳鎧冑アカシック・オリジナル",							count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
 	var setCode = "NET-072"
 	var setName = "山田盃DM大賽3rd【MMM退化＠元丰】"
 	var isDeck = true;
