@@ -1901,7 +1901,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-071"
-	var setName = "山田盃DM大賽1st【青綠巨人＠菜虫】"
+	var setName = "山田盃DM大賽2nd【青綠巨人＠菜虫】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "銀河竜 ゴルファンタジスタ",									count : 4,	},
