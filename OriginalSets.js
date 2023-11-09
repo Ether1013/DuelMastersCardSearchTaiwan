@@ -1944,3 +1944,23 @@
 		{		name : "新世界王の闘気",												count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-073"
+	var setName = "山田盃DM大賽4th【龍CUBE＠YOKA】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "ミステリー・キューブ",										count : 4,	},
+		{		name : "龍世界～龍の降臨する地～",									count : 4,	},
+		{		name : "切札勝舞&ボルメテウス ー決闘の物語ー",						count : 4,	},
+		{		name : "ボルシャックライシス・NEX（ネックス）",						count : 4,	},
+		{		name : "大樹王 ギガンディダノス",									count : 4,	},
+		{		name : "無双龍幻バルガ・ド・ライバー",								count : 4,	},
+		{		name : "地龍仙ロマネアース / 仙なる大地",							count : 4,	},
+		{		name : "龍騎旋竜ボルシャック・バルガ",								count : 2,	},
+		{		name : "勝利宣言 鬼丸「覇」",										count : 2,	},
+		{		name : "地封龍 ギャイア",											count : 3,	},
+		{		name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",	count : 1,	},
+		{		name : "ボルシャック・スーパーヒーロー / 超英雄タイム",				count : 1,	},
+		{		name : "R.S.F.K. / オールイン・チャージャー",						count : 3,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );

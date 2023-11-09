@@ -11472,7 +11472,7 @@
 					"(K)S・トリガー(/K)",
 					"將我方牌庫洗牌。之後公開牌庫頂第一張牌。如果那張卡是生物的話，你可以將之打出至戰鬥場上。如果不是生物的話就置入我方的魔力區中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-054.jpg",
 		},
 		{
 			name : "無敵剣 カツキングMAX",
@@ -64758,7 +64758,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-010.jpg",
 		},
 		{
-			name : "龍世界　～龍の降臨する地～",
+			name : "龍世界～龍の降臨する地～",
 			type : "DF",
 			civil : 2,
 			race : ["ドラゴン・ワールド"],
