@@ -93276,20 +93276,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-008.jpg",
 		},
 		{
-			name : "勇者の１号 ハムカツマン蒼",
-			type : "C",
-			civil : 3,
-			race : ["メガ・ドラゴン","革命軍","ハムカツ団"],
-			power : 4000,
-			cost : 5,
-			mana : 1,
-			sp : [
-				"(K)革命チェンジ(/K)＝火文明或是自然文明的生物。",
-				"此生物出場時，觀看我方牌庫頂5張牌。你可以從中選擇1隻多色生物置入牌庫頂。之後將剩餘卡牌依喜好順序置入牌庫底。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TF11.jpg",
-		},
-		{
 			name : "ミラクル１ ドレミ24",
 			type : "C",
 			civil : 24,
@@ -95298,21 +95284,6 @@
 				"(K)T・ブレイカー(/K)",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmpcd03-b01.jpg",
-		},
-		{
-			name : "大邪眼Ｂ・ロマノフ",
-			type : "EC",
-			civil : 4,
-			race : ["ダークロード","ドラゴン・ゾンビ","ナイト"],
-			power : 12000,
-			cost : 7,
-			mana : 1,
-			sp : [
-				"(K)墓地進化GV(/K)－此生物進化在我方墓地中3隻闇文明生物之上。",
-				"(K)T・ブレイカー(/K)",
-				"(K)メテオバーン(/K)－此生物發動攻擊時，你可以作廢此生物下方任意張卡牌。每因此將1張卡牌置入墓地，就隨機選擇1張對手手牌。觀看其內容、並將之置入對手牌庫底。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmpcd03-b02.jpg",
 		},
 		{
 			name : "邪眼獣ヤミノオーダー",
