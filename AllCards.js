@@ -65830,7 +65830,7 @@
 				},
 				{
 					type :	"S",
-					civil : 4,
+					civil : 8,
 					cost : 2,
 
 					sp : [
