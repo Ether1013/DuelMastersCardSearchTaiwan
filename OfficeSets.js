@@ -50504,7 +50504,7 @@
 			id : "EX08 174/???",
 		},
 		{
-			name : "ミラクル１ ドレミ24",
+			name : "ミラクル1 ドレミ24",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-175.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -67729,7 +67729,7 @@
 			id : "RP22 SP5/SP6",
 		},
 		{
-			name : "ミラクル１ ドレミ24",
+			name : "ミラクル1 ドレミ24",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-SP6.jpg"],
 			rarity : ["R"],
 			flavor : [ "" ],

@@ -93276,20 +93276,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-008.jpg",
 		},
 		{
-			name : "ミラクル１ ドレミ24",
-			type : "C",
-			civil : 24,
-			race : ["エンジェル・ドラゴン","革命軍","ドレミ団"],
-			power : 4000,
-			cost : 5,
-			mana : 1,
-			sp : [
-				"(K)革命チェンジ(/K)－光文明或是水文明的生物。",
-				"此生物出場時，你可以不支付費用、從手牌中使用1張費用3以下的水文明咒文。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-SP6.jpg",
-		},
-		{
 			name : "五憐の精霊オソニス",
 			type : "C",
 			civil : 16,
