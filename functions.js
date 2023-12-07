@@ -1016,6 +1016,7 @@
 			abilitiesValues.push( abFilterObjs[abs].value );
 		}
 		*/
+		var customerAbilitiesFilterValue = gobi("customerAbilitiesFilter").value;
 		var abilitiesValues = getValuesByName( "abilities" );
 		//指定種族關鍵字
 		var abilitiesRaceValues = gobi("ab_race").value;
@@ -1340,7 +1341,20 @@
 							absAllow = false;
 						}
 					}
-				}	
+				}
+				if ( customerAbilitiesFilterValue != '' ){
+					var abText = "";
+					for ( var ai = 0 ; ai < insertData.sp.length ; ai++ ){
+						var parseTags = keyWords.transTags( insertData.sp[ai] );
+						for ( var t = 0 ; t < parseTags.length ; t++ ){
+							abText += ( parseTags[t].innerText == null ? parseTags[t].data : parseTags[t].innerText );
+						}
+					}
+					abText = translateText( abText, isTC2C );
+					if ( abText.indexOf( customerAbilitiesFilterValue ) == -1 ){
+						absAllow = false;
+					}
+				}
 				if ( !absAllow ){
 					continue;
 				}
@@ -3630,7 +3644,7 @@
 		//第二組種族過濾器
 		gobi("race2Span").style.display = doOpen ? "inline" : "none";
 		//能力過濾器
-		gobi("filter_tr_abilities").style.display = doOpen ? "" : "none";
+		gobi("regularAbilitiesFilter").style.display = doOpen ? "" : "none";
 		//卡牌種類
 		var subTypes = gosbcn("subType");
 		for ( var s = 0 ; s < subTypes.length ; s++ ){
