@@ -1016,7 +1016,15 @@
 			abilitiesValues.push( abFilterObjs[abs].value );
 		}
 		*/
-		var customerAbilitiesFilterValue = gobi("customerAbilitiesFilter").value;
+		//取得輸入的複述關鍵字並去除空白
+		var customerAbilitiesFilterValue = gobi("customerAbilitiesFilter").value.split(/\s/g);
+		var cc = [];
+		for ( var caf = 0 ; caf < customerAbilitiesFilterValue.length ; caf++ ){
+			if ( customerAbilitiesFilterValue[caf] != '' ){
+				cc.push( customerAbilitiesFilterValue[caf] );
+			}
+		}
+		customerAbilitiesFilterValue = cc;
 		var abilitiesValues = getValuesByName( "abilities" );
 		//指定種族關鍵字
 		var abilitiesRaceValues = gobi("ab_race").value;
@@ -1342,7 +1350,7 @@
 						}
 					}
 				}
-				if ( customerAbilitiesFilterValue != '' ){
+				if ( customerAbilitiesFilterValue.length > 0 ){
 					var abText = "";
 					for ( var ai = 0 ; ai < insertData.sp.length ; ai++ ){
 						var parseTags = keyWords.transTags( insertData.sp[ai] );
@@ -1351,8 +1359,11 @@
 						}
 					}
 					abText = translateText( abText, isTC2C );
-					if ( abText.indexOf( customerAbilitiesFilterValue ) == -1 ){
-						absAllow = false;
+					for ( var caf = 0 ; caf < customerAbilitiesFilterValue.length ; caf++ ){
+						if ( abText.indexOf( customerAbilitiesFilterValue[caf] ) == -1 ){
+							absAllow = false;
+							break;
+						}
 					}
 				}
 				if ( !absAllow ){
