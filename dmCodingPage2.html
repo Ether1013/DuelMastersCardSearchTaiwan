@@ -1,0 +1,286 @@
+<html>
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="./basicDatas.js?v=20170807"></script>
+	<script src="./basicDatas_abilities.js?v=20170807"></script>
+	<script src="./basicDatas_raceList.js?v=20170807"></script>
+	<script src="./AllCards.js?v=20170807"></script>
+	<script src="./functions.js?v=20170807"></script>
+</head>
+<script>
+	function scriptFromExcel(){
+	
+		var cDatas = [];
+	
+		var list = $("[name=codeText]").val().split("\n");
+		for ( var l = 0 ; l < list.length ; l++ ){
+			var cd = list[l];
+			if ( cd == '' )
+				continue;
+			cd = cd.split("\t");
+			var cdDetail = {
+			};
+			if ( cd[12] == "" ){
+				cdDetail = {
+					name : cd[1].substr( 0, cd[1].indexOf("(") ),
+					id : cd[1].substring( cd[1].indexOf("(")+3, cd[1].indexOf(")") ),
+					pic : cd[0],
+					mana : cd[7],
+					flavor : cd[11]+cd[21],
+					rarity : cd[4],
+					type : [],
+					civil : civilMapping.getValueByText( cd[3] ),
+					sp : eval(cd[10].replace(/\\s/g,"")),
+				};
+				
+				var types = cd[2].split("/");
+				for ( var t = 0 ; t < types.length ; t++ ){
+					cdDetail.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+				}
+				
+				if ( cd[5] != "" ){
+					cdDetail.power = cd[5];
+				}
+				
+				if ( cd[6] != "" ){
+					cdDetail.cost = cd[6];
+				}
+				
+				if ( cd[8] != "" ){
+					cdDetail.race = cd[8].split( "/" );
+				}
+				
+			} else {
+				cdDetail = {
+					name : cd[1].substr( 0, cd[1].indexOf("(") ),
+					id : cd[1].substring( cd[1].indexOf("(")+3, cd[1].indexOf(")") ),
+					pic : cd[0],
+					mana : cd[7],
+					flavor : cd[11]+cd[21],
+					rarity : cd[4],
+					wData : [
+						
+					],
+				};
+				
+				var w = {
+					type : [],
+					civil : civilMapping.getValueByText( cd[3] ),
+					sp : eval(cd[10].replace(/\\s/g,"")),
+				}
+				var types = cd[2].split("/");
+				for ( var t = 0 ; t < types.length ; t++ ){
+					w.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+				}
+				if ( cd[5] != "" ){
+					w.power = cd[5];
+				}
+				if ( cd[6] != "" ){
+					w.cost = cd[6];
+				}
+				if ( cd[8] != "" ){
+					w.race = cd[8].split( "/" );
+				}
+				cdDetail.wData.push( w );
+
+				w = {
+					type : [],
+					civil : civilMapping.getValueByText( cd[14] ),
+					sp : eval(cd[20].replace(/\\s/g,"")),
+				}
+				var types = cd[13].split("/");
+				for ( var t = 0 ; t < types.length ; t++ ){
+					w.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+				}
+				if ( cd[16] != "" ){
+					w.power = cd[16];
+				}
+				if ( cd[17] != "" ){
+					w.cost = cd[17];
+				}
+				if ( cd[19] != "" ){
+					w.race = cd[19].split( "/" );
+				}
+				cdDetail.wData.push( w );
+			}
+			
+			cDatas.push( cdDetail );
+		}
+//		alert( JSON.stringify( cDatas[7] ) );
+
+		//印出新卡資料
+		var newCardNames = [];
+		var textContent = "";
+		for ( var cd = 0 ; cd < cDatas.length ; cd++ ){
+			var cData = cDatas[cd];
+			if ( cardDatas.getDataByName( cData.name ) != null ){
+				continue;
+			} else if ( newCardNames.include( cData.name ) ){
+				continue;
+			} else {
+				newCardNames.push( cData.name );
+			}
+			
+			textContent += "\r\n{";
+			textContent += "\r\n\tname : \"" + cData.name + "\",";
+			textContent += "\r\n\tpic : \"" + cData.pic + "\",";
+			if ( cData.mana != null ){
+				textContent += "\r\n\tmana : " + cData.mana + ",";
+			}
+			if ( cData.wData == null ){
+				textContent += "\r\n\ttype : \"";
+				for ( var t = 0 ; t < cData.type.length ; t++ ){
+					textContent += ( t > 0 ? "/" : "" ) +cData.type[t];
+				}
+				textContent += "\",";
+				textContent += "\r\n\tcivil : " + cData.civil + ",";
+				if ( cData.race != null ){
+					textContent += "\r\n\trace : [";
+					for ( var r = 0 ; r < cData.race.length ; r++ ){
+						textContent += ( r > 0 ? ", " : "" ) + "\"" + cData.race[r] + "\"";
+					}
+					textContent += "],";
+				}
+				if ( cData.power != null ){
+					textContent += "\r\n\tpower : " + cData.power.replace(/[+-]/g,"") + ",";
+					if ( cData.power.indexOf("+") != -1 ){
+						textContent += "\r\n\tpc : true,";
+					} else if ( cData.power.indexOf("-") != -1 ){
+						textContent += "\r\n\tpc : false,";
+					}
+				}
+				if ( cData.cost != null ){
+					textContent += "\r\n\tcost : " + cData.cost + ",";
+				}					
+				textContent += "\r\n\tsp : [";
+				for ( var s = 0 ; s < cData.sp.length ; s++ ){
+					textContent += "\r\n\t\t" + "\"" + cData.sp[s] + "\",";
+				}
+				textContent += "\r\n\t],";
+			} else {
+				textContent += "\r\n\twData : [";
+				for ( var w = 0 ; w < cData.wData.length ; w++ ){
+					cDataUD = cData.wData[w];
+					textContent += "\r\n\t\t{";
+
+					textContent += "\r\n\t\t\ttype : \"";
+					for ( var t = 0 ; t < cDataUD.type.length ; t++ ){
+						textContent += ( t > 0 ? "/" : "" ) + cDataUD.type[t];
+					}
+					textContent += "\",";
+					textContent += "\r\n\t\t\tcivil : " + cDataUD.civil + ",";
+					if ( cDataUD.race != null ){
+						textContent += "\r\n\t\t\trace : [";
+						for ( var r = 0 ; r < cDataUD.race.length ; r++ ){
+							textContent += ( r > 0 ? ", " : "" ) + "\"" + cDataUD.race[r] + "\"";
+						}
+						textContent += "],";
+					}
+					if ( cDataUD.power != null ){
+						textContent += "\r\n\t\t\tpower : " + cDataUD.power.replace(/[+-]/g,"") + ",";
+						if ( cDataUD.power.indexOf("+") != -1 ){
+							textContent += "\r\n\t\t\tpc : true,";
+						} else if ( cDataUD.power.indexOf("-") != -1 ){
+							textContent += "\r\n\t\t\tpc : false,";
+						}
+					}
+					if ( cDataUD.cost != null ){
+						textContent += "\r\n\t\t\tcost : " + cDataUD.cost + ",";
+					}					
+					textContent += "\r\n\t\t\tsp : [";
+					for ( var s = 0 ; s < cDataUD.sp.length ; s++ ){
+						textContent += "\r\n\t\t\t\t\"" + cDataUD.sp[s] + "\",";
+					}
+					textContent += "\r\n\t\t\t],";
+
+					
+					textContent += "\r\n\t\t},";
+				}
+				textContent += "\r\n\t],";
+			}
+			textContent += "\r\n},";
+		}
+		
+		//印出卡表
+		var mapKey = [];
+		var mapCDatas = [];
+		for ( var cd = 0 ; cd < cDatas.length ; cd++ ){
+			var cData = cDatas[cd];
+			var index = mapKey.indexOf( cData.name );
+			if ( index == -1 ){
+				mapKey.push( cData.name );
+				mapCDatas.push( [] );
+				index = mapKey.length - 1;
+			}
+			mapCDatas[index].push( cData );
+		}
+		var isDeck = confirm("是否為牌組");
+		var textContent2 = "";
+		textContent2 += "\r\nvar setCode = \"\";";
+		textContent2 += "\r\nvar setName = \"\";";
+		textContent2 += "\r\nvar isDeck = " + ( isDeck ? "true" : "false" ) + ";";
+		textContent2 += "\r\nvar setCardList = [";
+		
+		for ( var m = 0 ; m < mapKey.length ; m++ ){
+			textContent2 += "\r\n\t{";
+
+			textContent2 += "\r\n\t\tname : \"" + mapKey[m] + "\",";
+			textContent2 += "\r\n\t\tpic : [ ";
+			for ( var mc = 0 ; mc < mapCDatas[m].length ; mc++ ){
+				textContent2 += "\"" + (mapCDatas[m])[mc].pic + "\", "
+			}
+			textContent2 += "],";
+			textContent2 += "\r\n\t\trarity : [ ";
+			for ( var mc = 0 ; mc < mapCDatas[m].length ; mc++ ){
+				textContent2 += "\"" + (mapCDatas[m])[mc].rarity + "\", "
+			}
+			textContent2 += "],";
+			textContent2 += "\r\n\t\tflavor : [ ";
+			for ( var mc = 0 ; mc < mapCDatas[m].length ; mc++ ){
+				textContent2 += "\"" + (mapCDatas[m])[mc].flavor + "\", "
+			}
+			textContent2 += "],";
+			textContent2 += "\r\n\t\tid : [ ";
+			for ( var mc = 0 ; mc < mapCDatas[m].length ; mc++ ){
+				textContent2 += "\"" + (mapCDatas[m])[mc].id + "\", "
+			}
+			textContent2 += "],";
+			if ( isDeck ){
+				textContent2 += "\r\n\t\tcount : ,";
+			}
+			textContent2 += "\r\n\t},";
+		}
+		
+		textContent2 += "\r\n];";
+		textContent2 += "\r\nsetDatas.addMap( setCode , setName , isDeck , setCardList );";
+		/*
+	var setCode = "DMRP-15";
+	var setName = "幻龍×凶襲 ゲンムエンペラー!!!";
+	var isDeck = false;
+	var setCardList = [	
+		{
+			name : "∞龍 ゲンムエンペラー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp15-km1.jpg",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "RP15 KM1/KM3",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+		*/
+		$("body").append($("<span><XMP>" + textContent + "</XMP></span>")).append($("<HR>")).append($("<span><XMP>" + textContent2 + "</XMP></span>"));
+	}
+</script>
+<body>
+	<div class="table">
+		<div class="tr">
+			<div class="td" style="vertical-align:top;" width="40%">
+				<input type="button" value="↓" onclick="scriptFromExcel();" style="width:400px;height:40px;"><BR>
+				<textarea style="width:400px;height:250px;" name="codeText" onfocus="$(this).select();"></textarea><br>
+				<div name="code">
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
