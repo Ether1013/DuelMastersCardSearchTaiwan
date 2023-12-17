@@ -311,6 +311,7 @@
 			{ Jap : "フレンド・バースト",	Eng : "Friend Burst",			Chi : "友情爆裂",			descript : "此生物出場時，你可以橫置戰鬥場上1隻我方其他的指定生物，那樣的話，就使用此卡的咒文側",},
 			{ Jap : "W・メクレイド",		Eng : "Double Revolve Great",	Chi : "雙重命驅強襲",		descript : "觀看牌庫頂六張牌，使用兩張指定種族與指定費用以下的卡牌",},
 			{ Jap : "ゼロ輪廻∞",			Eng : "Zero Rinne Infinity",	Chi : "零之輪迴無限",		descript : "當此生物召喚出場或是發動攻擊時，你可以不支付費用、使用此生物的咒文側。那樣的話，就將我方牌庫頂5張牌置入我方魔力區中",},
+			{ Jap : "終極宣言",				Eng : "Final Declaration",		Chi : "終極宣言",			descript : "以下能力一場遊戲中只能發動一次",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
