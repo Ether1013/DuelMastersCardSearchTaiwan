@@ -303,6 +303,27 @@
 				return rtnChis;
 			}
 		},
+		
+		//用日文取得文明
+		getValueByText : function( value ){
+			var rtn = 0;
+			value = value.split( /[\/,]/g );
+			for ( var t = 0 ; t < value.length ; t++ ){
+				if ( value[t] == "光" )
+					rtn += 16;
+				if ( value[t] == "水" )
+					rtn += 8;
+				if ( value[t] == "闇" )
+					rtn += 4;
+				if ( value[t] == "火" )
+					rtn += 2;
+				if ( value[t] == "自然" )
+					rtn += 1;
+			}
+			if ( rtn == 0 )
+				rtn = 32;
+			return rtn;
+		},
 			
 		//取得該文明的資料標頭圖片
 		getHeaderPicByValue : function( value ){
@@ -1275,10 +1296,9 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM23-RP4",
 		"DM23-BD2",
 		"DM23-BD3",
-		"NET-070",
-		"NET-071",
 	]
 	
 	//系統更新日誌
