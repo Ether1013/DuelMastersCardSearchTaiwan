@@ -358,6 +358,9 @@
 				{	Jap : "メカ・アビス・セレス",				Eng : "Mecha Abyss Celes",		Chi : "機械深淵天國",	isCategory : false,	},
 				{	Jap : "マジック・アーマード・セレス",		Eng : "Magic Armored Celes",	Chi : "魔法裝甲天國",	isCategory : false,	},
 				{	Jap : "アビス・ジャイアント・セレス",		Eng : "Abyss Giant Celes",		Chi : "深淵巨人天國",	isCategory : false,	},
+				{	Jap : "マジック・ソニック・コマンド",		Eng : "Magic Sonic Command",	Chi : "魔法音速指揮",	isCategory : false,	},
+				{	Jap : "アーマード・ドリームメイト",			Eng : "Amored Dream Mate",		Chi : "裝甲夢幻夥伴",	isCategory : false,	},
+				{	Jap : "アーマード・メタリカ",				Eng : "Armored Metallica",		Chi : "裝甲金屬造物",	isCategory : false,	},
 
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
