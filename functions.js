@@ -1016,7 +1016,7 @@
 			abilitiesValues.push( abFilterObjs[abs].value );
 		}
 		*/
-		//取得輸入的複述關鍵字並去除空白
+		//取得輸入的複數關鍵字並去除空白
 		var customerAbilitiesFilterValue = gobi("customerAbilitiesFilter").value.split(/\s/g);
 		var cc = [];
 		for ( var caf = 0 ; caf < customerAbilitiesFilterValue.length ; caf++ ){
@@ -2906,6 +2906,8 @@
 		}
 		//記錄從DMVault過來的資料，等後面進行動態匯入
 		var afterMethodParameters = [];
+		//紀錄已經寫過的能力標籤
+		var writtenTags = [];
 		for ( var i = 0 ; i < queryListResults.length ; i++ ){
 			var popCData = queryListResults[i];	
 			if ( theSet != null ){
@@ -2934,10 +2936,37 @@
 			
 				//判斷有沒有雙極
 				var udCData = popCData.ws == null ? null : cardDatas.getDataByName( popCData.name , lastSelectedSetCode, v, 1 );
+				//紀錄第一次出現的TAG
+				var absTags = [];
+				var popCDataAbsUandD = [];
+				if ( udCData == null ){
+					popCDataAbsUandD.push( popCData.sp );
+				} else {
+					popCDataAbsUandD.push( popCData.sp );
+					popCDataAbsUandD.push( udCData.sp );
+				}
+				for ( var w = 0 ; w < popCDataAbsUandD.length ; w++ ){
+					for ( var ab = 0 ; ab < popCDataAbsUandD[w].length ; ab++ ){
+						var tags = keyWords.transTags( (popCDataAbsUandD[w])[ab] );
+						for ( var t = 0 ; t < tags.length ; t++ ){
+							if ( !tags[t].data ){
+								var keyWordTagName = tags[t].innerText;
+								if ( keyWordTagName != null ){
+									if ( writtenTags.include( keyWordTagName ) ){
+										continue;
+									} else {
+										writtenTags.push( keyWordTagName );
+										absTags.push( keyWordTagName );
+									}
+								}
+							}
+						}
+					}
+				}
 				
-				var singleCardHTML = getPopListHTMLCode( true, showPicture, true, isDeck, language, popCData, i, v );
+				var singleCardHTML = getPopListHTMLCode( true, showPicture, true, isDeck, language, popCData, i, v, udCData == null ? absTags : [] );
 				if ( udCData != null ){
-					var udSingleCardHTML = getPopListHTMLCode( true, false, true, isDeck, language, udCData, i, v );
+					var udSingleCardHTML = getPopListHTMLCode( true, false, true, isDeck, language, udCData, i, v, absTags );
 					singleCardHTML += ( language == "P" ? "" : "↑↓<BR>" ) + udSingleCardHTML;
 				}
 				resultHTML.push( singleCardHTML );
@@ -3199,7 +3228,7 @@
 		w.alert( translateText( "已成功轉為一張圖片！", isTC2C ) );
 	}
 	
-	function getPopListHTMLCode( writePCNCPPart, showPicture, writeDataPart , isDeck, language, popCData , listIndex, aaIndex ){
+	function getPopListHTMLCode( writePCNCPPart, showPicture, writeDataPart , isDeck, language, popCData , listIndex, aaIndex, absHints ){
 		var singleCardHTML = "";
 		//是否寫出圖片、張數、卡名、文明、攻擊力
 		if ( writePCNCPPart ){
@@ -3471,6 +3500,23 @@
 					singleCardHTML += "</i>";
 					if ( flavorInVersion.length > 0 && flavorInVersion[0] != "" ){
 						singleCardHTML += "<BR>";
+					}
+				}
+				//能力說明
+				if ( absHints != null && absHints instanceof Array ){
+					for ( var t = 0 ; t < absHints.length ; t++ ){
+						var abTag = abilityMapping.getDataByJap( absHints[t] );
+						if ( abTag != null ){
+							var tagName = abTag.Jap;
+							if ( language == 'E' ){
+								tagName = abTag.Eng;
+							} else if ( language == 'C' ){
+								tagName = abTag.Chi;
+							}
+							singleCardHTML += "<br><i style='font-size:13px;'>";
+							singleCardHTML += "※"+tagName+"："+abTag.descript;
+							singleCardHTML += "</i>";
+						}
 					}
 				}
 			} else {
