@@ -1964,3 +1964,87 @@
 		{		name : "R.S.F.K. / オールイン・チャージャー",						count : 3,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-074"
+	var setName = "QOO盃DM大賽1st【流星霸道＠MisterLobaLoba】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "勝利龍装 クラッシュ“覇道”",										count : 4,	},
+		{		name : "流星のガイアッシュ・カイザー",									count : 4,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",							count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",									count : 4,	},
+		{		name : "メンデルスゾーン",												count : 4,	},
+		{		name : "爆龍覇 グレンリベット /「爆流秘術、暴龍の大地！」",				count : 2,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",			count : 2,	},
+		{		name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",	count : 2,	},
+		{		name : "次世代龍覇 グレングラッサ /「ここはまかせて、お姉ちゃん！」",	count : 2,	},
+		{		name : "龍世界 ドラゴ大王",												count : 3,	},
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "MMM-ジョーキング",												count : 2,	},
+		{		name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",		count : 2,	},
+		{		name : "時の法皇 ミラダンテⅫ",											count : 1,	},
+		{		name : "百族の長 プチョヘンザ",											count : 1,	},
+		{		name : "「修羅」の頂 VAN・ベートーベン",								count : 1,	},
+		{		name : "光牙忍ハヤブサマル",											count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-075"
+	var setName = "QOO盃DM大賽2nd【黑綠深淵＠蚵仔】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "アビスベル＝覇＝ロード",					count : 4,	},
+		{		name : "邪幽 ジャガイスト",							count : 4,	},
+		{		name : "謀遠 テレスコ=テレス",						count : 4,	},
+		{		name : "深淵の壊炉 マーダン=ロウ",					count : 4,	},
+		{		name : "スパトー:ド:スパトゥー / 邪暴乱舞",			count : 2,	},
+		{		name : "フェアリー・Re:ライフ",						count : 4,	},
+		{		name : "フォック＝ザ＝ダーティ",					count : 2,	},
+		{		name : "秩序の意志",								count : 2,	},
+		{		name : "フットレス＝トレース / 「力が欲しいか？」",	count : 2,	},
+		{		name : "ノラディ:ド:スルーザ",						count : 3,	},
+		{		name : "邪闘 シス",									count : 1,	},
+		{		name : "ア:グンテ",									count : 2,	},
+		{		name : "ドミー=ゾー / 「倒したいか？」",			count : 2,	},
+		{		name : "ア:エヌ:マクア",							count : 3,	},
+		{		name : "フェアリー・ギフト",						count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-076"
+	var setName = "QOO盃DM大賽3rd【赤白5th＠礦工王】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "龍風混成 ザーディクリカ",										count : 4,	},
+		{		name : "頂上連結 ロッド・ゾージア5th",									count : 4,	},
+		{		name : "未来の法皇 ミラダンテSF",										count : 4,	},
+		{		name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",	count : 4,	},
+		{		name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",					count : 4,	},
+		{		name : "アカシック・ファイナル",										count : 4,	},
+		{		name : "R.S.F.K. / オールイン・チャージャー",							count : 4,	},
+		{		name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",			count : 4,	},
+		{		name : "ドラゴンズ・サイン",											count : 4,	},
+		{		name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",		count : 3,	},
+		{		name : "時の法皇 ミラダンテⅫ",											count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-077"
+	var setName = "QOO盃DM大賽4th【白黑天門＠Funky】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "闘門の精霊ウェルキウス",														count : 4,	},
+		{		name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",							count : 4,	},
+		{		name : "水雲の聖沌 5u170n",																count : 4,	},
+		{		name : "星門の精霊アケルナル / スターゲイズ・ゲート",									count : 4,	},
+		{		name : "禁呪と聖句の決断",																count : 4,	},
+		{		name : "ヘブンズ・ゲート",																count : 4,	},
+		{		name : "「合体」の頂 アクア・TITAAANS / 「必殺！ジェット・カスケード・アタック!!」",	count : 4,	},
+		{		name : "ケンザン・チャージャー",														count : 4,	},
+		{		name : "神聖龍 エモーショナル・ハードコア",												count : 2,	},
+		{		name : "裏斬隠 カクシ・レシピ",															count : 2,	},
+		{		name : "∞龍 ゲンムエンペラー",															count : 3,	},
+		{		name : "光牙忍ハヤブサマル",															count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	

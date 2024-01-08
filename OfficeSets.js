@@ -77027,7 +77027,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-RP4";
-	var setName = "竜皇神爆輝";
+	var setName = "アビス・レボリューション 第4弾 「竜皇神爆輝」";
 	var isDeck = false;
 	var setCardList = [
 		{
@@ -77789,7 +77789,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM23-RP4X";
-	var setName = "「竜皇神爆輝」 超刺激パック";
+	var setName = "アビス・レボリューション 第4弾 「竜皇神爆輝」 超刺激パック";
 	var isDeck = false;
 	var setCardList = [
 		{

@@ -10436,7 +10436,7 @@
 			sp : [
 					"此回合中、下1隻召喚的生物的費用最多可以少3，但是不能降到比1少。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-se10.jpg",
 		},
 		{
 			name : "熱血龍 ボルシャック・クロス",
@@ -10753,7 +10753,7 @@
 					"(K)T・ブレイカー(/K)",
 					"(K)エターナル・Ω(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-se03.jpg",
 		},
 		{
 			name : "「必勝」の頂 カイザー「刃鬼」",
@@ -54693,7 +54693,7 @@
 					"所有費用數字比我方魔力區卡牌張數小的對手生物一律以橫置方式出場。",
 					"(K)ファイナル革命(/K)－將戰鬥場上所有攻擊力比此生物小的生物置入其持有者的魔力區中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-SP01.jpg",
 		},
 		{
 			name : "蒼き団長 ドギラゴン剣",
