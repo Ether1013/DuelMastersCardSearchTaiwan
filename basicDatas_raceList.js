@@ -361,6 +361,12 @@
 				{	Jap : "マジック・ソニック・コマンド",		Eng : "Magic Sonic Command",	Chi : "魔法音速指揮",	isCategory : false,	},
 				{	Jap : "アーマード・ドリームメイト",			Eng : "Amored Dream Mate",		Chi : "裝甲夢幻夥伴",	isCategory : false,	},
 				{	Jap : "アーマード・メタリカ",				Eng : "Armored Metallica",		Chi : "裝甲金屬造物",	isCategory : false,	},
+				{	Jap : "ジャイアント・ドリームメイト",		Eng : "Giant Dream Mate",		Chi : "巨大夢幻夥伴",	isCategory : false,	},
+				{	Jap : "トゥルース・ドラゴン",				Eng : "Trues Dragon",			Chi : "真實之龍",		isCategory : false,	},
+				{	Jap : "トゥルース",							Eng : "Trues",					Chi : "真實",			isCategory : false,	},
+				{	Jap : "バルーン・マッシュルーム・ドラゴン",	Eng : "Balloon Mushroom",		Chi : "氣球蘑菇龍",		isCategory : false,	},
+				{	Jap : "グランセクト・ハザード",				Eng : "Grand Sect Hazard",		Chi : "偉大災害",		isCategory : false,	},
+				{	Jap : "マーメイド",							Eng : "Mermaid",				Chi : "人魚",			isCategory : false,	},
 
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
