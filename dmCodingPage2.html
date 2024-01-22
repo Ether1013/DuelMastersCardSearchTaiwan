@@ -51,22 +51,34 @@
 				}
 				
 			} else {
-				cdDetail = {
-					name : cd[1].substr( 0, cd[1].indexOf("(") ),
-					id : cd[1].substring( cd[1].indexOf("(")+3, cd[1].indexOf(")") ),
-					pic : cd[0],
-					mana : cd[7],
-					flavor : cd[11]+cd[21],
-					rarity : cd[4],
-					wData : [
-						
-					],
-				};
-				
-				var w = {
-					type : [],
-					civil : civilMapping.getValueByText( cd[3] ),
-					sp : eval(cd[10].replace(/\\s/g,"")),
+
+				try {
+					cdDetail = {
+						name : cd[1].substr( 0, cd[1].indexOf("(") ),
+						id : cd[1].substring( cd[1].indexOf("(")+3, cd[1].indexOf(")") ),
+						pic : cd[0],
+						mana : cd[7],
+						flavor : cd[11]+cd[21],
+						rarity : cd[4],
+						wData : [
+							
+						],
+					};
+				} catch ( e ){
+					alert( l + "("+cd[1]+")" );
+					throw 'Error';
+				}
+
+				var w = {};
+				try {
+					w = {
+						type : [],
+						civil : civilMapping.getValueByText( cd[3] ),
+						sp : eval(cd[10].replace(/\\s/g,"")),
+					}
+				} catch ( e ){
+					alert( l + "("+cd[1]+")Abi(U)" );
+					throw 'Error';
 				}
 				var types = cd[2].split("/");
 				for ( var t = 0 ; t < types.length ; t++ ){
@@ -83,11 +95,17 @@
 				}
 				cdDetail.wData.push( w );
 
-				w = {
-					type : [],
-					civil : civilMapping.getValueByText( cd[14] ),
-					sp : eval(cd[20].replace(/\\s/g,"")),
+				try {
+					w = {
+						type : [],
+						civil : civilMapping.getValueByText( cd[14] ),
+						sp : eval(cd[20].replace(/\\s/g,"")),
+					}
+				} catch ( e ){
+					alert( l + "("+cd[1]+")Abi(D)" );
+					throw 'Error';
 				}
+				
 				var types = cd[13].split("/");
 				for ( var t = 0 ; t < types.length ; t++ ){
 					w.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
