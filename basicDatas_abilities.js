@@ -312,6 +312,11 @@
 			{ Jap : "W・メクレイド",		Eng : "Double Revolve Great",	Chi : "雙重命驅強襲",		descript : "觀看牌庫頂六張牌，使用兩張指定種族與指定費用以下的卡牌",},
 			{ Jap : "ゼロ輪廻∞",			Eng : "Zero Rinne Infinity",	Chi : "零之輪迴無限",		descript : "當此生物召喚出場或是發動攻擊時，你可以不支付費用、使用此生物的咒文側。那樣的話，就將我方牌庫頂5張牌置入我方魔力區中",},
 			{ Jap : "終極宣言",				Eng : "Final Declaration",		Chi : "終極宣言",			descript : "以下能力一場遊戲中只能發動一次",},
+			{ Jap : "水晶ソウル",			Eng : "Crystal Soul",			Chi : "水晶魂",				descript : "當你召喚此生物時，魔力區的裏側卡牌所提供的魔力數字變成3",},
+			{ Jap : "クリスターナル・Κ",	Eng : "Crys-Eternal Cover",		Chi : "水晶永恆庇護",		descript : "當此生物離場或是我方輸掉這場遊戲時，你可以取而代之、將我方魔力區中3張裏側卡牌翻為表側",},
+			{ Jap : "エターナル・Κ",		Eng : "Eternal Cover",			Chi : "永恆庇護",			descript : "當此生物離場時，你可以取而代之、將我方魔力區中3張裏側卡牌翻為表側",},
+			{ Jap : "水晶武装",				Eng : "Crystal Arms",			Chi : "水晶武裝",			descript : "當我方魔力區中有指定張數的裏側卡牌時，獲得以下能力。",},
+			{ Jap : "水晶チャージャー",		Eng : "Crystal Charger",		Chi : "水晶突進者",			descript : "此咒文用完之後不會置入墓地，取而代之、以裏側方式置入我方魔力區中",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
