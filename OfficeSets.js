@@ -43067,7 +43067,7 @@
 			id : "EX13 16/84",
 		},
 		{
-			name : "西南の超人 /断断打つべしナウ",
+			name : "西南の超人 / 断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-017a.jpg",
 			rarity : "R",
 			flavor : [ "鎖鏈就是肌肉的延伸！訓練有素的(N)ゴリオ・ブゴリ<=>剛力羅王 ゴリオ・ブゴリ(/N)的鎖鏈、其硬度超越了鑽石！" ],
@@ -49132,7 +49132,7 @@
 			id : "EX15 72/100",
 		},
 		{
-			name : "西南の超人 /断断打つべしナウ",
+			name : "西南の超人 / 断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b073a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -70055,7 +70055,7 @@
 			count : 2,
 		},
 		{
-			name : "煌メク聖晶 弩楼/ビスティック・マース",
+			name : "煌メク聖晶 弩楼 / ビスティック・マース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-002a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],

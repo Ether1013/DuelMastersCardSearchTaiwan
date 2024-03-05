@@ -112,6 +112,7 @@
 				rtnData.name = mapData.name;
 				rtnData.pic = mapData.pic;
 				rtnData.mana = mapData.mana;
+				rtnData.mType = mapData.mType;
 				rtnData.ws = [];
 				for ( var w = 0 ; w < mapData.wData.length ; w++ ){
 					rtnData.ws.push( mapData.wData[w].type );
@@ -430,6 +431,7 @@
 				{	value : "EC",	text : "進化生物",			Jap : "進化クリーチャー",					Location : "M", horizontal : false,	main:true,	},
 				{	value : "SEC",	text : "星進化生物",		Jap : "スター進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "SMEC",	text : "S-MAX進化生物",		Jap : "S-MAX進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
+				{	value : "DC",	text : "夢幻生物",			Jap : "ドリーム・クリーチャー",				Location : "M", horizontal : false,	main:false,	descript : "可以進行超化的生物"							},
 				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					Location : "M", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
 				{	value : "GRC",	text : "GR生物",			Jap : "GRクリーチャー",						Location : "G", horizontal : false,	main:false,	},
 				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					Location : "G", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
@@ -1325,6 +1327,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2024/03/05",
+				log : [ 
+						"新增超化獸相關程式邏輯(但是還沒有資料)",
+				],	
+			},
+			{	
 				date : "2024/02/19",
 				log : [ 
 						"新增【DM23-EX3 アビス・レボリューション外伝 「邪神と水晶の華」】的資料",
@@ -1334,18 +1342,6 @@
 				date : "2024/01/22",
 				log : [ 
 						"新增四副官方派對牌組",
-				],	
-			},
-			{	
-				date : "2024/01/08",
-				log : [ 
-						"新增QOO盃四強牌組",
-				],	
-			},
-			{	
-				date : "2024/01/04",
-				log : [ 
-						"匯出功能新增能力提示",
 				],	
 			},
 		],

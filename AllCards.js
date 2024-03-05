@@ -61065,6 +61065,7 @@
 			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-006a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -61095,6 +61096,7 @@
 			name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -61123,6 +61125,7 @@
 			name : "エターナル・ブレイン / ブレイン珊瑚の仙樹",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-018a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "S",
@@ -61147,6 +61150,7 @@
 			name : "計略の手 / 陰謀の手",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-051a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "S",
@@ -64401,6 +64405,7 @@
 			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s08a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64463,6 +64468,7 @@
 			name : "龍装鬼 オブザ08号 / 終焉の開闢",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s11a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64492,6 +64498,7 @@
 			name : "紅に染まりし者「王牙」/クリムゾン・ビクトリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s13a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64522,6 +64529,7 @@
 			name : "ゴリガン砕車 ゴルドーザ / ダイナマウス・スクラッパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s14a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64693,6 +64701,7 @@
 			name : "カツラデランス /「アフロ行きま～す!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-008a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64762,6 +64771,7 @@
 			name : "黒豆だんしゃく / 白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64820,6 +64830,7 @@
 			name : "天体妖精エスメル /「お茶はいかがですか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-016a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -64976,6 +64987,7 @@
 			name : "奇石 ミクセル / ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-026a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65061,6 +65073,7 @@
 			name : "スニーク戦車 オーリー / トゲ玉・キャノンボール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-038a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65088,6 +65101,7 @@
 			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-041a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65118,6 +65132,7 @@
 			name : "青銅のバンビシカット /「我が力、しかと見よ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-045a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65202,6 +65217,7 @@
 			name : "透明妖精リリン / 妖精のプレリュード",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-052a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65230,6 +65246,7 @@
 			name : "綺羅王女プリン / ハンター☆エイリアン仲良しビーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-054a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65291,6 +65308,7 @@
 			name : "パーロックJr. / 新たなる旅立ち",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-059a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65318,6 +65336,7 @@
 			name : "カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-060a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65346,6 +65365,7 @@
 			name : "レイノ・ウッシ /「また引きずり込まれる～」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-063a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65406,6 +65426,7 @@
 			name : "レレディ・バ・グーバ / ツインパクト・マップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-068a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65435,6 +65456,7 @@
 			name : "コンダマ / 魂フエミドロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-069a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65490,6 +65512,7 @@
 			name : "応援妖精エール /「みんな一緒に応援してね！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-074a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65573,6 +65596,7 @@
 			name : "ソプラノ裁徒 / メロディアス・メロディ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-082a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65631,6 +65655,7 @@
 			name : "カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-090a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65661,6 +65686,7 @@
 			name : "水面護り ハコフ /蓄積された魔力の縛り",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-092a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65734,6 +65760,7 @@
 			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-101a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65805,6 +65832,7 @@
 			name : "ハリケーン・クロウラー /ブレイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65925,6 +65953,7 @@
 			name : "全員集合！アクア・三兄弟 / 超次元ジェイシーエイ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65954,6 +65983,7 @@
 			name : "最終決戦だ！鬼丸ボーイ / 超次元オニシュラ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-013a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -65983,6 +66013,7 @@
 			name : "The 大親分 鬼流院 刃 /「アンノウンがナンボのモンじゃ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-014a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -66038,6 +66069,7 @@
 			name : "龍装の調べ 初不 /ホーリー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd14-008a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -66209,6 +66241,7 @@
 			name : "爆龍覇 リンクウッド /「お前の相手はオレだ、ザ=デッドマン！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd14-015a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -68622,6 +68655,7 @@
 			name : "無双の縛り 達閃 /パシフィック・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-s05a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -68761,6 +68795,7 @@
 			name : "水晶の記録 ゼノシャーク / クリスタル・メモリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-011a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : 
 			[
 				{
@@ -68813,9 +68848,10 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-016.jpg",
 		},
 		{
-			name : "西南の超人 /断断打つべしナウ",
+			name : "西南の超人 / 断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-017a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : 
 			[
 				{
@@ -69317,6 +69353,7 @@
 			name : "フェルナンド・ソシュール /プライマル・スクリーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TR4a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70298,6 +70335,7 @@
 			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF16a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70651,6 +70689,7 @@
 			name : "冥界の不死帝 ブルース /「迷いはない。俺の成すことは決まった」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF1a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70681,6 +70720,7 @@
 			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF2a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70712,6 +70752,7 @@
 			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF3a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70740,6 +70781,7 @@
 			name : "ラ・ズーネヨマ・パンツァー / 逆転のオーロラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF4a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70899,6 +70941,7 @@
 			name : "アドレック・ワークマン/バイス・スクラッパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp12-007a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -70968,6 +71011,7 @@
 			name : "龍頭星雲人 / 零誕祭",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-015a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -71011,6 +71055,7 @@
 			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s6a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -71081,6 +71126,7 @@
 			name : "機術士ディール/「本日のラッキーナンバー！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp05-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -71454,6 +71500,7 @@
 			name : "マグナム・ルピア / クリムゾン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se3a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -71496,6 +71543,7 @@
 			name : "鳳翔竜騎ソウルピアレイジ / 高貴なる魂炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "NC",
@@ -73359,6 +73407,7 @@
 			name : "地龍仙ロマネアース / 仙なる大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-014a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73497,6 +73546,7 @@
 			name : "偽りの王 ナンバーナイン / 歓喜の歌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-022a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73585,6 +73635,7 @@
 			name : "R.S.F.K. / オールイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-030a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73644,6 +73695,7 @@
 			name : "八頭竜 ACE-Yamata / 神秘の宝剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-033a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73715,6 +73767,7 @@
 			name : "アクア・スペルブルー / インビンシブル・オーラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-038a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73787,6 +73840,7 @@
 			name : "偽りの名 スネーク / アンノウン・プログラム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-042a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73902,6 +73956,7 @@
 			name : "「武」の頂 マキシマム・ザ・マックス / 極頂秘伝ゼニス・シンフォニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-043a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73931,6 +73986,7 @@
 			name : "霊騎コルテオ / プロテクション・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-044a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -73988,6 +74044,7 @@
 			name : "俺神（シェン）豚（トン） ブリタニア /「カツキング、俺とお前の勝負だ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-048a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "XC",
@@ -74071,6 +74128,7 @@
 			name : "キャベッジ・セッションズ / ソイルピンプ・キャベッジ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-052a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "NC",
@@ -74100,6 +74158,7 @@
 			name : "偽りの名 13 / 種族選別",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-053a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74127,6 +74186,7 @@
 			name : "薔薇の使者 / ガイアズ・ソング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-055a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74155,6 +74215,7 @@
 			name : "コレンココ・タンク / ボント・プラントボ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-056a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74199,6 +74260,7 @@
 			name : "偽りの名 iFormula X / クリスティナ・フォール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-059a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74239,6 +74301,7 @@
 			name : "暴発秘宝ベンゾ / 星龍の暴発",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-061a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74267,6 +74330,7 @@
 			name : "閃光の神官 ヴェルベット / フェアリー・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-062a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74296,6 +74360,7 @@
 			name : "星雲の精霊キルスティン / 神秘の石柱",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-063a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74324,6 +74389,7 @@
 			name : "セブ・コアクマン / マインド・リセット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-064a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74351,6 +74417,7 @@
 			name : "戦武の無限皇 ジャッキー /「俺たちの夢は終わらねぇ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-065a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74380,6 +74447,7 @@
 			name : "キング・シビレアシダケ / インビンシブル・テクノロジー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-066a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74443,6 +74511,7 @@
 			name : "緑神龍ディルガベジーダ / 偶発と弾幕の要塞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-070a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74577,6 +74646,7 @@
 			name : "光器ペトローバ / ソーラー・コミューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-073a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74606,6 +74676,7 @@
 			name : "予言者ラメール / マスター・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-074a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74674,6 +74745,7 @@
 			name : "神（シェン）豚（トン） ブータンPUNK / ブータン両成敗",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-080a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "XC",
@@ -74703,6 +74775,7 @@
 			name : "学校男 / ゾンビ・カーニバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-081a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74732,6 +74805,7 @@
 			name : "骨折人形トロンボ / デビル・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-082a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74825,6 +74899,7 @@
 			name : "斬神兵グランドルメス / バースト・ワンショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-088a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74885,6 +74960,7 @@
 			name : "アラーム・ラディッシュ / ナチュラトゥルー・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-093a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -74977,6 +75053,7 @@
 			name : "天雷龍姫エリザベス / インビンシブル・フォートレス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-098a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75004,6 +75081,7 @@
 			name : "第六戦街 ラヴ・ガトラー / インビンシブル・アビス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-099a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75034,6 +75112,7 @@
 			name : "雪溶の鎖 / 堕牛の一撃",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-100a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75099,6 +75178,7 @@
 			name : "堅防の使徒アースラ / グローリー・ストーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-101a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75168,6 +75248,7 @@
 			name : "パーロック / 蓄積された魔力の渦",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-105a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75224,6 +75305,7 @@
 			name : "薔薇公爵ハザリア / ファントム・ベール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-109a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75278,6 +75360,7 @@
 			name : "轟速 ザ・レッド / 超次元キル・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-112a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75306,6 +75389,7 @@
 			name : "炎舞闘士サピエント・アーク / 無限掌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-113a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75412,6 +75496,7 @@
 			name : "ニンジャ・パンプキン / グローリー・マッスル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-119a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -75535,6 +75620,7 @@
 			name : "超次元エナジー・ホール / 超次元サプライズ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-127a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "S",
@@ -75562,6 +75648,7 @@
 			name : "牙神兵ガンガン・マンモス / ブレイン・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-128a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -76975,7 +77062,7 @@
 			cost : 2,
 			mana : 1,
 			sp : [
-				"每當此生物橫置時，抽1張牌。",
+				"每當此生物重置時，抽1張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex14-088.jpg",
 		},
@@ -77299,6 +77386,7 @@
 			name : "奇石 ベイブレンラ/スーパー・エターナル・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp08-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -77328,6 +77416,7 @@
 			name : "龍聖霊ウルフェウス/ヘブンの衝撃",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex04-036a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -77492,6 +77581,7 @@
 			name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-011a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -77520,6 +77610,7 @@
 			name : "次世代龍覇 グレングラッサ /「ここはまかせて、お姉ちゃん！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -77548,6 +77639,7 @@
 			name : "爆龍覇 グレンリベット /「爆流秘術、暴龍の大地！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-013a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -79057,6 +79149,7 @@
 			name : "天地命動 バラギアラ / 輪廻暴聖",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-SP2a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -79087,6 +79180,7 @@
 			name : "天地命動 バラギアラ / 輪廻暴冥",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR2a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -80947,6 +81041,7 @@
 			name : "悪魔神バロム / バロム砲",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a024a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "EC",
@@ -80976,6 +81071,7 @@
 			name : "ボルメテウス・ホワイト・ドラゴン / ボルメテウス・レジェンド・フレア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a027a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81033,6 +81129,7 @@
 			name : "白騎士の聖霊王アルカディアス / 完全決闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "EC",
@@ -81063,6 +81160,7 @@
 			name : "天海の精霊シリウス / W・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81151,6 +81249,7 @@
 			name : "浄化の精霊ウルス / 精霊・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81196,6 +81295,7 @@
 			name : "魔刻の騎士オルゲイト /「全員、地獄送りだ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b015a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81297,6 +81397,7 @@
 			name : "ムシ無視のんのん / 灰になるほどヒート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b068a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81381,6 +81482,7 @@
 			name : "超幽龍アブゾ・ドルバ / 切り札をねらう悪魔!!",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b022a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "EC",
@@ -81413,6 +81515,7 @@
 			name : "黒神龍アマデウス /「ぼくだって！決闘者なんだ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b023a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81465,6 +81568,7 @@
 			name : "勝舞の機神装甲ヴァルボーグ / 火炎ヴァルバスター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b026a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "EC",
@@ -81531,6 +81635,7 @@
 			name : "だべべ村の大昆虫ギガマンティス /「虫虫大行進!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b031a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "EC",
@@ -81558,6 +81663,7 @@
 			name : "シビレアシダケ / インビンシブル・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b032a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81796,6 +81902,7 @@
 			name : "キングダム・オウ禍武斗 / 轟破天九十九語",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a018a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81825,6 +81932,7 @@
 			name : "超機動罠 デンジャデオン / 地獄極楽トラップ黙示録",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a019a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81855,6 +81963,7 @@
 			name : "Q.Q.QX / 終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -81948,6 +82057,7 @@
 			name : "レアカードハンター ウサギ団 / ラビットハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b030a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "NC",
@@ -83612,6 +83722,7 @@
 			name : "反逆龍 5000typeR / 無法頂上会談",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-006a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -83643,6 +83754,7 @@
 			name : "勇気と知識 テスタ・ロッサ＆アリス /「行くぜアリス!」「行けるわテスタ!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -83846,6 +83958,7 @@
 			name : "残虐覇王デスカール / ロスト・ソウル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-039a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -83980,6 +84093,7 @@
 			name : "罪無 ズゴブ垓 / 堕呪 バケドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-062a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84072,6 +84186,7 @@
 			name : "幻緑の双月 / 母なる星域",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-078a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84099,6 +84214,7 @@
 			name : "全虹帝 ミノガミ / ハザード・パクト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-081a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84176,6 +84292,7 @@
 			name : "ボルシャック・クロス・NEX（ネックス） / ボルシャック英雄譚",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84246,6 +84363,7 @@
 			name : "ボルシャック・大和・ドラゴン / 大和ザンゲキ剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-001a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84295,6 +84413,7 @@
 			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-008a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84340,6 +84459,7 @@
 			name : "電脳の女王 アリス / 不埒な再侵入",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-007a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -84765,6 +84885,7 @@
 			name : "ゲオルグ・バーボシュタイン / ゴースト・タッチ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85039,6 +85160,7 @@
 			name : "虚無の守護者グリ・ラ / 無情の光",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-041a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85163,6 +85285,7 @@
 			name : "目覚めのファミリア キナコ / ムボー日和",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-052a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85205,6 +85328,7 @@
 			name : "メルゲ否男 / 「今も我らの願いはただひとつ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-059a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85329,6 +85453,7 @@
 			name : "罪無 バスダク極 / ダックス奮闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-069a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85357,6 +85482,7 @@
 			name : "凶鬼98号 ガシャゴン / 堕呪 ブラッドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-070a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85388,6 +85514,7 @@
 			name : "コオニ小町 / 「世界はジャオウガ様のモノ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-072a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -85819,6 +85946,7 @@
 			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-a12a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87057,6 +87185,7 @@
 			name : "ほめほめ老 / ホメホメ老句",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-015a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87133,6 +87262,7 @@
 			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-025a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87191,6 +87321,7 @@
 			name : "遣宮使 ネオンクス / ネオ・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-028a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87247,6 +87378,7 @@
 			name : "魔光帝フェルナンドVII世 / 魔弾デュアル・ザンジバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-031a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87310,6 +87442,7 @@
 			name : "龍装医 ルギヌス / 地獄のゴッド・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-034a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87401,6 +87534,7 @@
 			name : "オブラディ・ホーネット / 「Let it Bee！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-041a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87460,6 +87594,7 @@
 			name : "サイバー・K・ウォズレック / ウォズレックの審問",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-046a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87488,6 +87623,7 @@
 			name : "スゴ腕プロジューサー / りんご娘はさんにんっ娘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-047a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87706,6 +87842,7 @@
 			name : "天雷の導士アヴァラルド公 / 魔弾アルカディア・エッグ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-070a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87736,6 +87873,7 @@
 			name : "ベイビー「刃鬼」/「俺たちも必ず勝つ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-071a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87763,6 +87901,7 @@
 			name : "爆獣マチュー・スチュアート / 超銀河弾 HELL",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-072a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87806,6 +87945,7 @@
 			name : "魔光王機デ・バウラ伯 / 魔弾グローリー・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-074a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87865,6 +88005,7 @@
 			name : "魔光ドラム・トレボール / 魔弾バレット・バイス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-083a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -87960,6 +88101,7 @@
 			name : "傀儡将ボルギーズ / ジェニコの知らない世界",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-089a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -88092,6 +88234,7 @@
 			name : "超七極 Gio / 巨大設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-105a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "EC",
@@ -88161,6 +88304,7 @@
 			name : "緊急機装エクス・コプター / 合身秘伝メカ・マシーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-110a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -88190,6 +88334,7 @@
 			name : "氷牙フランツI世 / 魔弾オープン・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-112a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -88283,6 +88428,7 @@
 			name : "熱血姫様プリン / 狩人秘伝ハンター・ファイア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-124a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -88339,6 +88485,7 @@
 			name : "爆獣パンダ・ブーリン / 魔弾パンダフル・ライフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-130a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -88369,6 +88516,7 @@
 			name : "味息子サン・グリル / 千切秘伝ワイルド・ベジタブル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-131a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -88871,6 +89019,7 @@
 			name : "バーンメア・ザ・シルバー / オラオラ・スラッシュ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-a12a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -90983,6 +91132,7 @@
 			name : "Disマスター /「己の弱さが敗北させるのだよ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-054a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -91123,6 +91273,7 @@
 			name : "未来妖精ミクル / ミラクル・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-069a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -91524,6 +91675,7 @@
 			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -91554,6 +91706,7 @@
 			name : "龍罠 エスカルデン / マクスカルゴ・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR4a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -92583,6 +92736,7 @@
 			name : "めっちゃ！デンヂャラスG３ / ケッシング・ゼロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF1a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -92756,6 +92910,7 @@
 			name : "龍月 ドラグ・スザーク / 龍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-014a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -92865,6 +93020,7 @@
 			name : "D２V３ 終断のデッドトロン / デッドリー・ビッグバン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -92893,6 +93049,7 @@
 			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-013a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -92923,6 +93080,7 @@
 			name : "D２V３ 終断のレッドトロン / フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-014a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94241,6 +94399,7 @@
 			name : "始全虹帝 ミノガミ / 自然の肯定",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s14a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94303,6 +94462,7 @@
 			name : "ナ・チュラルゴ・デンジャー / ナチュラル・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s17a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94333,6 +94493,7 @@
 			name : "キング・ザ・スロットン７/ 7777777",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s3a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94395,6 +94556,7 @@
 			name : "卍 ギ・ルーギリン 卍 / 卍獄ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s9a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94438,6 +94600,7 @@
 			name : "奇石 トランキー / アイ・オブ・ザ・タイガー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94496,6 +94659,7 @@
 			name : "龍装05号 イヴィルヴィ / イーヴィル・フォース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -94767,6 +94931,7 @@
 			name : "審絆の鎮り 新蓮 / ジャスティス・シェイパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-040a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "NC",
@@ -94891,6 +95056,7 @@
 			name : "バリスイトーヨー / 水筒の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-059a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98189,6 +98355,7 @@
 			name : "強襲竜 ボルシャック・レイダー / レイド・エントリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/01.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98248,6 +98415,7 @@
 			name : "ボルシャック・ヒート・ドラゴン / ヒートブレス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/07.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98305,6 +98473,7 @@
 			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/12.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98361,6 +98530,7 @@
 			name : "龍装者“JET”レミング/ローレンツ・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp10-053a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98739,6 +98909,7 @@
 			name : "der'Zen Mondo / ♪必殺で つわものどもが 夢の跡",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S3a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98861,6 +99032,7 @@
 			name : "D-Jealousy-灰撫 / ♪五本まで 集めて林 森ジャングル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-002a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -98935,6 +99107,7 @@
 			name : "輝跡！シャイニングロード・マンティス / 輝跡の大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-006a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99006,6 +99179,7 @@
 			name : "ゴルパガーニ-A7 / ダウンフォース・サーキュラー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99076,6 +99250,7 @@
 			name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-013a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99146,6 +99321,7 @@
 			name : "イード＝ミード / 「奈落を見たいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-017a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99201,6 +99377,7 @@
 			name : "ボルザード・スラッシャー / 「愛ゆえに斬る!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99258,6 +99435,7 @@
 			name : "氷打の妖精 / 巨打設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-023a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99331,6 +99509,7 @@
 			name : "星姫械 マリハダル / レプリカ・オークション",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-027a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99414,6 +99593,7 @@
 			name : "マジック・A・セミプーロ / ♪閑かさや とにかくブレイン 蝉ミンミン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-032a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99495,6 +99675,7 @@
 			name : "ステッキ＝ステーシー / 「素敵だろう？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-037a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99579,6 +99760,7 @@
 			name : "レーホウ・衛・デカッチ / 「暴竜爵様のお出ましだッチ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-042a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99659,6 +99841,7 @@
 			name : "十柱の超人 / 直撃の極意",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-047a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99728,6 +99911,7 @@
 			name : "星姫械 アイリプス / アイリス・アンブレラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-051a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99810,6 +99994,7 @@
 			name : "サダイエ・ホンカドリーマー / ♪古池や ワンスアゲイン スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-056a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -99881,6 +100066,7 @@
 			name : "ワイグラス＝ワグラス / 「宴を始めよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-060a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -100001,6 +100187,7 @@
 			name : "配球の超人 / 記録的剛球",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-070a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -100081,6 +100268,7 @@
 			name : "スパトー:ド:スパトゥー / 邪暴乱舞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/01.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -100109,6 +100297,7 @@
 			name : "ソファ＝ソフティソニア / 「どんな夢がお望みだ？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/04.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -100137,6 +100326,7 @@
 			name : "ドアノッカ＝ノアドッカ / 「…開けるか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/09.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -100163,6 +100353,7 @@
 			name : "フットレス＝トレース / 「力が欲しいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/12.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -101394,6 +101585,7 @@
 			name : "ふでがき師匠/一筆奏上！",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-a-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -101483,6 +101675,7 @@
 			name : "煌メク聖晶 弩楼 / ビスティック・マース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-002a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -101511,6 +101704,7 @@
 			name : "龍装者 シャイニー/エッジ・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-010a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -101594,6 +101788,7 @@
 			name : "ハヤブサノ裁徒Ｚ /ヒーリン・マスカラス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-006a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -101720,6 +101915,7 @@
 			name : "カブトリアル・クーガ /ミステリー・ディザスター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-144a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -102238,6 +102434,7 @@
 			name : "蓮根の槌 /番長大号令",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -102378,6 +102575,7 @@
 			name : "十極 ジョバンチュ / Genesis of Drillball",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-049a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -102632,6 +102830,7 @@
 			name : "激竜王 /ガイアール流激烈竜王破・滅",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-112a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -102827,6 +103026,7 @@
 			name : "キングダム・オウ禍武斗 /チャージ３回、フリーエントリー！",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-156a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -102998,6 +103198,7 @@
 			name : "拘束の影メリコミ・タマタマ /グシャット・フィスト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-193a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103262,6 +103463,7 @@
 			name : "天井院さま / 床弾坊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-266a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103412,6 +103614,7 @@
 			name : "天地命動 バラギアラ / 輪廻暴炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-258a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103556,6 +103759,7 @@
 			name : "煙幕の聖沌 k3mur1 / 聖沌忍法 メカくしの術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-007a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103584,6 +103788,7 @@
 			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103700,6 +103905,7 @@
 			name : "マジック・H・コレクター / ♪マジソンを 集めて早し ストリーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S02a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103791,6 +103997,7 @@
 			name : "超球の超人 / 父なるタッチダウン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S07a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -103964,6 +104171,7 @@
 			name : "星姫械 ミントジュバ / ミンティア・リンギング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104021,6 +104229,7 @@
 			name : "歌舞音愛 ヒメカット / ♪蛙の子 遭えるの何処？好きと謂ひて",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-013a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104077,6 +104286,7 @@
 			name : "ヨービリン=リリン / 「……誰を呼びたい？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-016a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104144,6 +104354,7 @@
 			name : "カラカラ・警・ルピア / 「ここはお任せだッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104199,6 +104410,7 @@
 			name : "マーチングベル シアン / ミーミル・ミュージカル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-023a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104227,6 +104439,7 @@
 			name : "マーチングドラム ミドリ / ハーメルン・ハーモニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-024a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104283,6 +104496,7 @@
 			name : "聖沌忍者 シャーリーシー / シャーリー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-027a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104355,6 +104569,7 @@
 			name : "音素記号Bm エネルジコ / ♪水面から 天掴まんと するチャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-031a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104383,6 +104598,7 @@
 			name : "人気魚 / ♪大空の ムーンサルト やや斜め",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-032a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104451,6 +104667,7 @@
 			name : "モノクル＝ドクトール / 「すべてを見通す眼だ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-036a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104479,6 +104696,7 @@
 			name : "カーペット=ガペット / 「ふむ、君の希望を踏まえよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-037a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104533,6 +104751,7 @@
 			name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-040a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104618,6 +104837,7 @@
 			name : "竹馬の超人 / テイクバック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-045a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104732,6 +104952,7 @@
 			name : "詠み人-シラズ-Machine / 招水呪文「マジックル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-056a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104760,6 +104981,7 @@
 			name : "爆弾音愛 メッシュ / ♪キミとボク 共感すれば マジ文殊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-057a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104824,6 +105046,7 @@
 			name : "サドレイン=トレイン / 邪神呪文「アビサール」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-061a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104902,6 +105125,7 @@
 			name : "ゲンジ・天・パワッチ / 招火呪文「アーマアド」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-066a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -104982,6 +105206,7 @@
 			name : "無双の妖精 / 招然呪文「ジャイババン」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-071a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105046,6 +105271,7 @@
 			name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-010a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105124,6 +105350,7 @@
 			name : "「合体」の頂 アクア・TITAAANS / 「必殺！ジェット・カスケード・アタック!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-017a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105183,6 +105410,7 @@
 			name : "「根性」の頂 メチャデ塊ゾウ / 「大親分、ここにあり！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-021a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105342,6 +105570,7 @@
 			name : "戦慄の魔女 アリス / 神にも届く旋律",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-034a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105398,6 +105627,7 @@
 			name : "ドミー=ゾー / 「倒したいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-044a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105425,6 +105655,7 @@
 			name : "運命の親衛隊シウバ / 「その運命、我らもそれに従おう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-045a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105498,6 +105729,7 @@
 			name : "情熱の薔薇 メーテル / 神にも届く歌声",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-051a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105580,6 +105812,7 @@
 			name : "トランプ=ランプゼンゼンマ / 「さぁ、カードを配ろう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-064a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105793,6 +106026,7 @@
 			name : "「色災」の頂 カラーレス・レインボー / 天上天下輪廻天頂",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-009a.jpg",
 			mana : 0,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105966,6 +106200,7 @@
 			name : "踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -105993,6 +106228,7 @@
 			name : "調律師ピーカプ / ♪音速で 本番中に チューニング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106034,6 +106270,7 @@
 			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-007a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106089,6 +106326,7 @@
 			name : "AQsabbath / ♪このギター グシャっとすれば グシャっとなる",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106211,6 +106449,7 @@
 			name : "Napo獅子-Vi無粋 / ♪オレの歌 聞けよ聞かなきゃ 殴り合い",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-S04a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106429,6 +106668,7 @@
 			name : "蜘紙の聖沌 kum0 / 聖沌忍法 メカ吹雪の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106487,6 +106727,7 @@
 			name : "同期の妖精 / ド浮きの動悸",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-013a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106547,6 +106788,7 @@
 			name : "トング＝ゴング / 「世界をつかませてやろうか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-016a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106622,6 +106864,7 @@
 			name : "ボルゼラス・ドラゴン / 「オレの行く道は止められねぇ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106650,6 +106893,7 @@
 			name : "満韻炎霊 キャノンボール / ♪夏草や イフリートによる 夢の跡",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-021a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106693,6 +106937,7 @@
 			name : "弓道の妖精 / ド級の弩弓",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-023a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106766,6 +107011,7 @@
 			name : "強撃の鎧徒エッカルト / ウォーニング・ショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-027a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106820,7 +107066,8 @@
 		{
 			name : "声凄音愛 オダンゴ / ♪ワタクシの シャウトの前に 皆黙る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-031a.jpg",
-			mana : 0,
+			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106875,6 +107122,7 @@
 			name : "蛙紙の聖沌 fr09 / 聖沌忍法 メカ寄せの術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-034a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -106958,6 +107206,7 @@
 			name : "オ:ドユニワ / 喰土邪覇",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-039a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107064,6 +107313,7 @@
 			name : "パトファール-P4 / サイレント・サイレン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-046a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107091,6 +107341,7 @@
 			name : "照明野郎カンタ /「どうだ、明るくなったろう？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-047a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107119,6 +107370,7 @@
 			name : "タネダ・パンクトーカー / ♪夕暮れに さらに弱い ヤツ叩く",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-048a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107146,6 +107398,7 @@
 			name : "竹刀の超人 / サイバー免許皆伝",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-049a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107174,6 +107427,7 @@
 			name : "ハニー＝マーガニー / 「こっちは甘いぞー」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-050a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107522,6 +107776,7 @@
 			name : "魔導管理室 カリヤドネ / ハーミット・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-ChoG009a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107550,6 +107805,7 @@
 			name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107734,6 +107990,7 @@
 			name : "卍月 ガ・リュザーク 卍 / 「すべて見えているぞ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-022a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107875,6 +108132,7 @@
 			name : "頂上印鑑 パラキン8th / 「魔物が居るな……」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-037a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107904,6 +108162,7 @@
 			name : "魔神頂上 ”密愛流”9th / 「パーフェクト！パーフェクト!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-038a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107933,6 +108192,7 @@
 			name : "審絆の彩り 喜望 / キーボード・アクセス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-039a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -107961,6 +108221,7 @@
 			name : "純潔妖精ガーベラ / ハイビとビスカの印",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-040a.jpg",
 			mana : 0,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108016,6 +108277,7 @@
 			name : "氷牙アクア・マルガレーテ卿 / スペルブック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-044a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108042,6 +108304,7 @@
 			name : "電脳鉄人センジュオー / センジュ・チューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-045a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108297,6 +108560,7 @@
 			name : "凶鬼90号 ゾレーゴ / 「大当たり！もう一本!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-064a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108543,6 +108807,7 @@
 			name : "頂上龍覇 サソリス2nd / 「ナチュラル、タイマン！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-088a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108621,6 +108886,7 @@
 			name : "爆獣ダキテー・ドラグーン / 勝負だ！チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-098a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108662,6 +108928,7 @@
 			name : "韋駄天モー / 鼓動する石版",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-102a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108702,6 +108969,7 @@
 			name : "爆獣イナバ・ギーゼ / 魔弾ソウル・キャッチャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-109a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108728,6 +108996,7 @@
 			name : "早食王のリンパオ / ライク・ア・ローリング・ストーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-110a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108754,6 +109023,7 @@
 			name : "力持ちのジェロン / ガード・グリップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-111a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108781,6 +109051,7 @@
 			name : "大鉄漢シルバスターズ / スクリーム・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-112a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108822,6 +109093,7 @@
 			name : "天地命動 バラギアラ / 輪廻暴氷",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -108917,6 +109189,7 @@
 			name : "サケビ・ポエムシャウター / ♪いつまでも オレ様の歌は 終わらねぇ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-S03a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109074,6 +109347,7 @@
 			name : "リッチーモア＝ザ＝ダーティ / 「収めてやろうか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109104,6 +109378,7 @@
 			name : "ドラン・ゴル・ゲルス / 豪龍の記憶",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109132,6 +109407,7 @@
 			name : "堅き革命 ボルシュゴス / 「ボルシュゴス・スラッシャー!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-006a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109161,6 +109437,7 @@
 			name : "芸魔獅子 レオジンロ / ♪限りなく 透明に近い このワタシ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-007a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109189,6 +109466,7 @@
 			name : "宙番龍 オービーメイカー Par001 / 奇跡の一打",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-008a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109209,33 +109487,6 @@
 					cost : 2,
 					sp : [
 						"對手自行將他一個元素置入魔力區。",
-					],
-				},
-			],
-		},
-		{
-			name : "西南の超人 / 断断打つべしナウ",
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-TF03a.jpg",
-			mana : 1,
-			wData : [
-				{
-					type : "C",
-					civil : 1,
-					race : ["ジャイアント", "サムライ"],
-					power : 3000,
-					cost : 4,
-					sp : [
-						"我方(R)ジャイアント(/R)生物的召喚費用最多可以少2。但是不能降到0以下。",
-						"(K)セイバー(/K)－(R)ジャイアント(/R)",
-					],
-				},
-				{
-					type : "S",
-					civil : 1,
-					cost : 1,
-					sp : [
-						"(K)S・トリガー(/K)",
-						"橫置1隻我方生物。下個我方回合開始前，對手生物如果要發動攻擊的話、就要以該生物為攻擊目標。",
 					],
 				},
 			],
@@ -109354,6 +109605,7 @@
 			name : "シェケダン・ドメ・ゲルス / ドメスティック・アイ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-016a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109464,6 +109716,7 @@
 			name : "オ:ベカリーヌ / 裏盗邪撫",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-022a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109613,6 +109866,7 @@
 			name : "タイピング＝タップ / 「キミの最期の言葉、読むか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-031a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109712,6 +109966,7 @@
 			name : "卓球の妖精 / 回転する開眼",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-037a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109865,6 +110120,7 @@
 			name : "シュバルスリング-B3 / エン・ゲルス・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-046a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109892,6 +110148,7 @@
 			name : "一期音愛 カーリー / ♪さようなら また会うかもね さようなら",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-047a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109920,6 +110177,7 @@
 			name : "ゲキシャ・写・メッチ / 「おいらの激写は機関銃だッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-048a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109947,6 +110205,7 @@
 			name : "ア:メナカア / 堕墓邪暗",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-049a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -109975,6 +110234,7 @@
 			name : "孤迫の超人 / 旋回する鞍馬",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-050a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110003,6 +110263,7 @@
 			name : "モッチ・網・パラッチ / 「これが最後の輝きだッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-051a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110085,6 +110346,7 @@
 			name : "イシカワ・ハンドシーカー / ♪聞くだけで 才能バレる このチューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-056a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110194,6 +110456,7 @@
 			name : "俳速 ザ・ハイク / ♪突進者 英語でいえば それチャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-063a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110399,6 +110662,7 @@
 			name : "ブルー・インパルス / 「真実を見極めよ、ジョニー！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110427,6 +110691,7 @@
 			name : "衒影の精霊 リアリテル / 「この記憶もロック完了だね」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110454,6 +110719,7 @@
 			name : "衒影の悪魔龍 トゥルトゥル / 封じられた真言",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110496,6 +110762,7 @@
 			name : "聖闘の精霊龍 セイント・カイザー / ライブラ・シールド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110539,6 +110806,7 @@
 			name : "魔刻の斬将オルゼキア / 訪れる魔の時刻",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-035a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110565,6 +110833,7 @@
 			name : "ルソー・モンテス / 法と契約の秤",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-036a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110671,6 +110940,7 @@
 			name : "ボルザード・スーパーヒーロー / 超帝王タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110782,6 +111052,7 @@
 			name : "摩破目 ナトゥーラ・トプス / ストンピング・ウィード",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-050a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -110887,6 +111158,7 @@
 			name : "暴命天 バラギアラ / ガイアの目覚め",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-026a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111015,6 +111287,7 @@
 			name : "アカシック・B / 「バブルの泡に溺れるのヨ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-003a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111041,6 +111314,7 @@
 			name : "クック・ポロッチ＆ドラッケン / スクランブル・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111068,6 +111342,7 @@
 			name : "アカシック・A / 「アサルト！やっちまいな！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-005a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111094,6 +111369,7 @@
 			name : "アカシック・C / 「叩き潰すのよ、クラッシュ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-006a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111121,6 +111397,7 @@
 			name : "第六戦街 ラヴ・ガトラー / 漆黒の裏六戦街",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-020a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111149,6 +111426,7 @@
 			name : "エイトビートルズ / R.C.4.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-030a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111176,6 +111454,7 @@
 			name : "ファビュラ・スネイル / ゴルチョップ・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-033a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111202,6 +111481,7 @@
 			name : "カワモリデン / リーフストーム・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-034a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111229,6 +111509,7 @@
 			name : "ブルックス・ザ・シルバー / ザババン・ライト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-035a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111255,6 +111536,7 @@
 			name : "K・アトラン＆キング海賊団 / アイアイサー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-007a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111283,6 +111565,7 @@
 			name : "雪精 サエポヨ＆ユキぴょん / ハンマー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-008a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111324,6 +111607,7 @@
 			name : "ドンド・ラフーイ / ネオン・ジオング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-047a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111570,6 +111854,7 @@
 			name : "邪騎 スベルニル / 「我が愛馬よ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-S10a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111645,6 +111930,7 @@
 			name : "水晶の祈り / クリスタル・ドゥーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-004a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "S",
@@ -111714,7 +112000,7 @@
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
 				"我方的(R)アンノウン(/R)生物或是(R)ゼニス(/R)生物的召喚費用少3，但是不能降到0以下。",
-				"(K)水晶武装(/K)４－此生物不會因為戰鬥敗北以外的效果離場。",
+				"(K)水晶武装(/K)４－我方生物不會因為戰鬥敗北以外的效果離場。",
 			],
 		},
 		{
@@ -111730,13 +112016,14 @@
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
 				"我方所有其他的(R)オラクル(/R)、(R)アンノウン(/R)、以及(R)ゼニス(/R)的攻擊力一律+4000、並獲得「(K)マッハファイター(/K)」能力。",
-				"(K)水晶武装(/K)４－對手生物出場時所觸發的效果、取而代之、不予觸發。",
+				"(K)水晶武装(/K)４－對手生物「當此生物出場時」能力所觸發的效果、取而代之、不予觸發。",
 			],
 		},
 		{
 			name : "懐疑の虎狼 ミラーズホロウ / 「汝は偽名なりや？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-T03a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111809,6 +112096,7 @@
 			name : "神判のカルマ コットン / ジャッジ・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-012a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111863,6 +112151,7 @@
 			name : "救済のカルマ ミルク / リリーフ・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-015a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111916,6 +112205,7 @@
 			name : "禁術のカルマ カレイル / フォビッド・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-018a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -111970,6 +112260,7 @@
 			name : "連射のカルマ ユキメ / ショット・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-021a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -112025,6 +112316,7 @@
 			name : "清浄のカルマ インカ / オキヨメ・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-024a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -112208,6 +112500,7 @@
 			name : "戦攻のシダン アカダシ / 「いいダシがとれそうだ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-035a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -112541,6 +112834,7 @@
 			name : "埋没のシダン オリーブオイル / 記憶喪失魔法 アブラカタブーラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-058a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -112765,6 +113059,7 @@
 			name : "邪鎧 デ=アムド / 「我が力となれ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-074a.jpg",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -112804,8 +113099,10 @@
 		},
 		{
 			name : "",
+			type : "",
 			pic : "",
 			mana : 1,
+			mType : 'T',
 			wData : [
 				{
 					type : "C",

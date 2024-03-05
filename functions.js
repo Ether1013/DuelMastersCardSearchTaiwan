@@ -953,6 +953,8 @@
 		var ctValues = getCheckboxValues( "cardType" );
 		//雙極與否
 		var wValue = getSelectedByName('wType');
+		//超化與否
+		var hValue = getSelectedByName('hType');
 		//允許文明
 //		var allowCivilValues = getCheckboxValues( "allowCivil" );
 		var allowCivilValues = [];
@@ -1178,10 +1180,17 @@
 				}
 				*/
 				//C-2.雙極
-				if ( wValue == 'W' && insertData.ws == null ){
+				if ( wValue == 'W' && insertData.mType != 'T' ){
 					continue;
 				}
-				if ( wValue == 'NW' && insertData.ws != null ){
+				if ( wValue == 'NW' && insertData.mType == 'T' ){
+					continue;
+				}
+				//C-3.超化
+				if ( hValue == 'H' && insertData.mType != 'H' ){
+					continue;
+				}
+				if ( hValue == 'NH' && insertData.mType == "H" ){
 					continue;
 				}
 				//D.Cost
@@ -1645,7 +1654,11 @@
 					if ( wt > 0 ){
 						typeText += "/";
 					}
-					typeText += cardTypeMapping.getTextByValue( cws[w][wt] )
+					if ( selectedCardDats.mType == 'H' && w > 0 && cws[w][0] == cws[w][wt] ){
+						typeText += "超化";
+					} else {
+						typeText += cardTypeMapping.getTextByValue( cws[w][wt] );
+					}
 				}
 				nameSpan.appendChild( document.createTextNode( typeText ) );
 				var lsui = lastSelectedUdIndex == null ? 0 : lastSelectedUdIndex;
