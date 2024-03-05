@@ -81438,18 +81438,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b074.jpg",
 		},
 		{
-			name : "運 命",
-			type : "S",
-			civil : 32,
-			cost : 10,
-			mana : 1,
-			sp : [
-				"(K)アタック・チャンス(/K)：《(N)「戦慄」の頂 べートーベン(/N)》",
-				"最多抽5張牌。之後，隨機讓對手選擇3張我方手牌並將之公開。你可以將當中任意隻(R)ドラゴン(/R)打出至戰鬥場上。				                        。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b055.jpg",
-		},	
-		{
 			name : "ボルシャックライシス・NEX（ネックス）",
 			type : "C",
 			civil : 2,
@@ -82002,22 +81990,6 @@
 				"(K)ミノまじかる(/K)",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a021.jpg",
-		},
-		{
-			name : "「戦慄」の頂 べートーベン",
-			type : "C",
-			civil : 32,
-			race : ["キング・コマンド・ドラゴン","アンノウン","ゼニス"],
-			power : 13000,
-			cost : 10,
-			mana : 1,
-			sp : [
-				"(K)T・ブレイカー(/K)",
-				"當此生物以召喚方式出場時，將合計3張的(R)ドラゴン(/R)或是無色咒文從魔力區或是墓地拿回到手牌中。你可以將我方牌庫頂3張牌置入我方魔力區中。之後，你可以橫置此生物。",
-				"對手生物發動攻擊，如果可以的話就要攻擊此生物。",
-				"我方的(R)ドラゴン(/R)與(R)コマンド(/R)一律獲得「(K)エターナル・Ω(/K)」能力。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a046.jpg",
 		},
 		{
 			name : "切札ジョー&ジョラゴン ー自由の物語ー",

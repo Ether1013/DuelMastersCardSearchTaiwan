@@ -48593,7 +48593,7 @@
 			id : "EX15 45/50",
 		},
 		{
-			name : "「戦慄」の頂 べートーベン",
+			name : "「戦慄」の頂 ベートーベン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a046.jpg",
 			rarity : "VIC",
 			flavor : [ "" ],
@@ -49006,7 +49006,7 @@
 			id : "EX15 54/100",
 		},
 		{
-			name : "運 命",
+			name : "運命",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b055.jpg",
 			rarity : "R",
 			flavor : [ "きさまの運命は、敗北と共に鳴り響く!! — オサムライ・ヴァン・オサム— 『デュエル・マスターズV』６巻より" ],
@@ -79515,7 +79515,7 @@
 			count : 1,
 		},
 		{
-			name : "「戦慄」の頂 べートーベン",
+			name : "「戦慄」の頂 ベートーベン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-011.jpg", ],
 			rarity : [ "VIC", ],
 			flavor : [ "", ],
@@ -81134,7 +81134,7 @@
 			id : [ "23EX3 TR4/TR15", ],
 		},
 		{
-			name : "「戦慄」の頂 べートーベン",
+			name : "「戦慄」の頂 ベートーベン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-TR05.jpg", ],
 			rarity : [ "VIC", ],
 			flavor : [ "かつては希望の双子。今は戦慄の戦鬼。", ],
@@ -81309,7 +81309,7 @@
 			id : [ "23EX3 T4/T20", ],
 		},
 		{
-			name : "運 命",
+			name : "運命",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-T05.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "自分の運命も目的も、自分で決めろ。", ],
