@@ -431,7 +431,7 @@
 				{	value : "EC",	text : "進化生物",			Jap : "進化クリーチャー",					Location : "M", horizontal : false,	main:true,	},
 				{	value : "SEC",	text : "星進化生物",		Jap : "スター進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "SMEC",	text : "S-MAX進化生物",		Jap : "S-MAX進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
-				{	value : "DC",	text : "夢幻生物",			Jap : "ドリーム・クリーチャー",				Location : "M", horizontal : false,	main:false,	descript : "可以進行超化的生物"							},
+				{	value : "DC",	text : "夢幻生物",			Jap : "ドリーム・クリーチャー",				Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
 				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					Location : "M", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
 				{	value : "GRC",	text : "GR生物",			Jap : "GRクリーチャー",						Location : "G", horizontal : false,	main:false,	},
 				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					Location : "G", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
@@ -1326,6 +1326,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2024/03/07",
+				log : [ 
+						"新增神藝術DMART-08~DMART-12的資料",
+				],	
+			},
 			{	
 				date : "2024/03/05",
 				log : [ 

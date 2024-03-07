@@ -80499,6 +80499,273 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 		
+	var setCode = "DMART-11";
+	var setName = "神アート ドラゴン娘の青春アオハル☆パラダイス";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "龍世界 ドラゴ大王",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg05_pc.png",
+			rarity : "VIC",
+			flavor : [ "そこのうぬ、儂と勝負せいっ！── 伍代ドーラ ","……！── 帝王坂∞" ],
+			id : "ART11 1/5",
+			count : 1,
+		},
+		{
+			name : "∞龍 ゲンムエンペラー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg06_pc.png",
+			rarity : "VIC",
+			flavor : [ "(∞ちゃんすごか！ずーっとゲームしよるばい。)──── 蒼斬しのぶ" ],
+			id : "ART11 2/5",
+			count : 1,
+		},
+		{
+			name : "斬隠蒼頭龍バイケン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg07_pc.png",
+			rarity : "SR",
+			flavor : [ "うちの勝ちやけん、もう1周行ってくるばい。── 蒼斬しのぶ","げひー！── 宿禰マロン" ],
+			id : "ART11 3/5",
+			count : 1,
+		},
+		{
+			name : "超竜バジュラズテラ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg08_pc.png",
+			rarity : "SR",
+			flavor : [ "Yes! Nice Shot、ジュラ子完璧ですわ!!──ジュラ子・リューバ―","コートを壊しちゃダメでし！── 宿禰マロン" ],
+			id : "ART11 4/5",
+			count : 1,
+		},
+		{
+			name : "龍仙ロマネスク",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg09_pc.png",
+			rarity : "SR",
+			flavor : [ "げひひ、我が輩のすごいゲージュツが完成でし！── 宿禰マロン Oh! Excellent、ジュラ子感激ですわ！！── ジュラ子・リューバー" ],
+			id : "ART11 5/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+		
+	var setCode = "DMART-08";
+	var setName = "神アート 輝かしき新世界";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "新世界王の権威",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg32_pc.png",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "ART08 1/6",
+			count : 1,
+		},
+		{
+			name : "新世界王の思想",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg33_pc.png",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "ART08 2/6",
+			count : 1,
+		},
+		{
+			name : "新世界王の闘気",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg34_pc.png",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "ART08 3/6",
+			count : 1,
+		},
+		{
+			name : "Volzeos-Balamord",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg05_pc.png",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "",
+			count : 1,
+		},
+		{
+			name : "新世界王の創造",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg35_pc.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART08 4/6",
+			count : 1,
+		},
+		{
+			name : "新世界王の破壊",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg36_pc.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART08 5/6",
+			count : 1,
+		},
+		{
+			name : "新世界秩序",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg06_pc.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "",
+			count : 1,
+		},
+		{
+			name : "地龍神の魔陣",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg07_pc.png",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "ART08 6/6",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+		
+	var setCode = "DMART-09";
+	var setName = "神アート ディスペクター・デュエマリウム";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "不死鳥縫合 ブラック・ビッグバン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg17_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART10 1/5",
+			count : 1,
+		},
+		{
+			name : "龍風混成 ザーディクリカ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg18_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART10 2/5",
+			count : 1,
+		},
+		{
+			name : "砕慄接続 グレイトフル・ベン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg19_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART10 3/5",
+			count : 1,
+		},
+		{
+			name : "勝災電融王 ギュカウツ・マグル",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg20_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART10 4/5",
+			count : 1,
+		},
+		{
+			name : "灰燼と天門の儀式",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart04/image/kamiartImg21_pc.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART10 5/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+		
+	var setCode = "DMART-10";
+	var setName = "神アート デュエマ×TRANSFORMERS";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "“罰怒“ブランド",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart05/image/kamiartImg11_pc.png",
+			rarity : "MAS",
+			flavor : [ "" ],
+			id : "ART10 1/6",
+			count : 1,
+		},
+		{
+			name : "我我我ガイアール・ブランド",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart05/image/kamiartImg12_pc.png",
+			rarity : "KGM",
+			flavor : [ "" ],
+			id : "ART10 2/6",
+			count : 1,
+		},
+		{
+			name : "切札勝太&カツキング ー熱血の物語ー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart05/image/kamiartImg13_pc.png",
+			rarity : "DSR",
+			flavor : [ "" ],
+			id : "ART10 3/6",
+			count : 1,
+		},
+		{
+			name : "ガチャンコ  ガチロボ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart05/image/kamiartImg14_pc.png",
+			rarity : "SR",
+			flavor : [ "サイバトロンどもを皆殺しにするのだ!　ースカージ" ],
+			id : "ART10 4/6",
+			count : 1,
+		},
+		{
+			name : "奇天烈 シャッフ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart05/image/kamiartImg15_pc.png",
+			rarity : "VR",
+			flavor : [ "俺はチーター! よろしくじゃ～ん!　ーチーター" ],
+			id : "ART10 5/6",
+			count : 1,
+		},
+		{
+			name : "最終龍覇 ロージア",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart05/image/kamiartImg16_pc.png",
+			rarity : "R",
+			flavor : [ "ハーイ、みんな元気?　ーアーシー" ],
+			id : "ART10 6/6",
+			count : 1,
+		}
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+		
+	var setCode = "DMART-12";
+	var setName = "神アート エンジェリック・ウィズダム";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg17_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART12 1/5",
+			count : 1,
+		},
+		{
+			name : "闘門の精霊ウェルキウス",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg18_pc.png",
+			rarity : "SR",
+			flavor : [ "天の門が開く時、人々を守るための闘いが始まる。" ],
+			id : "ART12 2/5",
+			count : 1,
+		},
+		{
+			name : "神聖龍 エモーショナル・ハードコア",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg19_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART12 3/5",
+			count : 1,
+		},
+		{
+			name : "電磁魔天イエス・ザナドゥ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg20_pc.png",
+			rarity : "SR",
+			flavor : [ "天の門が開く時、天界の反撃が始まる。" ],
+			id : "ART12 4/5",
+			count : 1,
+		},
+		{
+			name : "ヘブンズ・ゲート",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg21_pc.png",
+			rarity : "R",
+			flavor : [ "人々が叡智を求めた時、天の門が開く。" ],
+			id : "ART12 5/5",
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DM23-EX3";
 	var setName = "アビス・レボリューション外伝 「邪神と水晶の華」";
 	var isDeck = false;
