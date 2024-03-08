@@ -1748,6 +1748,7 @@
 			if ( selectedCardDats.sp == null || selectedCardDats.sp.length == 0 ){
 				caObj.appendChild( document.createTextNode( "　" ) );
 			} else {
+				var abHints = [];
 				for ( var i = 0 ; i < selectedCardDats.sp.length ; i++ ){
 					var isHint = selectedCardDats.sp[i].indexOf( abilitiesHintHeader ) == 0;
 					var spLinesStr = selectedCardDats.sp[i];
@@ -1763,6 +1764,11 @@
 							abis = transHK_MathWords( abis );
 						}
 						var singleAbilityParts = transAbilitiesTags( abis );
+						for ( var sbp = 0 ; sbp < singleAbilityParts.length ; sbp++ ){
+							if ( singleAbilityParts[sbp].tagName == "SPAN" && singleAbilityParts[sbp].getAttribute("sTagType") == "K" ){
+								abHints.push( singleAbilityParts[sbp].getAttribute("title") );
+							}
+						}
 						if ( spl == 0 ){
 							for ( var sbp = 0 ; sbp < singleAbilityParts.length ; sbp++ ){
 								caObj.appendChild( singleAbilityParts[sbp] );
@@ -1782,6 +1788,59 @@
 						caObj.appendChild( ulBlock );
 					}
 				}
+				
+				//效果解說
+				var abHintsDiv = document.createElement("div");
+				abHintsDiv.style.fontSize = "12px";
+				abHintsDiv.style.display = "none";
+				abHintsDiv.setAttribute("id","abHintsDiv");
+				abHintsDiv.append( document.createElement("hr") );
+				for ( var h = 0 ; h < abHints.length ; h++ ){
+					var titleTexts = abHints[h].split("\n");
+					abHintsDiv.append( document.createTextNode( titleTexts[0] ) );
+					abHintsDiv.append( document.createElement("br") );
+					abHintsDiv.append( document.createTextNode( titleTexts[1] ) );
+					abHintsDiv.append( document.createElement("br") );
+					abHintsDiv.append( document.createElement("br") );
+				}
+				caObj.append( abHintsDiv );
+
+				var abHintsBtn1 = document.createElement("span");
+				abHintsBtn1.style.fontSize = "12px";
+				abHintsBtn1.appendChild( document.createElement('br') );
+				abHintsBtn1.appendChild( document.createTextNode('----') );
+				abHintsBtn1.append( document.createTextNode( "顯示能力註釋" ) );
+				abHintsBtn1.setAttribute("id","absHintsBtn1");
+				abHintsBtn1.style.cursor = "pointer";
+				abHintsBtn1.style.textDecoration = "underline";
+				abHintsBtn1.onclick = (function(){
+					return function(){
+						gobi("absHintsBtn1").style.display = "none";
+						gobi("absHintsBtn2").style.display = "inline";
+						gobi("abHintsDiv").style.display = "inline";
+					}
+				})();
+				abHintsBtn1.appendChild( document.createTextNode('----') );
+				caObj.appendChild( abHintsBtn1 );
+
+				var abHintsBtn2 = document.createElement("span");
+				abHintsBtn2.style.fontSize = "12px";
+				abHintsBtn2.appendChild( document.createElement('br') );
+				abHintsBtn2.appendChild( document.createTextNode('----') );
+				abHintsBtn2.append( document.createTextNode( "關閉能力註釋" ) );
+				abHintsBtn2.setAttribute("id","absHintsBtn2");
+				abHintsBtn2.style.display = "none";
+				abHintsBtn2.style.cursor = "pointer";
+				abHintsBtn2.style.textDecoration = "underline";
+				abHintsBtn2.onclick = (function(){
+					return function(){
+						gobi("absHintsBtn2").style.display = "none";
+						gobi("absHintsBtn1").style.display = "inline";
+						gobi("abHintsDiv").style.display = "none";
+					}
+				})();
+				abHintsBtn2.appendChild( document.createTextNode('----') );
+				caObj.appendChild( abHintsBtn2 );
 			}
 			//魔力支付
 			if ( selectedCardDats.mana == null ){

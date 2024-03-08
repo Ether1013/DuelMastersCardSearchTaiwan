@@ -314,7 +314,7 @@
 			{ Jap : "終極宣言",				Eng : "Final Declaration",		Chi : "終極宣言",			descript : "以下能力一場遊戲中只能發動一次",},
 			{ Jap : "水晶ソウル",			Eng : "Crystal Soul",			Chi : "水晶魂",				descript : "當你召喚此生物時，魔力區的裏側卡牌所提供的魔力數字變成3",},
 			{ Jap : "クリスターナル・Κ",	Eng : "Crys-Eternal Cover",		Chi : "水晶永恆庇護",		descript : "當此生物離場或是我方輸掉這場遊戲時，你可以取而代之、將我方魔力區中3張裏側卡牌翻為表側",},
-			{ Jap : "エターナル・Κ",		Eng : "Eternal Cover",			Chi : "永恆庇護",			descript : "當此生物離場時，你可以取而代之、將我方魔力區中3張裏側卡牌翻為表側",},
+			{ Jap : "エターナル・Κ",		Eng : "Eternal Copper",			Chi : "永恆κ",				descript : "當此生物離場時，你可以取而代之、將我方魔力區中3張裏側卡牌翻為表側",},
 			{ Jap : "水晶武装",				Eng : "Crystal Arms",			Chi : "水晶武裝",			descript : "當我方魔力區中有指定張數的裏側卡牌時，獲得以下能力。",},
 			{ Jap : "水晶チャージャー",		Eng : "Crystal Charger",		Chi : "水晶突進者",			descript : "此咒文用完之後不會置入墓地，取而代之、以裏側方式置入我方魔力區中",},
 
