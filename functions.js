@@ -1790,57 +1790,61 @@
 				}
 				
 				//效果解說
-				var abHintsDiv = document.createElement("div");
-				abHintsDiv.style.fontSize = "12px";
-				abHintsDiv.style.display = "none";
-				abHintsDiv.setAttribute("id","abHintsDiv");
-				abHintsDiv.append( document.createElement("hr") );
-				for ( var h = 0 ; h < abHints.length ; h++ ){
-					var titleTexts = abHints[h].split("\n");
-					for ( var t = 0 ; t < titleTexts.length ; t++ ){
-						abHintsDiv.append( document.createTextNode( titleTexts[t] ) );
+				if ( abHints.length > 0 ){
+
+					var abHintsDiv = document.createElement("div");
+					abHintsDiv.style.fontSize = "12px";
+					abHintsDiv.style.display = "none";
+					abHintsDiv.setAttribute("id","abHintsDiv");
+					abHintsDiv.append( document.createElement("hr") );
+					for ( var h = 0 ; h < abHints.length ; h++ ){
+						var titleTexts = abHints[h].split("\n");
+						for ( var t = 0 ; t < titleTexts.length ; t++ ){
+							abHintsDiv.append( document.createTextNode( titleTexts[t] ) );
+							abHintsDiv.append( document.createElement("br") );
+						}
 						abHintsDiv.append( document.createElement("br") );
 					}
-					abHintsDiv.append( document.createElement("br") );
+					caObj.append( abHintsDiv );
+
+					var abHintsBtn1 = document.createElement("span");
+					abHintsBtn1.style.fontSize = "12px";
+					abHintsBtn1.appendChild( document.createElement('br') );
+					abHintsBtn1.appendChild( document.createTextNode('----') );
+					abHintsBtn1.append( document.createTextNode( "顯示能力註釋" ) );
+					abHintsBtn1.setAttribute("id","absHintsBtn1");
+					abHintsBtn1.style.cursor = "pointer";
+					abHintsBtn1.style.textDecoration = "underline";
+					abHintsBtn1.onclick = (function(){
+						return function(){
+							gobi("absHintsBtn1").style.display = "none";
+							gobi("absHintsBtn2").style.display = "inline";
+							gobi("abHintsDiv").style.display = "inline";
+						}
+					})();
+					abHintsBtn1.appendChild( document.createTextNode('----') );
+					caObj.appendChild( abHintsBtn1 );
+
+					var abHintsBtn2 = document.createElement("span");
+					abHintsBtn2.style.fontSize = "12px";
+					abHintsBtn2.appendChild( document.createElement('br') );
+					abHintsBtn2.appendChild( document.createTextNode('----') );
+					abHintsBtn2.append( document.createTextNode( "關閉能力註釋" ) );
+					abHintsBtn2.setAttribute("id","absHintsBtn2");
+					abHintsBtn2.style.display = "none";
+					abHintsBtn2.style.cursor = "pointer";
+					abHintsBtn2.style.textDecoration = "underline";
+					abHintsBtn2.onclick = (function(){
+						return function(){
+							gobi("absHintsBtn2").style.display = "none";
+							gobi("absHintsBtn1").style.display = "inline";
+							gobi("abHintsDiv").style.display = "none";
+						}
+					})();
+					abHintsBtn2.appendChild( document.createTextNode('----') );
+					caObj.appendChild( abHintsBtn2 );
+					
 				}
-				caObj.append( abHintsDiv );
-
-				var abHintsBtn1 = document.createElement("span");
-				abHintsBtn1.style.fontSize = "12px";
-				abHintsBtn1.appendChild( document.createElement('br') );
-				abHintsBtn1.appendChild( document.createTextNode('----') );
-				abHintsBtn1.append( document.createTextNode( "顯示能力註釋" ) );
-				abHintsBtn1.setAttribute("id","absHintsBtn1");
-				abHintsBtn1.style.cursor = "pointer";
-				abHintsBtn1.style.textDecoration = "underline";
-				abHintsBtn1.onclick = (function(){
-					return function(){
-						gobi("absHintsBtn1").style.display = "none";
-						gobi("absHintsBtn2").style.display = "inline";
-						gobi("abHintsDiv").style.display = "inline";
-					}
-				})();
-				abHintsBtn1.appendChild( document.createTextNode('----') );
-				caObj.appendChild( abHintsBtn1 );
-
-				var abHintsBtn2 = document.createElement("span");
-				abHintsBtn2.style.fontSize = "12px";
-				abHintsBtn2.appendChild( document.createElement('br') );
-				abHintsBtn2.appendChild( document.createTextNode('----') );
-				abHintsBtn2.append( document.createTextNode( "關閉能力註釋" ) );
-				abHintsBtn2.setAttribute("id","absHintsBtn2");
-				abHintsBtn2.style.display = "none";
-				abHintsBtn2.style.cursor = "pointer";
-				abHintsBtn2.style.textDecoration = "underline";
-				abHintsBtn2.onclick = (function(){
-					return function(){
-						gobi("absHintsBtn2").style.display = "none";
-						gobi("absHintsBtn1").style.display = "inline";
-						gobi("abHintsDiv").style.display = "none";
-					}
-				})();
-				abHintsBtn2.appendChild( document.createTextNode('----') );
-				caObj.appendChild( abHintsBtn2 );
 			}
 			//魔力支付
 			if ( selectedCardDats.mana == null ){
