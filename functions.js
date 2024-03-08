@@ -1797,10 +1797,10 @@
 				abHintsDiv.append( document.createElement("hr") );
 				for ( var h = 0 ; h < abHints.length ; h++ ){
 					var titleTexts = abHints[h].split("\n");
-					abHintsDiv.append( document.createTextNode( titleTexts[0] ) );
-					abHintsDiv.append( document.createElement("br") );
-					abHintsDiv.append( document.createTextNode( titleTexts[1] ) );
-					abHintsDiv.append( document.createElement("br") );
+					for ( var t = 0 ; t < titleTexts.length ; t++ ){
+						abHintsDiv.append( document.createTextNode( titleTexts[t] ) );
+						abHintsDiv.append( document.createElement("br") );
+					}
 					abHintsDiv.append( document.createElement("br") );
 				}
 				caObj.append( abHintsDiv );
