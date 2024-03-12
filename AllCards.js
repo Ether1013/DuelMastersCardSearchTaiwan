@@ -65848,7 +65848,7 @@
 				{
 					type :	"S",
 					civil : 8,
-					cost : 2,
+					cost : 4,
 
 					sp : [
 						"抽1張牌。",
@@ -69923,7 +69923,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"你可以以橫置狀態打出此生物。",
-				"對手生物發動攻擊時，可以的話就要攻擊此生物。",
+				"對手生物發動攻擊時，可以的話就要攻擊生物。",
 				"(K)シビルカウント(/K)(自然3)－此生物攻擊力+5000、並獲得「(K)W・ブレイカー(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-023.jpg",
@@ -94482,7 +94482,7 @@
 				{
 					type : "S",
 					civil : 32,
-					cost : 7,
+					cost : 3,
 
 					sp : [
 						"(K)S・トリガー(/K)",
@@ -108483,7 +108483,7 @@
 				"此生物發動攻擊時，隨機作廢1張對手手牌。",
 				"此生物離場時，取而代之、將此卡翻至(T)クロスギア(/T)那側。",
 			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-059b.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-059a.jpg",
 		},
 		{
 			name : "次元の至宝 オール・イエス",

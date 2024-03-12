@@ -1807,29 +1807,28 @@
 					}
 					caObj.append( abHintsDiv );
 
-					var abHintsBtn1 = document.createElement("span");
+					var abHintsBtn1 = document.createElement("div");
 					abHintsBtn1.style.fontSize = "12px";
+					abHintsBtn1.style.textAlign = "right";
 					abHintsBtn1.appendChild( document.createElement('br') );
-					abHintsBtn1.appendChild( document.createTextNode('----') );
-					abHintsBtn1.append( document.createTextNode( "顯示能力註釋" ) );
+					abHintsBtn1.append( document.createTextNode( "▼顯示能力註釋" ) );
 					abHintsBtn1.setAttribute("id","absHintsBtn1");
 					abHintsBtn1.style.cursor = "pointer";
 					abHintsBtn1.style.textDecoration = "underline";
 					abHintsBtn1.onclick = (function(){
 						return function(){
 							gobi("absHintsBtn1").style.display = "none";
-							gobi("absHintsBtn2").style.display = "inline";
-							gobi("abHintsDiv").style.display = "inline";
+							gobi("absHintsBtn2").style.display = "block";
+							gobi("abHintsDiv").style.display = "block";
 						}
 					})();
-					abHintsBtn1.appendChild( document.createTextNode('----') );
 					caObj.appendChild( abHintsBtn1 );
 
-					var abHintsBtn2 = document.createElement("span");
+					var abHintsBtn2 = document.createElement("div");
 					abHintsBtn2.style.fontSize = "12px";
+					abHintsBtn2.style.textAlign = "right";
 					abHintsBtn2.appendChild( document.createElement('br') );
-					abHintsBtn2.appendChild( document.createTextNode('----') );
-					abHintsBtn2.append( document.createTextNode( "關閉能力註釋" ) );
+					abHintsBtn2.append( document.createTextNode( "▲關閉能力註釋" ) );
 					abHintsBtn2.setAttribute("id","absHintsBtn2");
 					abHintsBtn2.style.display = "none";
 					abHintsBtn2.style.cursor = "pointer";
@@ -1837,11 +1836,10 @@
 					abHintsBtn2.onclick = (function(){
 						return function(){
 							gobi("absHintsBtn2").style.display = "none";
-							gobi("absHintsBtn1").style.display = "inline";
+							gobi("absHintsBtn1").style.display = "block";
 							gobi("abHintsDiv").style.display = "none";
 						}
 					})();
-					abHintsBtn2.appendChild( document.createTextNode('----') );
 					caObj.appendChild( abHintsBtn2 );
 					
 				}
