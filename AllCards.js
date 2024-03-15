@@ -102179,18 +102179,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-008a.jpg",
 		},
 		{
-			name : "ガチンコ・ル－レット",
-			type : "S",
-			civil : 1,
-			cost : 3,
-			mana : 1,
-			sp : [
-				"將我方牌庫頂第一張牌置入魔力區中。",
-				"與對手進行(K)ガチンコ・ジャッジ(/K)，我方獲勝的話，則此咒文使用完畢之後不會置入墓地、取而代之、拿回到手牌中。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-050.jpg",
-		},
-				{
 			name : "不死身の果実",
 			type : "S",
 			civil : 1,

@@ -49622,7 +49622,7 @@
 			id : "EX08 49/???",
 		},
 		{
-			name : "ガチンコ・ル－レット",
+			name : "ガチンコ・ルーレット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-050.jpg",
 			rarity : "U",
 			flavor : [ "" ],
