@@ -81703,6 +81703,41 @@
 		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "DM24-SD1";
+	var setName = "「いきなりつよいデッキ 攻めの王道」(先行版)";
+	var isDeck = true;
+	var setCardList = [
+		{		name : "我我我ガイアール・ブランド",	count : 4,	},
+		{		name : "“罰怒“ブランド",	count : 2,	},
+		{		name : "“轟轟轟”ブランド",	count : 1,	},
+		{		name : "烈火大聖 ソンクン",	count : 4,	},
+		{		name : "こたつむり",	count : 4,	},
+		{		name : "ダチッコ・チュリス",	count : 2,	},
+		{		name : "クミタテ・チュリス",	count : 4,	},
+		{		name : "赤い稲妻 テスタ・ロッサ",	count : 4,	},
+		{		name : "一番隊 チュチュリス",	count : 4,	},
+		{		name : "斬斬人形コダマンマ GS",	count : 3,	},
+		{		name : "ブンブン・チュリス",	count : 4,	},
+		{		name : "凶戦士ブレイズ・クロー",	count : 4,	},	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "DM24-SD2";
+	var setName = "「いきなりつよいデッキ 守りの王道」(先行版)";
+	var isDeck = true;
+	var setCardList = [
+		{		name : "闘門の精霊ウェルキウス",	count : 4,	},
+		{		name : "白騎士の精霊ホワイト・ウィズダム",	count : 2,	},
+		{		name : "星門の精霊アケルナル / スターゲイズ・ゲート",	count : 4,	},
+		{		name : "閃光の守護者ホーリー",	count : 4,	},
+		{		name : "聖闘の精霊龍 セイント・カイザー / ライブラ・シールド",	count : 2,	},
+		{		name : "ヘブンズ・ゲート",	count : 4,	},
+		{		name : "竹馬の超人 / テイクバック・チャージャー",	count : 4,	},
+		{		name : "配球の超人 / 記録的剛球",	count : 4,	},
+		{		name : "巨大設計図",	count : 4,	},
+		{		name : "真邪連結 バウ・M・ロマイオン",	count : 4,	},
+		{		name : "閃光の神官 ヴェルベット / フェアリー・パワー",	count : 4,	},	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = queryHistorySetCode;
 	var setName = "【歷史查詢】";
