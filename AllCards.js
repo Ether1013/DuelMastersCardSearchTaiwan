@@ -68338,21 +68338,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-m16.jpg",
 		},
 		{
-			name : "無頼 ミランダ-2",
-			type : "C",
-			civil : 1,
-			race : ["ビーストフォーク","ディスタス"],
-			power : 4000,
-			cost : 6,
-			mana : 1,
-			sp : [
-				"(K)S・トリガー(/K)",
-				"此生物出場時，將戰鬥場上1隻對手的重置狀態生物置入其有者的魔力區中。",
-				"(K)ササゲール(/K)２",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-002.jpg",
-		},
-		{
 			name : "ヴィオラの黒像",
 			type : "TS",
 			civil : 4,
@@ -105632,7 +105617,7 @@
 					civil : 8,
 					cost : 7,
 					sp : [
-						"(K)S・トリガー(K/)",
+						"(K)S・トリガー(/K)",
 						"抽1張牌、然後作廢1張手牌。之後將戰鬥場上任意隻對手生物拿回到其持有者的手牌中。但是那些生物的費用合計不能超過作廢的該張卡牌費用。",
 					]
 				},
