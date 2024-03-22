@@ -81703,6 +81703,62 @@
 		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	
+	var setCode = "OF-Y23 SPP2023-2"
+	var setName = "スペシャルプロモパック2023 vol.2"
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "アウルーリー-T8",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-019.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "PROMOY22 P19/Y22",
+		},
+		{
+			name : "ボルシャック・コーヤ・ドラゴン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-020.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "PROMOY22 P20/Y22",
+		},
+		{
+			name : "パーパット・スカラベ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-021.jpg",
+			rarity : "",
+			flavor : [ "君がイベントに来てくれて、パーパット・スカラベもニッコリだ！" ],
+			id : "PROMOY22 P21/Y22",
+		},
+		{
+			name : "サドレイン=トレイン / 邪神呪文「アビサール」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-022a.jpg",
+			rarity : "",
+			flavor : [ "" ],
+			id : "PROMOY22 P22/Y22",
+		},
+		{
+			name : "地龍神の魔陣",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-023.jpg",
+			rarity : "",
+			flavor : [ "勝利に向けて、一歩ずつ前へ！" ],
+			id : "PROMOY22 P23/Y22",
+		},
+		{
+			name : "レクタ・アイニー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-024.jpg",
+			rarity : "",
+			flavor : [ "ドラゴンありしところに、ファイアー・バードは必ず駆けつける！" ],
+			id : "PROMOY22 P24/Y22",
+		},
+		{
+			name : "デスマッチ・ビートル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-025.jpg",
+			rarity : "",
+			flavor : [ "激しい死闘を潜り抜けた君の帰りを、デスマッチ・ビートルがお出迎えだ！" ],
+			id : "PROMOY22 P25/Y22",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-SD1";
 	var setName = "「いきなりつよいデッキ 攻めの王道」(先行版)";
