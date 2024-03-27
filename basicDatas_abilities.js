@@ -292,7 +292,7 @@
 			{ Jap : "無敵虹帝",				Eng : "Invincible Rainbow Emperor",		
 																			Chi : "無敵虹帝",			descript : "當對手獲勝或是我方敗北時，你可以取而代之、將我方魔力區中8張卡牌洗牌並放進牌庫底",},
 			{ Jap : "ドラゴン・T・ブレイカー",		
-											Eng : "Dragon Triple Breaker",	Chi : "龍三重擊破者",		descript : "此生物擊破3張護盾。在各擊破前，可以將牌庫頂第一張牌以裏側方式置入護盾、或是以表側方式置於1張我方護盾之上。",},
+											Eng : "Dragon Triple Breaker",	Chi : "龍三重擊破者",		descript : "此生物擊破3張護盾。在各擊破前，將牌庫頂第一張牌以裏側方式置入護盾、或是以表側方式置於1張我方護盾之上。",},
 			{ Jap : "P’S覚醒リンク",		Eng : "Play's Psychic Link",	Chi : "Play's 覺醒聯結",	descript : "若於自己回合初、或是指定生物出場時，若滿足指定條件的話，則將戰鬥場上所指定的超次元生物一起翻面，並結合成一隻生物",},
 			{ Jap : "メガメテオバーン10",	Eng : "Mega Meteor Burn 10",	Chi : "隕石重擊10",			descript : "作廢此生物下方10張卡牌以發動指定能力",},
 			{ Jap : "S・トリガー・プラス",	Eng : "Shield Trigger Plus",	Chi : "護盾觸發追擊",		descript : "當此卡從護盾區中回到手牌時，你可以不支付費用使用此卡。若現在是對手的回合、且我方護盾已被擊破2張以上時，追加✚能力",},
