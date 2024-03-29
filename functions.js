@@ -1766,7 +1766,9 @@
 						var singleAbilityParts = transAbilitiesTags( abis );
 						for ( var sbp = 0 ; sbp < singleAbilityParts.length ; sbp++ ){
 							if ( singleAbilityParts[sbp].tagName == "SPAN" && singleAbilityParts[sbp].getAttribute("sTagType") == "K" ){
-								abHints.push( singleAbilityParts[sbp].getAttribute("title") );
+								if ( !abHints.include( singleAbilityParts[sbp].getAttribute("title") ) ){
+									abHints.push( singleAbilityParts[sbp].getAttribute("title") );
+								}
 							}
 						}
 						if ( spl == 0 ){
