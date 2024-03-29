@@ -101583,17 +101583,31 @@
 		},
 		{
 			name : "ガンバＧ/ガガン・ガン・ガガン",
-			type : "C",
-			civil : 32,
-			race : ["ジョーカーズ"],
-			power : 6000,
-			cost : 6,
-			mana : 1,
-			sp : [
-				"(K)W・ブレイカー(/K)",
-				"此生物可以於出場的回合攻擊玩家。",
-			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-a-006a.jpg",
+			mana : 1,
+			mType : 'T',
+			wData : [
+				{
+					type : "C",
+					civil : 32,
+					race : ["ジョーカーズ"],
+					power : 6000,
+					cost : 6,
+					mana : 1,
+					sp : [
+						"(K)W・ブレイカー(/K)",
+						"此生物可以於出場的回合攻擊玩家。",
+					],
+				},
+				{
+					type : "S",
+					civil : 32,
+					cost : 2,
+					sp : [
+						"將我方墓地一張(R)ジョーカーズ(/R)置入我方魔力區中。",
+					],
+				}
+			]
 		},
 		{
 			name : "オヴ・シディア†",
