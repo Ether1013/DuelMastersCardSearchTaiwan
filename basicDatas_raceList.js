@@ -145,7 +145,7 @@
 				{	Jap : "革命軍",								Eng : "Revolution Army",		Chi : "革命軍",			isCategory : false,	},
 				{	Jap : "ガオー・モンスター",					Eng : "Gao Monster",			Chi : "嘶吼獸",			isCategory : false,	},
 				{	Jap : "ソウル・コマンド",					Eng : "Soul Command",			Chi : "靈魂指揮",		isCategory : false,	},
-				{	Jap : "ガーゴイル",							Eng : "Gargoyle",				Chi : "石像魔",			isCategory : false,	},
+				{	Jap : "ガーゴイル",							Eng : "Gargoyle",				Chi : "石像鬼",			isCategory : false,	},
 				{	Jap : "マジック・コマンド",					Eng : "Magic Command",			Chi : "魔法指揮",		isCategory : false,	},
 				{	Jap : "ゲリラ・コマンド",					Eng : "Guerrilla Command",		Chi : "游擊指揮",		isCategory : false,	},
 				{	Jap : "???",								Eng : "???",					Chi : "???",			isCategory : false,	},
@@ -369,6 +369,14 @@
 				{	Jap : "マーメイド",							Eng : "Mermaid",				Chi : "人魚",			isCategory : false,	},
 				{	Jap : "オラクル・セレス",					Eng : "Oracle Seles",			Chi : "天界神諭",		isCategory : false,	},
 				{	Jap : "アンノウン・セレス",					Eng : "Unknown Seles",			Chi : "天界未知",		isCategory : false,	},
+				{	Jap : "超化獣",								Eng : "Hyper Monster",			Chi : "超化獸",			isCategory : false,	},
+				{	Jap : "メカ・ブレインジャッカー",			Eng : "Mecha Brain Jacker",		Chi : "機械提腦者",		isCategory : false,	},
+				{	Jap : "アーマード・ガーゴイル",				Eng : "Armored Gargoyle",		Chi : "裝甲石像鬼",		isCategory : false,	},
+				{	Jap : "マジック・パラサイトワーム",			Eng : "Magic Parasite Worm",	Chi : "魔法寄生蟲",		isCategory : false,	},
+				{	Jap : "ジャイアント・デビルマスク",			Eng : "Giant Devil Mask",		Chi : "巨大惡魔面具",	isCategory : false,	},
+				{	Jap : "マスターズ・レガシー",				Eng : "Master Legacy",			Chi : "王者遺產",		isCategory : false,	},
+				{	Jap : "アビスカス",							Eng : "Abyss Garbage",			Chi : "深淵渣",			isCategory : false,	},
+				{	Jap : "コロコロイヤル",						Eng : "Corocoro Royal",			Chi : "快樂快樂皇家",	isCategory : false,	},
 
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},

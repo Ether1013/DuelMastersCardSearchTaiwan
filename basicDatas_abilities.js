@@ -317,6 +317,8 @@
 			{ Jap : "エターナル・Κ",		Eng : "Eternal Copper",			Chi : "永恆κ",				descript : "當此生物離場時，你可以取而代之、將我方魔力區中3張裏側卡牌翻為表側",},
 			{ Jap : "水晶武装",				Eng : "Crystal Arms",			Chi : "水晶武裝",			descript : "當我方魔力區中有指定張數的裏側卡牌時，獲得以下能力。",},
 			{ Jap : "水晶チャージャー",		Eng : "Crystal Charger",		Chi : "水晶突進者",			descript : "此咒文用完之後不會置入墓地，取而代之、以裏側方式置入我方魔力區中",},
+			{ Jap : "ハイパー化",			Eng : "Hyper Mode",				Chi : "超化",				descript : "你可以於我方主要階段執行以下動作以將此生物進入超化狀態",},
+			{ Jap : "OVERハイパー化",		Eng : "Over Hyper Mode",		Chi : "極限超化",			descript : "你可以於我方主要階段執行以下動作以將此生物進入超化狀態",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
