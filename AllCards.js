@@ -113354,34 +113354,6 @@
 			],
 		},
 		{
-			name : "カブトリアル・クーガ / ミステリー・ディザスター",
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp1-TR07a.jpg",
-			mana : 1,
-			mType : 'T',
-			wData : [
-				{
-					type : "C",
-					civil : 1,
-					race : ["グランセクト"],
-					power : 13000,
-					cost : 8,
-					sp : [
-						"(K)マッハファイター(/K)",
-						"(K)T・ブレイカー(/K)",
-						"此生物戰鬥獲勝時，公開我方牌庫頂3張牌。你可以將當中1隻生物加入手牌，並將其餘卡牌置入我方魔力區中。",
-					],
-				},
-				{
-					type : "S",
-					civil : 1,
-					cost : 5,
-					sp : [
-						"將我方牌庫洗牌。之後公開我方牌庫頂第一張牌。如果那是生物的話就打出至戰鬥場上。不是的話就置入魔力區中。",
-					],
-				},
-			],
-		},
-		{
 			name : "巨進の超人",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp1-TR08.jpg",
 			mana : 1,

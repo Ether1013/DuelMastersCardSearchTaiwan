@@ -82294,7 +82294,7 @@
 			id : [ "24RP1 TR6/TR11", "24RP1 S8/S10", ],
 		},
 		{
-			name : "カブトリアル・クーガ / ミステリー・ディザスター",
+			name : "カブトリアル・クーガ /ミステリー・ディザスター",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp1-TR07a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
