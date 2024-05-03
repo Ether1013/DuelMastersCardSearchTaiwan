@@ -2048,6 +2048,26 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-078"
+	var setName = "台灣CS大賽2024 1st【水闇COMPLEX＠元丰】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "DARK MATERIAL COMPLEX",										count : 4,	},
+		{		name : "同期の妖精 / ド浮きの動悸",									count : 4,	},
+		{		name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",	count : 3,	},
+		{		name : "機怪人形ガチャック2",										count : 1,	},
+		{		name : "SSS級天災 デッドダムド",									count : 2,	},
+		{		name : "飛翔龍 5000VT",												count : 2,	},
+		{		name : "終止の時計 ザ・ミュート",									count : 4,	},
+		{		name : "忍蛇の聖沌 c0br4",											count : 4,	},
+		{		name : "奇天烈 シャッフ",											count : 4,	},
+		{		name : "アーテル・ゴルギーニ",										count : 4,	},
+		{		name : "電脳の女王 アリス / 不埒な再侵入",							count : 4,	},
+		{		name : "学校男 / ゾンビ・カーニバル",								count : 2,	},
+		{		name : "闇参謀グラン・ギニョール",									count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
 	var setCode = "NET-079"
 	var setName = "台灣CS大賽2024 2nd【深淵邪王門＠久】"
 	var isDeck = true;
@@ -2089,6 +2109,27 @@
 		{		name : "勝利龍装 クラッシュ“覇道”",										count : 4,	},
 		{		name : "龍世界 ドラゴ大王",												count : 3,	},
 		{		name : "「修羅」の頂 VAN・ベートーベン",								count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-081"
+	var setName = "台灣CS大賽2024 4th【三色機車＠菜虫】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "覇帝なき侵略 レッドゾーンF",						count : 4,	},
+		{		name : "禁断の轟速 ブラックゾーン",							count : 4,	},
+		{		name : "影速 ザ・トリッパー",								count : 4,	},
+		{		name : "龍装者 バルチュリス",								count : 3,	},
+		{		name : "赤い稲妻 テスタ・ロッサ",							count : 3,	},
+		{		name : "偽りの希望 鬼丸「終斗」",							count : 2,	},
+		{		name : "超次元の王家",										count : 4,	},
+		{		name : "ヴィオラの黒像",									count : 4,	},
+		{		name : "救済のカルマ ミルク / リリーフ・水晶チャージャー",	count : 4,	},
+		{		name : "終末の時計 ザ・クロック",							count : 4,	},
+		{		name : "絶速 ザ・ヒート",									count : 1,	},
+		{		name : "単騎連射 マグナム",									count : 1,	},
+		{		name : "轟く侵略 レッドゾーン",								count : 1,	},
+		{		name : "熱き侵略 レッドゾーンZ",							count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	

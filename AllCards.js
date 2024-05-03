@@ -44769,7 +44769,7 @@
 					"(K)W・ブレイカー(/K)",
 					"當此生物置於非進化生物之上出場時，選擇1張對手護盾並將之置入其持有者的墓地中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmd27-014.jpg",
 		},
 		{
 			name : "轟速 ザ・ゼット",
