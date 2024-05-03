@@ -2134,7 +2134,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-082"
-	var setName = "甲龍QX"
+	var setName = "甲龍QX＠Ether"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "甲型龍帝式 キリコ３",					count : 4,	},
