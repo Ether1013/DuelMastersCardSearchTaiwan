@@ -1458,7 +1458,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-054"
-	var setName = "台灣俺嘉年華2023 1st-[5C万軍投]＠彥誠"
+	var setName = "台灣俺嘉年華2023 1st【5C万軍投＠彥誠】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "クリスマⅢ",												count : 2,	},
@@ -1497,7 +1497,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-055"
-	var setName = "台灣俺嘉年華2023 2nd-[5CモルトNEXT]＠德爾塔"
+	var setName = "台灣俺嘉年華2023 2nd【5CモルトNEXT＠德爾塔】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
@@ -1533,7 +1533,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-056"
-	var setName = "台灣俺嘉年華2023 3rd-[水魂種]＠Norman"
+	var setName = "台灣俺嘉年華2023 3rd【水魂種＠Norman】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "バイケンの海幻",								count : 4,	},
@@ -1558,7 +1558,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-057"
-	var setName = "台灣俺嘉年華2023 4th-[5C万軍投]＠國洋"
+	var setName = "台灣俺嘉年華2023 4th【5C万軍投＠國洋】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "クリスマⅢ",												count : 2,	},
@@ -1589,7 +1589,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-058"
-	var setName = "台灣俺嘉年華2023 主辦-[龍月絕望神]＠紹睿"
+	var setName = "台灣俺嘉年華2023 主辦【龍月絕望神＠紹睿】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "Disジルコン",												count : 2,	},
@@ -2048,3 +2048,46 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-079"
+	var setName = "台灣CS大賽2024 2nd【深淵邪王門＠久】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "邪幽 ジャガイスト",									count : 4,	},
+		{		name : "ア:エヌ:マクア",									count : 4,	},
+		{		name : "超霊淵 ヤバーダン＝ロウ",							count : 4,	},
+		{		name : "謀遠 テレスコ=テレス",								count : 4,	},
+		{		name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",	count : 2,	},
+		{		name : "イカリノアブラニ火ヲツケロ",						count : 2,	},
+		{		name : "鬼寄せの術",										count : 4,	},
+		{		name : "ドミー=ゾー / 「倒したいか？」",					count : 4,	},
+		{		name : "フットレス＝トレース / 「力が欲しいか？」",			count : 4,	},
+		{		name : "百鬼の邪王門",										count : 2,	},
+		{		name : "アビスベル＝覇＝ロード",							count : 3,	},
+		{		name : "聖魔連結王 ドルファディロム",						count : 2,	},
+		{		name : "メガ・マナロック・ドラゴン",						count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-080"
+	var setName = "台灣CS大賽2024 3rd【流星霸道＠Alfian】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "メンデルスゾーン",												count : 4,	},
+		{		name : "ボルシャック・栄光・ルピア",									count : 4,	},
+		{		name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",			count : 2,	},
+		{		name : "爆龍覇 グレンリベット /「爆流秘術、暴龍の大地！」",				count : 2,	},
+		{		name : "切札勝太&カツキング ー熱血の物語ー",							count : 4,	},
+		{		name : "MMM-ジョーキング",												count : 2,	},
+		{		name : "流星のガイアッシュ・カイザー",									count : 4,	},
+		{		name : "光鎧龍ホーリーグレイス",										count : 2,	},
+		{		name : "蒼神龍トライクラブ・トライショット",							count : 1,	},
+		{		name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」",	count : 2,	},
+		{		name : "蒼き団長 ドギラゴン剣",											count : 1,	},
+		{		name : "時の法皇 ミラダンテⅫ",											count : 1,	},
+		{		name : "百族の長 プチョヘンザ",											count : 1,	},
+		{		name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",		count : 2,	},
+		{		name : "勝利龍装 クラッシュ“覇道”",										count : 4,	},
+		{		name : "龍世界 ドラゴ大王",												count : 3,	},
+		{		name : "「修羅」の頂 VAN・ベートーベン",								count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
