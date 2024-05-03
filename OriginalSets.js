@@ -2091,3 +2091,22 @@
 		{		name : "「修羅」の頂 VAN・ベートーベン",								count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-082"
+	var setName = "甲龍QX"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "甲型龍帝式 キリコ３",					count : 4,	},
+		{		name : "Q.Q.QX / 終葬 5.S.D.",					count : 4,	},
+		{		name : "水晶の祈り / クリスタル・ドゥーム",		count : 4,	},
+		{		name : "流星のガイアッシュ・カイザー",			count : 3,	},
+		{		name : "ガイアッシュの海地図",					count : 3,	},
+		{		name : "蒼狼の王妃 イザナミテラス",				count : 4,	},
+		{		name : "蒼神龍トライクラブ・トライショット",	count : 4,	},
+		{		name : "ア:グンテ",								count : 3,	},
+		{		name : "奇天烈 シャッフ",						count : 3,	},
+		{		name : "霞み妖精ジャスミン",					count : 2,	},
+		{		name : "電脳鎧冑アナリス",						count : 2,	},
+		{		name : "ジャスミンの地版",						count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
