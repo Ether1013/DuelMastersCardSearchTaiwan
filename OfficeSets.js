@@ -12859,7 +12859,7 @@
 			id : "DMR21 47/94",
 		},
 		{
-			name : "タイム3 シド",
+			name : "タイム３ シド",
 			pic : "",
 			rarity : "UC",
 			flavor : "",
@@ -13561,7 +13561,7 @@
 			id : "DMR22 39/74",
 		},
 		{
-			name : "タイム3 シドXⅡ",
+			name : "タイム３ シドXⅡ",
 			pic : "",
 			rarity : "UC",
 			flavor : "",
