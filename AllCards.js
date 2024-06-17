@@ -62404,7 +62404,7 @@
 		{
 			name : "デモニオの鬼時計",
 			type : "S",
-			civil : 2,
+			civil : 6,
 			race : [ "鬼札王国" ],
 			cost : 3,
 			mana : 1,
@@ -108625,7 +108625,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"所有玩家作廢其所有手牌、並最多抽5張牌。。",
+				"所有玩家作廢其所有手牌、並最多抽5張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-080.jpg",
 		},
