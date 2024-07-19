@@ -377,6 +377,14 @@
 				{	Jap : "マスターズ・レガシー",				Eng : "Master Legacy",			Chi : "王者遺產",		isCategory : false,	},
 				{	Jap : "アビスカス",							Eng : "Abyss Garbage",			Chi : "深淵渣",			isCategory : false,	},
 				{	Jap : "コロコロイヤル",						Eng : "Corocoro Royal",			Chi : "快樂快樂皇家",	isCategory : false,	},
+				{	Jap : "ドラゴンの花嫁",						Eng : "Dragon's Bride",			Chi : "龍的新娘",		isCategory : false,	},
+				{	Jap : "スプラッシュ・クイーンの集い",		Eng : "Splash Queen's Gathering",
+																								Chi : "水花皇后的集會",	isCategory : false,	},
+				{	Jap : "デスパペットの集い",					Eng : "Death Puppet's Gathering",
+																								Chi : "死亡傀儡的集會",	isCategory : false,	},
+				{	Jap : "ファイアー・バードの集い",			Eng : "Fire Bird's Gathering",	Chi : "火鳥的集會",		isCategory : false,	},
+				{	Jap : "ドリームメイトの集い",				Eng : "Dream Mate's Gathering",	Chi : "夢幻夥伴的集會",	isCategory : false,	},
+				{	Jap : "スノーフェアリーの集い",				Eng : "Snow Fearie's Gathering",Chi : "雪妖的集會",		isCategory : false,	},
 
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
