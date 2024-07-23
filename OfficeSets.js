@@ -80766,6 +80766,211 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
+	var setCode = "DMART-13";
+	var setName = "神アート デュエマ×デュエプレ";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "神人類 ヨミ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg11_pc.png",
+			rarity : "VC",
+			flavor : [ "" ],
+			id : "ART13 1/6",
+			count : 1,
+		},
+		{
+			name : "聖霊王アルファリオン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg12_pc.png",
+			rarity : "SR",
+			flavor : [ "聖霊王の名のもとに･･････道を阻む者は粛清します！ ―エレナ" ],
+			id : "ART13 2/6",
+			count : 1,
+		},
+		{
+			name : "Drache der'Zen",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg13_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART13 3/6",
+			count : 1,
+		},
+		{
+			name : "魔光神官ルドルフ・アルカディア",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg14_pc.png",
+			rarity : "SR",
+			flavor : [ "天に光、地に闇、魔光に仕える神のしもべよ、我が導きに応えなさい・・・・・・降臨せよ、ルドルフ・アルカディア ―ルカ" ],
+			id : "ART13 4/6",
+			count : 1,
+		},
+		{
+			name : "暴龍事変 ガイグレン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg15_pc.png",
+			rarity : "VC",
+			flavor : [ "" ],
+			id : "ART13 5/6",
+			count : 1,
+		},
+		{
+			name : "グレート・グラスパー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg16_pc.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART13 6/6",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "DMART-14";
+	var setName = "神アート フェアリー・タイムライン";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "葉鳴妖精ハキリ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card01.png",
+			rarity : "VR",
+			flavor : [ "マナが染み渡りますえ。　― 葉鳴妖精ハキリ" ],
+			id : "ART14 1/6",
+			count : 1,
+		},
+		{
+			name : "幻想と伝承の決断",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card02.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART14 2/6",
+			count : 1,
+		},
+		{
+			name : "氷打の妖精 / 巨打設計図",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card03.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART14 3/6",
+			count : 1,
+		},
+		{
+			name : "応援妖精エール /「みんな一緒に応援してね！」",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card04.png",
+			rarity : "U",
+			flavor : [ "" ],
+			id : "ART14 4/6",
+			count : 1,
+		},
+		{
+			name : "豊潤フォージュン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card05.png",
+			rarity : "C",
+			flavor : [ "豊潤な原始のパワー、見せてあげるっ！　― 原始妖精サリス" ],
+			id : "ART14 5/6",
+			count : 1,
+		},
+		{
+			name : "フェアリー・Re:ライフ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card06.png",
+			rarity : "C",
+			flavor : [ "ああ、また会えるなんて！ ──雪渓妖精マルル" ],
+			id : "ART14 6/6",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "DMART-15";
+	var setName = "神アート 激筆!!超獣戯画";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "轟く覚醒 レッドゾーン・バスター",
+			pic : "./cardPic/dmart15-1a.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART15 1a/6",
+			count : 1,
+		},
+		{
+			name : "蒼き覚醒 ドギラゴンX",
+			pic : "./cardPic/dmart15-1b.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART15 1b/6",
+			count : 1,
+		},
+		{
+			name : "邪帝斧 ボアロアックス",
+			pic : "./cardPic/dmart15-2a.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART15 2a/6",
+			count : 1,
+		},
+		{
+			name : "邪帝遺跡 ボアロパゴス",
+			pic : "./cardPic/dmart15-2b.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART15 2b/6",
+			count : 1,
+		},
+		{
+			name : "我臥牙 ヴェロキボアロス",
+			pic : "./cardPic/dmart15-2c.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART15 2c/6",
+			count : 1,
+		},
+		{
+			name : "オールデリート",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/01/card03.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART15 3/6",
+			count : 1,
+		},
+		{
+			name : "戦慄の魔女 アリス / 神にも届く旋律",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/01/card04.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART15 4/6",
+			count : 1,
+		},
+		{
+			name : "次世代龍覇 グレングラッサ /「ここはまかせて、お姉ちゃん！」",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/01/card05.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART15 5/6",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
 	var setCode = "DM23-EX3";
 	var setName = "アビス・レボリューション外伝 「邪神と水晶の華」";
 	var isDeck = false;
