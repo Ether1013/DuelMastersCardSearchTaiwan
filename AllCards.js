@@ -42566,20 +42566,6 @@
 			pic : "",
 		},
 		{
-			name : "邪眼教皇ロマノフII世",
-			type : "C",
-			civil : 4,
-			race : ["ダークロード","ドラゴン・ゾンビ","ナイト"],
-			power : 8000,
-			cost : 7,
-			mana : 1,
-			sp : [
-					"(K)W・ブレイカー(/K)",
-					"此生物出場時，作廢我方牌庫頂5張牌。之後，你可以不支付費用、從中使用1張費用6以下的咒文。",
-			],
-			pic : "",
-		},
-		{
 			name : "煉獄と魔弾の印",
 			type : "S",
 			civil : 6,
@@ -62229,7 +62215,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex09-039.jpg",
 		},
 		{
-			name : "邪眼教皇ロマノフⅡ世",
+			name : "邪眼教皇ロマノフII世",
 			type : "C",
 			civil : 4,
 			race : [ "ダークロード","ドラゴン・ゾンビ","ナイト" ],

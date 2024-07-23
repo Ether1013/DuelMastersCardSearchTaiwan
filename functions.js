@@ -1094,8 +1094,8 @@
 			for ( var udIndex = 0 ; udIndex < insertDatas.length ; udIndex++ ){
 				var insertData = insertDatas[udIndex];
 				var idCivil = insertData.civil;
-				//過濾卡牌時，雙極卡的文明由上下兩者合計
-				if ( insertData.ws != null ){
+				//過濾卡牌時，如果有指定卡種的話，則雙極卡只使用其中一邊的文明進行過濾、沒有指定的話，則雙極卡的文明由上下兩者合計
+				if ( insertData.ws != null && ctValues.length == 0 ){
 					idCivil = cardDatas.getDataByName( insertData.name, null, null, 0 ).civil | cardDatas.getDataByName( insertData.name, null, null, 1 ).civil;
 				}
 				var insertIndex = 0;

@@ -38251,7 +38251,7 @@
 	var isDeck = false;
 	var setCardList = [
 		{
-			name : "邪眼教皇ロマノフⅡ世",
+			name : "邪眼教皇ロマノフII世",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex10-s01.jpg",
 			rarity : "SR",
 			flavor : "",
@@ -64456,7 +64456,7 @@
 			id : ["RP19 12A/20","RP19 12B/20"],
 		},
 		{
-			name : "邪眼教皇ロマノフⅡ世",
+			name : "邪眼教皇ロマノフII世",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-a13.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-b13.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "邪眼の一族は、争いを求める。","RP19 13B/20" ],
