@@ -11277,7 +11277,7 @@
 					"每當有對手卡牌從任何地方置入墓地時，你可以將我方牌庫頂第一張牌置入我方的魔力區中。",
 					"(K)T・ブレイカー(/K)",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-S14.jpg",
 		},
 		{
 			name : "死神術士デスマーチ",
@@ -79092,8 +79092,8 @@
 				},				{
 					type :	"S",
 					civil : 16,
-					cost : 1,
-					mana : 5,
+					cost : 5,
+					mana : 1,
 					sp : [
 							"(K)S・トリガー(/K)",
 							"對手自行橫置他2隻重置狀態生物。",
