@@ -319,6 +319,7 @@
 			{ Jap : "水晶チャージャー",		Eng : "Crystal Charger",		Chi : "水晶突進者",			descript : "此咒文用完之後不會置入墓地，取而代之、以裏側方式置入我方魔力區中",},
 			{ Jap : "ハイパー化",			Eng : "Hyper Mode",				Chi : "超化",				descript : "你可以於我方主要階段執行以下動作以將此生物進入超化狀態",},
 			{ Jap : "OVERハイパー化",		Eng : "Over Hyper Mode",		Chi : "極限超化",			descript : "你可以於我方主要階段執行以下動作以將此生物進入超化狀態",},
+			{ Jap : "ヨビニオン",			Eng : "Callnion",				Chi : "呼朋引伴",			descript : "當你召喚此生物時，你可以持續公開我方牌庫頂的牌直到翻出費用此生物小的生物為止。打出該生物、並將其餘卡牌洗牌置入牌庫底",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
