@@ -16383,7 +16383,7 @@
 					"(K)S・トリガー(/K)",
 					"當此生物出場時，選擇戰鬥場上1隻我方生物、並將其他我方生物拿回到手牌中。之後，對手選擇戰鬥場上1隻對手自己的生物、並將其他對手生物拿回到手牌中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-021.jpg",
 		},
 		{
 			name : "聖域の戦虎 ベルセルク",
@@ -48250,7 +48250,7 @@
 			sp : [
 					"每當對手打出了費用數字比對手魔力區中的卡牌張數還多的生物至戰鬥場上時，取代其出場、直接將該生物置入對手魔力區中。",
 			],
-			pic : "",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex06-094.jpg",
 		},
 		{
 			name : "原始 サンナップ",
