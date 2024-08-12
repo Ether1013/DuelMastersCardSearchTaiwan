@@ -830,26 +830,6 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-061"
-	var setName = "水火サガ超神羅星"
-	var isDeck = true;
-	var setCardList = [
-		{		name : "カツラデランス /「アフロ行きま～す!!」",						count : 4,	},
-		{		name : "冥界の不死帝 ブルース /「迷いはない。俺の成すことは決まった」",	count : 2,	},
-		{		name : "死神覇王 XENARCH",												count : 2,	},
-		{		name : "カチコミ入道 ＜バトライ.鬼＞",									count : 4,	},
-		{		name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",		count : 4,	},
-		{		name : "絶望神サガ",													count : 4,	},
-		{		name : "ネ申・マニフェスト",											count : 4,	},
-		{		name : "瞬閃と疾駆と双撃の決断",										count : 4,	},
-		{		name : "蒼狼の大王 イザナギテラス",										count : 4,	},
-		{		name : "超神羅星アポロヌス・ドラゲリオン",								count : 3,	},
-		{		name : "単騎連射 マグナム",												count : 1,	},
-		{		name : "機術士ディール/「本日のラッキーナンバー！」",					count : 1,	},
-		{		name : "禁断の轟速 ブラックゾーン",										count : 3,	},
-	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
-	
 	var setCode = "TW-020"
 	var setName = "DOOM HEAVEN＠國洋"
 	var isDeck = true;
@@ -1319,15 +1299,15 @@
 		{		name : "甲型龍帝式 キリコ３",					count : 4,	},
 		{		name : "Q.Q.QX / 終葬 5.S.D.",					count : 4,	},
 		{		name : "水晶の祈り / クリスタル・ドゥーム",		count : 4,	},
-		{		name : "哀樹神官 グリッファ",					count : 3,	},
-		{		name : "ガイアッシュの海地図",					count : 3,	},
 		{		name : "蒼狼の王妃 イザナミテラス",				count : 4,	},
 		{		name : "蒼神龍トライクラブ・トライショット",	count : 4,	},
-		{		name : "ア:グンテ",								count : 3,	},
-		{		name : "奇天烈 シャッフ",						count : 3,	},
+		{		name : "ア:グンテ",								count : 4,	},
 		{		name : "霞み妖精ジャスミン",					count : 2,	},
 		{		name : "電脳鎧冑アナリス",						count : 2,	},
 		{		name : "ジャスミンの地版",						count : 4,	},
+		{		name : "哀樹神官 グリッファ",					count : 2,	},
+		{		name : "深海の伝道師 アトランティス",			count : 3,	},
+		{		name : "獣軍隊 ヤドック",						count : 3,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
