@@ -2151,3 +2151,86 @@
 		{		name : "ジャスミンの地版",						count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-083"
+	var setName = "新加坡官方CS大賽2024 1st【Heavens Gate＠Don】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "∞龍 ゲンムエンペラー",									count : 4,	},
+		{		name : "ヘブンズ・ゲート",										count : 4,	},
+		{		name : "B.F.F. モーメント",										count : 4,	},
+		{		name : "闘門の精霊ウェルキウス",								count : 4,	},
+		{		name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",	count : 4,	},
+		{		name : "光開の精霊サイフォゲート",								count : 4,	},
+		{		name : "星門の精霊アケルナル / スターゲイズ・ゲート",			count : 4,	},
+		{		name : "ケンザン・チャージャー",								count : 2,	},
+		{		name : "聖霊超王 H・アルカディアス",							count : 2,	},
+		{		name : "理想と平和の決断",										count : 3,	},
+		{		name : "飛翔龍 5000VT",											count : 1,	},
+		{		name : "蒼神龍アナザー・ワールド",								count : 2,	},
+		{		name : "護天！銀河MAX",											count : 1,	},
+		{		name : "閃光の精霊カンビアーレ",								count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-084"
+	var setName = "新加坡官方CS大賽2024 2nd【Green Black Abyss＠Anthony】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "邪幽 ジャガイスト",							count : 4,	},
+		{		name : "アビスベル＝覇＝ロード",					count : 4,	},
+		{		name : "フェアリー・Re:ライフ",						count : 4,	},
+		{		name : "深淵の壊炉 マーダン=ロウ",					count : 4,	},
+		{		name : "ドミー=ゾー / 「倒したいか？」",			count : 4,	},
+		{		name : "謀遠 テレスコ=テレス",						count : 4,	},
+		{		name : "フットレス＝トレース / 「力が欲しいか？」",	count : 4,	},
+		{		name : "ア:エヌ:マクア",							count : 4,	},
+		{		name : "超霊淵 ヤバーダン＝ロウ",					count : 3,	},
+		{		name : "秩序の意志",								count : 2,	},
+		{		name : "邪闘 シス",									count : 1,	},
+		{		name : "フェアリー・ギフト",						count : 1,	},
+		{		name : "フェアリー・ライフ",						count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-085"
+	var setName = "新加坡官方CS大賽2024 3rd【Blue Black Complex＠Young】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "DARK MATERIAL COMPLEX",										count : 4,	},
+		{		name : "同期の妖精 / ド浮きの動悸",									count : 4,	},
+		{		name : "終止の時計 ザ・ミュート",									count : 4,	},
+		{		name : "アーテル・ゴルギーニ",										count : 4,	},
+		{		name : "忍蛇の聖沌 c0br4",											count : 4,	},
+		{		name : "飛翔龍 5000VT",												count : 4,	},
+		{		name : "異端流し オニカマス",										count : 3,	},
+		{		name : "冥土人形ヴァミリア・バレル",								count : 3,	},
+		{		name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",	count : 3,	},
+		{		name : "ブルー・インパルス / 「真実を見極めよ、ジョニー！」",		count : 3,	},
+		{		name : "奇天烈 シャッフ",											count : 2,	},
+		{		name : "闇参謀グラン・ギニョール",									count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-086"
+	var setName = "新加坡官方CS大賽2024 3rd【Anacolour Deddam＠Alex】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "終末縫合王 ザ=キラー・キーナリー",							count : 3,	},
+		{		name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",	count : 3,	},
+		{		name : "CRYMAX ジャオウガ",											count : 2,	},
+		{		name : "アーテル・ゴルギーニ",										count : 4,	},
+		{		name : "流星のガイアッシュ・カイザー",								count : 4,	},
+		{		name : "天災 デドダム",												count : 4,	},
+		{		name : "忍蛇の聖沌 c0br4",											count : 4,	},
+		{		name : "奇天烈 シャッフ",											count : 2,	},
+		{		name : "飛翔龍 5000VT",												count : 2,	},
+		{		name : "終末の時計 ザ・クロック",									count : 2,	},
+		{		name : "SSS級天災 デッドダムド",									count : 2,	},
+		{		name : "同期の妖精 / ド浮きの動悸",									count : 2,	},
+		{		name : "キャディ・ビートル",										count : 3,	},
+		{		name : "哀樹の夜 シンベロム",										count : 1,	},
+		{		name : "虹速 ザ・ヴェルデ",											count : 1,	},
+		{		name : "終止の時計 ザ・ミュート",									count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
