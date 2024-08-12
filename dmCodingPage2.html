@@ -8,6 +8,80 @@
 	<script src="./functions.js?v=20170807"></script>
 </head>
 <script>
+
+	//全形轉半形
+	const FullShapeToHalfShape = (str) => {
+	  return str.replace(/[\uff01-\uff5e]/g, function (ch) {
+		return String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+	  }).replace(/\u3000/g, ' ')
+	}
+
+	//建立能力置換MAP
+	var insteadAB = [];
+	for ( var a = 0 ; a < abilityMapping.map.length ; a++ ){
+		var uuid = Math.random()*(10**16).toString();
+		var iData = { Jap : abilityMapping.map[a].Jap, Uuid : uuid };
+		var m = 0;
+		for ( ; m < insteadAB.length ; m++ ){
+			if ( iData.Jap.length >= insteadAB[m].Jap.length ){
+				break;
+			}
+		}
+		insteadAB.splice( m, 0, iData );
+	}
+	
+	//建立種族置換MAP
+	var insteadRC = [];
+	for ( var r = 0 ; r < raceMapping.map.length ; r++ ){
+		var uuid = Math.random()*(10**16).toString();
+		var rData = { Jap : raceMapping.map[r].Jap, Uuid : uuid };
+		var m = 0;
+		for ( ; m < insteadRC.length ; m++ ){
+			if ( rData.Jap.length >= insteadRC[m].Jap.length ){
+				break;
+			}
+		}
+		insteadRC.splice( m, 0, rData );
+	}
+
+	//將能力文字標籤化
+	function convertSP( sp ){
+		//全形轉半形並去掉半形空白
+		sp = FullShapeToHalfShape(sp).replaceAll( " ", "" );
+		//把所有關鍵字變成UUID
+		for ( var c = 0 ; c < insteadAB.length ; c++ ){
+			var doAlter = insteadAB[c].Jap == "G・ストライク";
+			sp = sp.replaceAll( insteadAB[c].Jap, insteadAB[c].Uuid );
+		}
+		//把所有種族變成UUID
+		for ( var c = 0 ; c < insteadRC.length ; c++ ){
+			var doAlter = insteadRC[c].Jap == "G・ストライク";
+			sp = sp.replaceAll( insteadRC[c].Jap, insteadRC[c].Uuid );
+		}
+		//把能力UUID變回能力文字並加上標籤
+		for ( var c = 0 ; c < insteadAB.length ; c++ ){
+			sp = sp.replaceAll( insteadAB[c].Uuid, "(K)"+insteadAB[c].Jap+"(/K)" );
+		}
+		//把種族UUID變回種族文字並加上標籤
+		for ( var c = 0 ; c < insteadRC.length ; c++ ){
+			sp = sp.replaceAll( insteadRC[c].Uuid, "(R)"+insteadRC[c].Jap+"(/R)" );
+		}
+		//護盾化要特別寫成中文
+		sp = sp.replaceAll("(K)シールド化(/K)","(K)護盾化<=>シールド化(/K)");
+		sp = eval(sp.replace(/\\s/g,""));
+		/*
+		for ( var s = 0 ; s < sp.length ; s++ ){
+			if ( !sp[s].startsWith("'") ){
+				sp[s] = "'" + sp[s];
+			}
+			if ( !sp[s].endsWith("',") ){
+				sp[s] = sp[s] + "',";
+			}
+		}
+		*/
+		return sp;
+	}
+
 	function scriptFromExcel(){
 	
 		var cDatas = [];
@@ -21,6 +95,7 @@
 			var cdDetail = {
 			};
 			if ( cd[12] == "" ){
+			
 				cdDetail = {
 					name : cd[1].substr( 0, cd[1].indexOf("(") ),
 					id : cd[1].substring( cd[1].indexOf("(")+3, cd[1].indexOf(")") ),
@@ -30,7 +105,8 @@
 					rarity : cd[4],
 					type : [],
 					civil : civilMapping.getValueByText( cd[3] ),
-					sp : eval(cd[10].replace(/\\s/g,"")),
+//					sp : eval(cd[10].replace(/\\s/g,"")),
+					sp : convertSP( cd[10] ),
 				};
 				
 				var types = cd[2].split("/");
@@ -74,7 +150,8 @@
 					w = {
 						type : [],
 						civil : civilMapping.getValueByText( cd[3] ),
-						sp : eval(cd[10].replace(/\\s/g,"")),
+//						sp : eval(cd[10].replace(/\\s/g,"")),
+						sp : convertSP( cd[10] ),
 					}
 				} catch ( e ){
 					alert( l + "("+cd[1]+")Abi(U)" );
@@ -99,7 +176,8 @@
 					w = {
 						type : [],
 						civil : civilMapping.getValueByText( cd[14] ),
-						sp : eval(cd[20].replace(/\\s/g,"")),
+//						sp : eval(cd[20].replace(/\\s/g,"")),
+						sp : convertSP( cd[20] ),
 					}
 				} catch ( e ){
 					alert( l + "("+cd[1]+")Abi(D)" );
@@ -276,21 +354,7 @@
 		
 		textContent2 += "\r\n];";
 		textContent2 += "\r\nsetDatas.addMap( setCode , setName , isDeck , setCardList );";
-		/*
-	var setCode = "DMRP-15";
-	var setName = "幻龍×凶襲 ゲンムエンペラー!!!";
-	var isDeck = false;
-	var setCardList = [	
-		{
-			name : "∞龍 ゲンムエンペラー",
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp15-km1.jpg",
-			rarity : "KGM",
-			flavor : [ "" ],
-			id : "RP15 KM1/KM3",
-		},
-	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
-		*/
+
 		$("body").append($("<span><XMP>" + textContent + "</XMP></span>")).append($("<HR>")).append($("<span><XMP>" + textContent2 + "</XMP></span>"));
 	}
 </script>

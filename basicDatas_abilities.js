@@ -8,7 +8,7 @@
 			{ Jap : "O・ドライブ",			Eng : "Over Drive",				Chi : "超越進擊",			descript : "當召喚此生物/使用此咒文時，你可以額外橫置自己魔力區中指定條件的卡片，這樣的話，發動追加能力",},
 			{ Jap : "バイオ・T",			Eng : "Bio Tackle",				Chi : "生化捕獲",			descript : "當指定種族的我方生物發動攻擊進入戰鬥時，你可以將此卡從手牌中丟棄，這樣的話，該回合結束前，發動攻擊的生物獲得指定能力",},
 			{ Jap : "ランチャーE",			Eng : "Launcher Energy",		Chi : "砲手能源",			descript : "橫置戰鬥場上任意隻指定種族的我方生物，並發動下面能力",},
-			{ Jap : "メガメテオバーン6",	Eng : "Mega Meteor Burn 6",		Chi : "百萬隕石爆擊６",		descript : "將進化生物下面的6張種子生物卡置入墓地以發動能力",},
+			{ Jap : "メガメテオバーン6",	Eng : "Mega Meteor Burn 6",		Chi : "百萬隕石爆擊6",		descript : "將進化生物下面的6張種子生物卡置入墓地以發動能力",},
 			{ Jap : "バイオ・K",			Eng : "Bio Kick",				Chi : "生化踢擊",			descript : "當指定種族的我方生物攻擊牌手未被阻擋時，你可以將此卡從手牌中丟棄，這樣的話，發動下列能力",},
 			{ Jap : "L・ゲート",			Eng : "Life Gate",				Chi : "生命之門",			descript : "當此生物被破壞時，你可以取代破壞、將指定種族的卡牌各別從我方墓地裡選擇1張、並將之加入到手牌中。那樣的話，將此生物置入牌庫底。",},
 
@@ -302,7 +302,7 @@
 																			Chi : "Gang Parade覺醒連結",descript : "當場上有指定生物時，將他們與此生物翻面進行連結",},
 			{ Jap : "超無限GR進化",			Eng : "Super Endless Gacha Range Evolution",
 																			Chi : "超無限GR進化",		descript : "將此卡進化在我方GR牌庫頂任意張卡牌之上",},
-			{ Jap : "ジョラゴン・ポップ１",	Eng : "Juragon Hope One",		Chi : "喬龍希望1",			descript : "當此生物離場時，你可以取而代之、將此生物下方一張卡牌置入墓地。如果該卡牌是ジョーカーズ生物的話，則你可以使用其出場效果的其中一條",},
+			{ Jap : "ジョラゴン・ポップ1",	Eng : "Juragon Hope One",		Chi : "喬龍希望1",			descript : "當此生物離場時，你可以取而代之、將此生物下方一張卡牌置入墓地。如果該卡牌是ジョーカーズ生物的話，則你可以使用其出場效果的其中一條",},
 			{ Jap : "超無限墓地呪文進化",	Eng : "Super Endless Graveyard Spell Evolution",		
 																			Chi : "超無限墓地呪文進化",	descript : "將此生物進化在我方墓地裡一張以上的咒文之上出場",},
 			{ Jap : "ホールド・ナッシング・バック！",	

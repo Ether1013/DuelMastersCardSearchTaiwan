@@ -55886,7 +55886,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex09-023.jpg",
 		},
 		{
-			name : "タイム３ シドXⅡ",
+			name : "タイム3 シドXⅡ",
 			type : "C",
 			civil : 24,
 			race : ["エンジェル・ドラゴン","革命軍","ドレミ団"],
@@ -62706,7 +62706,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex11-035.jpg",
 		},
 		{
-			name : "タイム１ ドレミ",
+			name : "タイム1 ドレミ",
 			type : "C",
 			civil : 24,
 			race : [ "革命軍/ドレミ団" ],
@@ -65324,7 +65324,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"(K)J・O・E(/K)１",
+				"(K)J・O・E(/K)1",
 				"(K)スピードアタッカー(/K)",
 				"每當任何玩家不支付費用打出生物時，破壞該生物。",
 			],
@@ -65463,7 +65463,7 @@
 			]
 		},
 		{
-			name : "タイム３ シド",
+			name : "タイム3 シド",
 			type : "C",
 			civil : 24,
 			race : ["エンジェル・ドラゴン","革命軍","ドレミ団"],
@@ -65477,7 +65477,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-076.jpg",
 		},
 		{
-			name : "【問２】 ノロン⤴",
+			name : "【問2】 ノロン⤴",
 			type : "C",
 			civil : 12,
 			race : ["クリスタル・ドラゴン","革命軍","テック団"],
@@ -68353,7 +68353,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex01-052.jpg",
 		},
 		{
-			name : "零獄接続王 ロマノグリラ０世",
+			name : "零獄接続王 ロマノグリラ0世",
 			type : "C",
 			civil : 21,
 			race : [ "ディスペクター","ダークロード","ガーディアン","ナイト" ],
@@ -69681,7 +69681,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF8.jpg",
 		},
 		{
-			name : "ジャマリーリョ-S８",
+			name : "ジャマリーリョ-S8",
 			type : "C",
 			civil : 16,
 			race : ["メカ・デル・ディネロ"],
@@ -69696,7 +69696,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-009.jpg",
 		},
 		{
-			name : "ブルトゥーラ-D１",
+			name : "ブルトゥーラ-D1",
 			type : "C",
 			civil : 16,
 			race : ["メカ・デル・ディネロ"],
@@ -69839,7 +69839,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-023.jpg",
 		},
 		{
-			name : "２番ウッドのタイガーくん",
+			name : "2番ウッドのタイガーくん",
 			type : "C",
 			civil : 1,
 			race : ["ドリームメイト"],
@@ -70215,7 +70215,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-050.jpg",
 		},
 		{
-			name : "アストマープル-T３",
+			name : "アストマープル-T3",
 			type : "C",
 			civil : 16,
 			race : ["メカ・デル・ディネロ"],
@@ -73170,7 +73170,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-003.jpg",
 		},
 		{
-			name : "甲型龍帝式 キリコ３",
+			name : "甲型龍帝式 キリコ3",
 			type : "EC",
 			civil : 8,
 			race : ["クリスタル・コマンド・ドラゴン"],
@@ -73846,7 +73846,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho31.jpg",
 		},
 		{
-			name : "霊宝 ヒャクメ-４",
+			name : "霊宝 ヒャクメ-4",
 			type : "C",
 			civil : 21,
 			race : ["パンドラボックス","アーク・セラフィム","ディスタス"],
@@ -74447,7 +74447,7 @@
 			]
 		},
 		{
-			name : "神徒 メイプル-１",
+			name : "神徒 メイプル-1",
 			type : "C",
 			civil : 4,
 			race : ["デスパペット","オラクル","ディスタス"],
@@ -74456,7 +74456,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，觀看對手手牌並擇一作廢。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho34.jpg",
 		},
@@ -74476,7 +74476,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho36.jpg",
 		},
 		{
-			name : "月砂 フロッガ-１",
+			name : "月砂 フロッガ-1",
 			type : "C",
 			civil : 2,
 			race : ["デューンゲッコー","ディスタス"],
@@ -74485,7 +74485,7 @@
 			mana : 1,
 			sp : [
 				"對手的非進化生物在出場的回合不能發動攻擊。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho37.jpg",
 		},
@@ -74502,7 +74502,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho38.jpg",
 		},
 		{
-			name : "妖精 アジサイ-２",
+			name : "妖精 アジサイ-2",
 			type : "C",
 			civil : 9,
 			race : ["スノーフェアリー","ディスタス"],
@@ -74511,7 +74511,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，觀看我方牌庫頂2張牌。將其中1張置入魔力區中，另1張則加入手牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho41.jpg",
 		},
@@ -75183,7 +75183,7 @@
 			]
 		},
 		{
-			name : "猛菌 キューティ-２",
+			name : "猛菌 キューティ-2",
 			type : "C",
 			civil : 8,
 			race : ["サイバー・ウイルス","ディスタス"],
@@ -75193,7 +75193,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"此生物出場時，選擇1隻對手生物，下個我方回合開始前，該生物不能攻擊或是阻擋。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-106.jpg",
 		},
@@ -77827,7 +77827,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy20-010.jpg",
 		},
 		{
-			name : "悪夢 ルドバット-１",
+			name : "悪夢 ルドバット-1",
 			type : "C",
 			civil : 4,
 			race : ["ダーク・ナイトメア","ディスタス"],
@@ -77836,7 +77836,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，作廢我方牌庫頂第一張牌。之後，將1隻生物從我方墓地拿回到手牌中。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy20-011.jpg",
 		},
@@ -79509,7 +79509,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-009.jpg",
 		},
 		{
-			name : "腐聖 ブラッドウ-２",
+			name : "腐聖 ブラッドウ-2",
 			type : "C",
 			civil : 20,
 			race : ["イニシエート","ゴースト","ディスタス"],
@@ -79520,12 +79520,12 @@
 				"(K)ブロッカー(/K)",
 				"此生物不能攻擊玩家。",
 				"此生物出場時，抽1張牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-011.jpg",
 		},
 		{
-			name : "勇騎 バクアイラ-１",
+			name : "勇騎 バクアイラ-1",
 			type : "C",
 			civil : 2,
 			race : ["ヒューマノイド爆","ディスタス"],
@@ -79534,12 +79534,12 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，你可以作廢1張手牌。那樣的話，就抽1張牌。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-014.jpg",
 		},
 		{
-			name : "黙示 ゲンシャコ-１",
+			name : "黙示 ゲンシャコ-1",
 			type : "C",
 			civil : 16,
 			race : ["ライトブリンガー","ディスタス"],
@@ -79549,7 +79549,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"此生物出場時，橫置1隻對手生物，下個對手回合初時，該生物不能重置。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-003.jpg",
 		},
@@ -79570,7 +79570,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-004.jpg",
 		},
 		{
-			name : "霊峰 メテオザ-１",
+			name : "霊峰 メテオザ-1",
 			type : "C",
 			civil : 2,
 			race : ["ロック・ビースト","ディスタス"],
@@ -79579,12 +79579,12 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，破壞1隻攻擊力2000以下的對手生物。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-005.jpg",
 		},
 		{
-			name : "腐勇 ドルマーク-２",
+			name : "腐勇 ドルマーク-2",
 			type : "C",
 			civil : 6,
 			race : ["ゴースト","ヒューマノイド","ディスタス"],
@@ -79594,7 +79594,7 @@
 			sp : [
 				"(K)G・ストライク(/K)",
 				"(K)スレイヤー(/K)",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd18-006.jpg",
 		},
@@ -80131,7 +80131,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-031.jpg",
 		},
 		{
-			name : "聖者 シュライ-１",
+			name : "聖者 シュライ-1",
 			type : "C",
 			civil : 16,
 			race : ["イニシエート","ディスタス"],
@@ -80140,7 +80140,7 @@
 			mana : 1,
 			sp : [
 				"我方回合結束時，你可以橫置此生物。那樣的話，就重置1隻我方其他生物。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-032.jpg",
 		},
@@ -80200,7 +80200,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-036.jpg",
 		},
 		{
-			name : "海族 パシフィオ-１",
+			name : "海族 パシフィオ-1",
 			type : "C",
 			civil : 8,
 			race : ["マーフォーク","ディスタス"],
@@ -80209,7 +80209,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，選擇1隻對手生物。該生物在下個我方回合開始前不會被攻擊或是阻擋。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-037.jpg",
 		},
@@ -80242,7 +80242,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-039.jpg",
 		},
 		{
-			name : "禁忌 ドルブロ-１",
+			name : "禁忌 ドルブロ-1",
 			type : "C",
 			civil : 4,
 			race : ["イニシャルズX","ディスタス"],
@@ -80253,7 +80253,7 @@
 				"(K)S・トリガー(/K)",
 				"(K)ブロッカー(/K)",
 				"於此生物攻擊後破壞此生物。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-040.jpg",
 		},
@@ -80326,7 +80326,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-045.jpg",
 		},
 		{
-			name : "熱血 バトクロス-１",
+			name : "熱血 バトクロス-1",
 			type : "C",
 			civil : 2,
 			race : ["ガイアール・コマンド・ドラゴン","ディスタス"],
@@ -80336,7 +80336,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"當此生物出場，你可以選擇1隻對手生物。讓被選擇的生物與此生物進行戰鬥。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-046.jpg",
 		},
@@ -80398,7 +80398,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-050.jpg",
 		},
 		{
-			name : "剛勇 ドングリ-１",
+			name : "剛勇 ドングリ-1",
 			type : "C",
 			civil : 1,
 			race : ["ワイルド・ベジーズ","ディスタス"],
@@ -80409,12 +80409,12 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"當此生物出場時，選擇1隻生物，此回合、該生物攻擊力+2000、且不能攻擊玩家。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-051.jpg",
 		},
 		{
-			name : "神官 フンヌ-２",
+			name : "神官 フンヌ-2",
 			type : "C",
 			civil : 18,
 			race : ["ソルトルーパー","メルト・ウォリアー","ディスタス"],
@@ -80425,12 +80425,12 @@
 				"(K)ブロッカー(/K)",
 				"(K)スピードアタッカー(/K)",
 				"我方回合結束時，重置此生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-054.jpg",
 		},
 		{
-			name : "麗姫 アントワ-２",
+			name : "麗姫 アントワ-2",
 			type : "C",
 			civil : 10,
 			race : ["スプラッシュ・クイーン","ティラノ・ドレイク","ディスタス"],
@@ -80439,12 +80439,12 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，你可以作廢所有我方手牌，那樣的話，就抽3張牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-055.jpg",
 		},
 		{
-			name : "鎧冑 アナリス-２",
+			name : "鎧冑 アナリス-2",
 			type : "C",
 			civil : 9,
 			race : ["ジャイアント・インセクト","サイバーロード","ディスタス"],
@@ -80454,12 +80454,12 @@
 			sp : [
 				"此生物不能發動攻擊。",
 				"每當對手生物發動攻擊時，你就可以抽1張牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-056.jpg",
 		},
 		{
-			name : "魂晶 リゲル-２",
+			name : "魂晶 リゲル-2",
 			type : "C",
 			civil : 5,
 			race : ["スピリット・クォーツ","ディスタス"],
@@ -80469,7 +80469,7 @@
 			sp : [
 				"(K)マッハファイター(/K)",
 				"此生物出場時，你可以將1張卡牌從我方墓地或是魔力區中拿回到手牌中。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-057.jpg",
 		},
@@ -80502,7 +80502,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-058.jpg",
 		},
 		{
-			name : "王機 バウラ-１",
+			name : "王機 バウラ-1",
 			type : "C",
 			civil : 16,
 			race : ["グレートメカオー","ディスタス"],
@@ -80513,7 +80513,7 @@
 				"(K)ブロッカー(/K)",
 				"此生物不能攻擊玩家。",
 				"此生物出場時，將1張咒文從我方墓地拿回到手中。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-059.jpg",
 		},
@@ -80533,7 +80533,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-060.jpg",
 		},
 		{
-			name : "星樹 ジェイド-１",
+			name : "星樹 ジェイド-1",
 			type : "C",
 			civil : 16,
 			race : ["スターライト・ツリー","ディスタス"],
@@ -80543,7 +80543,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物不能攻擊玩家。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-061.jpg",
 		},
@@ -80614,7 +80614,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-067.jpg",
 		},
 		{
-			name : "電脳 ハルカス-１",
+			name : "電脳 ハルカス-1",
 			type : "C",
 			civil : 8,
 			race : ["リキッド・ピープル","ディスタス"],
@@ -80623,12 +80623,12 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，抽1張牌。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-068.jpg",
 		},
 		{
-			name : "猛菌 マリフラ-１",
+			name : "猛菌 マリフラ-1",
 			type : "C",
 			civil : 8,
 			race : ["サイバー・ウイルス","ディスタス"],
@@ -80638,7 +80638,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物不能發動攻擊。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-069.jpg",
 		},
@@ -80708,7 +80708,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-074.jpg",
 		},
 		{
-			name : "傀儡 ジェニ-１",
+			name : "傀儡 ジェニ-1",
 			type : "C",
 			civil : 4,
 			race : ["デスパペット","ディスタス"],
@@ -80717,7 +80717,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，隨機作廢1張對手手牌。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-075.jpg",
 		},
@@ -80785,7 +80785,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-081.jpg",
 		},
 		{
-			name : "魂具 ピライバ-１",
+			name : "魂具 ピライバ-1",
 			type : "C",
 			civil : 2,
 			race : ["ゼノパーツ","ディスタス"],
@@ -80794,7 +80794,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，破壞戰鬥場上1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-082.jpg",
 		},
@@ -80852,7 +80852,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-089.jpg",
 		},
 		{
-			name : "勇猛 ギガホン-１",
+			name : "勇猛 ギガホン-1",
 			type : "C",
 			civil : 1,
 			race : ["ホーン・ビースト","ディスタス"],
@@ -80861,7 +80861,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，觀看我方牌庫頂5張牌，你可以從中選擇1隻生物給對手確認並加入手牌。其餘卡牌擇依喜好順序置入牌庫底。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-090.jpg",
 		},
@@ -80879,7 +80879,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-091.jpg",
 		},
 		{
-			name : "無頼 ブロンズ-１",
+			name : "無頼 ブロンズ-1",
 			type : "C",
 			civil : 1,
 			race : ["ビーストフォーク","ディスタス"],
@@ -80888,7 +80888,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，將我方牌庫頂第一張牌置入我方魔力區中。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp17-092.jpg",
 		},
@@ -81525,7 +81525,7 @@
 			mana : 1,
 			sp : [
 				"此回合、1隻我方生物的攻擊力+6000、獲得「(K)パワード・ブレイカー(/K)」能力。",
-				"(K)革命(/K)０－此回合、該生物發動攻擊時，如果我方沒有護盾的話，則重置該生物。",
+				"(K)革命(/K)0－此回合、該生物發動攻擊時，如果我方沒有護盾的話，則重置該生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b029.jpg",
 		},
@@ -81697,7 +81697,7 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"(K)革命(/K)２－此生物出場時，下列能力執行10次－##選擇1隻對手生物，此回合中、該生物攻擊力-1000。",
+				"(K)革命(/K)2－此生物出場時，下列能力執行10次－##選擇1隻對手生物，此回合中、該生物攻擊力-1000。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b042.jpg",
 		},
@@ -81747,8 +81747,8 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"(K)革命(/K)０－此生物出場時，你可以將我方牌庫頂2張牌各自(K)護盾化<=>シールド化(/K)。",
-				"(K)革命(/K)２－我方護盾區中的卡牌一律獲得「(K)S・トリガー(/K)」能力。",
+				"(K)革命(/K)0－此生物出場時，你可以將我方牌庫頂2張牌各自(K)護盾化<=>シールド化(/K)。",
+				"(K)革命(/K)2－我方護盾區中的卡牌一律獲得「(K)S・トリガー(/K)」能力。",
 				"此生物被破壞時，取而代之、置入魔力區中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b048.jpg",
@@ -82561,7 +82561,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-030.jpg",
 		},
 		{
-			name : "霊騎 フィーク-２",
+			name : "霊騎 フィーク-2",
 			type : "C",
 			civil : 16,
 			race : ["アーク・セラフィム","ディスタス"],
@@ -82570,7 +82570,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，你可以不支付費用、使用1張手牌中費用4以下的咒文。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-031.jpg",
 		},
@@ -82673,7 +82673,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-040.jpg",
 		},
 		{
-			name : "悪魔 フッシ-１",
+			name : "悪魔 フッシ-1",
 			type : "C",
 			civil : 4,
 			race : ["ファンキー・ナイトメア","ディスタス"],
@@ -82682,7 +82682,7 @@
 			mana : 1,
 			sp : [
 				"如果此生物在我方回合中被破壞的話，則於該回合結束時，將此生物從墓地打出至戰鬥場上。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-041.jpg",
 		},
@@ -82730,7 +82730,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-044.jpg",
 		},
 		{
-			name : "勇騎 ギャラガ-２",
+			name : "勇騎 ギャラガ-2",
 			type : "C",
 			civil : 2,
 			race : ["ヒューマノイド","ディスタス"],
@@ -82740,7 +82740,7 @@
 			sp : [
 				"(K)スピードアタッカー(/K)",
 				"此生物出場時，將1張我方護盾拿回到手牌中。但是你不能使用其「(K)S・トリガー(/K)」能力。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-045.jpg",
 		},
@@ -82801,7 +82801,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-049.jpg",
 		},
 		{
-			name : "群蟲 シェルフォ-２",
+			name : "群蟲 シェルフォ-2",
 			type : "C",
 			civil : 1,
 			race : ["コロニー・ビートル","ディスタス"],
@@ -82810,7 +82810,7 @@
 			mana : 1,
 			sp : [
 				"卡牌不會從對手的魔力區中離開。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-050.jpg",
 		},
@@ -82844,7 +82844,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-052.jpg",
 		},
 		{
-			name : "腐聖 ベガ-２",
+			name : "腐聖 ベガ-2",
 			type : "C",
 			civil : 20,
 			race : ["イニシエート","ゴースト","ディスタス"],
@@ -82854,12 +82854,12 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物被破壞時，隨機作廢1張對手手牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-053.jpg",
 		},
 		{
-			name : "勇聖 アールイ-２",
+			name : "勇聖 アールイ-2",
 			type : "C",
 			civil : 18,
 			race : ["イニシエート","ヒューマノイド","ディスタス"],
@@ -82869,12 +82869,12 @@
 			sp : [
 				"(K)スピードアタッカー(/K)",
 				"此生物被破壞時，你可以從手牌打出1隻費用4以下的生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-054.jpg",
 		},
 		{
-			name : "電勇 マグナス-２",
+			name : "電勇 マグナス-2",
 			type : "C",
 			civil : 10,
 			race : ["リキッド・ピープル","ヒューマノイド","ディスタス"],
@@ -82884,12 +82884,12 @@
 			sp : [
 				"此生物不會被阻擋。",
 				"此生物被破壞時，破壞1張戰鬥場上、費用4以下的對手卡牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-055.jpg",
 		},
 		{
-			name : "無電 スプラ-２",
+			name : "無電 スプラ-2",
 			type : "C",
 			civil : 9,
 			race : ["リキッド・ピープル","ビーストフォーク","ディスタス"],
@@ -82899,12 +82899,12 @@
 			sp : [
 				"(K)マッハファイター(/K)",
 				"此生物被破壞時，選擇1隻對手生物並將之拿回到其持有者的手牌中。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-056.jpg",
 		},
 		{
-			name : "腐頼 ルマウス-２",
+			name : "腐頼 ルマウス-2",
 			type : "C",
 			civil : 5,
 			race : ["ゴースト","ビーストフォーク","ディスタス"],
@@ -82914,7 +82914,7 @@
 			sp : [
 				"(K)スレイヤー(/K)",
 				"此生物被破壞時，公開我方牌庫頂2張牌。將其中一張置入魔力區中、另外一張若是生物的話則加入手牌、不是的話則置入墓地。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-057.jpg",
 		},
@@ -82987,7 +82987,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-062.jpg",
 		},
 		{
-			name : "輝晶 ソラレイ-１",
+			name : "輝晶 ソラレイ-1",
 			type : "C",
 			civil : 16,
 			race : ["メタリカ","ディスタス"],
@@ -82996,7 +82996,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，橫置1隻對手生物。下個對手回合初、該生物不能重置。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-063.jpg",
 		},
@@ -83056,7 +83056,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-068.jpg",
 		},
 		{
-			name : "海郷 エマジェン-１",
+			name : "海郷 エマジェン-1",
 			type : "C",
 			civil : 8,
 			race : ["ムートピア","ディスタス"],
@@ -83065,7 +83065,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，抽2張牌，然後作廢1張手牌。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-069.jpg",
 		},
@@ -83153,7 +83153,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-075.jpg",
 		},
 		{
-			name : "闇影 バイツ-１",
+			name : "闇影 バイツ-1",
 			type : "C",
 			civil : 4,
 			race : ["マフィ・ギャング","ディスタス"],
@@ -83162,7 +83162,7 @@
 			mana : 1,
 			sp : [
 				"當此生物被破壞時，選擇1隻對手生物。此回合中、該生物攻擊力-2000。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-076.jpg",
 		},
@@ -83266,7 +83266,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-083.jpg",
 		},
 		{
-			name : "爆衆 ボルカ-１",
+			name : "爆衆 ボルカ-1",
 			type : "C",
 			civil : 2,
 			race : ["ビートジョッキー","ディスタス"],
@@ -83275,7 +83275,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，你可以破壞1隻攻擊力5000以下的對手生物。那樣的話，就破壞1張我方護盾。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-084.jpg",
 		},
@@ -83387,7 +83387,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-093.jpg",
 		},
 		{
-			name : "大地 カママドウ-１",
+			name : "大地 カママドウ-1",
 			type : "C",
 			civil : 1,
 			race : ["グランセクト","ディスタス"],
@@ -83396,7 +83396,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，你可以將1隻攻擊力5000以下的對手生物置入其持有者的魔力區中。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-094.jpg",
 		},
@@ -83775,7 +83775,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"(K)マナ武装(/K)３(火)－此生物獲得「(K)スピードアタッカー(/K)」能力。",
+				"(K)マナ武装(/K)3(火)－此生物獲得「(K)スピードアタッカー(/K)」能力。",
 				"此生物可能的話每回合都要發動攻擊。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-029.jpg",
@@ -84376,7 +84376,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"(K)ニンジャ・ストライク(/K)５",
+				"(K)ニンジャ・ストライク(/K)5",
 				"此生物不能發動攻擊。",
 				"此生物出場時，抽1張牌，然後作廢1張手牌。",
 				"當我方墓地有6張以上的卡牌時，此生物獲得「(K)ブロッカー(/K)」能力。",
@@ -84384,7 +84384,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-008.jpg",
 		},
 		{
-			name : "電磁 アクアン-２",
+			name : "電磁 アクアン-2",
 			type : "C",
 			civil : 11,
 			race : ["サイバーロード","ディスタス"],
@@ -84394,7 +84394,7 @@
 			sp : [
 				"(K)G・ストライク(/K)",
 				"此生物出場時，公開我方牌庫頂4張牌。從中選擇水文明、火文明、自然文明的卡牌各1張並加入手牌。剩餘卡牌擇依喜好順序置入牌庫底。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-008.jpg",
 		},
@@ -84414,7 +84414,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-009.jpg",
 		},
 		{
-			name : "賢樹 エルフィ-１",
+			name : "賢樹 エルフィ-1",
 			type : "C",
 			civil : 1,
 			race : ["ツリーフォーク","ディスタス"],
@@ -84425,12 +84425,12 @@
 				"(K)ガードマン(/K)",
 				"此生物不能發動攻擊。",
 				"我方的(R)ディスタス(/R)的召喚費用少1。但是不能降到0以下。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-010.jpg",
 		},
 		{
-			name : "勇騎 オニモエル-２",
+			name : "勇騎 オニモエル-2",
 			type : "C",
 			civil : 2,
 			race : ["ヒューマノイド","ディスタス"],
@@ -84439,12 +84439,12 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，破壞1隻攻擊力2000以下的對手生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-014.jpg",
 		},
 		{
-			name : "無頼 ミランダ-２",
+			name : "無頼 ミランダ-2",
 			type : "C",
 			civil : 1,
 			race : ["ビーストフォーク","ディスタス"],
@@ -84454,7 +84454,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"此生物出場時，將1隻重置狀態的對手生物置入其持有者的魔力區。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-002.jpg",
 		},
@@ -84509,7 +84509,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-005.jpg",
 		},
 		{
-			name : "無頼 ダイチ-３",
+			name : "無頼 ダイチ-3",
 			type : "C",
 			civil : 11,
 			race : ["ビーストフォーク","ディスタス"],
@@ -84518,7 +84518,7 @@
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
-				"(K)ササゲール(/K)３",
+				"(K)ササゲール(/K)3",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsd19-006.jpg",
 		},
@@ -84848,7 +84848,7 @@
 				"(K)EXライフ(/K)",
 				"(K)W・ブレイカー(/K)",
 				"當卡牌從我方護盾區置入墓地時，如果該卡牌是(R)ディスタス(/R)或是(R)ディスペクター(/R)、且費用不超過我方魔力區中的卡牌張數的話就將之打出場。不是的話則加入手牌。",
-				"我方其他生物一律獲得「(K)ササゲール(/K)２」能力。",
+				"我方其他生物一律獲得「(K)ササゲール(/K)2」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-011.jpg",
 		},
@@ -86093,7 +86093,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-030.jpg",
 		},
 		{
-			name : "天翼 クリティブ-１",
+			name : "天翼 クリティブ-1",
 			type : "C",
 			civil : 16,
 			race : ["ジャスティス・ウイング","ディスタス"],
@@ -86102,7 +86102,7 @@
 			mana : 1,
 			sp : [
 				"當對手打出費用數值比對手魔力區卡牌張數還多的生物時，將該生物置入牌庫底。。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-031.jpg",
 		},
@@ -86149,7 +86149,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-034.jpg",
 		},
 		{
-			name : "電脳 メディクリ-１",
+			name : "電脳 メディクリ-1",
 			type : "C",
 			civil : 8,
 			race : ["リキッド・ピープル","ディスタス"],
@@ -86158,7 +86158,7 @@
 			mana : 1,
 			sp : [
 				"我方所有(R)ディスタス(/R)一律獲得「(K)ジャストダイバー(/K)」能力。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-035.jpg",
 		},
@@ -86192,7 +86192,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-037.jpg",
 		},
 		{
-			name : "傀魂 カット-１",
+			name : "傀魂 カット-1",
 			type : "C",
 			civil : 4,
 			race : ["デスパペット","ゼノパーツ","ディスタス"],
@@ -86201,7 +86201,7 @@
 			mana : 1,
 			sp : [
 				"我方所有(R)ディスタス(/R)一律獲得「(K)スレイヤー(/K)」能力。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-038.jpg",
 		},
@@ -86249,7 +86249,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-045.jpg",
 		},
 		{
-			name : "聖黒 アシュライ-２",
+			name : "聖黒 アシュライ-2",
 			type : "C",
 			civil : 20,
 			race : ["シャイン・モンスター","ダーク・モンスター","ディスタス"],
@@ -86259,12 +86259,12 @@
 			sp : [
 				"我方回合結束時，將我方牌庫頂第一張牌置入我方墓地。",
 				"當此生物被破壞時，你可以將1隻其他生物從我方墓地拿回到手牌中。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-046.jpg",
 		},
 		{
-			name : "鎧亜 イカロス-２",
+			name : "鎧亜 イカロス-2",
 			type : "C",
 			civil : 18,
 			race : ["ロスト・クルセイダー","ディスタス"],
@@ -86274,7 +86274,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"此生物出場時，下列能力擇一發動－##橫置1隻對手生物。##破壞1隻費用3以下的對手生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-047.jpg",
 		},
@@ -86307,7 +86307,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-049.jpg",
 		},
 		{
-			name : "機電 ドスコーピ-２",
+			name : "機電 ドスコーピ-2",
 			type : "C",
 			civil : 10,
 			race : ["アーマロイド","マーフォーク","ディスタス"],
@@ -86316,7 +86316,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，抽1張牌。然後破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-050.jpg",
 		},
@@ -86335,7 +86335,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-052.jpg",
 		},
 		{
-			name : "異鎧 ディスマジ-２",
+			name : "異鎧 ディスマジ-2",
 			type : "C",
 			civil : 5,
 			race : ["ロスト・クルセイダー","エイリアン","ディスタス"],
@@ -86344,12 +86344,12 @@
 			mana : 1,
 			sp : [
 				"你可以從我方墓地或是魔力區召喚此生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-053.jpg",
 		},
 		{
-			name : "機勇 スタバ-２",
+			name : "機勇 スタバ-2",
 			type : "C",
 			civil : 3,
 			race : ["ヒューマノイド","ビーストフォーク","ディスタス"],
@@ -86357,7 +86357,7 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 				"當你使用此生物的「(K)ササゲール(/K)」時，那隻減少費用出場的(R)ディスペクター(/R)獲得「(K)スピードアタッカー(/K)」與「(K)マッハファイター(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-054.jpg",
@@ -86424,7 +86424,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-058.jpg",
 		},
 		{
-			name : "黙示 ローラン-２",
+			name : "黙示 ローラン-2",
 			type : "C",
 			civil : 16,
 			race : ["ライトブリンガー","ディスタス"],
@@ -86433,7 +86433,7 @@
 			mana : 1,
 			sp : [
 				"(K)シンパシー(/K)－生物",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-059.jpg",
 		},
@@ -86518,7 +86518,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-065.jpg",
 		},
 		{
-			name : "電脳 ソルジャ-２",
+			name : "電脳 ソルジャ-2",
 			type : "C",
 			civil : 8,
 			race : ["リキッド・ピープル","ディスタス"],
@@ -86527,7 +86527,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，將此生物從墓地拿回到手牌中。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-066.jpg",
 		},
@@ -86614,7 +86614,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-072.jpg",
 		},
 		{
-			name : "魔光 ルナンド-２",
+			name : "魔光 ルナンド-2",
 			type : "C",
 			civil : 4,
 			race : ["デーモン・コマンド","ナイト","ディスタス"],
@@ -86623,7 +86623,7 @@
 			mana : 1,
 			sp : [
 				"我方墓地有2張以上的卡牌時，此生物的召喚費用少2。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-073.jpg",
 		},
@@ -86817,7 +86817,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，觀看我方牌庫頂5張牌。將其中1張置入魔力區，其餘卡牌擇依喜好順序置入我方牌庫底。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-090.jpg",
 		},
@@ -87076,7 +87076,7 @@
 					power : 7000,
 					cost : 7,
 					sp : [
-						"(K)J・O・E(/K)２",
+						"(K)J・O・E(/K)2",
 						"(K)スピードアタッカー(/K)",
 						"(K)W・ブレイカー(/K)",
 						"(K)スマッシュ・バースト(/K)",
@@ -87648,7 +87648,7 @@
 			power : 2000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)６（火）－公開我方牌庫頂第一張牌。如果那是費用6以下的非進化生物的話就將之打出至戰鬥場上。不是的話則置入牌庫底。",
+				"(K)マナドライブ(/K)6（火）－公開我方牌庫頂第一張牌。如果那是費用6以下的非進化生物的話就將之打出至戰鬥場上。不是的話則置入牌庫底。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-061.jpg",
 		},
@@ -87661,7 +87661,7 @@
 			cost : 6,
 			mana : 1,
 			sp : [
-				"(K)B・A・D(/K)１",
+				"(K)B・A・D(/K)1",
 				"此生物出場時，觀看我方牌庫頂3張牌。你可以從中打出1隻(R)ビートジョッキー(/R)，並將剩餘卡牌依喜好順序置入牌庫底。此回合結束時，破壞該隻(R)ビートジョッキー(/R)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-062.jpg",
@@ -87688,7 +87688,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"(K)B・A・D・S(/K)２",
+				"(K)B・A・D・S(/K)2",
 				"你可以從手牌打出1隻(R)ビートジョッキー(/R)。那樣的話，就選擇1隻對手生物並讓他們進行戰鬥。該回合結束時，破壞該(R)ビートジョッキー(/R)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-065.jpg",
@@ -88029,7 +88029,7 @@
 			power : 2000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)３（火）－此生物出場時，破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
+				"(K)マナドライブ(/K)3（火）－此生物出場時，破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-094.jpg",
 		},
@@ -88041,7 +88041,7 @@
 			power : 2000,
 			cost : 2,
 			sp : [
-				"(K)マナドライブ(/K)４（火）－此生物出場時，你可以破壞此生物，那樣的話，就破壞1隻攻擊力6000以下的對手生物。",
+				"(K)マナドライブ(/K)4（火）－此生物出場時，你可以破壞此生物，那樣的話，就破壞1隻攻擊力6000以下的對手生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-095.jpg",
 		},
@@ -88053,7 +88053,7 @@
 			power : 2000,
 			cost : 2,
 			sp : [
-				"(K)マナドライブ(/K)２（火）－此生物出場時，你可以選擇1隻對手生物，並讓他們進行戰鬥。",
+				"(K)マナドライブ(/K)2（火）－此生物出場時，你可以選擇1隻對手生物，並讓他們進行戰鬥。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-096.jpg",
 		},
@@ -88513,7 +88513,7 @@
 			power : 2000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)４（J((R)ジョーカーズ(/R))）：此生物出場時，你可以作廢1張手牌的(R)ジョーカーズ(/R)，那樣的話，則抽2張牌。",
+				"(K)マナドライブ(/K)4（J((R)ジョーカーズ(/R))）：此生物出場時，你可以作廢1張手牌的(R)ジョーカーズ(/R)，那樣的話，則抽2張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-004.jpg",
 		},
@@ -88562,7 +88562,7 @@
 			power : 2000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)６（J((R)ジョーカーズ(/R))）－此生物出場時，選擇1隻費用7以下的對手生物，對手要將其置入牌庫底。",
+				"(K)マナドライブ(/K)6（J((R)ジョーカーズ(/R))）－此生物出場時，選擇1隻費用7以下的對手生物，對手要將其置入牌庫底。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-008.jpg",
 		},
@@ -88574,7 +88574,7 @@
 			power : 2000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)２（J((R)ジョーカーズ(/R))）－此生物出場時，將我方墓地中1張(R)ジョーカーズ(/R)放進我方魔力區中。",
+				"(K)マナドライブ(/K)2（J((R)ジョーカーズ(/R))）－此生物出場時，將我方墓地中1張(R)ジョーカーズ(/R)放進我方魔力區中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmsp04-009.jpg",
 		},
@@ -89337,7 +89337,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-031.jpg",
 		},
 		{
-			name : "黙示 シャマリ-１",
+			name : "黙示 シャマリ-1",
 			type : "C",
 			civil : 16,
 			race : ["ライトブリンガー","ディスタス"],
@@ -89346,7 +89346,7 @@
 			mana : 1,
 			sp : [
 				"對手咒文的使用費用多1。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-032.jpg",
 		},
@@ -89367,7 +89367,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-033.jpg",
 		},
 		{
-			name : "電脳 メルゲ-２",
+			name : "電脳 メルゲ-2",
 			type : "C",
 			civil : 8,
 			race : ["リキッド・ピープル","ディスタス"],
@@ -89376,7 +89376,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，抽2張牌。之後如果場上沒有我方的(R)ディスペクター(/R)的話，就作廢2張手牌。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-034.jpg",
 		},
@@ -89465,7 +89465,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-041.jpg",
 		},
 		{
-			name : "勇騎 バクエン-２",
+			name : "勇騎 バクエン-2",
 			type : "C",
 			civil : 2,
 			race : ["ヒューマノイド爆","ディスタス"],
@@ -89474,7 +89474,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，你可以選擇1隻我方生物與1隻對手生物，並讓他們進行戰鬥。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-042.jpg",
 		},
@@ -89692,7 +89692,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-058.jpg",
 		},
 		{
-			name : "聖霊 レオニダ-２",
+			name : "聖霊 レオニダ-2",
 			type : "C",
 			civil : 16,
 			race : ["エンジェル・コマンド","ディスタス"],
@@ -89702,7 +89702,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物不能攻擊玩家。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-059.jpg",
 		},
@@ -89744,7 +89744,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物不能攻擊玩家。",
-				"(K)マナ武装(/K)４－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則橫置1隻對手生物。下個對手回合開始時，對手不能重置該生物。",
+				"(K)マナ武装(/K)4－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則橫置1隻對手生物。下個對手回合開始時，對手不能重置該生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-062.jpg",
 		},
@@ -89826,12 +89826,12 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物被破壞時，將此生物從墓地拿回到手牌中。",
-				"(K)マナ武装(/K)４－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則將1隻對手生物拿回到其持有者的手牌中。",
+				"(K)マナ武装(/K)4－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則將1隻對手生物拿回到其持有者的手牌中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-068.jpg",
 		},
 		{
-			name : "無法 アリス-１",
+			name : "無法 アリス-1",
 			type : "C",
 			civil : 8,
 			race : ["アウトレイジ","ディスタス"],
@@ -89840,7 +89840,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，抽3張牌。之後將2張手牌放回我方牌庫頂。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-069.jpg",
 		},
@@ -89857,7 +89857,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-070.jpg",
 		},
 		{
-			name : "悪魔 ガンヴィ-２",
+			name : "悪魔 ガンヴィ-2",
 			type : "C",
 			civil : 4,
 			race : ["デーモン・コマンド","ディスタス"],
@@ -89866,7 +89866,7 @@
 			mana : 1,
 			sp : [
 				"此生物被破壞時，破壞1隻橫置狀態的對手生物。",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-071.jpg",
 		},
@@ -89907,7 +89907,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，作廢我方牌庫頂2張牌。",
-				"(K)マナ武装(/K)４－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則你可以將我方墓地1張卡牌拿回到手牌中。",
+				"(K)マナ武装(/K)4－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則你可以將我方墓地1張卡牌拿回到手牌中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-074.jpg",
 		},
@@ -89966,7 +89966,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-079.jpg",
 		},
 		{
-			name : "機動 エルジ-１",
+			name : "機動 エルジ-1",
 			type : "C",
 			civil : 2,
 			race : ["アーマロイド","ディスタス"],
@@ -89975,7 +89975,7 @@
 			mana : 1,
 			sp : [
 				"可能的話，此生物每回合都要進行攻擊。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-080.jpg",
 		},
@@ -90002,7 +90002,7 @@
 			sp : [
 				"(K)スピードアタッカー(/K)",
 				"此生物出場時，作廢1張我方手牌。",
-				"(K)マナ武装(/K)４－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則抽2張牌。",
+				"(K)マナ武装(/K)4－此生物出場時，我方魔力區如果有4張以上的多色卡牌的話，則抽2張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-082.jpg",
 		},
@@ -90035,7 +90035,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-084.jpg",
 		},
 		{
-			name : "剛撃 シンピーダ-２",
+			name : "剛撃 シンピーダ-2",
 			type : "C",
 			civil : 1,
 			race : ["ジャイアント","ディスタス"],
@@ -90045,7 +90045,7 @@
 			sp : [
 				"(K)マッハファイター(/K)",
 				"(K)W・ブレイカー(/K)",
-				"(K)ササゲール(/K)２",
+				"(K)ササゲール(/K)2",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-085.jpg",
 		},
@@ -90087,12 +90087,12 @@
 			mana : 1,
 			sp : [
 				"(K)マッハファイター(/K)",
-				"(K)マナ武装(/K)４－我方魔力區如果有4張以上的多色卡牌的話，則此生物攻擊力+4000、並獲得「(K)W・ブレイカー(/K)」能力。",
+				"(K)マナ武装(/K)4－我方魔力區如果有4張以上的多色卡牌的話，則此生物攻擊力+4000、並獲得「(K)W・ブレイカー(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-088.jpg",
 		},
 		{
-			name : "鎧亜 メフィスト-１",
+			name : "鎧亜 メフィスト-1",
 			type : "C",
 			civil : 1,
 			race : ["ロスト・クルセイダー","ディスタス"],
@@ -90101,7 +90101,7 @@
 			mana : 1,
 			sp : [
 				"此生物出場時，公開我方牌庫頂第一張牌。如果那是多色卡牌的話就將其置入我方魔力區中。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-089.jpg",
 		},
@@ -90127,12 +90127,12 @@
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
-				"(K)ササゲール(/K)３",
+				"(K)ササゲール(/K)3",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-091.jpg",
 		},
 		{
-			name : "魂具 ドリスコ-３",
+			name : "魂具 ドリスコ-3",
 			type : "C",
 			civil : 22,
 			race : ["ゼノパーツ","ディスタス"],
@@ -90141,12 +90141,12 @@
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
-				"(K)ササゲール(/K)３",
+				"(K)ササゲール(/K)3",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-092.jpg",
 		},
 		{
-			name : "天翼 ヘブフォ-３",
+			name : "天翼 ヘブフォ-3",
 			type : "C",
 			civil : 21,
 			race : ["ジャスティス・ウイング","ディスタス"],
@@ -90155,12 +90155,12 @@
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
-				"(K)ササゲール(/K)３",
+				"(K)ササゲール(/K)3",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-093.jpg",
 		},
 		{
-			name : "腐敗 スケバイ-３",
+			name : "腐敗 スケバイ-3",
 			type : "C",
 			civil : 13,
 			race : ["ゴースト","ディスタス"],
@@ -90169,7 +90169,7 @@
 			mana : 1,
 			sp : [
 				"(K)G・ストライク(/K)",
-				"(K)ササゲール(/K)３",
+				"(K)ササゲール(/K)3",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-094.jpg",
 		},
@@ -91023,7 +91023,7 @@
 					power : 1000,
 					cost : 2,
 					sp : [
-						"(K)ササゲール(/K)１",
+						"(K)ササゲール(/K)1",
 						"(K)ラスト・バースト(/K)",
 					],
 				},
@@ -91102,7 +91102,7 @@
 			cost : 6,
 			mana : 1,
 			sp : [
-				"(K)J・O・E(/K)２",
+				"(K)J・O・E(/K)2",
 				"(K)スピードアタッカー(/K)",
 				"此生物出場時，破壞1隻持有「(K)ブロッカー(/K)」能力的對手生物。",
 			],
@@ -91166,7 +91166,7 @@
 
 					sp : [
 						"此生物出場時，將我方牌庫頂第一張牌置入我方魔力區中。",
-						"(K)マナ武装(/K)４－此生物出場時，如果我方魔力區中有4張以上的多色卡牌的話，則將我方牌庫頂第一張牌置入我方魔力區中。",
+						"(K)マナ武装(/K)4－此生物出場時，如果我方魔力區中有4張以上的多色卡牌的話，則將我方牌庫頂第一張牌置入我方魔力區中。",
 					],
 				},
 				{
@@ -91621,7 +91621,7 @@
 			power : 3000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)４（火）－此生物發動攻擊時，於此生物最初的攻擊結束後重置此生物。",
+				"(K)マナドライブ(/K)4（火）－此生物發動攻擊時，於此生物最初的攻擊結束後重置此生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR5.jpg",
 		},
@@ -91823,7 +91823,7 @@
 			power : 2000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)６（水）－此生物出場時，你可以抽3張牌。",
+				"(K)マナドライブ(/K)6（水）－此生物出場時，你可以抽3張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF8.jpg",
 		},
@@ -92039,7 +92039,7 @@
 			power : 1000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)５（光）－進行(K)GR召喚(/K)。",
+				"(K)マナドライブ(/K)5（光）－進行(K)GR召喚(/K)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF12.jpg",
 		},
@@ -92051,7 +92051,7 @@
 			power : 3000,
 			cost : 2,
 			sp : [
-				"(K)マナドライブ(/K)３（自然）－你可以破壞此生物以執行以下效果－##你可以將我方牌庫頂第一張牌以橫置方式置入我方魔力區中。之後，你可以將一張我方魔力區中的卡牌拿回到手牌中。",
+				"(K)マナドライブ(/K)3（自然）－你可以破壞此生物以執行以下效果－##你可以將我方牌庫頂第一張牌以橫置方式置入我方魔力區中。之後，你可以將一張我方魔力區中的卡牌拿回到手牌中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF16.jpg",
 		},
@@ -92615,7 +92615,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-074.jpg",
 		},
 		{
-			name : "めっちゃ！デンヂャラスG３ / ケッシング・ゼロ",
+			name : "めっちゃ！デンヂャラスG3 / ケッシング・ゼロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF1a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92733,7 +92733,7 @@
 			power : 1000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)３（水）－此生物獲得「(K)ブロッカー(/K)」能力。",
+				"(K)マナドライブ(/K)3（水）－此生物獲得「(K)ブロッカー(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-012.jpg",
 		},
@@ -92899,7 +92899,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-008b.jpg",
 		},
 		{
-			name : "D２V３ 終断のデッドトロン / デッドリー・ビッグバン",
+			name : "D2V3 終断のデッドトロン / デッドリー・ビッグバン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92959,7 +92959,7 @@
 			],
 		},
 		{
-			name : "D２V３ 終断のレッドトロン / フォビドゥン・ハンド",
+			name : "D2V3 終断のレッドトロン / フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-014a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92996,7 +92996,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"(K)ニンジャ・ストライク(/K)４",
+				"(K)ニンジャ・ストライク(/K)4",
 				"此生物出場時，破壞1隻攻擊力3000以下的對手生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-015.jpg",
@@ -93023,7 +93023,7 @@
 			sp : [
 				"我方(R)コマンド(/R)一律獲得「(K)スレイヤー(/K)」能力。",
 				abilitiesHintHeader + "當有其他(T)D2フィールド(/T)出場時，將此卡牌置入我方墓地",
-				"(K)Dスイッチ(/K)－我方回合結束時，你可以將這張(T)D２フィールド(/T)上下翻轉。那樣的話，就從我方墓地或是超次元區中召喚1隻費用6以下、且為闇文明或是火文明的(R)コマンド(/R)出場。",
+				"(K)Dスイッチ(/K)－我方回合結束時，你可以將這張(T)D2フィールド(/T)上下翻轉。那樣的話，就從我方墓地或是超次元區中召喚1隻費用6以下、且為闇文明或是火文明的(R)コマンド(/R)出場。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-017.jpg",
 		},		
@@ -93047,7 +93047,7 @@
 			power : 2000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)５（闇）－此生物出場時，你可以破壞此生物。那樣的話，就執行下列能力－##觀看對手手牌並擇一作廢。",
+				"(K)マナドライブ(/K)5（闇）－此生物出場時，你可以破壞此生物。那樣的話，就執行下列能力－##觀看對手手牌並擇一作廢。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-047.jpg",
 		},
@@ -93059,7 +93059,7 @@
 			power : 1000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)５（水）－此生物出場時，你可以從我方墓地將1張咒文或是(T)オーラ(/T)拿回到手牌中。",
+				"(K)マナドライブ(/K)5（水）－此生物出場時，你可以從我方墓地將1張咒文或是(T)オーラ(/T)拿回到手牌中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex07-021.jpg",
 		},
@@ -93071,7 +93071,7 @@
 			power : 1000,
 			cost : 2,
 			sp : [
-				"(K)マナドライブ(/K)４（水）－此生物出場時，你可以破壞此生物。那樣的話，就執行下列能力－抽2張牌。",
+				"(K)マナドライブ(/K)4（水）－此生物出場時，你可以破壞此生物。那樣的話，就執行下列能力－抽2張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp12-039.jpg",
 		},	
@@ -94255,7 +94255,7 @@
 			cost : 9,
 			mana : 1,
 			sp : [
-				"(K)J・O・E(/K)２",
+				"(K)J・O・E(/K)2",
 				"(K)スピードアタッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時，選擇2張對手護盾。此生物擊破所有其他對手護盾。之後，你可以作廢1張手牌。那樣的話，則下個回合、對手不能打出2隻以上的生物。",
@@ -94323,7 +94323,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s15.jpg",
 		},
 		{
-			name : "ドンジャングルS７",
+			name : "ドンジャングルS7",
 			type : "C",
 			civil : 1,
 			race : ["ジョーカーズ"],
@@ -94372,7 +94372,7 @@
 			],
 		},
 		{
-			name : "キング・ザ・スロットン７/ 7777777",
+			name : "キング・ザ・スロットン7/ 7777777",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s3a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94591,7 +94591,7 @@
 			mana : 1,
 			sp : [
 				"(K)マッハファイター(/K)",
-				"(K)Jチェンジ(/K)８",
+				"(K)Jチェンジ(/K)8",
 				"(K)W・ブレイカー(/K)",
 				"此生物離場時，你可以作廢1張手牌。那樣的話，就將我方魔力區中1隻生物拿回到手牌中。",
 			],
@@ -94607,7 +94607,7 @@
 			mana : 1,
 			sp : [
 				"(K)マッハファイター(/K)",
-				"(K)Jチェンジ(/K)６",
+				"(K)Jチェンジ(/K)6",
 				"此生物出場時，你可以將我方牌庫頂2張牌置入我方魔力區中。那樣的話，就將1張卡牌從我方魔力區中置入墓地。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-016.jpg",
@@ -94740,7 +94740,7 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"(K)無月の大罪(/K)２",
+				"(K)無月の大罪(/K)2",
 				"附加此卡的生物獲得「(K)パワード・ブレイカー(/K)」能力。",
 				"當此卡附加在生物上時，所有玩家各自破壞1隻自己的生物。",
 			],
@@ -98248,7 +98248,7 @@
 					sp : [
 						"(K)スピードアタッカー(/K)",
 						"(K)W・ブレイカー(/K)",
-						"此生物發動攻擊時，執行(R)アーマード(/R)・(K)メクレイド(/K)８",
+						"此生物發動攻擊時，執行(R)アーマード(/R)・(K)メクレイド(/K)8",
 					],
 				},
 				{
@@ -98258,7 +98258,7 @@
 					cost : 6,
 					sp : [
 						"將此卡置入牌庫中洗牌。",
-						"執行(R)アーマード(/R)・(K)メクレイド(/K)８",
+						"執行(R)アーマード(/R)・(K)メクレイド(/K)8",
 					]
 				},
 			],
@@ -98374,7 +98374,7 @@
 					civil : 2,
 					cost : 4,
 					sp : [
-						"執行(R)アーマード(/R)・(K)メクレイド(/K)５",
+						"執行(R)アーマード(/R)・(K)メクレイド(/K)5",
 					]
 				},
 			],
@@ -98389,7 +98389,7 @@
 			mana : 1,
 			sp : [
 				"(K)スピードアタッカー(/K)",
-				"此生物被破壞時，執行(R)アーマード(/R)・(K)メクレイド(/K)８",
+				"此生物被破壞時，執行(R)アーマード(/R)・(K)メクレイド(/K)8",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/13.jpg",
 		},
@@ -98443,7 +98443,7 @@
 			power : 1000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)３（火）－此生物獲得「(K)スピードアタッカー(/K)」能力。",
+				"(K)マナドライブ(/K)3（火）－此生物獲得「(K)スピードアタッカー(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp10-089.jpg",
 		},
@@ -98456,7 +98456,7 @@
 			pc : true,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)５（火）－此生物出場時，你可以破壞此生物以使用以下能力－##擊破1張對手護盾。",
+				"(K)マナドライブ(/K)5（火）－此生物出場時，你可以破壞此生物以使用以下能力－##擊破1張對手護盾。",
 				"戰鬥中、此生物攻擊力+2000。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp12-s09.jpg",
@@ -98469,7 +98469,7 @@
 			power : 4000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)６（自然）－此生物出場時，你可以破壞此生物以使用以下能力－##將1隻對手生物置入其持有者的魔力區中。",
+				"(K)マナドライブ(/K)6（自然）－此生物出場時，你可以破壞此生物以使用以下能力－##將1隻對手生物置入其持有者的魔力區中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp12-029.jpg",
 		},
@@ -98508,7 +98508,7 @@
 			power : 3000,
 			cost : 3,
 			sp : [
-				"(K)マナドライブ(/K)３（自然）－此生物獲得「(K)マッハファイター(/K)」能力。",
+				"(K)マナドライブ(/K)3（自然）－此生物獲得「(K)マッハファイター(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd12-j05.jpg",
 		},
@@ -98555,7 +98555,7 @@
 			power : 3000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)４（(R)J(ジョーカーズ)<=>ジョーカーズ(/R)）－此生物出場時，對手要自行破壞他攻擊力最低的一隻生物。",
+				"(K)マナドライブ(/K)4（(R)J(ジョーカーズ)<=>ジョーカーズ(/R)）－此生物出場時，對手要自行破壞他攻擊力最低的一隻生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-227.jpg",
 		},
@@ -98707,7 +98707,7 @@
 				"(K)スピードアタッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"我方的(R)ファイアー・バード(/R)一律獲得「(K)セイバー(/K)－(R)ドラゴン(/R)」能力。",
-				"於此生物的每一個擊破前、執行一次(R)アーマード(/R)・(K)メクレイド(/K)５。",
+				"於此生物的每一個擊破前、執行一次(R)アーマード(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-OR1.jpg",
 		},
@@ -98782,7 +98782,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物出場時，到下個我方回合開始前，此生物戰鬥必勝。",
-				"此生物發動攻擊時，你可以橫置2隻我方的(R)メカ(/R)。那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)８。",
+				"此生物發動攻擊時，你可以橫置2隻我方的(R)メカ(/R)。那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)8。",
 				"我方回合結束時，你最多可以重置3隻我方生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S2.jpg",
@@ -98857,7 +98857,7 @@
 			sp : [
 				"(K)アビスラッシュ(/K)",
 				"此生物出場時、或是對手選擇此生物時，隨機作廢1張對手手牌。",
-				"此生物發動攻擊時，你可以將我方墓地4張卡牌依喜好順序置入牌庫底。那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)８。不然的話，就最多作廢我方牌庫頂4張牌。",
+				"此生物發動攻擊時，你可以將我方墓地4張卡牌依喜好順序置入牌庫底。那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)8。不然的話，就最多作廢我方牌庫頂4張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S6.jpg",
 		},
@@ -98873,7 +98873,7 @@
 			sp : [
 				"(K)パワード・ブレイカー(/K)",
 				"此生物的攻擊力會隨著每一隻(R)ファイアー・バード(/R)而+3000。",
-				"此生物出場時，執行(R)アーマード(/R)・(K)メクレイド(/K)５",
+				"此生物出場時，執行(R)アーマード(/R)・(K)メクレイド(/K)5",
 				"各回合一次，當我方的(R)ファイアー・バード(/R)出場時，你可以選擇1隻對手生物，並讓該生物與此生物進行戰鬥。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S7.jpg",
@@ -98890,7 +98890,7 @@
 				"(K)W・ブレイカー(/K)",
 				"(K)マッハファイター(/K)",
 				"我方回合中，你可以從我方魔力區中召喚1隻(R)ジャイアント(/R)。那樣的話，就將我方牌庫頂第一張牌置入我方魔力區中。",
-				"此生物發動攻擊時，你可以將1隻我方其他的(R)ジャイアント(/R)置入我方魔力區中，那樣的話，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)８。",
+				"此生物發動攻擊時，你可以將1隻我方其他的(R)ジャイアント(/R)置入我方魔力區中，那樣的話，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S8.jpg",
 		},
@@ -98950,7 +98950,7 @@
 			sp : [
 				"(K)ジャストダイバー(/K)",
 				"此生物出場時，抽3張牌。然後將2張手牌、依喜好順序置入我方牌庫底。",
-				"各回合、我方第一次使用咒文時，你可以作廢1張手牌。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)５。",
+				"各回合、我方第一次使用咒文時，你可以作廢1張手牌。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-003.jpg",
 		},
@@ -99097,7 +99097,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"(K)ブロッカー(/K)",
-				"此生物出場時，你可以橫置1隻我方的(R)メカ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)５。",
+				"此生物出場時，你可以橫置1隻我方的(R)メカ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-010.jpg",
 		},
@@ -99182,7 +99182,7 @@
 			mana : 1,
 			sp : [
 				"(K)ジャストダイバー(/K)",
-				"此生物發動攻擊時，下列能力擇一發動－##抽2張牌。##你可以作廢2張手牌。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)８。",
+				"此生物發動攻擊時，下列能力擇一發動－##抽2張牌。##你可以作廢2張手牌。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-015.jpg",
 		},
@@ -99438,7 +99438,7 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"此生物出場時，你可以橫置戰鬥場上3隻我方的(R)メカ(/R)。那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)８。",
+				"此生物出場時，你可以橫置戰鬥場上3隻我方的(R)メカ(/R)。那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)8。",
 				"我方回合結束時，最多重置2隻我方生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-029.jpg",
@@ -99509,7 +99509,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"我方回合結束時，你可以作廢2張手牌。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)８。",
+				"我方回合結束時，你可以作廢2張手牌。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-033.jpg",
 		},
@@ -99591,7 +99591,7 @@
 			mana : 1,
 			sp : [
 				"(K)ブロッカー(/K)",
-				"此生物出場時，下列能力擇一發動－##你可以將我方墓地中4張卡牌依喜好置入牌庫底。那樣的話，就執行順序(R)アビス(/R)・(K)メクレイド(/K)８。##作廢我方牌庫頂4張牌。",
+				"此生物出場時，下列能力擇一發動－##你可以將我方墓地中4張卡牌依喜好置入牌庫底。那樣的話，就執行順序(R)アビス(/R)・(K)メクレイド(/K)8。##作廢我方牌庫頂4張牌。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-038.jpg",
 		},
@@ -99621,7 +99621,7 @@
 				"(K)ブロッカー(/K)",
 				"此生物不能發動攻擊。",
 				"此生物阻擋時，於阻擋後破壞此生物。",
-				"當此生物被破壞時，執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+				"當此生物被破壞時，執行(R)アビス(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-040.jpg",
 		},
@@ -99758,7 +99758,7 @@
 			mana : 1,
 			sp : [
 				"(K)W・ブレイカー(/K)",
-				"此生物發動攻擊時，你可以將1隻我方其他的(R)ジャイアント(/R)置入我方魔力區中。那樣的話，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)８。",
+				"此生物發動攻擊時，你可以將1隻我方其他的(R)ジャイアント(/R)置入我方魔力區中。那樣的話，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-048.jpg",
 		},
@@ -99868,7 +99868,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"你可以橫置1隻我方的(R)メカ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)５。",
+				"你可以橫置1隻我方的(R)メカ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-055.jpg",
 		},
@@ -100115,7 +100115,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"此生物發動攻擊時，你可以將我方1隻其他的(R)ジャイアント(/R)置入魔力區。那樣的話，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)５。",
+				"此生物發動攻擊時，你可以將我方1隻其他的(R)ジャイアント(/R)置入魔力區。那樣的話，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-072.jpg",
 		},
@@ -100161,7 +100161,7 @@
 					sp : [
 						"(K)アビスラッシュ(/K)",
 						"(K)W・ブレイカー(/K)",
-						"當此生物離場時，執行(R)アビス(/R)・(K)メクレイド(/K)８",
+						"當此生物離場時，執行(R)アビス(/R)・(K)メクレイド(/K)8",
 					],
 				},
 				{
@@ -100169,7 +100169,7 @@
 					civil : 4,
 					cost : 6,
 					sp : [
-						"執行(R)アビス(/R)・(K)メクレイド(/K)８",
+						"執行(R)アビス(/R)・(K)メクレイド(/K)8",
 						"作廢我方牌庫頂2張牌。",
 					],
 				}
@@ -100253,7 +100253,7 @@
 					civil : 4,
 					cost : 4,
 					sp : [
-						"執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+						"執行(R)アビス(/R)・(K)メクレイド(/K)5。",
 					],
 				}
 			]
@@ -100268,7 +100268,7 @@
 			mana : 1,
 			sp : [
 				"(K)アビスラッシュ(/K)",
-				"當此生物發動攻擊時，你可以破壞1隻我方其他生物，那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+				"當此生物發動攻擊時，你可以破壞1隻我方其他生物，那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/14.jpg",
 		},
@@ -101416,7 +101416,7 @@
 				"(K)マッハファイター(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時，該回合、對手不能使用費用4以下的咒文。",
-				"(K)Jチェンジ(/K)８",
+				"(K)Jチェンジ(/K)8",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-a-002.jpg",
 		},
@@ -101430,7 +101430,7 @@
 			mana : 1,
 			sp : [
 				"(K)NEO進化(/K)－你可以將此生物進化在戰鬥場上1隻我方的(R)ジョーカーズ(/R)生物之上。",
-				"(K)Jチェンジ(/K)８",
+				"(K)Jチェンジ(/K)8",
 				"(K)W・ブレイカー(/K)",
 				"此生物離場時，該回合中、1隻我方生物的攻擊力+5000、並追加擊破1張護盾。",
 			],
@@ -101459,7 +101459,7 @@
 			mana : 1,
 			sp : [
 				"(K)マッハファイター(/K)",
-				"(K)Jチェンジ(/K)４",
+				"(K)Jチェンジ(/K)4",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-a-011.jpg",
 		},
@@ -101788,7 +101788,7 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"我方手牌中所有火文明的(R)ジョーカーズ(/R)生物一律獲得「(K)J・O・E(/K)２」能力。",
+				"我方手牌中所有火文明的(R)ジョーカーズ(/R)生物一律獲得「(K)J・O・E(/K)2」能力。",
 				"此生物出場時，公開我方牌庫頂4張牌。你可以將當中1張(R)ジョーカーズ(/R)加入手牌。之後將剩餘卡牌依喜好順序置入牌庫底。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-084.jpg",
@@ -101845,7 +101845,7 @@
 			cost : 8,
 			mana : 1,
 			sp : [
-				"(K)B・A・D(/K)３",
+				"(K)B・A・D(/K)3",
 				"(K)スピードアタッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物被破壞時，你可以取而代之、破壞1隻我方的(R)ビートジョッキー(/R)。",
@@ -101877,7 +101877,7 @@
 			cost : 10,
 			mana : 1,
 			sp : [
-				"(K)J・O・E(/K)３",
+				"(K)J・O・E(/K)3",
 				"(K)スピードアタッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物的攻擊目標不會被變更。",
@@ -102622,7 +102622,7 @@
 			sp : [
 				"隨機作廢1張對手手牌。",
 				"用附有評分功能的卡拉OK機器唱一首歌。如果分數在80分以上的話，則隨機作廢1張對手手牌。",
-				"(K)リサイタル(/K)５",
+				"(K)リサイタル(/K)5",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-087.jpg",
 		},
@@ -102902,12 +102902,12 @@
 				"此生物下方每有1張卡牌，此生物的可愛度就+1。",
 				"此生物發動攻擊時，你可以展示1張手牌中你覺得很可愛的(R)ジョーカーズ(/R)生物並將之置入此生物之下。",
 				"每當對手選擇我方生物時，可能的話就要選擇最可愛的生物。",
-				"(K)ジョラゴン・ポップ１(/K)",
+				"(K)ジョラゴン・ポップ1(/K)",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-153.jpg",
 		},
 		{
-			name : "キングダム・オウ禍武斗 /チャージ３回、フリーエントリー！",
+			name : "キングダム・オウ禍武斗 /チャージ3回、フリーエントリー！",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-156a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103061,7 +103061,7 @@
 			power : 3000,
 			cost : 4,
 			sp : [
-				"(K)マナドライブ(/K)３（(N)はずれポンの助(/N)）－當此生物出場時，如果我方魔力區有3張以上的卡牌、且有《(N)はずれポンの助(/N)》的話，則進行(K)GR召喚(/K)。",
+				"(K)マナドライブ(/K)3（(N)はずれポンの助(/N)）－當此生物出場時，如果我方魔力區有3張以上的卡牌、且有《(N)はずれポンの助(/N)》的話，則進行(K)GR召喚(/K)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-190.jpg",
 		},
@@ -103572,7 +103572,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"(K)ニンジャ・チェンジ(/K)３",
+				"(K)ニンジャ・チェンジ(/K)3",
 				"(K)ブロッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時，到下個我方回合開始前，所有我方其他生物的攻擊力一律+3000。",
@@ -103590,7 +103590,7 @@
 			sp : [
 				"(K)シンパシー(/K)－生物",
 				"(K)W・ブレイカー(/K)",
-				"此生物出場或發動攻擊時，執行(R)メカ(/R)・(K)メクレイド(/K)５する。",
+				"此生物出場或發動攻擊時，執行(R)メカ(/R)・(K)メクレイド(/K)5する。",
 				"每當我方生物被破壞時，你可以取而代之、破壞1隻我方的其他(R)シノビ(/R)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-002.jpg",
@@ -103652,7 +103652,7 @@
 					power : 4000,
 					cost : 3,
 					sp : [
-						"此生物發動攻擊時，你可以橫置1隻我方其他的(R)メカ(/R)或是(R)シノビ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)５。",
+						"此生物發動攻擊時，你可以橫置1隻我方其他的(R)メカ(/R)或是(R)シノビ(/R)，那樣的話，就執行(R)メカ(/R)・(K)メクレイド(/K)5。",
 					],
 				},
 				{
@@ -103745,7 +103745,7 @@
 			cost : 7,
 			mana : 1,
 			sp : [
-				"(K)ニンジャ・チェンジ(/K)５",
+				"(K)ニンジャ・チェンジ(/K)5",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場或是發動攻擊時，橫置所有對手生物。",
 				"對手生物不能在出場的回合進行攻擊。",
@@ -103764,7 +103764,7 @@
 				"(K)アビスラッシュ(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時，選擇1隻對手生物。，該生物攻擊力-∞",
-				"此生物發動攻擊時，你可以執行(R)アビス(/R)・(K)W・メクレイド(/K)５。",
+				"此生物發動攻擊時，你可以執行(R)アビス(/R)・(K)W・メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-OR02.jpg",
 		},
@@ -103935,7 +103935,7 @@
 			sp : [
 				"如果有2隻以上持有「(K)ブロッカー(/K)」能力的我方生物的話，則此生物的召喚費用少3。",
 				"(K)W・ブレイカー(/K)",
-				"當此生物召喚出場時，進行(R)メカ(/R)・(K)W・メクレイド(/K)８",
+				"當此生物召喚出場時，進行(R)メカ(/R)・(K)W・メクレイド(/K)8",
 				"各回合結束時，重置戰鬥場上所有我方的(R)メカ(/R)。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-001.jpg",
@@ -103967,7 +103967,7 @@
 			sp : [
 				"如果有2隻以上我方的(T)ツインパクト<=>ツインパクトカード(/T)生物的話，則此生物召喚費用少3。",
 				"(K)W・ブレイカー(/K)",
-				"此生物召喚出場時，執行(R)マジック(/R)・(K)W・メクレイド(/K)８。",
+				"此生物召喚出場時，執行(R)マジック(/R)・(K)W・メクレイド(/K)8。",
 				"我方的(R)マジック(/R)生物一律不會被攻擊或是阻擋。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-003.jpg",
@@ -103983,7 +103983,7 @@
 			sp : [
 				"此生物召喚出場時，你可以破壞2隻我方生物。那樣的話，則此生物的召喚費用少3。",
 				"(K)W・ブレイカー(/K)",
-				"此生物召喚出場時，執行(R)アビス(/R)・(K)W・メクレイド(/K)８。",
+				"此生物召喚出場時，執行(R)アビス(/R)・(K)W・メクレイド(/K)8。",
 				"我方的(R)アビス(/R)生物一律獲得「(K)スレイヤー(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-004.jpg",
@@ -104018,7 +104018,7 @@
 			sp : [
 				"我方的火文明元素有3個以上時，此生物的召喚費用少3。",
 				"(K)W・ブレイカー(/K)",
-				"此生物召喚出場時，執行(R)アーマード(/R)・(K)W・メクレイド(/K)８。",
+				"此生物召喚出場時，執行(R)アーマード(/R)・(K)W・メクレイド(/K)8。",
 				"我方的(R)アーマード(/R)在戰鬥中、攻擊力一律+3000。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-006.jpg",
@@ -104034,7 +104034,7 @@
 			sp : [
 				"如果攻擊力6000以上的我方生物有2隻以上的話，則此生物的召喚費用少3。",
 				"(K)T・ブレイカー(/K)",
-				"此生物召喚出場時，執行(R)ジャイアント(/R)・(K)W・メクレイド(/K)８。",
+				"此生物召喚出場時，執行(R)ジャイアント(/R)・(K)W・メクレイド(/K)8。",
 				"每當我方的(R)ジャイアント(/R)被破壞時，你可以取而代之、將該生物置入我方魔力區中。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-007.jpg",
@@ -104105,7 +104105,7 @@
 			mana : 1,
 			sp : [
 				"此生物發動攻擊時，你可以將我方牌庫頂第一張牌(K)護盾化<=>シールド化(/K)。",
-				"各回合一次，當有卡牌置入我方護盾區時，就執行(R)メカ(/R)・(K)メクレイド(/K)５。",
+				"各回合一次，當有卡牌置入我方護盾區時，就執行(R)メカ(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-012.jpg",
 		},
@@ -104147,7 +104147,7 @@
 			sp : [
 				"(K)ジャストダイバー(/K)",
 				"我方回合初時，你可以抽1張牌。",
-				"各回合結束時，如果該回合中我方有使用咒文且又有召喚生物的話，則執行(R)マジック(/R)・(K)メクレイド(/K)８。",
+				"各回合結束時，如果該回合中我方有使用咒文且又有召喚生物的話，則執行(R)マジック(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-014.jpg",
 		},
@@ -104204,7 +104204,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"(K)スレイヤー(/K)",
-				"我方回合初時，你可以將2張我方護盾置入墓地。那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)８。",
+				"我方回合初時，你可以將2張我方護盾置入墓地。那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-017.jpg",
 		},
@@ -104356,7 +104356,7 @@
 			sp : [
 				"(K)マッハファイター(/K)",
 				"(K)W・ブレイカー(/K)",
-				"當此生物因戰鬥而破壞對手生物時，你可以取代破壞、執行(R)ジャイアント(/R)・(K)メクレイド(/K)８。",
+				"當此生物因戰鬥而破壞對手生物時，你可以取代破壞、執行(R)ジャイアント(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-025.jpg",
 		},
@@ -104416,7 +104416,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"此生物不能攻擊玩家。",
-				"各回合結束時，如果該回合有2張以上的卡牌置入我方護盾的話，則執行(R)メカ(/R)・(K)メクレイド(/K)８。",
+				"各回合結束時，如果該回合有2張以上的卡牌置入我方護盾的話，則執行(R)メカ(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-028.jpg",
 		},
@@ -104491,7 +104491,7 @@
 					power : 4000,
 					cost : 3,
 					sp : [
-						"我方回合初時，你可以將此生物拿回到手牌中。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)５。",
+						"我方回合初時，你可以將此生物拿回到手牌中。那樣的話，就執行(R)マジック(/R)・(K)メクレイド(/K)5。",
 					],
 				},
 				{
@@ -104514,7 +104514,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"各回合一次，如果對手不支付費用打出元素時，就可以執行(R)マジック(/R)・(K)メクレイド(/K)５。",
+				"各回合一次，如果對手不支付費用打出元素時，就可以執行(R)マジック(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-033.jpg",
 		},
@@ -104684,7 +104684,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"我方生物發動攻擊時，如果那是該回合第2次攻擊的話，就執行(R)アーマード(/R)・(K)メクレイド(/K)５。",
+				"我方生物發動攻擊時，如果那是該回合第2次攻擊的話，就執行(R)アーマード(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-042.jpg",
 		},
@@ -104771,7 +104771,7 @@
 			cost : 4,
 			mana : 1,
 			sp : [
-				"各回合、第2次有卡牌置入我方魔力區時，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)５。",
+				"各回合、第2次有卡牌置入我方魔力區時，就執行(R)ジャイアント(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-047.jpg",
 		},
@@ -104988,7 +104988,7 @@
 			cost : 3,
 			mana : 1,
 			sp : [
-				"我方回合結束時，如果該回合有2張以上的卡牌置入我方墓地的話，則執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+				"我方回合結束時，如果該回合有2張以上的卡牌置入我方墓地的話，則執行(R)アビス(/R)・(K)メクレイド(/K)5。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-064.jpg",
 		},
@@ -105043,7 +105043,7 @@
 			mana : 1,
 			sp : [
 				"(K)スピードアタッカー(/K)",
-				"我方回合結束時，如果此回合有擊破3張以上的護盾的話，則執行(R)アーマード(/R)・(K)メクレイド(/K)８。",
+				"我方回合結束時，如果此回合有擊破3張以上的護盾的話，則執行(R)アーマード(/R)・(K)メクレイド(/K)8。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-067.jpg",
 		},
@@ -105081,7 +105081,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"執行(R)アーマード(/R)・(K)メクレイド(/K)５。",
+				"執行(R)アーマード(/R)・(K)メクレイド(/K)5。",
 				"此回合、所有我方生物一律獲得「(K)スピードアタッカー(/K)」能力。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-070.jpg",
@@ -105344,7 +105344,7 @@
 				"(K)ブロッカー(/K)",
 				"(K)スレイヤー(/K)",
 				"(K)パワード・ブレイカー(/K)",
-				"我方回合初時，執行(R)ゴッド(/R)・(K)メクレイド(/K)５。",
+				"我方回合初時，執行(R)ゴッド(/R)・(K)メクレイド(/K)5。",
 				"(K)中央G・リンク(/K)",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-023.jpg",
@@ -105358,7 +105358,7 @@
 			mana : 1,
 			sp : [
 				"(K)クロスギア(/K)",
-				"當此(T)クロスギア(/T)出場時、或是裝備此卡的生物發動攻擊時，就執行(R)サムライ(/R)・(K)メクレイド(/K)５。",
+				"當此(T)クロスギア(/T)出場時、或是裝備此卡的生物發動攻擊時，就執行(R)サムライ(/R)・(K)メクレイド(/K)5。",
 				"你可以不支付費用將此(T)クロスギア(/T)裝備在我方的(R)サムライ(/R)生物之上。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-024.jpg",
@@ -105445,7 +105445,7 @@
 			cost : 2,
 			mana : 1,
 			sp : [
-				"我方回合初時，如果此生物裝有(T)クロスギア(/T)的話，則執行(R)サムライ(/R)・(K)メクレイド(/K)５。",
+				"我方回合初時，如果此生物裝有(T)クロスギア(/T)的話，則執行(R)サムライ(/R)・(K)メクレイド(/K)5。",
 				"(K)エスケープ(/K)",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-033.jpg",
@@ -105473,7 +105473,7 @@
 					cost : 6,
 					sp : [
 						"(K)S・バック(/K)－(R)アウトレイジ(/R)",
-						"執行(R)アウトレイジ(/R)・(K)メクレイド(/K)８",
+						"執行(R)アウトレイジ(/R)・(K)メクレイド(/K)8",
 					]
 				},
 			],
@@ -105852,7 +105852,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"(K)W・ブレイカー(/K)",
-				"此生物出場時，你可以作廢2張我方手牌。那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)５。",
+				"此生物出場時，你可以作廢2張我方手牌。那樣的話，就執行(R)アビス(/R)・(K)メクレイド(/K)5。",
 				"各回合一次，當我方從牌庫打出生物時，你可以將1隻我方墓地中的(R)アビス(/R)生物打出至戰鬥場上，但是該生物的費用不能超過從牌庫出場的生物的費用。該回合、該(R)アビス(/R)可以攻擊玩家。如果該生物於該回合發動攻擊了的話，則於該回合結束時將該生物置入我方牌庫底。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-004.jpg",
@@ -106031,7 +106031,7 @@
 				"(K)G・ストライク(/K)",
 				"當此卡置入魔力區時，你可以將手牌中的1張多色卡給對手確認。那樣的話，就重置此卡牌。",
 				"我方回合中，你可以從我方墓地召喚1隻(R)ディスペクター(/R)。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd1-011.jpg",
 		},
@@ -106047,7 +106047,7 @@
 				"(K)G・ストライク(/K)",
 				"當此卡置入魔力區時，你可以將手牌中的1張多色卡給對手確認。那樣的話，就重置此卡牌。",
 				"我方回合中，你可以從我方魔力區召喚1隻(R)ディスペクター(/R)。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd1-012.jpg",
 		},
@@ -106451,7 +106451,7 @@
 			cost : 5,
 			mana : 1,
 			sp : [
-				"(K)ニンジャ・チェンジ(/K)３",
+				"(K)ニンジャ・チェンジ(/K)3",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時，到下個我方回合開始前，對手所有生物只要能發動攻擊的話就一定要發動攻擊。",
 				"我方生物一律獲得「(K)スレイヤー(/K)」能力。",
@@ -111091,7 +111091,7 @@
 			cost : 3,
 			sp : [
 				"此生出場時，每有1個對手的手牌比我方多、就抽1張牌。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 		},
 		{
@@ -111105,7 +111105,7 @@
 			cost : 3,
 			sp : [
 				"此生物出場，隨機作廢所有對手各1張手牌。",
-				"(K)ササゲール(/K)１",
+				"(K)ササゲール(/K)1",
 			],
 		},
 		{
@@ -111523,7 +111523,7 @@
 			power : 28482,
 			cost : 18,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)ブロッカー(/K)",
 				"(K)ワールド・ブレイカー(/K)",
 				"此生物召喚出場時，選擇墓地與戰場上任意隻對手生物。使用所有被選擇生物的「此生物出場時」效果。",
@@ -111589,7 +111589,7 @@
 			power : 13500,
 			cost : 12,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)ブロッカー(/K)",
 				"(K)T・ブレイカー(/K)",
 				"此生物召喚出場時，將我方牌庫頂2張牌(K)護盾化<=>シールド化(/K)。之後，你可以將1個元素(K)護盾化<=>シールド化(/K)。",
@@ -111607,7 +111607,7 @@
 			power : 13000,
 			cost : 10,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)ジャストダイバー(/K)",
 				"(K)T・ブレイカー(/K)",
 				"此生物召喚出場時，你最多可以將3隻對手生物拿回到其持有者的手牌中。",
@@ -111625,7 +111625,7 @@
 			power : 13000,
 			cost : 12,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)スレイヤー(/K)",
 				"(K)T・ブレイカー(/K)",
 				"此生物召喚出場時，對手自行作廢他所有手牌。",
@@ -111643,7 +111643,7 @@
 			power : 12000,
 			cost : 11,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)T・ブレイカー(/K)",
 				"我方生物一律獲得「(K)スピードアタッカー(/K)」能力。",
 				"此生物召喚出場時，觀看我方牌庫頂3張牌。從中打出任意隻費用7以下的生物。並將其餘卡牌加入手牌。",
@@ -111660,7 +111660,7 @@
 			power : 19000,
 			cost : 13,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)マッハファイター(/K)",
 				"(K)Q・ブレイカー(/K)",
 				"此生物召喚出場時，觀看我方牌庫頂3張牌。你可以將當中任意隻生物給對手確認並加入手牌。其餘卡牌則以裏側方式置入我方魔力區中。",
@@ -111678,7 +111678,7 @@
 			power : 12321,
 			cost : 12,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)T・ブレイカー(/K)",
 				"我方生物可以於出場的回合攻擊玩家。",
 				"各回合、第一次有我方生物發動攻擊時，你可以破壞該生物。那樣的話，就持續公開我方牌庫頂的牌直到翻出(R)アンノウン(/R)生物或是(R)ゼニス(/R)生物為止。打出該生物、並將牌庫洗牌。",
@@ -111788,7 +111788,7 @@
 			race : ["ゼニス"],
 			cost : 10,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"對手將其所有費用5以下的非無色元素、依喜好順序置入牌庫底。",
 				"抽3張牌。",
 			],
@@ -111807,7 +111807,7 @@
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
 				"戰鬥中、此生物不會被破壞。",
-				"(K)水晶武装(/K)４－當此生物橫置時、擊破2張我方護盾。之後最多將2張我方手牌(K)護盾化<=>シールド化(/K)。",
+				"(K)水晶武装(/K)4－當此生物橫置時、擊破2張我方護盾。之後最多將2張我方手牌(K)護盾化<=>シールド化(/K)。",
 			],
 		},
 		{
@@ -111851,7 +111851,7 @@
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
 				"各回合、對手所使用的第一張卡的效果、無法選擇此生物。",
-				"(K)水晶武装(/K)４－當我方使用咒文時我方魔力區中的無色卡牌一律視為所有文明、且咒文的使用費用一律少4。但是不能降到0以下。",
+				"(K)水晶武装(/K)4－當我方使用咒文時我方魔力區中的無色卡牌一律視為所有文明、且咒文的使用費用一律少4。但是不能降到0以下。",
 			],
 		},
 		{
@@ -111868,7 +111868,7 @@
 				"(K)ブロッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
-				"(K)水晶武装(/K)４－對手卡牌以橫置方式置入魔力區或是戰鬥場。",
+				"(K)水晶武装(/K)4－對手卡牌以橫置方式置入魔力區或是戰鬥場。",
 			],
 		},
 		{
@@ -111884,7 +111884,7 @@
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
 				"我方的(R)アンノウン(/R)生物或是(R)ゼニス(/R)生物的召喚費用少3，但是不能降到0以下。",
-				"(K)水晶武装(/K)４－我方生物不會因為戰鬥敗北以外的效果離場。",
+				"(K)水晶武装(/K)4－我方生物不會因為戰鬥敗北以外的效果離場。",
 			],
 		},
 		{
@@ -111900,7 +111900,7 @@
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時、或是我方回合開始時，你可以將1張我方魔力區中的卡牌蓋成裏側。",
 				"我方所有其他的(R)オラクル(/R)、(R)アンノウン(/R)、以及(R)ゼニス(/R)的攻擊力一律+4000、並獲得「(K)マッハファイター(/K)」能力。",
-				"(K)水晶武装(/K)４－對手生物「當此生物出場時」能力所觸發的效果、取而代之、不予觸發。",
+				"(K)水晶武装(/K)4－對手生物「當此生物出場時」能力所觸發的效果、取而代之、不予觸發。",
 			],
 		},
 		{
@@ -111941,7 +111941,7 @@
 			power : 13579,
 			cost : 12,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)T・ブレイカー(/K)",
 				"我方生物出場時，你可以選擇1隻對手生物、並讓他們進行戰鬥。",
 				"生物戰鬥時比較的不是攻擊力而是費用。",
@@ -112013,7 +112013,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"橫置所有對手生物。",
-				"(K)水晶武装(/K)４：你可以從手牌中打出1隻光文明或是無色、且持有「(K)ブロッカー(/K)」能力的生物出場。",
+				"(K)水晶武装(/K)4：你可以從手牌中打出1隻光文明或是無色、且持有「(K)ブロッカー(/K)」能力的生物出場。",
 			],
 		},
 		{
@@ -112068,7 +112068,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"最多將2隻對手生物拿回到其持有者的手牌中。",
-				"(K)水晶武装(/K)４－最多從手牌中作廢3張費用5以下的咒文。你可以不支付費用、從墓地使用那些咒文。",
+				"(K)水晶武装(/K)4－最多從手牌中作廢3張費用5以下的咒文。你可以不支付費用、從墓地使用那些咒文。",
 			],
 		},
 		{
@@ -112124,7 +112124,7 @@
 			sp : [
 				"此生物出場時，隨機作廢1張對手手牌。",
 				"各回合、第一次有對手手牌被作廢時，你可以抽1張牌。",
-				"(K)水晶武装(/K)２－此生物發動攻擊時，對手要自行破壞他1隻生物。",
+				"(K)水晶武装(/K)2－此生物發動攻擊時，對手要自行破壞他1隻生物。",
 			],
 		},
 		{
@@ -112137,7 +112137,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"選擇1隻對手生物，此回合中、該生物攻擊力-15000。",
-				"(K)水晶武装(/K)４－此回合、未被此咒文選擇到的對手生物的攻擊力一律-6000。",
+				"(K)水晶武装(/K)4－此回合、未被此咒文選擇到的對手生物的攻擊力一律-6000。",
 			],
 		},
 		{
@@ -112180,7 +112180,7 @@
 				"(K)スピードアタッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物發動攻擊時，破壞1隻攻擊力11000以下、且持有「(K)ブロッカー(/K)」能力的對手生物。",
-				"(K)水晶武装(/K)４－此生物擊破護盾時、取而代之、將該卡牌置入墓地。",
+				"(K)水晶武装(/K)4－此生物擊破護盾時、取而代之、將該卡牌置入墓地。",
 			],
 		},
 		{
@@ -112193,7 +112193,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"作廢1張手牌。然後抽2張牌。之後、最多破壞2個對手元素。但是那些元素的費用總和不能超過該卡牌。",
-				"(K)水晶武装(/K)４－從我方墓地中打出任意隻於此回合中置入墓地的火文明生物。",
+				"(K)水晶武装(/K)4－從我方墓地中打出任意隻於此回合中置入墓地的火文明生物。",
 			],
 		},
 		{
@@ -112234,7 +112234,7 @@
 			cost : 3,
 			sp : [
 				"此生物出場時，觀看我方牌庫頂4張牌。你為多可以從中選擇(R)オラクル(/R)、(R)アンノウン(/R)、或是(R)ゼニス(/R)各一隻給對手確認並加入手牌。其餘卡牌擇依喜好順序置入牌庫底。之後你可以將我方魔力區中1張卡牌翻至裏側。",
-				"(K)水晶武装(/K)２－每當此生物發動攻擊時，你可以從我方手牌中打出1隻生物。但是該生物的費用不能超過我方魔力區中的卡牌張數。",
+				"(K)水晶武装(/K)2－每當此生物發動攻擊時，你可以從我方手牌中打出1隻生物。但是該生物的費用不能超過我方魔力區中的卡牌張數。",
 			],
 		},
 		{
@@ -112248,7 +112248,7 @@
 				"(K)S・トリガー(/K)",
 				"將我方牌庫頂2張牌置入我方魔力區中。",
 				"下個我方回合開始前，對手生物如果要發動攻擊、可能的話就要攻擊生物。",
-				"(K)水晶武装(/K)４－觀看我方牌庫頂3張牌。你可以從中打出1隻(R)アンノウン(/R)或是(R)ゼニス(/R)。你可以橫置該生物。並將其餘卡牌依喜好順序置入牌庫底。",
+				"(K)水晶武装(/K)4－觀看我方牌庫頂3張牌。你可以從中打出1隻(R)アンノウン(/R)或是(R)ゼニス(/R)。你可以橫置該生物。並將其餘卡牌依喜好順序置入牌庫底。",
 			],
 		},
 		{
@@ -112273,7 +112273,7 @@
 			power : 10001,
 			cost : 10,
 			sp : [
-				"(K)水晶ソウル(/K)３",
+				"(K)水晶ソウル(/K)3",
 				"(K)W・ブレイカー(/K)",
 				"此生物可以於出場的回合攻擊護盾數為偶數的玩家或是費用為偶數的生物。",
 				"(K)エターナル・Κ(/K)",
@@ -112290,7 +112290,7 @@
 			cost : 7,
 			sp : [
 				"(K)S・トリガー(/K)",
-				"(K)水晶ソウル(/K)２",
+				"(K)水晶ソウル(/K)2",
 				"此生物出場時，將1張對手元素置入其持有者的牌庫底。之後對手抽1張牌。",
 			],
 		},
@@ -112304,7 +112304,7 @@
 			sp : [
 				"(K)G・ストライク(/K)",
 				"將我方牌庫頂第一張牌以裏側橫置方式置入我方魔力區中。",
-				"(K)水晶武装(/K)２－將我方牌庫頂第一張牌以裏側方式置入我方魔力區中。",
+				"(K)水晶武装(/K)2－將我方牌庫頂第一張牌以裏側方式置入我方魔力區中。",
 			],
 		},
 		{
@@ -112332,7 +112332,7 @@
 			cost : 7,
 			sp : [
 				"(K)S・トリガー(/K)",
-				"(K)水晶ソウル(/K)２",
+				"(K)水晶ソウル(/K)2",
 				"此生物出場時，抽1張牌。之後將1張手牌(K)護盾化<=>シールド化(/K)。",
 			],
 		},
@@ -112362,7 +112362,7 @@
 			sp : [
 				"(K)ブロッカー(/K)",
 				"我方所有其他的(R)オラクル(/R)、(R)アンノウン(/R)、或是(R)ゼニス(/R)出場時，你可以抽1張牌。",
-				"(K)水晶武装(/K)２－此生物獲得「(K)エスケープ(/K)」能力。",
+				"(K)水晶武装(/K)2－此生物獲得「(K)エスケープ(/K)」能力。",
 			],
 		},
 		{
@@ -112375,7 +112375,7 @@
 			power : 1000,
 			cost : 3,
 			sp : [
-				"(K)水晶武装(/K)２－此生物召喚費用少2。",
+				"(K)水晶武装(/K)2－此生物召喚費用少2。",
 				"(K)ブロッカー(/K)",
 				"此生物出場時，抽1張牌。",
 			],
@@ -112419,7 +112419,7 @@
 			cost : 7,
 			sp : [
 				"(K)S・トリガー(/K)",
-				"(K)水晶ソウル(/K)２",
+				"(K)水晶ソウル(/K)2",
 				"此生物出場時，最多選擇3隻對手生物。到下個我方回合開始前，那些生物不能進行攻擊或是阻擋。",
 			],
 		},
@@ -112445,7 +112445,7 @@
 			civil : 8,
 			cost : 3,
 			sp : [
-				"(K)水晶武装(/K)２－此咒文的使用費用少2。",
+				"(K)水晶武装(/K)2－此咒文的使用費用少2。",
 				"抽2張牌。",
 			],
 		},
@@ -112460,7 +112460,7 @@
 			cost : 7,
 			sp : [
 				"(K)S・トリガー(/K)",
-				"(K)水晶ソウル(/K)２",
+				"(K)水晶ソウル(/K)2",
 				"此生物出場時，破壞1隻對手生物。",
 			],
 		},
@@ -112488,7 +112488,7 @@
 			cost : 3,
 			sp : [
 				"從我方墓地中打出1隻費用3以下的生物出場。",
-				"(K)水晶武装(/K)４－取而代之、打出1隻費用8以下的生物出場。",
+				"(K)水晶武装(/K)4－取而代之、打出1隻費用8以下的生物出場。",
 			],
 		},
 		{
@@ -112516,7 +112516,7 @@
 			cost : 7,
 			sp : [
 				"(K)S・トリガー(/K)",
-				"(K)水晶ソウル(/K)２",
+				"(K)水晶ソウル(/K)2",
 				"此生物出場時，選擇2隻生物、並讓他們進行戰鬥。",
 			],
 		},
@@ -112546,7 +112546,7 @@
 			cost : 2,
 			sp : [
 				"此生物發動攻擊時，此回合中、1隻我方生物獲得「(K)スピードアタッカー(/K)」能力。",
-				"(K)水晶武装(/K)２－我方生物一律獲得「(K)スピードアタッカー(/K)」能力。",
+				"(K)水晶武装(/K)2－我方生物一律獲得「(K)スピードアタッカー(/K)」能力。",
 			],
 		},
 		{
@@ -112572,7 +112572,7 @@
 			cost : 7,
 			sp : [
 				"(K)S・トリガー(/K)",
-				"(K)水晶ソウル(/K)２",
+				"(K)水晶ソウル(/K)2",
 				"此生物出場時，你可以將1隻生物置入其持有者的魔力區中。",
 			],
 		},
@@ -112671,7 +112671,7 @@
 			cost : 3,
 			sp : [
 				"(K)ブロッカー(/K)",
-				"(K)水晶武装(/K)２－阻擋中、此生物的攻擊力+9000。",
+				"(K)水晶武装(/K)2－阻擋中、此生物的攻擊力+9000。",
 			],
 		},
 		{
@@ -112750,7 +112750,7 @@
 			power : 5000,
 			cost : 5,
 			sp : [
-				"(K)水晶武装(/K)２－當我方使用了水文明的咒文時，你就可以不支付費用、召喚此生物。",
+				"(K)水晶武装(/K)2－當我方使用了水文明的咒文時，你就可以不支付費用、召喚此生物。",
 				"(K)ブロッカー(/K)",
 			],
 		},
@@ -112803,7 +112803,7 @@
 			power : 1000,
 			cost : 3,
 			sp : [
-				"(K)水晶武装(/K)２－你可以從我方墓地中召喚此生物。",
+				"(K)水晶武装(/K)2－你可以從我方墓地中召喚此生物。",
 				"(K)スレイヤー(/K)",
 			],
 		},
@@ -112843,7 +112843,7 @@
 			power : 3000,
 			cost : 3,
 			sp : [
-				"(K)水晶武装(/K)２－各回合、當此生物第一次發動攻擊時，重置此生物。",
+				"(K)水晶武装(/K)2－各回合、當此生物第一次發動攻擊時，重置此生物。",
 			],
 		},
 		{
@@ -112911,7 +112911,7 @@
 			pc : true,
 			cost : 2,
 			sp : [
-				"(K)水晶武装(/K)２－此生物攻擊力+6000、並獲得「(K)W・ブレイカー(/K)」能力。",
+				"(K)水晶武装(/K)2－此生物攻擊力+6000、並獲得「(K)W・ブレイカー(/K)」能力。",
 			],
 		},
 		{
@@ -114831,7 +114831,7 @@
 			power : 13000,
 			cost : 8,
 			sp : [
-				"(K)革命(/K)０－此生物從護盾區加入手牌時，如我我方沒有護盾的話，則你可以不支付費用、從手牌召喚此生物。",
+				"(K)革命(/K)0－此生物從護盾區加入手牌時，如我我方沒有護盾的話，則你可以不支付費用、從手牌召喚此生物。",
 				"(K)ブロッカー(/K)",
 				"(K)T・ブレイカー(/K)",
 				"此生物出場時，橫置所有對手生物。下個對手回合初，不能重置那些生物。",
@@ -115065,7 +115065,7 @@
 			civil : 24,
 			cost : 4,
 			sp : [
-				"(K)革命(/K)２－當我方護盾在2張以下時，從護盾拿回到手牌的此咒文獲得「(K)S・トリガー(/K)」能力。",
+				"(K)革命(/K)2－當我方護盾在2張以下時，從護盾拿回到手牌的此咒文獲得「(K)S・トリガー(/K)」能力。",
 				"下列能力擇二發動(可以選擇同一條)－##公開我方牌庫頂2張牌，將當中的光文明與水文明卡牌加入手牌。其餘卡牌則依喜好順序置入牌庫底##將我方牌庫頂第一張牌(K)護盾化<=>シールド化(/K)##將1個費用3以下的元素(K)護盾化<=>シールド化(/K)。",
 			],
 		},
@@ -116499,7 +116499,7 @@
 				"(K)スピードアタッカー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"此生物被破壞時，你可以取而代之、破壞1隻我方其他的(R)ファイアー・バード(/R)。",
-				"此生物發動攻擊時，你可以破壞1個我方的(R)ファイアー・バード(/R)。那樣的話，就執行(R)ファイアー・バード(/R)・(K)メクレイド(/K)８する。",
+				"此生物發動攻擊時，你可以破壞1個我方的(R)ファイアー・バード(/R)。那樣的話，就執行(R)ファイアー・バード(/R)・(K)メクレイド(/K)8する。",
 			],
 		},
 		{
@@ -116515,7 +116515,7 @@
 				"(K)スピードアタッカー(/K)",
 				"(K)マッハファイター(/K)",
 				"(K)W・ブレイカー(/K)",
-				"此生物發動攻擊時，執行(R)ドリームメイト(/R)・(K)メクレイド(/K)５する。",
+				"此生物發動攻擊時，執行(R)ドリームメイト(/R)・(K)メクレイド(/K)5する。",
 				"(K)エスケープ(/K)",
 			],
 		},
@@ -116532,7 +116532,7 @@
 				"(K)ジャストダイバー(/K)",
 				"(K)W・ブレイカー(/K)",
 				"我方的(R)スノーフェアリー(/R)被破壞時，取而代之、置入魔力區中。",
-				"各回合結束時，你可以將我方魔力區中1張卡牌置入墓地。那樣的話，就執行(R)スノーフェアリー(/R)・(K)メクレイド(/K)５。",
+				"各回合結束時，你可以將我方魔力區中1張卡牌置入墓地。那樣的話，就執行(R)スノーフェアリー(/R)・(K)メクレイド(/K)5。",
 			],
 		},
 		{
@@ -116564,7 +116564,7 @@
 				"召喚此生物時，你可以破壞我方3個(R)デスパペット(/R)。那樣的話，則此生物的召喚費用會變成(闇2)。",
 				"(K)W・ブレイカー(/K)",
 				"此生物出場時，隨機作廢2張對手手牌。",
-				"各回合一次，當對手作廢手牌時，就執行(R)デスパペット(/R)・(K)メクレイド(/K)５。",
+				"各回合一次，當對手作廢手牌時，就執行(R)デスパペット(/R)・(K)メクレイド(/K)5。",
 			],
 		},
 		{
@@ -116652,7 +116652,7 @@
 					civil : 8,
 					cost : 6,
 					sp : [
-						"(R)スプラッシュ・クイーン(/R)・(K)メクレイド(/K)８。",
+						"(R)スプラッシュ・クイーン(/R)・(K)メクレイド(/K)8。",
 					],
 				},
 			],
@@ -116684,7 +116684,7 @@
 						"當對手生物出場時，如果該生物的費用比其魔力區中的卡牌張數多的話，則破壞該生物。",
 						"(K)ハイパー化(/K)－橫置1隻我方其他生物。",
 						"(K)スピードアタッカー(/K)",
-						"此生物發動攻擊時，執行(R)ファイアー・バード(/R)・(K)メクレイド(/K)５。",
+						"此生物發動攻擊時，執行(R)ファイアー・バード(/R)・(K)メクレイド(/K)5。",
 					],
 				},
 			],
@@ -116796,7 +116796,7 @@
 						"(K)ジャストダイバー(/K)",
 						"此生物出場時，觀看1張我方護盾。你可以將那張護盾拿回到手牌中，但是你不能使用其「(K)S・トリガー(/K)」能力。那樣的話，則將我方牌庫頂第一張牌(K)護盾化<=>シールド化(/K)。如果不打把護盾拿回到手牌中的話，則抽1張牌。",
 						"(K)ハイパー化(/K)－橫置1隻我方其他生物。",
-						"此生物發動攻擊時，執行(R)スプラッシュ・クイーン(/R)・(K)メクレイド(/K)５。",
+						"此生物發動攻擊時，執行(R)スプラッシュ・クイーン(/R)・(K)メクレイド(/K)5。",
 					],
 				},
 			],
@@ -116933,7 +116933,7 @@
 			sp : [
 				"(K)S・トリガー(/K)",
 				"當此卡因對手生物或是咒文的效果而從手牌中作廢時，則你可以不支付費用、從我方墓地使用此咒文。",
-				"執行(R)スノーフェアリー(/R)・(K)W・メクレイド(/K)５。",
+				"執行(R)スノーフェアリー(/R)・(K)W・メクレイド(/K)5。",
 			],
 		},
 		{
@@ -117396,8 +117396,8 @@
 				"(K)ブロッカー(/K)",
 				"(K)スピードアタッカー(/K)",
 				"此生物出場時，將我方牌庫頂2張牌置入魔力區中。之後將我方魔力區中1隻生物拿回到手牌中。",
-				"(K)革命(/K)２－當此生物從我方護盾區拿回到手牌中時，此生物獲得「(K)S・トリガー(/K)」能力。",
-				"(K)革命(/K)０－戰鬥中、此生物攻擊力+10000、並於此生物戰鬥獲勝後重置此生物。",
+				"(K)革命(/K)2－當此生物從我方護盾區拿回到手牌中時，此生物獲得「(K)S・トリガー(/K)」能力。",
+				"(K)革命(/K)0－戰鬥中、此生物攻擊力+10000、並於此生物戰鬥獲勝後重置此生物。",
 			],
 		},
 		{

@@ -181,16 +181,16 @@
 	var isDeck = true;
 	var setCardList = [
 		{		name : "運搬の守護者 アル・ハコブ",				count : 4,	},
-		{		name : "アストマープル-T３",					count : 4,	},
+		{		name : "アストマープル-T3",					count : 4,	},
 		{		name : "権力のコイン",							count : 4,	},
 		{		name : "ハイパーソニック・ゴールデンタイヤ",	count : 3,	},
 		{		name : "巡霊者ヴニース",						count : 3,	},
 		{		name : "トロワ・サイン",						count : 4,	},
-		{		name : "ブルトゥーラ-D１",						count : 3,	},
+		{		name : "ブルトゥーラ-D1",						count : 3,	},
 		{		name : "ドラン・ゴルギーニ",					count : 4,	},
 		{		name : "赤翼の精霊エルラ・ルージュ",			count : 3,	},
 		{		name : "シェケダン・ドメチアーレ",				count : 4,	},
-		{		name : "ジャマリーリョ-S８",					count : 4,	},
+		{		name : "ジャマリーリョ-S8",					count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
@@ -264,7 +264,7 @@
 		{		name : "スプーン＝ンプス",				count : 3,	},
 		{		name : "斬斬人形コダマンマ GS",			count : 4,	},
 		{		name : "アニー・ルピア",				count : 4,	},
-		{		name : "月砂 フロッガ-１",				count : 4,	},
+		{		name : "月砂 フロッガ-1",				count : 4,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 		
@@ -290,11 +290,11 @@
 	var setName = "甲型全刪＠衛君"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "猛菌 キューティ-２",					count : 4,	},
+		{		name : "猛菌 キューティ-2",					count : 4,	},
 		{		name : "腐敗妖精ダチュラ",						count : 4,	},
 		{		name : "禁断竜秘伝エターナルプレミアムズ",		count : 3,	},
 		{		name : "地封龍 ギャイア",						count : 1,	},
-		{		name : "甲型龍帝式 キリコ３",					count : 4,	},
+		{		name : "甲型龍帝式 キリコ3",					count : 4,	},
 		{		name : "オールデリート",						count : 2,	},
 		{		name : "怒流牙 根津の超人",						count : 2,	},
 		{		name : "切札勝太&カツキング ー熱血の物語ー",	count : 4,	},
@@ -309,11 +309,11 @@
 	var setName = "甲型炸盾＠衛君"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "猛菌 キューティ-２",									count : 4,	},
+		{		name : "猛菌 キューティ-2",									count : 4,	},
 		{		name : "腐敗妖精ダチュラ",										count : 4,	},
 		{		name : "天雷龍姫エリザベス / インビンシブル・フォートレス",		count : 4,	},
 		{		name : "地封龍 ギャイア",										count : 1,	},
-		{		name : "甲型龍帝式 キリコ３",									count : 4,	},
+		{		name : "甲型龍帝式 キリコ3",									count : 4,	},
 		{		name : "怒流牙 根津の超人",										count : 3,	},
 		{		name : "切札勝太&カツキング ー熱血の物語ー",					count : 4,	},
 		{		name : "蒼狼の王妃 イザナミテラス",								count : 4,	},
@@ -350,8 +350,8 @@
 		{		name : "シェケダン・ドメチアーレ",										count : 4,	},
 		{		name : "予言者マンプクルト",											count : 4,	},
 		{		name : "ドラン・ゴルギーニ",											count : 4,	},
-		{		name : "ジャマリーリョ-S８",											count : 4,	},
-		{		name : "ブルトゥーラ-D１",												count : 4,	},
+		{		name : "ジャマリーリョ-S8",											count : 4,	},
+		{		name : "ブルトゥーラ-D1",												count : 4,	},
 		{		name : "運搬の守護者 アル・ハコブ",										count : 4,	},
 		{		name : "トロワ・サイン",												count : 4,	},
 		{		name : "「正義星帝」 ＜鬼羅.Star＞",									count : 4,	},
@@ -590,7 +590,7 @@
 		{		name : "轟速 ザ・レッド / 超次元キル・ホール",	count : 4,	},
 		{		name : "バサラ",								count : 4,	},
 		{		name : "「貪」の鬼 バクロ法師",					count : 4,	},
-		{		name : "月砂 フロッガ-１",						count : 4,	},
+		{		name : "月砂 フロッガ-1",						count : 4,	},
 		{		name : "斬斬人形コダマンマ GS",					count : 4,	},
 		{		name : "カンゴク入道",							count : 4,	},
 		{		name : "「大蛇」の鬼 ジャドク丸",				count : 4,	},
@@ -1296,7 +1296,7 @@
 	var setName = "甲龍QX＠Ether"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "甲型龍帝式 キリコ３",					count : 4,	},
+		{		name : "甲型龍帝式 キリコ3",					count : 4,	},
 		{		name : "Q.Q.QX / 終葬 5.S.D.",					count : 4,	},
 		{		name : "水晶の祈り / クリスタル・ドゥーム",		count : 4,	},
 		{		name : "蒼狼の王妃 イザナミテラス",				count : 4,	},

@@ -3633,7 +3633,7 @@
 	
 	//英文全型轉半型
 	var fhConverter = {
-		full : "ＱＡＺＷＳＸＥＤＣＲＦＶＴＧＢＹＨＮＵＪＭＩＫＯＬＰｑａｚｗｓｘｅｄｃｒｆｖｔｇｂｙｈｎｕｊｍｉｋｏｌｐ０１２３４５６７８９　！？＜＞",
+		full : "ＱＡＺＷＳＸＥＤＣＲＦＶＴＧＢＹＨＮＵＪＭＩＫＯＬＰｑａｚｗｓｘｅｄｃｒｆｖｔｇｂｙｈｎｕｊｍｉｋｏｌｐ0123456789　！？＜＞",
 		helf : "QAZWSXEDCRFVTGBYHNUJMIKOLPqazwsxedcrfvtgbyhnujmikolp01234567890!?<>",
 		fullToHalf : function( str ){
 			if ( str == null )
@@ -3950,7 +3950,7 @@
 			var pdbsTextarea = document.createElement('textarea');
 			pdbsTextarea.style.width = ( blockPercentW * 100 - 10 ) + "%";
 			pdbsTextarea.style.height = ( blockPercentH * 100 - 10 ) + "%";
-			var initString = "請在此輸入牌庫內文，例：\r\n３x 神帝ムーラ\r\n 4 * 神帝アージュ\r\n2 時空の庭園";
+			var initString = "請在此輸入牌庫內文，例：\r\n3x 神帝ムーラ\r\n 4 * 神帝アージュ\r\n2 時空の庭園";
 			pdbsTextarea.placeholder = translateText( initString, isTC2C );
 			pdbsDIV.appendChild( pdbsTextarea );
 			pdbsDIV.appendChild( document.createElement('br') );

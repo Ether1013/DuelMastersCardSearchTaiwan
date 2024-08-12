@@ -339,12 +339,12 @@
 		for ( var ds = 0 ; ds < deckString.length ; ds++ ){
 			var _line = deckString[ds].replace( /^[ 　\s]+/g , "" ).replace( /[ 　\s]+$/g , "" );
 			var _cardNames = null;
-			var _num = _line.match(/^[0-9０１２３４５６７８９]+/);
+			var _num = _line.match(/^[0-90123456789]+/);
 			if ( _num != null && _num != "" ){
-				_cardNames = _line.replace(/^[0-9０１２３４５６７８９]+/,"");
+				_cardNames = _line.replace(/^[0-90123456789]+/,"");
 			} else {
-				_num = _line.match(/[0-9０１２３４５６７８９]+$/);
-				_cardNames = _line.replace(/[0-9０１２３４５６７８９]+$/,"");
+				_num = _line.match(/[0-90123456789]+$/);
+				_cardNames = _line.replace(/[0-90123456789]+$/,"");
 			}
 			if ( _num == null || _num == "" ){
 				continue;
@@ -412,7 +412,7 @@
 		var deckStringSplit = [];
 		while ( deckString.length > 0 ){
 			var charType = null;
-			var matchStr = deckString.match( /^[\d０１２３４５６７８９]+/ );
+			var matchStr = deckString.match( /^[\d0123456789]+/ );
 			if ( matchStr != null ){
 				charType = "N";
 			} else {
@@ -420,7 +420,7 @@
 				if ( matchStr != null ){
 					charType = "B";
 				} else {
-					matchStr = deckString.match( /^[^\*＊xXｘＸ×\d０１２３４５６７８９]+/ );
+					matchStr = deckString.match( /^[^\*＊xXｘＸ×\d0123456789]+/ );
 					charType = "W";
 				}
 			}
@@ -468,12 +468,12 @@
 		for ( var ds = 0 ; ds < deckString.length ; ds++ ){
 			var _line = deckString[ds];
 			var _cardNames = null;
-			var _num = _line.match(/^[0-9０１２３４５６７８９]+/);
+			var _num = _line.match(/^[0-90123456789]+/);
 			if ( _num != null && _num != "" ){
-				_cardNames = _line.replace(/^[0-9０１２３４５６７８９]+/,"");
+				_cardNames = _line.replace(/^[0-90123456789]+/,"");
 			} else {
-				_num = _line.match(/[0-9０１２３４５６７８９]+$/);
-				_cardNames = _line.replace(/[0-9０１２３４５６７８９]+$/,"");
+				_num = _line.match(/[0-90123456789]+$/);
+				_cardNames = _line.replace(/[0-90123456789]+$/,"");
 			}
 			if ( _num == null || _num == "" ){
 				continue;
