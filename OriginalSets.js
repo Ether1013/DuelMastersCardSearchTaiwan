@@ -1,5 +1,5 @@
 ﻿		
-	var setCode = "NET-009";
+	var setCode = "NET-001";
 	var setName = "CE-甲子園亞軍-光単サザン・ルネッサンス";
 	var isDeck = true;
 	var setCardList = [
@@ -19,7 +19,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-010";
+	var setCode = "NET-002";
 	var setName = "CE-甲子園冠軍-ドロマーオールイエス";
 	var isDeck = true;
 	var setCardList = [
@@ -54,7 +54,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
-	var setCode = "NET-020"
+	var setCode = "NET-003"
 	var setName = "赤黒フェニックスヘルボロフ "
 	var isDeck = true;
 	var setCardList = [
@@ -82,7 +82,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
-	var setCode = "NET-021"
+	var setCode = "NET-004"
 	var setName = "準自然単若頭鬼流院刃"
 	var isDeck = true;
 	var setCardList = [
@@ -116,7 +116,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );	
 
-	var setCode = "NET-025"
+	var setCode = "NET-005"
 	var setName = "優勝 デッキ 闇単 火"
 	var isDeck = true;
 	var setCardList = [
@@ -361,7 +361,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-044"
+	var setCode = "NET-006"
 	var setName = "光單禁斷＠Ether"
 	var isDeck = true;
 	var setCardList = [
@@ -403,7 +403,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-045"
+	var setCode = "NET-007"
 	var setName = "正義星帝<鬼羅Star.>＠元丰"
 	var isDeck = true;
 	var setCardList = [
@@ -425,7 +425,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-046";
+	var setCode = "NET-008";
 	var setName = "龍霸爆炎豪華改造案＠衛君";
 	var isDeck = true;
 	var setCardList = [
@@ -463,7 +463,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-047";
+	var setCode = "NET-009";
 	var setName = "龍風控制＠元丰";
 	var isDeck = true;
 	var setCardList = [
@@ -517,7 +517,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-051"
+	var setCode = "NET-010"
 	var setName = "港台交流賽2023-[Z-File]＠Ether"
 	var isDeck = true;
 	var setCardList = [
@@ -540,7 +540,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-052"
+	var setCode = "NET-011"
 	var setName = "港台交流賽2023-[神官邪王門]＠衛君"
 	var isDeck = true;
 	var setCardList = [
@@ -560,7 +560,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-053"
+	var setCode = "NET-012"
 	var setName = "港台交流賽2023-[赤青阿波羅]＠顆同學"
 	var isDeck = true;
 	var setCardList = [
@@ -636,7 +636,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-054"
+	var setCode = "NET-013"
 	var setName = "台灣俺嘉年華2023 1st【5C万軍投＠彥誠】"
 	var isDeck = true;
 	var setCardList = [
@@ -675,7 +675,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-055"
+	var setCode = "NET-014"
 	var setName = "台灣俺嘉年華2023 2nd【5CモルトNEXT＠德爾塔】"
 	var isDeck = true;
 	var setCardList = [
@@ -711,7 +711,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-056"
+	var setCode = "NET-015"
 	var setName = "台灣俺嘉年華2023 3rd【水魂種＠Norman】"
 	var isDeck = true;
 	var setCardList = [
@@ -736,7 +736,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-057"
+	var setCode = "NET-016"
 	var setName = "台灣俺嘉年華2023 4th【5C万軍投＠國洋】"
 	var isDeck = true;
 	var setCardList = [
@@ -767,7 +767,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-058"
+	var setCode = "NET-017"
 	var setName = "台灣俺嘉年華2023 主辦【龍月絕望神＠紹睿】"
 	var isDeck = true;
 	var setCardList = [
@@ -794,7 +794,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-059"
+	var setCode = "NET-018"
 	var setName = "DMGP2023-1st 『ラッカ鬼羅スターライオネル』＠ナオ@すずの音"
 	var isDeck = true;
 	var setCardList = [
@@ -812,7 +812,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-060"
+	var setCode = "NET-019"
 	var setName = "DMGP2023-1st 『赤單我我我』＠いっぺこ"
 	var isDeck = true;
 	var setCardList = [
@@ -850,7 +850,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-062"
+	var setCode = "NET-020"
 	var setName = "帥狗盃DM大賽1st【5C龍風＠致舜】"
 	var isDeck = true;
 	var setCardList = [
@@ -874,7 +874,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-063"
+	var setCode = "NET-021"
 	var setName = "帥狗盃DM大賽2nd【龍霸VV8＠家華】"
 	var isDeck = true;
 	var setCardList = [
@@ -912,7 +912,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-064"
+	var setCode = "NET-022"
 	var setName = "帥狗盃DM大賽3rd【深淵＠可樂薯條】"
 	var isDeck = true;
 	var setCardList = [
@@ -931,7 +931,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-065"
+	var setCode = "NET-023"
 	var setName = "帥狗盃DM大賽4th【4C邪王門＠元丰】"
 	var isDeck = true;
 	var setCardList = [
@@ -956,7 +956,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-066"
+	var setCode = "NET-024"
 	var setName = "衛君盃DM大賽1st【5C龍風＠致舜】"
 	var isDeck = true;
 	var setCardList = [
@@ -979,7 +979,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-067"
+	var setCode = "NET-025"
 	var setName = "衛君盃DM大賽2nd【赤綠波夏克切札家＠崇銘】"
 	var isDeck = true;
 	var setCardList = [
@@ -1000,7 +1000,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-068"
+	var setCode = "NET-026"
 	var setName = "衛君盃DM大賽3rd【黑綠深淵＠元丰】"
 	var isDeck = true;
 	var setCardList = [
@@ -1020,7 +1020,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-069"
+	var setCode = "NET-027"
 	var setName = "衛君盃DM大賽4th【5C龍風＠佑昀】"
 	var isDeck = true;
 	var setCardList = [
@@ -1042,7 +1042,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-070"
+	var setCode = "NET-028"
 	var setName = "山田盃DM大賽1st【7軸天使機器人＠山田】"
 	var isDeck = true;
 	var setCardList = [
@@ -1059,7 +1059,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-071"
+	var setCode = "NET-029"
 	var setName = "山田盃DM大賽2nd【青綠巨人＠菜虫】"
 	var isDeck = true;
 	var setCardList = [
@@ -1079,7 +1079,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-072"
+	var setCode = "NET-030"
 	var setName = "山田盃DM大賽3rd【MMM退化＠元丰】"
 	var isDeck = true;
 	var setCardList = [
@@ -1104,7 +1104,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-073"
+	var setCode = "NET-031"
 	var setName = "山田盃DM大賽4th【龍CUBE＠YOKA】"
 	var isDeck = true;
 	var setCardList = [
@@ -1124,7 +1124,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-074"
+	var setCode = "NET-032"
 	var setName = "QOO盃DM大賽1st【流星霸道＠MisterLobaLoba】"
 	var isDeck = true;
 	var setCardList = [
@@ -1148,7 +1148,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-075"
+	var setCode = "NET-033"
 	var setName = "QOO盃DM大賽2nd【黑綠深淵＠蚵仔】"
 	var isDeck = true;
 	var setCardList = [
@@ -1170,7 +1170,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-076"
+	var setCode = "NET-034"
 	var setName = "QOO盃DM大賽3rd【赤白5th＠礦工王】"
 	var isDeck = true;
 	var setCardList = [
@@ -1188,7 +1188,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-077"
+	var setCode = "NET-035"
 	var setName = "QOO盃DM大賽4th【白黑天門＠Funky】"
 	var isDeck = true;
 	var setCardList = [
@@ -1207,7 +1207,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-078"
+	var setCode = "NET-036"
 	var setName = "台灣CS大賽2024 1st【水闇COMPLEX＠元丰】"
 	var isDeck = true;
 	var setCardList = [
@@ -1227,7 +1227,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-079"
+	var setCode = "NET-037"
 	var setName = "台灣CS大賽2024 2nd【深淵邪王門＠久】"
 	var isDeck = true;
 	var setCardList = [
@@ -1247,7 +1247,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-080"
+	var setCode = "NET-038"
 	var setName = "台灣CS大賽2024 3rd【流星霸道＠Alfian】"
 	var isDeck = true;
 	var setCardList = [
@@ -1271,7 +1271,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-081"
+	var setCode = "NET-039"
 	var setName = "台灣CS大賽2024 4th【三色機車＠菜虫】"
 	var isDeck = true;
 	var setCardList = [
@@ -1292,7 +1292,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-082"
+	var setCode = "NET-040"
 	var setName = "甲龍QX＠Ether"
 	var isDeck = true;
 	var setCardList = [
@@ -1311,7 +1311,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-083"
+	var setCode = "NET-041"
 	var setName = "新加坡官方CS大賽2024 1st【Heavens Gate＠Don】"
 	var isDeck = true;
 	var setCardList = [
@@ -1332,7 +1332,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-084"
+	var setCode = "NET-042"
 	var setName = "新加坡官方CS大賽2024 2nd【Green Black Abyss＠Anthony】"
 	var isDeck = true;
 	var setCardList = [
@@ -1352,7 +1352,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-085"
+	var setCode = "NET-043"
 	var setName = "新加坡官方CS大賽2024 3rd【Blue Black Complex＠Young】"
 	var isDeck = true;
 	var setCardList = [
@@ -1371,7 +1371,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-086"
+	var setCode = "NET-044"
 	var setName = "新加坡官方CS大賽2024 3rd【Anacolour Deddam＠Alex】"
 	var isDeck = true;
 	var setCardList = [
