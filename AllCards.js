@@ -65477,20 +65477,6 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-076.jpg",
 		},
 		{
-			name : "【問2】 ノロン⤴",
-			type : "C",
-			civil : 12,
-			race : ["クリスタル・ドラゴン","革命軍","テック団"],
-			power : 4000,
-			cost : 3,
-			mana : 1,
-			sp : [
-				"(K)革命チェンジ(/K)－水文明或是闇文明的生物",
-				"此生物出場時，你可以抽1張牌，那樣的話，則作廢1張手牌。",
-			],
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-078.jpg",
-		},
-		{
 			name : "怒流牙 佐助の超人",
 			type : "C",
 			civil : 9,
@@ -86875,7 +86861,7 @@
 			mana : 1,
 			sp : [
 				"(K)ブロッカー(/K)",
-				"此生物出場時，你可以將1隻我方護盾置入墓地。然後抽1張牌。",
+				"此生物出場時，你可以將1張我方護盾置入墓地。然後抽1張牌。",
 				"於此生物攻擊結束後、破壞此生物。",
 			],
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-095.jpg",
