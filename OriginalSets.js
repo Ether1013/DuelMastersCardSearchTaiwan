@@ -1303,12 +1303,12 @@
 		{		name : "ア:グンテ",								count : 4,	},
 		{		name : "霞み妖精ジャスミン",					count : 4,	},
 		{		name : "深海の伝道師 アトランティス",			count : 4,	},
-		{		name : "蒼狼の王妃 イザナミテラス",				count : 2,	},
 		{		name : "電脳鎧冑アナリス",						count : 2,	},
+		{		name : "ジャスミンの地版",						count : 2,	},
 		{		name : "ポクチンちん",							count : 1,	},
 		{		name : "ガイアッシュの海地図",					count : 3,	},
-		{		name : "ジャスミンの地版",						count : 2,	},
 		{		name : "哀樹神官 グリッファ",					count : 2,	},
+		{		name : "蒼狼の王妃 イザナミテラス",				count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
