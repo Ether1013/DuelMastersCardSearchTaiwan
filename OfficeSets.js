@@ -69625,7 +69625,7 @@
 			count : 4,
 		},
 		{
-			name : "戦略のＤ・Ｈ アツト",
+			name : "戦略のD・Hアツト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-023.jpg",
 			rarity : "C",
 			flavor : [ "ジョーたちにとっては敵であっても、ゼーロは闇文明にとって間違いなくヒーローであった。" ],

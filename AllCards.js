@@ -10820,20 +10820,6 @@
 			pic : "",
 		},
 		{
-			name : "戦略のD・Hアツト",
-			type : "C",
-			civil : 12,
-			race : ["ヒューマノイド","ヒーロー"],
-			power : 2000,
-			cost : 2,
-			mana : 1,
-			sp : [
-					
-					"當此生物出場時，你可以抽2張牌。那樣的話，作廢2張手牌。",
-			],
-			pic : "",
-		},
-		{
 			name : "知識の精霊ロードリエス",
 			type : "C",
 			civil : 24,
@@ -50094,7 +50080,7 @@
 		},
 		{
 			name : "ツナミ・カタストロフィー",
-			type : "C",
+			type : "CG",
 			civil : 12,
 			cost : 4,
 			mana : 1,
@@ -92736,7 +92722,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-013.jpg",
 		},
 		{
-			name : "戦略のＤ・Ｈ アツト",
+			name : "戦略のD・Hアツト",
 			type : "C",
 			civil : 12,
 			race : ["ヒューマノイド","ヒーロー"],
