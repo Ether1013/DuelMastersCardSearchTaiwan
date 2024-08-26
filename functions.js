@@ -2060,6 +2060,7 @@
 		gobi( "cardName" ).value = cardName;
 		//判斷是不是要查放逐生物
 		if ( isXC != null && isXC ){
+			gobi( "skipType" ).checked = false;
 			setCheckboxValue( "cardType" , [ "XC" , "EXC" ] );
 		}
 		var result = query();
@@ -3227,8 +3228,8 @@
 			}
 		}
 		if ( !chk ){
-			w.alert( translateText( "圖片尚未全數讀取完成，請稍候再試！", isTC2C ) );
-			return;
+//			w.alert( translateText( "圖片尚未全數讀取完成，請稍候再試！", isTC2C ) );
+//			return;
 		}
 		var percent = 0.9;
 		var domPicsArray = [];
