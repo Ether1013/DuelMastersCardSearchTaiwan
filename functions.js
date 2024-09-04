@@ -2357,6 +2357,9 @@
 		while( ( beforeIndex = name.indexOf( "（" ) ) != -1 && ( endIndex = name.indexOf( "）" ) ) != -1 ){
 			name = name.substring( 0 , beforeIndex ) + name.substring( endIndex + 1 );
 		}
+		while( ( beforeIndex = name.indexOf( "(" ) ) != -1 && ( endIndex = name.indexOf( ")" ) ) != -1 ){
+			name = name.substring( 0 , beforeIndex ) + name.substring( endIndex + 1 );
+		}
 		return name;
 	}
 	
@@ -4157,8 +4160,15 @@
 		return tags;
 	}
 	
+	function findWiki(){
+		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
+		var keyword = clearSubName( ToCDB( lastSelectedCardName ) );
+		var _link = "https://www.google.co.jp/search?q="+encodeURI(keyword)+"+site%3Admwiki.net";
+		window.open( _link, '_blank' );
+	}
+	
 	function findTrade(){
-		var keyword = null;;
+		var keyword = null;
 		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
 		if ( cardData.id != null ){
 			keyword = cardData.id;
