@@ -4136,7 +4136,7 @@
 			id : "DMR08 3/55",
 		},
 		{
-			name : "R・S・F・K",
+			name : "R.S.F.K.",
 			pic : "",
 			rarity : "VR",
 			flavor : "賭徒中的賭徒、現身！",
@@ -28335,7 +28335,7 @@
 			id : "DMX21 54/70",
 		},
 		{
-			name : "テンペスト･ベビー",
+			name : "テンペスト・ベビー",
 			pic : "",
 			rarity : "C",
 			flavor : "安靜點!!少把人講的像怪物一樣啦。－黃昏ミミ",
@@ -29602,7 +29602,7 @@
 			id : "DMX22-b 78/???",
 		},
 		{
-			name : "R・S・F・K",
+			name : "R.S.F.K.",
 			pic : "",
 			rarity : "VR",
 			flavor : "看招!!直擊閃光!!－怪盜ジョーカー",
@@ -49482,7 +49482,7 @@
 			id : "EX08 28/???",
 		},
 		{
-			name : "激竜ガイアール・Ｂ（ボルシャック）",
+			name : "激竜ガイアール・B（ボルシャック）",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-029.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -81268,6 +81268,124 @@
 			rarity : "R",
 			flavor : [ "" ],
 			id : "ART15 5/6",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "DMART-16";
+	var setName = "神アート 禁断 ~封印されしアート~";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "時空の禁断 レッドゾーンX",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/01/card01.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART16 1a/5",
+			count : 1,
+		},
+		{
+			name : "終焉の覚醒者 レッドゾーンBSR",
+			pic : "./cardPic/dmart16-1b.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART16 1b/5",
+			count : 1,
+		},
+		{
+			name : "禁断の轟速 ブラックゾーン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/01/card02.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART16 2/5",
+			count : 1,
+		},
+		{
+			name : "秩序の意志",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/01/card03.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART16 3/5",
+			count : 1,
+		},
+		{
+			name : "D2V3 終断のデッドトロン / デッドリー・ビッグバン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/01/card04.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART16 4/5",
+			count : 1,
+		},
+		{
+			name : "Forbidden Sunrise ～禁断の夜明け～",
+			pic : "./cardPic/dmart16-5.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART16 5/5",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "DMART-17";
+	var setName = "神アート 禁断 ~封印されしアート~";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "切札勝太&カツキング ー熱血の物語ー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/02/card01.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART17 1/5",
+			count : 1,
+		},
+		{
+			name : "革命の絆",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/02/card02.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART17 2/5",
+			count : 1,
+		},
+		{
+			name : "終止の時計 ザ・ミュート",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/02/card03.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART17 3/5",
+			count : 1,
+		},
+		{
+			name : "撃髄医 スパイナー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/02/card04.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART17 4/5",
+			count : 1,
+		},
+		{
+			name : "裏斬隠裏蒼頭 バルガリスク",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/02/card05.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART17 5/5",
 			count : 1,
 		},
 		{

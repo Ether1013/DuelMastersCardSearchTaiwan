@@ -1302,6 +1302,8 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DMART-16",
+		"DMART-17",
 		"DM24-BD1",
 		"DM24-BD2",
 	]
@@ -1330,6 +1332,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2024/09/12",
+				log : [ 
+						"新增DMART-16, DMART-17",
+				],	
+			},
 			{	
 				date : "2024/09/04",
 				log : [ 
