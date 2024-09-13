@@ -18022,7 +18022,7 @@
 			],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-07";
 	var setName = "神アート COLORFUL＊SNOW";
@@ -18102,7 +18102,7 @@
 			],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-05";
 	var setName = "神アート 五人祭でドラゴン♡サマー";
@@ -81318,7 +81318,7 @@
 			count : 1,
 		},
 		{
-			name : "D2V3 終断のデッドトロン / デッドリー・ビッグバン",
+			name : "D2V3 終断のレッドトロン / フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/01/card04.png",
 			rarity : "R",
 			flavor : [ "" ],

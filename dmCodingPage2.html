@@ -16,6 +16,18 @@
 	  }).replace(/\u3000/g, ' ')
 	}
 
+	//找出既存卡名
+	function findExistName( name ){
+		for ( var n = 0 ; n < cardDatas.map.length ; n++ ){
+			var clearName = clearSubName( cardDatas.map[n].name ).replaceAll( " " , "" );
+			var _name = clearSubName( name ).replaceAll( " " , "" );
+			if ( clearName == _name ){
+				return cardDatas.map[n].name;
+			}
+		}
+		return name;
+	}
+
 	//建立能力置換MAP
 	var insteadAB = [];
 	for ( var a = 0 ; a < abilityMapping.map.length ; a++ ){
@@ -199,6 +211,8 @@
 				}
 				cdDetail.wData.push( w );
 			}
+			//比對舊有資料，如果有找到既有卡名的話就以既有卡名為準
+			cdDetail.name = findExistName( cdDetail.name );
 			
 			cDatas.push( cdDetail );
 		}
@@ -357,8 +371,10 @@
 
 		$("body").append($("<span><XMP>" + textContent + "</XMP></span>")).append($("<HR>")).append($("<span><XMP>" + textContent2 + "</XMP></span>"));
 	}
+	
 </script>
 <body>
+	<img src="" alt="" id="demo">
 	<div class="table">
 		<div class="tr">
 			<div class="td" style="vertical-align:top;" width="40%">

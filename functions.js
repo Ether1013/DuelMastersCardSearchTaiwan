@@ -4038,6 +4038,59 @@
 			return null; 
 		} 
 	} 
+	
+	function convertImageToBase64( imgObj, doCanvas ){
+		
+		alert( "請等候10秒鐘" );
+//		console.log( "請等候10秒鐘" );
+		var proxy = "https://api.allorigins.win/get?url=";
+		var url = proxy+encodeURIComponent( imgObj.src );
+		
+//		console.log( url );
+		try{
+			$.get(url, function (data) {
+	//			console.log( typeof data.contents );
+	//			console.log( data.contents );
+				imgObj.src = data.contents;			
+
+				if ( doCanvas ){
+					setTimeout( getCanvas, 3000 );
+				}
+			});
+			
+		} catch(e){
+			alert( "失敗了" );			
+		}
+	}
+	
+	function screenshot(){
+		
+		convertImageToBase64( gobi( "list_block" ), true );
+	}
+	
+	function getCanvas(){
+//		console.log( gobi( "list_block" ).src );
+		var mainBlock = ( isMobile() ? gobi( "card_data_rPart" ) : gobi( "cardDataBlockMain" ) );
+		html2canvas( mainBlock ).then(function(canvas) {
+			document.body.appendChild(canvas);
+			var a = document.createElement('a');
+			a.href = canvas.toDataURL("image/jpeg").replace("image/jpeg", "image/octet-stream");
+			a.download = 'image.jpg';
+			a.click();
+			document.body.removeChild(canvas);
+			/*
+			const imageSrc = canvas.toDataURL(); // 將截圖轉換成 base64 圖片
+			var canvasImg = document.createElement("img");
+			canvasImg.src = imageSrc;
+			canvasImg.addEventListener('click', function() {
+				document.execCommand('copy');
+			});
+			document.body.appendChild(canvasImg);
+			canvasImg.click();
+			*/
+			alert("完成");
+		});
+	}
 
 	/** 全形轉半形*/
 	function ToCDB(str) { 
