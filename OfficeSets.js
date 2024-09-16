@@ -81345,7 +81345,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMART-17";
-	var setName = "神アート 禁断 ~封印されしアート~";
+	var setName = "神アート 蛍光少女";
 	var isDeck = true;
 	var setCardList = [
 		{
