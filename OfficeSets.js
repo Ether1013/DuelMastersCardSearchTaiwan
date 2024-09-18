@@ -82339,7 +82339,7 @@
 	
 	var setCode = "OF-Y23 SPP2023-2"
 	var setName = "スペシャルプロモパック2023 vol.2"
-	var isDeck = true;
+	var isDeck = false;
 	var setCardList = [
 		{
 			name : "アウルーリー-T8",
@@ -82395,7 +82395,7 @@
 
 	var setCode = "OF-Y23 SPP2023-3"
 	var setName = "スペシャルプロモパック2023 vol.3"
-	var isDeck = true;
+	var isDeck = false;
 	var setCardList = [
 		{
 			name : "トング＝ゴング / 「世界をつかませてやろうか？」",
@@ -82458,7 +82458,7 @@
 
 	var setCode = "OF-Y23 SPP2023-4"
 	var setName = "スペシャルプロモパック2023 vol.4"
-	var isDeck = true;
+	var isDeck = false;
 	var setCardList = [
 		{
 			name : "オ:ベカリーヌ / 裏盗邪撫",
@@ -82521,7 +82521,7 @@
 
 	var setCode = "OF-Y23 SPP2024-1"
 	var setName = "スペシャルプロモパック2024 vol.1"
-	var isDeck = true;
+	var isDeck = false;
 	var setCardList = [
 		{
 			name : "光開の精霊サイフォゲート",
