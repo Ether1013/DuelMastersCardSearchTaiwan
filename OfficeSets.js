@@ -82393,6 +82393,195 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
+	var setCode = "OF-Y23 SPP2023-3"
+	var setName = "スペシャルプロモパック2023 vol.3"
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "トング＝ゴング / 「世界をつかませてやろうか？」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-044a.jpg",
+			rarity : "R",
+			flavor : [ "イベントの楽しさで、君のハートをわしづかみ！" ],
+			id : "PROMOY22 P44/Y22",
+		},
+		{
+			name : "芸魔土車 チャトランガ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-045.jpg",
+			rarity : "UC",
+			flavor : [ "君がイベントに来てくれて、チャトランガもニッコリだ！" ],
+			id : "PROMOY22 P45/Y22",
+		},
+		{
+			name : "飛工！デネビア&ドッペル",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-046.jpg",
+			rarity : "C",
+			flavor : [ "デュエマは友達と一緒ならぶっ飛ぶほど楽しい！" ],
+			id : "PROMOY22 P46/Y22",
+		},
+		{
+			name : "舞頭の超人",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-047.jpg",
+			rarity : "UC",
+			flavor : [ "君が来てくれて、舞頭の超人もいつもより余計に回ってくれているぞ！" ],
+			id : "PROMOY22 P47/Y22",
+		},
+		{
+			name : "暴発秘宝ベンゾ / 星龍の暴発",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-048a.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "PROMOY22 P48/Y22",
+		},
+		{
+			name : "闇参謀グラン・ギニョール",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-049.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "PROMOY22 P49/Y22",
+		},
+		{
+			name : "パイセン・チュリス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-050.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "PROMOY22 P50/Y22",
+		},
+		{
+			name : "龍装者“JET”レミング/ローレンツ・タイフーン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-051a.jpg",
+			rarity : "UC",
+			flavor : [ "君のデッキで嵐を巻き起こせ！" ],
+			id : "PROMOY22 P51/Y22",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "OF-Y23 SPP2023-4"
+	var setName = "スペシャルプロモパック2023 vol.4"
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "オ:ベカリーヌ / 裏盗邪撫",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-064a.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "PROMOY22 P64/Y22",
+		},
+		{
+			name : "アシステスト・インコッピ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-065.jpg",
+			rarity : "UC",
+			flavor : [ "インコッピが君を盛り上げるぞ！" ],
+			id : "PROMOY22 P65/Y22",
+		},
+		{
+			name : "助招！Mogi林檎&無双",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-066.jpg",
+			rarity : "UC",
+			flavor : [ "イベントの序章から無双するのだ！" ],
+			id : "PROMOY22 P66/Y22",
+		},
+		{
+			name : "タンクリオ-L8",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-067.jpg",
+			rarity : "C",
+			flavor : [ "君がイベントに来てくれて、タンクリオもニッコリだ！" ],
+			id : "PROMOY22 P67/Y22",
+		},
+		{
+			name : "絶速 ザ・ヒート",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-068.jpg",
+			rarity : "UC",
+			flavor : [ "楽しいデュエマでヒートアップ！！" ],
+			id : "PROMOY22 P68/Y22",
+		},
+		{
+			name : "SMAPONの心絵",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-069.jpg",
+			rarity : "",
+			flavor : [ "参加したイベントのメモリーは無限大！" ],
+			id : "PROMOY22 P69/Y22",
+		},
+		{
+			name : "豊潤フォージュン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-070.jpg",
+			rarity : "C",
+			flavor : [ "豊潤なマナから切り札へとつなごう！" ],
+			id : "PROMOY22 P70/Y22",
+		},
+		{
+			name : "魔王と天使のカナシミ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-071.jpg",
+			rarity : "C",
+			flavor : [ "カナシミも力に変えるのだ！" ],
+			id : "PROMOY22 P71/Y22",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "OF-Y23 SPP2024-1"
+	var setName = "スペシャルプロモパック2024 vol.1"
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "光開の精霊サイフォゲート",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-016.jpg",
+			rarity : "R",
+			flavor : [ "天門を開いて勝利をつかめ！" ],
+			id : "PROMOY24 P16/Y23",
+		},
+		{
+			name : "文藍月 スケルハンター",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-017a.jpg",
+			rarity : "UC",
+			flavor : [ "" ],
+			id : "PROMOY24 P17/Y23",
+		},
+		{
+			name : "ボルシャック・疾・ピピッチ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-018.jpg",
+			rarity : "C",
+			flavor : [ "疾風のごとき攻撃で勝利をねらえ！" ],
+			id : "PROMOY24 P18/Y23",
+		},
+		{
+			name : "超化秘伝アビスアサルト",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-019.jpg",
+			rarity : "UC",
+			flavor : [ "ハイパーモードは勝利のモード！" ],
+			id : "PROMOY24 P19/Y23",
+		},
+		{
+			name : "特攻の忠剣ハチ公",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-020.jpg",
+			rarity : "C",
+			flavor : [ "" ],
+			id : "PROMOY24 P20/Y23",
+		},
+		{
+			name : "堕∞魔 ヴォゲンム",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-021.jpg",
+			rarity : "R",
+			flavor : [ "君がイベントに来てくれてヴォゲンムもニッコリだ！" ],
+			id : "PROMOY24 P21/Y23",
+		},
+		{
+			name : "トップ・オブ・ロマネスク",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-022.jpg",
+			rarity : "",
+			flavor : [ "我こそ頂点！" ],
+			id : "PROMOY24 P22/Y23",
+		},
+		{
+			name : "「伝説のサイバーパワー！」",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-023.jpg",
+			rarity : "UC",
+			flavor : [ "ビビッドに勝利を引き寄せろ！" ],
+			id : "PROMOY24 P23/Y23",
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "DM24-SD1";
 	var setName = "「いきなりつよいデッキ 攻めの王道」";
 	var isDeck = true;
