@@ -4216,7 +4216,7 @@
 	function findWiki(){
 		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
 		var keyword = clearSubName( ToCDB( lastSelectedCardName ) );
-		var _link = "https://www.google.co.jp/search?q="+encodeURI(keyword)+"+site%3Admwiki.net";
+		var _link = "https://www.google.co.jp/search?q="+encodeURIComponent(keyword)+"+site%3Admwiki.net";
 		window.open( _link, '_blank' );
 	}
 	
