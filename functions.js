@@ -3906,7 +3906,7 @@
 	
 	//判斷是否為作者
 	function isRD(){
-		return (""+window.location).indexOf( "file" ) == 0 || getParameter("user") == "Ether";
+		return (""+window.location).indexOf( "file" ) == 0 || getParameter("user") == "Ether" || getParameter("user") == "Sky";
 	}
 
 	//判斷是否支援Canvas
