@@ -2914,6 +2914,28 @@
 		return JSON.stringify(obj, null, 4);
 	}
 	
+	function popListToOutter(){
+		var rtn = null;
+		var theSet = setDatas.getSetDatas( lastSelectedSetCode );
+		for ( var c = 0 ; c < theSet.setCards.length ; c++ ){
+			if ( rtn == null ){
+				rtn = "";
+			} else {
+				rtn += ",";
+			}
+			rtn += theSet.setCards[c].count + ":" + theSet.setCards[c].name;
+		}
+		var w = window.open();
+		w.document.write( "<head>" );
+		w.document.write( "<title>" + ( ( theSet == null ) ? "" : ( "《" + theSet.setName + "》" ) ) + "卡表匯出</title>" );
+		w.document.write( "</head>" );
+		w.document.write( "<body>" );
+		w.document.write( "<div id='popDIV'>" );
+		w.document.write( encodeURIComponent( rtn ) );
+		w.document.write( "</div>" );
+		w.document.write( "</body>" );
+	}
+	
 	//匯出卡表
 	function popList( language , ask , writeSelf ){
 	
@@ -3936,7 +3958,6 @@
 		return rtrnVal;
 	}
 
-	
 	//開啟/關閉Textarea輸入區塊
 	function openPDBSBlock( doCloseIfThisIsTheSubmitBtn, afterFunction ){
 		if ( doCloseIfThisIsTheSubmitBtn == null ){
