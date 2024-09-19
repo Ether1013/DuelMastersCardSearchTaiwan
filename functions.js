@@ -2937,9 +2937,18 @@
 			}
 			rtn += theSet.setCards[c].count + ":" + theSet.setCards[c].name;
 		}
-		copyString( "https://ether1013.github.io/DuelMastersCardSearchTaiwan/indexMobile2.html?import="+encodeURIComponent( rtn ) );
-
-		alert("複製完畢");
+		var etherUri = "https://ether1013.github.io/DuelMastersCardSearchTaiwan/indexMobile2.html?import="+encodeURIComponent( rtn );
+		var tinyUri = "http://tinyurl.com/api-create.php?url=" + encodeURIComponent( etherUri );
+		var proxyUri = "https://api.allorigins.win/get?url="+encodeURIComponent( tinyUri );
+		
+		$.get(proxyUri,function(response){
+			if ( response.status.http_code != 200 ){
+				alert( "ErrorCode( "+response.http_code+" )" );
+			} else {
+				copyString( response.contents );
+				alert("複製完畢");
+			}
+		});
 	}
 	
 	//匯出卡表
