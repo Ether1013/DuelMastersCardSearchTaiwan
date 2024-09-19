@@ -427,12 +427,15 @@
 				tr.style.cursor = "pointer";
 				tr.ondblclick = function(){
 					const value = clearSubName( this.getAttribute("tr_cardName") );
+					copyString( value );
+/*					
 					const el = document.createElement('textarea');
 					el.value = value;
 					document.body.appendChild(el);
 					el.select();
 					document.execCommand('copy');
 					document.body.removeChild(el);
+*/					
 				}
 /*
 				if ( cardTypeMapping.getDataByValue( cardDataBySort[i].type instanceof Array ? cardDataBySort[i].type[0] : cardDataBySort[i].type ) == null ){
@@ -2914,6 +2917,15 @@
 		return JSON.stringify(obj, null, 4);
 	}
 	
+	function copyString( value ){
+		const el = document.createElement('textarea');
+		el.value = value;
+		document.body.appendChild(el);
+		el.select();
+		document.execCommand('copy');
+		document.body.removeChild(el);
+	}
+	
 	function popListToOutter(){
 		var rtn = null;
 		var theSet = setDatas.getSetDatas( lastSelectedSetCode );
@@ -2925,15 +2937,9 @@
 			}
 			rtn += theSet.setCards[c].count + ":" + theSet.setCards[c].name;
 		}
-		var w = window.open();
-		w.document.write( "<head>" );
-		w.document.write( "<title>" + ( ( theSet == null ) ? "" : ( "《" + theSet.setName + "》" ) ) + "卡表匯出</title>" );
-		w.document.write( "</head>" );
-		w.document.write( "<body>" );
-		w.document.write( "<div id='popDIV'>" );
-		w.document.write( "https://ether1013.github.io/DuelMastersCardSearchTaiwan/indexMobile2.html?import="+encodeURIComponent( rtn ) );
-		w.document.write( "</div>" );
-		w.document.write( "</body>" );
+		copyString( "https://ether1013.github.io/DuelMastersCardSearchTaiwan/indexMobile2.html?import="+encodeURIComponent( rtn ) );
+
+		alert("複製完畢");
 	}
 	
 	//匯出卡表
