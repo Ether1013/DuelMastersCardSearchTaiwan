@@ -351,7 +351,7 @@
 		//如果有動態匯入牌組的話，則開始解析
 		var importDeckList = getParameter("import");
 		if ( importDeckList != null ){
-			parseDeckString( "https://ether1013.github.io/DuelMastersCardSearchTaiwan/indexMobile2.html?import="+decodeURIComponent( importDeckList ).replace( /:/g, "*" ).replace( /,/g, "\n" ) );
+			parseDeckString( decodeURIComponent( importDeckList ).replace( /:/g, "*" ).replace( /,/g, "\n" ) );
 		}
 		
 		//更新日誌按鍵

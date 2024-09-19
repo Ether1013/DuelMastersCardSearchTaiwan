@@ -2931,7 +2931,7 @@
 		w.document.write( "</head>" );
 		w.document.write( "<body>" );
 		w.document.write( "<div id='popDIV'>" );
-		w.document.write( encodeURIComponent( rtn ) );
+		w.document.write( "https://ether1013.github.io/DuelMastersCardSearchTaiwan/indexMobile2.html?import="+encodeURIComponent( rtn ) );
 		w.document.write( "</div>" );
 		w.document.write( "</body>" );
 	}
