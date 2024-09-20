@@ -330,7 +330,7 @@
 	
 	//將字串轉成牌庫
 	var stringDeckSetCodeHeader = "PS-";
-	function parseDeckString( deckString ){
+	function parseDeckString( deckString, skipAlert ){
 
 		var deckList_names = [];
 		var deckList_counts = [];
@@ -391,7 +391,7 @@
 			setCodeSelector.onchange();
 			query();
 			//如果有模糊比對來的卡的話，則要跳出提示訊息
-			if ( fuzzyDatas.length > 0 ){
+			if ( fuzzyDatas.length > 0 && !skipAlert ){
 				var alertMsg = translateText( "以下" + fuzzyDatas.length + "張卡不一定為正確對象：\n", isTC2C );
 				for ( var i = 0 ; i < fuzzyDatas.length ; i++ ){
 					alertMsg += "\n【" + fuzzyDatas[i].tName + "】";

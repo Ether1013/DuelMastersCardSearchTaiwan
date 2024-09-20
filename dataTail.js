@@ -351,7 +351,7 @@
 		//如果有動態匯入牌組的話，則開始解析
 		var importDeckList = getParameter("import");
 		if ( importDeckList != null ){
-			parseDeckString( decodeURIComponent( importDeckList ).replace( /:/g, "*" ).replace( /,/g, "\n" ) );
+			parseDeckString( decodeURIComponent( importDeckList ).replace( /:/g, "*" ).replace( /,/g, "\n" ), true );
 		}
 		
 		//更新日誌按鍵
