@@ -108,18 +108,18 @@
 			var mVersion = true;
 		</script>
 		<script src="./tw_cn.js" id="tc2cJS"></script>
-		<script src="./functions.js?v=20240919"></script>
+		<script src="./functions.js?v=20240920"></script>
 		<script src="./moment.js"></script>
 		<script src="./fuse.js"></script>
-		<script src="./basicDatas.js?v=20240919"></script>
-		<script src="./basicDatas_abilities.js?v=20240919"></script>
-		<script src="./basicDatas_raceList.js?v=20240919"></script>
-		<script src="./parseDMVault.js?v=20240919"></script>
+		<script src="./basicDatas.js?v=20240920"></script>
+		<script src="./basicDatas_abilities.js?v=20240920"></script>
+		<script src="./basicDatas_raceList.js?v=20240920"></script>
+		<script src="./parseDMVault.js?v=20240920"></script>
 
-		<script src="./AllCards.js?v=20240919"></script>
-		<script src="./OfficeSets.js?v=20240919"></script>
-		<script src="./OriginalSets.js?v=20240919"></script>
-		<script src="./NewCards.js?v=20240919"></script>
+		<script src="./AllCards.js?v=20240920"></script>
+		<script src="./OfficeSets.js?v=20240920"></script>
+		<script src="./OriginalSets.js?v=20240920"></script>
+		<script src="./NewCards.js?v=20240920"></script>
 		<script src="./html2canvas.js"></script>
 	</head>
 	<body>
@@ -445,6 +445,11 @@
 						<input type="button" id="popList2" style="display:none;width:24%;height:24px;" value="匯(中)" onclick="popList('C');">
 						<input type="button" id="popList3" style="display:none;width:24%;height:24px;" value="匯(英)" onclick="popList('E');">
 						<input type="button" id="popList4" style="display:none;width:24%;height:24px;" value="匯(圖)" onclick="popList('P',false);">
+						<span id="codingBtnSpan" style="display:none;">
+							<BR>
+							<input type="button" style="width:100%;height:24px;" value="匯出連結" onclick="popListToOutter();">
+<!--										<input type="button" style="width:49%;height:24px;" value="估價" onclick="price();" id="priceBtn">-->
+						</span>
 					</div>
 				</div>
 				<div id="card_data_rPart" class="mainBlock">
@@ -452,11 +457,8 @@
 						<tr style="height:50px;">
 							<td colspan="2" id="card_name_header" style="font-weight:bold;color:#000000;vertical-align:middle;width:98%;padding-left:45px;">
 								<span id="card_rarity"></span>
-								<span id="card_name" style="text-align:left;cursor:pointer;" 
-									title="點擊查看DMValut資料"
-									onmouseover="this.style.textDecoration='underline';"
-									onmouseout="this.style.textDecoration='none';">
-								</span>
+								<span id="card_name" style="text-align:left;" 
+									title="點擊查看DMValut資料"></span>
 							</td>
 						</tr>
 						<tr>
@@ -555,7 +557,9 @@
 							<td class="bbfw h36">外部連結</td>
 							<td class="tvc">
 								<span class="trade" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findTrade();">【トレカカク】</span>
-								<span class="sell_cardrush">&nbsp;&nbsp;&nbsp;</span>
+								<span>&nbsp;&nbsp;&nbsp;</span>
+								<span class="takaratomy" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findOfficial();">【官網】</span>
+								<span>&nbsp;&nbsp;&nbsp;</span>
 								<span class="wiki" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findWiki();">【デュエマWIKI】</span>
 							</td>
 						</tr>
@@ -631,6 +635,6 @@
 				gotoPC();
 			}
 		}
-		checkUpdate("20240919");
+		checkUpdate("20240920");
 	</script>
 </html>

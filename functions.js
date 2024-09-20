@@ -427,7 +427,7 @@
 				tr.style.cursor = "pointer";
 				tr.ondblclick = function(){
 					const value = clearSubName( this.getAttribute("tr_cardName") );
-					copyString( value );
+					Clipboard.copy( value );
 /*					
 					const el = document.createElement('textarea');
 					el.value = value;
@@ -1559,16 +1559,9 @@
 			cardNameSpan.appendChild( document.createTextNode( showCardName ) );
 			setNoTrans( cardNameSpan );
 			gobi( "card_name" ).appendChild( cardNameSpan );
-			gobi( "card_name" ).onclick = function(){
-				/*
-				//僅供電腦版使用
-				if ( isMobile() ){
-					alert( translateText( "很抱歉，DMVault聯結功能不開放給行動裝置使用", isTC2C ) );
-				} else {
-					getDMVaultLink( selectedCardDats.name , 1 );
-				}
-				*/
-				window.open("https://dm.takaratomy.co.jp/card/?v=%7B%22suggest%22:%22on%22,%22keyword%22:%22"+selectedCardDats.name+"%22,%22keyword_type%22:%5B%22card_name%22%5D,%22culture_cond%22:%5B%22%E5%8D%98%E8%89%B2%22,%22%E5%A4%9A%E8%89%B2%22%5D,%22pagenum%22:%221%22,%22samename%22:%22show%22,%22sort%22:%22release_new%22%7D","_blank");
+			gobi( "card_name" ).ondblclick = function(){
+				Clipboard.copy( selectedCardDats.name );
+//				window.open("https://dm.takaratomy.co.jp/card/?v=%7B%22suggest%22:%22on%22,%22keyword%22:%22"+selectedCardDats.name+"%22,%22keyword_type%22:%5B%22card_name%22%5D,%22culture_cond%22:%5B%22%E5%8D%98%E8%89%B2%22,%22%E5%A4%9A%E8%89%B2%22%5D,%22pagenum%22:%221%22,%22samename%22:%22show%22,%22sort%22:%22release_new%22%7D","_blank");
 //				window.open( "https://www.google.com/search?q="+showCardName+"&sourceid=chrome&ie=UTF-8" , "_blank" );
 			};
 			//電腦版追加DMVault的牌庫、評價、FAQ、Combo、Link、拍賣
@@ -2916,7 +2909,54 @@
 	function parseObjectToSring( obj ){
 		return JSON.stringify(obj, null, 4);
 	}
-	
+
+	/** 複製文字 */
+	window.Clipboard = (function(window, document, navigator) {
+		var textArea,
+			copy;
+
+		function isOS() {
+			return navigator.userAgent.match(/ipad|iphone/i);
+		}
+
+		function createTextArea(text) {
+			textArea = document.createElement('textArea');
+			textArea.value = text;
+			document.body.appendChild(textArea);
+		}
+
+		function selectText() {
+			var range,
+				selection;
+
+			if (isOS()) {
+				range = document.createRange();
+				range.selectNodeContents(textArea);
+				selection = window.getSelection();
+				selection.removeAllRanges();
+				selection.addRange(range);
+				textArea.setSelectionRange(0, 999999);
+			} else {
+				textArea.select();
+			}
+		}
+
+		function copyToClipboard() {        
+			document.execCommand('copy');
+			document.body.removeChild(textArea);
+		}
+
+		copy = function(text) {
+			createTextArea(text);
+			selectText();
+			copyToClipboard();
+		};
+
+		return {
+			copy: copy
+		};
+	})(window, document, navigator);
+/*	
 	function copyString( value ){
 		const el = document.createElement('textarea');
 		el.value = value;
@@ -2925,7 +2965,7 @@
 		document.execCommand('copy');
 		document.body.removeChild(el);
 	}
-	
+*/	
 	function popListToOutter(){
 		var rtn = null;
 		var theSet = setDatas.getSetDatas( lastSelectedSetCode );
@@ -2945,7 +2985,7 @@
 			if ( response.status.http_code != 200 ){
 				alert( "ErrorCode( "+response.http_code+" )" );
 			} else {
-				copyString( response.contents );
+				Clipboard.copy( response.contents );
 				alert("複製完畢");
 			}
 		});
@@ -4247,6 +4287,10 @@
 			str = str.substring(ie+4);
 		}
 		return tags;
+	}
+	
+	function findOfficial(){
+		window.open("https://dm.takaratomy.co.jp/card/?v=%7B%22suggest%22:%22on%22,%22keyword%22:%22"+encodeURIComponent(lastSelectedCardName)+"%22,%22keyword_type%22:%5B%22card_name%22%5D,%22culture_cond%22:%5B%22%E5%8D%98%E8%89%B2%22,%22%E5%A4%9A%E8%89%B2%22%5D,%22pagenum%22:%221%22,%22sort%22:%22release_new%22%7D","_blank");
 	}
 	
 	function findWiki(){
