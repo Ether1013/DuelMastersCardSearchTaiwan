@@ -1953,6 +1953,13 @@
 				}
 			}
 			//露天
+			if ( !twsdCards.include( lastSelectedCardName ) ){
+				var rutenSpans = gosbcn( "sell_ruten" );
+				for ( var r = 0 ; r < rutenSpans.length ; r++ ){
+					rutenSpans[r].style.display = "none";
+				}
+			}
+			/*
 			if ( lastSelectedSetCode != null && lastSelectedSetCode != '' && twsdSets.includes( lastSelectedSetCode ) ){
 			} else {
 				var rutenSpans = gosbcn( "sell_ruten" );
@@ -1960,6 +1967,7 @@
 					rutenSpans[r].style.display = "none";
 				}
 			}
+			*/
 			if ( isVM() && !inSetTd.firstChild ){
 				inSetTd.appendChild( document.createTextNode("--") );
 			}
@@ -4304,29 +4312,48 @@
 		var keyword = null;
 		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
 		if ( cardData.id != null ){
-			keyword = cardData.id;
+			keyword = cardData.id.replace( /秘/g,"㊙" );
 		} else {
 			keyword = clearSubName( ToCDB( lastSelectedCardName ) ).replace( /\//g,"／" );
 		}
-		window.open( "https://torekakaku.com/dm/search/?q="+keyword, '_blank' );
+		window.open( "https://torekakaku.com/dm/search/?q="+encodeURIComponent(keyword), '_blank' );
 	}
 	
 	function findRuten(){
 		if ( !twsdCards.includes( lastSelectedCardName ) )
 			return;
-		var selectedCardDats = cardDatas.getDataByName( lastSelectedCardName , lastSelectedSetCode , lastSelectedAAIndex, lastSelectedUdIndex );
-		var idNum = selectedCardDats.id.split( " " )[1];
-		window.open( "https://www.ruten.com.tw/find/?q=%E6%B1%BA%E9%AC%A5%E7%8E%8B+"+lastSelectedSetCode+"+"+idNum, '_blank');
+		
+		var idNum = null;
+		var r_setCode = lastSelectedSetCode;
+		if ( lastSelectedSetCode != null && lastSelectedSetCode != '' ){
+			var selectedCardDats = cardDatas.getDataByName( lastSelectedCardName , lastSelectedSetCode , lastSelectedAAIndex, lastSelectedUdIndex );
+			idNum = selectedCardDats.id.split( " " )[1];
+		} else {
+			for ( var s = 0 ; s < setDatas.set.length ; s++ ){
+				if ( setDatas.set[s].isTWSurroundings ){
+					var cardDataOfSet = setDatas.getCardDataInSet( setDatas.set[s].setCode , lastSelectedCardName );
+					if ( cardDataOfSet != null && cardDataOfSet.id != null ){
+						r_setCode = setDatas.set[s].setCode;
+						var idArray = cardDataOfSet.id instanceof Array ? cardDataOfSet.id : [ cardDataOfSet.id ];
+						idNum = idArray[0].split( " " )[1];
+						break;
+					}
+				}
+			}
+		}
+		if ( idNum != null ){
+			window.open( "https://www.ruten.com.tw/find/?q=%E6%B1%BA%E9%AC%A5%E7%8E%8B+"+r_setCode+"+"+encodeURIComponent(idNum), '_blank');
+		}
 	}
 
 	function findCardRush(){
 		var keyword = clearSubName( lastSelectedCardName ).replace( /\s/g,"+" );
-		window.open( "https://www.cardrush-dm.jp/product-list?keyword="+keyword+"&Submit=%E6%A4%9C%E7%B4%A2", '_blank');
+		window.open( "https://www.cardrush-dm.jp/product-list?keyword="+(keyword)+"&Submit=%E6%A4%9C%E7%B4%A2", '_blank');
 	}
 
 	function findYuyutei(){
 		var keyword = clearSubName( lastSelectedCardName ).replace( /\s/g,"+" );
-		window.open( "https://yuyu-tei.jp/sell/dm/s/search?search_word="+keyword, '_blank');
+		window.open( "https://yuyu-tei.jp/sell/dm/s/search?search_word="+(keyword), '_blank');
 	}
 
 	/**

@@ -85384,7 +85384,7 @@
 			id : [ "24RP3 SP5/SP5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-EX1";
 	var setName = "超感謝祭 ファンタジーBEST";

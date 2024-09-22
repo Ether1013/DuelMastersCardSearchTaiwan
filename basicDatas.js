@@ -159,6 +159,7 @@
 					isDeck : isDeck,
 					optionColor : optionColor,
 					isListSkip : ( isListSkip == null ? false : isListSkip ),
+					isTWSurroundings : isTWSurroundings,
 				};
 				this.set.push( setObj );
 				this.map.push( setDatas );
@@ -1332,6 +1333,13 @@
 		
 		logAndDate : [
 			{	
+				date : "2024/09/22",
+				log : [ 
+						"將DM24-RP3調整為台灣環境",
+						"調整露天拍賣連結相關邏輯",
+				],	
+			},
+			{	
 				date : "2024/09/21",
 				log : [ 
 						"新增DM24-RP3【王道篇第3弾 「ゴールド・オブ・ハイパーエンジェル」】的資料",
@@ -1341,12 +1349,6 @@
 				date : "2024/09/20",
 				log : [ 
 						"新增官網連結",
-				],	
-			},
-			{	
-				date : "2024/09/19",
-				log : [ 
-						"新增預設牌組匯入功能",
 				],	
 			},
 		],
