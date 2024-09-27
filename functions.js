@@ -4308,6 +4308,13 @@
 		window.open( _link, '_blank' );
 	}
 	
+	function findEnWiki(){
+		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
+		var keyword = clearSubName( ToCDB( lastSelectedCardName ) );
+		var _link = "https://www.google.co.jp/search?q="+encodeURIComponent(keyword)+"+site%3Aduelmasters.fandom.com%2Fwiki%2F";
+		window.open( _link, '_blank' );
+	}
+	
 	function findTrade(){
 		var keyword = null;
 		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
