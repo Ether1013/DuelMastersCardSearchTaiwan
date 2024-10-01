@@ -1299,16 +1299,14 @@
 		{		name : "甲型龍帝式 キリコ3",					count : 4,	},
 		{		name : "Q.Q.QX / 終葬 5.S.D.",					count : 4,	},
 		{		name : "水晶の祈り / クリスタル・ドゥーム",		count : 4,	},
+		{		name : "ヨビニオン・マルル",					count : 4,	},
 		{		name : "蒼神龍トライクラブ・トライショット",	count : 4,	},
-		{		name : "ア:グンテ",								count : 4,	},
-		{		name : "霞み妖精ジャスミン",					count : 4,	},
-		{		name : "深海の伝道師 アトランティス",			count : 4,	},
-		{		name : "電脳鎧冑アナリス",						count : 2,	},
-		{		name : "ジャスミンの地版",						count : 2,	},
-		{		name : "ポクチンちん",							count : 1,	},
+		{		name : "プリンセス・パーティ ～シラハの絆～",	count : 4,	},
+		{		name : "シェル・アルカザール",					count : 4,	},
+		{		name : "ジャスミンの地版",						count : 4,	},
+		{		name : "蒼狼の王妃 イザナミテラス",				count : 3,	},
 		{		name : "ガイアッシュの海地図",					count : 3,	},
-		{		name : "哀樹神官 グリッファ",					count : 2,	},
-		{		name : "蒼狼の王妃 イザナミテラス",				count : 2,	},
+		{		name : "ア:グンテ",								count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
