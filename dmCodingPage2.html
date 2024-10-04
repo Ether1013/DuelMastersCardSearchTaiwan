@@ -106,14 +106,14 @@
 			cd = cd.split("\t");
 			var cdDetail = {
 			};
-			if ( cd[12] == "" ){
+			if ( cd.length < 13 || cd[12] == "" ){
 			
 				cdDetail = {
 					name : cd[1].substr( 0, cd[1].indexOf("(") ),
 					id : cd[1].substring( cd[1].indexOf("(")+3, cd[1].indexOf(")") ),
 					pic : cd[0],
 					mana : cd[7],
-					flavor : cd[11]+cd[21],
+					flavor : cd[11],
 					rarity : cd[4],
 					type : [],
 					civil : civilMapping.getValueByText( cd[3] ),
@@ -192,6 +192,7 @@
 						sp : convertSP( cd[20] ),
 					}
 				} catch ( e ){
+					alert( e );
 					alert( l + "("+cd[1]+")Abi(D)" );
 					throw 'Error';
 				}

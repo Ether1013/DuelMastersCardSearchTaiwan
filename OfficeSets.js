@@ -86106,6 +86106,117 @@
 		},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	
+	var setCode = "DM24-SP2";
+	var setName = "キャラプレミアムデッキ「デュエル・マスターズLOST」誓いの水晶";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "蠅の王 クリス=タブラ=ラーサ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-001.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-TD01.jpg", ],
+			rarity : [ "SR", "SR", ],
+			flavor : [ "", "", ],
+			id : [ "24SP2 1/13", "24SP2 TD1/TD5", ],
+			count : 2,
+		},
+		{
+			name : "「奇妙」の頂天 クリス=バアル",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-002.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-TD02.jpg", ],
+			rarity : [ "SR", "SR", ],
+			flavor : [ "ゼニスの力、思い知るがいい。 — クリスタ", "私はもうあなたの言いなりにはなりません！ — クリスタ", ],
+			id : [ "24SP2 2/13", "24SP2 TD2/TD5", ],
+			count : 3,
+		},
+		{
+			name : "「戦鬼」の頂天 ベートーベン",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-003.jpg", ],
+			rarity : [ "SR", ],
+			flavor : [ "", ],
+			id : [ "24SP2 3/13", ],
+			count : 2,
+		},
+		{
+			name : "「心」の頂天 プロフェシー",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-004.jpg", ],
+			rarity : [ "VR", ],
+			flavor : [ "ウィンたちが暮らす世界の裏側には、クリーチャーが跋扈する荒廃したもう一つの世界が存在していた……。", ],
+			id : [ "24SP2 4/13", ],
+			count : 2,
+		},
+		{
+			name : "聖斬のコード アシッド",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-005.jpg", ],
+			rarity : [ "U", ],
+			flavor : [ "", ],
+			id : [ "24SP2 5/13", ],
+			count : 4,
+		},
+		{
+			name : "悟りのクリス アラヤシキ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-006.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-TD03.jpg", ],
+			rarity : [ "U", "U", ],
+			flavor : [ "クリスタはウィンとともに過ごした日々の思い出を語り、記憶を刺激する。だがそれでも過去を取り戻す気配のないウィンを見て、クリスタは密かに決意を固めるのだった……。", "……仰せのままに。 — クリスタ", ],
+			id : [ "24SP2 6/13", "24SP2 TD3/TD5", ],
+			count : 3,
+		},
+		{
+			name : "シャングリラ・クリスタル",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-007.jpg", ],
+			rarity : [ "U", ],
+			flavor : [ "", ],
+			id : [ "24SP2 7/13", ],
+			count : 4,
+		},
+		{
+			name : "偽りの名 プラット",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-008.jpg", ],
+			rarity : [ "U", ],
+			flavor : [ "", ],
+			id : [ "24SP2 8/13", ],
+			count : 4,
+		},
+		{
+			name : "「これは命懸けのデュエルなのです」",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-009.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-TD04.jpg", ],
+			rarity : [ "U", "U", ],
+			flavor : [ "クリスタとの戦いで、ウィンが召喚したジャシンがクリス=タブラ=ラーサと激突する！命懸けのデュエルの結末に待つものは、はたして……？", "なんで……なんでアンタがウィンの好きなものを知ってんの⁉ 　— ニイカウィン様のことなら私はすべて知っています。　 — クリスタ", ],
+			id : [ "24SP2 9/13", "24SP2 TD4/TD5", ],
+			count : 2,
+		},
+		{
+			name : "水晶設計図",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-010.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-TD05.jpg", ],
+			rarity : [ "C", "C", ],
+			flavor : [ "もうウィン様に記憶を取り戻していただくしか、方法はないのです。 — クリスタ", "ウィン様。何があっても、私はあなたの味方です。それだけはどうか、忘れないでください。 — クリスタ", ],
+			id : [ "24SP2 10/13", "24SP2 TD5/TD5", ],
+			count : 4,
+		},
+		{
+			name : "奪取のクリス アラカン",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-011.jpg", ],
+			rarity : [ "C", ],
+			flavor : [ "助けを求めるメッセージを見て、もう一つの世界に入るウィン。そこには水晶で固められたニイカと、蠅のクリーチャーを従えるクリスタの姿があった……。", ],
+			id : [ "24SP2 11/13", ],
+			count : 4,
+		},
+		{
+			name : "ピクシー・ライフ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-012.jpg", ],
+			rarity : [ "C", ],
+			flavor : [ "記憶をなくしたウィンの許嫁を名乗り、失われた過去も知っているという謎の少女、クリスタ。彼女との出会いで、ウィンの運命がまた動き出す……。", ],
+			id : [ "24SP2 12/13", ],
+			count : 2,
+		},
+		{
+			name : "「この私のために華を咲かすのだ！」",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp2-013.jpg", ],
+			rarity : [ "C", ],
+			flavor : [ "約束したあの場所へ……帰りましょう。 — クリスタ", ],
+			id : [ "24SP2 13/13", ],
+			count : 4,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = queryHistorySetCode;
 	var setName = "【歷史查詢】";
