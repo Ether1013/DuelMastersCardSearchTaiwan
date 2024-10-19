@@ -433,6 +433,7 @@
 				{	value : "SEC",	text : "星進化生物",		Jap : "スター進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "SMEC",	text : "S-MAX進化生物",		Jap : "S-MAX進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "DC",	text : "夢幻生物",			Jap : "ドリーム・クリーチャー",				Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
+				{	value : "EDC",	text : "進化夢幻生物",		Jap : "進化ドリーム・クリーチャー",			Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
 				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					Location : "M", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
 				{	value : "GRC",	text : "GR生物",			Jap : "GRクリーチャー",						Location : "G", horizontal : false,	main:false,	},
 				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					Location : "G", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
@@ -866,6 +867,10 @@
 			"・",
 			"名人",
 			"タイピング＝タップ",
+			"ドギラゴン",
+			"ジャシン",
+			"ホーリー・スパーク",
+			"ボルメテウス・ホワイト・ドラゴン",
 		],
 		
 		isCategory : function( name ){
@@ -1303,6 +1308,7 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM24-EX2",
 		"DM24-SP2",
 		"DM24-RP3",
 	]
@@ -1332,6 +1338,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2024/10/19",
+				log : [ 
+						"新增【DM24-EX2 天下夢双!!デュエキングDreaM 2024】的內容",
+				],	
+			},
+			{	
 				date : "2024/10/17",
 				log : [ 
 						"訂正【バラバラエティ】的效果",
@@ -1341,21 +1353,6 @@
 				date : "2024/10/11",
 				log : [ 
 						"訂正【邪魂の王道 ジャシン帝】的效果",
-				],	
-			},
-			{	
-				date : "2024/10/04",
-				log : [ 
-						"訂正【魔光王機デ・バウラ伯 / 魔弾グローリー・ゲート】的費用",
-						"訂正【逆転の剣スカイソード】的能力",
-						"訂正【D-Jealousy-灰撫 / ♪五本まで 集めて林 森ジャングル】的費用",
-						"新增【キャラプレミアムデッキ「デュエル・マスターズLOST」誓いの水晶】的資料",
-				],	
-			},
-			{	
-				date : "2024/09/30",
-				log : [ 
-						"調整【アクア・ギャクテンポインター】的效果",
 				],	
 			},
 		],

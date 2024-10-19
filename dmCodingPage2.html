@@ -121,11 +121,16 @@
 					sp : convertSP( cd[10] ),
 				};
 				
-				var types = cd[2].split("/");
-				for ( var t = 0 ; t < types.length ; t++ ){
-					cdDetail.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+				try {
+					var types = cd[2].split("/");
+					for ( var t = 0 ; t < types.length ; t++ ){
+						cdDetail.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+					}
+					
+				} catch ( e ){
+					alert( l + "("+cd[2]+")" );
+					throw 'Error';
 				}
-				
 				if ( cd[5] != "" ){
 					cdDetail.power = cd[5];
 				}

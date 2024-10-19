@@ -386,6 +386,8 @@
 				{	Jap : "ドリームメイトの集い",				Eng : "Dream Mate's Gathering",	Chi : "夢幻夥伴的集會",	isCategory : false,	},
 				{	Jap : "スノーフェアリーの集い",				Eng : "Snow Fearie's Gathering",Chi : "雪妖的集會",		isCategory : false,	},
 				{	Jap : "デモンズ・レガシー",					Eng : "Demon's Legacy",			Chi : "惡魔們的遺產",	isCategory : false,	},
+				{	Jap : "ツォルキン",							Eng : "Tzolkin",				Chi : "馬雅曆",			isCategory : false,	},
+				
 
 
 				{	Jap : "コマンド",							Eng : "Command",				Chi : "指揮",			isCategory : true,	},
