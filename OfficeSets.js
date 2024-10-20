@@ -86109,7 +86109,14 @@
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho002a.jpg", ],
 			rarity : [ "VIC", ],
 			flavor : [ "", ],
-			id : [ "24EX2 超2/超47", ],
+			id : [ "24EX2 超2a/超47", ],
+		},
+		{
+			name : "爆熱王ＤＸ バトガイ銀河",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho002b.jpg", ],
+			rarity : [ "VIC", ],
+			flavor : [ "", ],
+			id : [ "24EX2 超2b/超47", ],
 		},
 		{
 			name : "ジョリー・ザ・ジョニー Joe",

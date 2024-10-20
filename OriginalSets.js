@@ -1297,16 +1297,18 @@
 	var isDeck = true;
 	var setCardList = [
 		{		name : "甲型龍帝式 キリコ3",					count : 4,	},
-		{		name : "Q.Q.QX / 終葬 5.S.D.",					count : 4,	},
 		{		name : "水晶の祈り / クリスタル・ドゥーム",		count : 4,	},
-		{		name : "ヨビニオン・マルル",					count : 4,	},
 		{		name : "蒼神龍トライクラブ・トライショット",	count : 4,	},
 		{		name : "プリンセス・パーティ ～シラハの絆～",	count : 4,	},
 		{		name : "シェル・アルカザール",					count : 4,	},
 		{		name : "ジャスミンの地版",						count : 4,	},
 		{		name : "蒼狼の王妃 イザナミテラス",				count : 3,	},
-		{		name : "ガイアッシュの海地図",					count : 3,	},
-		{		name : "ア:グンテ",								count : 2,	},
+		{		name : "Q.Q.QX / 終葬 5.S.D.",					count : 3,	},
+		{		name : "ヨビニオン・マルル",					count : 3,	},
+		{		name : "ガイアッシュの海地図",					count : 2,	},
+		{		name : "Dの天災 海底研究所",					count : 2,	},
+		{		name : "コーライルの海幻",						count : 2,	},
+		{		name : "蒼神龍アナザー・ワールド",				count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
@@ -1392,3 +1394,90 @@
 		{		name : "終止の時計 ザ・ミュート",									count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-045"
+	var setName = "睿哥神藝術盃2024 1st【青黑COPMPLEX＠胃】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "DARK MATERIAL COMPLEX",										count : 4,	},
+		{		name : "同期の妖精 / ド浮きの動悸",									count : 4,	},
+		{		name : "終止の時計 ザ・ミュート",									count : 4,	},
+		{		name : "アーテル・ゴルギーニ",										count : 4,	},
+		{		name : "忍蛇の聖沌 c0br4",											count : 4,	},
+		{		name : "異端流し オニカマス",										count : 3,	},
+		{		name : "カレイコの黒像",											count : 3,	},
+		{		name : "奇天烈 シャッフ",											count : 3,	},
+		{		name : "飛翔龍 5000VT",												count : 3,	},
+		{		name : "アクア忍者 ライヤ",											count : 2,	},
+		{		name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",	count : 2,	},
+		{		name : "冥土人形ヴァミリア・バレル",								count : 2,	},
+		{		name : "闇参謀グラン・ギニョール",									count : 1,	},
+		{		name : "SSS級天災 デッドダムド",									count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-046"
+	var setName = "睿哥神藝術盃2024 2nd【火鳥＠勇】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "マジシャン・ルピア",		count : 4,	},
+		{		name : "ルピア&ガ:ナテハ",			count : 4,	},
+		{		name : "ハッター・ルピア",			count : 4,	},
+		{		name : "ハンプティ・ルピア",		count : 4,	},
+		{		name : "アリスの突撃インタビュー",	count : 4,	},
+		{		name : "雷炎翔鎧バルピアレスク",	count : 4,	},
+		{		name : "龍后凰翔クイーン・ルピア",	count : 4,	},
+		{		name : "アリス・ルピア",			count : 4,	},
+		{		name : "ポッピ・冠・ラッキー",		count : 3,	},
+		{		name : "ヤット・パウル",			count : 2,	},
+		{		name : "アシステスト・インコッピ",	count : 2,	},
+		{		name : "コッコ・武・ルピア",		count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	var setCode = "NET-047"
+	var setName = "睿哥神藝術盃2024 3rd【5C褻瀆者＠Funky】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "Disコットン＆Disケラサス",								count : 4,	},
+		{		name : "天災 デドダム",											count : 4,	},
+		{		name : "S（スクラッパー）・S（スパイラル）・S（スパーク）",		count : 4,	},
+		{		name : "漢気の2号 ボスカツ",									count : 3,	},
+		{		name : "流星のガイアッシュ・カイザー",							count : 3,	},
+		{		name : "霊宝 ヒャクメ-4",										count : 3,	},
+		{		name : "砕慄接続 グレイトフル・ベン",							count : 3,	},
+		{		name : "王道の革命 ドギラゴン",									count : 2,	},
+		{		name : "光開の精霊サイフォゲート",								count : 2,	},
+		{		name : "聖魔連結王 ドルファディロム",							count : 2,	},
+		{		name : "ブルー・インパルス / 「真実を見極めよ、ジョニー！」",	count : 2,	},
+		{		name : "終末縫合王 ザ=キラー・キーナリー",						count : 2,	},
+		{		name : "ブレイン・スラッシュ",									count : 1,	},
+		{		name : "魔弾 マッド・ゲンド・チェスター",						count : 1,	},
+		{		name : "水上第九院 シャコガイル",								count : 1,	},
+		{		name : "終末の監視者 ジ・ウォッチ",								count : 1,	},
+		{		name : "終末縫合王 ミカドレオ",									count : 1,	},
+		{		name : "零獄接続王 ロマノグリラ0世",							count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-048"
+	var setName = "睿哥神藝術盃2024 4th【天災色瑪露露＠Thomas】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "フェアリー・ライフ",				count : 4,	},
+		{		name : "フェアリー・Re:ライフ",				count : 4,	},
+		{		name : "ヨビニオン・マルル",				count : 4,	},
+		{		name : "深淵の逆転撃",						count : 4,	},
+		{		name : "流星のガイアッシュ・カイザー",		count : 4,	},
+		{		name : "天災 デドダム",						count : 4,	},
+		{		name : "CRYMAX ジャオウガ",					count : 3,	},
+		{		name : "飛翔龍 5000VT",						count : 3,	},
+		{		name : "ロスト・Re:ソウル",					count : 2,	},
+		{		name : "終末縫合王 ザ=キラー・キーナリー",	count : 2,	},
+		{		name : "地龍神の魔陣",						count : 1,	},
+		{		name : "環嵐！ホールインワン・ヘラクレス",	count : 1,	},
+		{		name : "海龍神クリスド",					count : 1,	},
+		{		name : "終末の監視者 ジ・ウォッチ",			count : 1,	},
+		{		name : "終末縫合王 ミカドレオ",				count : 1,	},
+		{		name : "九番龍 ジゴクバンカー Par459",		count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
