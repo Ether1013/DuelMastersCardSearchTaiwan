@@ -70486,7 +70486,7 @@
 			cost : 19,
 			mana : 1,
 			sp : [
-				"(K)G・ゼロ(/K)－我方火文明的(R)ドラゴン(/R)有4張以上時，你可以不支付費用召喚此生物。",
+				"(K)G・ゼロ(/K)－我方火文明的(R)ドラゴン(/R)有4隻以上時，你可以不支付費用召喚此生物。",
 				"(K)スピードアタッカー(/K)",
 				"(K)T・ブレイカー(/K)",
 				"此生物出場時，破壞戰鬥場上所有持有「(K)ブロッカー(/K)」能力的對手生物。",
@@ -118951,7 +118951,7 @@
 			name : "呪烏竜 ACE-Curase / 繁栄の鏡",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-022a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119234,7 +119234,7 @@
 			name : "凶骨の邪将クエイクス / クエイクス・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-047a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119372,7 +119372,7 @@
 			name : "爆竜兵ドラグストライク / 天使と悪魔の憤怒",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-060a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119426,7 +119426,7 @@
 			name : "神門の精霊エールフリート / ホーリー・スパーク壱式",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-063a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119456,7 +119456,7 @@
 			name : "混沌の獅子デスライガー / カオス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-066a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119515,7 +119515,7 @@
 			name : "タイムピョンチキ / オラオラ・ジョーカーズ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-071a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119544,7 +119544,7 @@
 			name : "記憶の炎 ボルメテウス・エナジー / 魂と怒りの盾",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-072a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119600,7 +119600,7 @@
 			name : "襲撃者ディス・ドライブ / パンドラ・タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-076a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119675,7 +119675,7 @@
 			name : "消火機装コントロール・ファイア / パンドラ・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-085a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -119775,7 +119775,7 @@
 			name : "蒼狼の豊穣 ワクムテラス / オリジナル・ライフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-096a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
