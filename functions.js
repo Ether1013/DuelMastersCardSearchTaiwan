@@ -4334,8 +4334,11 @@
 		var r_setCode = lastSelectedSetCode;
 		if ( lastSelectedSetCode != null && lastSelectedSetCode != '' ){
 			var selectedCardDats = cardDatas.getDataByName( lastSelectedCardName , lastSelectedSetCode , lastSelectedAAIndex, lastSelectedUdIndex );
-			idNum = selectedCardDats.id.split( " " )[1];
-		} else {
+			if ( selectedCardDats.id != null ){
+				idNum = selectedCardDats.id.split( " " )[1];
+			}
+		}
+		if ( idNum == null || idNum == "" ){
 			for ( var s = 0 ; s < setDatas.set.length ; s++ ){
 				if ( setDatas.set[s].isTWSurroundings ){
 					var cardDataOfSet = setDatas.getCardDataInSet( setDatas.set[s].setCode , lastSelectedCardName );
