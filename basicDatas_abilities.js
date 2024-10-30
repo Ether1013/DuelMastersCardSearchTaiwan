@@ -72,7 +72,7 @@
 			{ Jap : "マナ爆誕",				Eng : "Mana Reburst",			Chi : "魔力爆誕",			descript : "你可以支付指定的費用數字，讓此生物從魔力區召喚",},
 			{ Jap : "ハンティング",			Eng : "Hunting",				Chi : "狩獵",				descript : "戰鬥時，此生物的攻擊力會隨著戰鬥場上每一隻我方的ハンター而+1000",},
 			{ Jap : "ウルトラ・セイバー",	Eng : "Ultra Saver",			Chi : "超級救星",			descript : "當有指定條件的我方生物離場時，你可以取而代之、破壞此生物",},
-			{ Jap : "G・ブレイカー",		Eng : "Galaxy Breaker",			Chi : "銀河擊破者",			descript : "擊破對手所有護盾，之後擊破我方所有護盾",},
+			{ Jap : "G・ブレイカー",		Eng : "Galaxy Breaker",			Chi : "銀河擊破者",			descript : "擊破對手所有護盾，該攻擊後、擊破我方所有護盾",},
 			{ Jap : "シールド・フォース",	Eng : "Shield Force",			Chi : "護盾之力",			descript : "當此生物出場時，選擇一張我方的護盾，只要該護盾未離場，則使此生物獲得下面能力",},
 			{ Jap : "クライマックス・ドロン・ゴー",			
 											Eng : "Climax Doron Go",		Chi : "極型隱遁前行",		descript : "當指定條件的我方放逐生物被破壞時，你可以從手牌中打出此生物到戰鬥場上。",},
