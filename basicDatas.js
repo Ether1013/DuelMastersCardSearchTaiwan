@@ -259,13 +259,18 @@
 		//資料集合
 		map : 
 			[
-				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#ffffcc",	},
-				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#ccffff",	},
-				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#cccccc",	},
-				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#ffcecc",	},
-				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#ccffd0",	},
+				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#fee19f",	},
+				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#aad4ec",	},
+				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#d3d6c3",	},
+				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#ffd0d6",	},
+				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#85cf84",	},
 				{	value : 32,	text : "無色文明",			eText : "Zero",		headerPic : "card_list_header_zero.gif",	dvBGColor : "#ffffff",	},
-//				{	value : 96,	text : "小丑(無色)文明",	eText : "Jockers",	headerPic : "card_list_header_jokers.gif",	dvBGColor : "#ffffff",	},
+//				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#ffffcc",	},
+//				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#ccffff",	},
+//				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#cccccc",	},
+//				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#ffcecc",	},
+//				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#ccffd0",	},
+//				{	value : 32,	text : "無色文明",			eText : "Zero",		headerPic : "card_list_header_zero.gif",	dvBGColor : "#ffffff",	},
 			],
 
 		//用單一文明代碼取得文明資料
@@ -1340,6 +1345,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2024/11/01",
+				log : [ 
+						"更改網站配色",
+				],	
+			},
+			{	
 				date : "2024/10/30",
 				log : [ 
 						"訂正【G・ブレイカー】的效果",
@@ -1349,20 +1360,6 @@
 				date : "2024/10/29",
 				log : [ 
 						"訂正【黄泉秘伝トリプル・ZERO】的效果",
-				],	
-			},
-			{	
-				date : "2024/10/24",
-				log : [ 
-						"調整外部連結的程式邏輯",
-				],	
-			},
-			{	
-				date : "2024/10/21",
-				log : [ 
-						"訂正【DM24-EX2 天下夢双!!デュエキングDreaM 2024】的收錄內容與卡牌資料",
-						"訂正【「胡乱」の頂天 クリス＝ビュート】的能力",
-						"新增【睿哥神藝術盃】的前四名牌組",
 				],	
 			},
 		],

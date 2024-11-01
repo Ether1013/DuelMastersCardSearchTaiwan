@@ -517,7 +517,7 @@
 			//插進一個"以下超次元區"的分隔用TR
 			if ( tableTrExList.length > 0 ){
 				var tr = document.createElement('tr');
-				tr.style.backgroundColor = "#000000";
+				tr.style.backgroundColor = "#370d00";
 				tr.style.height = "10px;";
 		
 				var td = document.createElement('td');
@@ -532,7 +532,7 @@
 			//插進一個"以下GR區"的分隔用TR
 			if ( tableTrGrList.length > 0 ){
 				var tr = document.createElement('tr');
-				tr.style.backgroundColor = "#000000";
+				tr.style.backgroundColor = "#370d00";
 				tr.style.height = "10px;";
 		
 				var td = document.createElement('td');
@@ -547,7 +547,7 @@
 			//插進一個"以下初始區"的分隔用TR
 			if ( tableTrExistList.length > 0 ){
 				var tr = document.createElement('tr');
-				tr.style.backgroundColor = "#000000";
+				tr.style.backgroundColor = "#370d00";
 				tr.style.height = "10px;";
 		
 				var td = document.createElement('td');
@@ -773,11 +773,11 @@
 		}
 		//處理上下頁功能顯示
 		if ( gobi("arrow_his_last") != null ){
-			gobi("arrow_his_last").style.color = ( historyIndex == 0 ) ? "#000000" : "#FFFFFF";
+			gobi("arrow_his_last").style.color = ( historyIndex == 0 ) ? "#370d00" : "#FFFFFF";
 			gobi("arrow_his_last").style.cursor = ( historyIndex == 0 ) ? "auto" : "pointer";
 		}
 		if ( gobi("arrow_his_next") != null ){
-			gobi("arrow_his_next").style.color = ( historyIndex == ( queryHistory.length - 1 ) ) ? "#000000" : "#FFFFFF";
+			gobi("arrow_his_next").style.color = ( historyIndex == ( queryHistory.length - 1 ) ) ? "#370d00" : "#FFFFFF";
 			gobi("arrow_his_next").style.cursor = ( historyIndex == ( queryHistory.length - 1 ) ) ? "auto" : "pointer";
 		}
 
@@ -2452,7 +2452,7 @@
 					if ( !isVM() ){
 						arrow_obj[i].style.color = arrow_tf[i] ? "black" : "gray";
 					} else {
-						arrow_obj[i].style.color = arrow_tf[i] ? "#FFFFFF" : "#000000";
+						arrow_obj[i].style.color = arrow_tf[i] ? "#FFFFFF" : "#370d00";
 					}
 					arrow_obj[i].style.cursor = arrow_tf[i] ? "pointer" : "auto";
 				}
@@ -2874,11 +2874,11 @@
 		}
 		for ( var i = 0 ; i < bars.length ; i++ ){
 			if ( i == index ){
-				bars[i].style.backgroundColor = "#bebefa";
+				bars[i].style.backgroundColor = "#d5d2c1";
 				bars[i].style.fontWeight = "bold";
 				mains[i].style.display = "block";
 			} else {
-				bars[i].style.backgroundColor = "#beffff";
+				bars[i].style.backgroundColor = "#bd8e62";
 				bars[i].style.fontWeight = "normal";
 				mains[i].style.display = "none";
 			}
@@ -4006,7 +4006,7 @@
 		for (var i = 0; i < prefixes.length; i++)
 		{
 			// Attempt to set the style 
-			dom.style.background = prefixes[i] + 'linear-gradient(0deg, #000000 0%, #ffffff 100%)';
+			dom.style.background = prefixes[i] + 'linear-gradient(0deg, #370d00 0%, #ffffff 100%)';
 
 			// Detect if the style was successfully set
 			if (dom.style.backgroundImage )
