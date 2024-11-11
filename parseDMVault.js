@@ -540,10 +540,29 @@
 			var _name = deckList_names[i];
 			var _count = deckList_counts[i];
 			//如果是超次元超級生物的話，要所有卡牌都有塞才會顯示
-			var _data = cardDatas.getDataByName( _name , null , null );
-			//如果找到卡、卡名卻不一樣的話，表示是以去除注音的方式找到的，此時要異動輸入卡名
-			if ( _data != null && _data.name != _name ){
+			//先當ID來找卡名
+			if ( _name.match( /^[a-zA-Z0-9]+ [^\/]+\/[^\/]+$/ ) ){
+				loop1:
+				for ( var s1 = 0 ; s1 < setDatas.map.length ; s1++ ){
+					loop2:
+					for ( var s2 = 0 ; s2 < setDatas.map[s1].length ; s2++ ){
+						if ( (setDatas.map[s1])[s2].id == _name ){
+							_name = (setDatas.map[s1])[s2].name;
+							break loop1;
+						}
+					}
+				}
+			}
+			var _data = queryByCode( _name, false );
+			if ( _data != null ){
 				_name = _data.name;
+			//ID找不到的話，則當作卡名去找
+			} else {
+				_data = cardDatas.getDataByName( _name , null , null );
+				//如果找到卡、卡名卻不一樣的話，表示是以去除注音的方式找到的，此時要異動輸入卡名
+				if ( _data != null && _data.name != _name ){
+					_name = _data.name;
+				}
 			}
 			//如果沒找到資料的話，就先用綽號去找
 			if ( _data == null ){
