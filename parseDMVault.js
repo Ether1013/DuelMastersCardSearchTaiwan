@@ -546,9 +546,16 @@
 				for ( var s1 = 0 ; s1 < setDatas.map.length ; s1++ ){
 					loop2:
 					for ( var s2 = 0 ; s2 < setDatas.map[s1].length ; s2++ ){
-						if ( (setDatas.map[s1])[s2].id == _name ){
-							_name = (setDatas.map[s1])[s2].name;
-							break loop1;
+						var ids = (setDatas.map[s1])[s2].id;
+						if ( !(ids instanceof Array) ){
+							ids = [ ids ];
+						}
+						loop3:
+						for ( var s3 = 0 ; s3 < ids.length ; s3++ ){
+							if ( ids[s3] == _name ){
+								_name = (setDatas.map[s1])[s2].name;
+								break loop1;
+							}
 						}
 					}
 				}
