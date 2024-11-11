@@ -560,16 +560,11 @@
 					}
 				}
 			}
-			var _data = queryByCode( _name, false );
-			if ( _data != null ){
+			//再用卡名去找資料
+			_data = cardDatas.getDataByName( _name , null , null );
+			//如果找到卡、卡名卻不一樣的話，表示是以去除注音的方式找到的，此時要異動輸入卡名
+			if ( _data != null && _data.name != _name ){
 				_name = _data.name;
-			//ID找不到的話，則當作卡名去找
-			} else {
-				_data = cardDatas.getDataByName( _name , null , null );
-				//如果找到卡、卡名卻不一樣的話，表示是以去除注音的方式找到的，此時要異動輸入卡名
-				if ( _data != null && _data.name != _name ){
-					_name = _data.name;
-				}
 			}
 			//如果沒找到資料的話，就先用綽號去找
 			if ( _data == null ){
