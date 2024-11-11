@@ -561,7 +561,7 @@
 				}
 			}
 			//再用卡名去找資料
-			_data = cardDatas.getDataByName( _name , null , null );
+			var _data = cardDatas.getDataByName( _name , null , null );
 			//如果找到卡、卡名卻不一樣的話，表示是以去除注音的方式找到的，此時要異動輸入卡名
 			if ( _data != null && _data.name != _name ){
 				_name = _data.name;
