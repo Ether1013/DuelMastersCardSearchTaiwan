@@ -21857,7 +21857,7 @@
 		},
 		{
 			name : "ドラグハリケーン・エナジー",
-			type : "EC",
+			type : "S",
 			civil : 1,
 			cost : 4,
 			mana : 1,
