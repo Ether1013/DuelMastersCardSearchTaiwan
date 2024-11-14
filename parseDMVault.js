@@ -576,17 +576,23 @@
 			}
 			//綽號也沒找到的話，就用模糊比對去找
 			if ( _data == null ){
-				var fuzzyResult = searchForCardByName( _name );
-				_data = cardDatas.getDataByName( fuzzyResult , null , null );
-				if ( _data != null ){
-					//去掉注音跟空白進行前後比對，如果兩者相等的話就當作正確結果
-					if ( clearSubName( fuzzyResult ).replace( /[ 　]/g, "" ) != _name.replace( /[ 　]/g, "" ) ){
-						fuzzyDatas.push({
-							oName : _name,
-							tName : fuzzyResult,
-						});
+				try {
+					var fuzzyResult = searchForCardByName( _name );
+					_data = cardDatas.getDataByName( fuzzyResult , null , null );
+					if ( _data != null ){
+						//去掉注音跟空白進行前後比對，如果兩者相等的話就當作正確結果
+						if ( clearSubName( fuzzyResult ).replace( /[ 　]/g, "" ) != _name.replace( /[ 　]/g, "" ) ){
+							fuzzyDatas.push({
+								oName : _name,
+								tName : fuzzyResult,
+							});
+						}
+						_name = fuzzyResult;
 					}
-					_name = fuzzyResult;
+				} catch(e){
+					console.log(_name);
+					alert( "目前我們無法處理【"+_name+"】這張卡，請截圖聯絡系統管理員" );
+					break;
 				}
 			}
 			if ( _data != null && _data.back != null && _data.back instanceof Array && _data.back.length > 1 ){

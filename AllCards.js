@@ -60915,7 +60915,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp13-036.jpg",
 		},
 		{
-			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
+			name : "ボルシャック・NEX（ネックス）/スーパー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-006a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -60975,7 +60975,7 @@
 			]
 		},
 		{
-			name : "エターナル・ブレイン / ブレイン珊瑚の仙樹",
+			name : "エターナル・ブレイン/ブレイン珊瑚の仙樹",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-018a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -61000,7 +61000,7 @@
 			]
 		},
 		{
-			name : "計略の手 / 陰謀の手",
+			name : "計略の手/陰謀の手",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-051a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64255,7 +64255,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s07.jpg",
 		},
 		{
-			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			name : "龍装艦 チェンジザ/六奇怪の四 ～土を割る逆瀧～",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s08a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64318,7 +64318,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s10.jpg",
 		},
 		{
-			name : "龍装鬼 オブザ08号 / 終焉の開闢",
+			name : "龍装鬼 オブザ08号/終焉の開闢",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s11a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64379,7 +64379,7 @@
 			]
 		},
 		{
-			name : "ゴリガン砕車 ゴルドーザ / ダイナマウス・スクラッパー",
+			name : "ゴリガン砕車 ゴルドーザ/ダイナマウス・スクラッパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s14a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64621,7 +64621,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-011.jpg",
 		},
 		{
-			name : "黒豆だんしゃく / 白米男しゃく",
+			name : "黒豆だんしゃく/白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64837,7 +64837,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-025.jpg",
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-026a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64923,7 +64923,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-036.jpg",
 		},
 		{
-			name : "スニーク戦車 オーリー / トゲ玉・キャノンボール",
+			name : "スニーク戦車 オーリー/トゲ玉・キャノンボール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-038a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -64951,7 +64951,7 @@
 			]
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-041a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65067,7 +65067,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-050.jpg",
 		},
 		{
-			name : "透明妖精リリン / 妖精のプレリュード",
+			name : "透明妖精リリン/妖精のプレリュード",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-052a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65096,7 +65096,7 @@
 			]
 		},
 		{
-			name : "綺羅王女プリン / ハンター☆エイリアン仲良しビーム",
+			name : "綺羅王女プリン/ハンター☆エイリアン仲良しビーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-054a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65158,7 +65158,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-058.jpg",
 		},
 		{
-			name : "パーロックJr. / 新たなる旅立ち",
+			name : "パーロックJr./新たなる旅立ち",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-059a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65186,7 +65186,7 @@
 			]
 		},
 		{
-			name : "カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る",
+			name : "カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-060a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65276,7 +65276,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-067.jpg",
 		},
 		{
-			name : "レレディ・バ・グーバ / ツインパクト・マップ",
+			name : "レレディ・バ・グーバ/ツインパクト・マップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-068a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65306,7 +65306,7 @@
 			]
 		},
 		{
-			name : "コンダマ / 魂フエミドロ",
+			name : "コンダマ/魂フエミドロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-069a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65432,7 +65432,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-080.jpg",
 		},
 		{
-			name : "ソプラノ裁徒 / メロディアス・メロディ",
+			name : "ソプラノ裁徒/メロディアス・メロディ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-082a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65491,7 +65491,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-088.jpg",
 		},
 		{
-			name : "カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る",
+			name : "カシス・ソーダ/♥あたしたちがみんなに元気を届け～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-090a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65596,7 +65596,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-096.jpg",
 		},
 		{
-			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
+			name : "イチゴッチ・タンク/レッツ・ゴイチゴ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-101a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65789,7 +65789,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-007.jpg",
 		},
 		{
-			name : "全員集合！アクア・三兄弟 / 超次元ジェイシーエイ・ホール",
+			name : "全員集合！アクア・三兄弟/超次元ジェイシーエイ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -65819,7 +65819,7 @@
 			]
 		},
 		{
-			name : "最終決戦だ！鬼丸ボーイ / 超次元オニシュラ・ホール",
+			name : "最終決戦だ！鬼丸ボーイ/超次元オニシュラ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-013a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -68616,7 +68616,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-010.jpg",
 		},
 		{
-			name : "水晶の記録 ゼノシャーク / クリスタル・メモリー",
+			name : "水晶の記録 ゼノシャーク/クリスタル・メモリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-011a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -68672,7 +68672,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-016.jpg",
 		},
 		{
-			name : "西南の超人 / 断断打つべしナウ",
+			name : "西南の超人/断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-017a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -70156,7 +70156,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-17A.jpg",
 		},
 		{
-			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
+			name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF16a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -70541,7 +70541,7 @@
 			]
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF2a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -70573,7 +70573,7 @@
 			]
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF3a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -70602,7 +70602,7 @@
 			]
 		},
 		{
-			name : "ラ・ズーネヨマ・パンツァー / 逆転のオーロラ",
+			name : "ラ・ズーネヨマ・パンツァー/逆転のオーロラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF4a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -70832,7 +70832,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s19.jpg",
 		},
 		{
-			name : "龍頭星雲人 / 零誕祭",
+			name : "龍頭星雲人/零誕祭",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-015a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -70876,7 +70876,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-073.jpg",
 		},
 		{
-			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
+			name : "天命龍装 ホーリーエンド/ナウ・オア・ネバー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s6a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -71321,7 +71321,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-017.jpg",
 		},
 		{
-			name : "マグナム・ルピア / クリムゾン・チャージャー",
+			name : "マグナム・ルピア/クリムゾン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se3a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -71364,7 +71364,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se4.jpg",
 		},
 		{
-			name : "鳳翔竜騎ソウルピアレイジ / 高貴なる魂炎",
+			name : "鳳翔竜騎ソウルピアレイジ/高貴なる魂炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73228,7 +73228,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-013.jpg",
 		},
 		{
-			name : "地龍仙ロマネアース / 仙なる大地",
+			name : "地龍仙ロマネアース/仙なる大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-014a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73367,7 +73367,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-021.jpg",
 		},
 		{
-			name : "偽りの王 ナンバーナイン / 歓喜の歌",
+			name : "偽りの王 ナンバーナイン/歓喜の歌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-022a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73456,7 +73456,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-027.jpg",
 		},
 		{
-			name : "R.S.F.K. / オールイン・チャージャー",
+			name : "R.S.F.K./オールイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-030a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73516,7 +73516,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-032.jpg",
 		},
 		{
-			name : "八頭竜 ACE-Yamata / 神秘の宝剣",
+			name : "八頭竜 ACE-Yamata/神秘の宝剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-033a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73588,7 +73588,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-037.jpg",
 		},
 		{
-			name : "アクア・スペルブルー / インビンシブル・オーラ",
+			name : "アクア・スペルブルー/インビンシブル・オーラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-038a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73661,7 +73661,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-041.jpg",
 		},
 		{
-			name : "偽りの名 スネーク / アンノウン・プログラム",
+			name : "偽りの名 スネーク/アンノウン・プログラム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-042a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73777,7 +73777,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho32.jpg",
 		},
 		{
-			name : "「武」の頂 マキシマム・ザ・マックス / 極頂秘伝ゼニス・シンフォニー",
+			name : "「武」の頂 マキシマム・ザ・マックス/極頂秘伝ゼニス・シンフォニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-043a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73807,7 +73807,7 @@
 			]
 		},
 		{
-			name : "霊騎コルテオ / プロテクション・サークル",
+			name : "霊騎コルテオ/プロテクション・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-044a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73949,7 +73949,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-051.jpg",
 		},
 		{
-			name : "キャベッジ・セッションズ / ソイルピンプ・キャベッジ",
+			name : "キャベッジ・セッションズ/ソイルピンプ・キャベッジ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-052a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -73979,7 +73979,7 @@
 			]
 		},
 		{
-			name : "偽りの名 13 / 種族選別",
+			name : "偽りの名 13/種族選別",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-053a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74007,7 +74007,7 @@
 			]
 		},
 		{
-			name : "薔薇の使者 / ガイアズ・ソング",
+			name : "薔薇の使者/ガイアズ・ソング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-055a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74036,7 +74036,7 @@
 			]
 		},
 		{
-			name : "コレンココ・タンク / ボント・プラントボ",
+			name : "コレンココ・タンク/ボント・プラントボ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-056a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74081,7 +74081,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-057.jpg",
 		},
 		{
-			name : "偽りの名 iFormula X / クリスティナ・フォール",
+			name : "偽りの名 iFormula X/クリスティナ・フォール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-059a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74122,7 +74122,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-060.jpg",
 		},
 		{
-			name : "暴発秘宝ベンゾ / 星龍の暴発",
+			name : "暴発秘宝ベンゾ/星龍の暴発",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-061a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74151,7 +74151,7 @@
 			]
 		},
 		{
-			name : "閃光の神官 ヴェルベット / フェアリー・パワー",
+			name : "閃光の神官 ヴェルベット/フェアリー・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-062a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74181,7 +74181,7 @@
 			]
 		},
 		{
-			name : "星雲の精霊キルスティン / 神秘の石柱",
+			name : "星雲の精霊キルスティン/神秘の石柱",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-063a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74210,7 +74210,7 @@
 			]
 		},
 		{
-			name : "セブ・コアクマン / マインド・リセット",
+			name : "セブ・コアクマン/マインド・リセット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-064a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74268,7 +74268,7 @@
 			]
 		},
 		{
-			name : "キング・シビレアシダケ / インビンシブル・テクノロジー",
+			name : "キング・シビレアシダケ/インビンシブル・テクノロジー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-066a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74332,7 +74332,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-069.jpg",
 		},
 		{
-			name : "緑神龍ディルガベジーダ / 偶発と弾幕の要塞",
+			name : "緑神龍ディルガベジーダ/偶発と弾幕の要塞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-070a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74467,7 +74467,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-072.jpg",
 		},
 		{
-			name : "光器ペトローバ / ソーラー・コミューン",
+			name : "光器ペトローバ/ソーラー・コミューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-073a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74497,7 +74497,7 @@
 			]
 		},
 		{
-			name : "予言者ラメール / マスター・スパーク",
+			name : "予言者ラメール/マスター・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-074a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74566,7 +74566,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-079.jpg",
 		},
 		{
-			name : "神（シェン）豚（トン） ブータンPUNK / ブータン両成敗",
+			name : "神（シェン）豚（トン） ブータンPUNK/ブータン両成敗",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-080a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74596,7 +74596,7 @@
 			]
 		},
 		{
-			name : "学校男 / ゾンビ・カーニバル",
+			name : "学校男/ゾンビ・カーニバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-081a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74626,7 +74626,7 @@
 			]
 		},
 		{
-			name : "骨折人形トロンボ / デビル・ハンド",
+			name : "骨折人形トロンボ/デビル・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-082a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74720,7 +74720,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-086.jpg",
 		},
 		{
-			name : "斬神兵グランドルメス / バースト・ワンショット",
+			name : "斬神兵グランドルメス/バースト・ワンショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-088a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74781,7 +74781,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-091.jpg",
 		},
 		{
-			name : "アラーム・ラディッシュ / ナチュラトゥルー・トラップ",
+			name : "アラーム・ラディッシュ/ナチュラトゥルー・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-093a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74874,7 +74874,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-097.jpg",
 		},
 		{
-			name : "天雷龍姫エリザベス / インビンシブル・フォートレス",
+			name : "天雷龍姫エリザベス/インビンシブル・フォートレス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-098a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74902,7 +74902,7 @@
 			]
 		},
 		{
-			name : "第六戦街 ラヴ・ガトラー / インビンシブル・アビス",
+			name : "第六戦街 ラヴ・ガトラー/インビンシブル・アビス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-099a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74933,7 +74933,7 @@
 			]
 		},
 		{
-			name : "雪溶の鎖 / 堕牛の一撃",
+			name : "雪溶の鎖/堕牛の一撃",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-100a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -74999,7 +74999,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-Cho49.jpg",
 		},
 		{
-			name : "堅防の使徒アースラ / グローリー・ストーン",
+			name : "堅防の使徒アースラ/グローリー・ストーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-101a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75069,7 +75069,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-103.jpg",
 		},
 		{
-			name : "パーロック / 蓄積された魔力の渦",
+			name : "パーロック/蓄積された魔力の渦",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-105a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75126,7 +75126,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-107.jpg",
 		},
 		{
-			name : "薔薇公爵ハザリア / ファントム・ベール",
+			name : "薔薇公爵ハザリア/ファントム・ベール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-109a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75181,7 +75181,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-111.jpg",
 		},
 		{
-			name : "轟速 ザ・レッド / 超次元キル・ホール",
+			name : "轟速 ザ・レッド/超次元キル・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-112a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75210,7 +75210,7 @@
 			]
 		},
 		{
-			name : "炎舞闘士サピエント・アーク / 無限掌",
+			name : "炎舞闘士サピエント・アーク/無限掌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-113a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75317,7 +75317,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-118a.jpg",
 		},
 		{
-			name : "ニンジャ・パンプキン / グローリー・マッスル",
+			name : "ニンジャ・パンプキン/グローリー・マッスル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-119a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75441,7 +75441,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-126.jpg",
 		},
 		{
-			name : "超次元エナジー・ホール / 超次元サプライズ・ホール",
+			name : "超次元エナジー・ホール/超次元サプライズ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-127a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -75469,7 +75469,7 @@
 			]
 		},
 		{
-			name : "牙神兵ガンガン・マンモス / ブレイン・タイフーン",
+			name : "牙神兵ガンガン・マンモス/ブレイン・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-128a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -77402,7 +77402,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-010.jpg",
 		},
 		{
-			name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",
+			name : "炎龍覇 グレンアイラ/「助けて！モルト!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-011a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -78970,7 +78970,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-TR2.jpg",
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴聖",
+			name : "天地命動 バラギアラ/輪廻暴聖",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-SP2a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -79001,7 +79001,7 @@
 			]
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴冥",
+			name : "天地命動 バラギアラ/輪廻暴冥",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR2a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -80862,7 +80862,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a023.jpg",
 		},
 		{
-			name : "悪魔神バロム / バロム砲",
+			name : "悪魔神バロム/バロム砲",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a024a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -80892,7 +80892,7 @@
 			]
 		},
 		{
-			name : "ボルメテウス・ホワイト・ドラゴン / ボルメテウス・レジェンド・フレア",
+			name : "ボルメテウス・ホワイト・ドラゴン/ボルメテウス・レジェンド・フレア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a027a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -80950,7 +80950,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a035.jpg",
 		},
 		{
-			name : "白騎士の聖霊王アルカディアス / 完全決闘",
+			name : "白騎士の聖霊王アルカディアス/完全決闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -80981,7 +80981,7 @@
 			]
 		},
 		{
-			name : "天海の精霊シリウス / W・チャージャー",
+			name : "天海の精霊シリウス/W・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81070,7 +81070,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a043.jpg",
 		},
 		{
-			name : "浄化の精霊ウルス / 精霊・スパーク",
+			name : "浄化の精霊ウルス/精霊・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81218,7 +81218,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b067.jpg",
 		},
 		{
-			name : "ムシ無視のんのん / 灰になるほどヒート",
+			name : "ムシ無視のんのん/灰になるほどヒート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b068a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81291,7 +81291,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b021.jpg",
 		},
 		{
-			name : "超幽龍アブゾ・ドルバ / 切り札をねらう悪魔!!",
+			name : "超幽龍アブゾ・ドルバ/切り札をねらう悪魔!!",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b022a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81377,7 +81377,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b025.jpg",
 		},
 		{
-			name : "勝舞の機神装甲ヴァルボーグ / 火炎ヴァルバスター",
+			name : "勝舞の機神装甲ヴァルボーグ/火炎ヴァルバスター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b026a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81472,7 +81472,7 @@
 			],
 		},
 		{
-			name : "シビレアシダケ / インビンシブル・パワー",
+			name : "シビレアシダケ/インビンシブル・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b032a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81711,7 +81711,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a017.jpg",
 		},
 		{
-			name : "キングダム・オウ禍武斗 / 轟破天九十九語",
+			name : "キングダム・オウ禍武斗/轟破天九十九語",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a018a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81741,7 +81741,7 @@
 			],
 		},
 		{
-			name : "超機動罠 デンジャデオン / 地獄極楽トラップ黙示録",
+			name : "超機動罠 デンジャデオン/地獄極楽トラップ黙示録",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a019a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81772,7 +81772,7 @@
 			],
 		},
 		{
-			name : "Q.Q.QX / 終葬 5.S.D.",
+			name : "Q.Q.QX/終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a020a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -81850,7 +81850,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b003.jpg",
 		},
 		{
-			name : "レアカードハンター ウサギ団 / ラビットハンド",
+			name : "レアカードハンター ウサギ団/ラビットハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b030a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -83515,7 +83515,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-005.jpg",
 		},
 		{
-			name : "反逆龍 5000typeR / 無法頂上会談",
+			name : "反逆龍 5000typeR/無法頂上会談",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-006a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -83751,7 +83751,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-037.jpg",
 		},
 		{
-			name : "残虐覇王デスカール / ロスト・ソウル",
+			name : "残虐覇王デスカール/ロスト・ソウル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-039a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -83886,7 +83886,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-061.jpg",
 		},
 		{
-			name : "罪無 ズゴブ垓 / 堕呪 バケドゥ",
+			name : "罪無 ズゴブ垓/堕呪 バケドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-062a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -83979,7 +83979,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-077.jpg",
 		},
 		{
-			name : "幻緑の双月 / 母なる星域",
+			name : "幻緑の双月/母なる星域",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-078a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84007,7 +84007,7 @@
 			],
 		},
 		{
-			name : "全虹帝 ミノガミ / ハザード・パクト",
+			name : "全虹帝 ミノガミ/ハザード・パクト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-081a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84085,7 +84085,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-096.jpg",
 		},
 		{
-			name : "ボルシャック・クロス・NEX（ネックス） / ボルシャック英雄譚",
+			name : "ボルシャック・クロス・NEX（ネックス）/ボルシャック英雄譚",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84156,7 +84156,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-teki008.jpg",
 		},
 		{
-			name : "ボルシャック・大和・ドラゴン / 大和ザンゲキ剣",
+			name : "ボルシャック・大和・ドラゴン/大和ザンゲキ剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-001a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84206,7 +84206,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-002.jpg",
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-008a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84252,7 +84252,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-010.jpg",
 		},
 		{
-			name : "電脳の女王 アリス / 不埒な再侵入",
+			name : "電脳の女王 アリス/不埒な再侵入",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-007a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84678,7 +84678,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-004.jpg",
 		},
 		{
-			name : "ゲオルグ・バーボシュタイン / ゴースト・タッチ",
+			name : "ゲオルグ・バーボシュタイン/ゴースト・タッチ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -84953,7 +84953,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-036.jpg",
 		},
 		{
-			name : "虚無の守護者グリ・ラ / 無情の光",
+			name : "虚無の守護者グリ・ラ/無情の光",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-041a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -85078,7 +85078,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-051.jpg",
 		},
 		{
-			name : "目覚めのファミリア キナコ / ムボー日和",
+			name : "目覚めのファミリア キナコ/ムボー日和",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-052a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -85121,7 +85121,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-056.jpg",
 		},
 		{
-			name : "メルゲ否男 / 「今も我らの願いはただひとつ」",
+			name : "メルゲ否男/「今も我らの願いはただひとつ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-059a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -85246,7 +85246,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-068.jpg",
 		},
 		{
-			name : "罪無 バスダク極 / ダックス奮闘",
+			name : "罪無 バスダク極/ダックス奮闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-069a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -85275,7 +85275,7 @@
 			],
 		},
 		{
-			name : "凶鬼98号 ガシャゴン / 堕呪 ブラッドゥ",
+			name : "凶鬼98号 ガシャゴン/堕呪 ブラッドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-070a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -85307,7 +85307,7 @@
 			],
 		},
 		{
-			name : "コオニ小町 / 「世界はジャオウガ様のモノ！」",
+			name : "コオニ小町/「世界はジャオウガ様のモノ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-072a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -85739,7 +85739,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-010.jpg",
 		},
 		{
-			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
+			name : "メヂカラ・コバルト・カイザー/アイド・ワイズ・シャッター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-a12a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -86978,7 +86978,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-014.jpg",
 		},
 		{
-			name : "ほめほめ老 / ホメホメ老句",
+			name : "ほめほめ老/ホメホメ老句",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-015a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87055,7 +87055,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-024.jpg",
 		},
 		{
-			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
+			name : "星門の精霊アケルナル/スターゲイズ・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-025a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87114,7 +87114,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-027.jpg",
 		},
 		{
-			name : "遣宮使 ネオンクス / ネオ・ブレイン",
+			name : "遣宮使 ネオンクス/ネオ・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-028a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87171,7 +87171,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-030.jpg",
 		},
 		{
-			name : "魔光帝フェルナンドVII世 / 魔弾デュアル・ザンジバル",
+			name : "魔光帝フェルナンドVII世/魔弾デュアル・ザンジバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-031a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87235,7 +87235,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-033.jpg",
 		},
 		{
-			name : "龍装医 ルギヌス / 地獄のゴッド・ハンド",
+			name : "龍装医 ルギヌス/地獄のゴッド・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-034a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87327,7 +87327,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-040.jpg",
 		},
 		{
-			name : "オブラディ・ホーネット / 「Let it Bee！」",
+			name : "オブラディ・ホーネット/「Let it Bee！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-041a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87387,7 +87387,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-044.jpg",
 		},
 		{
-			name : "サイバー・K・ウォズレック / ウォズレックの審問",
+			name : "サイバー・K・ウォズレック/ウォズレックの審問",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-046a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87416,7 +87416,7 @@
 			],
 		},
 		{
-			name : "スゴ腕プロジューサー / りんご娘はさんにんっ娘",
+			name : "スゴ腕プロジューサー/りんご娘はさんにんっ娘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-047a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87635,7 +87635,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-068.jpg",
 		},
 		{
-			name : "天雷の導士アヴァラルド公 / 魔弾アルカディア・エッグ",
+			name : "天雷の導士アヴァラルド公/魔弾アルカディア・エッグ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-070a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87694,7 +87694,7 @@
 			],
 		},
 		{
-			name : "爆獣マチュー・スチュアート / 超銀河弾 HELL",
+			name : "爆獣マチュー・スチュアート/超銀河弾 HELL",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-072a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87738,7 +87738,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-073.jpg",
 		},
 		{
-			name : "魔光王機デ・バウラ伯 / 魔弾グローリー・ゲート",
+			name : "魔光王機デ・バウラ伯/魔弾グローリー・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-074a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87796,7 +87796,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-081.jpg",
 		},
 		{
-			name : "魔光ドラム・トレボール / 魔弾バレット・バイス",
+			name : "魔光ドラム・トレボール/魔弾バレット・バイス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-083a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -87892,7 +87892,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-088.jpg",
 		},
 		{
-			name : "傀儡将ボルギーズ / ジェニコの知らない世界",
+			name : "傀儡将ボルギーズ/ジェニコの知らない世界",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-089a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88025,7 +88025,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-103.jpg",
 		},
 		{
-			name : "超七極 Gio / 巨大設計図",
+			name : "超七極 Gio/巨大設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-105a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88095,7 +88095,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-109.jpg",
 		},
 		{
-			name : "緊急機装エクス・コプター / 合身秘伝メカ・マシーン",
+			name : "緊急機装エクス・コプター/合身秘伝メカ・マシーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-110a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88125,7 +88125,7 @@
 			],
 		},
 		{
-			name : "氷牙フランツI世 / 魔弾オープン・ブレイン",
+			name : "氷牙フランツI世/魔弾オープン・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-112a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88219,7 +88219,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-122.jpg",
 		},
 		{
-			name : "熱血姫様プリン / 狩人秘伝ハンター・ファイア",
+			name : "熱血姫様プリン/狩人秘伝ハンター・ファイア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-124a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88276,7 +88276,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-126.jpg",
 		},
 		{
-			name : "爆獣パンダ・ブーリン / 魔弾パンダフル・ライフ",
+			name : "爆獣パンダ・ブーリン/魔弾パンダフル・ライフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-130a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88307,7 +88307,7 @@
 			],
 		},
 		{
-			name : "味息子サン・グリル / 千切秘伝ワイルド・ベジタブル",
+			name : "味息子サン・グリル/千切秘伝ワイルド・ベジタブル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-131a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -88810,7 +88810,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-s11.jpg",
 		},
 		{
-			name : "バーンメア・ザ・シルバー / オラオラ・スラッシュ",
+			name : "バーンメア・ザ・シルバー/オラオラ・スラッシュ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-a12a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -91064,7 +91064,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-068.jpg",
 		},
 		{
-			name : "未来妖精ミクル / ミラクル・ブレイン",
+			name : "未来妖精ミクル/ミラクル・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-069a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -91466,7 +91466,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-012.jpg",
 		},
 		{
-			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
+			name : "卍月 ガ・リュザーク 卍/卍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-003a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -91497,7 +91497,7 @@
 			],
 		},
 		{
-			name : "龍罠 エスカルデン / マクスカルゴ・トラップ",
+			name : "龍罠 エスカルデン/マクスカルゴ・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR4a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92527,7 +92527,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-074.jpg",
 		},
 		{
-			name : "めっちゃ！デンヂャラスG3 / ケッシング・ゼロ",
+			name : "めっちゃ！デンヂャラスG3/ケッシング・ゼロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF1a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92701,7 +92701,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-007.jpg",
 		},
 		{
-			name : "龍月 ドラグ・スザーク / 龍・獄・殺",
+			name : "龍月 ドラグ・スザーク/龍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-014a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92811,7 +92811,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-008b.jpg",
 		},
 		{
-			name : "D2V3 終断のデッドトロン / デッドリー・ビッグバン",
+			name : "D2V3 終断のデッドトロン/デッドリー・ビッグバン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92840,7 +92840,7 @@
 			],
 		},
 		{
-			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
+			name : "終断γ ドルブロ/ボーンおどり・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-013a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -92871,7 +92871,7 @@
 			],
 		},
 		{
-			name : "D2V3 終断のレッドトロン / フォビドゥン・ハンド",
+			name : "D2V3 終断のレッドトロン/フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-014a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94190,7 +94190,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s13.jpg",
 		},
 		{
-			name : "始全虹帝 ミノガミ / 自然の肯定",
+			name : "始全虹帝 ミノガミ/自然の肯定",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s14a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94253,7 +94253,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s16.jpg",
 		},
 		{
-			name : "ナ・チュラルゴ・デンジャー / ナチュラル・トラップ",
+			name : "ナ・チュラルゴ・デンジャー/ナチュラル・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s17a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94347,7 +94347,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s8.jpg",
 		},
 		{
-			name : "卍 ギ・ルーギリン 卍 / 卍獄ブレイン",
+			name : "卍 ギ・ルーギリン 卍/卍獄ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s9a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94391,7 +94391,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-002.jpg",
 		},
 		{
-			name : "奇石 トランキー / アイ・オブ・ザ・タイガー",
+			name : "奇石 トランキー/アイ・オブ・ザ・タイガー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94450,7 +94450,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-007.jpg",
 		},
 		{
-			name : "龍装05号 イヴィルヴィ / イーヴィル・フォース",
+			name : "龍装05号 イヴィルヴィ/イーヴィル・フォース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-009a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94722,7 +94722,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-039.jpg",
 		},
 		{
-			name : "審絆の鎮り 新蓮 / ジャスティス・シェイパー",
+			name : "審絆の鎮り 新蓮/ジャスティス・シェイパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-040a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -94847,7 +94847,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-058.jpg",
 		},
 		{
-			name : "バリスイトーヨー / 水筒の術",
+			name : "バリスイトーヨー/水筒の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-059a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98146,7 +98146,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm04-055.jpg",
 		},
 		{
-			name : "強襲竜 ボルシャック・レイダー / レイド・エントリー",
+			name : "強襲竜 ボルシャック・レイダー/レイド・エントリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/01.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98206,7 +98206,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/03.jpg",
 		},
 		{
-			name : "ボルシャック・ヒート・ドラゴン / ヒートブレス・チャージャー",
+			name : "ボルシャック・ヒート・ドラゴン/ヒートブレス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/07.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98264,7 +98264,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/11.jpg",
 		},
 		{
-			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
+			name : "ファイン・撃・ピヨッチ/「暴竜爵は不滅なり！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sd1/precedence/12.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98700,7 +98700,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S2.jpg",
 		},
 		{
-			name : "der'Zen Mondo / ♪必殺で つわものどもが 夢の跡",
+			name : "der'Zen Mondo/♪必殺で つわものどもが 夢の跡",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S3a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98823,7 +98823,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-001.jpg",
 		},
 		{
-			name : "D-Jealousy-灰撫 / ♪五本まで 集めて林 森ジャングル",
+			name : "D-Jealousy-灰撫/♪五本まで 集めて林 森ジャングル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-002a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98898,7 +98898,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-005.jpg",
 		},
 		{
-			name : "輝跡！シャイニングロード・マンティス / 輝跡の大地",
+			name : "輝跡！シャイニングロード・マンティス/輝跡の大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-006a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -98970,7 +98970,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-TF4.jpg",
 		},
 		{
-			name : "ゴルパガーニ-A7 / ダウンフォース・サーキュラー",
+			name : "ゴルパガーニ-A7/ダウンフォース・サーキュラー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-009a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99041,7 +99041,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-012.jpg",
 		},
 		{
-			name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",
+			name : "ボン・キゴマイム/♪やせ蛙 ラッキーナンバー ここにあり",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-013a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99112,7 +99112,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-016.jpg",
 		},
 		{
-			name : "イード＝ミード / 「奈落を見たいか？」",
+			name : "イード＝ミード/「奈落を見たいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-017a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99168,7 +99168,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-019.jpg",
 		},
 		{
-			name : "ボルザード・スラッシャー / 「愛ゆえに斬る!!」",
+			name : "ボルザード・スラッシャー/「愛ゆえに斬る!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-020a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99226,7 +99226,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-022.jpg",
 		},
 		{
-			name : "氷打の妖精 / 巨打設計図",
+			name : "氷打の妖精/巨打設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-023a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99300,7 +99300,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-026.jpg",
 		},
 		{
-			name : "星姫械 マリハダル / レプリカ・オークション",
+			name : "星姫械 マリハダル/レプリカ・オークション",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-027a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99384,7 +99384,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-031.jpg",
 		},
 		{
-			name : "マジック・A・セミプーロ / ♪閑かさや とにかくブレイン 蝉ミンミン",
+			name : "マジック・A・セミプーロ/♪閑かさや とにかくブレイン 蝉ミンミン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-032a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99466,7 +99466,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-036.jpg",
 		},
 		{
-			name : "ステッキ＝ステーシー / 「素敵だろう？」",
+			name : "ステッキ＝ステーシー/「素敵だろう？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-037a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99551,7 +99551,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-041.jpg",
 		},
 		{
-			name : "レーホウ・衛・デカッチ / 「暴竜爵様のお出ましだッチ！」",
+			name : "レーホウ・衛・デカッチ/「暴竜爵様のお出ましだッチ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-042a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99632,7 +99632,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-046.jpg",
 		},
 		{
-			name : "十柱の超人 / 直撃の極意",
+			name : "十柱の超人/直撃の極意",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-047a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99702,7 +99702,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-050.jpg",
 		},
 		{
-			name : "星姫械 アイリプス / アイリス・アンブレラ",
+			name : "星姫械 アイリプス/アイリス・アンブレラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-051a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99785,7 +99785,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-055.jpg",
 		},
 		{
-			name : "サダイエ・ホンカドリーマー / ♪古池や ワンスアゲイン スパイラル",
+			name : "サダイエ・ホンカドリーマー/♪古池や ワンスアゲイン スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-056a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99857,7 +99857,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-059.jpg",
 		},
 		{
-			name : "ワイグラス＝ワグラス / 「宴を始めよう」",
+			name : "ワイグラス＝ワグラス/「宴を始めよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-060a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -99978,7 +99978,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-069.jpg",
 		},
 		{
-			name : "配球の超人 / 記録的剛球",
+			name : "配球の超人/記録的剛球",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-070a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -100059,7 +100059,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-074.jpg",
 		},
 		{
-			name : "スパトー:ド:スパトゥー / 邪暴乱舞",
+			name : "スパトー:ド:スパトゥー/邪暴乱舞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/01.jpg",
 			mana : 1,
 			mType : 'T',
@@ -100088,7 +100088,7 @@
 			]
 		},
 		{
-			name : "ソファ＝ソフティソニア / 「どんな夢がお望みだ？」",
+			name : "ソファ＝ソフティソニア/「どんな夢がお望みだ？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/04.jpg",
 			mana : 1,
 			mType : 'T',
@@ -100117,7 +100117,7 @@
 			]
 		},
 		{
-			name : "ドアノッカ＝ノアドッカ / 「…開けるか？」",
+			name : "ドアノッカ＝ノアドッカ/「…開けるか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/09.jpg",
 			mana : 1,
 			mType : 'T',
@@ -100144,7 +100144,7 @@
 			]
 		},
 		{
-			name : "フットレス＝トレース / 「力が欲しいか？」",
+			name : "フットレス＝トレース/「力が欲しいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/themes/dm2019/img/product/dm23sp1/precedence/12.jpg",
 			mana : 1,
 			mType : 'T',
@@ -101480,7 +101480,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-001.jpg",
 		},
 		{
-			name : "煌メク聖晶 弩楼 / ビスティック・マース",
+			name : "煌メク聖晶 弩楼/ビスティック・マース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-002a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -102368,7 +102368,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-047.jpg",
 		},
 		{
-			name : "十極 ジョバンチュ / Genesis of Drillball",
+			name : "十極 ジョバンチュ/Genesis of Drillball",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-049a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103256,7 +103256,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-264.jpg",
 		},
 		{
-			name : "天井院さま / 床弾坊",
+			name : "天井院さま/床弾坊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-266a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103407,7 +103407,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-308.jpg",
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴炎",
+			name : "天地命動 バラギアラ/輪廻暴炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-258a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103552,7 +103552,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-006.jpg",
 		},
 		{
-			name : "煙幕の聖沌 k3mur1 / 聖沌忍法 メカくしの術",
+			name : "煙幕の聖沌 k3mur1/聖沌忍法 メカくしの術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-007a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103581,7 +103581,7 @@
 			],
 		},
 		{
-			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
+			name : "星姫械 ミモザスター/招光呪文「メカミング」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-009a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103698,7 +103698,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S01.jpg",
 		},
 		{
-			name : "マジック・H・コレクター / ♪マジソンを 集めて早し ストリーム",
+			name : "マジック・H・コレクター/♪マジソンを 集めて早し ストリーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S02a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103790,7 +103790,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S06.jpg",
 		},
 		{
-			name : "超球の超人 / 父なるタッチダウン",
+			name : "超球の超人/父なるタッチダウン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S07a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -103964,7 +103964,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-008.jpg",
 		},
 		{
-			name : "星姫械 ミントジュバ / ミンティア・リンギング",
+			name : "星姫械 ミントジュバ/ミンティア・リンギング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-009a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104022,7 +104022,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-012.jpg",
 		},
 		{
-			name : "歌舞音愛 ヒメカット / ♪蛙の子 遭えるの何処？好きと謂ひて",
+			name : "歌舞音愛 ヒメカット/♪蛙の子 遭えるの何処？好きと謂ひて",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-013a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104079,7 +104079,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-015.jpg",
 		},
 		{
-			name : "ヨービリン=リリン / 「……誰を呼びたい？」",
+			name : "ヨービリン=リリン/「……誰を呼びたい？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-016a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104147,7 +104147,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-019.jpg",
 		},
 		{
-			name : "カラカラ・警・ルピア / 「ここはお任せだッピ！」",
+			name : "カラカラ・警・ルピア/「ここはお任せだッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-020a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104203,7 +104203,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-022.jpg",
 		},
 		{
-			name : "マーチングベル シアン / ミーミル・ミュージカル",
+			name : "マーチングベル シアン/ミーミル・ミュージカル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-023a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104232,7 +104232,7 @@
 			],
 		},
 		{
-			name : "マーチングドラム ミドリ / ハーメルン・ハーモニー",
+			name : "マーチングドラム ミドリ/ハーメルン・ハーモニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-024a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104289,7 +104289,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-026.jpg",
 		},
 				{
-			name : "聖沌忍者 シャーリーシー / シャーリー・チャージャー",
+			name : "聖沌忍者 シャーリーシー/シャーリー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-027a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104362,7 +104362,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-030.jpg",
 		},
 		{
-			name : "音素記号Bm エネルジコ / ♪水面から 天掴まんと するチャージャー",
+			name : "音素記号Bm エネルジコ/♪水面から 天掴まんと するチャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-031a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104391,7 +104391,7 @@
 			],
 		},
 		{
-			name : "人気魚 / ♪大空の ムーンサルト やや斜め",
+			name : "人気魚/♪大空の ムーンサルト やや斜め",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-032a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104460,7 +104460,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-035.jpg",
 		},
 		{
-			name : "モノクル＝ドクトール / 「すべてを見通す眼だ」",
+			name : "モノクル＝ドクトール/「すべてを見通す眼だ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-036a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104489,7 +104489,7 @@
 			],
 		},
 		{
-			name : "カーペット=ガペット / 「ふむ、君の希望を踏まえよう」",
+			name : "カーペット=ガペット/「ふむ、君の希望を踏まえよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-037a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104544,7 +104544,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-039.jpg",
 		},
 		{
-			name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",
+			name : "セルリアン・アックス・ドラゴン/ダブルアックス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-040a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104630,7 +104630,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-044.jpg",
 		},
 		{
-			name : "竹馬の超人 / テイクバック・チャージャー",
+			name : "竹馬の超人/テイクバック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-045a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104745,7 +104745,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-054.jpg",
 		},
 		{
-			name : "詠み人-シラズ-Machine / 招水呪文「マジックル」",
+			name : "詠み人-シラズ-Machine/招水呪文「マジックル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-056a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104774,7 +104774,7 @@
 			],
 		},
 		{
-			name : "爆弾音愛 メッシュ / ♪キミとボク 共感すれば マジ文殊",
+			name : "爆弾音愛 メッシュ/♪キミとボク 共感すれば マジ文殊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-057a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104839,7 +104839,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-060.jpg",
 		},
 		{
-			name : "サドレイン=トレイン / 邪神呪文「アビサール」",
+			name : "サドレイン=トレイン/邪神呪文「アビサール」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-061a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104918,7 +104918,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-065.jpg",
 		},
 		{
-			name : "ゲンジ・天・パワッチ / 招火呪文「アーマアド」",
+			name : "ゲンジ・天・パワッチ/招火呪文「アーマアド」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-066a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -104999,7 +104999,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-070.jpg",
 		},
 		{
-			name : "無双の妖精 / 招然呪文「ジャイババン」",
+			name : "無双の妖精/招然呪文「ジャイババン」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-071a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105064,7 +105064,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-074.jpg",
 		},
 		{
-			name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",
+			name : "「必然」の頂 リュウセイ/「オレの勝利だオフコース！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-010a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105143,7 +105143,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-012.jpg",
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS / 「必殺！ジェット・カスケード・アタック!!」",
+			name : "「合体」の頂 アクア・TITAAANS/「必殺！ジェット・カスケード・アタック!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-017a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105203,7 +105203,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-020.jpg",
 		},
 		{
-			name : "「根性」の頂 メチャデ塊ゾウ / 「大親分、ここにあり！」",
+			name : "「根性」の頂 メチャデ塊ゾウ/「大親分、ここにあり！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-021a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105363,7 +105363,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-033.jpg",
 		},
 		{
-			name : "戦慄の魔女 アリス / 神にも届く旋律",
+			name : "戦慄の魔女 アリス/神にも届く旋律",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-034a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105420,7 +105420,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-042.jpg",
 		},
 		{
-			name : "ドミー=ゾー / 「倒したいか？」",
+			name : "ドミー=ゾー/「倒したいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-044a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105448,7 +105448,7 @@
 			],
 		},
 		{
-			name : "運命の親衛隊シウバ / 「その運命、我らもそれに従おう」",
+			name : "運命の親衛隊シウバ/「その運命、我らもそれに従おう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-045a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105522,7 +105522,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-050.jpg",
 		},
 		{
-			name : "情熱の薔薇 メーテル / 神にも届く歌声",
+			name : "情熱の薔薇 メーテル/神にも届く歌声",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-051a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105605,7 +105605,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-061.jpg",
 		},
 		{
-			name : "トランプ=ランプゼンゼンマ / 「さぁ、カードを配ろう」",
+			name : "トランプ=ランプゼンゼンマ/「さぁ、カードを配ろう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-064a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -105819,7 +105819,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-007.jpg",
 		},
 		{
-			name : "「色災」の頂 カラーレス・レインボー / 天上天下輪廻天頂",
+			name : "「色災」の頂 カラーレス・レインボー/天上天下輪廻天頂",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-009a.jpg",
 			mana : 0,
 			mType : 'T',
@@ -105993,7 +105993,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-001.jpg",
 		},
 		{
-			name : "踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン",
+			name : "踊戯音愛 パステル/♪摩訶不思議 マジカルプリズン キンキラリン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-003a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106021,7 +106021,7 @@
 			],
 		},
 		{
-			name : "調律師ピーカプ / ♪音速で 本番中に チューニング",
+			name : "調律師ピーカプ/♪音速で 本番中に チューニング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106063,7 +106063,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-006.jpg",
 		},
 		{
-			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
+			name : "淡いと濃い ケローラ/♪やせガエル 負けるなケローラ スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-007a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106119,7 +106119,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-010.jpg",
 		},
 		{
-			name : "AQsabbath / ♪このギター グシャっとすれば グシャっとなる",
+			name : "AQsabbath/♪このギター グシャっとすれば グシャっとなる",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106242,7 +106242,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-S03.jpg",
 		},
 		{
-			name : "Napo獅子-Vi無粋 / ♪オレの歌 聞けよ聞かなきゃ 殴り合い",
+			name : "Napo獅子-Vi無粋/♪オレの歌 聞けよ聞かなきゃ 殴り合い",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-S04a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106461,7 +106461,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-008.jpg",
 		},
 		{
-			name : "蜘紙の聖沌 kum0 / 聖沌忍法 メカ吹雪の術",
+			name : "蜘紙の聖沌 kum0/聖沌忍法 メカ吹雪の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-009a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106520,7 +106520,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-011.jpg",
 		},
 		{
-			name : "同期の妖精 / ド浮きの動悸",
+			name : "同期の妖精/ド浮きの動悸",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-013a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106581,7 +106581,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-015.jpg",
 		},
 		{
-			name : "トング＝ゴング / 「世界をつかませてやろうか？」",
+			name : "トング＝ゴング/「世界をつかませてやろうか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-016a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106657,7 +106657,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-019.jpg",
 		},
 		{
-			name : "ボルゼラス・ドラゴン / 「オレの行く道は止められねぇ」",
+			name : "ボルゼラス・ドラゴン/「オレの行く道は止められねぇ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-020a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106686,7 +106686,7 @@
 			],
 		},
 		{
-			name : "満韻炎霊 キャノンボール / ♪夏草や イフリートによる 夢の跡",
+			name : "満韻炎霊 キャノンボール/♪夏草や イフリートによる 夢の跡",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-021a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106730,7 +106730,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-022.jpg",
 		},
 		{
-			name : "弓道の妖精 / ド級の弩弓",
+			name : "弓道の妖精/ド級の弩弓",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-023a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106804,7 +106804,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-026.jpg",
 		},
 		{
-			name : "強撃の鎧徒エッカルト / ウォーニング・ショット",
+			name : "強撃の鎧徒エッカルト/ウォーニング・ショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-027a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106860,7 +106860,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-029.jpg",
 		},
 		{
-			name : "声凄音愛 オダンゴ / ♪ワタクシの シャウトの前に 皆黙る",
+			name : "声凄音愛 オダンゴ/♪ワタクシの シャウトの前に 皆黙る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-031a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106915,7 +106915,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-033.jpg",
 		},
 		{
-			name : "蛙紙の聖沌 fr09 / 聖沌忍法 メカ寄せの術",
+			name : "蛙紙の聖沌 fr09/聖沌忍法 メカ寄せの術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-034a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -106999,7 +106999,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-038.jpg",
 		},
 		{
-			name : "オ:ドユニワ / 喰土邪覇",
+			name : "オ:ドユニワ/喰土邪覇",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-039a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107106,7 +107106,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-045.jpg",
 		},
 		{
-			name : "パトファール-P4 / サイレント・サイレン",
+			name : "パトファール-P4/サイレント・サイレン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-046a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107163,7 +107163,7 @@
 			],
 		},
 		{
-			name : "タネダ・パンクトーカー / ♪夕暮れに さらに弱い ヤツ叩く",
+			name : "タネダ・パンクトーカー/♪夕暮れに さらに弱い ヤツ叩く",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-048a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107191,7 +107191,7 @@
 			],
 		},
 		{
-			name : "竹刀の超人 / サイバー免許皆伝",
+			name : "竹刀の超人/サイバー免許皆伝",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-049a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107220,7 +107220,7 @@
 			],
 		},
 		{
-			name : "ハニー＝マーガニー / 「こっちは甘いぞー」",
+			name : "ハニー＝マーガニー/「こっちは甘いぞー」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-050a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107569,7 +107569,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-074.jpg",
 		},				
 	{
-			name : "魔導管理室 カリヤドネ / ハーミット・サークル",
+			name : "魔導管理室 カリヤドネ/ハーミット・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-ChoG009a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107598,7 +107598,7 @@
 			],
 		},
 		{
-			name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",
+			name : "支配の精霊ペルフェクト/ギャラクシー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107783,7 +107783,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-021b.jpg",
 		},
 		{
-			name : "卍月 ガ・リュザーク 卍 / 「すべて見えているぞ！」",
+			name : "卍月 ガ・リュザーク 卍/「すべて見えているぞ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-022a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107925,7 +107925,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-036.jpg",
 		},
 		{
-			name : "頂上印鑑 パラキン8th / 「魔物が居るな……」",
+			name : "頂上印鑑 パラキン8th/「魔物が居るな……」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-037a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107955,7 +107955,7 @@
 			],
 		},
 		{
-			name : "魔神頂上 ”密愛流”9th / 「パーフェクト！パーフェクト!!」",
+			name : "魔神頂上 ”密愛流”9th/「パーフェクト！パーフェクト!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-038a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -107985,7 +107985,7 @@
 			],
 		},
 		{
-			name : "審絆の彩り 喜望 / キーボード・アクセス",
+			name : "審絆の彩り 喜望/キーボード・アクセス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-039a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108014,7 +108014,7 @@
 			],
 		},
 		{
-			name : "純潔妖精ガーベラ / ハイビとビスカの印",
+			name : "純潔妖精ガーベラ/ハイビとビスカの印",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-040a.jpg",
 			mana : 0,
 			mType : 'T',
@@ -108070,7 +108070,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-042.jpg",
 		},
 		{
-			name : "氷牙アクア・マルガレーテ卿 / スペルブック・チャージャー",
+			name : "氷牙アクア・マルガレーテ卿/スペルブック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-044a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108097,7 +108097,7 @@
 			],
 		},
 		{
-			name : "電脳鉄人センジュオー / センジュ・チューン",
+			name : "電脳鉄人センジュオー/センジュ・チューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-045a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108353,7 +108353,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-062.jpg",
 		},
 		{
-			name : "凶鬼90号 ゾレーゴ / 「大当たり！もう一本!!」",
+			name : "凶鬼90号 ゾレーゴ/「大当たり！もう一本!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-064a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108600,7 +108600,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-087a.jpg",
 		},
 		{
-			name : "頂上龍覇 サソリス2nd / 「ナチュラル、タイマン！」",
+			name : "頂上龍覇 サソリス2nd/「ナチュラル、タイマン！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-088a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108679,7 +108679,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-096.jpg",
 		},
 		{
-			name : "爆獣ダキテー・ドラグーン / 勝負だ！チャージャー",
+			name : "爆獣ダキテー・ドラグーン/勝負だ！チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-098a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108721,7 +108721,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-101.jpg",
 		},
 		{
-			name : "韋駄天モー / 鼓動する石版",
+			name : "韋駄天モー/鼓動する石版",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-102a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108762,7 +108762,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-104.jpg",
 		},
 		{
-			name : "爆獣イナバ・ギーゼ / 魔弾ソウル・キャッチャー",
+			name : "爆獣イナバ・ギーゼ/魔弾ソウル・キャッチャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-109a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108789,7 +108789,7 @@
 			],
 		},
 		{
-			name : "早食王のリンパオ / ライク・ア・ローリング・ストーム",
+			name : "早食王のリンパオ/ライク・ア・ローリング・ストーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-110a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108816,7 +108816,7 @@
 			],
 		},
 		{
-			name : "力持ちのジェロン / ガード・グリップ",
+			name : "力持ちのジェロン/ガード・グリップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-111a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108844,7 +108844,7 @@
 			],
 		},
 		{
-			name : "大鉄漢シルバスターズ / スクリーム・チャージャー",
+			name : "大鉄漢シルバスターズ/スクリーム・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-112a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108886,7 +108886,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-027.jpg",
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴氷",
+			name : "天地命動 バラギアラ/輪廻暴氷",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-003a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -108982,7 +108982,7 @@
 			],
 		},
 		{
-			name : "サケビ・ポエムシャウター / ♪いつまでも オレ様の歌は 終わらねぇ",
+			name : "サケビ・ポエムシャウター/♪いつまでも オレ様の歌は 終わらねぇ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-S03a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109140,7 +109140,7 @@
 			],
 		},
 		{
-			name : "リッチーモア＝ザ＝ダーティ / 「収めてやろうか？」",
+			name : "リッチーモア＝ザ＝ダーティ/「収めてやろうか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109171,7 +109171,7 @@
 			],
 		},
 		{
-			name : "ドラン・ゴル・ゲルス / 豪龍の記憶",
+			name : "ドラン・ゴル・ゲルス/豪龍の記憶",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109200,7 +109200,7 @@
 			],
 		},
 		{
-			name : "堅き革命 ボルシュゴス / 「ボルシュゴス・スラッシャー!!」",
+			name : "堅き革命 ボルシュゴス/「ボルシュゴス・スラッシャー!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-006a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109230,7 +109230,7 @@
 			],
 		},
 		{
-			name : "芸魔獅子 レオジンロ / ♪限りなく 透明に近い このワタシ",
+			name : "芸魔獅子 レオジンロ/♪限りなく 透明に近い このワタシ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-007a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109259,7 +109259,7 @@
 			],
 		},
 		{
-			name : "宙番龍 オービーメイカー Par001 / 奇跡の一打",
+			name : "宙番龍 オービーメイカー Par001/奇跡の一打",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-008a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109398,7 +109398,7 @@
 			],
 		},
 		{
-			name : "シェケダン・ドメ・ゲルス / ドメスティック・アイ",
+			name : "シェケダン・ドメ・ゲルス/ドメスティック・アイ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-016a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109509,7 +109509,7 @@
 			],
 		},
 		{
-			name : "オ:ベカリーヌ / 裏盗邪撫",
+			name : "オ:ベカリーヌ/裏盗邪撫",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-022a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109659,7 +109659,7 @@
 			],
 		},
 		{
-			name : "タイピング＝タップ / 「キミの最期の言葉、読むか？」",
+			name : "タイピング＝タップ/「キミの最期の言葉、読むか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-031a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109759,7 +109759,7 @@
 			],
 		},
 		{
-			name : "卓球の妖精 / 回転する開眼",
+			name : "卓球の妖精/回転する開眼",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-037a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109913,7 +109913,7 @@
 			],
 		},
 		{
-			name : "シュバルスリング-B3 / エン・ゲルス・スパーク",
+			name : "シュバルスリング-B3/エン・ゲルス・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-046a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109941,7 +109941,7 @@
 			],
 		},
 		{
-			name : "一期音愛 カーリー / ♪さようなら また会うかもね さようなら",
+			name : "一期音愛 カーリー/♪さようなら また会うかもね さようなら",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-047a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109970,7 +109970,7 @@
 			],
 		},
 		{
-			name : "ゲキシャ・写・メッチ / 「おいらの激写は機関銃だッピ！」",
+			name : "ゲキシャ・写・メッチ/「おいらの激写は機関銃だッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-048a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -109998,7 +109998,7 @@
 			],
 		},
 		{
-			name : "ア:メナカア / 堕墓邪暗",
+			name : "ア:メナカア/堕墓邪暗",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-049a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110027,7 +110027,7 @@
 			],
 		},
 		{
-			name : "孤迫の超人 / 旋回する鞍馬",
+			name : "孤迫の超人/旋回する鞍馬",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-050a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110056,7 +110056,7 @@
 			],
 		},
 		{
-			name : "モッチ・網・パラッチ / 「これが最後の輝きだッピ！」",
+			name : "モッチ・網・パラッチ/「これが最後の輝きだッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-051a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110139,7 +110139,7 @@
 			],
 		},
 		{
-			name : "イシカワ・ハンドシーカー / ♪聞くだけで 才能バレる このチューン",
+			name : "イシカワ・ハンドシーカー/♪聞くだけで 才能バレる このチューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-056a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110249,7 +110249,7 @@
 			],
 		},
 		{
-			name : "俳速 ザ・ハイク / ♪突進者 英語でいえば それチャージャー",
+			name : "俳速 ザ・ハイク/♪突進者 英語でいえば それチャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-063a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110455,7 +110455,7 @@
 			],
 		},
 		{
-			name : "ブルー・インパルス / 「真実を見極めよ、ジョニー！」",
+			name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-003a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110467,7 +110467,7 @@
 					power : 12000,
 					cost : 10,
 					sp : [
-						"對手回合結束時，如果對手生物比我方多4隻以上、且場上沒有我方的《(N)ブルー・インパルス<=>ブルー・インパルス / 「真実を見極めよ、ジョニー！」(/N)》的話，則你可以不支付費用召喚此生物。",
+						"對手回合結束時，如果對手生物比我方多4隻以上、且場上沒有我方的《(N)ブルー・インパルス<=>ブルー・インパルス/「真実を見極めよ、ジョニー！」(/N)》的話，則你可以不支付費用召喚此生物。",
 						"(K)T・ブレイカー(/K)",
 						"(K)スマッシュ・バースト(/K)",
 					],
@@ -110484,7 +110484,7 @@
 			],
 		},
 		{
-			name : "衒影の精霊 リアリテル / 「この記憶もロック完了だね」",
+			name : "衒影の精霊 リアリテル/「この記憶もロック完了だね」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110512,7 +110512,7 @@
 			],
 		},
 		{
-			name : "衒影の悪魔龍 トゥルトゥル / 封じられた真言",
+			name : "衒影の悪魔龍 トゥルトゥル/封じられた真言",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110555,7 +110555,7 @@
 			],
 		},
 		{
-			name : "聖闘の精霊龍 セイント・カイザー / ライブラ・シールド",
+			name : "聖闘の精霊龍 セイント・カイザー/ライブラ・シールド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-020a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110599,7 +110599,7 @@
 			],
 		},
 		{
-			name : "魔刻の斬将オルゼキア / 訪れる魔の時刻",
+			name : "魔刻の斬将オルゼキア/訪れる魔の時刻",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-035a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110626,7 +110626,7 @@
 			],
 		},
 		{
-			name : "ルソー・モンテス / 法と契約の秤",
+			name : "ルソー・モンテス/法と契約の秤",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-036a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110733,7 +110733,7 @@
 			],
 		},
 		{
-			name : "ボルザード・スーパーヒーロー / 超帝王タイム",
+			name : "ボルザード・スーパーヒーロー/超帝王タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-003a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110845,7 +110845,7 @@
 			],
 		},
 		{
-			name : "摩破目 ナトゥーラ・トプス / ストンピング・ウィード",
+			name : "摩破目 ナトゥーラ・トプス/ストンピング・ウィード",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-050a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -110951,7 +110951,7 @@
 			],
 		},
 		{
-			name : "暴命天 バラギアラ / ガイアの目覚め",
+			name : "暴命天 バラギアラ/ガイアの目覚め",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-026a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111080,7 +111080,7 @@
 			],
 		},
 		{
-			name : "アカシック・B / 「バブルの泡に溺れるのヨ！」",
+			name : "アカシック・B/「バブルの泡に溺れるのヨ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-003a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111107,7 +111107,7 @@
 			],
 		},
 		{
-			name : "クック・ポロッチ＆ドラッケン / スクランブル・チャージャー",
+			name : "クック・ポロッチ＆ドラッケン/スクランブル・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111135,7 +111135,7 @@
 			],
 		},
 		{
-			name : "アカシック・A / 「アサルト！やっちまいな！」",
+			name : "アカシック・A/「アサルト！やっちまいな！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-005a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111162,7 +111162,7 @@
 			],
 		},
 		{
-			name : "アカシック・C / 「叩き潰すのよ、クラッシュ！」",
+			name : "アカシック・C/「叩き潰すのよ、クラッシュ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-006a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111190,7 +111190,7 @@
 			],
 		},
 		{
-			name : "第六戦街 ラヴ・ガトラー / 漆黒の裏六戦街",
+			name : "第六戦街 ラヴ・ガトラー/漆黒の裏六戦街",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-020a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111219,7 +111219,7 @@
 			],
 		},
 		{
-			name : "エイトビートルズ / R.C.4.",
+			name : "エイトビートルズ/R.C.4.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-030a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111247,7 +111247,7 @@
 			],
 		},
 		{
-			name : "ファビュラ・スネイル / ゴルチョップ・トラップ",
+			name : "ファビュラ・スネイル/ゴルチョップ・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-033a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111274,7 +111274,7 @@
 			],
 		},
 		{
-			name : "カワモリデン / リーフストーム・トラップ",
+			name : "カワモリデン/リーフストーム・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-034a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111302,7 +111302,7 @@
 			],
 		},
 		{
-			name : "ブルックス・ザ・シルバー / ザババン・ライト",
+			name : "ブルックス・ザ・シルバー/ザババン・ライト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-035a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111329,7 +111329,7 @@
 			],
 		},
 		{
-			name : "K・アトラン＆キング海賊団 / アイアイサー・チャージャー",
+			name : "K・アトラン＆キング海賊団/アイアイサー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-007a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111358,7 +111358,7 @@
 			],
 		},
 		{
-			name : "雪精 サエポヨ＆ユキぴょん / ハンマー・チャージャー",
+			name : "雪精 サエポヨ＆ユキぴょん/ハンマー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-008a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111400,7 +111400,7 @@
 			],
 		},
 		{
-			name : "ドンド・ラフーイ / ネオン・ジオング",
+			name : "ドンド・ラフーイ/ネオン・ジオング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-047a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111647,7 +111647,7 @@
 			],
 		},
 		{
-			name : "邪騎 スベルニル / 「我が愛馬よ!!」",
+			name : "邪騎 スベルニル/「我が愛馬よ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-S10a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111723,7 +111723,7 @@
 			],
 		},
 		{
-			name : "水晶の祈り / クリスタル・ドゥーム",
+			name : "水晶の祈り/クリスタル・ドゥーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-004a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111816,7 +111816,7 @@
 			],
 		},
 		{
-			name : "懐疑の虎狼 ミラーズホロウ / 「汝は偽名なりや？」",
+			name : "懐疑の虎狼 ミラーズホロウ/「汝は偽名なりや？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-T03a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111889,7 +111889,7 @@
 			],
 		},
 		{
-			name : "神判のカルマ コットン / ジャッジ・水晶チャージャー",
+			name : "神判のカルマ コットン/ジャッジ・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-012a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111944,7 +111944,7 @@
 			],
 		},
 		{
-			name : "救済のカルマ ミルク / リリーフ・水晶チャージャー",
+			name : "救済のカルマ ミルク/リリーフ・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-015a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -111998,7 +111998,7 @@
 			],
 		},
 		{
-			name : "禁術のカルマ カレイル / フォビッド・水晶チャージャー",
+			name : "禁術のカルマ カレイル/フォビッド・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-018a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -112053,7 +112053,7 @@
 			],
 		},
 		{
-			name : "連射のカルマ ユキメ / ショット・水晶チャージャー",
+			name : "連射のカルマ ユキメ/ショット・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-021a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -112109,7 +112109,7 @@
 			],
 		},
 		{
-			name : "清浄のカルマ インカ / オキヨメ・水晶チャージャー",
+			name : "清浄のカルマ インカ/オキヨメ・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-024a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -112293,7 +112293,7 @@
 			],
 		},
 		{
-			name : "戦攻のシダン アカダシ / 「いいダシがとれそうだ」",
+			name : "戦攻のシダン アカダシ/「いいダシがとれそうだ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-035a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -112627,7 +112627,7 @@
 			],
 		},
 		{
-			name : "埋没のシダン オリーブオイル / 記憶喪失魔法 アブラカタブーラ",
+			name : "埋没のシダン オリーブオイル/記憶喪失魔法 アブラカタブーラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-058a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -112852,7 +112852,7 @@
 			],
 		},
 		{
-			name : "邪鎧 デ=アムド / 「我が力となれ!!」",
+			name : "邪鎧 デ=アムド/「我が力となれ!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-074a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -116544,7 +116544,7 @@
 			],
 		},
 		{
-			name : "カシス・グレープ / ♥トキメク思いがグレイドをあげ～る",
+			name : "カシス・グレープ/♥トキメク思いがグレイドをあげ～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-017a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -116849,7 +116849,7 @@
 			],
 		},
 		{
-			name : "カシス・パイン / ♥あたしのスパークがメロメロにさせ～る",
+			name : "カシス・パイン/♥あたしのスパークがメロメロにさせ～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-036a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -117083,7 +117083,7 @@
 			],
 		},
 		{
-			name : "完璧妖精ビスカX / 「燃え燃えズッキュン！」",
+			name : "完璧妖精ビスカX/「燃え燃えズッキュン！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-061a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -117165,7 +117165,7 @@
 			],
 		},
 		{
-			name : "完璧妖精オチャッピィX / 「ちょこっトラップ！」",
+			name : "完璧妖精オチャッピィX/「ちょこっトラップ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-081a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -117266,7 +117266,7 @@
 			],
 		},
 		{
-			name : "ネフェルカーネン / タイム・ストップン",
+			name : "ネフェルカーネン/タイム・ストップン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd2-013a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -118948,7 +118948,7 @@
 			],
 		},
 		{
-			name : "呪烏竜 ACE-Curase / 繁栄の鏡",
+			name : "呪烏竜 ACE-Curase/繁栄の鏡",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-022a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119231,7 +119231,7 @@
 			],
 		},
 		{
-			name : "凶骨の邪将クエイクス / クエイクス・ハンド",
+			name : "凶骨の邪将クエイクス/クエイクス・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-047a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119369,7 +119369,7 @@
 			],
 		},
 		{
-			name : "爆竜兵ドラグストライク / 天使と悪魔の憤怒",
+			name : "爆竜兵ドラグストライク/天使と悪魔の憤怒",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-060a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119423,7 +119423,7 @@
 			],
 		},
 		{
-			name : "神門の精霊エールフリート / ホーリー・スパーク壱式",
+			name : "神門の精霊エールフリート/ホーリー・スパーク壱式",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-063a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119453,7 +119453,7 @@
 			],
 		},
 		{
-			name : "混沌の獅子デスライガー / カオス・チャージャー",
+			name : "混沌の獅子デスライガー/カオス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-066a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119512,7 +119512,7 @@
 			],
 		},
 		{
-			name : "タイムピョンチキ / オラオラ・ジョーカーズ",
+			name : "タイムピョンチキ/オラオラ・ジョーカーズ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-071a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119541,7 +119541,7 @@
 			],
 		},
 		{
-			name : "記憶の炎 ボルメテウス・エナジー / 魂と怒りの盾",
+			name : "記憶の炎 ボルメテウス・エナジー/魂と怒りの盾",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-072a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119597,7 +119597,7 @@
 			],
 		},
 		{
-			name : "襲撃者ディス・ドライブ / パンドラ・タイム",
+			name : "襲撃者ディス・ドライブ/パンドラ・タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-076a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119672,7 +119672,7 @@
 			],
 		},
 		{
-			name : "消火機装コントロール・ファイア / パンドラ・チャージャー",
+			name : "消火機装コントロール・ファイア/パンドラ・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-085a.jpg",
 			mana : 1,
 			mType : 'T',
@@ -119772,7 +119772,7 @@
 			],
 		},
 		{
-			name : "蒼狼の豊穣 ワクムテラス / オリジナル・ライフ",
+			name : "蒼狼の豊穣 ワクムテラス/オリジナル・ライフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-096a.jpg",
 			mana : 1,
 			mType : 'T',

@@ -351,7 +351,13 @@
 		//如果有動態匯入牌組的話，則開始解析
 		var importDeckList = getParameter("import");
 		if ( importDeckList != null ){
-			parseDeckString( decodeURIComponent( importDeckList ).replace( /:/g, "*" ).replace( /,/g, "\n" ), true );
+			//如果符合ガチまとめ的牌組ID格式的話，就去抓資料
+			if ( importDeckList.match( /^\w{8}\-\w{4}-\w{4}-\w{4}-\w{12}$/ ) != null ){
+				parseGachiMatome( importDeckList );
+			//不是的話就當作文字進行匯入
+			} else {
+				parseDeckString( decodeURIComponent( importDeckList ).replace( /:/g, "*" ).replace( /,/g, "\n" ), true );
+			}
 		}
 		
 		//更新日誌按鍵

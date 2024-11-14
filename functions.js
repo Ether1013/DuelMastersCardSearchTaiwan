@@ -4194,6 +4194,106 @@
 		return tmp 
 	} 
 	
+	//自ガチまとめ匯入牌組(UI)
+	function importGachi(){
+		var deckId = prompt("請輸入ガチまとめ的牌組網址").match( /\w{8}\-\w{4}-\w{4}-\w{4}-\w{12}/ )[0];
+		if ( deckId == null || deckId == "" ){
+			alert( "格式不符，請聯絡系統管理員" );
+		} else {
+			parseGachiMatome( deckId );
+		}
+	}
+	
+	//自ガチまとめ匯入牌組(CORE)
+	function parseGachiMatome( deckId ){
+		
+		const deckRecipeInfo = new DeckRecipeInfo(2, deckId, null);
+		Promise.all([deckRecipeInfo.updateDeckDetail()]).then((results => {
+			//卡牌ID/卡名
+			var cards = [];
+			//卡牌張數
+			var counts = [];
+			var datas = [ deckRecipeInfo.deckCardData.main, deckRecipeInfo.deckCardData.hyper_spatial_cards, deckRecipeInfo.deckCardData.gr ];
+			for ( var t = 0 ; t < datas.length ; t++ ){
+				for ( i = 0 ; i < datas[t].length ; i++ ){
+					var mcid = (datas[t])[i].main_card_id;
+					var index = cards.indexOf( mcid );
+					if ( index == -1 ){
+						cards.push( mcid );
+						counts.push( 1 );
+					} else {
+						counts[index]++;
+					}
+				}
+			}
+//			console.log( "https://d23r8jlqp3e2gc.cloudfront.net/api/v1/dm/cards?main-card-ids="+cards.join(",") );
+			fetch( "https://d23r8jlqp3e2gc.cloudfront.net/api/v1/dm/cards?main-card-ids="+cards.join(",") )
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			}).then(cardData => {
+				for ( var i = 0 ; i < cardData.length ; i++ ){
+					//如果有多張圖的話表示是雙面卡
+					if ( cardData[i].image_paths.length > 1 ){
+						var names = cardData[i].name.split("/");
+						var frontName = names[0];
+						var backName = names[1];
+						cards[i] = frontName;
+						var _i = cards.indexOf( backName );
+						if ( _i == -1 ){
+							cards.push( backName );
+							counts.push( counts[i] );
+						} else {
+							counts[_i] = Math.min( counts[_i], counts[i] );
+						}
+					} else {
+						cards[i] = cardData[i].name;
+					}
+				}
+				//如果有大禁斷的話，增加卡牌與張數
+				if ( deckRecipeInfo.deckCardData.dorumagedon ){
+					cards.push("FORBIDDEN STAR ～世界最後の日～");
+					counts.push(1);
+					cards.push("終焉の禁断 ドルマゲドンX");
+					counts.push(1);
+				}
+				//如果有零龍的話，增加卡牌與張數
+				if ( deckRecipeInfo.deckCardData.zeron ){
+					cards.push("滅亡の起源 零無");
+					counts.push(1);
+					cards.push("墓地の儀");
+					counts.push(1);
+					cards.push("復活の儀");
+					counts.push(1);
+					cards.push("手札の儀");
+					counts.push(1);
+					cards.push("破壊の儀");
+					counts.push(1);
+					cards.push("零龍");
+					counts.push(1);
+				}
+				var importStr = "";
+				for ( var i = 0 ; i < cards.length ; i++ ){
+					importStr += ( i == 0 ? "" : "\n" ) + counts[i] + "*" + cards[i];
+				}
+//				console.log(importStr);
+				try {
+					parseDeckString( importStr, true );
+				} catch( e ){
+					alert("失敗了，請再試一次"+e);
+				}
+			}).catch(error => {
+				console.error('Error:', error);
+			});
+			
+		})).catch(e => {
+			console.error('NG!!!', e);
+			window.alert('匯入時發生錯誤，或是此牌組尚未公開');
+		});
+	}
+	
 	/**外部連結用工具
 	 * Param:
 	 * qUrl : 外部URL

@@ -16982,7 +16982,7 @@
 	var isDeck = true;
 	var setCardList = [
 		{
-			name : "強襲竜 ボルシャック・レイダー / レイド・エントリー",
+			name : "強襲竜 ボルシャック・レイダー/レイド・エントリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-001a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -17036,7 +17036,7 @@
 		},
 
 		{
-			name : "ボルシャック・ヒート・ドラゴン / ヒートブレス・チャージャー",
+			name : "ボルシャック・ヒート・ドラゴン/ヒートブレス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-007a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -17080,7 +17080,7 @@
 		},
 
 		{
-			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
+			name : "ファイン・撃・ピヨッチ/「暴竜爵は不滅なり！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd1-012a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -18250,7 +18250,7 @@
 	var isDeck = true;
 	var setCardList = [
 		{
-			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
+			name : "ボルシャック・NEX（ネックス）/スーパー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmart02-004a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -18939,14 +18939,14 @@
 			id : ["22RP2 T1/T20","22RP2 TF1/TF20"],
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-T2a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-TF2a.jpg"],
 			rarity : ["",""],
 			flavor : [ "","" ],
 			id : ["22RP2 T2/T20","22RP2 TF2/TF20"],
 		},
 		{
-			name : "ラ・ズーネヨマ・パンツァー / 逆転のオーロラ",
+			name : "ラ・ズーネヨマ・パンツァー/逆転のオーロラ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-T3a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-TF3a.jpg"],
 			rarity : ["",""],
 			flavor : [ "","" ],
@@ -19037,7 +19037,7 @@
 			id : ["22RP2 T15/T20","22RP2 TF15/TF20"],
 		},
 		{
-			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
+			name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-T16a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-TF16a.jpg"],
 			rarity : ["C","C"],
 			flavor : [ "","" ],
@@ -19156,7 +19156,7 @@
 			id : "22RP2 SP1/SP5",
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴聖",
+			name : "天地命動 バラギアラ/輪廻暴聖",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp2-SP2a.jpg",
 			rarity : "MHZ",
 			flavor : [ "" ],
@@ -19219,7 +19219,7 @@
 			id : ["23RP1 S2/S8","23RP1 4B/22","23RP1 2A/20"],
 		},
 		{
-			name : "der'Zen Mondo / ♪必殺で つわものどもが 夢の跡",
+			name : "der'Zen Mondo/♪必殺で つわものどもが 夢の跡",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-S3a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-5Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-3Aa.jpg"],
 			rarity : ["SR","SR","SR"],
 			flavor : [ "◆解説◆必殺技は使えば勝ちます。","","" ],
@@ -19268,7 +19268,7 @@
 			id : "23RP1 1/74",
 		},
 		{
-			name : "D-Jealousy-灰撫 / ♪五本まで 集めて林 森ジャングル",
+			name : "D-Jealousy-灰撫/♪五本まで 集めて林 森ジャングル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-002a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -19296,7 +19296,7 @@
 			id : "23RP1 5/74",
 		},
 		{
-			name : "輝跡！シャイニングロード・マンティス / 輝跡の大地",
+			name : "輝跡！シャイニングロード・マンティス/輝跡の大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-006a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -19317,7 +19317,7 @@
 			id : ["23RP1 8/74","23RP1 13B/22","23RP1 11A/20"],
 		},
 		{
-			name : "ゴルパガーニ-A7 / ダウンフォース・サーキュラー",
+			name : "ゴルパガーニ-A7/ダウンフォース・サーキュラー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-009a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -19345,7 +19345,7 @@
 			id : "23RP1 12/74",
 		},
 		{
-			name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",
+			name : "ボン・キゴマイム/♪やせ蛙 ラッキーナンバー ここにあり",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-013a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -19373,7 +19373,7 @@
 			id : "23RP1 16/74",
 		},
 		{
-			name : "イード＝ミード / 「奈落を見たいか？」",
+			name : "イード＝ミード/「奈落を見たいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-017a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -19394,7 +19394,7 @@
 			id : "23RP1 19/74",
 		},
 		{
-			name : "ボルザード・スラッシャー / 「愛ゆえに斬る!!」",
+			name : "ボルザード・スラッシャー/「愛ゆえに斬る!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-020a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -19415,7 +19415,7 @@
 			id : "23RP1 22/74",
 		},
 		{
-			name : "氷打の妖精 / 巨打設計図",
+			name : "氷打の妖精/巨打設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-023a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -19443,7 +19443,7 @@
 			id : "23RP1 26/74",
 		},
 		{
-			name : "星姫械 マリハダル / レプリカ・オークション",
+			name : "星姫械 マリハダル/レプリカ・オークション",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-027a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -19478,7 +19478,7 @@
 			id : "23RP1 31/74",
 		},
 		{
-			name : "マジック・A・セミプーロ / ♪閑かさや とにかくブレイン 蝉ミンミン",
+			name : "マジック・A・セミプーロ/♪閑かさや とにかくブレイン 蝉ミンミン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-032a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -19513,7 +19513,7 @@
 			id : "23RP1 36/74",
 		},
 		{
-			name : "ステッキ＝ステーシー / 「素敵だろう？」",
+			name : "ステッキ＝ステーシー/「素敵だろう？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-037a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -19548,7 +19548,7 @@
 			id : "23RP1 41/74",
 		},
 		{
-			name : "レーホウ・衛・デカッチ / 「暴竜爵様のお出ましだッチ！」",
+			name : "レーホウ・衛・デカッチ/「暴竜爵様のお出ましだッチ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-042a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -19583,7 +19583,7 @@
 			id : "23RP1 46/74",
 		},
 		{
-			name : "十柱の超人 / 直撃の極意",
+			name : "十柱の超人/直撃の極意",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-047a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -19611,7 +19611,7 @@
 			id : ["23RP1 50/74","23RP1 19B/22",""],
 		},
 		{
-			name : "星姫械 アイリプス / アイリス・アンブレラ",
+			name : "星姫械 アイリプス/アイリス・アンブレラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-051a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -19646,7 +19646,7 @@
 			id : "23RP1 55/74",
 		},
 		{
-			name : "サダイエ・ホンカドリーマー / ♪古池や ワンスアゲイン スパイラル",
+			name : "サダイエ・ホンカドリーマー/♪古池や ワンスアゲイン スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-056a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -19674,7 +19674,7 @@
 			id : "23RP1 59/74",
 		},
 		{
-			name : "ワイグラス＝ワグラス / 「宴を始めよう」",
+			name : "ワイグラス＝ワグラス/「宴を始めよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-060a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -19709,7 +19709,7 @@
 			id : "23RP1 64/74",
 		},
 		{
-			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
+			name : "ファイン・撃・ピヨッチ/「暴竜爵は不滅なり！」",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-065a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-21Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-19Aa.jpg"],
 			rarity : ["C","C","C"],
 			flavor : [ "","","" ],
@@ -19744,7 +19744,7 @@
 			id : "23RP1 69/74",
 		},
 		{
-			name : "配球の超人 / 記録的剛球",
+			name : "配球の超人/記録的剛球",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-070a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -19828,7 +19828,7 @@
 			id : ["23RP1 TF7/TF10","23RP1 T7/T10"],
 		},
 		{
-			name : "超七極 Gio / 巨大設計図",
+			name : "超七極 Gio/巨大設計図",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-TF8a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp1-T8a.jpg"],
 			rarity : ["U","U"],
 			flavor : [ "","" ],
@@ -20256,7 +20256,7 @@
 			id : "PROMOY22 P3/Y22",
 		},
 		{
-			name : "マジック・A・セミプーロ / ♪閑かさや とにかくブレイン 蝉ミンミン",
+			name : "マジック・A・セミプーロ/♪閑かさや とにかくブレイン 蝉ミンミン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-004a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -40588,7 +40588,7 @@
 			id : "EX12 S7/S20",
 		},
 		{
-			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			name : "龍装艦 チェンジザ/六奇怪の四 ～土を割る逆瀧～",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s08a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -40609,7 +40609,7 @@
 			id : "EX12 S10/S20",
 		},
 		{
-			name : "龍装鬼 オブザ08号 / 終焉の開闢",
+			name : "龍装鬼 オブザ08号/終焉の開闢",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s11a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -40630,7 +40630,7 @@
 			id : "EX12 S13/S20",
 		},
 		{
-			name : "ゴリガン砕車 ゴルドーザ / ダイナマウス・スクラッパー",
+			name : "ゴリガン砕車 ゴルドーザ/ダイナマウス・スクラッパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-s14a.jpg",
 			rarity : "SR",
 			flavor : [ "當邪惡的(R)龍<=>ドラゴン(/R)從龍頭星雲的方向前來之時，火文明真正的(N)轟炸龍<=>爆龍皇 ダイナボルト(/N)爆誕了！" ],
@@ -40777,7 +40777,7 @@
 			id : "EX12 11/110",
 		},
 		{
-			name : "黒豆だんしゃく / 白米男しゃく",
+			name : "黒豆だんしゃく/白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-012a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -40875,7 +40875,7 @@
 			id : "EX12 25/110",
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-026a.jpg",
 			rarity : "R",
 			flavor : [ "不承認由DG計畫以外所生出的(R)龍<=>ドラゴン(/R)！" ],
@@ -40959,7 +40959,7 @@
 			id : "EX12 37/110",
 		},
 		{
-			name : "スニーク戦車 オーリー / トゲ玉・キャノンボール",
+			name : "スニーク戦車 オーリー/トゲ玉・キャノンボール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-038a.jpg",
 			rarity : "R",
 			flavor : [ "我們(R)ビートジョッキー(/R)也有(N)龍<=>爆龍皇 ダイナボルト(/N)降臨囉！" ],
@@ -40980,7 +40980,7 @@
 			id : "EX12 40/110",
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-041a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -41046,7 +41046,7 @@
 			name : "パーロック・スマイリーストーリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-050.jpg",
 			rarity : "R",
-			flavor : [ "成為了(R)オラクリオン(/R)的(N)パーロック<=>神聖祈 パーロック(/N)は、終於在冒險的終點找到了幸福之地。他為了未來將會嚮往幸福之地的(N)兒子<=>パーロックJr. / 新たなる旅立ち(/N)、而將至今的冒險寫成微笑的故事、並命名為「(N)Smiley Story<=>パーロック・スマイリーストーリー(/N)」。" ],
+			flavor : [ "成為了(R)オラクリオン(/R)的(N)パーロック<=>神聖祈 パーロック(/N)は、終於在冒險的終點找到了幸福之地。他為了未來將會嚮往幸福之地的(N)兒子<=>パーロックJr./新たなる旅立ち(/N)、而將至今的冒險寫成微笑的故事、並命名為「(N)Smiley Story<=>パーロック・スマイリーストーリー(/N)」。" ],
 			id : "EX12 50/110",
 		},
 		{
@@ -41057,7 +41057,7 @@
 			id : "EX12 51/110",
 		},
 		{
-			name : "透明妖精リリン / 妖精のプレリュード",
+			name : "透明妖精リリン/妖精のプレリュード",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-052a.jpg",
 			rarity : "U",
 			flavor : [ "(N)「呪」<=>「呪」の頂 サスペンス(/N)的神之力是不滅的呦！" ],
@@ -41071,7 +41071,7 @@
 			id : "EX12 53/110",
 		},
 		{
-			name : "綺羅王女プリン / ハンター☆エイリアン仲良しビーム",
+			name : "綺羅王女プリン/ハンター☆エイリアン仲良しビーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-054a.jpg",
 			rarity : "U",
 			flavor : [ " " ],
@@ -41095,25 +41095,25 @@
 			name : "ペイント・フラッペ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-057.jpg",
 			rarity : "U",
-			flavor : [ "「(N)C<=>カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る(/N)」的傳說演唱會，在(N)ライベルモット・ビターズ<=>海姫龍 ライベルモット・ビターズ(/N)降臨的時候迎來最高潮！接著，(N)ライベルモット・ビターズ<=>海姫龍 ライベルモット・ビターズ(/N)藉著自己的歌「海浪的記憶」告知了下次「CC」的演唱會會場。兩人的傳說將永不止息！" ],
+			flavor : [ "「(N)C<=>カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ/♥あたしたちがみんなに元気を届け～る(/N)」的傳說演唱會，在(N)ライベルモット・ビターズ<=>海姫龍 ライベルモット・ビターズ(/N)降臨的時候迎來最高潮！接著，(N)ライベルモット・ビターズ<=>海姫龍 ライベルモット・ビターズ(/N)藉著自己的歌「海浪的記憶」告知了下次「CC」的演唱會會場。兩人的傳說將永不止息！" ],
 			id : "EX12 57/110",
 		},
 		{
 			name : "マリブ・リッキー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-058.jpg",
 			rarity : "U",
-			flavor : [ "身為眾多偶像製作人的我非常了解、(N)カシス・オレンジ<=>カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る(/N)跟(N)カシス・ソーダ<=>カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る(/N)的兩人組「CC」是千年一遇的偶像！－(N)マリブ・リッキー(/N)" ],
+			flavor : [ "身為眾多偶像製作人的我非常了解、(N)カシス・オレンジ<=>カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る(/N)跟(N)カシス・ソーダ<=>カシス・ソーダ/♥あたしたちがみんなに元気を届け～る(/N)的兩人組「CC」是千年一遇的偶像！－(N)マリブ・リッキー(/N)" ],
 			id : "EX12 58/110",
 		},
 		{
-			name : "パーロックJr. / 新たなる旅立ち",
+			name : "パーロックJr./新たなる旅立ち",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-059a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "EX12 59/110",
 		},
 		{
-			name : "カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る",
+			name : "カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-060a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -41169,14 +41169,14 @@
 			id : "EX12 67/110",
 		},
 		{
-			name : "レレディ・バ・グーバ / ツインパクト・マップ",
+			name : "レレディ・バ・グーバ/ツインパクト・マップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-068a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "EX12 68/110",
 		},
 		{
-			name : "コンダマ / 魂フエミドロ",
+			name : "コンダマ/魂フエミドロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-069a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -41193,7 +41193,7 @@
 			name : "妖精のイザナイ オーロラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-071.jpg",
 			rarity : "U",
-			flavor : [ "捨棄了「サトリ」的位階、將(R)オラクル(/R)的信仰推廣到雪山的(N)リリン<=>透明妖精リリン / 妖精のプレリュード(/N)現在在做甚麼呢？……。－(N)妖精のイザナイ オーロラ(/N)" ],
+			flavor : [ "捨棄了「サトリ」的位階、將(R)オラクル(/R)的信仰推廣到雪山的(N)リリン<=>透明妖精リリン/妖精のプレリュード(/N)現在在做甚麼呢？……。－(N)妖精のイザナイ オーロラ(/N)" ],
 			id : "EX12 71/110",
 		},
 		{
@@ -41267,7 +41267,7 @@
 			id : "EX12 81/110",
 		},
 		{
-			name : "ソプラノ裁徒 / メロディアス・メロディ",
+			name : "ソプラノ裁徒/メロディアス・メロディ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-082a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -41298,7 +41298,7 @@
 			name : "電磁麗姫ジェリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-086.jpg",
 			rarity : "C",
-			flavor : [ "「(N)C<=>カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る(/N)」的演唱會裡，用兩手擺出的「C」字圍成一個心形是定番的記號。" ],
+			flavor : [ "「(N)C<=>カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ/♥あたしたちがみんなに元気を届け～る(/N)」的演唱會裡，用兩手擺出的「C」字圍成一個心形是定番的記號。" ],
 			id : "EX12 86/110",
 		},
 		{
@@ -41312,18 +41312,18 @@
 			name : "ロイヤル・アドニス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-088.jpg",
 			rarity : "C",
-			flavor : [ "(R)スプラッシュ・クィーン(/R)的榮耀－兩人組的歌姬「(N)C<=>カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る(/N)」的傳說演唱會，其會場變成了(T)D2フィールド(/T)。也就是(N)デュエット＆ディーヴァフィールド<=>Dの劇場 テンダネス・エスセーキ(/N)。" ],
+			flavor : [ "(R)スプラッシュ・クィーン(/R)的榮耀－兩人組的歌姬「(N)C<=>カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ/♥あたしたちがみんなに元気を届け～る(/N)」的傳說演唱會，其會場變成了(T)D2フィールド(/T)。也就是(N)デュエット＆ディーヴァフィールド<=>Dの劇場 テンダネス・エスセーキ(/N)。" ],
 			id : "EX12 88/110",
 		},
 		{
 			name : "海賊の祈祷師 レディ・パーロック",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-089.jpg",
 			rarity : "C",
-			flavor : [ "我一直都做好這天到來的覺悟。(N)我們的兒子<=>パーロックJr. / 新たなる旅立ち(/N)終究是跟(N)你<=>神聖祈 パーロック(/N)一樣、踏上為了追求夢、冒險、以及玩心而旅行的日子。每天晚上，我都會將我跟你的冒險之旅－「(N)微笑的故事、Smiley Story微笑みの物語、スマイリーストーリー<=>パーロック・スマイリーストーリー(/N)」講給那孩子聽。這故事一定會給他幫助的。我相信那孩子這次將會與他的同伴們一起看著同樣的景色而微笑。－(N)海賊の祈祷師 レディ・パーロック(/N)" ],
+			flavor : [ "我一直都做好這天到來的覺悟。(N)我們的兒子<=>パーロックJr./新たなる旅立ち(/N)終究是跟(N)你<=>神聖祈 パーロック(/N)一樣、踏上為了追求夢、冒險、以及玩心而旅行的日子。每天晚上，我都會將我跟你的冒險之旅－「(N)微笑的故事、Smiley Story微笑みの物語、スマイリーストーリー<=>パーロック・スマイリーストーリー(/N)」講給那孩子聽。這故事一定會給他幫助的。我相信那孩子這次將會與他的同伴們一起看著同樣的景色而微笑。－(N)海賊の祈祷師 レディ・パーロック(/N)" ],
 			id : "EX12 89/110",
 		},
 		{
-			name : "カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る",
+			name : "カシス・ソーダ/♥あたしたちがみんなに元気を届け～る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-090a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -41333,7 +41333,7 @@
 			name : "コスモ・ポリタン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-091.jpg",
 			rarity : "C",
-			flavor : [ "「(N)C<=>カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る(/N)」的最新曲「Ｃ的奇蹟」是她們與粉絲交流感謝所唱的一曲。" ],
+			flavor : [ "「(N)C<=>カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ/♥あたしたちがみんなに元気を届け～る(/N)」的最新曲「Ｃ的奇蹟」是她們與粉絲交流感謝所唱的一曲。" ],
 			id : "EX12 91/110",
 		},
 		{
@@ -41400,7 +41400,7 @@
 			id : "EX12 100/110",
 		},
 		{
-			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
+			name : "イチゴッチ・タンク/レッツ・ゴイチゴ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-101a.jpg",
 			rarity : "C",
 			flavor : [ "聽說(R)龍<=>ドラゴン(/R)有崩壞世界平衡的力量……。" ],
@@ -41459,7 +41459,7 @@
 			name : "腐敗麗姫ベラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex12-109.jpg",
 			rarity : "C",
-			flavor : [ "「(N)C<=>カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る(/N)」的傳說演唱會、據說是辦在全部都是VIP座的(N)テンダネス・エスセーキ<=>Dの劇場 テンダネス・エスセーキ(/N)！－(N)腐敗麗姫ベラ(/N)" ],
+			flavor : [ "「(N)C<=>カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る(/N)(N)C<=>カシス・ソーダ/♥あたしたちがみんなに元気を届け～る(/N)」的傳說演唱會、據說是辦在全部都是VIP座的(N)テンダネス・エスセーキ<=>Dの劇場 テンダネス・エスセーキ(/N)！－(N)腐敗麗姫ベラ(/N)" ],
 			id : "EX12 109/110",
 		},
 		{
@@ -41557,7 +41557,7 @@
 			name : "ドンドン吸い込むナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-016.jpg",
 			rarity : "R",
-			flavor : [ "(R)ハンター(/R)與(R)エイリアン(/R)的聯合軍與(R)アンノウン(/R)的激戰中、希望的雙子－(N)鬼丸<=>最終決戦だ！鬼丸ボーイ / 超次元オニシュラ・ホール(/N)與(N)修羅丸<=>真実の名 修羅丸(/N)也準備戰鬥。但是守護者們在留下希望之後、被吸入了超次元之穴裡。" ],
+			flavor : [ "(R)ハンター(/R)與(R)エイリアン(/R)的聯合軍與(R)アンノウン(/R)的激戰中、希望的雙子－(N)鬼丸<=>最終決戦だ！鬼丸ボーイ/超次元オニシュラ・ホール(/N)與(N)修羅丸<=>真実の名 修羅丸(/N)也準備戰鬥。但是守護者們在留下希望之後、被吸入了超次元之穴裡。" ],
 			id : "BD13 16/26",
 			count : 3,
 		},
@@ -41589,7 +41589,7 @@
 			name : "電脳鎧冑アナリス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-020.jpg",
 			rarity : "U",
-			flavor : [ "(N)シャーロック<=>偽りの名 シャーロック(/N)與(N)リュウセイ<=>勝利のリュウセイ・カイザー(/N)激戰時、(N)アクア・三兄弟<=>全員集合！アクア・三兄弟 / 超次元ジェイシーエイ・ホール(/N)與(N)鬼流院 刃<=>The 大親分 鬼流院 刃 /「アンノウンがナンボのモンじゃ！」(/N)也與(N)偽りの名 13(/N)進行激戰。身為「根絕的(R)アンノウン(/R)」的(N)13<=>偽りの名 13(/N)實在是太過強大，光是要打成平手就很勉強了。" ],
+			flavor : [ "(N)シャーロック<=>偽りの名 シャーロック(/N)與(N)リュウセイ<=>勝利のリュウセイ・カイザー(/N)激戰時、(N)アクア・三兄弟<=>全員集合！アクア・三兄弟/超次元ジェイシーエイ・ホール(/N)與(N)鬼流院 刃<=>The 大親分 鬼流院 刃 /「アンノウンがナンボのモンじゃ！」(/N)也與(N)偽りの名 13(/N)進行激戰。身為「根絕的(R)アンノウン(/R)」的(N)13<=>偽りの名 13(/N)實在是太過強大，光是要打成平手就很勉強了。" ],
 			id : "BD13 20/26",
 			count : 2,
 		},
@@ -41671,7 +41671,7 @@
 			count : 2,
 		},
 		{
-			name : "全員集合！アクア・三兄弟 / 超次元ジェイシーエイ・ホール",
+			name : "全員集合！アクア・三兄弟/超次元ジェイシーエイ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-012a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -41679,7 +41679,7 @@
 			count : 3,
 		},
 		{
-			name : "最終決戦だ！鬼丸ボーイ / 超次元オニシュラ・ホール",
+			name : "最終決戦だ！鬼丸ボーイ/超次元オニシュラ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd13-013a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -43025,7 +43025,7 @@
 			id : "EX13 10/84",
 		},
 		{
-			name : "水晶の記録 ゼノシャーク / クリスタル・メモリー",
+			name : "水晶の記録 ゼノシャーク/クリスタル・メモリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-011a.jpg",
 			rarity : "VR",
 			flavor : [ "(R)美孔麗王国(/R)的戲劇、在非公式紀錄裡，曾在WaveCari裡售出高價。" ],
@@ -43067,7 +43067,7 @@
 			id : "EX13 16/84",
 		},
 		{
-			name : "西南の超人 / 断断打つべしナウ",
+			name : "西南の超人/断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex13-017a.jpg",
 			rarity : "R",
 			flavor : [ "鎖鏈就是肌肉的延伸！訓練有素的(N)ゴリオ・ブゴリ<=>剛力羅王 ゴリオ・ブゴリ(/N)的鎖鏈、其硬度超越了鑽石！" ],
@@ -43648,7 +43648,7 @@
 			id : "22EX1 13/130",
 		},
 		{
-			name : "地龍仙ロマネアース / 仙なる大地",
+			name : "地龍仙ロマネアース/仙なる大地",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-014a.jpg",
 			rarity : "SR",
 			flavor : [ "在仙界、(N)ロマネスク<=>龍仙ロマネスク(/N)擁有五種持有五種文明的型態。必要的時候、他就會以其中一個身姿降臨於世。" ],
@@ -43704,7 +43704,7 @@
 			id : "22EX1 21/130",
 		},
 		{
-			name : "偽りの王 ナンバーナイン / 歓喜の歌",
+			name : "偽りの王 ナンバーナイン/歓喜の歌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-022a.jpg",
 			rarity : "VR",
 			flavor : [ "(R)キング・コマンド・ドラゴン(/R)的裝甲、是由來自(N)パンドラ<=>パンドラ城 デス・ファントム(/N)的技術所完成的。" ],
@@ -43760,7 +43760,7 @@
 			id : "22EX1 29/130",
 		},
 		{
-			name : "R.S.F.K. / オールイン・チャージャー",
+			name : "R.S.F.K./オールイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-030a.jpg",
 			rarity : "VR",
 			flavor : [ "玩家總是下全注。" ],
@@ -43781,10 +43781,10 @@
 			id : "22EX1 32/130",
 		},
 		{
-			name : "八頭竜 ACE-Yamata / 神秘の宝剣",
+			name : "八頭竜 ACE-Yamata/神秘の宝剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-033a.jpg",
 			rarity : "VR",
-			flavor : [ "(N)ACE-Yamata<=>八頭竜 ACE-Yamata / 神秘の宝剣(/N)所孕育的寶劍”(N)Kusanagi<=>八頭竜 ACE-Yamata / 神秘の宝剣(/N)”失去下落了。" ],
+			flavor : [ "(N)ACE-Yamata<=>八頭竜 ACE-Yamata/神秘の宝剣(/N)所孕育的寶劍”(N)Kusanagi<=>八頭竜 ACE-Yamata/神秘の宝剣(/N)”失去下落了。" ],
 			id : "22EX1 33/130",
 		},
 		{
@@ -43816,7 +43816,7 @@
 			id : "22EX1 37/130",
 		},
 		{
-			name : "アクア・スペルブルー / インビンシブル・オーラ",
+			name : "アクア・スペルブルー/インビンシブル・オーラ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-038a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -43851,21 +43851,21 @@
 			id : "22EX1 41/130",
 		},
 		{
-			name : "偽りの名 スネーク / アンノウン・プログラム",
+			name : "偽りの名 スネーク/アンノウン・プログラム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-042a.jpg",
 			rarity : "VR",
 			flavor : [ "「演偽的(R)アンノウン(/R)」(N)スネーク<=>偽りの名 スネーク(/N)的襲來、一如往常地照著計劃進行。" ],
 			id : "22EX1 42/130",
 		},
 		{
-			name : "「武」の頂 マキシマム・ザ・マックス / 極頂秘伝ゼニス・シンフォニー",
+			name : "「武」の頂 マキシマム・ザ・マックス/極頂秘伝ゼニス・シンフォニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-043a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "22EX1 43/130",
 		},
 		{
-			name : "霊騎コルテオ / プロテクション・サークル",
+			name : "霊騎コルテオ/プロテクション・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-044a.jpg",
 			rarity : "R",
 			flavor : [ "為了鳴奏起祝祭的音色，描繪起了護法的魔法陣。" ],
@@ -43928,35 +43928,35 @@
 			id : "22EX1 51/130",
 		},
 		{
-			name : "キャベッジ・セッションズ / ソイルピンプ・キャベッジ",
+			name : "キャベッジ・セッションズ/ソイルピンプ・キャベッジ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-052a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "22EX1 52/130",
 		},
 		{
-			name : "偽りの名 13 / 種族選別",
+			name : "偽りの名 13/種族選別",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-053a.jpg",
 			rarity : "R",
 			flavor : [ "その一撃がパンドラを破壊した。" ],
 			id : "22EX1 53/130",
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-054a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "22EX1 54/130",
 		},
 		{
-			name : "薔薇の使者 / ガイアズ・ソング",
+			name : "薔薇の使者/ガイアズ・ソング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-055a.jpg",
 			rarity : "R",
 			flavor : [ "自然文明のオリジンたちは、大地に神歌を見出していた。" ],
 			id : "22EX1 55/130",
 		},
 		{
-			name : "コレンココ・タンク / ボント・プラントボ",
+			name : "コレンココ・タンク/ボント・プラントボ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-056a.jpg",
 			rarity : "R",
 			flavor : [ "誰でも運転できるって言ってたじゃないかンボ……" ],
@@ -43977,7 +43977,7 @@
 			id : "22EX1 58/130",
 		},
 		{
-			name : "偽りの名 iFormula X / クリスティナ・フォール",
+			name : "偽りの名 iFormula X/クリスティナ・フォール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-059a.jpg",
 			rarity : "R",
 			flavor : [ "手札がいっぱいでよかった。" ],
@@ -43991,28 +43991,28 @@
 			id : "22EX1 60/130",
 		},
 		{
-			name : "暴発秘宝ベンゾ / 星龍の暴発",
+			name : "暴発秘宝ベンゾ/星龍の暴発",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-061a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "22EX1 61/130",
 		},
 		{
-			name : "閃光の神官 ヴェルベット / フェアリー・パワー",
+			name : "閃光の神官 ヴェルベット/フェアリー・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-062a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "22EX1 62/130",
 		},
 		{
-			name : "星雲の精霊キルスティン / 神秘の石柱",
+			name : "星雲の精霊キルスティン/神秘の石柱",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-063a.jpg",
 			rarity : "R",
 			flavor : [ "無限軍団の将が、他文明の力を取り込み再び兵を率いる。" ],
 			id : "22EX1 63/130",
 		},
 		{
-			name : "セブ・コアクマン / マインド・リセット",
+			name : "セブ・コアクマン/マインド・リセット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-064a.jpg",
 			rarity : "R",
 			flavor : [ "にひひ、どっちの味方だったかもう覚えてないよね？" ],
@@ -44026,7 +44026,7 @@
 			id : "22EX1 65/130",
 		},
 		{
-			name : "キング・シビレアシダケ / インビンシブル・テクノロジー",
+			name : "キング・シビレアシダケ/インビンシブル・テクノロジー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-066a.jpg",
 			rarity : "R",
 			flavor : [ "アカシック・レコード、それは全宇宙の真理と審判の日が記述された禁断の記録。" ],
@@ -44054,7 +44054,7 @@
 			id : "22EX1 69/130",
 		},
 		{
-			name : "緑神龍ディルガベジーダ / 偶発と弾幕の要塞",
+			name : "緑神龍ディルガベジーダ/偶発と弾幕の要塞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-070a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -44075,14 +44075,14 @@
 			id : "22EX1 72/130",
 		},
 		{
-			name : "光器ペトローバ / ソーラー・コミューン",
+			name : "光器ペトローバ/ソーラー・コミューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-073a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "22EX1 73/130",
 		},
 		{
-			name : "予言者ラメール / マスター・スパーク",
+			name : "予言者ラメール/マスター・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-074a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -44124,21 +44124,21 @@
 			id : "22EX1 79/130",
 		},
 		{
-			name : "神（シェン）豚（トン） ブータンPUNK / ブータン両成敗",
+			name : "神（シェン）豚（トン） ブータンPUNK/ブータン両成敗",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-080a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "22EX1 80/130",
 		},
 		{
-			name : "学校男 / ゾンビ・カーニバル",
+			name : "学校男/ゾンビ・カーニバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-081a.jpg",
 			rarity : "U",
 			flavor : [ "帰宅したみなさ~ん、登校の時間ですよ~！" ],
 			id : "22EX1 81/130",
 		},
 		{
-			name : "骨折人形トロンボ / デビル・ハンド",
+			name : "骨折人形トロンボ/デビル・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-082a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -44187,7 +44187,7 @@
 			id : "22EX1 87/130",
 		},
 		{
-			name : "斬神兵グランドルメス / バースト・ワンショット",
+			name : "斬神兵グランドルメス/バースト・ワンショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-088a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -44229,7 +44229,7 @@
 			id : "22EX1 92/130",
 		},
 		{
-			name : "アラーム・ラディッシュ / ナチュラトゥルー・トラップ",
+			name : "アラーム・ラディッシュ/ナチュラトゥルー・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-093a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -44271,28 +44271,28 @@
 			id : "22EX1 97/130",
 		},
 		{
-			name : "天雷龍姫エリザベス / インビンシブル・フォートレス",
+			name : "天雷龍姫エリザベス/インビンシブル・フォートレス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-098a.jpg",
 			rarity : "U",
 			flavor : [ "火文明に残された超科学。その出自は明らかになっていない。" ],
 			id : "22EX1 98/130",
 		},
 		{
-			name : "第六戦街 ラヴ・ガトラー / インビンシブル・アビス",
+			name : "第六戦街 ラヴ・ガトラー/インビンシブル・アビス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-099a.jpg",
 			rarity : "U",
 			flavor : [ "深淵に触れたものは全てを失う。" ],
 			id : "22EX1 99/130",
 		},
 		{
-			name : "雪溶の鎖 / 堕牛の一撃",
+			name : "雪溶の鎖/堕牛の一撃",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-100a.jpg",
 			rarity : "U",
 			flavor : [ "だから、俺はシカでも王女でもねぇって！" ],
 			id : "22EX1 100/130",
 		},
 		{
-			name : "堅防の使徒アースラ / グローリー・ストーン",
+			name : "堅防の使徒アースラ/グローリー・ストーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-101a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -44327,7 +44327,7 @@
 			id : "22EX1 104/130",
 		},
 		{
-			name : "パーロック / 蓄積された魔力の渦",
+			name : "パーロック/蓄積された魔力の渦",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-105a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -44355,7 +44355,7 @@
 			id : "22EX1 108/130",
 		},
 		{
-			name : "薔薇公爵ハザリア / ファントム・ベール",
+			name : "薔薇公爵ハザリア/ファントム・ベール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-109a.jpg",
 			rarity : "C",
 			flavor : [ "謎のベールの下の素顔は、友情とのジレンマに苦しむ表情だった。" ],
@@ -44376,14 +44376,14 @@
 			id : "22EX1 111/130",
 		},
 		{
-			name : "轟速 ザ・レッド / 超次元キル・ホール",
+			name : "轟速 ザ・レッド/超次元キル・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-112a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "22EX1 112/130",
 		},
 		{
-			name : "炎舞闘士サピエント・アーク / 無限掌",
+			name : "炎舞闘士サピエント・アーク/無限掌",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-113a.jpg",
 			rarity : "C",
 			flavor : [ "無限軍団の奇襲部隊が、無限の掌を身に着け復活する！" ],
@@ -44432,7 +44432,7 @@
 			id : "22EX1 118b/130",
 		},
 		{
-			name : "ニンジャ・パンプキン / グローリー・マッスル",
+			name : "ニンジャ・パンプキン/グローリー・マッスル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-119a.jpg",
 			rarity : "C",
 			flavor : [ "ランド大陸で行われたアカシック・ゼノンの研究は、双子の約束を守るための計画、ツインパクト計画と名付けられた。" ],
@@ -44495,14 +44495,14 @@
 			id : "22EX1 126/130",
 		},
 		{
-			name : "超次元エナジー・ホール / 超次元サプライズ・ホール",
+			name : "超次元エナジー・ホール/超次元サプライズ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-127a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "22EX1 127/130",
 		},
 		{
-			name : "牙神兵ガンガン・マンモス / ブレイン・タイフーン",
+			name : "牙神兵ガンガン・マンモス/ブレイン・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex1-128a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -45938,7 +45938,7 @@
 			id : "EX18 17/75",
 		},
 		{
-			name : "エターナル・ブレイン / ブレイン珊瑚の仙樹",
+			name : "エターナル・ブレイン/ブレイン珊瑚の仙樹",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-018a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -46176,7 +46176,7 @@
 			id : "EX18 50/75",
 		},
 		{
-			name : "計略の手 / 陰謀の手",
+			name : "計略の手/陰謀の手",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-051a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -46302,7 +46302,7 @@
 			id : "EX18 68/75",
 		},
 		{
-			name : "未来妖精ミクル / ミラクル・ブレイン",
+			name : "未来妖精ミクル/ミラクル・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex18-069a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -48079,21 +48079,21 @@
 			id : [ "22RP1 TF1/TF20","22RP1 T1/T20" ],
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF2a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-T2a.jpg" ],
 			rarity : "",
 			flavor : [ "","" ],
 			id : [ "22RP1 TF2/TF20","22RP1 T2/T20" ],
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF3a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-T3a.jpg" ],
 			rarity : "",
 			flavor : [ "","" ],
 			id : [ "22RP1 TF3/TF20","22RP1 T3/T20" ],
 		},
 		{
-			name : "ラ・ズーネヨマ・パンツァー / 逆転のオーロラ",
+			name : "ラ・ズーネヨマ・パンツァー/逆転のオーロラ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF4a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-T4a.jpg" ],
 			rarity : "",
 			flavor : [ "","" ],
@@ -48180,7 +48180,7 @@
 			id : [ "22RP1 TF15/TF20","22RP1 T15/T20" ],
 		},
 		{
-			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
+			name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-TF16a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22rp1-T16a.jpg" ],
 			rarity : "C",
 			flavor : [ "","" ],
@@ -48397,21 +48397,21 @@
 			id : "EX15 17/50",
 		},
 		{
-			name : "キングダム・オウ禍武斗 / 轟破天九十九語",
+			name : "キングダム・オウ禍武斗/轟破天九十九語",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a018a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
 			id : "EX15 18/50",
 		},
 		{
-			name : "超機動罠 デンジャデオン / 地獄極楽トラップ黙示録",
+			name : "超機動罠 デンジャデオン/地獄極楽トラップ黙示録",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a019a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
 			id : "EX15 19/50",
 		},
 		{
-			name : "Q.Q.QX / 終葬 5.S.D.",
+			name : "Q.Q.QX/終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a020a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -48439,7 +48439,7 @@
 			id : "EX15 23/50",
 		},
 		{
-			name : "悪魔神バロム / バロム砲",
+			name : "悪魔神バロム/バロム砲",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a024a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -48460,7 +48460,7 @@
 			id : "EX15 26/50",
 		},
 		{
-			name : "ボルメテウス・ホワイト・ドラゴン / ボルメテウス・レジェンド・フレア",
+			name : "ボルメテウス・ホワイト・ドラゴン/ボルメテウス・レジェンド・フレア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a027a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -48600,7 +48600,7 @@
 			id : "EX15 46/50",
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a047a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -48649,21 +48649,21 @@
 			id : "EX15 3/100",
 		},
 		{
-			name : "白騎士の聖霊王アルカディアス / 完全決闘",
+			name : "白騎士の聖霊王アルカディアス/完全決闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b004a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
 			id : "EX15 4/100",
 		},
 		{
-			name : "天海の精霊シリウス / W・チャージャー",
+			name : "天海の精霊シリウス/W・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b005a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
 			id : "EX15 5/100",
 		},
 		{
-			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
+			name : "ボルシャック・NEX（ネックス）/スーパー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b006a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -48705,7 +48705,7 @@
 			id : "EX15 11/100",
 		},
 		{
-			name : "浄化の精霊ウルス / 精霊・スパーク",
+			name : "浄化の精霊ウルス/精霊・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b012a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -48775,7 +48775,7 @@
 			id : "EX15 21/100",
 		},
 		{
-			name : "超幽龍アブゾ・ドルバ / 切り札をねらう悪魔!!",
+			name : "超幽龍アブゾ・ドルバ/切り札をねらう悪魔!!",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b022a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -48803,7 +48803,7 @@
 			id : "EX15 25/100",
 		},
 		{
-			name : "勝舞の機神装甲ヴァルボーグ / 火炎ヴァルバスター",
+			name : "勝舞の機神装甲ヴァルボーグ/火炎ヴァルバスター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b026a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -48831,7 +48831,7 @@
 			id : "EX15 29/100",
 		},
 		{
-			name : "レアカードハンター ウサギ団 / ラビットハンド",
+			name : "レアカードハンター ウサギ団/ラビットハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b030a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -48845,7 +48845,7 @@
 			id : "EX15 31/100",
 		},
 		{
-			name : "シビレアシダケ / インビンシブル・パワー",
+			name : "シビレアシダケ/インビンシブル・パワー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b032a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -49097,7 +49097,7 @@
 			id : "EX15 67/100",
 		},
 		{
-			name : "ムシ無視のんのん / 灰になるほどヒート",
+			name : "ムシ無視のんのん/灰になるほどヒート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b068a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -49132,7 +49132,7 @@
 			id : "EX15 72/100",
 		},
 		{
-			name : "西南の超人 / 断断打つべしナウ",
+			name : "西南の超人/断断打つべしナウ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-b073a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -49615,7 +49615,7 @@
 			id : [ "EX08 47/???","EX08 48/???", ],
 		},
 		{
-			name : "十極 ジョバンチュ / Genesis of Drillball",
+			name : "十極 ジョバンチュ/Genesis of Drillball",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-049a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -51078,7 +51078,7 @@
 			id : "EX08 257/???",
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴炎",
+			name : "天地命動 バラギアラ/輪廻暴炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-258a.jpg",
 			rarity : "MHZ",
 			flavor : [ "" ],
@@ -51141,7 +51141,7 @@
 			id : "EX08 265/???",
 		},
 		{
-			name : "天井院さま / 床弾坊",
+			name : "天井院さま/床弾坊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex08-266a.jpg",
 			rarity : "",
 			flavor : [ "おデリシャス！" ],
@@ -52198,7 +52198,7 @@
 			id : ["RP18 KM3/KM3","RP18 3B/20"],
 		},
 		{
-			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
+			name : "天命龍装 ホーリーエンド/ナウ・オア・ネバー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a11a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b11a.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "","" ],
@@ -52226,7 +52226,7 @@
 			id : ["RP18 14A/20","RP18 14B/20"],
 		},
 		{
-			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			name : "龍装艦 チェンジザ/六奇怪の四 ～土を割る逆瀧～",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-a15a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp18-b15a.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "","" ],
@@ -52310,7 +52310,7 @@
 			id : "EX16 5/100",
 		},
 		{
-			name : "反逆龍 5000typeR / 無法頂上会談",
+			name : "反逆龍 5000typeR/無法頂上会談",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-006a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -52506,7 +52506,7 @@
 			id : "EX16 33/100",
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-034a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -52541,7 +52541,7 @@
 			id : "EX16 38/100",
 		},
 		{
-			name : "残虐覇王デスカール / ロスト・ソウル",
+			name : "残虐覇王デスカール/ロスト・ソウル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-039a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -52702,7 +52702,7 @@
 			id : "EX16 61/100",
 		},
 		{
-			name : "罪無 ズゴブ垓 / 堕呪 バケドゥ",
+			name : "罪無 ズゴブ垓/堕呪 バケドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-062a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -52814,7 +52814,7 @@
 			id : "EX16 77/100",
 		},
 		{
-			name : "幻緑の双月 / 母なる星域",
+			name : "幻緑の双月/母なる星域",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-078a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -52835,21 +52835,21 @@
 			id : "EX16 80/100",
 		},
 		{
-			name : "全虹帝 ミノガミ / ハザード・パクト",
+			name : "全虹帝 ミノガミ/ハザード・パクト",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-081a.jpg",
 			rarity : "",
 			flavor : [ "" ],
 			id : "EX16 81/100",
 		},
 		{
-			name : "偽りの名 13 / 種族選別",
+			name : "偽りの名 13/種族選別",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-082a.jpg",
 			rarity : "",
 			flavor : [ "" ],
 			id : "EX16 82/100",
 		},
 		{
-			name : "レレディ・バ・グーバ / ツインパクト・マップ",
+			name : "レレディ・バ・グーバ/ツインパクト・マップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-083a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -52863,7 +52863,7 @@
 			id : "EX16 84/100",
 		},
 		{
-			name : "コンダマ / 魂フエミドロ",
+			name : "コンダマ/魂フエミドロ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex16-085a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -61009,7 +61009,7 @@
 			count : 4,
 		},
 		{
-			name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",
+			name : "炎龍覇 グレンアイラ/「助けて！モルト!!」",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-011a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd1-BE1a.jpg"],
 			rarity : ["","",],
 			flavor : [ "又被救了呢。","" ],
@@ -61329,7 +61329,7 @@
 			id : "BD17 3/14",
 			count : 2,
 		},		{
-			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			name : "龍装艦 チェンジザ/六奇怪の四 ～土を割る逆瀧～",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-004a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -61337,7 +61337,7 @@
 			count : 2,
 		},
 		{
-			name : "龍装鬼 オブザ08号 / 終焉の開闢",
+			name : "龍装鬼 オブザ08号/終焉の開闢",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-005a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -61353,7 +61353,7 @@
 			count : 2,
 		},
 		{
-			name : "電脳の女王 アリス / 不埒な再侵入",
+			name : "電脳の女王 アリス/不埒な再侵入",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd17-007a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -61504,7 +61504,7 @@
 	var isDeck = true;
 	var setCardList = [		
 		{
-			name : "ボルシャック・大和・ドラゴン / 大和ザンゲキ剣",
+			name : "ボルシャック・大和・ドラゴン/大和ザンゲキ剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-001a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -61535,7 +61535,7 @@
 			id : "BD16 4/14",
 			count : 3,
 		},		{
-			name : "ボルシャック・クロス・NEX（ネックス） / ボルシャック英雄譚",
+			name : "ボルシャック・クロス・NEX（ネックス）/ボルシャック英雄譚",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-005a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -61543,7 +61543,7 @@
 			count : 2,
 		},
 		{
-			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
+			name : "ボルシャック・NEX（ネックス）/スーパー・スパーク",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-006a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -61559,7 +61559,7 @@
 			count : 1,
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-008a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -61567,7 +61567,7 @@
 			count : 4,
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-009a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -61599,7 +61599,7 @@
 			count : 2,
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd16-013a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -61742,7 +61742,7 @@
 			count : 1,
 		},
 		{
-			name : "鳳翔竜騎ソウルピアレイジ / 高貴なる魂炎",
+			name : "鳳翔竜騎ソウルピアレイジ/高貴なる魂炎",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-004a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-be3a.jpg"],
 			rarity : "",
 			flavor : [ "","" ],
@@ -61862,7 +61862,7 @@
 			count : 1,
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se9a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-be9a.jpg"],
 			rarity : "R",
 			flavor : [ "","" ],
@@ -61870,7 +61870,7 @@
 			count : 1,
 		},
 		{
-			name : "水晶の記録 ゼノシャーク / クリスタル・メモリー",
+			name : "水晶の記録 ゼノシャーク/クリスタル・メモリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se7a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -61894,7 +61894,7 @@
 			count : 1,
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se2a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-be6a.jpg"],
 			rarity : "",
 			flavor : [ "","" ],
@@ -61902,7 +61902,7 @@
 			count : 1,
 		},
 		{
-			name : "マグナム・ルピア / クリムゾン・チャージャー",
+			name : "マグナム・ルピア/クリムゾン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd15-se3a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -62031,7 +62031,7 @@
 			id : "EX17 14/138",
 		},
 		{
-			name : "ほめほめ老 / ホメホメ老句",
+			name : "ほめほめ老/ホメホメ老句",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-015a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -62101,7 +62101,7 @@
 			id : "EX17 24/138",
 		},
 		{
-			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
+			name : "星門の精霊アケルナル/スターゲイズ・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-025a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -62122,7 +62122,7 @@
 			id : "EX17 27/138",
 		},
 		{
-			name : "遣宮使 ネオンクス / ネオ・ブレイン",
+			name : "遣宮使 ネオンクス/ネオ・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-028a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -62143,7 +62143,7 @@
 			id : "EX17 30/138",
 		},
 		{
-			name : "魔光帝フェルナンドVII世 / 魔弾デュアル・ザンジバル",
+			name : "魔光帝フェルナンドVII世/魔弾デュアル・ザンジバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-031a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -62164,7 +62164,7 @@
 			id : "EX17 33/138",
 		},
 		{
-			name : "龍装医 ルギヌス / 地獄のゴッド・ハンド",
+			name : "龍装医 ルギヌス/地獄のゴッド・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-034a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -62220,7 +62220,7 @@
 			id : "EX17 40/138",
 		},
 		{
-			name : "オブラディ・ホーネット / 「Let it Bee！」",
+			name : "オブラディ・ホーネット/「Let it Bee！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-041a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -62255,14 +62255,14 @@
 			id : "EX17 45/138",
 		},
 		{
-			name : "サイバー・K・ウォズレック / ウォズレックの審問",
+			name : "サイバー・K・ウォズレック/ウォズレックの審問",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-046a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
 			id : "EX17 46/138",
 		},
 		{
-			name : "スゴ腕プロジューサー / りんご娘はさんにんっ娘",
+			name : "スゴ腕プロジューサー/りんご娘はさんにんっ娘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-047a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -62318,7 +62318,7 @@
 			id : "EX17 54/138",
 		},
 		{
-			name : "全員集合！アクア・三兄弟 / 超次元ジェイシーエイ・ホール",
+			name : "全員集合！アクア・三兄弟/超次元ジェイシーエイ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-055a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -62353,7 +62353,7 @@
 			id : "EX17 59/138",
 		},
 		{
-			name : "鳳翔竜騎ソウルピアレイジ / 高貴なる魂炎",
+			name : "鳳翔竜騎ソウルピアレイジ/高貴なる魂炎",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-060a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -62430,7 +62430,7 @@
 			id : "EX17 69/138",
 		},
 		{
-			name : "天雷の導士アヴァラルド公 / 魔弾アルカディア・エッグ",
+			name : "天雷の導士アヴァラルド公/魔弾アルカディア・エッグ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-070a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -62444,7 +62444,7 @@
 			id : "EX17 71/138",
 		},
 		{
-			name : "爆獣マチュー・スチュアート / 超銀河弾 HELL",
+			name : "爆獣マチュー・スチュアート/超銀河弾 HELL",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-072a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -62458,7 +62458,7 @@
 			id : "EX17 73/138",
 		},
 		{
-			name : "魔光王機デ・バウラ伯 / 魔弾グローリー・ゲート",
+			name : "魔光王機デ・バウラ伯/魔弾グローリー・ゲート",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-074a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -62535,7 +62535,7 @@
 			id : "EX17 82/138",
 		},
 		{
-			name : "魔光ドラム・トレボール / 魔弾バレット・バイス",
+			name : "魔光ドラム・トレボール/魔弾バレット・バイス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-083a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -62577,7 +62577,7 @@
 			id : "EX17 88/138",
 		},
 		{
-			name : "傀儡将ボルギーズ / ジェニコの知らない世界",
+			name : "傀儡将ボルギーズ/ジェニコの知らない世界",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-089a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -62605,7 +62605,7 @@
 			id : "EX17 91/138",
 		},
 		{
-			name : "最終決戦だ！鬼丸ボーイ / 超次元オニシュラ・ホール",
+			name : "最終決戦だ！鬼丸ボーイ/超次元オニシュラ・ホール",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-092a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -62703,7 +62703,7 @@
 			id : "EX17 104/138",
 		},
 		{
-			name : "超七極 Gio / 巨大設計図",
+			name : "超七極 Gio/巨大設計図",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-105a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -62738,21 +62738,21 @@
 			id : "EX17 109/138",
 		},
 		{
-			name : "緊急機装エクス・コプター / 合身秘伝メカ・マシーン",
+			name : "緊急機装エクス・コプター/合身秘伝メカ・マシーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-110a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "EX17 110/138",
 		},
 		{
-			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
+			name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-111a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "EX17 111/138",
 		},
 		{
-			name : "氷牙フランツI世 / 魔弾オープン・ブレイン",
+			name : "氷牙フランツI世/魔弾オープン・ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-112a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -62836,7 +62836,7 @@
 			id : "EX17 123/138",
 		},
 		{
-			name : "熱血姫様プリン / 狩人秘伝ハンター・ファイア",
+			name : "熱血姫様プリン/狩人秘伝ハンター・ファイア",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-124a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -62878,14 +62878,14 @@
 			id : "EX17 129/138",
 		},
 		{
-			name : "爆獣パンダ・ブーリン / 魔弾パンダフル・ライフ",
+			name : "爆獣パンダ・ブーリン/魔弾パンダフル・ライフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-130a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "EX17 130/138",
 		},
 		{
-			name : "味息子サン・グリル / 千切秘伝ワイルド・ベジタブル",
+			name : "味息子サン・グリル/千切秘伝ワイルド・ベジタブル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-131a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -63405,7 +63405,7 @@
 			count : 4,
 		},
 		{
-			name : "八頭竜 ACE-Yamata / 神秘の宝剣",
+			name : "八頭竜 ACE-Yamata/神秘の宝剣",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-003a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -63437,7 +63437,7 @@
 			count : 2,
 		},
 		{
-			name : "幻緑の双月 / 母なる星域",
+			name : "幻緑の双月/母なる星域",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd18-007a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -64449,7 +64449,7 @@
 			id : ["RP19 11A/20","RP19 11B/20"],
 		},
 		{
-			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
+			name : "メヂカラ・コバルト・カイザー/アイド・ワイズ・シャッター",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-a12a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-b12a.jpg"],
 			rarity : ["VR","VR"],
 			flavor : [ "","" ],
@@ -64470,7 +64470,7 @@
 			id : ["RP19 14A/20","RP19 14B/20"],
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-a15a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp19-b15a.jpg"],
 			rarity : ["",""],
 			flavor : [ "","" ],
@@ -65303,7 +65303,7 @@
 			id : ["RP20 11A/20","RP20 11B/20"],
 		},
 		{
-			name : "バーンメア・ザ・シルバー / オラオラ・スラッシュ",
+			name : "バーンメア・ザ・シルバー/オラオラ・スラッシュ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-a12a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp20-b12a.jpg"],
 			rarity : ["SR","SR"],
 			flavor : [ "","" ],
@@ -65541,7 +65541,7 @@
 			count : 2,
 		},
 		{
-			name : "D2V3 終断のデッドトロン / デッドリー・ビッグバン",
+			name : "D2V3 終断のデッドトロン/デッドリー・ビッグバン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-012a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -65549,7 +65549,7 @@
 			count : 3,
 		},
 		{
-			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
+			name : "終断γ ドルブロ/ボーンおどり・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-013a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -65557,7 +65557,7 @@
 			count : 4,
 		},
 		{
-			name : "D2V3 終断のレッドトロン / フォビドゥン・ハンド",
+			name : "D2V3 終断のレッドトロン/フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd21-014a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -65700,7 +65700,7 @@
 			count : 2,
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd2-015a.jpg",
 			rarity : "R",
 			flavor : [ "フィニッシュ時には相手の呪文を止めて安全を確保しましょう。" ],
@@ -65771,7 +65771,7 @@
 			count : 4,
 		},
 		{
-			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
+			name : "天命龍装 ホーリーエンド/ナウ・オア・ネバー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd3-004a.jpg",
 			rarity : "SR",
 			flavor : [ "ナウ・オア・ネバーを利用すればガチロボを5マナで出すことが可能です。" ],
@@ -65803,7 +65803,7 @@
 			count : 2,
 		},
 		{
-			name : "R.S.F.K. / オールイン・チャージャー",
+			name : "R.S.F.K./オールイン・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd3-008a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -65811,7 +65811,7 @@
 			count : 4,
 		},
 		{
-			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
+			name : "メヂカラ・コバルト・カイザー/アイド・ワイズ・シャッター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd3-009a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -65835,7 +65835,7 @@
 			count : 1,
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd3-012a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -65851,7 +65851,7 @@
 			count : 3,
 		},
 		{
-			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
+			name : "イチゴッチ・タンク/レッツ・ゴイチゴ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd3-014a.jpg",
 			rarity : "C",
 			flavor : [ "マナ加速してガチロボ。それがこのデッキの全てです。" ],
@@ -65859,7 +65859,7 @@
 			count : 4,
 		},
 		{
-			name : "レレディ・バ・グーバ / ツインパクト・マップ",
+			name : "レレディ・バ・グーバ/ツインパクト・マップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22bd3-002a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -66254,7 +66254,7 @@
 			id : "22EX2 4/75",
 		},
 		{
-			name : "ゲオルグ・バーボシュタイン / ゴースト・タッチ",
+			name : "ゲオルグ・バーボシュタイン/ゴースト・タッチ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-005a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -66506,7 +66506,7 @@
 			id : "22EX2 40/75",
 		},
 		{
-			name : "虚無の守護者グリ・ラ / 無情の光",
+			name : "虚無の守護者グリ・ラ/無情の光",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-041a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -66583,7 +66583,7 @@
 			id : "22EX2 51/75",
 		},
 		{
-			name : "目覚めのファミリア キナコ / ムボー日和",
+			name : "目覚めのファミリア キナコ/ムボー日和",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-052a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -66632,7 +66632,7 @@
 			id : "22EX2 58/75",
 		},
 		{
-			name : "メルゲ否男 / 「今も我らの願いはただひとつ」",
+			name : "メルゲ否男/「今も我らの願いはただひとつ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-059a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -66702,14 +66702,14 @@
 			id : "22EX2 68/75",
 		},
 		{
-			name : "罪無 バスダク極 / ダックス奮闘",
+			name : "罪無 バスダク極/ダックス奮闘",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-069a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "22EX2 69/75",
 		},
 		{
-			name : "凶鬼98号 ガシャゴン / 堕呪 ブラッドゥ",
+			name : "凶鬼98号 ガシャゴン/堕呪 ブラッドゥ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-070a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -66723,7 +66723,7 @@
 			id : "22EX2 71/75",
 		},
 		{
-			name : "コオニ小町 / 「世界はジャオウガ様のモノ！」",
+			name : "コオニ小町/「世界はジャオウガ様のモノ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm22ex2-072a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -66859,7 +66859,7 @@
 			count : 4,
 		},
 		{
-			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
+			name : "卍月 ガ・リュザーク 卍/卍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd20-003a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -67484,7 +67484,7 @@
 			id : ["RP22 KM2/KM2","RP22 2B/10"],
 		},
 		{
-			name : "反逆龍 5000typeR / 無法頂上会談",
+			name : "反逆龍 5000typeR/無法頂上会談",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TR1a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -67575,7 +67575,7 @@
 			id : ["RP22 TF2/TF20","RP22 T2/T20"],
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TF3a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-T3a.jpg"],
 			rarity : ["",""],
 			flavor : [ "","ボルシャックの名は、新たなる英雄へと受け継がれていく。" ],
@@ -67603,7 +67603,7 @@
 			id : ["RP22 TF6/TF20","RP22 T6/T20"],
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-TF7a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp22-T7a.jpg"],
 			rarity : ["R","R"],
 			flavor : [ "","奇跡を祈る気持ちまでは止められない。" ],
@@ -67778,7 +67778,7 @@
 			id : "EX19 S5/S20",
 		},
 		{
-			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
+			name : "天命龍装 ホーリーエンド/ナウ・オア・ネバー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s6a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -67799,7 +67799,7 @@
 			id : "EX19 S8/S20",
 		},
 		{
-			name : "卍 ギ・ルーギリン 卍 / 卍獄ブレイン",
+			name : "卍 ギ・ルーギリン 卍/卍獄ブレイン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s9a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -67834,7 +67834,7 @@
 			id : "EX19 S13/S20",
 		},
 		{
-			name : "始全虹帝 ミノガミ / 自然の肯定",
+			name : "始全虹帝 ミノガミ/自然の肯定",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s14a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -67855,7 +67855,7 @@
 			id : "EX19 S16/S20",
 		},
 		{
-			name : "ナ・チュラルゴ・デンジャー / ナチュラル・トラップ",
+			name : "ナ・チュラルゴ・デンジャー/ナチュラル・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-s17a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -67904,7 +67904,7 @@
 			id : "EX19 3/68",
 		},
 		{
-			name : "奇石 トランキー / アイ・オブ・ザ・タイガー",
+			name : "奇石 トランキー/アイ・オブ・ザ・タイガー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-004a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -67939,7 +67939,7 @@
 			id : "EX19 8/68",
 		},
 		{
-			name : "龍装05号 イヴィルヴィ / イーヴィル・フォース",
+			name : "龍装05号 イヴィルヴィ/イーヴィル・フォース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-009a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -67974,7 +67974,7 @@
 			id : "EX19 13/68",
 		},
 		{
-			name : "黒豆だんしゃく / 白米男しゃく",
+			name : "黒豆だんしゃく/白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-014a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -68156,7 +68156,7 @@
 			id : "EX19 39/68",
 		},
 		{
-			name : "審絆の鎮り 新蓮 / ジャスティス・シェイパー",
+			name : "審絆の鎮り 新蓮/ジャスティス・シェイパー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-040a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -68289,7 +68289,7 @@
 			id : "EX19 58/68",
 		},
 		{
-			name : "バリスイトーヨー / 水筒の術",
+			name : "バリスイトーヨー/水筒の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-059a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -68331,7 +68331,7 @@
 			id : "EX19 64/68",
 		},
 		{
-			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
+			name : "イチゴッチ・タンク/レッツ・ゴイチゴ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-065a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -68576,7 +68576,7 @@
 			id : "EX19 M31/M40",
 		},
 		{
-			name : "卍月 ガ・リュザーク 卍 / 卍・獄・殺",
+			name : "卍月 ガ・リュザーク 卍/卍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-m32a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -68618,7 +68618,7 @@
 			id : "EX19 M37/M40",
 		},
 		{
-			name : "超機動罠 デンジャデオン / 地獄極楽トラップ黙示録",
+			name : "超機動罠 デンジャデオン/地獄極楽トラップ黙示録",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-m38a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -68632,7 +68632,7 @@
 			id : "EX19 M39/M40",
 		},
 		{
-			name : "Q.Q.QX / 終葬 5.S.D.",
+			name : "Q.Q.QX/終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-m40a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -68688,7 +68688,7 @@
 			id : "EX19 M秘7/M秘10",
 		},
 		{
-			name : "キングダム・オウ禍武斗 / 轟破天九十九語",
+			name : "キングダム・オウ禍武斗/轟破天九十九語",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-ms08a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -69332,7 +69332,7 @@
 			id : "RP21 TR1b/TR10",
 		},		
 		{
-			name : "天地命動 バラギアラ / 輪廻暴冥",
+			name : "天地命動 バラギアラ/輪廻暴冥",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR2a.jpg",
 			rarity : "MHZ",
 			flavor : [ "" ],
@@ -69346,7 +69346,7 @@
 			id : "RP21 TR3/TR10",
 		},
 		{
-			name : "龍罠 エスカルデン / マクスカルゴ・トラップ",
+			name : "龍罠 エスカルデン/マクスカルゴ・トラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TR4a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -69395,14 +69395,14 @@
 			id : "RP21 TR10/TR10",
 		},
 		{
-			name : "めっちゃ！デンヂャラスG3 / ケッシング・ゼロ",
+			name : "めっちゃ！デンヂャラスG3/ケッシング・ゼロ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF1a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-T1a.jpg"],
 			rarity : ["",""],
 			flavor : [ "","" ],
 			id : ["RP21 TF1/TF20","RP21 T1/T20"],
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF2a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-T2a.jpg"],
 			rarity : ["",""],
 			flavor : [ "","ボルシャック、それは決闘の中に真実を見出し、強敵を戦友とできるものに受け継がれていく名前。" ],
@@ -69423,7 +69423,7 @@
 			id : ["RP21 TF4/TF20","RP21 T4/T20"],
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF5a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-T5a.jpg"],
 			rarity : ["R","R"],
 			flavor : [ "","" ],
@@ -69465,7 +69465,7 @@
 			id : ["RP21 TF10/TF20","RP21 T10/T20"],
 		},
 		{
-			name : "ムシ無視のんのん / 灰になるほどヒート",
+			name : "ムシ無視のんのん/灰になるほどヒート",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-TF11a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmrp21-T11a.jpg"],
 			rarity : ["R","R"],
 			flavor : [ "","" ],
@@ -69585,7 +69585,7 @@
 			count : 2,
 		},
 		{
-			name : "龍装鬼 オブザ08号 / 終焉の開闢",
+			name : "龍装鬼 オブザ08号/終焉の開闢",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-018a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -69649,7 +69649,7 @@
 			count : 3,
 		},
 		{
-			name : "龍月 ドラグ・スザーク / 龍・獄・殺",
+			name : "龍月 ドラグ・スザーク/龍・獄・殺",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-014a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -69657,7 +69657,7 @@
 			count : 3,
 		},
 		{
-			name : "龍頭星雲人 / 零誕祭",
+			name : "龍頭星雲人/零誕祭",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd22-015a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -69792,7 +69792,7 @@
 	var isDeck = true;
 	var setCardList = [
 		{
-			name : "スパトー:ド:スパトゥー / 邪暴乱舞",
+			name : "スパトー:ド:スパトゥー/邪暴乱舞",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sp1-001a.jpg",
 			rarity : "OR",
 			flavor : [ "" ],
@@ -69808,7 +69808,7 @@
 			count : 2,
 		},
 		{
-			name : "ソファ＝ソフティソニア / 「どんな夢がお望みだ？」",
+			name : "ソファ＝ソフティソニア/「どんな夢がお望みだ？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sp1-003a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -69848,7 +69848,7 @@
 			count : 2,
 		},
 		{
-			name : "ドアノッカ＝ノアドッカ / 「…開けるか？」",
+			name : "ドアノッカ＝ノアドッカ/「…開けるか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sp1-008a.jpg",
 			rarity : "R",
 			flavor : [ "コイツは1体で迫る2体を倒し、きさまを守ることもあるであろう、フハハハハ！" ],
@@ -69856,7 +69856,7 @@
 			count : 3,
 		},
 		{
-			name : "イード＝ミード / 「奈落を見たいか？」",
+			name : "イード＝ミード/「奈落を見たいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sp1-009a.jpg",
 			rarity : "R",
 			flavor : [ "メクレイドをするならば、このしもべが来ることを願うがよい！" ],
@@ -69872,7 +69872,7 @@
 			count : 2,
 		},
 		{
-			name : "フットレス＝トレース / 「力が欲しいか？」",
+			name : "フットレス＝トレース/「力が欲しいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sp1-011a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -70055,7 +70055,7 @@
 			count : 2,
 		},
 		{
-			name : "煌メク聖晶 弩楼 / ビスティック・マース",
+			name : "煌メク聖晶 弩楼/ビスティック・マース",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-002a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -70071,7 +70071,7 @@
 			count : 2,
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmbd07-b-011a.jpg",
 			rarity : "R",
 			flavor : [ "序盤の相手の動きを邪魔して、大型ブロッカーまで時間を稼ごう！" ],
@@ -71587,7 +71587,7 @@
 			id : ["23RP2 S1/S8","23RP2 3B/22","23RP2 1A/20"],
 		},
 		{
-			name : "マジック・H・コレクター / ♪マジソンを 集めて早し ストリーム",
+			name : "マジック・H・コレクター/♪マジソンを 集めて早し ストリーム",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S02a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-04Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-02Aa.jpg"],
 			rarity : ["SR","SR","SR"],
 			flavor : [ "","","" ],
@@ -71622,7 +71622,7 @@
 			id : ["23RP2 S6/S8","23RP2 8B/22","23RP2 6A/20"],
 		},
 		{
-			name : "超球の超人 / 父なるタッチダウン",
+			name : "超球の超人/父なるタッチダウン",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-S07a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-09Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-07Aa.jpg"],
 			rarity : ["SR","SR","SR"],
 			flavor : [ "","","" ],
@@ -71692,7 +71692,7 @@
 			id : ["23RP2 8/74","23RP2 13B/22","23RP2 11A/20"],
 		},
 		{
-			name : "星姫械 ミントジュバ / ミンティア・リンギング",
+			name : "星姫械 ミントジュバ/ミンティア・リンギング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-009a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -71720,7 +71720,7 @@
 			id : ["23RP2 12/74","23RP2 14B/22","23RP2 12A/20"],
 		},
 		{
-			name : "歌舞音愛 ヒメカット / ♪蛙の子 遭えるの何処？好きと謂ひて",
+			name : "歌舞音愛 ヒメカット/♪蛙の子 遭えるの何処？好きと謂ひて",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-013a.jpg",
 			rarity : "R",
 			flavor : [ "◆解説◆行方不明になったケローラの帰りを待っている様子を表しています。" ],
@@ -71741,7 +71741,7 @@
 			id : ["23RP2 15/74","23RP2 15B/22","23RP2 13A/20"],
 		},
 		{
-			name : "ヨービリン=リリン / 「……誰を呼びたい？」",
+			name : "ヨービリン=リリン/「……誰を呼びたい？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-016a.jpg",
 			rarity : "R",
 			flavor : [ "押し逃げしようとした者には、お返しに100倍の力で押し返してくる。" ],
@@ -71769,7 +71769,7 @@
 			id : "23RP2 19/74",
 		},
 		{
-			name : "カラカラ・警・ルピア / 「ここはお任せだッピ！」",
+			name : "カラカラ・警・ルピア/「ここはお任せだッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-020a.jpg",
 			rarity : "R",
 			flavor : [ "竜との絆が、新たなる奇跡を生む。" ],
@@ -71790,14 +71790,14 @@
 			id : "23RP2 22/74",
 		},
 		{
-			name : "マーチングベル シアン / ミーミル・ミュージカル",
+			name : "マーチングベル シアン/ミーミル・ミュージカル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-023a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23RP2 23/74",
 		},
 		{
-			name : "マーチングドラム ミドリ / ハーメルン・ハーモニー",
+			name : "マーチングドラム ミドリ/ハーメルン・ハーモニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-024a.jpg",
 			rarity : "R",
 			flavor : [ "その旋律を耳にした者は、どことも知らぬ場所に連れていかれてしまうという。" ],
@@ -71818,7 +71818,7 @@
 			id : "23RP2 26/74",
 		},
 		{
-			name : "聖沌忍者 シャーリーシー / シャーリー・チャージャー",
+			name : "聖沌忍者 シャーリーシー/シャーリー・チャージャー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-027a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-17Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-15Aa.jpg"],
 			rarity : ["U","U","U"],
 			flavor : [ "","","" ],
@@ -71846,14 +71846,14 @@
 			id : "23RP2 30/74",
 		},
 		{
-			name : "音素記号Bm エネルジコ / ♪水面から 天掴まんと するチャージャー",
+			name : "音素記号Bm エネルジコ/♪水面から 天掴まんと するチャージャー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-031a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-18Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-16Aa.jpg"],
 			rarity : ["U","U","U"],
 			flavor : [ "","","" ],
 			id : ["23RP2 31/74","23RP2 18B/22","23RP2 16A/20"],
 		},
 		{
-			name : "人気魚 / ♪大空の ムーンサルト やや斜め",
+			name : "人気魚/♪大空の ムーンサルト やや斜め",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-032a.jpg",
 			rarity : "U",
 			flavor : [ "◆解説◆イルカショーに行きましょう。" ],
@@ -71881,14 +71881,14 @@
 			id : "23RP2 35/74",
 		},
 		{
-			name : "モノクル＝ドクトール / 「すべてを見通す眼だ」",
+			name : "モノクル＝ドクトール/「すべてを見通す眼だ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-036a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23RP2 36/74",
 		},
 		{
-			name : "カーペット=ガペット / 「ふむ、君の希望を踏まえよう」",
+			name : "カーペット=ガペット/「ふむ、君の希望を踏まえよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-037a.jpg",
 			rarity : "U",
 			flavor : [ "その絨毯は、いつでも不満そうだ。" ],
@@ -71909,7 +71909,7 @@
 			id : "23RP2 39/74",
 		},
 		{
-			name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",
+			name : "セルリアン・アックス・ドラゴン/ダブルアックス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-040a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -71944,7 +71944,7 @@
 			id : "23RP2 44/74",
 		},
 		{
-			name : "竹馬の超人 / テイクバック・チャージャー",
+			name : "竹馬の超人/テイクバック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-045a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -71986,7 +71986,7 @@
 			id : ["23RP2 50/74","23RP2 19B/22","23RP2 17A/20"],
 		},
 		{
-			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
+			name : "星姫械 ミモザスター/招光呪文「メカミング」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-051a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、星を呼ぶ。" ],
@@ -72021,14 +72021,14 @@
 			id : "23RP2 55/74",
 		},
 		{
-			name : "詠み人-シラズ-Machine / 招水呪文「マジックル」",
+			name : "詠み人-シラズ-Machine/招水呪文「マジックル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-056a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、ハイクを詠む。" ],
 			id : "23RP2 56/74",
 		},
 		{
-			name : "爆弾音愛 メッシュ / ♪キミとボク 共感すれば マジ文殊",
+			name : "爆弾音愛 メッシュ/♪キミとボク 共感すれば マジ文殊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-057a.jpg",
 			rarity : "C",
 			flavor : [ "◆解説◆共感すれば解説などいりません。" ],
@@ -72056,7 +72056,7 @@
 			id : "23RP2 60/74",
 		},
 		{
-			name : "サドレイン=トレイン / 邪神呪文「アビサール」",
+			name : "サドレイン=トレイン/邪神呪文「アビサール」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-061a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、深淵を呼ぶ。" ],
@@ -72091,7 +72091,7 @@
 			id : [ "23RP2 65/74","23RP2 20B/22","23RP2 18A/20" ],
 		},
 				{
-			name : "ゲンジ・天・パワッチ / 招火呪文「アーマアド」",
+			name : "ゲンジ・天・パワッチ/招火呪文「アーマアド」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-066a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -72126,7 +72126,7 @@
 			id : "23RP2 70/74",
 		},
 		{
-			name : "無双の妖精 / 招然呪文「ジャイババン」",
+			name : "無双の妖精/招然呪文「ジャイババン」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-071a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、回転する。" ],
@@ -72280,7 +72280,7 @@
 			id : "23RP2 TR8/TR9",
 		},
 		{
-			name : "黒豆だんしゃく / 白米男しゃく",
+			name : "黒豆だんしゃく/白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2-TR09a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -72350,7 +72350,7 @@
 			id : ["23RP2X S1/S8","23RP2X S1X/S8","23RP2X 3B/22","23RP2X 1A/20"],
 		},
 		{
-			name : "マジック・H・コレクター / ♪マジソンを 集めて早し ストリーム",
+			name : "マジック・H・コレクター/♪マジソンを 集めて早し ストリーム",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-S02a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-S02Xa.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-04Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-02Aa.jpg"],
 			rarity : ["SR","SR","SR","SR"],
 			flavor : [ "","","","" ],
@@ -72385,7 +72385,7 @@
 			id : ["23RP2X S6/S8","23RP2X S6X/S8","23RP2X 8B/22","23RP2X 6A/20"],
 		},
 		{
-			name : "超球の超人 / 父なるタッチダウン",
+			name : "超球の超人/父なるタッチダウン",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-S07a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-S07Xa.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-09Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-07Aa.jpg"],
 			rarity : ["SR","SR","SR","SR"],
 			flavor : [ "","","","" ],
@@ -72455,7 +72455,7 @@
 			id : ["23RP2X 8/8","23RP2X 8X/8","23RP2X 13B/22","23RP2X 11A/20"],
 		},
 		{
-			name : "星姫械 ミントジュバ / ミンティア・リンギング",
+			name : "星姫械 ミントジュバ/ミンティア・リンギング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-009a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -72483,7 +72483,7 @@
 			id : ["23RP2X 12/74","23RP2X 14B/22","23RP2X 12A/20"],
 		},
 		{
-			name : "歌舞音愛 ヒメカット / ♪蛙の子 遭えるの何処？好きと謂ひて",
+			name : "歌舞音愛 ヒメカット/♪蛙の子 遭えるの何処？好きと謂ひて",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-013a.jpg",
 			rarity : "R",
 			flavor : [ "◆解説◆行方不明になったケローラの帰りを待っている様子を表しています。" ],
@@ -72504,7 +72504,7 @@
 			id : ["23RP2X 15/74","23RP2X 15B/22","23RP2X 13A/20"],
 		},
 		{
-			name : "ヨービリン=リリン / 「……誰を呼びたい？」",
+			name : "ヨービリン=リリン/「……誰を呼びたい？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-016a.jpg",
 			rarity : "R",
 			flavor : [ "押し逃げしようとした者には、お返しに100倍の力で押し返してくる。" ],
@@ -72532,7 +72532,7 @@
 			id : "23RP2X 19/74",
 		},
 		{
-			name : "カラカラ・警・ルピア / 「ここはお任せだッピ！」",
+			name : "カラカラ・警・ルピア/「ここはお任せだッピ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-020a.jpg",
 			rarity : "R",
 			flavor : [ "竜との絆が、新たなる奇跡を生む。" ],
@@ -72553,14 +72553,14 @@
 			id : "23RP2X 22/74",
 		},
 		{
-			name : "マーチングベル シアン / ミーミル・ミュージカル",
+			name : "マーチングベル シアン/ミーミル・ミュージカル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-023a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23RP2X 23/74",
 		},
 		{
-			name : "マーチングドラム ミドリ / ハーメルン・ハーモニー",
+			name : "マーチングドラム ミドリ/ハーメルン・ハーモニー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-024a.jpg",
 			rarity : "R",
 			flavor : [ "その旋律を耳にした者は、どことも知らぬ場所に連れていかれてしまうという。" ],
@@ -72581,7 +72581,7 @@
 			id : "23RP2X 26/74",
 		},
 		{
-			name : "聖沌忍者 シャーリーシー / シャーリー・チャージャー",
+			name : "聖沌忍者 シャーリーシー/シャーリー・チャージャー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-027a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-17Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-15Aa.jpg"],
 			rarity : ["U","U","U"],
 			flavor : [ "","","" ],
@@ -72609,14 +72609,14 @@
 			id : "23RP2X 30/74",
 		},
 		{
-			name : "音素記号Bm エネルジコ / ♪水面から 天掴まんと するチャージャー",
+			name : "音素記号Bm エネルジコ/♪水面から 天掴まんと するチャージャー",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-031a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-18Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-16Aa.jpg"],
 			rarity : ["U","U","U"],
 			flavor : [ "","","" ],
 			id : ["23RP2X 31/74","23RP2X 18B/22","23RP2X 16A/20"],
 		},
 		{
-			name : "人気魚 / ♪大空の ムーンサルト やや斜め",
+			name : "人気魚/♪大空の ムーンサルト やや斜め",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-032a.jpg",
 			rarity : "U",
 			flavor : [ "◆解説◆イルカショーに行きましょう。" ],
@@ -72644,14 +72644,14 @@
 			id : "23RP2X 35/74",
 		},
 		{
-			name : "モノクル＝ドクトール / 「すべてを見通す眼だ」",
+			name : "モノクル＝ドクトール/「すべてを見通す眼だ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-036a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23RP2X 36/74",
 		},
 		{
-			name : "カーペット=ガペット / 「ふむ、君の希望を踏まえよう」",
+			name : "カーペット=ガペット/「ふむ、君の希望を踏まえよう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-037a.jpg",
 			rarity : "U",
 			flavor : [ "その絨毯は、いつでも不満そうだ。" ],
@@ -72672,7 +72672,7 @@
 			id : "23RP2X 39/74",
 		},
 		{
-			name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",
+			name : "セルリアン・アックス・ドラゴン/ダブルアックス・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-040a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -72707,7 +72707,7 @@
 			id : "23RP2X 44/74",
 		},
 		{
-			name : "竹馬の超人 / テイクバック・チャージャー",
+			name : "竹馬の超人/テイクバック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-045a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -72749,7 +72749,7 @@
 			id : ["23RP2X 50/74","23RP2X 19B/22","23RP2X 17A/20"],
 		},
 		{
-			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
+			name : "星姫械 ミモザスター/招光呪文「メカミング」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-051a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、星を呼ぶ。" ],
@@ -72784,14 +72784,14 @@
 			id : "23RP2X 55/74",
 		},
 		{
-			name : "詠み人-シラズ-Machine / 招水呪文「マジックル」",
+			name : "詠み人-シラズ-Machine/招水呪文「マジックル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-056a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、ハイクを詠む。" ],
 			id : "23RP2X 56/74",
 		},
 		{
-			name : "爆弾音愛 メッシュ / ♪キミとボク 共感すれば マジ文殊",
+			name : "爆弾音愛 メッシュ/♪キミとボク 共感すれば マジ文殊",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-057a.jpg",
 			rarity : "C",
 			flavor : [ "◆解説◆共感すれば解説などいりません。" ],
@@ -72819,7 +72819,7 @@
 			id : "23RP2X 60/74",
 		},
 		{
-			name : "サドレイン=トレイン / 邪神呪文「アビサール」",
+			name : "サドレイン=トレイン/邪神呪文「アビサール」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-061a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、深淵を呼ぶ。" ],
@@ -72854,7 +72854,7 @@
 			id : ["23RP2X 65/74","23RP2X 20B/22","23RP2X 18A/20"],
 		},
 		{
-			name : "ゲンジ・天・パワッチ / 招火呪文「アーマアド」",
+			name : "ゲンジ・天・パワッチ/招火呪文「アーマアド」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-066a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -72889,7 +72889,7 @@
 			id : "23RP2X 70/74",
 		},
 		{
-			name : "無双の妖精 / 招然呪文「ジャイババン」",
+			name : "無双の妖精/招然呪文「ジャイババン」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-071a.jpg",
 			rarity : "C",
 			flavor : [ "その呪文が、回転する。" ],
@@ -73043,7 +73043,7 @@
 			id : "23RP2X TR8/TR9",
 		},
 		{
-			name : "黒豆だんしゃく / 白米男しゃく",
+			name : "黒豆だんしゃく/白米男しゃく",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp2x-TR09a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -73127,7 +73127,7 @@
 			id : ["23RP3 S3/S8","23RP3 5B/22","23RP3 3A/20"],
 		},
 		{
-			name : "Napo獅子-Vi無粋 / ♪オレの歌 聞けよ聞かなきゃ 殴り合い",
+			name : "Napo獅子-Vi無粋/♪オレの歌 聞けよ聞かなきゃ 殴り合い",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-S04a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-06Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-04Aa.jpg"],
 			rarity : ["SR","SR","SR"],
 			flavor : [ "その歌は、革命さえも過去にする。","バイブスが闘争心を刺激する。","この歌の後には誰も残らない。" ],
@@ -73218,7 +73218,7 @@
 			id : "23RP3 8/74",
 		},
 		{
-			name : "蜘紙の聖沌 kum0 / 聖沌忍法 メカ吹雪の術",
+			name : "蜘紙の聖沌 kum0/聖沌忍法 メカ吹雪の術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-009a.jpg",
 			rarity : "R",
 			flavor : [ "カオスマントラの絶技にかかれば、ただの折り紙も即席の軍隊となる。" ],
@@ -73239,14 +73239,14 @@
 			id : "23RP3 11/74",
 		},
 		{
-			name : "踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン",
+			name : "踊戯音愛 パステル/♪摩訶不思議 マジカルプリズン キンキラリン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-012a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23RP3 12/74",
 		},
 		{
-			name : "同期の妖精 / ド浮きの動悸",
+			name : "同期の妖精/ド浮きの動悸",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-013a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -73267,7 +73267,7 @@
 			id : ["23RP3 15/74","23RP3 14B/22","23RP3 12A/20"],
 		},
 		{
-			name : "トング＝ゴング / 「世界をつかませてやろうか？」",
+			name : "トング＝ゴング/「世界をつかませてやろうか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-016a.jpg",
 			rarity : "R",
 			flavor : [ "つかみはバッチリ。" ],
@@ -73295,14 +73295,14 @@
 			id : "23RP3 19/74",
 		},
 		{
-			name : "ボルゼラス・ドラゴン / 「オレの行く道は止められねぇ」",
+			name : "ボルゼラス・ドラゴン/「オレの行く道は止められねぇ」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-020a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23RP3 20/74",
 		},
 		{
-			name : "満韻炎霊 キャノンボール / ♪夏草や イフリートによる 夢の跡",
+			name : "満韻炎霊 キャノンボール/♪夏草や イフリートによる 夢の跡",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-021a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-15Ba.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-13Aa.jpg"],
 			rarity : ["R","R","R"],
 			flavor : [ "覇＝ロードとカクメイジンの戦いの結末はキャノンボールにも詠めなかった。","","" ],
@@ -73316,7 +73316,7 @@
 			id : "23RP3 22/74",
 		},
 		{
-			name : "弓道の妖精 / ド級の弩弓",
+			name : "弓道の妖精/ド級の弩弓",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-023a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -73344,7 +73344,7 @@
 			id : "23RP3 26/74",
 		},
 		{
-			name : "強撃の鎧徒エッカルト / ウォーニング・ショット",
+			name : "強撃の鎧徒エッカルト/ウォーニング・ショット",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-027a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -73365,14 +73365,14 @@
 			id : "23RP3 29/74",
 		},
 		{
-			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
+			name : "淡いと濃い ケローラ/♪やせガエル 負けるなケローラ スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-030a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23RP3 30/74",
 		},
 		{
-			name : "声凄音愛 オダンゴ / ♪ワタクシの シャウトの前に 皆黙る",
+			name : "声凄音愛 オダンゴ/♪ワタクシの シャウトの前に 皆黙る",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-031a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -73393,7 +73393,7 @@
 			id : "23RP3 33/74",
 		},
 		{
-			name : "蛙紙の聖沌 fr09 / 聖沌忍法 メカ寄せの術",
+			name : "蛙紙の聖沌 fr09/聖沌忍法 メカ寄せの術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-034a.jpg",
 			rarity : "U",
 			flavor : [ "「ゴルギーニヲ監視セヨ」……それがシノビの一族に伝わる掟。" ],
@@ -73428,7 +73428,7 @@
 			id : ["23RP3 38/74","23RP3 18B/22","23RP3 16A/20"],
 		},
 		{
-			name : "オ:ドユニワ / 喰土邪覇",
+			name : "オ:ドユニワ/喰土邪覇",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-039a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -73477,7 +73477,7 @@
 			id : "23RP3 45/74",
 		},
 		{
-			name : "パトファール-P4 / サイレント・サイレン",
+			name : "パトファール-P4/サイレント・サイレン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-046a.jpg",
 			rarity : "U",
 			flavor : [ "内面から湧き上がる絆の高まりが、パトファールのサイレンに火を灯した。" ],
@@ -73491,21 +73491,21 @@
 			id : "23RP3 47/74",
 		},
 		{
-			name : "タネダ・パンクトーカー / ♪夕暮れに さらに弱い ヤツ叩く",
+			name : "タネダ・パンクトーカー/♪夕暮れに さらに弱い ヤツ叩く",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-048a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23RP3 48/74",
 		},
 		{
-			name : "竹刀の超人 / サイバー免許皆伝",
+			name : "竹刀の超人/サイバー免許皆伝",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-049a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
 			id : "23RP3 49/74",
 		},
 		{
-			name : "ハニー＝マーガニー / 「こっちは甘いぞー」",
+			name : "ハニー＝マーガニー/「こっちは甘いぞー」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-050a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -73806,7 +73806,7 @@
 			id : ["23RP3 TF8/TF10","23RP3 T8/T10"],
 		},
 		{
-			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
+			name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン",
 			pic : ["https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-TF09a.jpg","https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp3-T09a.jpg"],
 			rarity : ["C","C"],
 			flavor : [ "","" ],
@@ -73911,21 +73911,21 @@
 			id : "23EX1 7/84",
 		},
 		{
-			name : "反逆龍 5000typeR / 無法頂上会談",
+			name : "反逆龍 5000typeR/無法頂上会談",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-008a.jpg",
 			rarity : "VIC",
 			flavor : [ "" ],
 			id : "23EX1 8/84",
 		},
 		{
-			name : "「色災」の頂 カラーレス・レインボー / 天上天下輪廻天頂",
+			name : "「色災」の頂 カラーレス・レインボー/天上天下輪廻天頂",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-009a.jpg",
 			rarity : "VIC",
 			flavor : [ "" ],
 			id : "23EX1 9/84",
 		},
 		{
-			name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",
+			name : "「必然」の頂 リュウセイ/「オレの勝利だオフコース！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-010a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -73974,7 +73974,7 @@
 			id : "23EX1 16/84",
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS / 「必殺！ジェット・カスケード・アタック!!」",
+			name : "「合体」の頂 アクア・TITAAANS/「必殺！ジェット・カスケード・アタック!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-017a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -74002,7 +74002,7 @@
 			id : "23EX1 20/84",
 		},
 		{
-			name : "「根性」の頂 メチャデ塊ゾウ / 「大親分、ここにあり！」",
+			name : "「根性」の頂 メチャデ塊ゾウ/「大親分、ここにあり！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-021a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -74065,7 +74065,7 @@
 			id : "23EX1 29/84",
 		},
 		{
-			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
+			name : "メヂカラ・コバルト・カイザー/アイド・ワイズ・シャッター",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-030a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -74093,7 +74093,7 @@
 			id : "23EX1 33/84",
 		},
 		{
-			name : "戦慄の魔女 アリス / 神にも届く旋律",
+			name : "戦慄の魔女 アリス/神にも届く旋律",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-034a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -74121,7 +74121,7 @@
 			id : "23EX1 37/84",
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-038a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -74142,7 +74142,7 @@
 			id : "23EX1 40/84",
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-041a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -74163,14 +74163,14 @@
 			id : "23EX1 43/84",
 		},
 		{
-			name : "ドミー=ゾー / 「倒したいか？」",
+			name : "ドミー=ゾー/「倒したいか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-044a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23EX1 44/84",
 		},
 		{
-			name : "運命の親衛隊シウバ / 「その運命、我らもそれに従おう」",
+			name : "運命の親衛隊シウバ/「その運命、我らもそれに従おう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-045a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -74212,7 +74212,7 @@
 			id : "23EX1 50/84",
 		},
 		{
-			name : "情熱の薔薇 メーテル / 神にも届く歌声",
+			name : "情熱の薔薇 メーテル/神にも届く歌声",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-051a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -74303,7 +74303,7 @@
 			id : "23EX1 63/84",
 		},
 		{
-			name : "トランプ=ランプゼンゼンマ / 「さぁ、カードを配ろう」",
+			name : "トランプ=ランプゼンゼンマ/「さぁ、カードを配ろう」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-064a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -74471,21 +74471,21 @@
 			id : "23EX2 2/112",
 		},
 		{
-			name : "天地命動 バラギアラ / 輪廻暴氷",
+			name : "天地命動 バラギアラ/輪廻暴氷",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-003a.jpg",
 			rarity : "MHZ",
 			flavor : [ "" ],
 			id : "23EX2 3/112",
 		},
 		{
-			name : "キング・ザ・スロットン7 / 7777777",
+			name : "キング・ザ・スロットン7/7777777",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-004a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
 			id : "23EX2 4/112",
 		},
 		{
-			name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",
+			name : "支配の精霊ペルフェクト/ギャラクシー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-005a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -74499,7 +74499,7 @@
 			id : "23EX2 6/112",
 		},
 		{
-			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			name : "龍装艦 チェンジザ/六奇怪の四 ～土を割る逆瀧～",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-007a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -74625,7 +74625,7 @@
 			id : "23EX2 21b/112",
 		},
 		{
-			name : "卍月 ガ・リュザーク 卍 / 「すべて見えているぞ！」",
+			name : "卍月 ガ・リュザーク 卍/「すべて見えているぞ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-022a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -74737,28 +74737,28 @@
 			id : "23EX2 36/112",
 		},
 		{
-			name : "頂上印鑑 パラキン8th / 「魔物が居るな……」",
+			name : "頂上印鑑 パラキン8th/「魔物が居るな……」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-037a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
 			id : "23EX2 37/112",
 		},
 		{
-			name : "魔神頂上 ”密愛流”9th / 「パーフェクト！パーフェクト!!」",
+			name : "魔神頂上 ”密愛流”9th/「パーフェクト！パーフェクト!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-038a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
 			id : "23EX2 38/112",
 		},
 		{
-			name : "審絆の彩り 喜望 / キーボード・アクセス",
+			name : "審絆の彩り 喜望/キーボード・アクセス",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-039a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
 			id : "23EX2 39/112",
 		},
 		{
-			name : "純潔妖精ガーベラ / ハイビとビスカの印",
+			name : "純潔妖精ガーベラ/ハイビとビスカの印",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-040a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -74786,14 +74786,14 @@
 			id : "23EX2 43/112",
 		},
 		{
-			name : "氷牙アクア・マルガレーテ卿 / スペルブック・チャージャー",
+			name : "氷牙アクア・マルガレーテ卿/スペルブック・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-044a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
 			id : "23EX2 44/112",
 		},
 		{
-			name : "電脳鉄人センジュオー / センジュ・チューン",
+			name : "電脳鉄人センジュオー/センジュ・チューン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-045a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -74940,7 +74940,7 @@
 			id : "23EX2 63/112",
 		},
 		{
-			name : "凶鬼90号 ゾレーゴ / 「大当たり！もう一本!!」",
+			name : "凶鬼90号 ゾレーゴ/「大当たり！もう一本!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-064a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -75122,7 +75122,7 @@
 			id : "23EX2 87a/112",
 		},
 		{
-			name : "頂上龍覇 サソリス2nd / 「ナチュラル、タイマン！」",
+			name : "頂上龍覇 サソリス2nd/「ナチュラル、タイマン！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-088a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -75192,7 +75192,7 @@
 			id : "23EX2 97/112",
 		},
 		{
-			name : "爆獣ダキテー・ドラグーン / 勝負だ！チャージャー",
+			name : "爆獣ダキテー・ドラグーン/勝負だ！チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-098a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -75220,7 +75220,7 @@
 			id : "23EX2 101/112",
 		},
 		{
-			name : "韋駄天モー / 鼓動する石版",
+			name : "韋駄天モー/鼓動する石版",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-102a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -75269,28 +75269,28 @@
 			id : "23EX2 108/112",
 		},
 		{
-			name : "爆獣イナバ・ギーゼ / 魔弾ソウル・キャッチャー",
+			name : "爆獣イナバ・ギーゼ/魔弾ソウル・キャッチャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-109a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
 			id : "23EX2 109/112",
 		},
 		{
-			name : "早食王のリンパオ / ライク・ア・ローリング・ストーム",
+			name : "早食王のリンパオ/ライク・ア・ローリング・ストーム",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-110a.jpg",
 			rarity : "C",
 			flavor : [ "ダイナモ、それは敵味方を超えて密かに紡がれる意思の力。" ],
 			id : "23EX2 110/112",
 		},
 		{
-			name : "力持ちのジェロン / ガード・グリップ",
+			name : "力持ちのジェロン/ガード・グリップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-111a.jpg",
 			rarity : "C",
 			flavor : [ "リンパオ！お前の意思を受け継いで、オレが戦う!!" ],
 			id : "23EX2 111/112",
 		},
 		{
-			name : "大鉄漢シルバスターズ / スクリーム・チャージャー",
+			name : "大鉄漢シルバスターズ/スクリーム・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-112a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -75353,7 +75353,7 @@
 			id : "23EX2 超G8/超G12",
 		},
 		{
-			name : "魔導管理室 カリヤドネ / ハーミット・サークル",
+			name : "魔導管理室 カリヤドネ/ハーミット・サークル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-ChoG009a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -75367,7 +75367,7 @@
 			id : "23EX2 超G10/超G12",
 		},
 		{
-			name : "奇石 ミクセル / ジャミング・チャフ",
+			name : "奇石 ミクセル/ジャミング・チャフ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-ChoG011a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -75402,7 +75402,7 @@
 			id : "23EX2 超2/超38",
 		},
 		{
-			name : "龍頭星雲人 / 零誕祭",
+			name : "龍頭星雲人/零誕祭",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-Cho003a.jpg",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -75451,7 +75451,7 @@
 			id : "23EX2 超9/超38",
 		},
 		{
-			name : "水晶の記録 ゼノシャーク / クリスタル・メモリー",
+			name : "水晶の記録 ゼノシャーク/クリスタル・メモリー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-Cho010a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -75535,7 +75535,7 @@
 			id : "23EX2 超20b/超38",
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-Cho021a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -75570,7 +75570,7 @@
 			id : "23EX2 超25/超38",
 		},
 		{
-			name : "天雷の導士アヴァラルド公 / 魔弾アルカディア・エッグ",
+			name : "天雷の導士アヴァラルド公/魔弾アルカディア・エッグ",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex2-Cho026a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -75875,7 +75875,7 @@
 			count : 2,
 		},
 		{
-			name : "学校男 / ゾンビ・カーニバル",
+			name : "学校男/ゾンビ・カーニバル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd3-011a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -75986,7 +75986,7 @@
 			count : 3,
 		},
 		{
-			name : "煙幕の聖沌 k3mur1 / 聖沌忍法 メカくしの術",
+			name : "煙幕の聖沌 k3mur1/聖沌忍法 メカくしの術",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-007a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -76002,7 +76002,7 @@
 			count : 3,
 		},
 		{
-			name : "星姫械 ミモザスター / 招光呪文「メカミング」",
+			name : "星姫械 ミモザスター/招光呪文「メカミング」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd2-009a.jpg",
 			rarity : "C",
 			flavor : [ "シノビのオキテ：序盤はシリエスを、中盤以降はクノイチマントラを探すべし！" ],
@@ -76320,7 +76320,7 @@
 			count : 4,
 		},
 		{
-			name : "ネフェルカーネン / タイム・ストップン",
+			name : "ネフェルカーネン/タイム・ストップン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd2-013a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -76383,7 +76383,7 @@
 			count : 1,
 		},
 		{
-			name : "踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン",
+			name : "踊戯音愛 パステル/♪摩訶不思議 マジカルプリズン キンキラリン",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-003a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -76399,7 +76399,7 @@
 			count : 3,
 		},
 		{
-			name : "調律師ピーカプ / ♪音速で 本番中に チューニング",
+			name : "調律師ピーカプ/♪音速で 本番中に チューニング",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-005a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -76415,7 +76415,7 @@
 			count : 3,
 		},
 		{
-			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
+			name : "淡いと濃い ケローラ/♪やせガエル 負けるなケローラ スパイラル",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-007a.jpg",
 			rarity : "U",
 			flavor : [ "" ],
@@ -76447,7 +76447,7 @@
 			count : 2,
 		},
 		{
-			name : "AQsabbath / ♪このギター グシャっとすれば グシャっとなる",
+			name : "AQsabbath/♪このギター グシャっとすれば グシャっとなる",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-012a.jpg",
 			rarity : "U",
 			flavor : [ "ツインパクトが手札にある時には、クリーチャーと呪文、どちらとしても使用できるぞ！" ],
@@ -76463,7 +76463,7 @@
 			count : 3,
 		},
 		{
-			name : "詠み人-シラズ-Machine / 招水呪文「マジックル」",
+			name : "詠み人-シラズ-Machine/招水呪文「マジックル」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23sd3-013a.jpg",
 			rarity : "C",
 			flavor : [ "" ],
@@ -77369,7 +77369,7 @@
 			id : [ "23RP4 S2/S8", "23RP4 4B/22", "23RP4 2A/20", ],
 		},
 		{
-			name : "サケビ・ポエムシャウター / ♪いつまでも オレ様の歌は 終わらねぇ",
+			name : "サケビ・ポエムシャウター/♪いつまでも オレ様の歌は 終わらねぇ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-S03a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-05Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-03Aa.jpg", ],
 			rarity : [ "SR", "SR", "SR", ],
 			flavor : [ "", "", "", ],
@@ -77432,35 +77432,35 @@
 			id : [ "23RP4 3/74", "23RP4 11B/22", "23RP4 9A/20", ],
 		},
 		{
-			name : "リッチーモア＝ザ＝ダーティ / 「収めてやろうか？」",
+			name : "リッチーモア＝ザ＝ダーティ/「収めてやろうか？」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-004a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-12Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-10Aa.jpg", ],
 			rarity : [ "VR", "VR", "VR", ],
 			flavor : [ "その力は、枠には到底収まらない。", "", "", ],
 			id : [ "23RP4 4/74", "23RP4 12B/22", "23RP4 10A/20", ],
 		},
 		{
-			name : "ドラン・ゴル・ゲルス / 豪龍の記憶",
+			name : "ドラン・ゴル・ゲルス/豪龍の記憶",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-005a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-13Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-11Aa.jpg", ],
 			rarity : [ "VR", "VR", "VR", ],
 			flavor : [ "", "", "", ],
 			id : [ "23RP4 5/74", "23RP4 13B/22", "23RP4 11A/20", ],
 		},
 		{
-			name : "堅き革命 ボルシュゴス / 「ボルシュゴス・スラッシャー!!」",
+			name : "堅き革命 ボルシュゴス/「ボルシュゴス・スラッシャー!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-006a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
 			id : [ "23RP4 6/74", ],
 		},
 		{
-			name : "芸魔獅子 レオジンロ / ♪限りなく 透明に近い このワタシ",
+			name : "芸魔獅子 レオジンロ/♪限りなく 透明に近い このワタシ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-007a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
 			id : [ "23RP4 7/74", ],
 		},
 		{
-			name : "宙番龍 オービーメイカー Par001 / 奇跡の一打",
+			name : "宙番龍 オービーメイカー Par001/奇跡の一打",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-008a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "OBの一打も、回転させると001打になる。", ],
@@ -77516,7 +77516,7 @@
 			id : [ "23RP4 15/74", ],
 		},
 		{
-			name : "シェケダン・ドメ・ゲルス / ドメスティック・アイ",
+			name : "シェケダン・ドメ・ゲルス/ドメスティック・アイ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-016a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -77558,7 +77558,7 @@
 			id : [ "23RP4 21/74", ],
 		},
 		{
-			name : "オ:ベカリーヌ / 裏盗邪撫",
+			name : "オ:ベカリーヌ/裏盗邪撫",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-022a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -77621,7 +77621,7 @@
 			id : [ "23RP4 30/74", ],
 		},
 		{
-			name : "タイピング＝タップ / 「キミの最期の言葉、読むか？」",
+			name : "タイピング＝タップ/「キミの最期の言葉、読むか？」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-031a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -77663,7 +77663,7 @@
 			id : [ "23RP4 36/74", ],
 		},
 		{
-			name : "卓球の妖精 / 回転する開眼",
+			name : "卓球の妖精/回転する開眼",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-037a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-18Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-16Aa.jpg", ],
 			rarity : [ "U", "U", "U", ],
 			flavor : [ "", "", "", ],
@@ -77726,42 +77726,42 @@
 			id : [ "23RP4 45/74", ],
 		},
 		{
-			name : "シュバルスリング-B3 / エン・ゲルス・スパーク",
+			name : "シュバルスリング-B3/エン・ゲルス・スパーク",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-046a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4 46/74", ],
 		},
 		{
-			name : "一期音愛 カーリー / ♪さようなら また会うかもね さようなら",
+			name : "一期音愛 カーリー/♪さようなら また会うかもね さようなら",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-047a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4 47/74", ],
 		},
 		{
-			name : "ゲキシャ・写・メッチ / 「おいらの激写は機関銃だッピ！」",
+			name : "ゲキシャ・写・メッチ/「おいらの激写は機関銃だッピ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-048a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4 48/74", ],
 		},
 		{
-			name : "ア:メナカア / 堕墓邪暗",
+			name : "ア:メナカア/堕墓邪暗",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-049a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4 49/74", ],
 		},
 		{
-			name : "孤迫の超人 / 旋回する鞍馬",
+			name : "孤迫の超人/旋回する鞍馬",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-050a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4 50/74", ],
 		},
 		{
-			name : "モッチ・網・パラッチ / 「これが最後の輝きだッピ！」",
+			name : "モッチ・網・パラッチ/「これが最後の輝きだッピ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-051a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "みんなで暴竜爵様の勇姿を見届けるッピ！ — モッチ・網・パラッチ", ],
@@ -77796,7 +77796,7 @@
 			id : [ "23RP4 55/74", "23RP4 20B/22", "23RP4 18A/20", ],
 		},
 		{
-			name : "イシカワ・ハンドシーカー / ♪聞くだけで 才能バレる このチューン",
+			name : "イシカワ・ハンドシーカー/♪聞くだけで 才能バレる このチューン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-056a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -77845,7 +77845,7 @@
 			id : [ "23RP4 62/74", ],
 		},
 		{
-			name : "俳速 ザ・ハイク / ♪突進者 英語でいえば それチャージャー",
+			name : "俳速 ザ・ハイク/♪突進者 英語でいえば それチャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-063a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -77963,14 +77963,14 @@
 			id : [ "23RP4 TR5/TR9", ],
 		},
 		{
-			name : "龍月 ドラグ・スザーク / 龍・獄・殺",
+			name : "龍月 ドラグ・スザーク/龍・獄・殺",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-TR06a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
 			id : [ "23RP4 TR6/TR9", ],
 		},
 		{
-			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
+			name : "星門の精霊アケルナル/スターゲイズ・ゲート",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-TR07a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -78005,7 +78005,7 @@
 			id : [ "23RP4 TF2/TF10", "23RP4 T2/T10", ],
 		},
 		{
-			name : "西南の超人 / 断断打つべしナウ",
+			name : "西南の超人/断断打つべしナウ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-TF03a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-T03a.jpg", ],
 			rarity : [ "R", "R", ],
 			flavor : [ "", "", ],
@@ -78033,7 +78033,7 @@
 			id : [ "23RP4 TF6/TF10", "23RP4 T6/T10", ],
 		},
 		{
-			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
+			name : "終断γ ドルブロ/ボーンおどり・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-TF07a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-T07a.jpg", ],
 			rarity : [ "U", "U", ],
 			flavor : [ "", "", ],
@@ -78054,7 +78054,7 @@
 			id : [ "23RP4 TF9/TF10", "23RP4 T9/T10", ],
 		},
 		{
-			name : "凶鬼98号 ガシャゴン / 堕呪 ブラッドゥ",
+			name : "凶鬼98号 ガシャゴン/堕呪 ブラッドゥ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-TF10a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4-T10a.jpg", ],
 			rarity : [ "C", "C", ],
 			flavor : [ "", "", ],
@@ -78131,7 +78131,7 @@
 			id : [ "23RP4X S2/S8", "23RP4X S2X/S8", "23RP4X 4B/22", "23RP4X 2A/20", ],
 		},
 		{
-			name : "サケビ・ポエムシャウター / ♪いつまでも オレ様の歌は 終わらねぇ",
+			name : "サケビ・ポエムシャウター/♪いつまでも オレ様の歌は 終わらねぇ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-S03a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-S03Xa.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-05Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-03Aa.jpg", ],
 			rarity : [ "SR", "SR", "SR", "SR", ],
 			flavor : [ "", "", "", "", ],
@@ -78194,35 +78194,35 @@
 			id : [ "23RP4X 3/8", "23RP4X 3X/8", "23RP4X 11B/22", "23RP4X 9A/20", ],
 		},
 		{
-			name : "リッチーモア＝ザ＝ダーティ / 「収めてやろうか？」",
+			name : "リッチーモア＝ザ＝ダーティ/「収めてやろうか？」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-004a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-004Xa.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-12Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-10Aa.jpg", ],
 			rarity : [ "VR", "VR", "VR", "VR", ],
 			flavor : [ "", "", "", "", ],
 			id : [ "23RP4X 4/8", "23RP4X 4X/8", "23RP4X 12B/22", "23RP4X 10A/20", ],
 		},
 		{
-			name : "ドラン・ゴル・ゲルス / 豪龍の記憶",
+			name : "ドラン・ゴル・ゲルス/豪龍の記憶",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-005a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-005Xa.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-13Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-11Aa.jpg", ],
 			rarity : [ "VR", "VR", "VR", "VR", ],
 			flavor : [ "", "", "", "", ],
 			id : [ "23RP4X 5/8", "23RP4X 5X/8", "23RP4X 13B/22", "23RP4X 11A/20", ],
 		},
 		{
-			name : "堅き革命 ボルシュゴス / 「ボルシュゴス・スラッシャー!!」",
+			name : "堅き革命 ボルシュゴス/「ボルシュゴス・スラッシャー!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-006a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-006Xa.jpg", ],
 			rarity : [ "VR", "VR", ],
 			flavor : [ "", "", ],
 			id : [ "23RP4X 6/8", "23RP4X 6X/8", ],
 		},
 		{
-			name : "芸魔獅子 レオジンロ / ♪限りなく 透明に近い このワタシ",
+			name : "芸魔獅子 レオジンロ/♪限りなく 透明に近い このワタシ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-007a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-007Xa.jpg", ],
 			rarity : [ "VR", "VR", ],
 			flavor : [ "", "", ],
 			id : [ "23RP4X 7/8", "23RP4X 7X/8", ],
 		},
 		{
-			name : "宙番龍 オービーメイカー Par001 / 奇跡の一打",
+			name : "宙番龍 オービーメイカー Par001/奇跡の一打",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-008a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-008Xa.jpg", ],
 			rarity : [ "VR", "VR", ],
 			flavor : [ "", "", ],
@@ -78278,7 +78278,7 @@
 			id : [ "23RP4X 15/74", ],
 		},
 		{
-			name : "シェケダン・ドメ・ゲルス / ドメスティック・アイ",
+			name : "シェケダン・ドメ・ゲルス/ドメスティック・アイ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-016a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78320,7 +78320,7 @@
 			id : [ "23RP4X 21/74", ],
 		},
 		{
-			name : "オ:ベカリーヌ / 裏盗邪撫",
+			name : "オ:ベカリーヌ/裏盗邪撫",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-022a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78383,7 +78383,7 @@
 			id : [ "23RP4X 30/74", ],
 		},
 		{
-			name : "タイピング＝タップ / 「キミの最期の言葉、読むか？」",
+			name : "タイピング＝タップ/「キミの最期の言葉、読むか？」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-031a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -78425,7 +78425,7 @@
 			id : [ "23RP4X 36/74", ],
 		},
 		{
-			name : "卓球の妖精 / 回転する開眼",
+			name : "卓球の妖精/回転する開眼",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-037a.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-18Ba.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-16Aa.jpg", ],
 			rarity : [ "U", "U", "U", ],
 			flavor : [ "", "", "", ],
@@ -78488,42 +78488,42 @@
 			id : [ "23RP4X 45/74", ],
 		},
 		{
-			name : "シュバルスリング-B3 / エン・ゲルス・スパーク",
+			name : "シュバルスリング-B3/エン・ゲルス・スパーク",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-046a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4X 46/74", ],
 		},
 		{
-			name : "一期音愛 カーリー / ♪さようなら また会うかもね さようなら",
+			name : "一期音愛 カーリー/♪さようなら また会うかもね さようなら",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-047a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4X 47/74", ],
 		},
 		{
-			name : "ゲキシャ・写・メッチ / 「おいらの激写は機関銃だッピ！」",
+			name : "ゲキシャ・写・メッチ/「おいらの激写は機関銃だッピ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-048a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4X 48/74", ],
 		},
 		{
-			name : "ア:メナカア / 堕墓邪暗",
+			name : "ア:メナカア/堕墓邪暗",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-049a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4X 49/74", ],
 		},
 		{
-			name : "孤迫の超人 / 旋回する鞍馬",
+			name : "孤迫の超人/旋回する鞍馬",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-050a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "23RP4X 50/74", ],
 		},
 		{
-			name : "モッチ・網・パラッチ / 「これが最後の輝きだッピ！」",
+			name : "モッチ・網・パラッチ/「これが最後の輝きだッピ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-051a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "みんなで暴竜爵様の勇姿を見届けるッピ！ — モッチ・網・パラッチ", ],
@@ -78558,7 +78558,7 @@
 			id : [ "23RP4X 55/74", "23RP4X 20B/22", "23RP4X 18A/20", ],
 		},
 		{
-			name : "イシカワ・ハンドシーカー / ♪聞くだけで 才能バレる このチューン",
+			name : "イシカワ・ハンドシーカー/♪聞くだけで 才能バレる このチューン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-056a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -78607,7 +78607,7 @@
 			id : [ "23RP4X 62/74", ],
 		},
 		{
-			name : "俳速 ザ・ハイク / ♪突進者 英語でいえば それチャージャー",
+			name : "俳速 ザ・ハイク/♪突進者 英語でいえば それチャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-063a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -78726,14 +78726,14 @@
 			id : [ "23RP4X TR5/TR9", ],
 		},
 		{
-			name : "龍月 ドラグ・スザーク / 龍・獄・殺",
+			name : "龍月 ドラグ・スザーク/龍・獄・殺",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-TR06a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
 			id : [ "23RP4X TR6/TR9", ],
 		},
 		{
-			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
+			name : "星門の精霊アケルナル/スターゲイズ・ゲート",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-TR07a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -78768,7 +78768,7 @@
 			id : [ "23RP4X TF2/TF10", ],
 		},
 		{
-			name : "西南の超人 / 断断打つべしナウ",
+			name : "西南の超人/断断打つべしナウ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-TF03a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78796,7 +78796,7 @@
 			id : [ "23RP4X TF6/TF10", ],
 		},
 		{
-			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
+			name : "終断γ ドルブロ/ボーンおどり・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-TF07a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -78817,7 +78817,7 @@
 			id : [ "23RP4X TF9/TF10", ],
 		},
 		{
-			name : "凶鬼98号 ガシャゴン / 堕呪 ブラッドゥ",
+			name : "凶鬼98号 ガシャゴン/堕呪 ブラッドゥ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23rp4x-TF10a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -78882,7 +78882,7 @@
 			count : 1,
 		},
 		{
-			name : "ブルー・インパルス / 「真実を見極めよ、ジョニー！」",
+			name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-003a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -78890,7 +78890,7 @@
 			count : 1,
 		},
 		{
-			name : "龍装艦 チェンジザ / 六奇怪の四 ～土を割る逆瀧～",
+			name : "龍装艦 チェンジザ/六奇怪の四 ～土を割る逆瀧～",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-012a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -78930,7 +78930,7 @@
 			count : 1,
 		},
 		{
-			name : "メヂカラ・コバルト・カイザー / アイド・ワイズ・シャッター",
+			name : "メヂカラ・コバルト・カイザー/アイド・ワイズ・シャッター",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-017a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -78938,7 +78938,7 @@
 			count : 1,
 		},
 		{
-			name : "衒影の精霊 リアリテル / 「この記憶もロック完了だね」",
+			name : "衒影の精霊 リアリテル/「この記憶もロック完了だね」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-004a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78946,7 +78946,7 @@
 			count : 1,
 		},
 		{
-			name : "衒影の悪魔龍 トゥルトゥル / 封じられた真言",
+			name : "衒影の悪魔龍 トゥルトゥル/封じられた真言",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-005a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78970,7 +78970,7 @@
 			count : 1,
 		},
 		{
-			name : "煌メク聖晶 弩楼 / ビスティック・マース",
+			name : "煌メク聖晶 弩楼/ビスティック・マース",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-019a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78978,7 +78978,7 @@
 			count : 1,
 		},
 		{
-			name : "聖闘の精霊龍 セイント・カイザー / ライブラ・シールド",
+			name : "聖闘の精霊龍 セイント・カイザー/ライブラ・シールド",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-020a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -78986,7 +78986,7 @@
 			count : 1,
 		},
 		{
-			name : "霊騎コルテオ / プロテクション・サークル",
+			name : "霊騎コルテオ/プロテクション・サークル",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-021a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79098,7 +79098,7 @@
 			count : 1,
 		},
 		{
-			name : "魔刻の斬将オルゼキア / 訪れる魔の時刻",
+			name : "魔刻の斬将オルゼキア/訪れる魔の時刻",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-035a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79106,7 +79106,7 @@
 			count : 1,
 		},
 		{
-			name : "ルソー・モンテス / 法と契約の秤",
+			name : "ルソー・モンテス/法と契約の秤",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-036a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79170,7 +79170,7 @@
 			count : 1,
 		},
 		{
-			name : "天雷の導士アヴァラルド公 / 魔弾アルカディア・エッグ",
+			name : "天雷の導士アヴァラルド公/魔弾アルカディア・エッグ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-044a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79242,7 +79242,7 @@
 			count : 1,
 		},
 		{
-			name : "聖沌忍者 シャーリーシー / シャーリー・チャージャー",
+			name : "聖沌忍者 シャーリーシー/シャーリー・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-049a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -79250,7 +79250,7 @@
 			count : 1,
 		},
 		{
-			name : "音素記号Bm エネルジコ / ♪水面から 天掴まんと するチャージャー",
+			name : "音素記号Bm エネルジコ/♪水面から 天掴まんと するチャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-050a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -79274,7 +79274,7 @@
 			count : 1,
 		},
 		{
-			name : "終断γ ドルブロ / ボーンおどり・チャージャー",
+			name : "終断γ ドルブロ/ボーンおどり・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd7-053a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -79409,7 +79409,7 @@
 			count : 1,
 		},
 		{
-			name : "ボルザード・スーパーヒーロー / 超帝王タイム",
+			name : "ボルザード・スーパーヒーロー/超帝王タイム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-003a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79449,7 +79449,7 @@
 			count : 1,
 		},
 		{
-			name : "鳳翔竜騎ソウルピアレイジ / 高貴なる魂炎",
+			name : "鳳翔竜騎ソウルピアレイジ/高貴なる魂炎",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-020a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79457,7 +79457,7 @@
 			count : 1,
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-021a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79465,7 +79465,7 @@
 			count : 1,
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-022a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79569,7 +79569,7 @@
 			count : 1,
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-035a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79689,7 +79689,7 @@
 			count : 1,
 		},
 		{
-			name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",
+			name : "セルリアン・アックス・ドラゴン/ダブルアックス・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-046a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -79721,7 +79721,7 @@
 			count : 1,
 		},
 		{
-			name : "摩破目 ナトゥーラ・トプス / ストンピング・ウィード",
+			name : "摩破目 ナトゥーラ・トプス/ストンピング・ウィード",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-050a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -79785,7 +79785,7 @@
 			count : 1,
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd4-058a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -79864,7 +79864,7 @@
 			count : 1,
 		},
 		{
-			name : "地龍仙ロマネアース / 仙なる大地",
+			name : "地龍仙ロマネアース/仙なる大地",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-014a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -79896,7 +79896,7 @@
 			count : 1,
 		},
 		{
-			name : "黒豆だんしゃく / 白米男しゃく",
+			name : "黒豆だんしゃく/白米男しゃく",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-018a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -79984,7 +79984,7 @@
 			count : 1,
 		},
 		{
-			name : "暴命天 バラギアラ / ガイアの目覚め",
+			name : "暴命天 バラギアラ/ガイアの目覚め",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-026a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -79992,7 +79992,7 @@
 			count : 1,
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-027a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80136,7 +80136,7 @@
 			count : 1,
 		},
 		{
-			name : "学校男 / ゾンビ・カーニバル",
+			name : "学校男/ゾンビ・カーニバル",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd5-040a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80359,7 +80359,7 @@
 			count : 1,
 		},
 		{
-			name : "ナ・チュラルゴ・デンジャー / ナチュラル・トラップ",
+			name : "ナ・チュラルゴ・デンジャー/ナチュラル・トラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-013a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -80367,7 +80367,7 @@
 			count : 1,
 		},
 		{
-			name : "龍罠 エスカルデン / マクスカルゴ・トラップ",
+			name : "龍罠 エスカルデン/マクスカルゴ・トラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-014a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -80399,7 +80399,7 @@
 			count : 1,
 		},
 		{
-			name : "D-Jealousy-灰撫 / ♪五本まで 集めて林 森ジャングル",
+			name : "D-Jealousy-灰撫/♪五本まで 集めて林 森ジャングル",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-018a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -80407,7 +80407,7 @@
 			count : 1,
 		},
 		{
-			name : "アカシック・B / 「バブルの泡に溺れるのヨ！」",
+			name : "アカシック・B/「バブルの泡に溺れるのヨ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-003a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80415,7 +80415,7 @@
 			count : 1,
 		},
 		{
-			name : "クック・ポロッチ＆ドラッケン / スクランブル・チャージャー",
+			name : "クック・ポロッチ＆ドラッケン/スクランブル・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-004a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80423,7 +80423,7 @@
 			count : 1,
 		},
 		{
-			name : "アカシック・A / 「アサルト！やっちまいな！」",
+			name : "アカシック・A/「アサルト！やっちまいな！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-005a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80431,7 +80431,7 @@
 			count : 1,
 		},
 		{
-			name : "アカシック・C / 「叩き潰すのよ、クラッシュ！」",
+			name : "アカシック・C/「叩き潰すのよ、クラッシュ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-006a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80447,7 +80447,7 @@
 			count : 1,
 		},
 		{
-			name : "第六戦街 ラヴ・ガトラー / 漆黒の裏六戦街",
+			name : "第六戦街 ラヴ・ガトラー/漆黒の裏六戦街",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-020a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80471,7 +80471,7 @@
 			count : 1,
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-023a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80479,7 +80479,7 @@
 			count : 1,
 		},
 		{
-			name : "満韻炎霊 キャノンボール / ♪夏草や イフリートによる 夢の跡",
+			name : "満韻炎霊 キャノンボール/♪夏草や イフリートによる 夢の跡",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-024a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80495,7 +80495,7 @@
 			count : 1,
 		},
 		{
-			name : "偽りの名 13 / 種族選別",
+			name : "偽りの名 13/種族選別",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-026a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80503,7 +80503,7 @@
 			count : 1,
 		},
 		{
-			name : "暴命天 バラギアラ / ガイアの目覚め",
+			name : "暴命天 バラギアラ/ガイアの目覚め",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-027a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80511,7 +80511,7 @@
 			count : 1,
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-028a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80519,7 +80519,7 @@
 			count : 1,
 		},
 		{
-			name : "コレンココ・タンク / ボント・プラントボ",
+			name : "コレンココ・タンク/ボント・プラントボ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-029a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80527,7 +80527,7 @@
 			count : 1,
 		},
 		{
-			name : "エイトビートルズ / R.C.4.",
+			name : "エイトビートルズ/R.C.4.",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-030a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80535,7 +80535,7 @@
 			count : 1,
 		},
 		{
-			name : "全虹帝 ミノガミ / ハザード・パクト",
+			name : "全虹帝 ミノガミ/ハザード・パクト",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-031a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80543,7 +80543,7 @@
 			count : 1,
 		},
 		{
-			name : "マーチングドラム ミドリ / ハーメルン・ハーモニー",
+			name : "マーチングドラム ミドリ/ハーメルン・ハーモニー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-032a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80551,7 +80551,7 @@
 			count : 1,
 		},
 		{
-			name : "ファビュラ・スネイル / ゴルチョップ・トラップ",
+			name : "ファビュラ・スネイル/ゴルチョップ・トラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-033a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80559,7 +80559,7 @@
 			count : 1,
 		},
 		{
-			name : "カワモリデン / リーフストーム・トラップ",
+			name : "カワモリデン/リーフストーム・トラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-034a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80567,7 +80567,7 @@
 			count : 1,
 		},
 		{
-			name : "ブルックス・ザ・シルバー / ザババン・ライト",
+			name : "ブルックス・ザ・シルバー/ザババン・ライト",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-035a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80575,7 +80575,7 @@
 			count : 1,
 		},
 		{
-			name : "キング・シビレアシダケ / インビンシブル・テクノロジー",
+			name : "キング・シビレアシダケ/インビンシブル・テクノロジー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-036a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80615,7 +80615,7 @@
 			count : 1,
 		},
 		{
-			name : "爆獣マチュー・スチュアート / 超銀河弾 HELL",
+			name : "爆獣マチュー・スチュアート/超銀河弾 HELL",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-041a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -80647,7 +80647,7 @@
 			count : 1,
 		},
 		{
-			name : "K・アトラン＆キング海賊団 / アイアイサー・チャージャー",
+			name : "K・アトラン＆キング海賊団/アイアイサー・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-007a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80655,7 +80655,7 @@
 			count : 1,
 		},
 		{
-			name : "雪精 サエポヨ＆ユキぴょん / ハンマー・チャージャー",
+			name : "雪精 サエポヨ＆ユキぴょん/ハンマー・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-008a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "このハンマーは私の初恋！", ],
@@ -80679,7 +80679,7 @@
 			count : 1,
 		},
 		{
-			name : "摩破目 ナトゥーラ・トプス / ストンピング・ウィード",
+			name : "摩破目 ナトゥーラ・トプス/ストンピング・ウィード",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-045a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80687,7 +80687,7 @@
 			count : 1,
 		},
 		{
-			name : "レレディ・バ・グーバ / ツインパクト・マップ",
+			name : "レレディ・バ・グーバ/ツインパクト・マップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-046a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80695,7 +80695,7 @@
 			count : 1,
 		},
 		{
-			name : "ドンド・ラフーイ / ネオン・ジオング",
+			name : "ドンド・ラフーイ/ネオン・ジオング",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-047a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80703,7 +80703,7 @@
 			count : 1,
 		},
 		{
-			name : "コンダマ / 魂フエミドロ",
+			name : "コンダマ/魂フエミドロ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-048a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80711,7 +80711,7 @@
 			count : 1,
 		},
 		{
-			name : "シビレアシダケ / インビンシブル・パワー",
+			name : "シビレアシダケ/インビンシブル・パワー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-049a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -80751,7 +80751,7 @@
 			count : 1,
 		},
 		{
-			name : "氷牙レオポル・ディーネ公 / エマージェンシー・タイフーン",
+			name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-054a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -80759,7 +80759,7 @@
 			count : 1,
 		},
 		{
-			name : "氷牙フランツI世 / 魔弾オープン・ブレイン",
+			name : "氷牙フランツI世/魔弾オープン・ブレイン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-055a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -80775,7 +80775,7 @@
 			count : 1,
 		},
 		{
-			name : "配球の超人 / 記録的剛球",
+			name : "配球の超人/記録的剛球",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-057a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -80783,7 +80783,7 @@
 			count : 1,
 		},
 		{
-			name : "イチゴッチ・タンク / レッツ・ゴイチゴ",
+			name : "イチゴッチ・タンク/レッツ・ゴイチゴ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-058a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -80799,7 +80799,7 @@
 			count : 1,
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23bd6-060a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -81034,7 +81034,7 @@
 	var isDeck = true;
 	var setCardList = [
 		{
-			name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",
+			name : "支配の精霊ペルフェクト/ギャラクシー・チャージャー",
 			pic : "https://dm.takaratomy.co.jp/product/kamiart06/image/kamiartImg17_pc.png",
 			rarity : "SR",
 			flavor : [ "" ],
@@ -81160,7 +81160,7 @@
 			count : 1,
 		},
 		{
-			name : "氷打の妖精 / 巨打設計図",
+			name : "氷打の妖精/巨打設計図",
 			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/02/card03.png",
 			rarity : "R",
 			flavor : [ "" ],
@@ -81255,7 +81255,7 @@
 			count : 1,
 		},
 		{
-			name : "戦慄の魔女 アリス / 神にも届く旋律",
+			name : "戦慄の魔女 アリス/神にも届く旋律",
 			pic : "https://dm.takaratomy.co.jp/product/kamiart08/image/01/card04.png",
 			rarity : "R",
 			flavor : [ "" ],
@@ -81318,7 +81318,7 @@
 			count : 1,
 		},
 		{
-			name : "D2V3 終断のレッドトロン / フォビドゥン・ハンド",
+			name : "D2V3 終断のレッドトロン/フォビドゥン・ハンド",
 			pic : "https://dm.takaratomy.co.jp/product/kamiart09/image/01/card04.png",
 			rarity : "R",
 			flavor : [ "" ],
@@ -81481,7 +81481,7 @@
 			id : [ "23EX3 S9/S10", ],
 		},
 		{
-			name : "邪騎 スベルニル / 「我が愛馬よ!!」",
+			name : "邪騎 スベルニル/「我が愛馬よ!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-S10a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "ついに我を本気にさせたな!!", ],
@@ -81509,7 +81509,7 @@
 			id : [ "23EX3 3/74", ],
 		},
 		{
-			name : "水晶の祈り / クリスタル・ドゥーム",
+			name : "水晶の祈り/クリスタル・ドゥーム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-004a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -81565,7 +81565,7 @@
 			id : [ "23EX3 11/74", ],
 		},
 		{
-			name : "神判のカルマ コットン / ジャッジ・水晶チャージャー",
+			name : "神判のカルマ コットン/ジャッジ・水晶チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-012a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -81586,7 +81586,7 @@
 			id : [ "23EX3 14/74", ],
 		},
 		{
-			name : "救済のカルマ ミルク / リリーフ・水晶チャージャー",
+			name : "救済のカルマ ミルク/リリーフ・水晶チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-015a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -81607,7 +81607,7 @@
 			id : [ "23EX3 17/74", ],
 		},
 		{
-			name : "禁術のカルマ カレイル / フォビッド・水晶チャージャー",
+			name : "禁術のカルマ カレイル/フォビッド・水晶チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-018a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -81628,7 +81628,7 @@
 			id : [ "23EX3 20/74", ],
 		},
 		{
-			name : "連射のカルマ ユキメ / ショット・水晶チャージャー",
+			name : "連射のカルマ ユキメ/ショット・水晶チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-021a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -81649,7 +81649,7 @@
 			id : [ "23EX3 23/74", ],
 		},
 		{
-			name : "清浄のカルマ インカ / オキヨメ・水晶チャージャー",
+			name : "清浄のカルマ インカ/オキヨメ・水晶チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-024a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -81726,7 +81726,7 @@
 			id : [ "23EX3 34/74", ],
 		},
 		{
-			name : "戦攻のシダン アカダシ / 「いいダシがとれそうだ」",
+			name : "戦攻のシダン アカダシ/「いいダシがとれそうだ」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-035a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -81887,7 +81887,7 @@
 			id : [ "23EX3 57/74", ],
 		},
 		{
-			name : "埋没のシダン オリーブオイル / 記憶喪失魔法 アブラカタブーラ",
+			name : "埋没のシダン オリーブオイル/記憶喪失魔法 アブラカタブーラ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-058a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -81999,7 +81999,7 @@
 			id : [ "23EX3 73/74", ],
 		},
 		{
-			name : "邪鎧 デ=アムド / 「我が力となれ!!」",
+			name : "邪鎧 デ=アムド/「我が力となれ!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-074a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -82195,7 +82195,7 @@
 			id : [ "23EX3 T2/T20", ],
 		},
 		{
-			name : "懐疑の虎狼 ミラーズホロウ / 「汝は偽名なりや？」",
+			name : "懐疑の虎狼 ミラーズホロウ/「汝は偽名なりや？」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-T03a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -82251,7 +82251,7 @@
 			id : [ "23EX3 T10/T20", ],
 		},
 		{
-			name : "透明妖精リリン / 妖精のプレリュード",
+			name : "透明妖精リリン/妖精のプレリュード",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex3-T11a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -82363,7 +82363,7 @@
 			id : "PROMOY22 P21/Y22",
 		},
 		{
-			name : "サドレイン=トレイン / 邪神呪文「アビサール」",
+			name : "サドレイン=トレイン/邪神呪文「アビサール」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-022a.jpg",
 			rarity : "",
 			flavor : [ "" ],
@@ -82398,7 +82398,7 @@
 	var isDeck = false;
 	var setCardList = [
 		{
-			name : "トング＝ゴング / 「世界をつかませてやろうか？」",
+			name : "トング＝ゴング/「世界をつかませてやろうか？」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-044a.jpg",
 			rarity : "R",
 			flavor : [ "イベントの楽しさで、君のハートをわしづかみ！" ],
@@ -82426,7 +82426,7 @@
 			id : "PROMOY22 P47/Y22",
 		},
 		{
-			name : "暴発秘宝ベンゾ / 星龍の暴発",
+			name : "暴発秘宝ベンゾ/星龍の暴発",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-048a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -82461,7 +82461,7 @@
 	var isDeck = false;
 	var setCardList = [
 		{
-			name : "オ:ベカリーヌ / 裏盗邪撫",
+			name : "オ:ベカリーヌ/裏盗邪撫",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy22-064a.jpg",
 			rarity : "R",
 			flavor : [ "" ],
@@ -82706,7 +82706,7 @@
 			count : 2,
 		},
 		{
-			name : "星門の精霊アケルナル / スターゲイズ・ゲート",
+			name : "星門の精霊アケルナル/スターゲイズ・ゲート",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sd2-003a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -82714,7 +82714,7 @@
 			count : 4,
 		},
 		{
-			name : "聖闘の精霊龍 セイント・カイザー / ライブラ・シールド",
+			name : "聖闘の精霊龍 セイント・カイザー/ライブラ・シールド",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sd2-004a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -82746,7 +82746,7 @@
 			count : 4,
 		},
 		{
-			name : "閃光の神官 ヴェルベット / フェアリー・パワー",
+			name : "閃光の神官 ヴェルベット/フェアリー・パワー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sd2-008a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -82754,7 +82754,7 @@
 			count : 4,
 		},
 		{
-			name : "竹馬の超人 / テイクバック・チャージャー",
+			name : "竹馬の超人/テイクバック・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sd2-009a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -82762,7 +82762,7 @@
 			count : 4,
 		},
 		{
-			name : "配球の超人 / 記録的剛球",
+			name : "配球の超人/記録的剛球",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sd2-010a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -82857,7 +82857,7 @@
 			count : 3,
 		},
 		{
-			name : "闘争類拳嘩目 ステゴロ・カイザー / お清めシャラップ",
+			name : "闘争類拳嘩目 ステゴロ・カイザー/お清めシャラップ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24sp1-011a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -83697,7 +83697,7 @@
 			id : [ "24RP1 TR10/TR11", ],
 		},
 		{
-			name : "龍頭星雲人 / 零誕祭",
+			name : "龍頭星雲人/零誕祭",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp1-SP1a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -84418,7 +84418,7 @@
 			id : [ "24RP2 TR8/TR11", ],
 		},
 		{
-			name : "天命龍装 ホーリーエンド / ナウ・オア・ネバー",
+			name : "天命龍装 ホーリーエンド/ナウ・オア・ネバー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp2-TR09a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -84446,7 +84446,7 @@
 			id : [ "24RP2 T2/T12", ],
 		},
 		{
-			name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",
+			name : "ボン・キゴマイム/♪やせ蛙 ラッキーナンバー ここにあり",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp2-T03a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -84481,7 +84481,7 @@
 			id : [ "24RP2 T7/T12", ],
 		},
 		{
-			name : "フットレス＝トレース / 「力が欲しいか？」",
+			name : "フットレス＝トレース/「力が欲しいか？」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp2-T08a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -85181,14 +85181,14 @@
 			id : [ "24RP3 DM1/DM1", "24RP3 DM1秘/DM1", ],
 		},
 		{
-			name : "der'Zen Mondo / ♪必殺で つわものどもが 夢の跡",
+			name : "der'Zen Mondo/♪必殺で つわものどもが 夢の跡",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp3-TR01a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
 			id : [ "24RP3 TR1/TR9", ],
 		},
 		{
-			name : "「必然」の頂 リュウセイ / 「オレの勝利だオフコース！」",
+			name : "「必然」の頂 リュウセイ/「オレの勝利だオフコース！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp3-TR02a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -85279,7 +85279,7 @@
 			id : [ "24RP3 T2/T12", ],
 		},
 		{
-			name : "ムシ無視のんのん / 灰になるほどヒート",
+			name : "ムシ無視のんのん/灰になるほどヒート",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp3-T03a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -85538,7 +85538,7 @@
 			id : [ "24EX2 21/100", ],
 		},
 		{
-			name : "呪烏竜 ACE-Curase / 繁栄の鏡",
+			name : "呪烏竜 ACE-Curase/繁栄の鏡",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-022a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -85699,7 +85699,7 @@
 			id : [ "24EX2 44/100", ],
 		},
 		{
-			name : "霊騎コルテオ / プロテクション・サークル",
+			name : "霊騎コルテオ/プロテクション・サークル",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-045a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -85713,7 +85713,7 @@
 			id : [ "24EX2 46/100", ],
 		},
 		{
-			name : "凶骨の邪将クエイクス / クエイクス・ハンド",
+			name : "凶骨の邪将クエイクス/クエイクス・ハンド",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-047a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -85748,14 +85748,14 @@
 			id : [ "24EX2 50/100", ],
 		},
 		{
-			name : "ボルシャック・スーパーヒーロー / 超英雄タイム",
+			name : "ボルシャック・スーパーヒーロー/超英雄タイム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-051a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
 			id : [ "24EX2 51/100", ],
 		},
 		{
-			name : "炎龍覇 グレンアイラ / 「助けて！モルト!!」",
+			name : "炎龍覇 グレンアイラ/「助けて！モルト!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-052a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -85811,7 +85811,7 @@
 			id : [ "24EX2 59/100", ],
 		},
 		{
-			name : "爆竜兵ドラグストライク / 天使と悪魔の憤怒",
+			name : "爆竜兵ドラグストライク/天使と悪魔の憤怒",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-060a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -85832,7 +85832,7 @@
 			id : [ "24EX2 62/100", ],
 		},
 		{
-			name : "神門の精霊エールフリート / ホーリー・スパーク壱式",
+			name : "神門の精霊エールフリート/ホーリー・スパーク壱式",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-063a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -85853,14 +85853,14 @@
 			id : [ "24EX2 65/100", ],
 		},
 		{
-			name : "混沌の獅子デスライガー / カオス・チャージャー",
+			name : "混沌の獅子デスライガー/カオス・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-066a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "24EX2 66/100", ],
 		},
 		{
-			name : "学校男 / ゾンビ・カーニバル",
+			name : "学校男/ゾンビ・カーニバル",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-067a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -85881,21 +85881,21 @@
 			id : [ "24EX2 69/100", ],
 		},
 		{
-			name : "ボルシャック・ドラゴン / 決闘者・チャージャー",
+			name : "ボルシャック・ドラゴン/決闘者・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-070a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "24EX2 70/100", ],
 		},
 		{
-			name : "タイムピョンチキ / オラオラ・ジョーカーズ",
+			name : "タイムピョンチキ/オラオラ・ジョーカーズ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-071a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "24EX2 71/100", ],
 		},
 		{
-			name : "記憶の炎 ボルメテウス・エナジー / 魂と怒りの盾",
+			name : "記憶の炎 ボルメテウス・エナジー/魂と怒りの盾",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-072a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "その怒りは記憶に残り続ける。", ],
@@ -85923,7 +85923,7 @@
 			id : [ "24EX2 75/100", ],
 		},
 		{
-			name : "襲撃者ディス・ドライブ / パンドラ・タイム",
+			name : "襲撃者ディス・ドライブ/パンドラ・タイム",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-076a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -85986,7 +85986,7 @@
 			id : [ "24EX2 84/100", ],
 		},
 		{
-			name : "消火機装コントロール・ファイア / パンドラ・チャージャー",
+			name : "消火機装コントロール・ファイア/パンドラ・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-085a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -86063,7 +86063,7 @@
 			id : [ "24EX2 95/100", ],
 		},
 		{
-			name : "蒼狼の豊穣 ワクムテラス / オリジナル・ライフ",
+			name : "蒼狼の豊穣 ワクムテラス/オリジナル・ライフ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-096a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -86175,14 +86175,14 @@
 			id : [ "24EX2 超10/超47", ],
 		},
 		{
-			name : "支配の精霊ペルフェクト / ギャラクシー・チャージャー",
+			name : "支配の精霊ペルフェクト/ギャラクシー・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho011a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
 			id : [ "24EX2 超11/超47", ],
 		},
 		{
-			name : "ブルー・インパルス / 「真実を見極めよ、ジョニー！」",
+			name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho012a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -86210,7 +86210,7 @@
 			id : [ "24EX2 超15/超47", ],
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS / 「必殺！ジェット・カスケード・アタック!!」",
+			name : "「合体」の頂 アクア・TITAAANS/「必殺！ジェット・カスケード・アタック!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho016a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -86224,7 +86224,7 @@
 			id : [ "24EX2 超17/超47", ],
 		},
 		{
-			name : "八頭竜 ACE-Yamata / 神秘の宝剣",
+			name : "八頭竜 ACE-Yamata/神秘の宝剣",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho018a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -86266,14 +86266,14 @@
 			id : [ "24EX2 超23/超47", ],
 		},
 		{
-			name : "ボン・キゴマイム / ♪やせ蛙 ラッキーナンバー ここにあり",
+			name : "ボン・キゴマイム/♪やせ蛙 ラッキーナンバー ここにあり",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho024a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
 			id : [ "24EX2 超24/超47", ],
 		},
 		{
-			name : "同期の妖精 / ド浮きの動悸",
+			name : "同期の妖精/ド浮きの動悸",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho025a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -86308,7 +86308,7 @@
 			id : [ "24EX2 超29/超47", ],
 		},
 		{
-			name : "幻緑の双月 / 母なる星域",
+			name : "幻緑の双月/母なる星域",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho030a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -86350,14 +86350,14 @@
 			id : [ "24EX2 超35/超47", ],
 		},
 		{
-			name : "淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル",
+			name : "淡いと濃い ケローラ/♪やせガエル 負けるなケローラ スパイラル",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho036a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
 			id : [ "24EX2 超36/超47", ],
 		},
 		{
-			name : "セルリアン・アックス・ドラゴン / ダブルアックス・チャージャー",
+			name : "セルリアン・アックス・ドラゴン/ダブルアックス・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho037a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -86371,7 +86371,7 @@
 			id : [ "24EX2 超38/超47", ],
 		},
 		{
-			name : "雪精 サエポヨ＆ユキぴょん / ハンマー・チャージャー",
+			name : "雪精 サエポヨ＆ユキぴょん/ハンマー・チャージャー",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho039a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -86427,7 +86427,7 @@
 			id : [ "24EX2 超46/超47", ],
 		},
 		{
-			name : "ネオ・ボルシャック・ドラゴン / ボルシャックゾーン",
+			name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho047a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -86553,7 +86553,7 @@
 			id : [ "24EX1 9/89", "24EX1 秘1/秘5", ],
 		},
 		{
-			name : "ボルシャック・NEX（ネックス） / スーパー・スパーク",
+			name : "ボルシャック・NEX（ネックス）/スーパー・スパーク",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-010a.jpg", ],
 			rarity : [ "SR", ],
 			flavor : [ "", ],
@@ -86602,7 +86602,7 @@
 			id : [ "24EX1 16/89", ],
 		},
 		{
-			name : "カシス・グレープ / ♥トキメク思いがグレイドをあげ～る",
+			name : "カシス・グレープ/♥トキメク思いがグレイドをあげ～る",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-017a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
@@ -86735,7 +86735,7 @@
 			id : [ "24EX1 35/89", ],
 		},
 		{
-			name : "カシス・パイン / ♥あたしのスパークがメロメロにさせ～る",
+			name : "カシス・パイン/♥あたしのスパークがメロメロにさせ～る",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-036a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -86770,7 +86770,7 @@
 			id : [ "24EX1 40/89", ],
 		},
 		{
-			name : "氷打の妖精 / 巨打設計図",
+			name : "氷打の妖精/巨打設計図",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-041a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -86812,7 +86812,7 @@
 			id : [ "24EX1 46/89", ],
 		},
 		{
-			name : "暴発秘宝ベンゾ / 星龍の暴発",
+			name : "暴発秘宝ベンゾ/星龍の暴発",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-047a.jpg", ],
 			rarity : [ "R", ],
 			flavor : [ "", ],
@@ -86854,7 +86854,7 @@
 			id : [ "24EX1 52/89", ],
 		},
 		{
-			name : "カシス・オレンジ / ♥応援してくれるみんなが元気をくれ～る",
+			name : "カシス・オレンジ/♥応援してくれるみんなが元気をくれ～る",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-053a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -86910,7 +86910,7 @@
 			id : [ "24EX1 60/89", ],
 		},
 		{
-			name : "完璧妖精ビスカX / 「燃え燃えズッキュン！」",
+			name : "完璧妖精ビスカX/「燃え燃えズッキュン！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-061a.jpg", ],
 			rarity : [ "U", ],
 			flavor : [ "", ],
@@ -86980,7 +86980,7 @@
 			id : [ "24EX1 70/89", ],
 		},
 		{
-			name : "カシス・ソーダ / ♥あたしたちがみんなに元気を届け～る",
+			name : "カシス・ソーダ/♥あたしたちがみんなに元気を届け～る",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-071a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -87029,7 +87029,7 @@
 			id : [ "24EX1 77/89", ],
 		},
 		{
-			name : "ファイン・撃・ピヨッチ / 「暴竜爵は不滅なり！」",
+			name : "ファイン・撃・ピヨッチ/「暴竜爵は不滅なり！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-078a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
@@ -87050,7 +87050,7 @@
 			id : [ "24EX1 80/89", ],
 		},
 		{
-			name : "完璧妖精オチャッピィX / 「ちょこっトラップ！」",
+			name : "完璧妖精オチャッピィX/「ちょこっトラップ！」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex1-081a.jpg", ],
 			rarity : [ "C", ],
 			flavor : [ "", ],
