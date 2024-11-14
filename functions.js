@@ -4195,12 +4195,16 @@
 	} 
 	
 	//自ガチまとめ匯入牌組(UI)
-	function importGachi(){
-		var deckId = prompt("請輸入ガチまとめ的牌組網址").match( /\w{8}\-\w{4}-\w{4}-\w{4}-\w{12}/ )[0];
-		if ( deckId == null || deckId == "" ){
-			alert( "格式不符，請聯絡系統管理員" );
+	function importGachi( ignore ){
+		if ( ignore ){
+			alert( "請將ガチまとめ的牌組網址私訊給系統管理員，系統管理員將於上班時間幫您手動產生專屬翻譯用網址" );
 		} else {
-			parseGachiMatome( deckId );
+			var deckId = prompt("請輸入ガチまとめ的牌組網址").match( /\w{8}\-\w{4}-\w{4}-\w{4}-\w{12}/ )[0];
+			if ( deckId == null || deckId == "" ){
+				alert( "格式不符，請聯絡系統管理員" );
+			} else {
+				parseGachiMatome( deckId );
+			}
 		}
 	}
 	
