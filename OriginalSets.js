@@ -1303,7 +1303,7 @@
 		{		name : "シェル・アルカザール",					count : 4,	},
 		{		name : "ジャスミンの地版",						count : 4,	},
 		{		name : "蒼狼の王妃 イザナミテラス",				count : 3,	},
-		{		name : "Q.Q.QX/終葬 5.S.D.",					count : 3,	},
+		{		name : "Q.Q.QX./終葬 5.S.D.",					count : 3,	},
 		{		name : "ヨビニオン・マルル",					count : 3,	},
 		{		name : "ガイアッシュの海地図",					count : 2,	},
 		{		name : "Dの天災 海底研究所",					count : 2,	},

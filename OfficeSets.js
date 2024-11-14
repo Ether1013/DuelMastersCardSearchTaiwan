@@ -48411,7 +48411,7 @@
 			id : "EX15 19/50",
 		},
 		{
-			name : "Q.Q.QX/終葬 5.S.D.",
+			name : "Q.Q.QX./終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a020a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],
@@ -68632,7 +68632,7 @@
 			id : "EX19 M39/M40",
 		},
 		{
-			name : "Q.Q.QX/終葬 5.S.D.",
+			name : "Q.Q.QX./終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex19-m40a.jpg",
 			rarity : "MAS",
 			flavor : [ "" ],

@@ -81772,7 +81772,7 @@
 			],
 		},
 		{
-			name : "Q.Q.QX/終葬 5.S.D.",
+			name : "Q.Q.QX./終葬 5.S.D.",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex15-a020a.jpg",
 			mana : 1,
 			mType : 'T',
