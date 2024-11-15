@@ -1090,6 +1090,17 @@
 			if ( theCard.wData == null ){
 				insertDatas.push( cardDatas.getSelectedCardByUdIndex( theCard ) );
 			} else {
+				//先檢查雙極卡有沒有符合上下大小條件，沒有的話就踢掉
+				if ( theCard.mType == 'T' ){
+					var uCost = theCard.wData[0].cost;
+					var dCost = theCard.wData[1].cost;
+					if ( uCost > dCost && !$("[name=wUdCase][value=U]").is(":checked") )
+						continue;
+					if ( uCost == dCost && !$("[name=wUdCase][value=S]").is(":checked") )
+						continue;
+					if ( uCost < dCost && !$("[name=wUdCase][value=D]").is(":checked") )
+						continue;
+				}
 				for ( var udIndex = 0 ; udIndex < theCard.wData.length ; udIndex++ ){
 					insertDatas.push( cardDatas.getSelectedCardByUdIndex( theCard, udIndex ) );
 				}
@@ -3859,6 +3870,12 @@
 				(seconds[s1])[s2].style.display = doOpen ? "inline" : "none";
 			}
 		}
+		//雙極比較
+		if ( doOpen ){
+			$(".wUdDiv").show();
+		} else {
+			$(".wUdDiv").hide();
+		}
 		//魂
 		gobi("filter_tr_soul").style.display = doOpen ? "" : "none";
 		//稀有度
@@ -3890,7 +3907,8 @@
 //			setSelectValue( "power_calc" , "e" );
 			setSelectValue( "cost2" , "" );
 			setSelectValue( "power2" , "" );
-			
+			//雙極比較
+			$("[name=wUdCase]").prop("checked",true);
 			//魂
 			setCheckboxValue( "soul" , null );
 			//稀有度
