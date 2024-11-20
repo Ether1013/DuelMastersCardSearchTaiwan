@@ -81399,6 +81399,116 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "DMART-18";
+	var setName = "神アート 超獣世界の歩き方 ～アセビ見聞録～";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "芸魔王将 カクメイジン",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/01/card01.png",
+			rarity : "OR",
+			flavor : [ "" ],
+			id : "ART18 1/5",
+			count : 1,
+		},
+		{
+			name : "ボルシャック・ヴォルジャアク",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/01/card02.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART18 2/5",
+			count : 1,
+		},
+		{
+			name : "流星のガイアッシュ・カイザー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/01/card03.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART18 3/5",
+			count : 1,
+		},
+		{
+			name : "衒影鎧 ロストメモリ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/01/card04.png",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "ART18 4/5",
+			count : 1,
+		},
+		{
+			name : "悪魔妖精ベラドンナ",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/01/card05.png",
+			rarity : "UC",
+			flavor : [ "" ],
+			id : "ART18 5/5",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "DMART-19";
+	var setName = "神アート RPD-ロールプレイングデュエマ リュウセイ・カイザーが転生したら勇者だった件";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "「必然」の頂 リュウセイ/「オレの勝利だオフコース！」",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/02/card01.png",
+			rarity : "SR",
+			flavor : [ "" ],
+			id : "ART19 1/5",
+			count : 1,
+		},
+		{
+			name : "「合体」の頂 アクア・TITAAANS/「必殺！ジェット・カスケード・アタック!!」",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/02/card02.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART19 2/5",
+			count : 1,
+		},
+		{
+			name : "「根性」の頂 メチャデ塊ゾウ/「大親分、ここにあり！」",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/02/card03.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART19 3/5",
+			count : 1,
+		},
+		{
+			name : "R.S.F.K./オールイン・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/02/card04.png",
+			rarity : "VR",
+			flavor : [ "" ],
+			id : "ART19 4/5",
+			count : 1,
+		},
+		{
+			name : "頂上連結 ロッド・ゾージア5th",
+			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/02/card05.png",
+			rarity : "SR",
+			flavor : [ "よくぞ我が導きに従い4大天使を倒した……では彼らを統べし5番目の大天使……わたしが最後の相手だ。" ],
+			id : "ART19 5/5",
+			count : 1,
+		},
+		{
+			name : "特攻人形ジェニー",
+			pic : [ "https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg23_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg24_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg25_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg26_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg27_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg28_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg29_pc.png","https://dm.takaratomy.co.jp/product/kamiart07/image/kamiartImg30_pc.png", ],
+			rarity : "C",
+			flavor : [ "ぬし様、お手を拝借でありんす。 — 特攻人形ジェニー","カフェ「じゑにゐ」にてお待ちしてます。 — 特攻人形ジェニー","みんな～！新曲のレコード、買ってくれてありがとう!! — 特攻人形ジェニー","イェーイ、めっちゃチョベリグ！ — 特攻人形ジェニー","その時代、彼女は人々の憧れだった。","その時代、彼女は町の華だった。","その時代、彼女は崇拝の対象だった。","その時代、彼女は自由の象徴だった。", ],
+			id : [ "神P1/Y23","神P2/Y23","神P3/Y23","神P4/Y23","神P5/Y23","神P6/Y23","神P7/Y23","神P8/Y23", ],
+			count : 1,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
 	var setCode = "DM23-EX3";
 	var setName = "アビス・レボリューション外伝 「邪神と水晶の華」";
 	var isDeck = false;
@@ -82519,7 +82629,7 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
-	var setCode = "OF-Y23 SPP2024-1"
+	var setCode = "OF-Y24 SPP2024-1"
 	var setName = "スペシャルプロモパック2024 vol.1"
 	var isDeck = false;
 	var setCardList = [
@@ -82579,6 +82689,70 @@
 			flavor : [ "ビビッドに勝利を引き寄せろ！" ],
 			id : "PROMOY24 P23/Y23",
 		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
+	var setCode = "OF-Y24 SPP2024-2"
+	var setName = "スペシャルプロモパック2024 vol.2"
+	var isDeck = false;
+	var setCardList = [
+		{
+			name : "ボルシャック・ハイパー・アークゼオス",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-033a.jpg",
+			rarity : "R",
+			flavor : [ "" ],
+			id : "P33/Y23",
+		},
+		{
+			name : "破城の槌",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-034.jpg",
+			rarity : "C",
+			flavor : [ "君がイベントに来てくれて、破城の槌もニッコリだ！" ],
+			id : "P34/Y23",
+		},
+		{
+			name : "霊淵 アガルーム＝プルーフ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-035a.jpg",
+			rarity : "UC",
+			flavor : [ "" ],
+			id : "P35/Y23",
+		},
+		{
+			name : "コッコ・格・ルピア",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-036.jpg",
+			rarity : "UC",
+			flavor : [ "スペシャルなプロモカードをお届け！" ],
+			id : "P36/Y23",
+		},
+		{
+			name : "冒険妖精ポレコ",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-037.jpg",
+			rarity : "C",
+			flavor : [ "デュエマをめぐる冒険は終わらない！" ],
+			id : "P37/Y23",
+		},
+		{
+			name : "白騎士の精霊HEAVEN・キッド",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-038.jpg",
+			rarity : "R",
+			flavor : [ "デュエマで遊べてカードももらえる、イベントの楽しさはヘヴン級！" ],
+			id : "P38/Y23",
+		},
+		{
+			name : "Disメイデン",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-039.jpg",
+			rarity : "R",
+			flavor : [ "君がイベントに来てくれて、Disメイデンのテンションも上がりっぱなしだ！" ],
+			id : "P39/Y23",
+		},
+		{
+			name : "K・アトラン＆キング海賊団/アイアイサー・チャージャー",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/promoy23-040a.jpg",
+			rarity : "UC",
+			flavor : [ "" ],
+			id : "P40/Y23",
+		},
+
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 

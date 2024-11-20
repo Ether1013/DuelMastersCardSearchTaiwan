@@ -335,7 +335,8 @@
 		var deckList_names = [];
 		var deckList_counts = [];
 
-		deckString = deckString.replace( /[\[\]《》【】]/g , " " ).split( /[\n]/g );
+		deckString = deckString.replace("／","/").replace( /[\[\]《》【】]/g , " " ).split( /[\n]/g );
+		console.log( deckString );
 		for ( var ds = 0 ; ds < deckString.length ; ds++ ){
 			var _line = deckString[ds].replace( /^[ 　\s]+/g , "" ).replace( /[ 　\s]+$/g , "" );
 			var _cardNames = null;
