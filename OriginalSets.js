@@ -1293,22 +1293,21 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-040"
-	var setName = "甲龍QX＠Ether"
+	var setName = "甲龍QX 防禦型＠Ether"
 	var isDeck = true;
 	var setCardList = [
-		{		name : "甲型龍帝式 キリコ3",					count : 4,	},
-		{		name : "水晶の祈り/クリスタル・ドゥーム",		count : 4,	},
-		{		name : "蒼神龍トライクラブ・トライショット",	count : 4,	},
-		{		name : "プリンセス・パーティ ～シラハの絆～",	count : 4,	},
 		{		name : "シェル・アルカザール",					count : 4,	},
-		{		name : "ジャスミンの地版",						count : 4,	},
-		{		name : "蒼狼の王妃 イザナミテラス",				count : 3,	},
-		{		name : "Q.Q.QX./終葬 5.S.D.",					count : 3,	},
-		{		name : "ヨビニオン・マルル",					count : 3,	},
-		{		name : "ガイアッシュの海地図",					count : 2,	},
-		{		name : "Dの天災 海底研究所",					count : 2,	},
-		{		name : "コーライルの海幻",						count : 2,	},
+		{		name : "霞み妖精ジャスミン",					count : 4,	},
+		{		name : "流星アーシュ",							count : 4,	},
+		{		name : "水晶の祈り/クリスタル・ドゥーム",		count : 4,	},
+		{		name : "プリンセス・パーティ ～シラハの絆～",	count : 4,	},
+		{		name : "Q.Q.QX./終葬 5.S.D.",					count : 4,	},
+		{		name : "蒼神龍トライクラブ・トライショット",	count : 4,	},
+		{		name : "蒼狼の王妃 イザナミテラス",				count : 4,	},
+		{		name : "甲型龍帝式 キリコ3",					count : 3,	},
 		{		name : "蒼神龍アナザー・ワールド",				count : 1,	},
+		{		name : "空間型無限収納ストラトバッグ",			count : 2,	},
+		{		name : "SSS級天災 デッドダムド",				count : 2,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
