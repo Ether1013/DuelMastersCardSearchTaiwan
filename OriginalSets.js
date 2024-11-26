@@ -1480,3 +1480,22 @@
 		{		name : "九番龍 ジゴクバンカー Par459",		count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-049"
+	var setName = "王道禁斷桃＠Ether"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "ヘルコプ太の心絵",					count : 4,	},
+		{		name : "禁断英雄 モモキングダムX",			count : 4,	},
+		{		name : "カチコミ入道 ＜バトライ.鬼＞",		count : 4,	},
+		{		name : "ムカチャッカ",						count : 4,	},
+		{		name : "鬼退治の心絵",						count : 4,	},
+		{		name : "ヴィオラの黒像",					count : 4,	},
+		{		name : "センメツ邪鬼 ＜ソルフェニ.鬼＞",	count : 3,	},
+		{		name : "レヴィヤの地版",					count : 3,	},
+		{		name : "超戦英雄 モモキング・NEXT",			count : 3,	},
+		{		name : "モモからうまれたモモキング",		count : 3,	},
+		{		name : "王道英雄 キング・モモキングKG",		count : 3,	},
+		{		name : "超神羅星アポロヌス・ドラゲリオン",	count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
