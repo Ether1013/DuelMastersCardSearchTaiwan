@@ -32,6 +32,12 @@
 		addMap : function( jsDatas ){
 			if ( jsDatas != null ){
 				for ( var i = 0 ; i < jsDatas.length ; i++ ){
+					
+					//增加debugMode
+					if ( debugMode.length > 0 && !debugMode.include( jsDatas[i].name ) ){
+						continue;
+					}
+					
 					if ( jsDatas[i].race != null && jsDatas[i].race.length == 1 ){
 						jsDatas[i].race = jsDatas[i].race[0].split("/");
 					}
@@ -1344,26 +1350,22 @@
 		
 		logAndDate : [
 			{	
+				date : "2024/12/04",
+				log : [ 
+						"新增官網QA連結",
+				],	
+			},
+			{	
+				date : "2024/12/03",
+				log : [ 
+						"訂正DM24-EX2的收錄內容",
+				],	
+			},
+			{	
 				date : "2024/11/22",
 				log : [ 
 						"新增DM24-BD3【ドリーム英雄譚デッキ モモキングの書】的內容",
 						"新增DM24-BD4【ナイトメア黙示録デッキ バロムの章】的內容",
-				],	
-			},
-			{	
-				date : "2024/11/21",
-				log : [ 
-						"訂正【勝利の頂上 ヴォルグ・イソレイト6th】的種族",
-						"基於判例，補足「シビルカウント」的詳述內容",
-				],	
-			},
-			{	
-				date : "2024/11/20",
-				log : [ 
-						"新增【スペシャルプロモパック2024 vol.2】的資料",
-						"新增【神アート 超獣世界の歩き方 ～アセビ見聞録～】的資料",
-						"新增【神アート RPD-ロールプレイングデュエマ リュウセイ・カイザーが転生したら勇者だった件】的資料",
-						"訂正【純潔妖精ガーベラ/ハイビとビスカの印】的能力",
 				],	
 			},
 

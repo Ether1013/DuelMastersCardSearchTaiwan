@@ -4333,6 +4333,10 @@
 		window.open("https://dm.takaratomy.co.jp/card/?v=%7B%22suggest%22:%22on%22,%22keyword%22:%22"+encodeURIComponent(lastSelectedCardName)+"%22,%22keyword_type%22:%5B%22card_name%22%5D,%22culture_cond%22:%5B%22%E5%8D%98%E8%89%B2%22,%22%E5%A4%9A%E8%89%B2%22%5D,%22pagenum%22:%221%22,%22sort%22:%22release_new%22%7D","_blank");
 	}
 	
+	function findOfficialQA(){
+		window.open("https://dm.takaratomy.co.jp/rule/qa/?qa_w="+encodeURIComponent(lastSelectedCardName),"_blank");
+	}
+	
 	function findWiki(){
 		var cardData = cardDatas.getDataByName( lastSelectedCardName, lastSelectedSetCode, lastSelectedAAIndex, null );
 		var keyword = clearSubName( ToCDB( lastSelectedCardName ) );
