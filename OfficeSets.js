@@ -88583,7 +88583,7 @@
 			id : [ "24RP4 SP5/SP5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, false );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = queryHistorySetCode;
 	var setName = "【歷史查詢】";
