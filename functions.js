@@ -957,7 +957,7 @@
 		//雙極與否
 		var wValue = getSelectedByName('wType');
 		//超化與否
-		var hValue = getSelectedByName('hType');
+//		var hValue = getSelectedByName('hType');
 		//允許文明
 //		var allowCivilValues = getCheckboxValues( "allowCivil" );
 		var allowCivilValues = [];
@@ -1101,8 +1101,23 @@
 					if ( uCost < dCost && !$("[name=wUdCase][value=D]").is(":checked") )
 						continue;
 				}
-				for ( var udIndex = 0 ; udIndex < theCard.wData.length ; udIndex++ ){
-					insertDatas.push( cardDatas.getSelectedCardByUdIndex( theCard, udIndex ) );
+				//能力混找
+				if ( $("[name=wSearchType]").is(":checked") ){
+					var allSps = [];
+					var wDatas = [];
+					for ( var udIndex = 0 ; udIndex < theCard.wData.length ; udIndex++ ){
+						allSps.and( theCard.wData[udIndex].sp );
+						wDatas.push( cardDatas.getSelectedCardByUdIndex( theCard, udIndex ) );
+					}
+					for ( var wd = 0 ; wd < wDatas.length ; wd++ ){
+						wDatas[wd].sp = allSps;
+						insertDatas.push( wDatas[wd] );
+					}
+				//能力不混找
+				} else {
+					for ( var udIndex = 0 ; udIndex < theCard.wData.length ; udIndex++ ){
+						insertDatas.push( cardDatas.getSelectedCardByUdIndex( theCard, udIndex ) );
+					}
 				}
 			}
 			for ( var udIndex = 0 ; udIndex < insertDatas.length ; udIndex++ ){
@@ -1200,6 +1215,7 @@
 				if ( wValue == 'NW' && insertData.mType == 'T' ){
 					continue;
 				}
+				/*
 				//C-3.超化
 				if ( hValue == 'H' && insertData.mType != 'H' ){
 					continue;
@@ -1207,6 +1223,7 @@
 				if ( hValue == 'NH' && insertData.mType == "H" ){
 					continue;
 				}
+				*/
 				//D.Cost
 				/*
 				if ( costValue != "" ){
