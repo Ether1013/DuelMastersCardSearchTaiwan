@@ -387,6 +387,7 @@
 				{	Jap : "スノーフェアリーの集い",				Eng : "Snow Fearie's Gathering",Chi : "雪妖的集會",		isCategory : false,	},
 				{	Jap : "デモンズ・レガシー",					Eng : "Demon's Legacy",			Chi : "惡魔們的遺產",	isCategory : false,	},
 				{	Jap : "ツォルキン",							Eng : "Tzolkin",				Chi : "馬雅曆",			isCategory : false,	},
+				{	Jap : "ウィザード",							Eng : "Wizard",					Chi : "巫師",			isCategory : false,	},
 				
 
 
