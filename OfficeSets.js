@@ -87869,7 +87869,7 @@
 			id : [ "24RP4 3/76", ],
 		},
 		{
-			name : "ストーム・ハイパーXX",
+			name : "ストーム・ハイパーXX（ダブルクロス）",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24rp4-004.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],
