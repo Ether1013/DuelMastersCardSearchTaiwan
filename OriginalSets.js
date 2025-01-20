@@ -1525,7 +1525,7 @@
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-052"
-	var setName = "台灣CS大賽2025 3rd【5C控制＠伊石】"
+	var setName = "台灣CS大賽2025 3rd【4C控制＠伊石】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "鬼ヶ覇覇覇 ジャオウガ",									count : 3,	},
