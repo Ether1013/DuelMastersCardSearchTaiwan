@@ -2402,6 +2402,7 @@
 		}
 		if ( code == null || code.trim() == "" )
 			return;
+
 		code = code.toUpperCase().trim();
 		var setCode = null;
 		var cardName = null;
@@ -2412,6 +2413,13 @@
 		for ( var m = 0 ; m < setDatas.map.length && setCode == null && cardName == null ; m++ ){
 
 			for ( var c = 0 ; c < setDatas.map[m].length && setCode == null && cardName == null ; c++ ){
+
+				//如果沒有提示訊息的話則表示是點選了詳細資料的SET變換
+				if ( !doConfirmAndAlert ){
+					//此時，因為某些SET會有同ID不同卡的情況，所以卡名不同就跳過
+					if ( lastSelectedCardName != (setDatas.map[m])[c].name )
+						continue;
+				}
 			
 				if ( (setDatas.map[m])[c].id != null ){
 				
