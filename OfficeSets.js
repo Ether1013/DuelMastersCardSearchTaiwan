@@ -91037,7 +91037,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, false );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-BD6";
 	var setName = "エキサイティング・デュエパ・デッキ ツラトゥストラは水晶と語らう";
@@ -91524,7 +91524,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, false );
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = queryHistorySetCode;
 	var setName = "【歷史查詢】";
