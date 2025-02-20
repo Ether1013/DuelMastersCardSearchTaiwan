@@ -121523,7 +121523,7 @@
 			name : "魔力妖精バーベナ / 「これは…失われし記憶」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd5-008a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -121550,7 +121550,7 @@
 			name : "海遊妖精アルメリア / 「海中でなんだか歌が聞こえるね!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd5-009a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -121578,7 +121578,7 @@
 			name : "怪盗妖精カサブランカ / 「信じていたのに裏切られるなんて！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd5-010a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -121658,7 +121658,7 @@
 			name : "鬼面のコード デトロイト・テクノ / 「水晶よ、大地より我が配下を創れ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd6-004a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -121688,7 +121688,7 @@
 			name : "シダン教皇 バラモン / 「我が言葉のみを信じるのだ！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd6-005a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
@@ -121733,7 +121733,7 @@
 			name : "偽りの名 ダスニゼス / リーダー・水晶チャージャー",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24bd6-007a.jpg",
 			mana : 1,
-			mType : 'H',
+			mType : 'T',
 			wData : [
 				{
 					type : "C",
