@@ -445,9 +445,11 @@
 				{	value : "SMEC",	text : "S-MAX進化生物",		Jap : "S-MAX進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "DC",	text : "夢幻生物",			Jap : "ドリーム・クリーチャー",				Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
 				{	value : "EDC",	text : "進化夢幻生物",		Jap : "進化ドリーム・クリーチャー",			Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
-				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					Location : "M", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
+				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					Location : "M", horizontal : false,	main:true,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
+				{	value : "GNC",	text : "G-NEO生物",			Jap : "G-NEOクリーチャー",					Location : "M", horizontal : false,	main:true,	descript : "當此生物下方有生物卡牌時，則將此生物視為NEO進化生物"							},
+				{	value : "GNDC",	text : "G-NEO夢幻生物",		Jap : "G-NEOドリーム・クリーチャー",		Location : "M", horizontal : false,	main:true,	descript : "當此生物下方有生物卡牌時，則將此生物視為NEO進化生物，且我方場上同名生物只能存在一隻的特別生物"							},
 				{	value : "GRC",	text : "GR生物",			Jap : "GRクリーチャー",						Location : "G", horizontal : false,	main:false,	},
-				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					Location : "G", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
+				{	value : "NGRC",	text : "NEO GR生物",		Jap : "NEO GRクリーチャー",					Location : "G", horizontal : false,	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為NEO進化生物"							},
 				{	value : "S",	text : "咒文",				Jap : "呪文",								Location : "M", horizontal : false,	main:true,	},
 				{	value : "CA",	text : "城",				Jap : "城",									Location : "M", horizontal : false,	main:false,	},
 				{	value : "HF",	text : "幸福領域",			Jap : "幸せのフィールド",					Location : "M", horizontal : true,	main:false,	},
@@ -1319,6 +1321,7 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM25-RP1",
 		"DM25-SD1",
 		"DM25-SD2",
 		"DM25-SP1",
@@ -1348,6 +1351,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2025/04/19",
+				log : [ 
+						"新增DM25-RP1【王道W 第1弾 邪神vs邪神 ～ソウル・オブ・ジ・アビス～】的資料",
+				],	
+			},
 			{	
 				date : "2025/04/14",
 				log : [ 

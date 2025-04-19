@@ -388,6 +388,20 @@
 				{	Jap : "デモンズ・レガシー",					Eng : "Demon's Legacy",			Chi : "惡魔們的遺產",	isCategory : false,	},
 				{	Jap : "ツォルキン",							Eng : "Tzolkin",				Chi : "馬雅曆",			isCategory : false,	},
 				{	Jap : "ウィザード",							Eng : "Wizard",					Chi : "巫師",			isCategory : false,	},
+				{	Jap : "ミリオン・フレイム・ドラゴン",		Eng : "Million Flame Dragon",	Chi : "億萬火焰龍",		isCategory : false,	},
+				{	Jap : "マジック・デスパペット",				Eng : "Magic Death Puppet",		Chi : "魔法死亡傀儡",	isCategory : false,	},
+				{	Jap : "マジック・スノーフェアリー",			Eng : "Magic Snow Fearie",		Chi : "魔法雪妖",		isCategory : false,	},
+				{	Jap : "サイバー・ムーン・コマンド",			Eng : "Cyber Moon Command",		Chi : "電子月指揮",		isCategory : false,	},
+				{	Jap : "マジック・フレイム・コマンド",		Eng : "Magic Flame Command",	Chi : "魔法火焰指揮",	isCategory : false,	},
+				{	Jap : "ヴァンパイア",						Eng : "Vampire",				Chi : "吸血鬼",			isCategory : false,	},
+				{	Jap : "サイバー・コマンド・ドラゴン",		Eng : "Cyber Command Drgon",	Chi : "電子指揮龍",		isCategory : false,	},
+				{	Jap : "フュージョナー",						Eng : "Fusion",					Chi : "融合怪",			isCategory : false,	},
+				{	Jap : "スチーム・ナイト",					Eng : "Steam Knight",			Chi : "蒸氣騎士",		isCategory : false,	},
+				{	Jap : "テクノ・サムライ",					Eng : "Techno Samurai",			Chi : "技巧武士",		isCategory : false,	},
+				{	Jap : "ジャイアント・エンジェル・コマンド",	Eng : "Giant Angel Command",	Chi : "巨大天使指揮",	isCategory : false,	},
+				{	Jap : "ルージュアビス",						Eng : "Rouge Abyss",			Chi : "嫣紅深淵",		isCategory : false,	},
+				{	Jap : "アズールアビス",						Eng : "Azure Abyss",			Chi : "雲端深淵",		isCategory : false,	},
+				{	Jap : "マジック・メカ・デル・ステラ",		Eng : "Magic Mecha Del Stella",	Chi : "魔法機械星星",	isCategory : false,	},
 				
 
 
