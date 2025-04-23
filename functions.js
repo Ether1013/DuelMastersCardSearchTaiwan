@@ -872,6 +872,7 @@
 			if ( openTitle != null ){
 				w.document.write( "<head><title>" + openTitle + "</title></head>" );
 			}
+//			w.document.write( "<style type='text/css'>html, body { margin:0;padding:0;width:100vw;height:100vh; }</style>" );
 			if ( isMobile() ){
 				w.document.write( "<body>" );
 			} else {
@@ -888,12 +889,10 @@
 					// 原圖大小
 					var naturalWidth = $(this).width();
 					var naturalHeight = $(this).height();
-					alert( naturalWidth + "/" + naturalHeight );
 
 					// 螢幕大小
 					var screenWidth = $(window).width();
 					var screenHeight = $(window).height();
-					alert( screenWidth + "/" + screenHeight );
 
 					// 比例因子
 					var widthRatio = screenWidth / naturalWidth;
