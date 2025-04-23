@@ -879,6 +879,7 @@
 			}
 			w.document.write( "<img src='"+this.src+"' onclick='window.close();' style='cursor:pointer;' id='img'>" );
 			w.document.write( "</body>" );
+			/*
 			if ( isMobile() ){
 
 				var $img = $( w.document.getElementById("img") );
@@ -914,6 +915,7 @@
 					});
 				})();
 			}
+			*/
 		};
 	}
 	
