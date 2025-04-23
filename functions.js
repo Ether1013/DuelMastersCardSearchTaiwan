@@ -887,10 +887,12 @@
 					// 原圖大小
 					var naturalWidth = $(this).width();
 					var naturalHeight = $(this).height();
+					alert( naturalWidth + "/" + naturalHeight );
 
 					// 螢幕大小
 					var screenWidth = $(window).width();
 					var screenHeight = $(window).height();
+					alert( screenWidth + "/" + screenHeight );
 
 					// 比例因子
 					var widthRatio = screenWidth / naturalWidth;
