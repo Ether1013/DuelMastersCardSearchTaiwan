@@ -872,9 +872,46 @@
 			if ( openTitle != null ){
 				w.document.write( "<head><title>" + openTitle + "</title></head>" );
 			}
-			w.document.write( "<body width='"+this.width+"' height='"+this.height+"'>" );
-			w.document.write( "<img src='"+this.src+"' onclick='window.close();' style='cursor:pointer;'>" );
+			if ( isMobile() ){
+				w.document.write( "<body>" );
+			} else {
+				w.document.write( "<body width='"+this.width+"' height='"+this.height+"'>" );
+			}
+			w.document.write( "<img src='"+this.src+"' onclick='window.close();' style='cursor:pointer;' id='img'>" );
 			w.document.write( "</body>" );
+			if ( isMobile() ){
+
+				var $img = $( w.document.getElementById("img") );
+				$img.onload = (function(){
+					
+					// 原圖大小
+					var naturalWidth = $(this).width();
+					var naturalHeight = $(this).height();
+
+					// 螢幕大小
+					var screenWidth = $(window).width();
+					var screenHeight = $(window).height();
+
+					// 比例因子
+					var widthRatio = screenWidth / naturalWidth;
+					var heightRatio = screenHeight / naturalHeight;
+
+					// 選擇較小的比例，以防變形或超出畫面
+					var scale = Math.min(widthRatio, heightRatio);
+
+					// 計算最終尺寸
+					var newWidth = naturalWidth * scale;
+					var newHeight = naturalHeight * scale;
+
+					// 套用尺寸並置中
+					$(this).css({
+						width: newWidth + 'px',
+						height: newHeight + 'px',
+						left: (screenWidth - newWidth) / 2 + 'px',
+						top: (screenHeight - newHeight) / 2 + 'px'
+					});
+				})();
+			}
 		};
 	}
 	
