@@ -1,4 +1,4 @@
-﻿あー	var addCardDatas = [
+﻿	var addCardDatas = [
 		{
 			name : "神帝アージュ",
 			type :	"C",
