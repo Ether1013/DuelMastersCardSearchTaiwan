@@ -23,7 +23,7 @@
 			{ Jap : "チャージャー",			Eng : "Charger",				Chi : "突進者",				descript : "此咒文使用完畢之後不會置入墓地、而是置入我方的魔力區中",},
 			{ Jap : "ゴッドスレイヤー",		Eng : "God Slayer",				Chi : "神殺手",				descript : "當此生物與ゴッド戰鬥時，於戰鬥之後破壞破壞該ゴッド",},
 			{ Jap : "スピードアタッカー",	Eng : "Speed Attacker",			Chi : "速攻",				descript : "此生物沒有召喚失調，出場的回合就可以發動攻擊",},
-			{ Jap : "パワーアタッカー",		Eng : "Power Attacker",			Chi : "威力攻擊者",			descript : "當此生物發動攻擊時，在該攻擊中，此生物攻擊力會增加指定數字",},
+			{ Jap : "パワーアタッカー",		Eng : "Power Attacker",			Chi : "威力攻擊者",			descript : "攻擊中，此生物攻擊力會增加指定數字",},
 			{ Jap : "ガチンコ・ジャッジ",	Eng : "Gachingo Judge",			Chi : "勝負裁決",			descript : "與對手一起公開牌頂比卡牌費用大小，只要發動方公開出來的卡片的費用數字沒有比對手小就算獲勝，之後將公開的牌放進牌庫底",},
 			{ Jap : "ソウルシフト",			Eng : "Soul Shift",				Chi : "靈魂轉移",			descript : "召喚此生物時，其費用值會隨著進化種子的費用值而減少",},
 			{ Jap : "Q・ブレイカー",		Eng : "Quadro Breaker",			Chi : "四重擊破者",			descript : "此生物擊破四張護盾",},
