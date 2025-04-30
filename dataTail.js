@@ -12,7 +12,7 @@
 		for ( var i = 0 ; i < raceMapping.map.length ; i++ ){
 			races.insertSingleOption( raceMapping.map[i].Jap );
 		}
-		var raceText = [];
+		var raceText = null;
 		var t = 0;
 		for ( var i = 0 ; i < races.length ; i++ ){
 			var raceObj = raceMapping.getDataByJap( races[i] );
@@ -24,11 +24,15 @@
 			option.value = races[i];
 			option.text = raceText;
 			option.setAttribute("NT","1");
+			if ( raceObj.pop ){
+				option.setAttribute("pop","1");
+			}
 			raceSelector.appendChild( option );
 		}
 		
 		races = null;
 	}
+	changeRaceLan();
 	
 	//依照卡名分類取產生下拉選單
 	var nameSelector = gobi("ab_name");

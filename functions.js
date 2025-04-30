@@ -2259,8 +2259,8 @@
 					cateRaceHint = translateText( cateRaceHint, isTC2C );
 					raceSelectorObj.options[i].text = raceText + cateRaceHint;
 					
-					//"全種族"置頂，不加入排序
-					if ( i > 0 ){
+					//"全種族"置頂，不加入排序；熱門種族略過
+					if ( i > 0 && raceSelectorObj.options[i].getAttribute("popTop") != "1" ){
 						var insertIndex = sortNewOptions.length;
 						for ( var ii = 0 ; ii < sortNewOptions.length ; ii++ ){
 							if ( raceSelectorObj.options[i].text < sortNewOptions[ii].text ){
@@ -2272,10 +2272,25 @@
 					}
 				}
 			}
-			//將"全種族"置頂
-			sortNewOptions.insert( 0 , raceSelectorObj.options[0] );
+			var theTop = raceSelectorObj.options[0];
 			//清除下拉式選單之後重新加入option
 			clearChildren( raceSelectorObj );
+			//先新增熱門選項
+			var popOtions = [];
+			for ( var i = 0 ; i < sortNewOptions.length ; i++ ){
+				if ( sortNewOptions[i].getAttribute( "pop" ) == "1" ){
+					var popOtion = $(sortNewOptions[i]).clone();
+					$(popOtion[0]).css('color','red');
+					popOtion[0].setAttribute("popTop","1");
+					popOtions.push( popOtion[0] );
+				}
+			}
+			for ( var p = popOtions.length-1 ; p >= 0 ; p-- ){
+				sortNewOptions.insert( 0 , popOtions[p] );
+			}
+			//將"全種族"置頂
+			sortNewOptions.insert( 0 , theTop );
+			//再新增一般選項
 			for ( var i = 0 ; i < sortNewOptions.length ; i++ ){
 				raceSelectorObj.appendChild( sortNewOptions[i] );
 			}
