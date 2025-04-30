@@ -188,7 +188,7 @@
 				{	Jap : "イニシャルズX",						Eng : "Initials X",				Chi : "字首X",			isCategory : false,	},
 				{	Jap : "ビートジョッキー",					Eng : "Beat Jockey",			Chi : "撞乘者",			isCategory : false,	},
 				{	Jap : "ドラゴンギルド",						Eng : "Dragon Guild",			Chi : "龍裝者",			isCategory : false,	},
-				{	Jap : "ジョーカーズ",						Eng : "Joe Cards",				Chi : "喬繪卡",			isCategory : false,		pop : true	},
+				{	Jap : "ジョーカーズ",						Eng : "Jockers",				Chi : "喬繪卡",			isCategory : false,		pop : true	},
 				{	Jap : "ムートピア",							Eng : "Mutopia",				Chi : "烏托邦",			isCategory : false,	},
 				{	Jap : "マフィ・ギャング",					Eng : "Mafi Gang",				Chi : "黑手黨流氓",		isCategory : false,	},
 				{	Jap : "グランセクト",						Eng : "Grand Sect",				Chi : "偉大蟲",			isCategory : false,	},

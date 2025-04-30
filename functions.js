@@ -2285,6 +2285,12 @@
 					popOtions.push( popOtion[0] );
 				}
 			}
+			var lineOption = document.createElement('option');
+			lineOption.text = "--------";
+			lineOption.setAttribute("popTop","1");
+			lineOption.setAttribute("disabled","true");
+			popOtions.push( lineOption );
+			
 			for ( var p = popOtions.length-1 ; p >= 0 ; p-- ){
 				sortNewOptions.insert( 0 , popOtions[p] );
 			}
