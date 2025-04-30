@@ -444,7 +444,7 @@
 				{	value : "SEC",	text : "星進化生物",		Jap : "スター進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "SMEC",	text : "S-MAX進化生物",		Jap : "S-MAX進化クリーチャー",				Location : "M", horizontal : false,	main:true,	},
 				{	value : "DC",	text : "夢幻生物",			Jap : "ドリーム・クリーチャー",				Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
-				{	value : "EDC",	text : "進化夢幻生物",		Jap : "進化ドリーム・クリーチャー",			Location : "M", horizontal : false,	main:true,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
+				{	value : "EDC",	text : "進化夢幻生物",		Jap : "進化ドリーム・クリーチャー",			Location : "M", horizontal : false,	main:false,	descript : "我方場上同名生物只能存在一隻的特別生物"							},
 				{	value : "NC",	text : "NEO生物",			Jap : "NEOクリーチャー",					Location : "M", horizontal : false,	main:true,	descript : "當此生物下方有生物卡牌時，則將此生物視為進化生物"							},
 				{	value : "GNC",	text : "G-NEO生物",			Jap : "G-NEOクリーチャー",					Location : "M", horizontal : false,	main:true,	descript : "當此生物下方有生物卡牌時，則將此生物視為NEO進化生物"							},
 				{	value : "GNDC",	text : "G-NEO夢幻生物",		Jap : "G-NEOドリーム・クリーチャー",		Location : "M", horizontal : false,	main:true,	descript : "當此生物下方有生物卡牌時，則將此生物視為NEO進化生物，且我方場上同名生物只能存在一隻的特別生物"							},
