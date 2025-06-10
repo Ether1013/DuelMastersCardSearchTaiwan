@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>卡片名稱辨識（含 GPT 回應與錯誤訊息）</title>
+  <title>卡片名稱辨識（支援手機 CORS）</title>
 </head>
 <body>
   <video id="video" width="640" height="480" autoplay playsinline></video><br>
@@ -51,7 +51,7 @@
       error.textContent = '錯誤：尚無';
 
       try {
-        const res = await fetch("https://gpt4o-cardname-relay.vercel.app/api/cardname-base64", {
+        const res = await fetch("https://gpt4o-cardname-relay.vercel.app/api/cardname-base64-cors", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image_base64: dataURL })
@@ -64,6 +64,7 @@
         const data = await res.json();
         result.textContent = "卡名結果：" + (data.card_name || "(未辨識)");
         raw.textContent = "GPT 回應：" + (data.raw_response || "(空白)");
+
       } catch (err) {
         console.error(err);
         result.textContent = '辨識錯誤';
