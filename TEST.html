@@ -2,15 +2,15 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>卡片名稱辨識</title>
+  <title>卡片名稱辨識（Base64 模式）</title>
 </head>
 <body>
-  <video id="video" width="320" height="240" autoplay playsinline></video><br>
+  <video id="video" width="640" height="480" autoplay playsinline></video><br>
   <button id="start">啟動相機</button>
   <button id="capture" disabled>拍照辨識卡名</button>
   <p id="result">卡名結果：尚未辨識</p>
 
-  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
   <script>
     const video = document.getElementById('video');
@@ -37,39 +37,24 @@
 
     document.getElementById('capture').onclick = async () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(async (blob) => {
-        result.textContent = '上傳圖片中...';
+      const dataURL = canvas.toDataURL('image/jpeg', 1.0); // base64 編碼圖片
 
-        const formData = new FormData();
-        formData.append('image', blob, 'capture.jpg');
+      result.textContent = '辨識中...';
 
-        const imgbbKey = 'c5ee2d4bce9e81dd77e756860a9717c1'; // 正式 key
+      try {
+        const res = await fetch("https://gpt4o-cardname-relay.vercel.app/api/cardname-base64", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_base64: dataURL })
+        });
 
-        try {
-          const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`, {
-            method: 'POST',
-            body: formData
-          });
+        const data = await res.json();
+        result.textContent = "卡名結果：" + data.card_name;
 
-          const uploadData = await uploadRes.json();
-          const imgUrl = uploadData.data.url;
-
-          result.textContent = '辨識中（ChatGPT）...';
-
-          const res = await fetch("https://gpt4o-cardname-relay.vercel.app/api/cardname", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image_url: imgUrl })
-          });
-
-          const data = await res.json();
-          result.textContent = "卡名結果：" + data.card_name;
-
-        } catch (err) {
-          console.error(err);
-          result.textContent = '辨識失敗，請再試一次';
-        }
-      }, 'image/jpeg');
+      } catch (err) {
+        console.error(err);
+        result.textContent = '辨識錯誤，請再試一次';
+      }
     };
   </script>
 </body>
