@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>卡片名稱辨識（含 GPT 回應）</title>
+  <title>卡片名稱辨識（含 GPT 回應與錯誤訊息）</title>
 </head>
 <body>
   <video id="video" width="640" height="480" autoplay playsinline></video><br>
@@ -10,6 +10,7 @@
   <button id="capture" disabled>拍照辨識卡名</button>
   <p id="result">卡名結果：尚未辨識</p>
   <p id="raw">GPT 回應：尚無</p>
+  <p id="error" style="color:red;">錯誤：尚無</p>
 
   <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
@@ -18,6 +19,7 @@
     const canvas = document.getElementById('canvas');
     const result = document.getElementById('result');
     const raw = document.getElementById('raw');
+    const error = document.getElementById('error');
     const ctx = canvas.getContext('2d');
 
     let stream = null;
@@ -32,18 +34,21 @@
         document.getElementById('capture').disabled = false;
         result.textContent = '相機已啟動，請拍照';
         raw.textContent = 'GPT 回應：尚無';
+        error.textContent = '錯誤：尚無';
       } catch (err) {
         console.error('相機錯誤：', err);
         result.textContent = '相機啟動失敗';
+        error.textContent = '相機錯誤：' + err.message;
       }
     };
 
     document.getElementById('capture').onclick = async () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataURL = canvas.toDataURL('image/jpeg', 1.0); // base64 編碼圖片
+      const dataURL = canvas.toDataURL('image/jpeg', 1.0);
 
       result.textContent = '辨識中...';
       raw.textContent = 'GPT 回應：辨識中...';
+      error.textContent = '錯誤：尚無';
 
       try {
         const res = await fetch("https://gpt4o-cardname-relay.vercel.app/api/cardname-base64", {
@@ -52,14 +57,18 @@
           body: JSON.stringify({ image_base64: dataURL })
         });
 
+        if (!res.ok) {
+          throw new Error(`HTTP 錯誤狀態碼 ${res.status}`);
+        }
+
         const data = await res.json();
         result.textContent = "卡名結果：" + (data.card_name || "(未辨識)");
         raw.textContent = "GPT 回應：" + (data.raw_response || "(空白)");
-
       } catch (err) {
         console.error(err);
         result.textContent = '辨識錯誤';
-        raw.textContent = 'GPT 回應：發生錯誤';
+        raw.textContent = 'GPT 回應：失敗';
+        error.textContent = '錯誤：' + err.message;
       }
     };
   </script>
