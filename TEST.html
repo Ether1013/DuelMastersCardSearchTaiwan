@@ -5,9 +5,11 @@
   <title>卡片識別</title>
 </head>
 <body>
-  <video id="video" width="320" height="240" autoplay></video><br>
-  <button id="capture">拍照並辨識</button>
+  <video id="video" width="320" height="240" autoplay playsinline></video><br>
+  <button id="start">啟動相機</button>
+  <button id="capture" disabled>拍照辨識</button>
   <p id="result">卡名結果：尚未辨識</p>
+
   <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
   <script>
@@ -16,10 +18,23 @@
     const result = document.getElementById('result');
     const ctx = canvas.getContext('2d');
 
-    // 開相機
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      video.srcObject = stream;
-    });
+    let stream = null;
+
+    // 必須在使用者互動中呼叫才可啟用相機
+    document.getElementById('start').onclick = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }, // 優先使用後鏡頭
+          audio: false
+        });
+        video.srcObject = stream;
+        document.getElementById('capture').disabled = false;
+        result.textContent = '相機已啟動，請拍照';
+      } catch (err) {
+        console.error('無法啟動相機：', err);
+        result.textContent = '相機啟動失敗';
+      }
+    };
 
     document.getElementById('capture').onclick = async () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -37,7 +52,6 @@
 
           const data = await response.json();
           const text = data?.data?.[0] || "無法辨識";
-
           result.textContent = '卡名結果：' + text;
         } catch (err) {
           console.error(err);
