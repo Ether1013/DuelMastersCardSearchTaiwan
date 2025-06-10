@@ -2,13 +2,14 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>卡片名稱辨識（Base64 模式）</title>
+  <title>卡片名稱辨識（含 GPT 回應）</title>
 </head>
 <body>
   <video id="video" width="640" height="480" autoplay playsinline></video><br>
   <button id="start">啟動相機</button>
   <button id="capture" disabled>拍照辨識卡名</button>
   <p id="result">卡名結果：尚未辨識</p>
+  <p id="raw">GPT 回應：尚無</p>
 
   <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
@@ -16,6 +17,7 @@
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const result = document.getElementById('result');
+    const raw = document.getElementById('raw');
     const ctx = canvas.getContext('2d');
 
     let stream = null;
@@ -29,6 +31,7 @@
         video.srcObject = stream;
         document.getElementById('capture').disabled = false;
         result.textContent = '相機已啟動，請拍照';
+        raw.textContent = 'GPT 回應：尚無';
       } catch (err) {
         console.error('相機錯誤：', err);
         result.textContent = '相機啟動失敗';
@@ -40,6 +43,7 @@
       const dataURL = canvas.toDataURL('image/jpeg', 1.0); // base64 編碼圖片
 
       result.textContent = '辨識中...';
+      raw.textContent = 'GPT 回應：辨識中...';
 
       try {
         const res = await fetch("https://gpt4o-cardname-relay.vercel.app/api/cardname-base64", {
@@ -49,11 +53,13 @@
         });
 
         const data = await res.json();
-        result.textContent = "卡名結果：" + data.card_name;
+        result.textContent = "卡名結果：" + (data.card_name || "(未辨識)");
+        raw.textContent = "GPT 回應：" + (data.raw_response || "(空白)");
 
       } catch (err) {
         console.error(err);
-        result.textContent = '辨識錯誤，請再試一次';
+        result.textContent = '辨識錯誤';
+        raw.textContent = 'GPT 回應：發生錯誤';
       }
     };
   </script>
