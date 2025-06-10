@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>卡片識別</title>
+</head>
+<body>
+  <video id="video" width="320" height="240" autoplay></video><br>
+  <button id="capture">拍照並辨識</button>
+  <p id="result">卡名結果：尚未辨識</p>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const result = document.getElementById('result');
+    const ctx = canvas.getContext('2d');
+
+    // 開相機
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      video.srcObject = stream;
+    });
+
+    document.getElementById('capture').onclick = async () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(async (blob) => {
+        result.textContent = '辨識中...';
+
+        const formData = new FormData();
+        formData.append("image", blob, "capture.jpg");
+
+        try {
+          const response = await fetch("https://hf.space/embed/nateraw/ocr/+/api/predict", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await response.json();
+          const text = data?.data?.[0] || "無法辨識";
+
+          result.textContent = '卡名結果：' + text;
+        } catch (err) {
+          console.error(err);
+          result.textContent = '辨識錯誤';
+        }
+      }, 'image/jpeg');
+    };
+  </script>
+</body>
+</html>
