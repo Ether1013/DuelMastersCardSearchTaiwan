@@ -2,6 +2,7 @@
 <html style="height:95%;max-width:1024px;max-heightL768px;">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="robots" content="noindex, nofollow">
 <title>簡易決鬥王卡牌效果搜尋器(Author:Ether/Supporter:Sky/Picture Source:takaratomy.co.jp)</title>
 <script>
 	var startLoading = new Date();
@@ -27,6 +28,48 @@
 <script src="./OriginalSets.js?v=20250621"></script>
 <script src="./NewCards.js?v=20250621"></script>
 <script src="./html2canvas.js"></script>
+<!--
+<script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-analytics.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-messaging.js"></script>
+<script src="https://gachi-matome.com/wp-content/themes/bones/library/js/gm-firebase.js"></script>
+<script src="https://gachi-matome.com/wp-content/themes/bones/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="https://gachi-matome.com/wp-content/themes/bones/slick/slick.min.js"></script>
+<script src="https://gachi-matome.com/wp-content/themes/bones/infinite-scroll/jquery.infinitescroll.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/iScroll/5.2.0/iscroll.min.js"></script>
+<script src="https://gachi-matome.com/wp-content/themes/bones/drawer-master/src/js/drawer.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/gm-card-info/library/js/gm-card-info-script.js?ver=1.0.0"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/wp-ulike/assets/js/wp-ulike.min.js?ver=3.6.2"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/lazy-loading-responsive-images/js/lazysizes.min.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/lazy-loading-responsive-images/js/ls.aspectratio.min.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/themes/bones/library/js/scripts.js"></script>
+<script type="text/javascript" src="https://www.gstatic.com/firebasejs/6.2.0/firebase-firestore.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/deck-maker-plugin/env/production.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/deck-maker-plugin/js/utils.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/deck-maker-plugin/js/model/deckrecipe-detailpage-and-embed.js"></script>
+<script type="text/javascript" src="https://gachi-matome.com/wp-content/plugins/deck-maker-plugin/js/model/deckrecipe-list.js"></script>
+-->
+<script src="./GachiJS/firebase-app7.6.1.js"></script>
+<script src="./GachiJS/firebase-analytics.js"></script>
+<script src="./GachiJS/firebase-messaging.js"></script>
+<script src="./GachiJS/gm-firebase.js"></script>
+<script src="./GachiJS/bootstrap.bundle.min.js"></script>
+<script src="./GachiJS/slick.min.js"></script>
+<script src="./GachiJS/jquery.infinitescroll.min.js"></script>
+<script src="./GachiJS/iscroll.min.js"></script>
+<script src="./GachiJS/drawer.js"></script>
+<script type="text/javascript" src="./GachiJS/gm-card-info-script.js?ver=1.0.0"></script>
+<script type="text/javascript" src="./GachiJS/wp-ulike.min.js?ver=3.6.2"></script>
+<script type="text/javascript" src="./GachiJS/lazysizes.min.js"></script>
+<script type="text/javascript" src="./GachiJS/ls.aspectratio.min.js"></script>
+<script type="text/javascript" src="./GachiJS/scripts.js"></script>
+<script src="./GachiJS/firebase-app.js"></script>
+<script type="text/javascript" src="./GachiJS/firebase-firestore.js"></script>
+<script type="text/javascript" src="./GachiJS/production.js"></script>
+<script type="text/javascript" src="./GachiJS/utils.js"></script>
+<script type="text/javascript" src="./GachiJS/deckrecipe-detailpage-and-embed.js"></script>
+<script type="text/javascript" src="./GachiJS/deckrecipe-list.js"></script>
+
 <style type="text/css">
 <!--
 	.bbfw {  
@@ -222,8 +265,6 @@
 														<span class="trade" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findTrade();">【トレカカク】</span>
 														<span>&nbsp;&nbsp;&nbsp;</span>
 														<span class="takaratomy" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findOfficial();">【官網】</span>
-														<span>&nbsp;&nbsp;&nbsp;</span>
-														<span class="takaratomy" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findOfficialQA();">【官網QA】</span>
 														<span>&nbsp;&nbsp;&nbsp;</span><br>
 														<span class="wiki" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findWiki();">【デュエマWIKI】</span>
 														<span>&nbsp;&nbsp;&nbsp;</span>
@@ -298,7 +339,7 @@
 											<td>
 												<input type="radio" name="wType" value="W"><span onclick="checkedBrother(this,true);" class="pointer">雙極</span> 
 												<input type="radio" name="wType" value="NW" ><span onclick="checkedBrother(this,true);" class="pointer">非雙極</span> 
-												<input type="radio" name="wType" value="ALL" checked ><span onclick="checkedBrother(this,true);" class="pointer">都找</span><BR>
+												<input type="radio" name="wType" value="ALL" checked ><span onclick="checkedBrother(this,true);" class="pointer">都找</span> <BR>
 												<input type="checkbox" name="wSearchType" checked><span onclick="checkedBrother(this,true);" class="pointer">能力混找</span>
 												<div class="wUdDiv" style="display:none;">
 													<input type="checkbox" name="wUdCase" value="U" checked><span onclick="checkedBrother(this,true);" style="font-size:small;" class="pointer">上面較大</span> 
@@ -531,7 +572,7 @@
 												<input type="button" class="functionBtn" value="指定卡牌編號" style="width:120px;height:30px;" onclick="queryByCode(null,true);">
 												<input type="button" class="functionBtn" value="文字匯入牌庫" style="width:120px;height:30px;" onclick="openPDBSBlock(null,parseDeckString);" id="importStringDeckBtn"><BR>
 												<input type="button" class="functionBtn" value="開啟歷史查詢" style="width:120px;height:30px;" onclick="showQueryHistory();" id="queryHistoryBtn">
-												<input type="button" class="functionBtn" value="匯入ガチまとめ" style="width:120px;height:30px;" onclick="importGachi(true);" id="importGachiBtn" ><BR>
+												<input type="button" class="functionBtn" value="匯入ガチまとめ" style="width:120px;height:30px;" onclick="importGachi(false);" id="importGachiBtn" ><BR>
 												<input type="button" class="functionBtn" value="更新日誌" style="width:244px;height:30px;" onclick="updateLog.showLastLogContent();" id="logBtn" ><BR>
 											</td>
 										</tr>
@@ -596,7 +637,98 @@
 	</table>
 <script src="./dataTail.js"></script>
 </body>
-<script>		
+<script>	
+	
+	//自ガチまとめ匯入牌組(CORE)
+	function parseGachiMatome( deckId ){
+		
+		const deckRecipeInfo = new DeckRecipeInfo(2, deckId, null);
+		Promise.all([deckRecipeInfo.updateDeckDetail()]).then((results => {
+			//卡牌ID/卡名
+			var cards = [];
+			//卡牌張數
+			var counts = [];
+			var datas = [ deckRecipeInfo.deckCardData.main, deckRecipeInfo.deckCardData.hyper_spatial_cards, deckRecipeInfo.deckCardData.gr ];
+			for ( var t = 0 ; t < datas.length ; t++ ){
+				for ( i = 0 ; i < datas[t].length ; i++ ){
+					var mcid = (datas[t])[i].main_card_id;
+					var index = cards.indexOf( mcid );
+					if ( index == -1 ){
+						cards.push( mcid );
+						counts.push( 1 );
+					} else {
+						counts[index]++;
+					}
+				}
+			}
+//			console.log( "https://d23r8jlqp3e2gc.cloudfront.net/api/v1/dm/cards?main-card-ids="+cards.join(",") );
+			fetch( "https://d23r8jlqp3e2gc.cloudfront.net/api/v1/dm/cards?main-card-ids="+cards.join(",") )
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			}).then(cardData => {
+				for ( var i = 0 ; i < cardData.length ; i++ ){
+					//如果有多張圖的話表示是雙面卡
+					if ( cardData[i].image_paths.length > 1 ){
+						var names = cardData[i].name.split("/");
+						var frontName = names[0];
+						var backName = names[1];
+						cards[i] = frontName;
+						var _i = cards.indexOf( backName );
+						if ( _i == -1 ){
+							cards.push( backName );
+							counts.push( counts[i] );
+						} else {
+							counts[_i] = Math.min( counts[_i], counts[i] );
+						}
+					} else {
+						cards[i] = cardData[i].name;
+					}
+				}
+				//如果有大禁斷的話，增加卡牌與張數
+				if ( deckRecipeInfo.deckCardData.dorumagedon ){
+					cards.push("FORBIDDEN STAR ～世界最後の日～");
+					counts.push(1);
+					cards.push("終焉の禁断 ドルマゲドンX");
+					counts.push(1);
+				}
+				//如果有零龍的話，增加卡牌與張數
+				if ( deckRecipeInfo.deckCardData.zeron ){
+					cards.push("滅亡の起源 零無");
+					counts.push(1);
+					cards.push("墓地の儀");
+					counts.push(1);
+					cards.push("復活の儀");
+					counts.push(1);
+					cards.push("手札の儀");
+					counts.push(1);
+					cards.push("破壊の儀");
+					counts.push(1);
+					cards.push("零龍");
+					counts.push(1);
+				}
+				var importStr = "";
+				for ( var i = 0 ; i < cards.length ; i++ ){
+					importStr += ( i == 0 ? "" : "\n" ) + counts[i] + "*" + cards[i];
+				}
+//				console.log(importStr);
+				try {
+					parseDeckString( importStr, true );
+				} catch( e ){
+					alert("失敗了，請再試一次"+e);
+				}
+			}).catch(error => {
+				console.error('Error:', error);
+			});
+			
+		})).catch(e => {
+			console.error('NG!!!', e);
+			window.alert('匯入時發生錯誤，或是此牌組尚未公開');
+		});
+	}
+
 	if ( !popListOnly ){
 		//Local端開啟Coding用功能
 		if ( isRD() ){
