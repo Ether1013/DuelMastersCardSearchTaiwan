@@ -265,11 +265,11 @@
 		//資料集合
 		map : 
 			[
-				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#fee19f",	},
-				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#aad4ec",	},
-				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#d3d6c3",	},
-				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#ffd0d6",	},
-				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#87c488",	},
+				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#FEF0A0",	},
+				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#8BD1F8",	},
+				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#BBB7B7",	},
+				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#E8747D",	},
+				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#8BCF8D",	},
 				{	value : 32,	text : "無色文明",			eText : "Zero",		headerPic : "card_list_header_zero.gif",	dvBGColor : "#ffffff",	},
 //				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#ffffcc",	},
 //				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#ccffff",	},
@@ -1354,6 +1354,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2025/07/21",
+				log : [ 
+						"調整文明顏色",
+				],	
+			},
 			{	
 				date : "2025/07/20",
 				log : [ 
