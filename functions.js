@@ -3634,7 +3634,7 @@
 					singleCardHTML += "Cost " + ( popCData.cost == Number.MAX_SAFE_INTEGER ? "∞" : popCData.cost );
 				}
 				if ( popCData.power != null ){
-					singleCardHTML += " / Power " + popCData.power + ( popCData.pc == null ? "" : ( popCData.pc ? "+" : "-" ) );
+					singleCardHTML += " / Power " + ( popCData.power == Number.MAX_SAFE_INTEGER ? "∞" : popCData.power ) + ( popCData.pc == null ? "" : ( popCData.pc ? "+" : "-" ) );
 				}
 				singleCardHTML += "<BR>";
 				//特殊能力
