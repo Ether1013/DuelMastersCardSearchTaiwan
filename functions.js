@@ -3352,7 +3352,7 @@
 	  });
 	}
 	
-	function doWriteCanvasMain( ot, pic, main ){
+	function doWriteCanvasMain( main ){
 //		$("#tr_sell").hide();
 //		$("#tr_trade").hide();
 		html2canvas(
@@ -3368,7 +3368,10 @@
 			}
 		).then(canvas => {
 			document.body.appendChild(canvas);
-			Canvas2Image.saveAsPNG(canvas, canvas.width, canvas.height, lastSelectedCardName);
+			Canvas2Image.saveAsPNG(
+				canvas, canvas.width, canvas.height, 
+				lastSelectedCardName == null ? ( lastSelectedSetCode == null ? "截圖" : lastSelectedSetCode ) : lastSelectedCardName 
+			);
 			$(canvas).remove();
 //			$("#tr_sell").show();
 //			$("#tr_trade").show();
@@ -3382,39 +3385,54 @@
 	}
 	
 	//截圖
-	function doWriteCanvas2(){
+	function doWriteCanvas2( main, beforeAlert ){
 		
-		alert( "請停止操作並等候5~10秒" );
-		var main = isMobile() ? "cardDataBlock" : "cardDataBlockMain";
+		if ( beforeAlert ){
+			alert( "請停止操作並等候5~10秒" );
+		}
+//		var main = isMobile() ? "cardDataBlock" : "cardDataBlockMain";
 		var imgs = $( gobi(main) ).find("img");
 		var count = imgs.length;
 
-		imgs.each(function(){
-			if ( $(this).attr("src").indexOf("http") == 0 ){
-				var pic = new Image();
-				if ( $(this).attr("src").indexOf( "corsproxy.io" ) == -1 ){
-					pic.src = "https://corsproxy.io/?"+$(this).attr("src");
+		if ( count == 0 ){
+			doWriteCanvasMain( main );
+		} else {
+			imgs.each(function(){
+				if ( $(this).attr("src").indexOf("http") == 0 ){
+					var pic = new Image();
+					if ( $(this).attr("src").indexOf( "corsproxy.io" ) == -1 ){
+						pic.src = "https://corsproxy.io/?"+$(this).attr("src");
+					} else {
+						pic.src = $(this).attr("src");
+					}
+					pic.crossorigin="anonymous";
+					pic.onload = (function(ot,pic){
+						return function() {
+							ot.attr("src",pic.src);
+							if ( --count == 0 ){
+								doWriteCanvasMain( main );
+							}
+						};
+					})($(this),pic);
 				} else {
+					var pic = new Image();
 					pic.src = $(this).attr("src");
+					pic.crossorigin="anonymous";
+					if ( --count == 0 ){
+						doWriteCanvasMain( main );
+					}
 				}
-				pic.crossorigin="anonymous";
-				pic.onload = (function(ot,pic){
-					return function() {
-						ot.attr("src",pic.src);
-						if ( --count == 0 ){
-							doWriteCanvasMain( ot, pic, main );
-						}
-					};
-				})($(this),pic);
-			} else {
-				var pic = new Image();
-				pic.src = $(this).attr("src");
-				pic.crossorigin="anonymous";
-				if ( --count == 0 ){
-					doWriteCanvasMain( $(this), pic, main );
-				}
-			}
-		});
+			});
+		}
+	}
+	
+	function doWriteCanvasMobile(){
+		var page = whichPage();
+		switch( page ){
+			case 1 : doWriteCanvas2( "names", true );			break;
+			case 2 : doWriteCanvas2( "cardDataBlock", true );	break;
+			default : 											break;
+		}
 	}
 
 	//將圖片進行合併
