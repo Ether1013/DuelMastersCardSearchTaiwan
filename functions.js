@@ -3398,8 +3398,11 @@
 					};
 				})($(this),pic);
 			} else {
+				var pic = new Image();
+				pic.src = $(this).attr("src");
+				pic.crossorigin="anonymous";
 				if ( --count == 0 ){
-					doWriteCanvasMain( ot, pic, main );
+					doWriteCanvasMain( $(this), pic, main );
 				}
 			}
 		});
