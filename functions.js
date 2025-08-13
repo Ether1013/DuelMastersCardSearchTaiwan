@@ -3353,20 +3353,28 @@
 	}
 	
 	function doWriteCanvasMain( ot, pic, main ){
-		$("#tr_sell").hide();
-		$("#tr_trade").hide();
+//		$("#tr_sell").hide();
+//		$("#tr_trade").hide();
 		html2canvas(
-			gobi( main ), { useCORS: true }
+			gobi( main ), 
+			{ 
+				useCORS: true,
+				ignoreElements: (el) => {
+					return el.id === 'tr_sell' ||
+					el.id === 'tr_trade' ||
+					el.classList?.contains('downloadBtn');
+				}
+			}
 		).then(canvas => {
 			document.body.appendChild(canvas);
 			Canvas2Image.saveAsPNG(canvas, canvas.width, canvas.height, lastSelectedCardName);
 			$(canvas).remove();
-			$("#tr_sell").show();
-			$("#tr_trade").show();
+//			$("#tr_sell").show();
+//			$("#tr_trade").show();
 			alert("截圖完成");
 		}).catch(err => {
-			$("#tr_sell").show();
-			$("#tr_trade").show();
+//			$("#tr_sell").show();
+//			$("#tr_trade").show();
 			alert("截圖下載失敗");
 		}).finally(() => {
 		});
