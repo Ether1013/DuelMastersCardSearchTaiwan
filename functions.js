@@ -3352,9 +3352,11 @@
 	  });
 	}
 	
-	function doWriteCanvasMain( main ){
-//		$("#tr_sell").hide();
-//		$("#tr_trade").hide();
+	function doWriteCanvasMain( main, fileName ){
+
+		if ( fileName == null || fileName == '' ){
+			fileName = "截圖";
+		}
 		html2canvas(
 			gobi( main ), 
 			{ 
@@ -3368,24 +3370,17 @@
 			}
 		).then(canvas => {
 			document.body.appendChild(canvas);
-			Canvas2Image.saveAsPNG(
-				canvas, canvas.width, canvas.height, 
-				lastSelectedCardName == null ? ( lastSelectedSetCode == null ? "截圖" : lastSelectedSetCode ) : lastSelectedCardName 
-			);
+			Canvas2Image.saveAsPNG( canvas, canvas.width, canvas.height, fileName );
 			$(canvas).remove();
-//			$("#tr_sell").show();
-//			$("#tr_trade").show();
 			alert("截圖完成");
 		}).catch(err => {
-//			$("#tr_sell").show();
-//			$("#tr_trade").show();
 			alert("截圖下載失敗");
 		}).finally(() => {
 		});
 	}
 	
 	//截圖
-	function doWriteCanvas2( main, beforeAlert ){
+	function doWriteCanvas2( main, beforeAlert, fileName ){
 		
 		if ( beforeAlert ){
 			alert( "請停止操作並等候5~10秒" );
@@ -3395,7 +3390,7 @@
 		var count = imgs.length;
 
 		if ( count == 0 ){
-			doWriteCanvasMain( main );
+			doWriteCanvasMain( main, fileName );
 		} else {
 			imgs.each(function(){
 				if ( $(this).attr("src").indexOf("http") == 0 ){
@@ -3410,7 +3405,7 @@
 						return function() {
 							ot.attr("src",pic.src);
 							if ( --count == 0 ){
-								doWriteCanvasMain( main );
+								doWriteCanvasMain( main, fileName );
 							}
 						};
 					})($(this),pic);
@@ -3419,7 +3414,7 @@
 					pic.src = $(this).attr("src");
 					pic.crossorigin="anonymous";
 					if ( --count == 0 ){
-						doWriteCanvasMain( main );
+						doWriteCanvasMain( main, fileName );
 					}
 				}
 			});
@@ -3429,9 +3424,9 @@
 	function doWriteCanvasMobile(){
 		var page = whichPage();
 		switch( page ){
-			case 1 : doWriteCanvas2( "names", true );			break;
-			case 2 : doWriteCanvas2( "cardDataBlock", true );	break;
-			default : 											break;
+			case 1 : doWriteCanvas2( "names", true, lastSelectedSetCode );			break;
+			case 2 : doWriteCanvas2( "cardDataBlock", true, lastSelectedCardName );	break;
+			default : 																break;
 		}
 	}
 
