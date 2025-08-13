@@ -3331,69 +3331,71 @@
 		returnHTMLStr = null;
 	}
 	
+	function copyCanvasToClipboard(canvas) {
+	  return new Promise((resolve, reject) => {
+		canvas.toBlob(async (blob) => {
+		  if (!blob) {
+			reject(new Error("Canvas 轉 Blob 失敗"));
+			return;
+		  }
+		  try {
+			await navigator.clipboard.write([
+			  new ClipboardItem({
+				[blob.type]: blob
+			  })
+			]);
+			resolve();
+		  } catch (err) {
+			reject(err);
+		  }
+		}, "image/png");
+	  });
+	}
+	
 	//截圖
 	function doWriteCanvas2(){
-			
-		html2canvas(gobi("cardDataBlockMain"), { useCORS: true })
-		  .then(canvas => { 
-			document.body.append(canvas);
-/*
-			var img = gobi("card_picture").firstChild;
-			var context = canvas.getContext('2d');
-			context.globalAlpha = 1.0;
-			context.drawImage( img , 0, 0 , 251 , 180 );
-*/			
-		});
-/*
-			var canvas = document.getElementsByTagName("canvas")[0];
-			var img = gobi("card_picture").firstChild;
-			var context = canvas.getContext('2d');
-			context.globalAlpha = 1.0;
-			context.drawImage( img , 0, 0 , 251 , 180 );
-/*			
-		html2canvas(gobi("cardDataBlockMain"), { useCORS: true })
-		  .then(canvas => { 
-			canvas.id = "canvas3";
-			document.body.appendChild(canvas);
-			var img = gobi("card_picture").firstChild;
-			var context = gobi("canvas3").getContext('2d');
-			context.globalAlpha = 1.0;
-			context.drawImage( img , 0, 200 , 200 , 280 );
-		});
-*/
-	}
-
-	//截圖
-	function doWriteCanvas3(){
-			
-		var canvas = document.createElement("canvas");
-		document.body.append( canvas );
-		var img = gobi("card_picture").firstChild;
-		var context = canvas.getContext('2d');
-		context.width = img.clientWidth;
-		context.height = img.clientheight;
-		context.globalAlpha = 1.0;
-		context.drawImage( img , 0, 0 , img.clientWidth , img.clientHeight );
-
-	}
-
-	//截圖
-	function doWriteCanvas4(){
-			
-		var canvas = document.createElement("canvas");
-		document.body.append( canvas );
 		
-		var imgObj = gobi("card_picture").firstChild;
-		
-		var img = new Image();
-		img.crossOrigin = '';
-		img.src = imgObj.src;
-		var context = canvas.getContext('2d');
-		context.width = imgObj.clientWidth;
-		context.height = imgObj.clientheight;
-		context.globalAlpha = 1.0;
-		context.drawImage( img , 0, 0 , imgObj.clientWidth , imgObj.clientHeight );
+		alert( "請停止操作並等候5~10秒" );
+		var main = isMobile() ? "cardDataBlock" : "cardDataBlockMain";
+		var imgs = $( gobi(main) ).find("img");
+		var count = imgs.length;
 
+		imgs.each(function(){
+			if ( $(this).attr("src").indexOf("http") == 0 ){
+				var pic = new Image();
+				if ( $(this).attr("src").indexOf( "corsproxy.io" ) == -1 ){
+					pic.src = "https://corsproxy.io/?"+$(this).attr("src");
+				}
+				pic.crossorigin="anonymous";
+				pic.onload = (function(ot,pic){
+					return function() {
+						ot.attr("src",pic.src);
+						count--;
+						if ( count == 0 ){
+							$("#tr_sell").hide();
+							$("#tr_trade").hide();
+							html2canvas(
+								gobi( main ), { useCORS: true }
+							).then(canvas => {
+								document.body.appendChild(canvas);
+								Canvas2Image.saveAsPNG(canvas, canvas.width, canvas.height, lastSelectedCardName);
+								$(canvas).remove();
+								$("#tr_sell").show();
+								$("#tr_trade").show();
+								alert("截圖完成");
+							}).catch(err => {
+								$("#tr_sell").show();
+								$("#tr_trade").show();
+								alert("截圖下載失敗");
+							}).finally(() => {
+							});
+						}
+					};
+				})($(this),pic);
+			} else {
+				count--;
+			}
+		});
 	}
 
 	//將圖片進行合併
