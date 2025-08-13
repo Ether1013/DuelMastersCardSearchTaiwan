@@ -3362,6 +3362,7 @@
 				ignoreElements: (el) => {
 					return el.id === 'tr_sell' ||
 					el.id === 'tr_trade' ||
+					el.id === 'tr_sets' ||
 					el.classList?.contains('downloadBtn');
 				}
 			}
