@@ -3352,6 +3352,26 @@
 	  });
 	}
 	
+	function doWriteCanvasMain( ot, pic, main ){
+		$("#tr_sell").hide();
+		$("#tr_trade").hide();
+		html2canvas(
+			gobi( main ), { useCORS: true }
+		).then(canvas => {
+			document.body.appendChild(canvas);
+			Canvas2Image.saveAsPNG(canvas, canvas.width, canvas.height, lastSelectedCardName);
+			$(canvas).remove();
+			$("#tr_sell").show();
+			$("#tr_trade").show();
+			alert("截圖完成");
+		}).catch(err => {
+			$("#tr_sell").show();
+			$("#tr_trade").show();
+			alert("截圖下載失敗");
+		}).finally(() => {
+		});
+	}
+	
 	//截圖
 	function doWriteCanvas2(){
 		
@@ -3365,35 +3385,22 @@
 				var pic = new Image();
 				if ( $(this).attr("src").indexOf( "corsproxy.io" ) == -1 ){
 					pic.src = "https://corsproxy.io/?"+$(this).attr("src");
+				} else {
+					pic.src = $(this).attr("src");
 				}
 				pic.crossorigin="anonymous";
 				pic.onload = (function(ot,pic){
 					return function() {
 						ot.attr("src",pic.src);
-						count--;
-						if ( count == 0 ){
-							$("#tr_sell").hide();
-							$("#tr_trade").hide();
-							html2canvas(
-								gobi( main ), { useCORS: true }
-							).then(canvas => {
-								document.body.appendChild(canvas);
-								Canvas2Image.saveAsPNG(canvas, canvas.width, canvas.height, lastSelectedCardName);
-								$(canvas).remove();
-								$("#tr_sell").show();
-								$("#tr_trade").show();
-								alert("截圖完成");
-							}).catch(err => {
-								$("#tr_sell").show();
-								$("#tr_trade").show();
-								alert("截圖下載失敗");
-							}).finally(() => {
-							});
+						if ( --count == 0 ){
+							doWriteCanvasMain( ot, pic, main );
 						}
 					};
 				})($(this),pic);
 			} else {
-				count--;
+				if ( --count == 0 ){
+					doWriteCanvasMain( ot, pic, main );
+				}
 			}
 		});
 	}
