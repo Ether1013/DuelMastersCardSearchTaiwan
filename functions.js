@@ -4293,7 +4293,7 @@
 	
 	function getCanvas(){
 //		console.log( gobi( "list_block" ).src );
-		var mainBlock = ( isMobile() ? gobi( "card_data_rPart" ) : gobi( "cardDataBlockMain" ) );
+		var mainBlock = ( isMobile() ? gobi( "card_data_rPart" ) : gobi( "cardDataBlockMainTable" ) );
 		html2canvas( mainBlock ).then(function(canvas) {
 			document.body.appendChild(canvas);
 			var a = document.createElement('a');
