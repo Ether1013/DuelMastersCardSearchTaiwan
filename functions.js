@@ -3362,10 +3362,12 @@
 			{ 
 				useCORS: true,
 				ignoreElements: (el) => {
-					return el.id === 'tr_sell' ||
-					el.id === 'tr_trade' ||
-					el.id === 'tr_sets' ||
-					el.classList?.contains('downloadBtn');
+					return 
+						el.id === 'tr_sell' ||
+						el.id === 'tr_trade' ||
+						el.id === 'tr_sets' ||
+						el.id === 'absHintsBtn1' ||
+						el.classList?.contains('downloadBtn');
 				}
 			}
 		).then(canvas => {
