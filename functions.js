@@ -3390,6 +3390,7 @@
 						el.id === 'tr_trade' ||
 						el.id === 'tr_sets' ||
 						el.id === 'absHintsBtn1' ||
+						el.id === 'card_picture_aa' ||
 						el.classList?.contains('downloadBtn');
 				}
 			}
