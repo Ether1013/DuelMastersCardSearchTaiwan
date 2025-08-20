@@ -106,7 +106,28 @@
 			body{
 				color: #370D00;
 			}
-			
+			.backdrop {
+				position: fixed;
+				top: 0; 
+				left: 0;
+				width: 100vw; 
+				height: 100vh;
+				background: rgba(0, 0, 0, 0.3);
+				z-index: 999;
+				display: none;
+				font: 60px solid;
+				text-align: center; /* 水平置中 */
+			}
+			.backdrop>div{
+				position: relative;
+				width: 100vw; 
+				height: 100vh;
+				top: 22vh;
+			}
+			.backdrop>div>img{
+				width:320px;
+				height:320px;
+			}
 		</style>
 		<script>
 			var mVersion = true;
@@ -628,6 +649,7 @@
 				</div>
 			</div>
 		</div>
+		<div class="backdrop"><div><img src="./waiting.gif"></div></div>
 	</body>
 	<script>
 		changePage();

@@ -180,7 +180,31 @@
 	var isTC2C = "isTC2C" == getParameter("tran");
 	//特殊符號
 	var spHeader = [ "✪","⌂","✚","✡" ];
-	
+/*	
+	// 你需要先到 https://counterapi.dev 免費註冊一個 Workspace
+	// 然後把 'my-workspace' 換成你建立的 workspace 名稱
+	const counter = new Counter({ workspace: "duelmasterscardsearchtaiwan" });
+
+	// 更新畫面上的數字
+	async function updateCount(feature) {
+		try {
+			const result = await counter.get(feature);
+			alert( "功能["+feature+"]的使用次數為"+result.data ?? 0 );
+		} catch (err) {
+			console.error("讀取計數失敗：", err.message);
+		}
+	}
+
+	// 點擊時 +1 並更新
+	async function increment(feature) {
+		try {
+			const result = await counter.up(feature);
+		} catch (err) {
+			console.error("計數失敗：", err.message);
+		}
+	}
+
+*/
 	//依照過濾條件找出相符資料
 	function query(){
 
@@ -3373,7 +3397,8 @@
 			document.body.appendChild(canvas);
 			Canvas2Image.saveAsPNG( canvas, canvas.width, canvas.height, fileName );
 			$(canvas).remove();
-			alert("截圖完成");
+//			alert("截圖完成");
+			$(".backdrop").hide();
 		}).catch(err => {
 			alert("截圖下載失敗");
 		}).finally(() => {
@@ -3384,7 +3409,8 @@
 	function doWriteCanvas2( main, beforeAlert, fileName ){
 		
 		if ( beforeAlert ){
-			alert( "請停止操作並等候5~10秒" );
+//			alert( "請停止操作並等候5~10秒" );
+			$(".backdrop").show();
 		}
 //		var main = isMobile() ? "cardDataBlock" : "cardDataBlockMain";
 		var imgs = $( gobi(main) ).find("img");
