@@ -12,7 +12,7 @@
 				{	Jap : "レッド・コマンド・ドラゴン",				Eng : "Red Commond Dragon",		Chi : "赤紅指揮龍",		isCategory : false,	},
 				{	Jap : "フェニックス",					Eng : "Phoenix",				Chi : "鳳凰",			isCategory : false,		pop : true	},
 				{	Jap : "ファイアー・バード",					Eng : "Fire Bird",				Chi : "火鳥",			isCategory : false,		pop : true	},
-				{	Jap : "ティラノ・ドレイク",					Eng : "Tyranno Drake",			Chi : "恐龍",			isCategory : false,		pop : true	},
+				{	Jap : "ティラノ・ドレイク",					Eng : "Tyranno Drake",			Chi : "恐龍",			isCategory : false,	},
 				{	Jap : "エイリアン",						Eng : "Alien",					Chi : "外星人",			isCategory : false,	},
 				{	Jap : "ハンター",						Eng : "Hunter",					Chi : "獵人",			isCategory : false,	},
 				{	Jap : "ゴッド",						Eng : "God",					Chi : "神",				isCategory : false,	},
