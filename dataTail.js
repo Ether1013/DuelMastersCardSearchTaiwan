@@ -114,11 +114,15 @@
 			option.value = abs[i];
 			option.text = abText;
 			option.setAttribute("NT","1");
+			if ( abObj.pop ){
+				option.setAttribute("pop","1");
+			}
 			abSelector.appendChild( option );
 		}
 		
 		abs = null;
 	}
+	changeKeyWordLan();
 	
 	//產生語言連結
 	var tranSpans = [ 

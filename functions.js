@@ -2224,10 +2224,17 @@
 		for ( var r = 0 ; r < abSelectorObjs.length ; r++ ){
 			var abSelectorObj = abSelectorObjs[r];
 			var lastSelectedAb = abSelectorObj.value;
+			var optionOfEmpty = null;
+			var optionOfSkip = abSelectorObj.options[0];
 			var sortNewOptions = [];
 			for ( var i = 0 ; i < abSelectorObj.options.length ; i++ ){
 				var japAb = abSelectorObj.options[i].value;
 				var japAbObj = abilityMapping.getDataByJap( japAb );
+				//"無能力"另外抓出來
+				if ( abSelectorObj.options[i].value == "empty" ){
+					optionOfEmpty = abSelectorObj.options[i];
+					continue;
+				}
 				if ( japAbObj != null ){
 					var abText = eval("japAbObj."+value);
 					//如果要求簡體中文的話就進行翻譯
@@ -2236,8 +2243,8 @@
 					}
 					abSelectorObj.options[i].text = abText;
 					
-					//"全種族"跟"無能力"置頂，不加入排序
-					if ( i > 1 ){
+					//"不過濾"置頂，不加入排序；熱門略過
+					if ( i > 0 && abSelectorObj.options[i].getAttribute("popTop") != "1" ){
 						var insertIndex = sortNewOptions.length;
 						for ( var ii = 0 ; ii < sortNewOptions.length ; ii++ ){
 							if ( abSelectorObj.options[i].text < sortNewOptions[ii].text ){
@@ -2249,11 +2256,31 @@
 					}
 				}
 			}
-			//將"全種族"跟"無能力"置頂
-			sortNewOptions.insert( 0 , abSelectorObj.options[0] );
-			sortNewOptions.insert( 1 , abSelectorObj.options[1] );
 			//清除下拉式選單之後重新加入option
 			clearChildren( abSelectorObj );
+			//先新增熱門選項
+			var popOtions = [];
+			for ( var i = 0 ; i < sortNewOptions.length ; i++ ){
+				if ( sortNewOptions[i].getAttribute( "pop" ) == "1" ){
+					var popOtion = $(sortNewOptions[i]).clone();
+					$(popOtion[0]).css('color','red');
+					popOtion[0].setAttribute("popTop","1");
+					popOtions.push( popOtion[0] );
+				}
+			}
+			//新增分隔線
+			sortNewOptions.insert( sortNewOptions.length , optionOfEmpty );
+			var lineOption = document.createElement('option');
+			lineOption.text = "--------";
+			lineOption.setAttribute("popTop","1");
+			lineOption.setAttribute("disabled","true");
+			popOtions.push( lineOption );
+			for ( var p = popOtions.length-1 ; p >= 0 ; p-- ){
+				sortNewOptions.insert( 0 , popOtions[p] );
+			}
+			//將"不過濾"置頂
+			sortNewOptions.insert( 0 , optionOfSkip );
+			//加入所有種族
 			for ( var i = 0 ; i < sortNewOptions.length ; i++ ){
 				abSelectorObj.appendChild( sortNewOptions[i] );
 			}

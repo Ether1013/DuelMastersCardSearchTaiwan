@@ -3,7 +3,7 @@
 	var abilityMapping = {
 	
 		map : [
-			{ Jap : "S・トリガー",			Eng : "Shield Trigger",			Chi : "護盾觸發",			descript : "當此卡從護盾區中回到手牌時，你可以不支付費用使用此卡",},
+			{ Jap : "S・トリガー",			Eng : "Shield Trigger",			Chi : "護盾觸發",			descript : "當此卡從護盾區中回到手牌時，你可以不支付費用使用此卡",	pop:true,},
 			{ Jap : "S・トリガーX",			Eng : "Shield Trigger X",		Chi : "護盾觸發X",			descript : "當此卡從護盾區中回到手牌時，你可以不支付費用直接將此卡打出至戰鬥場上、並裝備至戰鬥場上1隻我方生物之上",},
 			{ Jap : "O・ドライブ",			Eng : "Over Drive",				Chi : "超越進擊",			descript : "當召喚此生物/使用此咒文時，你可以額外橫置自己魔力區中指定條件的卡片，這樣的話，發動追加能力",},
 			{ Jap : "バイオ・T",			Eng : "Bio Tackle",				Chi : "生化捕獲",			descript : "當指定種族的我方生物發動攻擊進入戰鬥時，你可以將此卡從手牌中丟棄，這樣的話，該回合結束前，發動攻擊的生物獲得指定能力",},
@@ -19,11 +19,11 @@
 			{ Jap : "メテオバーン",			Eng : "Meteor Burn",			Chi : "隕石爆擊",			descript : "將進化生物下面的種子生物卡置入墓地以發動能力",},
 			{ Jap : "シンパシー",			Eng : "Sympathy",				Chi : "共鳴",				descript : "生物的召喚費用/咒文的使用費用會隨著每一個指定條件的存在而降低1，但是不能降到比0、或是比其文明數少",},
 			{ Jap : "W・ブレイカー",		Eng : "Double Breaker",			Chi : "雙重擊破者",			descript : "此生物擊破兩張護盾",},
-			{ Jap : "ブロッカー",			Eng : "Blocker",				Chi : "阻擋者",				descript : "當對手生物攻擊時，你可以橫置此生物來跟對手生物戰鬥，以保護原本的被攻擊目標",},
+			{ Jap : "ブロッカー",			Eng : "Blocker",				Chi : "阻擋者",				descript : "當對手生物攻擊時，你可以橫置此生物來跟對手生物戰鬥，以保護原本的被攻擊目標",	pop:true,},
 			{ Jap : "G・ゼロ",				Eng : "Gravity Zero",			Chi : "零重力",				descript : "當達成指定條件時，你可以不支付費用召喚此生物或是使用此咒文",},
 			{ Jap : "チャージャー",			Eng : "Charger",				Chi : "突進者",				descript : "此咒文使用完畢之後不會置入墓地、而是置入我方的魔力區中",},
 			{ Jap : "ゴッドスレイヤー",		Eng : "God Slayer",				Chi : "神殺手",				descript : "當此生物與ゴッド戰鬥時，於戰鬥之後破壞破壞該ゴッド",},
-			{ Jap : "スピードアタッカー",	Eng : "Speed Attacker",			Chi : "速攻",				descript : "此生物沒有召喚失調，出場的回合就可以發動攻擊",},
+			{ Jap : "スピードアタッカー",	Eng : "Speed Attacker",			Chi : "速攻",				descript : "此生物沒有召喚失調，出場的回合就可以發動攻擊",	pop:true,},
 			{ Jap : "パワーアタッカー",		Eng : "Power Attacker",			Chi : "威力攻擊者",			descript : "攻擊中，此生物攻擊力會增加指定數字",},
 			{ Jap : "ガチンコ・ジャッジ",	Eng : "Gachingo Judge",			Chi : "勝負裁決",			descript : "與對手一起公開牌頂比卡牌費用大小，只要發動方公開出來的卡片的費用數字沒有比對手小就算獲勝，之後將公開的牌放進牌庫底",},
 			{ Jap : "ソウルシフト",			Eng : "Soul Shift",				Chi : "靈魂轉移",			descript : "召喚此生物時，其費用值會隨著進化種子的費用值而減少",},
@@ -185,7 +185,7 @@
 			{ Jap : "スーパー・S・トリガー",Eng : "Super Shield Trigger",	Chi : "超級護盾觸發",		descript : "當此卡從護盾區中回到手牌時，你可以不支付費用直接召喚此生物或是使用此咒文。倘若此時我方沒有護盾的話，則追加✪效果。",},
 			{ Jap : "B・A・D",				Eng : "Bad Action Dynamite",	Chi : "惡行炸彈",			descript : "召喚此生物時，你可以少支付指定數量的費用，那樣的話，於我方回合結束時破壞此生物",},
 			{ Jap : "キリフダッシュ",		Eng : "Kirifudash",				Chi : "王牌衝刺",			descript : "當有我方生物擊破護盾時，你可以於該攻擊後、支付指定費用使用此卡。",},
-			{ Jap : "マッハファイター",		Eng : "Macha Fighter",			Chi : "音速鬥士",			descript : "此生物可以於出場的回合攻擊戰鬥場上橫置或是重置狀態的對手生物。",},
+			{ Jap : "マッハファイター",		Eng : "Macha Fighter",			Chi : "音速鬥士",			descript : "此生物可以於出場的回合攻擊戰鬥場上橫置或是重置狀態的對手生物。",	pop:true,},
 			{ Jap : "鬼タイム",				Eng : "Oni Time",				Chi : "鬼之時",				descript : "當雙方護盾區中的護盾總數在六張以下時所發動的能力。",},
 			{ Jap : "フシギバース",			Eng : "Incredible Birth",		Chi : "奇異誕生",			descript : "將戰鬥場上一隻我方生物以橫置方式置入我方魔力區中，然後支付此能力所標示的文明與減去該生物的費用值數字、將此生物從墓地中召喚至戰鬥場上。",},
 			{ Jap : "ギャラクシールド",		Eng : "Galaxy Shield",			Chi : "銀河盾",				descript : "你可以取代原費用、改由支付指定文明與費用，這樣的話，就將此卡以表側方式置入我方護盾區中。",},
@@ -267,7 +267,7 @@
 			{ Jap : "Jトルネード",			Eng : "Jockers Tornado",		Chi : "小丑旋風",			descript : "將戰鬥場上1隻我方其他的ジョーカーズ拿回到手牌中",},
 			{ Jap : "キズナ",				Eng : "Fetters",				Chi : "羈絆",				descript : "當此生物出場時，你可以使用戰鬥場上1隻我方生物的⌂能力。",},
 //			{ Jap : "[P]",					Eng : "Fetters[P]",				Chi : "羈絆(主效果)",		descript : "名有\"羈絆\"能力的主要效果",},
-			{ Jap : "メクレイド",			Eng : "Revolve Great",			Chi : "命驅強襲",			descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",},
+			{ Jap : "メクレイド",			Eng : "Revolve Great",			Chi : "命驅強襲",			descript : "觀看牌庫頂三張牌，使用一張指定種族與指定費用以下的卡牌",	pop:true,},
 			{ Jap : "アッパー・ゴー",		Eng : "Upper Go",				Chi : "提升猛進",			descript : "當生物被破壞時、此生物下方沒有裏側卡牌的話，則將我方牌庫頂第一張牌以裏側方式置入此生物之下",},
 			{ Jap : "キッカー",				Eng : "Kicker",					Chi : "蹴者",				descript : "使用此咒文時，你可以追加支付指定費用以追加後續效果",},
 			{ Jap : "G.R.D.",				Eng : "Gacha Range Down",		Chi : "GR重沉",				descript : "當此生物發動攻擊時，對手要將其GR牌庫頂第四張牌橫置",},
@@ -335,7 +335,7 @@
 											Eng : "Master Triple Breaker",	Chi : "王者三重擊破者",		descript : "此生物擊破三張護盾。當此生物於出場的回合擊破護盾時，則於各擊破前破壞戰鬥場上1隻對手生物。",},
 			{ Jap : "逆転撃",				Eng : "Reverse Strike",			Chi : "逆轉擊",				descript : "當對手生物攻擊我方玩家、且此回合尚未使用過「逆転撃」的話，則你可以不支付費用、從手牌使用此卡。下個我方回合初時，支付指定費用，無法支付的話，則敗北於此遊戲",},
 			{ Jap : "W・ヨビニオン",		Eng : "Double Callnion",		Chi : "雙重呼朋引伴",		descript : "當你召喚此生物時，你可以持續公開我方牌庫頂的牌直到翻出2隻費用此生物小的生物為止。打出那些生物、並將其餘卡牌洗牌置入牌庫底",},
-			{ Jap : "超魂X",				Eng : "Ultra Soul X",			Chi : "超魂X",				descript : "此生物獲得以下能力，當此卡置於生物底下時，該生物亦獲得以下能力",},
+			{ Jap : "超魂X",				Eng : "Ultra Soul X",			Chi : "超魂X",				descript : "此生物獲得以下能力，當此卡置於生物底下時，該生物亦獲得以下能力",	pop:true,},
 			{ Jap : "超魂レイド",		Eng : "Ultra Soul Rida",		Chi : "超魂騎襲",	descript : "當此生物出場時，觀看我方牌庫頂3張牌，你可以從中選擇1張可以成為此生物進化種的卡牌置入此生物之下。之後將其餘卡牌依喜好順序置入牌庫底。",},
 
 			/*
