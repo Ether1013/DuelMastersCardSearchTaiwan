@@ -216,7 +216,7 @@
 			{ Jap : "スマッシュ・バースト",	Eng : "Smash Burst",			Chi : "粉碎爆裂",			descript : "此生物發動攻擊時，可以使用此生物的咒文側",},
 			{ Jap : "フォートＥ",			Eng : "Fort Energy",			Chi : "堡壘能源",			descript : "支付費用使用卡牌時，如果橫置到了魔力區指定條件的卡牌的話，則發動此能力",},
 			{ Jap : "S・バック",			Eng : "Strike Back",			Chi : "攻擊反彈",			descript : "當自己指定條件的卡從護盾區加到手牌時，你可以將該張卡片直接從護盾區中置入墓地，並以不支付費用的方式、從手牌中召喚此生物/使用此咒文",},
-			{ Jap : "G・ストライク",		Eng : "Guard Strike",			Chi : "守護強襲",			descript : "當此卡從護盾中拿回到手牌時，你可以展示給對手看，那樣的話，就選擇戰鬥場上1隻對手生物，此回合中、該生物不能發動攻擊",},
+			{ Jap : "G・ストライク",		Eng : "Guard Strike",			Chi : "守護強襲",			descript : "當此卡從護盾中拿回到手牌時，你可以展示給對手看，那樣的話，就選擇戰鬥場上1隻對手生物，此回合中、該生物不能發動攻擊",	pop:true,},
 			{ Jap : "G・G・G",				Eng : "Gogogo Gangan Galaxy",	Chi : "拉轉衝鋒銀河",		descript : "當我方手牌在1張以下時所發動的能力",},
 			{ Jap : "シンカパワー",			Eng : "Evolution Power",		Chi : "進化之力",			descript : "當此生物進化時，此回合中、獲得以下能力",},
 			{ Jap : "シールド化",			Eng : "Shielding",				Chi : "護盾化",				descript : "將指定卡牌作為一個新盾置入其持有者的護盾區中",},
