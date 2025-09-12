@@ -96249,6 +96249,149 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
 	
+	var setCode = "DM25-SP2";
+	var setName = "ドラゴン娘になりたくないっ！ はじけろスポーツ！青春☆ワールドカップ!!";
+	var isDeck = true;
+	var setCardList = [
+		{
+			name : "勝利宣言 鬼丸「覇」",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-001.jpg", ],
+			rarity : [ "VIC", ],
+			flavor : [ "", ],
+			id : [ "25SP2 1/17", ],
+			count : 1,
+		},
+		{
+			name : "炎龍神ヴォルジャアク",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-002.jpg", ],
+			rarity : [ "SR", ],
+			flavor : [ "青春ワールドカップで優勝した組には、修学旅行で青春燃焼できるように豪華旅館の宿泊権がプレゼントされるのだ！", ],
+			id : [ "25SP2 2/17", ],
+			count : 1,
+		},
+		{
+			name : "「必然」の頂 リュウセイ/「オレの勝利だオフコース！」",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-003a.jpg", ],
+			rarity : [ "SR", ],
+			flavor : [ "", ],
+			id : [ "25SP2 3/17", ],
+			count : 2,
+		},
+		{
+			name : "終末縫合王 ザ=キラー・キーナリー",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-004.jpg", ],
+			rarity : [ "SR", ],
+			flavor : [ "", ],
+			id : [ "25SP2 4/17", ],
+			count : 1,
+		},
+		{
+			name : "斬龍電融 オロチリュウセイ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-005.jpg", ],
+			rarity : [ "SR", ],
+			flavor : [ "激闘の結果、優勝争いは生徒会組のチームとアオハル組のチームに絞られた！", ],
+			id : [ "25SP2 5/17", ],
+			count : 1,
+		},
+		{
+			name : "ガイアッシュの海地図",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-006.jpg", ],
+			rarity : [ "VR", ],
+			flavor : [ "", ],
+			id : [ "25SP2 6/17", ],
+			count : 3,
+		},
+		{
+			name : "光鎧龍ホーリーグレイス",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-007.jpg", ],
+			rarity : [ "R", ],
+			flavor : [ "ドラゴン娘たちが通う桜龍高校の名物イベント、その名も青春ワールドカップ。互いのプライドと青春をかけたチーム対抗の運動会が、いま始まる。", ],
+			id : [ "25SP2 7/17", ],
+			count : 2,
+		},
+		{
+			name : "蒼斬しのぶ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-008.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-TD1.jpg", ],
+			rarity : [ "R", "R", ],
+			flavor : [ "", "絶対に負けんばい！ — 蒼斬しのぶ", ],
+			id : [ "25SP2 8/17", "25SP2 TD1/TD5", ],
+			count : 3,
+		},
+		{
+			name : "ヴィオラの黒像",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-009.jpg", ],
+			rarity : [ "R", ],
+			flavor : [ "青春ワールドカップの種目はフィールド競技から格闘技、さらにはe-Sportsまで多岐に渡るのだ！", ],
+			id : [ "25SP2 9/17", ],
+			count : 2,
+		},
+		{
+			name : "龍世界～龍の降臨する地～",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-010.jpg", ],
+			rarity : [ "R", ],
+			flavor : [ "かいちょー、アンカー任せたよ！ — 真久間メガ頑張りますっ!! 　— 流星アーシュ", ],
+			id : [ "25SP2 10/17", ],
+			count : 4,
+		},
+		{
+			name : "ミステリー・キューブ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-011.jpg", ],
+			rarity : [ "R", ],
+			flavor : [ "生徒会組とアオハル組。勝つのはどちらか、それは蓋を開けてみるまではわからない……！", ],
+			id : [ "25SP2 11/17", ],
+			count : 2,
+		},
+		{
+			name : "帝王坂∞",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-012.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-TD2.jpg", ],
+			rarity : [ "R", "R", ],
+			flavor : [ "∞ちゃん、頑張るばい！　— 蒼斬しのぶ……！　— 帝王坂∞", "……。    — 帝王坂∞", ],
+			id : [ "25SP2 12/17", "25SP2 TD2/TD5", ],
+			count : 3,
+		},
+		{
+			name : "ジュラ子・リューバー",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-013.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-TD3.jpg", ],
+			rarity : [ "R", "R", ],
+			flavor : [ "On your mark！……ジュラ子が必ず勝利をもたらしますわ……!!", "Smash！ジュラ子絶好調ですわ!! 　— ジュラ子・リューバー", ],
+			id : [ "25SP2 13/17", "25SP2 TD3/TD5", ],
+			count : 3,
+		},
+		{
+			name : "宿禰マロン",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-014.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-TD4.jpg", ],
+			rarity : [ "R", "R", ],
+			flavor : [ "……、……、……。　— 帝王坂∞最初の勢いはどこに行ったでしか！はーやーくーすーるーでーしー!!　— 宿禰マロン", "青春全開のアートなアーチを作るでし！　— 宿禰マロン", ],
+			id : [ "25SP2 14/17", "25SP2 TD4/TD5", ],
+			count : 3,
+		},
+		{
+			name : "伍代ドーラ",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-015.jpg", "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-TD5.jpg", ],
+			rarity : [ "R", "R", ],
+			flavor : [ "", "", ],
+			id : [ "25SP2 15/17", "25SP2 TD5/TD5", ],
+			count : 3,
+		},
+		{
+			name : "地龍神の魔陣",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-016.jpg", ],
+			rarity : [ "U", ],
+			flavor : [ "見事、心をひとつにしたアオハル組が青春ワールドカップを手にしたのだった。", ],
+			id : [ "25SP2 16/17", ],
+			count : 4,
+		},
+		{
+			name : "友情地龍 ルピア・ターン",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25sp2-017.jpg", ],
+			rarity : [ "U", ],
+			flavor : [ "青春ワールドカップの最終種目は代表者５人によるリレー。生徒会組とアオハル組、それぞれの友情が試される!!", ],
+			id : [ "25SP2 17/17", ],
+			count : 2,
+		},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+
 	var setCode = "DM-07";
 	var setName = "闘魂編第2弾 時空超獣の呪";
 	var isDeck = false;
