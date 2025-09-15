@@ -4093,7 +4093,7 @@
 			gobi( "absoluteRace2" ).checked = false;
 			//能力過濾器
 			var absFilterObjs = gosbn( "abilities" );
-			for ( var abs = 0 ; abs < absFilterObjs.length ; abs++ ){
+			for ( var abs = 1 ; abs < absFilterObjs.length ; abs++ ){
 				setSelectValue2( absFilterObjs[abs] , "" );
 			}
 			//能力過濾器(種族)
