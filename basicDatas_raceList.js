@@ -388,6 +388,7 @@
 				{	Jap : "ツォルキン",						Eng : "Tzolkin",				Chi : "馬雅曆",			isCategory : false,	},
 				{	Jap : "ウィザード",						Eng : "Wizard",					Chi : "巫師",			isCategory : false,	},
 				{	Jap : "ミリオン・フレイム・ドラゴン",			Eng : "Million Flame Dragon",	Chi : "億萬火焰龍",		isCategory : false,	},
+				{	Jap : "ミリオン・フレイム",					Eng : "Million Flame",			Chi : "億萬火焰",			isCategory : false,	},
 				{	Jap : "マジック・デスパペット",				Eng : "Magic Death Puppet",		Chi : "魔法死亡傀儡",		isCategory : false,	},
 				{	Jap : "マジック・スノーフェアリー",			Eng : "Magic Snow Fearie",		Chi : "魔法雪妖",			isCategory : false,	},
 				{	Jap : "サイバー・ムーン・コマンド",			Eng : "Cyber Moon Command",		Chi : "電子月指揮",		isCategory : false,	},
@@ -407,6 +408,10 @@
 				{	Jap : "シノビ・ワード",					Eng : "Shinobi Word",			Chi : "忍者撰文",			isCategory : false,	},
 				{	Jap : "ファイアー・バード・ワード",				Eng : "Fire Bird Word",			Chi : "火鳥撰文",			isCategory : false,	},
 				{	Jap : "エンジェル・コマンド・ワード",			Eng : "Angel Command Word",		Chi : "天使司令撰文",		isCategory : false,	},
+				{	Jap : "マジック・エンジェル・コマンド",			Eng : "Magic Angel Command",	Chi : "魔法天使指揮",		isCategory : false,	},
+				{	Jap : "メカ・ファイアー・バード",				Eng : "Mecha Fire Bird",		Chi : "機械火鳥",			isCategory : false,	},
+				{	Jap : "マジック・シノビ",					Eng : "Magic Shinobi",			Chi : "魔法忍者",			isCategory : false,	},
+				{	Jap : "マジック・メカ・デル・ディネロ",			Eng : "Magic Mecha Del Dinero",	Chi : "魔法機械貨幣",		isCategory : false,	},
 				
 
 
