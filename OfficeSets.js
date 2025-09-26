@@ -73974,7 +73974,7 @@
 			id : "23EX1 16/84",
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS/「必殺!ジェット・カスケード・アタッ",
+			name : "「合体」の頂 アクア・TITAAANS／「必殺！ジェット・カスケード・アタック!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-017a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -81467,7 +81467,7 @@
 			count : 1,
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS/「必殺!ジェット・カスケード・アタッ",
+			name : "「合体」の頂 アクア・TITAAANS／「必殺！ジェット・カスケード・アタック!!」",
 			pic : "https://dm.takaratomy.co.jp/product/kamiart10/image/02/card02.png",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -86391,7 +86391,7 @@
 			id : [ "24EX2 超15/超47", ],
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS/「必殺!ジェット・カスケード・アタッ",
+			name : "「合体」の頂 アクア・TITAAANS／「必殺！ジェット・カスケード・アタック!!」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-Cho016a.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],

@@ -105129,7 +105129,7 @@
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-012.jpg",
 		},
 		{
-			name : "「合体」の頂 アクア・TITAAANS/「必殺!ジェット・カスケード・アタッ",
+			name : "「合体」の頂 アクア・TITAAANS／「必殺！ジェット・カスケード・アタック!!」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm23ex1-017a.jpg",
 			mana : 1,
 			mType : 'T',
