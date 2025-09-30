@@ -1590,5 +1590,93 @@
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
-
+	var setCode = "NET-055"
+	var setName = "睿哥神藝術盃2025 1st【龍娘使我強大＠武林】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "メンデルスゾーン",	count : 4,	},
+		{		name : "宿禰マロン",	count : 4,	},
+		{		name : "ボルシャック・ドラゴン/決闘者・チャージャー",	count : 3,	},
+		{		name : "ボルシャック・スーパーヒーロー/超英雄タイム",	count : 4,	},
+		{		name : "光鎧龍ホーリーグレイス",	count : 4,	},
+		{		name : "王闘竜皇 ボルシャック・ドラゴン",	count : 2,	},
+		{		name : "ボルシャック・ドリーム・ドラゴン",	count : 4,	},
+		{		name : "ボルシャック・ロマネスク",	count : 2,	},
+		{		name : "ネオ・ボルシャック・ドラゴン/ボルシャックゾーン",	count : 3,	},
+		{		name : "超竜バジュラズテラ",	count : 2,	},
+		{		name : "地封龍 ギャイア",	count : 2,	},
+		{		name : "禁断竜王 Vol-Val-8",	count : 1,	},
+		{		name : "竜皇神 ボルシャック・バクテラス",	count : 4,	},
+		{		name : "「GG」-001",	count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-056"
+	var setName = "睿哥神藝術盃2025 2nd【我5盒開4張DDD所以組這個＠胃】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "桜風妖精ステップル",	count : 3,	},
+		{		name : "轟速奪取 トップギジャ",	count : 4,	},
+		{		name : "場和了GO-YAMA-58",	count : 3,	},
+		{		name : "PP-「P」",	count : 4,	},
+		{		name : "魔誕幻獣ボンメェ",	count : 2,	},
+		{		name : "～墓碑に刻まれし魔弾の名～",	count : 2,	},
+		{		name : "轟速 ジャ・レッド",	count : 4,	},
+		{		name : "熱き邪道 レッドゾーンZ（ゼット）",	count : 1,	},
+		{		name : "アーテル・ゴルギーニ",	count : 4,	},
+		{		name : "弐闘路と轟点火の決断",	count : 4,	},
+		{		name : "轟く邪道 レッドゾーン",	count : 4,	},
+		{		name : "魔誕の封殺ディアス Z（ゼータ）",	count : 4,	},
+		{		name : "禁断の轟速 ブラックゾーン",	count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-057"
+	var setName = "睿哥神藝術盃2025 3rd【ジャイアント＠派大】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "とこしえの超人",	count : 4,	},
+		{		name : "同期の妖精/ド浮きの動悸",	count : 3,	},
+		{		name : "一音の妖精",	count : 1,	},
+		{		name : "キャディ・ビートル",	count : 4,	},
+		{		name : "アシステスト・シネラリア",	count : 3,	},
+		{		name : "PP-「P」",	count : 3,	},
+		{		name : "学識妖精サイクリル",	count : 3,	},
+		{		name : "巨魔天 アオフェシー",	count : 3,	},
+		{		name : "五番龍 レイクポーチャー ParZero",	count : 2,	},
+		{		name : "爆翠月 アカネ",	count : 1,	},
+		{		name : "チアスカーレット アカネ",	count : 3,	},
+		{		name : "チアスペース アカネ",	count : 3,	},
+		{		name : "ゴールドハム・サックス",	count : 1,	},
+		{		name : "銀河竜 ゴルファンタジスタ",	count : 1,	},
+		{		name : "超重竜 ゴルファンタジスタ",	count : 4,	},
+		{		name : "終の怒流牙 ドルゲユキムラ",	count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-058"
+	var setName = "睿哥神藝術盃2025 4th【5Cディスペクター＠Funky】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "Disコットン＆Disケラサス",	count : 4,	},
+		{		name : "邪爪の魔法陣",	count : 2,	},
+		{		name : "天災 デドダム",	count : 4,	},
+		{		name : "真気楼と誠偽感の決断",	count : 4,	},
+		{		name : "ヘブンズ・ゲート",	count : 3,	},
+		{		name : "聖霊超王 H・アルカディアス",	count : 1,	},
+		{		name : "ブレイン・スラッシュ",	count : 2,	},
+		{		name : "流星のガイアッシュ・カイザー",	count : 3,	},
+		{		name : "霊宝 ヒャクメ-4",	count : 2,	},
+		{		name : "S（スクラッパー）・S（スパイラル）・S（スパーク）",	count : 2,	},
+		{		name : "飛翔龍 5000VT",	count : 1,	},
+		{		name : "聖魔連結王 ドルファディロム",	count : 1,	},
+		{		name : "砕慄接続 グレイトフル・ベン",	count : 3,	},
+		{		name : "水上第九院 シャコガイル",	count : 1,	},
+		{		name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」",	count : 1,	},
+		{		name : "終末の監視者 ジ・ウォッチ",	count : 1,	},
+		{		name : "終末縫合王 ミカドレオ",	count : 1,	},
+		{		name : "終末縫合王 ザ=キラー・キーナリー",	count : 2,	},
+		{		name : "零獄接続王 ロマノグリラ0世",	count : 1,	},
+		{		name : "大樹王 ギガンディダノス",	count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
