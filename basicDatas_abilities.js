@@ -337,7 +337,7 @@
 			{ Jap : "W・ヨビニオン",		Eng : "Double Callnion",		Chi : "雙重呼朋引伴",		descript : "當你召喚此生物時，你可以持續公開我方牌庫頂的牌直到翻出2隻費用此生物小的生物為止。打出那些生物、並將其餘卡牌洗牌置入牌庫底",},
 			{ Jap : "超魂X",				Eng : "Ultra Soul X",			Chi : "超魂X",				descript : "此生物獲得以下能力，當此卡置於生物底下時，該生物亦獲得以下能力",	pop:true,},
 			{ Jap : "超魂レイド",		Eng : "Ultra Soul Rida",		Chi : "超魂騎襲",	descript : "當此生物出場時，觀看我方牌庫頂3張牌，你可以從中選擇1張可以成為此生物進化種的卡牌置入此生物之下。之後將其餘卡牌依喜好順序置入牌庫底。",},
-			{ Jap : "D・D・D",		Eng : "DeDeDe Dangerous Dash",		Chi : "DDD危險衝刺",	descript : "當我方生物發動攻擊時，你可以以指定的文明與費用實行此卡牌",	pop:true,},
+			{ Jap : "D・D・D",		Eng : "DeDeDe Dangerous Dash",		Chi : "DDD危險衝刺",	descript : "當我方生物發動攻擊時，你可以以指定的文明與費用、從手牌實行此卡牌",	pop:true,},
 			{ Jap : "ヌル・ブレイカー",		Eng : "Null Breaker",		Chi : "虛擊破者",	descript : "此生物擊破0張護盾",},
 
 			/*
