@@ -467,7 +467,7 @@
 				{	value : "SPC",	text : "精神超級生物",		Jap : "サイキック・スーパー・クリーチャー",			Location : "P", horizontal : false,	parents: [ "PC" ],			main:false,	},
 				{	value : "D2F",	text : "D2領域",				Jap : "D2フィールド",						Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
 				{	value : "HTF",	text : "歷史領域",			Jap : "ヒストリック・フィールド",					Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
-				{	value : "WDF",	text : "漫遊領域",			Jap : "WDフィールド",						Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
+				{	value : "WDF",	text : "奇觀領域",			Jap : "WDフィールド",						Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
 				{	value : "LF",	text : "月神領域",			Jap : "ルナティック・フィールド",					Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
 				{	value : "T2F",	text : "T2領域",				Jap : "T2フィールド",						Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
 				{	value : "DF",	text : "龍領域",				Jap : "ドラゴニック・フィールド",					Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
