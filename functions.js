@@ -1016,8 +1016,25 @@
 		//過濾種族是否完全指定
 //		var raceAbsoluteCheckeds = [ gobi( "absoluteRace" ).checked, gobi( "absoluteRace2" ).checked ];
 		var raceAbsoluteCheckeds = getCheckedByName( "filter_absoluteRace" );
+		//卡種是否涵蓋子類別
+		var ctIncludeChildren = $("#downSearch").is(":checked");
 		//卡種
-		var ctValues = getCheckboxValues( "cardType" );
+		var ctValues = [];
+		var _ctVs = getCheckboxValues( "cardType" );
+		for ( var _ctV = 0 ; _ctV < _ctVs.length ; _ctV++ ){
+			var checkedCTCode = _ctVs[_ctV];
+			ctValues.push( checkedCTCode );
+			//如果使用者勾選了類別卡種、或是允許向下尋找的話，則將所有子卡種加進來
+			if ( ctIncludeChildren || cardTypeMapping.getDataByValue( checkedCTCode ).catagory ){
+				for ( var m = 0 ; m < cardTypeMapping.map.length ; m++ ){
+					if ( cardTypeMapping.hasParent( cardTypeMapping.map[m].value, checkedCTCode ) ){
+						if ( !ctValues.include( cardTypeMapping.map[m].value ) ){
+							ctValues.push( cardTypeMapping.map[m].value );
+						}
+					}
+				}
+			}
+		}
 		//雙極與否
 		var wValue = getSelectedByName('wType');
 		//超化與否

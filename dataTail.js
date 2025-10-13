@@ -182,7 +182,7 @@
 		}
 */		
 		var checkDIV = document.createElement("div");
-		if ( !cardTypeMapping.map[i].main ){
+		if ( !(cardTypeMapping.map[i].main||cardTypeMapping.map[i].catagory) ){
 			checkDIV.setAttribute("class","subType");
 			checkDIV.setAttribute("style","display:none");
 		}
