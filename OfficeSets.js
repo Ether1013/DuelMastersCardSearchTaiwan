@@ -98763,6 +98763,13 @@
 			id : [ "25EX2 超45/超50", ],
 		},
 		{
+			name : "熱血龍 GENJI「天」",
+			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25ex2-Cho045b.jpg", ],
+			rarity : [ "U", ],
+			flavor : [ "熱血こそが王道だ。", ],
+			id : [ "25EX2 超45/超50", ],
+		},
+		{
 			name : "秘密結社アウトレイジ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25ex2-Cho046.jpg", ],
 			rarity : [ "U", ],
