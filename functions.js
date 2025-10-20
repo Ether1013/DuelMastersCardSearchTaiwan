@@ -858,8 +858,12 @@
 	function getImgSrc( dmCard ){
 		if ( dmCard == null || dmCard == "" ){
 			return "./noPic.png";
-		} else if ( dmCard.indexOf( "http" ) == 0 || dmCard.indexOf( "https" ) == 0 || dmCard.indexOf( "\./" ) == 0 ){			
-			return dmCard;
+		} else if ( dmCard.indexOf( "http" ) == 0 || dmCard.indexOf( "https" ) == 0 || dmCard.indexOf( "\./" ) == 0 ){
+			if ( dmCard.indexOf( "https://dm.takaratomy.co.jp/" ) == 0 ){
+				return dmCard;
+			} else {
+				return "https://corsproxy.io/?"+dmCard;
+			}
 		} else if ( dmCard.match( /\w\/\w{2}\/[\w\-\(\)%]+/ ) ){
 			return "http://vignette.wikia.nocookie.net/duelmasters/images/" + dmCard + ".jpg/revision/latest/scale-to-width-down/450";
 		} else {
@@ -999,6 +1003,54 @@
 			noPic.style.height = "200px";
 		}
 		return noPic == null ? [ img ] : [ noPic, img ];
+	}
+	
+	//依費用/攻擊力排序
+	function sortObjectsByCost(arr, sortStand, ascending = true) {
+
+		// 確保是陣列（因為要排序）
+		if (!Array.isArray(arr)) arr = [arr];
+
+		// 定義一個取代表值的函式
+		function getRepresentativeValue(obj) {
+			// 若有 wData，取其中的最小或最大 Cost/Power
+			if (Array.isArray(obj.wData)) {
+				const values = [];
+				if ( sortStand == 'Cost' ){
+					values = obj.wData.map(o => o.cost ?? null);
+				}
+				if ( sortStand == 'Power' ){
+					values = obj.wData.map(o => o.power ?? null);
+				}
+				const filtered = values.filter(v => v !== null);
+				if (filtered.length === 0) 
+					return null;
+				return ascending ? Math.min(...filtered) : Math.max(...filtered);
+			} else {
+				// 單一物件
+				if ( sortStand == 'Cost' )
+					return obj.cost ?? null;
+				if ( sortStand == 'Power' )
+					return obj.power ?? null;
+				return null;
+			}
+		}
+
+		// 排序
+		arr.sort((a, b) => {
+			const valA = getRepresentativeValue(a);
+			const valB = getRepresentativeValue(b);
+
+			// 處理 null（視為最小）
+			if (valA === null && valB === null) return 0;
+			if (valA === null) return ascending ? -1 : 1;
+			if (valB === null) return ascending ? 1 : -1;
+
+			// 一般數值比較
+			return ascending ? valA - valB : valB - valA;
+		});
+
+		return arr;
 	}
 	
 	//取得過濾、排序後的資料列表
@@ -1154,6 +1206,8 @@
 			}
 			baseList = turnList;
 			*/
+//			baseList = sortObjectsByCost(baseList, 'Cost', true);
+
 			baseList.sort(function (a, b) {
 			  if (a.name > b.name) {
 				return 1;
@@ -1161,9 +1215,34 @@
 			  if (a.name < b.name) {
 				return -1;
 			  }
+/*
+				var compareValueA = null;
+				if ( Array.isArray( a.wData ) ){
+					for ( var w = 0 ; w < a.wData.length ; w++ ){
+						compareValueA = compareValueA == null ? a.wData[w].cost : Math.max( compareValueA, a.wData[w].cost );
+					}
+				} else {
+					compareValueA = a.cost;
+				}
+				
+				var compareValueB = null;
+				if ( Array.isArray( b.wData ) ){
+					for ( var w = 0 ; w < b.wData.length ; w++ ){
+						compareValueB = compareValueB == null ? b.wData[w].cost : Math.max( compareValueB, b.wData[w].cost );
+					}
+				} else {
+					compareValueB = b.cost;
+				}
+				
+				if ( compareValueA > compareValueB )
+					return 1;
+				if ( compareValueA < compareValueB )
+					return -1;
+*/				
 			  // a must be equal to b
 			  return 0;
 			});
+
 		}
 		for ( var index = 0 ; index < baseList.length ; index++ ){
 			var theCard = baseList[index];
