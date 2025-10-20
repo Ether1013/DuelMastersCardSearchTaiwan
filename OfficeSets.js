@@ -98658,6 +98658,13 @@
 			id : [ "25EX2 超31/超50", ],
 		},
 		{
+			name : "極真龍魂 オール・オーバー・ザ・ワールド",
+			pic : [ "https://static.wikia.nocookie.net/duelmasters/images/3/3e/Dm25ex2-%E8%B6%8526b%2B%E8%B6%8528b%2B%E8%B6%8529b%2B%E8%B6%8531b%2B%E8%B6%8532b.png", ],
+			rarity : [ "R", ],
+			flavor : [ "", ],
+			id : [ "25EX2 超31b/超50", ],
+		},
+		{
 			name : "龍魂遺跡 グリーネ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25ex2-Cho032a.jpg", ],
 			rarity : [ "R", ],
