@@ -130921,7 +130921,7 @@
 		{
 			name : "龍覇合体 モルトWORLD",
 			pic : "https://static.wikia.nocookie.net/duelmasters/images/0/0e/Dm25ex2-55b%2B61b.jpg/revision/latest?cb=20251005095754",
-			back : [ "爆勇王剣 ラッシュ・ギガハート", "爆勇将龍剣ガイア・オウバーン" ],
+			back : [ "爆勇王剣 ラッシュ・ギガハート", "爆勇将龍剣 ガイア・オウバーン" ],
 			type : "SEDHSC",
 			civil : 11,
 			race : ["ガイアール・コマンド・ドラゴン", "ヒューマノイド爆", "ドラグナー"],
