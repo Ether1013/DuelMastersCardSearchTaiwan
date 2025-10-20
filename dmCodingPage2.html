@@ -207,7 +207,12 @@
 				
 				var types = cd[13].split("/");
 				for ( var t = 0 ; t < types.length ; t++ ){
-					w.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+					try {
+						w.type.push( cardTypeMapping.getObjByJap( types[t] ).value );
+					} catch ( e ){
+						console.log( "發現新卡種["+types[t]+"]" );
+						throw e;
+					}
 				}
 				if ( cd[16] != "" ){
 					w.power = cd[16];
@@ -278,6 +283,8 @@
 				textContent += "\r\n\t],";
 			} else {
 				if ( cData.wData[1].power == null || cData.wData[1].power == "" ){
+					textContent += "\r\n\tmType : 'T',"
+				} else if ( cData.wData[0].power == cData.wData[1].power ){
 					textContent += "\r\n\tmType : 'T',"
 				} else {
 					textContent += "\r\n\tmType : 'H',"

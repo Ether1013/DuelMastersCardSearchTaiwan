@@ -44,6 +44,7 @@
 			{ Jap : "クロスギア",			Eng : "Cross Gear",				Chi : "交叉武裝",			descript : "將此卡置於戰鬥場上。當你要將此裝備裝到生物身上時，要再支付一次費用。即使該生物離場，此卡也會繼續留在戰鬥場上",},
 			{ Jap : "KM",					Eng : "Knight Magic",			Chi : "騎士魔法(主效果)",	descript : "ナイト・マジック發動時，可以重複發動的效果主能力",},
 			{ Jap : "ナイト・マジック",		Eng : "Knight Magic",			Chi : "騎士魔法",			descript : "如果戰鬥場上有我方的ナイト的話，則可再一次發動此咒文上的KM能力",},
+			{ Jap : "キング・ナイト・マジック",		Eng : "King Knight Magic",			Chi : "王者騎士魔法",			descript : "戰鬥場上每有一個我方的ナイト，就可再一次發動此咒文上的KM能力",},
 			{ Jap : "シールド・プラス",		Eng : "Shield Plus",			Chi : "護盾增強",			descript : "將自己牌庫頂第一張牌，以裏側方式置入一張我方的護盾之下。",},
 			{ Jap : "W・シールド・プラス",	Eng : "Double Shield Plus",		Chi : "雙重護盾增強",		descript : "最多將自己牌庫頂前兩張牌，以裏側方式置入一張我方的護盾之下。",},
 			{ Jap : "スーパー・シールド・プラス",		
@@ -301,7 +302,7 @@
 			{ Jap : "メガメテオバーン10",	Eng : "Mega Meteor Burn 10",	Chi : "隕石重擊10",			descript : "作廢此生物下方10張卡牌以發動指定能力",},
 			{ Jap : "S・トリガー・プラス",	Eng : "Shield Trigger Plus",	Chi : "護盾觸發追擊",		descript : "當此卡從護盾區中回到手牌時，你可以不支付費用使用此卡。若現在是對手的回合、且我方護盾已被擊破2張以上時，追加✚能力",},
 			{ Jap : "シールド進化",			Eng : "Shield Evolution",		Chi : "護盾進化",			descript : "選擇1張我方護盾，將此生物置於其上並出場(護盾不會翻面)",},
-			{ Jap : "シールド進化",			Eng : "Shield Evolution Galaxy Vortex",		Chi : "護盾進化GV",			descript : "選擇3張我方護盾，將此生物置於其上並出場(護盾不會翻面)",},
+			{ Jap : "シールド進化GV",			Eng : "Shield Evolution Galaxy Vortex",		Chi : "護盾進化GV",			descript : "選擇3張我方護盾，將此生物置於其上並出場(護盾不會翻面)",},
 			{ Jap : "ネクスト・ブレイカー",	Eng : "Next Breaker",			Chi : "次階擊破者",			descript : "當此生物擊破沒有表側卡的護盾時、取而代之、將該護盾所有卡牌翻至正面",},
 			{ Jap : "GP覚醒リンク",			Eng : "Gang Parade Psychic Link",
 																			Chi : "Gang Parade覺醒連結",descript : "當場上有指定生物時，將他們與此生物翻面進行連結",},
@@ -339,6 +340,9 @@
 			{ Jap : "超魂レイド",		Eng : "Ultra Soul Rida",		Chi : "超魂騎襲",	descript : "當此生物出場時，觀看我方牌庫頂3張牌，你可以從中選擇1張可以成為此生物進化種的卡牌置入此生物之下。之後將其餘卡牌依喜好順序置入牌庫底。",},
 			{ Jap : "D・D・D",		Eng : "DeDeDe Dangerous Dash",		Chi : "DDD危險衝刺",	descript : "當我方生物發動攻擊時，你可以以指定的文明與費用、從手牌實行此卡牌",	pop:true,},
 			{ Jap : "ヌル・ブレイカー",		Eng : "Null Breaker",		Chi : "虛擊破者",	descript : "此生物擊破0張護盾",},
+			{ Jap : "タブー・ブレイカー",		Eng : "Taboo Breaker",		Chi : "禁忌擊破者",	descript : "此生物擊破13張護盾",},
+			{ Jap : "合体龍解",		Eng : "Combined Dragon Solution",		Chi : "合體龍解",	descript : "當指定條件達成時，將複數張ドラグハート翻面並合併成1隻生物",},
+			{ Jap : "龍魂回避",		Eng : "Dragon Heart Avoidance",		Chi : "龍魂回避",	descript : "當此生物離場時，取而代之、將其中1個ドラグハート・セル放回超次元區。其餘的ドラグハート・セル則翻面留在戰鬥場上",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},

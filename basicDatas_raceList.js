@@ -411,6 +411,9 @@
 				{	Jap : "メカ・ファイアー・バード",				Eng : "Mecha Fire Bird",		Chi : "機械火鳥",			isCategory : false,	},
 				{	Jap : "マジック・シノビ",					Eng : "Magic Shinobi",			Chi : "魔法忍者",			isCategory : false,	},
 				{	Jap : "マジック・メカ・デル・ディネロ",			Eng : "Magic Mecha Del Dinero",	Chi : "魔法機械貨幣",		isCategory : false,	},
+				{	Jap : "ミズガミ",						Eng : "Water God",				Chi : "水神",			isCategory : false,	},
+				{	Jap : "ロスト・クルセイダー・ドラゴン",			Eng : "Lost Crusader Dragon",	Chi : "逝軍龍",			isCategory : false,	},
+				{	Jap : "メカ・ゴッド",						Eng : "Mecha God",				Chi : "機械神",			isCategory : false,	},
 				
 
 

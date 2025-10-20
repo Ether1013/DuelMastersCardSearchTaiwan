@@ -489,7 +489,10 @@
 				{	value : "PF",	text : "精神領域",			Jap : "サイキック・フィールド",					Location : "P", horizontal : true,	parents: [ "F" ],			main:false,	},
 				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						Location : "P", horizontal : false,								main:false,	},
 				{	value : "ZC",	text : "零龍生物",			Jap : "零龍クリーチャー",						Location : "I", horizontal : true,								main:false,	},
-				{	value : "ZCL",	text : "零龍星雲",			Jap : "零龍星雲",							Location : "I", horizontal : false,								main:false,	},
+				{	value : "ZCL",	text : "零龍星雲",			Jap : "零龍星雲",							Location : "I", horizontal : false,	parents: [ "SEC","DHC" ],	main:false,	},
+				{	value : "DHSC",	text : "龍心超級生物",		Jap : "ドラグハート・スーパー・クリーチャー",			Location : "P", horizontal : false,	parents: [ "DHC" ],			main:false,	},
+				{	value : "SEDHSC",	
+									text : "星進化龍心超級生物",	Jap : "スター進化ドラグハート・スーパー・クリーチャー",	Location : "P", horizontal : false,								main:false,	},
 				{					text : "決鬥者",				Jap : "デュエリスト",															descript : "這是甚麼沒人知道，官方至今都沒有做出說明"								},
 				{	value : "DH",	text : "龍心",				Jap : "ドラグハート",						Location : "P", catagory : true,	descript : "泛指龍心生物、龍心武裝、與龍心要塞"									},
 				{					text : "武裝",				Jap : "ウエポン",																descript : "泛指龍心武裝"														},
@@ -1345,11 +1348,11 @@
 	
 	//最新推薦
 	var newestSets = [
+		"DM25-EX2",
 		"NET-055",
 		"NET-056",
 		"NET-057",
 		"NET-058",
-		"DM25-RP3",
 	]
 	
 	//系統更新日誌
@@ -1377,6 +1380,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2025/10/20",
+				log : [ 
+						"新增DM25-EX2「王道vs邪道 デュエキングWDreaM 2025」的資料",
+				],	
+			},
+			{	
 				date : "2025/10/13",
 				log : [ 
 						"卡種過濾新增「向下相容」過濾",
@@ -1386,25 +1395,6 @@
 				date : "2025/09/30",
 				log : [ 
 						"新增睿哥神藝術盃2025前四名的卡表",
-				],	
-			},
-			{	
-				date : "2025/09/22",
-				log : [ 
-						"新增DM25-RP3【邪神vs時皇 ～ビヨンド・ザ・タイム～】的資料",
-				],	
-			},
-			{	
-				date : "2025/09/12",
-				log : [ 
-						"新增DM25-SP2【ドラゴン娘になりたくないっ！ はじけろスポーツ！青春☆ワールドカップ!!】的資料",
-				],	
-			},
-			{	
-				date : "2025/09/05",
-				log : [ 
-						"能力過濾選單新增熱門置頂",
-						"預設開放一個能力過濾選單UI",
 				],	
 			},
 		],
