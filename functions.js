@@ -855,6 +855,8 @@
 	
 	//取得卡牌SRC
 	//http://duelmasters.wikia.com/wiki
+//	var proxyDomain = "https://corsproxy.io/?";
+	var proxyDomain = "https://api.allorigins.win/raw?url=";
 	function getImgSrc( dmCard ){
 		if ( dmCard == null || dmCard == "" ){
 			return "./noPic.png";
@@ -862,7 +864,7 @@
 			if ( dmCard.indexOf( "https://dm.takaratomy.co.jp/" ) == 0 ){
 				return dmCard;
 			} else {
-				return "https://corsproxy.io/?"+dmCard;
+				return proxyDomain+dmCard;
 			}
 		} else if ( dmCard.match( /\w\/\w{2}\/[\w\-\(\)%]+/ ) ){
 			return "http://vignette.wikia.nocookie.net/duelmasters/images/" + dmCard + ".jpg/revision/latest/scale-to-width-down/450";
@@ -3539,6 +3541,7 @@
 //		var main = isMobile() ? "cardDataBlock" : "cardDataBlockMain";
 		var imgs = $( gobi(main) ).find("img");
 		var count = imgs.length;
+		var anyError = false;
 
 		if ( count == 0 ){
 			doWriteCanvasMain( main, fileName );
@@ -3546,8 +3549,8 @@
 			imgs.each(function(){
 				if ( $(this).attr("src").indexOf("http") == 0 ){
 					var pic = new Image();
-					if ( $(this).attr("src").indexOf( "corsproxy.io" ) == -1 ){
-						pic.src = "https://corsproxy.io/?"+$(this).attr("src");
+					if ( $(this).attr("src").indexOf( proxyDomain ) == -1 ){
+						pic.src = proxyDomain+$(this).attr("src");
 					} else {
 						pic.src = $(this).attr("src");
 					}
@@ -3556,7 +3559,25 @@
 						return function() {
 							ot.attr("src",pic.src);
 							if ( --count == 0 ){
-								doWriteCanvasMain( main, fileName );
+								if ( anyError ){
+									$(".backdrop").hide();
+									alert( "截圖失敗" );
+								} else {
+									doWriteCanvasMain( main, fileName );
+								}
+							}
+						};
+					})($(this),pic);
+					pic.onerror = (function(ot,pic){
+						return function( err ) {
+							anyError = true;
+							if ( --count == 0 ){
+								if ( anyError ){
+									$(".backdrop").hide();
+									alert( "截圖失敗" );
+								} else {
+									doWriteCanvasMain( main, fileName );
+								}
 							}
 						};
 					})($(this),pic);
