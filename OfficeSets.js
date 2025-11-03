@@ -96950,7 +96950,7 @@
 			id : [ "25RP3 5/77", "25RP3 秘14/秘24", ],
 		},
 		{
-			name : "PP-「P」",
+			name : "PP-「P（プリン）」",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25rp3-006.jpg", ],
 			rarity : [ "VR", ],
 			flavor : [ "", ],

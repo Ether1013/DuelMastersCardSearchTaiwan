@@ -129243,7 +129243,7 @@
 			],
 		},
 		{
-			name : "PP-「P」",
+			name : "PP-「P（プリン）」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25rp3-006.jpg",
 			mana : 1,
 			type : "C",

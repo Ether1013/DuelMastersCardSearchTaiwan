@@ -1618,7 +1618,7 @@
 		{		name : "桜風妖精ステップル",	count : 3,	},
 		{		name : "轟速奪取 トップギジャ",	count : 4,	},
 		{		name : "場和了GO-YAMA-58",	count : 3,	},
-		{		name : "PP-「P」",	count : 4,	},
+		{		name : "PP-「P（プリン）」",	count : 4,	},
 		{		name : "魔誕幻獣ボンメェ",	count : 2,	},
 		{		name : "～墓碑に刻まれし魔弾の名～",	count : 2,	},
 		{		name : "轟速 ジャ・レッド",	count : 4,	},
@@ -1640,7 +1640,7 @@
 		{		name : "一音の妖精",	count : 1,	},
 		{		name : "キャディ・ビートル",	count : 4,	},
 		{		name : "アシステスト・シネラリア",	count : 3,	},
-		{		name : "PP-「P」",	count : 3,	},
+		{		name : "PP-「P（プリン）」",	count : 3,	},
 		{		name : "学識妖精サイクリル",	count : 3,	},
 		{		name : "巨魔天 アオフェシー",	count : 3,	},
 		{		name : "五番龍 レイクポーチャー ParZero",	count : 2,	},
@@ -1680,3 +1680,174 @@
 		{		name : "大樹王 ギガンディダノス",	count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-059"
+	var setName = "台灣CS大賽20251025 1st【5C褻瀆者＠Funky】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "DG-パルテノン～龍の創り出される地～",			count : 1,	},
+		{		name : "Disコットン＆Disケラサス",					count : 4,	},
+		{		name : "邪爪の魔法陣",							count : 2,	},
+		{		name : "天災 デドダム",							count : 4,	},
+		{		name : "真気楼と誠偽感の決断",					count : 2,	},
+		{		name : "ヘブンズ・ゲート",							count : 2,	},
+		{		name : "ブレイン・スラッシュ",						count : 2,	},
+		{		name : "流星のガイアッシュ・カイザー",					count : 3,	},
+		{		name : "霊宝 ヒャクメ-4",						count : 2,	},
+		{		name : "ルード・ザーナ",							count : 1,	},
+		{		name : "テック団の波壊Go!",						count : 2,	},
+		{		name : "S（スクラッパー）・S（スパイラル）・S（スパーク）",	count : 2,	},
+		{		name : "聖魔連結王 ドルファディロム",				count : 1,	},
+		{		name : "砕慄接続 グレイトフル・ベン",				count : 4,	},
+		{		name : "水上第九院 シャコガイル",					count : 1,	},
+		{		name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」",	count : 2,	},
+		{		name : "終末の監視者 ジ・ウォッチ",					count : 1,	},
+		{		name : "終末縫合王 ミカドレオ",					count : 1,	},
+		{		name : "終末縫合王 ザ=キラー・キーナリー",			count : 1,	},
+		{		name : "零獄接続王 ロマノグリラ0世",				count : 1,	},
+		{		name : "大樹王 ギガンディダノス",					count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-060"
+	var setName = "台灣CS大賽20251025 2nd【水闇V鏡人形＠Yuta】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "ジェニーの黒像",							count : 4,	},
+		{		name : "掘々人形ジェニス",						count : 1,	},
+		{		name : "冥土人形アカイブ・ヤップップ",				count : 1,	},
+		{		name : "冥土人形ロッカ・マグナム",					count : 4,	},
+		{		name : "人形の裏技ペット・パペット",					count : 4,	},
+		{		name : "カレイコの黒像",							count : 4,	},
+		{		name : "絶望と反魂と滅殺の決断",					count : 2,	},
+		{		name : "ガチャンコ  ガチロボ",						count : 2,	},
+		{		name : "冥土人形ヴァミリア・バレル",					count : 4,	},
+		{		name : "修羅の死神フミシュナ / 「この先は修羅の道ぞ」",	count : 4,	},
+		{		name : "セブ・コアクマン/マインド・リセット",				count : 4,	},
+		{		name : "メアリー・ジェニーのお茶会",					count : 4,	},
+		{		name : "ブレイン・スラッシュ",						count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-061"
+	var setName = "台灣CS大賽20251025 3rd【3C天門＠水燈】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "DG-パルテノン～龍の創り出される地～",			count : 2,	},
+		{		name : "♪立ち上がる 悪魔に天使 堕ちるかな",			count : 2,	},
+		{		name : "理想と平和の決断",						count : 4,	},
+		{		name : "真気楼と誠偽感の決断",					count : 4,	},
+		{		name : "光開の精霊サイフォゲート",					count : 4,	},
+		{		name : "ヘブンズ・ゲート",							count : 4,	},
+		{		name : "聖霊超王 H・アルカディアス",				count : 1,	},
+		{		name : "ドレミ団の光魂Go!",						count : 2,	},
+		{		name : "目的不明の作戦",						count : 1,	},
+		{		name : "支配の精霊ペルフェクト/ギャラクシー・チャージャー",	count : 4,	},
+		{		name : "神聖龍 エモーショナル・ハードコア",				count : 1,	},
+		{		name : "閃光の精霊カンビアーレ",					count : 1,	},
+		{		name : "真邪連結 バウ・M・ロマイオン",				count : 3,	},
+		{		name : "闘門の精霊ウェルキウス",					count : 3,	},
+		{		name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」",	count : 2,	},
+		{		name : "∞龍 ゲンムエンペラー",						count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+
+	var setCode = "NET-062"
+	var setName = "台灣CS大賽20251025 4th【光水るる＠夏】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "サザンの天宝",							count : 4,	},
+		{		name : "双子聖霊アンビアス",						count : 4,	},
+		{		name : "青薔薇の天宝",							count : 4,	},
+		{		name : "ゴールド・フラウム",						count : 2,	},
+		{		name : "神聖の精霊アルカ・ガール",					count : 4,	},
+		{		name : "理想と平和の決断",						count : 4,	},
+		{		name : "閃光の決闘",							count : 2,	},
+		{		name : "きりふだるる",							count : 2,	},
+		{		name : "天革の騎令嬢 ミラクルステラ",				count : 2,	},
+		{		name : "支配の精霊ペルフェクト/ギャラクシー・チャージャー",	count : 3,	},
+		{		name : "真聖霊王ネオ・アルカディアス",				count : 1,	},
+		{		name : "時の法皇 ミラダンテⅫ",					count : 1,	},
+		{		name : "聖霊王アルファリオン",						count : 3,	},
+		{		name : "滝川るる＆ラフルル ー閃光のヒロインー",			count : 4,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-063"
+	var setName = "台灣CS大賽20251026 1st【火闇自然巴羅姆邪道車＠德爾塔】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "轟速奪取 トップギジャ",					count : 4,	},
+		{		name : "場和了GO-YAMA-58",					count : 3,	},
+		{		name : "PP-「P（プリン）」",								count : 4,	},
+		{		name : "修羅の死神フミシュナ / 「この先は修羅の道ぞ」",	count : 4,	},
+		{		name : "轟速 ジャ・レッド",						count : 4,	},
+		{		name : "熱き邪道 レッドゾーンZ（ゼット）",			count : 2,	},
+		{		name : "アーテル・ゴルギーニ",						count : 4,	},
+		{		name : "弐闘路と轟点火の決断",					count : 4,	},
+		{		name : "熱き侵略 レッドゾーンZ",					count : 1,	},
+		{		name : "轟く邪道 レッドゾーン",					count : 4,	},
+		{		name : "魔誕の封殺ディアス Z（ゼータ）",			count : 4,	},
+		{		name : "悪夢神バロム・ナイトメア",					count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-064"
+	var setName = "台灣CS大賽20251026 2nd【火闇自然巴羅姆邪王門＠40】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "Forbidden Sunrise ～禁断の夜明け～",	count : 2,	},
+		{		name : "魔誕の悪魔デスモナーク",					count : 3,	},
+		{		name : "魔令嬢バロメアレディ",						count : 4,	},
+		{		name : "雷撃の冥将クーゼン / ダーク・ライフ",			count : 4,	},
+		{		name : "究極の虚 ジャシン＝ヴリドガルド",				count : 3,	},
+		{		name : "大地門ライフ・ゲート",						count : 2,	},
+		{		name : "百鬼の邪王門",							count : 4,	},
+		{		name : "地雷冥土The World Is Mine",			count : 4,	},
+		{		name : "魔誕導師ブラックルシファー",					count : 2,	},
+		{		name : "怒像アゲ",							count : 1,	},
+		{		name : "混沌の獅子デスライガー/カオス・チャージャー",		count : 4,	},
+		{		name : "悪夢神バロム・ナイトメア",					count : 3,	},
+		{		name : "悪魔神ドルバロム",						count : 1,	},
+		{		name : "悪魔神バロム・クエイク",					count : 3,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-065"
+	var setName = "台灣CS大賽20251026 3rd【爆転の妖精＠yuta】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "忍風の聖光 fu53n",		count : 4,	},
+		{		name : "与剣KURUTO-910",			count : 4,	},
+		{		name : "瞬封の使徒サグラダ・ファミリア",	count : 1,	},
+		{		name : "星姫械 エルナドンナ",			count : 4,	},
+		{		name : "一音の妖精",				count : 4,	},
+		{		name : "場和了GO-YAMA-58",		count : 4,	},
+		{		name : "爆転の妖精",				count : 2,	},
+		{		name : "TAKASUGI-死合乱闘3000",	count : 4,	},
+		{		name : "PP-「P（プリン）」",					count : 4,	},
+		{		name : "試算の妖精",				count : 3,	},
+		{		name : "大地の精霊龍 ボンボヤージュ",	count : 4,	},
+		{		name : "金天使 エン・ゴルギーニ",		count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-066"
+	var setName = "台灣CS大賽20251026 4th【闇王ZERO＠勇】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "「大蛇」の鬼 ジャドク丸",					count : 3,	},
+		{		name : "～地獄帰りの騎士～",					count : 4,	},
+		{		name : "天災 デドダム",							count : 4,	},
+		{		name : "ティンパニ＝シンバリー",					count : 2,	},
+		{		name : "アーテル・ゴルギーニ",						count : 3,	},
+		{		name : "DARK MEMORY CONTAINER",				count : 4,	},
+		{		name : "プリンセス・パーティ ～シラハの絆～",			count : 3,	},
+		{		name : "R・R・R",								count : 3,	},
+		{		name : "ヴィオラの黒像",							count : 4,	},
+		{		name : "闇王ゼーロ",							count : 4,	},
+		{		name : "不死鳥縫合 ブラック・ビッグバン",				count : 2,	},
+		{		name : "戦国接続 ギャラクテスト・シデンシーザー",			count : 3,	},
+		{		name : "サイバー・J・イレブン / 「みんなと戦えてよかった♥」",	count : 1,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	
