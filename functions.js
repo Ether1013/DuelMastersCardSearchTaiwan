@@ -2128,7 +2128,7 @@
 					if ( setDatas.set[s].setCode == lastSelectedSetCode ){
 						inSetName = "【" + inSetName + "】";
 					} else {
-						inSet.style.color = "blue";
+						inSet.style.color = setDatas.set[s].isTWSurroundings ? "#003A5F" : "#2FA8FF";
 						inSet.style.cursor = "pointer";
 						inSet.style.textDecoration = "underline";
 						inSet.onclick = (function(){
