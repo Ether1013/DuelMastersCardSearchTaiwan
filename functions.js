@@ -2142,12 +2142,16 @@
 						})();
 					}
 					inSet.appendChild( document.createTextNode( inSetName ) );
+					inSet.setAttribute( "code", setDatas.set[s].setCode );
 					( setDatas.set[s].isTWSurroundings ? twIncluded : jpOnly ).push( inSet );
 //					inSetTd.appendChild( inSet );					
 				}
 			}
 			var jptw = [ jpOnly, twIncluded ];
 			for ( var i = 0 ; i < jptw.length ; i++ ){
+				jptw[i].sort(function(a, b) {
+					return a.getAttribute("code").localeCompare( b.getAttribute("code") );
+				});
 				for ( var i2 = 0 ; i2 < jptw[i].length ; i2++ ){
 					if ( inSetTd.firstChild ){
 						inSetTd.appendChild( document.createElement('br') );
