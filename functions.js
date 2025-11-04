@@ -2115,18 +2115,21 @@
 			processArrows( hasLeft , true , true , hasRight );
 			//收錄
 			var inSetTd = gobi( "card_sets" );
+			var jpOnly = [];
+			var twIncluded = [];
 			for ( var s = 0 ; s < setDatas.set.length ; s++ ){
 				var cardDataOfSet = setDatas.getCardDataInSet( setDatas.set[s].setCode , lastSelectedCardName );
 				if ( cardDataOfSet != null && cardDataOfSet.id != null ){
 					//換行
-					if ( inSetTd.firstChild ){
-						inSetTd.appendChild( document.createElement('br') );
-					}
+//					if ( inSetTd.firstChild ){
+//						inSetTd.appendChild( document.createElement('br') );
+//					}
 					//收錄
 					var inSet = document.createElement('span');
 					var inSetName = setDatas.set[s].setCode + " " + setDatas.set[s].setName;
 					if ( setDatas.set[s].setCode == lastSelectedSetCode ){
 						inSetName = "【" + inSetName + "】";
+						inSet.style.color = "#FFB300";
 					} else {
 						inSet.style.color = setDatas.set[s].isTWSurroundings ? "#003A5F" : "#2FA8FF";
 						inSet.style.cursor = "pointer";
@@ -2139,7 +2142,17 @@
 						})();
 					}
 					inSet.appendChild( document.createTextNode( inSetName ) );
-					inSetTd.appendChild( inSet );					
+					( setDatas.set[s].isTWSurroundings ? twIncluded : jpOnly ).push( inSet );
+//					inSetTd.appendChild( inSet );					
+				}
+			}
+			var jptw = [ jpOnly, twIncluded ];
+			for ( var i = 0 ; i < jptw.length ; i++ ){
+				for ( var i2 = 0 ; i2 < jptw[i].length ; i2++ ){
+					if ( inSetTd.firstChild ){
+						inSetTd.appendChild( document.createElement('br') );
+					}
+					inSetTd.appendChild( (jptw[i])[i2] );	
 				}
 			}
 			//露天
