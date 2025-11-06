@@ -3137,11 +3137,11 @@
 		}
 		for ( var i = 0 ; i < bars.length ; i++ ){
 			if ( i == index ){
-				bars[i].style.backgroundColor = "#A7D5FF";
+				bars[i].style.backgroundColor = "#E2A98A";
 				bars[i].style.fontWeight = "bold";
 				mains[i].style.display = "block";
 			} else {
-				bars[i].style.backgroundColor = "#C9E6FF";
+				bars[i].style.backgroundColor = "#F4D9C7";
 				bars[i].style.fontWeight = "normal";
 				mains[i].style.display = "none";
 			}
