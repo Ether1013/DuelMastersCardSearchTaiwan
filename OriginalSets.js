@@ -643,3 +643,27 @@
 		{		name : "サイバー・J・イレブン / 「みんなと戦えてよかった♥」",	count : 1,	},
 	];
 	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-067"
+	var setName = "台灣CS大賽20251109 1st【水闇火深淵＠蒼炎】"
+	var isDeck = true;
+	var setCardList = [
+		{		name : "至高の魂 アビスベル＝ジャシン帝",	count : 4,	},
+		{		name : "邪龍 ジャジーブラッド",	count : 3,	},
+		{		name : "漆黒の深淵 ジャシン帝",	count : 3,	},
+		{		name : "至高の邪騎 スベルニル",	count : 4,	},
+		{		name : "炎氷渦と鎮魂禍の決断",	count : 2,	},
+		{		name : "邪龍 ジャブラッド",	count : 1,	},
+		{		name : "邪侵入",	count : 4,	},
+		{		name : "アーテル・ゴルギーニ",	count : 2,	},
+		{		name : "ブルーム＝プルーフ",	count : 2,	},
+		{		name : "戯具 ドゥゲンダ",	count : 3,	},
+		{		name : "【問2】 ノロン⤴",	count : 2,	},
+		{		name : "虚ト成リシ古ノ蛇神ノ咆哮",	count : 2,	},
+		{		name : "ダンマ＝ダンマダン",	count : 1,	},
+		{		name : "単騎連射 マグナム",	count : 1,	},
+		{		name : "奇天烈 シャッフ",	count : 1,	},
+		{		name : "終止の時計 ザ・ミュート",	count : 3,	},
+		{		name : "忍蛇の聖沌 c0br4",	count : 2,	},
+	];
+	setDatas.addMap( setCode , setName , isDeck , setCardList );	

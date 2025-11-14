@@ -490,6 +490,7 @@
 				{	value : "RP",	text : "規則追加",			Jap : "ルール・プラス",						Location : "P", horizontal : false,								main:false,	},
 				{	value : "ZC",	text : "零龍生物",			Jap : "零龍クリーチャー",						Location : "I", horizontal : true,								main:false,	},
 				{	value : "ZCL",	text : "零龍星雲",			Jap : "零龍星雲",							Location : "I", horizontal : false,	parents: [ "SEC","DHC" ],	main:false,	},
+				{	value : "DHTS",	text : "龍心魂種",			Jap : "ドラグハート・タマシード",					Location : "P", horizontal : false,	parents: [ "DH","TS" ],		main:false,	},
 				{	value : "DHSC",	text : "龍心超級生物",		Jap : "ドラグハート・スーパー・クリーチャー",			Location : "P", horizontal : false,	parents: [ "DHC" ],			main:false,	},
 				{	value : "SEDHSC",	
 									text : "星進化龍心超級生物",	Jap : "スター進化ドラグハート・スーパー・クリーチャー",	Location : "P", horizontal : false,								main:false,	},
@@ -900,6 +901,7 @@
 			"ジャシン",
 			"ホーリー・スパーク",
 			"ボルメテウス・ホワイト・ドラゴン",
+			"モルト",
 		],
 		
 		isCategory : function( name ){
@@ -1348,8 +1350,8 @@
 	
 	//最新推薦
 	var newestSets = [
-		"NET-059",
-		"NET-063",
+		"DM25-BD3",
+		"NET-067",
 		"DM25-EX2",
 	]
 	
@@ -1377,6 +1379,13 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2025/11/14",
+				log : [ 
+						"新增DM25-BD3【ドリーム英雄譚デッキ グレンモルトの書】的資料",
+						"新增台灣CS大賽20251109 1st【水闇火深淵＠蒼炎】的資料",
+				],	
+			},
 			{	
 				date : "2025/11/03",
 				log : [ 

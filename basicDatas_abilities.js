@@ -343,6 +343,7 @@
 			{ Jap : "タブー・ブレイカー",		Eng : "Taboo Breaker",		Chi : "禁忌擊破者",	descript : "此生物擊破13張護盾",},
 			{ Jap : "合体龍解",		Eng : "Combined Dragon Solution",		Chi : "合體龍解",	descript : "當指定條件達成時，將複數張ドラグハート翻面並合併成1隻生物",},
 			{ Jap : "龍魂回避",		Eng : "Dragon Heart Avoidance",		Chi : "龍魂回避",	descript : "當此生物離場時，取而代之、將其中1個ドラグハート・セル放回超次元區。其餘的ドラグハート・セル則翻面留在戰鬥場上",},
+			{ Jap : "龍魂解放",		Eng : "Dragon Soul Release",		Chi : "龍魂解放",	descript : "當達成指定條件時，將此卡翻至另一側",},
 
 			/*
 			{ Jap : "",		Eng : "",		Chi : "",	descript : "",},
