@@ -119273,7 +119273,7 @@
 		{
 			name : "次元の超銀河弓 ANOTHER",
 			back : "次元の超銀河剣 THE FINAL",
-			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-049a.jpg",
+			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm24ex2-049b.jpg",
 			type : "PCG",
 			civil : 2,
 			race : ["ナイト", "サムライ"],
