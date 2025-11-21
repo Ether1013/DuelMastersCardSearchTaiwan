@@ -113,6 +113,251 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // =================================================================
+// LZ-String 壓縮/解壓縮核心程式碼
+// https://github.com/pieroxy/lz-string
+// =================================================================
+const LZString = (function () {
+    const f = String.fromCharCode;
+    const keyStrBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+    const baseReverseDic = {};
+    
+    function getCompressor(keyString) {
+        return function (uncompressed) {
+            if (uncompressed === null || uncompressed === undefined) return "";
+            uncompressed = "" + uncompressed;
+            const context = {
+                dictionary: {},
+                dictionaryToCreate: {},
+                w: "",
+                data: [],
+                c: "",
+                wc: "",
+                _i: 0,
+                _j: 0,
+                _k: 0,
+                baseKey: keyString
+            };
+            for (let i = 0; i < 256; i++) {
+                context.dictionary[f(i)] = i;
+            }
+            context.data.push(1);
+            context.data.push(1);
+            let i = 0;
+            let current = 0;
+            let enlargeIn = 2; // Compensate for the first two characters
+            let dictSize = 3;
+            let numBits = 2;
+            let data = [];
+            let res = "";
+            let bits = 0;
+            let val = 0;
+            
+            function write(n) {
+                for (let i = 0; i < numBits; i++) {
+                    val = (val << 1) | (n & 1);
+                    bits++;
+                    n >>= 1;
+                    if (bits === 15) {
+                        bits = 0;
+                        data.push(f(val));
+                        val = 0;
+                    }
+                }
+            }
+
+            for (let i = 0; i < uncompressed.length; i++) {
+                context.c = uncompressed[i];
+                if (context.dictionary[context.c] !== null && context.dictionary[context.c] !== undefined) {
+                    context.wc = context.w + context.c;
+                    if (context.dictionary[context.wc] !== null && context.dictionary[context.wc] !== undefined) {
+                        context.w = context.wc;
+                    } else {
+                        write(context.dictionary[context.w]);
+                        context.dictionary[context.wc] = dictSize++;
+                        context.w = context.c;
+                        enlargeIn--;
+                        if (enlargeIn === 0) {
+                            enlargeIn = 1 << numBits++;
+                        }
+                    }
+                } else {
+                    write(context.dictionary[context.w]);
+                    context.dictionary[context.c] = dictSize++;
+                    context.w = context.c;
+                    enlargeIn--;
+                    if (enlargeIn === 0) {
+                        enlargeIn = 1 << numBits++;
+                    }
+                }
+            }
+            
+            if (context.w !== "") {
+                write(context.dictionary[context.w]);
+            }
+            write(0);
+            
+            // Flush the last chunk
+            data.push(f(val << (15 - bits)));
+            
+            function encode(input) {
+                let output = "";
+                let i = 0;
+                let c = 0;
+                let v = 0;
+                while (i < input.length * 2) {
+                    if (i % 2 === 0) {
+                        c = input.charCodeAt(i / 2) >> 8;
+                        v = 8;
+                    } else {
+                        c = input.charCodeAt((i - 1) / 2) & 0xFF;
+                        v = 8;
+                    }
+                    while (v > 0) {
+                        output += keyString[(c >> (v - 1)) & 1];
+                        v--;
+                    }
+                    i++;
+                }
+                return output;
+            }
+            
+            // Custom base 64 encode adapted for URL-safe output
+            for (let i = 0; i < data.length; i++) {
+                if (i % 3 === 0) {
+                    current = (data[i].charCodeAt(0) << 16) | (data[i + 1] ? data[i + 1].charCodeAt(0) << 8 : 0) | (data[i + 2] ? data[i + 2].charCodeAt(0) : 0);
+                    res += keyString.charAt(current >> 18);
+                    res += keyString.charAt((current >> 12) & 63);
+                    res += keyString.charAt((current >> 6) & 63);
+                    res += keyString.charAt(current & 63);
+                }
+            }
+            
+            return res;
+        };
+    }
+    
+    function getDecompressor(keyString) {
+        return function (compressed) {
+            if (compressed === null || compressed === undefined) return "";
+            compressed = "" + compressed;
+            if (compressed === "") return null;
+            
+            let baseReverseDic = baseReverseDic[keyString];
+            if (!baseReverseDic) {
+                baseReverseDic = {};
+                for (let i = 0; i < keyString.length; i++) {
+                    baseReverseDic[keyString.charAt(i)] = i;
+                }
+                baseReverseDic[keyString] = baseReverseDic;
+            }
+            
+            let context = {
+                dictionary: [],
+                w: "",
+                result: "",
+                k: "",
+                entry: "",
+                dictSize: 3,
+                numBits: 2,
+                enlargeIn: 4, // 2 ** 2
+                dict: {},
+                data: [],
+                i: 0,
+                bits: 0,
+                resb: 0,
+                resb: 0,
+                maxpower: 0,
+                power: 0,
+                c: 0,
+            };
+            
+            // Custom base 64 decode adapted for URL-safe input
+            for (let i = 0; i < compressed.length; i++) {
+                context.data.push(baseReverseDic[compressed.charAt(i)]);
+            }
+            
+            let getNextValue = function (index) {
+                let v = context.data[index];
+                if (v === null || v === undefined) {
+                    return 0;
+                }
+                return v;
+            }
+            
+            let read = function () {
+                let bits = context.numBits;
+                let resb = 0;
+                let res = 0;
+                let maxpower = 1 << bits;
+                let power = 0;
+                while (power !== maxpower) {
+                    resb = context.data[context.i];
+                    if (resb === null || resb === undefined) {
+                        return 0;
+                    }
+                    if (context.bits === 0) {
+                        context.bits = 6;
+                        context.c = getNextValue(context.i);
+                        context.i++;
+                    }
+                    context.bits--;
+                    power <<= 1;
+                    res |= ((context.c >> context.bits) & 1) * power;
+                }
+                return res;
+            };
+
+            for (let i = 0; i < 256; i++) {
+                context.dict[i] = f(i);
+            }
+
+            let next = read();
+            if(next === 0 || next === 1) next = read();
+            
+            if (next === 0) {
+                context.w = f(read());
+            } else if (next === 1) {
+                context.w = f(read());
+            } else {
+                return null;
+            }
+            
+            context.result = context.w;
+
+            while (true) {
+                context.c = read();
+                if (context.c === 0) {
+                    return context.result;
+                }
+
+                if (context.c < context.dictSize) {
+                    context.entry = context.dict[context.c];
+                } else {
+                    context.entry = context.w + context.w.charAt(0);
+                }
+                
+                context.result += context.entry;
+                
+                context.dict[context.dictSize++] = context.w + context.entry.charAt(0);
+                context.w = context.entry;
+                
+                if (context.dictSize === context.enlargeIn) {
+                    context.enlargeIn *= 2;
+                    context.numBits++;
+                }
+            }
+        };
+    }
+    
+    return {
+        compressToEncodedURIComponent: getCompressor(keyStrUriSafe),
+        decompressFromEncodedURIComponent: getDecompressor(keyStrUriSafe)
+    };
+})();
+
+
+// =================================================================
 // 1. 地圖與標記初始化
 // =================================================================
 const map = L.map('map').setView([26.20178415387677, 127.64689003446611], 13);
@@ -701,8 +946,8 @@ async function exportScript() {
         // --- 1. 數據轉換與 URL 構建 ---
         const jsonString = JSON.stringify(scriptSteps);
         
-        // 編碼：encodeURIComponent 處理 UTF-8 字元，再用 btoa 進行 Base64 編碼
-        const encodedScript = btoa(encodeURIComponent(jsonString));
+        // ** 變更：使用 LZString 壓縮，取代 btoa/encodeURIComponent **
+        const encodedScript = LZString.compressToEncodedURIComponent(jsonString);
         
         const currentUrl = window.location.origin + window.location.pathname;
         exportUrl = `${currentUrl}?script=${encodedScript}`;
@@ -758,51 +1003,54 @@ function checkAndLoadScriptFromURL() {
     let encodedScript = urlParams.get('script');
     let loadSource = 'URL';
 
-    // 1. 優先從 URL 參數載入
-    if (encodedScript) {
-        // ... (URL 載入邏輯) ...
-    } else {
-        // 2. 如果 URL 中沒有參數，則嘗試從 Local Storage 載入
-        const storedJson = getLocalStorage(STORAGE_KEY);
-        loadSource = '本機儲存';
-
-        if (storedJson) {
-            try {
-                // Local Storage 儲存的是純 JSON 字串，直接解析
-                const loadedSteps = JSON.parse(storedJson); 
-
-                if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
-                    scriptSteps = loadedSteps;
-                    document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
-                    return; // 成功從本地儲存載入並返回
-                }
-            } catch (error) {
-                console.error('解析本地儲存劇本失敗:', error);
-            }
-        }
-    }
-    
-    // 3. 處理 URL 載入邏輯 (如果前面有 URL 參數)
+    // 1. 只檢查 URL 參數載入
     if (encodedScript) {
         try {
-            // 解碼：Base64 解碼，再用 decodeURIComponent 處理 UTF-8 字元
-            const jsonString = decodeURIComponent(atob(encodedScript));
-            const loadedSteps = JSON.parse(jsonString);
-
-            if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
-                // 成功載入，替換當前劇本
-                scriptSteps = loadedSteps;
-                document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
-                // 從 URL 載入後，立即儲存到 Local Storage
-                saveScriptToLocalStorage(); 
+            // ** 變更：使用 LZString 解壓縮，取代 atob/decodeURIComponent **
+            const jsonString = LZString.decompressFromEncodedURIComponent(encodedScript);
+            
+            if (!jsonString) {
+                 console.error('解壓縮劇本字串失敗。');
             } else {
-                console.error('載入的劇本格式無效。使用預設劇本。');
+                const loadedSteps = JSON.parse(jsonString);
+
+                if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
+                    // 成功載入，替換當前劇本
+                    scriptSteps = loadedSteps;
+                    document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
+                    
+                    // *** 為了防止使用者下次在同一瀏覽器編輯時丟失，我們仍然儲存到 Local Storage ***
+                    saveScriptToLocalStorage(); 
+                    return;
+                } else {
+                    console.error('載入的劇本格式無效。使用預設劇本。');
+                }
             }
         } catch (error) {
             console.error('解析 URL 劇本失敗:', error);
             document.getElementById('status-message').textContent = '❌ 載入劇本失敗，使用預設劇本。';
         }
     }
+    
+    // 2. 如果 URL 中沒有參數，則嘗試從 Local Storage 載入 (保留編輯器工作區功能)
+    const storedJson = getLocalStorage(STORAGE_KEY);
+    loadSource = '本機儲存';
+
+    if (storedJson) {
+        try {
+            // Local Storage 儲存的是純 JSON 字串，直接解析
+            const loadedSteps = JSON.parse(storedJson); 
+
+            if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
+                scriptSteps = loadedSteps;
+                document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
+                return; 
+            }
+        } catch (error) {
+            console.error('解析本地儲存劇本失敗:', error);
+        }
+    }
+
     // 如果 URL 和 Local Storage 都沒有有效劇本，則使用初始預設劇本
 }
 
