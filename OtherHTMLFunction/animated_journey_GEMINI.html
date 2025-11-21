@@ -82,6 +82,40 @@
       transition: opacity 0.2s;
       pointer-events: none; /* 讓點擊穿透到 anchor */
   }
+
+  /* 響應式：強制縱向佈局 */
+  @media (max-width: 767px) {
+    .mobile-h-half {
+        height: 50%;
+    }
+    /* 修正 2: 行動裝置 ICON 縮小到 40px */
+    .leaflet-div-icon div {
+        font-size: 40px !important;
+    }
+    /* 修正 2: 行動裝置下，匯入模態框只覆蓋下半部 (controls 區) */
+    #import-modal {
+        top: 50%;       /* 從螢幕中間開始 */
+        height: 50%;    /* 只佔據下半部 */
+        bottom: 0;
+        /* 取消 flex items-center justify-center，讓內容從頂部開始 */
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding-top: 1rem; /* 模擬 p-4 */
+    }
+    #import-modal-content {
+        margin-top: 0;
+        max-height: 100%;
+        overflow-y: auto;
+    }
+  }
+
+  /* 修正 1: 讓拉到底部按鈕在 controls 容器內正常浮動 */
+  #scroll-to-bottom-container {
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      /* 移除絕對定位，使用 sticky */
+  }
 </style>
 <!-- 引入 Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -91,7 +125,7 @@
 // =================================================================
 const STORAGE_KEY = 'animatedJourneyScript';
 const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
-const iconSize = 75; 
+const iconSize = 75; // 桌面預設大小
 const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
 const icons = {
   train: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚆</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
@@ -823,7 +857,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                         if (step.icon) {
                             setIcon(step.icon);
                         }
-                        // 2. wait (如果有 sec 且 > 0)
+                        // 2. wait (如果有 sec 論 > 0)
                         if (step.sec && step.sec > 0) {
                             await wait(step.sec);
                         }
@@ -1163,13 +1197,13 @@ function renderScript() {
     let dayIndex = 0; // 0 (Day 1, Indigo) 或 1 (Day 2, Pink)
     // ---------------------------------
 
-    // ** 修正：插入模式的提示 UI 移動到控制面板底部，這裡只需要清空內容 **
+    // ** 處理插入模式提示與取消按鈕 **
     const insertStatusPanel = document.getElementById('insert-status-panel');
-    insertStatusPanel.innerHTML = ''; 
+    if(insertStatusPanel) insertStatusPanel.innerHTML = ''; // 檢查是否存在後再清空
 
     if (insertAnchorIndex !== -1) {
-        // 渲染插入模式提示到新的面板中 (不在 script-list 頂部)
-        insertStatusPanel.innerHTML = `
+        // 渲染插入模式提示到新的面板中 (包含取消按鈕)
+        if(insertStatusPanel) insertStatusPanel.innerHTML = `
             <div class="p-3 mb-3 bg-yellow-200 rounded-lg border border-yellow-500 flex justify-between items-center shadow-md">
                 <span class="font-bold text-yellow-800">📌 插入模式中：步驟將插入到 #${insertAnchorIndex} 位置。</span>
                  <!-- 渲染取消按鈕 -->
@@ -1376,14 +1410,36 @@ function renderScript() {
     // 修正: 顯示可點擊的文本，懸停時通過 CSS 變成虛線框
     finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${scriptSteps.length})</span>`;
     listContainer.appendChild(finalAnchorElement);
+
+    // ** 修正 1: 處理 [拉到最下面] 按鈕的顯示/隱藏 **
+    const controlsContainer = document.getElementById('controls');
+    const scrollToBottomContainer = document.getElementById('scroll-to-bottom-container');
+    
+    // 只有當內容高度大於可視區域時才顯示按鈕
+    // 使用 setTimeout 確保 DOM 渲染完成後再計算高度
+    setTimeout(() => {
+        if (controlsContainer.scrollHeight > controlsContainer.clientHeight) {
+            scrollToBottomContainer.classList.remove('hidden');
+        } else {
+            scrollToBottomContainer.classList.add('hidden');
+        }
+    }, 100);
 }
 </script>
 </head>
 <body class="bg-gray-50">
-<div class="flex h-screen overflow-hidden">
+<!-- 修正 1 & 3: 響應式佈局調整 -->
+<div class="flex flex-col md:flex-row h-screen overflow-hidden">
   
-  <!-- 左側控制面板 (可捲動區域) -->
-  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col relative">
+  <!-- 右側地圖顯示區 (在行動裝置上在上半部) -->
+  <div id="map-container" class="w-full md:w-2/3 relative mobile-h-half h-full">
+    <div id="map"></div>
+    <!-- 新增：夜間動畫遮罩。絕對定位覆蓋地圖 -->
+    <div id="night-overlay" class="absolute inset-0 z-[1000]"></div>
+  </div>
+
+  <!-- 左側控制面板 (在行動裝置上在下半部) -->
+  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col relative mobile-h-half h-full">
     <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2">🗺️ 旅程劇本設計器</h1>
 
     <!-- 腳本步驟列表 - 這是捲動的內容 -->
@@ -1391,14 +1447,6 @@ function renderScript() {
       <!-- 步驟將在此處渲染 -->
     </div>
     
-    <!-- 新增：拉到最下面按鈕 (STICKY/固定位置) -->
-    <!-- 使用 sticky 配合 bottom-0 z-10 將按鈕固定在控制面板可視範圍的底部 -->
-    <div class="sticky bottom-0 left-0 right-0 p-2 -mx-4 bg-white shadow-md border-t border-gray-200 z-10">
-        <button onclick="scrollToBottom()" class="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition duration-150 text-sm">
-            👇 拉到最下面
-        </button>
-    </div>
-
     <!-- 動作按鈕 -->
     <div class="space-y-2 mb-4 p-4 border rounded-lg bg-indigo-50">
         <p class="font-semibold text-sm text-indigo-700">新增動作：</p>
@@ -1412,9 +1460,8 @@ function renderScript() {
     </div>
     
     <!-- 新增：插入模式狀態與取消按鈕 (位於功能叢中) -->
-    <!-- 這裡放置取消按鈕，並由 JS 根據 insertAnchorIndex 渲染內容 -->
     <div id="insert-status-panel" class="mb-4">
-        <!-- 內容由 renderScript 渲染 -->
+        <!-- 內容由 renderScript 渲染 (包含取消按鈕) -->
     </div>
 
     <!-- 播放控制按鈕 -->
@@ -1461,20 +1508,19 @@ function renderScript() {
 
     <!-- 錯誤時顯示的手動複製區域會動態插入此處 -->
 
+    <!-- 新增：拉到最下面按鈕 (STICKY/固定在內容底部) -->
+    <div id="scroll-to-bottom-container" class="w-full p-2 -mx-4 bg-white shadow-md border-t border-gray-200 z-10 hidden">
+        <button onclick="scrollToBottom()" class="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition duration-150 text-sm">
+            👇 拉到最下面
+        </button>
+    </div>
+
   </div> <!-- End #controls -->
-
-  <!-- 右側地圖顯示區 -->
-  <div id="map-container" class="w-full md:w-2/3 relative h-screen">
-    <div id="map"></div>
-    <!-- 新增：夜間動畫遮罩。絕對定位覆蓋地圖 -->
-    <div id="night-overlay" class="absolute inset-0 z-[1000]"></div>
-  </div>
-
 </div>
 
 <!-- 1. 自訂匯入數據模態框 (Modal UI) -->
-<!-- 變更: 改為 fixed 頂部定位，與左側控制面板寬度一致 -->
-<div id="import-modal" class="fixed top-0 bottom-0 left-0 w-full md:w-1/3 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+<!-- 修正 1 & 2: Z-index 提升到最高，並修正手機定位 -->
+<div id="import-modal" class="fixed top-0 bottom-0 left-0 w-full md:w-1/3 bg-black bg-opacity-50 z-[9999] flex items-center justify-center hidden">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg modal-transition scale-95 opacity-0" id="import-modal-content">
         <h2 class="text-xl font-bold text-indigo-600 mb-4 border-b pb-2">📥 貼上劇本數據</h2>
         <p class="text-sm text-gray-600 mb-4">請將複製的數據字串貼入下方的文字區域，它會覆蓋您目前的劇本。</p>
