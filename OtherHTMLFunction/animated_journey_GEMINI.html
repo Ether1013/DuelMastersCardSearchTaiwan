@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Animated Journey Script Editor</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- 新增：載入 Pako (Zlib/Gzip) 壓縮函式庫 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<!-- 引入 Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   /* 確保地圖佔滿剩下的空間 */
@@ -48,18 +47,30 @@
       text-align: center;
       font-weight: bold;
   }
+  /* 模態框內容的過渡效果 */
+  .modal-transition {
+      transition: opacity 0.3s, transform 0.3s;
+  }
 </style>
 </head>
 <body class="bg-gray-50">
 <div class="flex h-screen overflow-hidden">
   
-  <!-- 左側控制面板 -->
-  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col">
+  <!-- 左側控制面板 (可捲動區域) -->
+  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col relative">
     <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2">🗺️ 旅程劇本設計器</h1>
 
-    <!-- 腳本步驟列表 -->
+    <!-- 腳本步驟列表 - 這是捲動的內容 -->
     <div id="script-list" class="space-y-3 flex-grow mb-4">
       <!-- 步驟將在此處渲染 -->
+    </div>
+    
+    <!-- 新增：拉到最下面按鈕 (STICKY/固定位置) -->
+    <!-- 使用 sticky 配合 bottom-0 z-10 將按鈕固定在控制面板可視範圍的底部 -->
+    <div class="sticky bottom-0 left-0 right-0 p-2 -mx-4 bg-white shadow-md border-t border-gray-200 z-10">
+        <button onclick="scrollToBottom()" class="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition duration-150 text-sm">
+            👇 拉到最下面
+        </button>
     </div>
 
     <!-- 動作按鈕 -->
@@ -67,7 +78,6 @@
         <p class="font-semibold text-sm text-indigo-700">新增動作：</p>
         <div class="grid grid-cols-2 gap-2 text-sm">
             <button onclick="addStep('goto')" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150">移動 (Goto)</button>
-            <!-- 整合 setIcon 和 wait 到 activity -->
             <button onclick="addStep('activity')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150">活動/狀態 (Activity)</button>
             <button onclick="addStep('show')" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150">顯示訊息 (Show)</button>
             <button onclick="addStep('dayoff')" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 col-span-2">休息過夜</button>
@@ -89,10 +99,16 @@
     
     <!-- 匯出與刪除按鈕 (新佈局) -->
     <div class="flex space-x-2 mb-2">
-        <button id="export-button" onclick="exportScript()" class="w-1/2 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
-          📤 匯出劇本 (URL)
+        <!-- 匯出按鈕：只複製資料字串 -->
+        <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
+          📄 複製數據
         </button>
-        <button id="delete-all-button" onclick="promptClearScript()" class="w-1/2 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
+        <!-- 新增：匯入按鈕 -->
+        <button id="import-button" onclick="showImportModal()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
+          📥 貼上數據
+        </button>
+        <!-- 刪除按鈕 -->
+        <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
           🗑️ 全部刪除
         </button>
     </div>
@@ -101,7 +117,7 @@
 
     <!-- 錯誤時顯示的手動複製區域會動態插入此處 -->
 
-  </div>
+  </div> <!-- End #controls -->
 
   <!-- 右側地圖顯示區 -->
   <div id="map-container" class="w-full md:w-2/3 relative h-screen">
@@ -112,71 +128,29 @@
 
 </div>
 
+<!-- 1. 自訂匯入數據模態框 (Modal UI) -->
+<!-- 變更: 從 absolute 改為 fixed top-0 bottom-0 left-0 w-1/3，使其不隨 #controls 捲動 -->
+<div id="import-modal" class="fixed top-0 bottom-0 left-0 w-full md:w-1/3 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg modal-transition scale-95 opacity-0" id="import-modal-content">
+        <h2 class="text-xl font-bold text-indigo-600 mb-4 border-b pb-2">📥 貼上劇本數據</h2>
+        <p class="text-sm text-gray-600 mb-4">請將複製的數據字串貼入下方的文字區域，它會覆蓋您目前的劇本。</p>
+        <!-- 新增 id="import-data-textarea" 以便在 JS 中獲取和監聽 -->
+        <textarea id="import-data-textarea" 
+                  class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none" 
+                  placeholder="請貼上已 URI 編碼的劇本數據..."></textarea>
+        <div class="flex justify-end space-x-3 mt-4">
+            <button onclick="closeImportModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                取消
+            </button>
+            <button onclick="handleImportConfirmation()" id="confirm-import-button" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                確認匯入
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// =================================================================
-// Pako (Gzip) 核心轉換函式
-// 依賴 Pako 庫提供的穩定 Deflate/Inflate 核心進行真正的壓縮
-// =================================================================
-
-/**
- * 將字串轉換為 Uint8Array (處理 UTF-8)
- */
-function strToU8(str) {
-    const buf = new Uint8Array(str.length);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-        buf[i] = str.charCodeAt(i);
-    }
-    return buf;
-}
-
-/**
- * 將 Uint8Array 轉換為字串
- */
-function u8ToStr(buf) {
-    return String.fromCharCode.apply(null, buf);
-}
-
-/**
- * 將 Uint8Array 轉換為 URI 安全的 Base64 字串 (壓縮核心)
- * @param {Uint8Array} u8arr - 壓縮後的二進位數據
- * @returns {string} - URI 安全的 Base64 字串
- */
-function compressToUriSafeBase64(u8arr) {
-    let binary = '';
-    const len = u8arr.length;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(u8arr[i]);
-    }
-    let base64 = btoa(binary);
-    // 轉為 URI 安全格式 (移除 + / =)
-    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-/**
- * 將 URI 安全的 Base64 字串解碼回 Uint8Array
- * @param {string} uriSafe - URI 安全的 Base64 字串
- * @returns {Uint8Array} - 解碼後的二進位數據
- */
-function decompressFromUriSafeBase64(uriSafe) {
-    // 1. 轉回標準 Base64 格式 (加回 padding)
-    while (uriSafe.length % 4) {
-        uriSafe += '=';
-    }
-    let base64 = uriSafe.replace(/-/g, '+').replace(/_/g, '/');
-    
-    // 2. Base64 解碼
-    const binaryString = atob(base64);
-    
-    // 3. 轉換為 Uint8Array
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-}
-
 // =================================================================
 // 1. 地圖與標記初始化
 // =================================================================
@@ -217,18 +191,6 @@ const START_STEP_DEFINITION = {
 // 初始劇本 (已將 setIcon 和 wait 轉換為 activity)
 let scriptSteps = [
     START_STEP_DEFINITION,
-    { type: 'goto', lat: 26.217316099459758, lng: 127.69247463281796, label: '搭乘單軌到牧志站', icon: 'train', words: '抵達牧志站' },
-    { type: 'goto', lat: 26.216668604473377, lng: 127.69066831093619, label: '步行到山羊料理', icon: 'walk' },
-    { type: 'activity', icon: 'dine', sec: 0, label: '吃午餐' }, 
-    { type: 'show', words: '山羊料理さかえ', label: '顯示：山羊料理さかえ' }, 
-    { type: 'activity', sec: 3, icon: '', label: '等待 3 秒 (用餐)' },
-    { type: 'goto', lat: 26.212824672458485, lng: 127.6891822419568, label: '步行到飯店入住', icon: 'walk', words: 'CABIN & HOTEL CONSTANT NAHA' },
-    { type: 'dayoff', sec: 3, label: '入住休息 (過夜效果)' }, 
-    { type: 'goto', lat: 26.21139855196967, lng: 127.68811493682566, label: '步行到公車站牌', icon: 'walk', words: '公車31站牌' },
-    { type: 'goto', lat: 26.210618356446393, lng: 127.67917746391598, label: '搭乘公車到下車點', icon: 'bus', words: '下車' },
-    { type: 'goto', lat: 26.213092860874845, lng: 127.67687857621559, label: '步行到機車租賃', icon: 'walk', words: '機車租賃GOYA' },
-    { type: 'goto', lat: 26.332465967977257, lng: 127.79849563345437, label: '騎車到新世紀飯店', icon: 'motorcycle', words: '新世紀飯店' },
-    { type: 'activity', sec: 3, icon: '', label: '等待 3 秒' },
 ];
 
 // =================================================================
@@ -517,108 +479,9 @@ function saveScriptToLocalStorage() {
     }
 }
 
-// =================================================================
-// 5. 壓縮與解壓縮邏輯 (採用 Pako Gzip 壓縮 + URI 安全 Base64 傳輸)
-// =================================================================
-
-/**
- * 將字串轉換為 Uint8Array (處理 UTF-8)
- */
-function strToU8(str) {
-    // 使用 TextEncoder (較新的 API) 處理 UTF-8
-    return new TextEncoder().encode(str);
-}
-
-/**
- * 將 Uint8Array 轉換為字串
- */
-function u8ToStr(buf) {
-    // 使用 TextDecoder (較新的 API) 處理 UTF-8
-    return new TextDecoder().decode(buf);
-}
-
-/**
- * 將 Uint8Array 轉換為 URI 安全的 Base64 字串
- * @param {Uint8Array} u8arr - 壓縮後的二進位數據
- */
-function compressToUriSafeBase64(u8arr) {
-    let binary = '';
-    const len = u8arr.length;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(u8arr[i]);
-    }
-    let base64 = btoa(binary);
-    // 轉為 URI 安全格式 (移除 + / =)
-    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-/**
- * 將 URI 安全的 Base64 字串解碼回 Uint8Array
- * @param {string} uriSafe - URI 安全的 Base64 字串
- */
-function decompressFromUriSafeBase64(uriSafe) {
-    // 1. 轉回標準 Base64 格式 (加回 padding)
-    while (uriSafe.length % 4) {
-        uriSafe += '=';
-    }
-    let base64 = uriSafe.replace(/-/g, '+').replace(/_/g, '/');
-    
-    // 2. Base64 解碼
-    const binaryString = atob(base64);
-    
-    // 3. 轉換為 Uint8Array
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-}
-
-
-/**
- * 壓縮 JSON 字串並編碼為 URI 安全字串 (使用 Pako.deflate)
- */
-function compressScript(jsonString) {
-    if (typeof pako === 'undefined' || !pako.deflate) {
-        console.error("Pako is not loaded or not defined. Falling back to uncompressed encoding.");
-        // 在 Pako 載入失敗時，退回使用無壓縮的 Base64 編碼，確保程式不會崩潰
-        return encodeURIComponent(jsonString);
-    }
-
-    const binaryString = strToU8(jsonString);
-    const compressed = pako.deflate(binaryString, { to: 'Uint8Array', level: 9 });
-    
-    return compressToUriSafeBase64(compressed);
-}
-
-/**
- * 解碼 URI 安全字串並解壓縮為 JSON 字串 (使用 Pako.inflate)
- */
-function decompressScript(encodedScript) {
-    if (typeof pako === 'undefined' || !pako.inflate) {
-        console.error("Pako is not loaded or not defined. Falling back to uncompressed decoding.");
-        // 在 Pako 載入失敗時，退回使用無壓縮的 Base64 解碼
-        try {
-            return decodeURIComponent(encodedScript);
-        } catch (e) {
-            return null;
-        }
-    }
-    
-    try {
-        const compressedU8 = decompressFromUriSafeBase64(encodedScript);
-        const decompressed = pako.inflate(compressedU8, { to: 'string' }); // 解壓縮為字串
-        return decompressed;
-    } catch (e) {
-        console.error("Pako decompression failed:", e);
-        return null;
-    }
-}
-
 
 // =================================================================
-// 4. UI 邏輯與腳本執行
+// 5. 資料傳輸邏輯 (使用 JSON 字串複製/貼上，帶 URI 編碼)
 // =================================================================
 
 /**
@@ -640,7 +503,7 @@ function showManualCopyPrompt(url) {
     promptDiv.className = 'mt-3 p-3 bg-red-100 border border-red-400 rounded-lg shadow-inner';
     
     promptDiv.innerHTML = `
-        <p class="text-sm font-semibold text-red-700 mb-2">⚠️ **自動複製失敗** (沙盒模式限制)：請手動複製以下網址：</p>
+        <p class="text-sm font-semibold text-red-700 mb-2">⚠️ **自動複製失敗** (沙盒模式限制)：請手動複製以下數據：</p>
         <textarea id="manual-copy-textarea" class="w-full text-xs p-2 border border-gray-300 rounded-md resize-none" rows="3" readonly></textarea>
     `;
     
@@ -656,202 +519,9 @@ function showManualCopyPrompt(url) {
     }, 15000); 
 }
 
-/**
- * 執行劇本
- * @param {number} startIndex - 從哪個步驟索引開始執行 (0為START，1為第一個可執行步驟)
- */
-async function executeScript(startIndex = 1) {
-    if (isScriptRunning) return;
-
-    const playButton = document.getElementById('play-button');
-    const statusMessage = document.getElementById('status-message');
-    const pauseButton = document.getElementById('pause-resume-button');
-
-    // 設置運行狀態
-    isScriptRunning = true;
-    isPaused = false; // 重設暫停狀態
-    
-    playButton.disabled = true;
-    pauseButton.disabled = false;
-    pauseButton.title = '暫停播放';
-    // 更新按鈕文字
-    pauseButton.querySelector('span').textContent = '⏸️ 暫停播放';
-
-    playButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-700');
-    playButton.classList.add('bg-gray-400');
-    statusMessage.textContent = '▶️ 劇本開始執行...';
-    
-    // 清除所有步驟高亮
-    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
-
-    // --- 1. 狀態重建：確保標記從正確的位置和圖標開始 ---
-    let currentLat = scriptSteps[0].lat;
-    let currentLng = scriptSteps[0].lng;
-    let currentIcon = 'train'; // 預設圖標 (火車圖標)
-
-    for (let j = 0; j < startIndex; j++) {
-        const step = scriptSteps[j];
-        if (step.type === 'start') {
-            currentLat = step.lat;
-            currentLng = step.lng;
-        } else if (step.type === 'goto') {
-            currentLat = step.lat;
-            currentLng = step.lng;
-            if (step.icon) {
-                currentIcon = step.icon;
-            }
-        } else if (step.type === 'activity') { 
-            if (step.icon) {
-                currentIcon = step.icon;
-            }
-        } else if (step.type === 'dayoff') {
-            // Dayoff 不改變位置，但會強制設為 sleep
-            currentIcon = 'sleep';
-        }
-    }
-
-    // 應用重建的狀態
-    start([currentLat, currentLng]);
-    setIcon(currentIcon);
-    map.setView([currentLat, currentLng], 13);
-    // ----------------------------------------------------
-
-
-    // 2. 按照步驟順序執行
-    for (let i = startIndex; i < scriptSteps.length; i++) {
-        // 檢查暫停狀態 (如果已暫停，程式會在此處等待)
-        await getPausePromise(); 
-
-        const step = scriptSteps[i];
-        
-        // 更新當前執行狀態
-        statusMessage.textContent = `執行中: 步驟 ${i}. ${step.label || step.type}`;
-        document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
-
-        try {
-            switch (step.type) {
-                case 'activity':
-                    // **Activity = setIcon (可選) + wait (可選)**
-                    // 1. setIcon (如果有 icon)
-                    if (step.icon) {
-                        setIcon(step.icon);
-                    }
-                    // 2. wait (如果有 sec 且 > 0)
-                    if (step.sec && step.sec > 0) {
-                        await wait(step.sec);
-                    }
-                    break;
-                case 'show':
-                    // 保持 show 獨立功能
-                    show(step.words);
-                    await wait(1); // 顯示訊息後短暫等待，讓用戶看到
-                    break;
-                case 'goto':
-                    // **如果 goto 帶有 icon，則先換圖標**
-                    if (step.icon) {
-                        setIcon(step.icon);
-                    }
-                    await goto([step.lat, step.lng]);
-                    
-                    // **如果 goto 帶有 words (且非空)，則接著顯示訊息**
-                    if (step.words && step.words.trim() !== '') {
-                        show(step.words);
-                        await wait(1); // 顯示訊息後短暫等待，讓用戶看到
-                    }
-                    break;
-                case 'dayoff':
-                    // **Dayoff 步驟**
-                    setIcon('sleep');
-                    await animateNight(step.sec);
-                    break;
-            }
-        } catch (error) {
-            console.error(`步驟 ${i} 執行錯誤:`, error);
-            statusMessage.textContent = `❌ 錯誤: 步驟 ${i} 執行失敗。`;
-            // 清除當前步驟高亮
-            document.getElementById(`step-${i}`).classList.remove('ring-2', 'ring-indigo-500', 'shadow-md');
-            break; // 遇到錯誤停止執行
-        }
-        
-        // 清除當前步驟高亮
-        document.getElementById(`step-${i}`).classList.remove('ring-2', 'ring-indigo-500', 'shadow-md');
-    }
-
-    // 3. 執行結束
-    statusMessage.textContent = '✅ 劇本執行完畢！';
-    
-    // 恢復播放按鈕狀態
-    isScriptRunning = false;
-    playButton.disabled = false;
-    pauseButton.disabled = true;
-    pauseButton.querySelector('span').textContent = '⏸️ 暫停/繼續'; // 重置按鈕文字
-    playButton.classList.add('bg-indigo-500', 'hover:bg-indigo-700');
-    playButton.classList.remove('bg-gray-400');
-}
-
-// ** 新增全刪除相關功能 **
 
 /**
- * 提示並執行清除劇本動作 (兩步驟確認)
- */
-function promptClearScript() {
-    const btn = document.getElementById('delete-all-button');
-    const originalText = '🗑️ 全部刪除';
-    const confirmText = '⚠️ 確認全部刪除? (5s)';
-
-    // 檢查是否處於確認狀態
-    if (btn.textContent.includes('確認')) {
-        clearScript();
-        return;
-    }
-    
-    // 進入確認狀態
-    btn.textContent = confirmText;
-    btn.classList.remove('bg-red-400', 'hover:bg-red-600');
-    btn.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
-
-    // 設置 5 秒後重置按鈕
-    clearTimeout(clearScriptTimeoutId);
-    clearScriptTimeoutId = setTimeout(() => {
-        btn.textContent = originalText;
-        btn.classList.add('bg-red-400', 'hover:bg-red-600');
-        btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
-    }, 5000);
-}
-
-/**
- * 清除所有劇本步驟，只保留第一個 'start' 步驟
- */
-function clearScript() {
-    const btn = document.getElementById('delete-all-button');
-    const statusMessage = document.getElementById('status-message');
-
-    // 清除確認狀態計時器
-    clearTimeout(clearScriptTimeoutId);
-
-    // 重設劇本為只有第一個 'start' 步驟 (使用 START_STEP_DEFINITION 來重設)
-    scriptSteps = [
-        { 
-            type: START_STEP_DEFINITION.type, 
-            lat: START_STEP_DEFINITION.lat, 
-            lng: START_STEP_DEFINITION.lng, 
-            label: START_STEP_DEFINITION.label 
-        }
-    ];
-
-    renderScript();
-    saveScriptToLocalStorage();
-
-    // 恢復按鈕和狀態訊息
-    btn.textContent = '🗑️ 全部刪除';
-    btn.classList.add('bg-red-400', 'hover:bg-red-600');
-    btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
-    statusMessage.textContent = '🗑️ 劇本已清除，已恢復初始步驟。';
-}
-
-
-/**
- * 匯出劇本：將當前劇本編碼為 URL 參數並複製到剪貼簿。
+ * 匯出劇本：將優化後的 JSON 字串複製到剪貼簿。
  */
 async function exportScript() {
     const statusMessage = document.getElementById('status-message');
@@ -859,12 +529,11 @@ async function exportScript() {
     const p = document.getElementById('manual-copy-prompt');
     if (p) p.remove();
 
-    let exportUrl = ''; 
+    let dataString = ''; 
     
     try {
-        // --- 1. 數據轉換與 URL 構建 ---
+        // --- 1. 數據優化與轉換 (壓縮結構) ---
         
-        // 使用 JSON 結構優化 + Pako 進行壓縮
         const compactScript = scriptSteps.map(step => {
             const compact = [];
             switch (step.type) {
@@ -874,13 +543,13 @@ async function exportScript() {
                     return compact;
                 case 'goto':
                     compact.push('g', step.lat, step.lng);
-                    if (step.icon) compact.push(step.icon.charAt(0)); // 只取圖標第一個字母
+                    if (step.icon) compact.push(step.icon.charAt(0)); 
                     else compact.push('');
                     if (step.words) compact.push(step.words);
                     return compact;
                 case 'activity':
                     compact.push('a', step.sec);
-                    if (step.icon) compact.push(step.icon.charAt(0)); // 只取圖標第一個字母
+                    if (step.icon) compact.push(step.icon.charAt(0)); 
                     return compact;
                 case 'show':
                     compact.push('h', step.words);
@@ -892,28 +561,26 @@ async function exportScript() {
             return compact;
         });
 
-        const jsonString = JSON.stringify(compactScript);
+        // 2. JSON.stringify 轉換為字串
+        const rawJsonString = JSON.stringify(compactScript);
         
-        // ** 使用 Pako 進行 Gzip 壓縮 **
-        const encodedScript = compressScript(jsonString);
+        // ** 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸 **
+        dataString = encodeURIComponent(rawJsonString);
         
-        const currentUrl = window.location.origin + window.location.pathname;
-        exportUrl = `${currentUrl}?script=${encodedScript}`;
-
     } catch (error) {
         statusMessage.textContent = '❌ 劇本數據轉換失敗。';
         console.error('數據轉換失敗:', error);
         return; 
     }
     
-    // --- 2. 複製到剪貼簿 (沙盒模式最可能失敗) ---
+    // --- 4. 複製到剪貼簿 (URI 編碼後的數據字串) ---
     try {
-        await navigator.clipboard.writeText(exportUrl);
+        await navigator.clipboard.writeText(dataString);
 
         const p = document.getElementById('manual-copy-prompt');
         if (p) p.remove();
 
-        statusMessage.textContent = '✅ 匯出成功！URL 已複製到剪貼簿。';
+        statusMessage.textContent = '✅ 數據已複製！請貼上以分享。';
         setTimeout(() => {
             statusMessage.textContent = '準備就緒';
         }, 3000);
@@ -922,7 +589,7 @@ async function exportScript() {
         // Clipboard API 失敗時，使用 document.execCommand('copy') 作為 fallback
         try {
             const tempInput = document.createElement('textarea');
-            tempInput.value = exportUrl; 
+            tempInput.value = dataString; 
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand('copy');
@@ -931,121 +598,219 @@ async function exportScript() {
             const p = document.getElementById('manual-copy-prompt');
             if (p) p.remove();
 
-            statusMessage.textContent = '✅ 匯出成功！(使用備用複製) URL 已複製到剪貼簿。';
+            statusMessage.textContent = '✅ 數據已複製！(使用備用複製) 請貼上以分享。';
             setTimeout(() => {
                 statusMessage.textContent = '準備就緒';
             }, 3000);
         } catch (copyError) {
              // 兩種複製方式皆失敗 (沙盒模式下預期行為)，顯示手動複製提示
-             statusMessage.textContent = '❌ 複製失敗！(沙盒模式限制) 請手動複製下方網址。';
-             showManualCopyPrompt(exportUrl);
+             statusMessage.textContent = '❌ 複製失敗！(沙盒模式限制) 請手動複製下方數據。';
+             showManualCopyPrompt(dataString); // 顯示 URI 編碼後的數據字串讓用戶手動複製
         }
     }
 }
 
-/**
- * 檢查並從 URL 參數或 Local Storage 載入劇本。
- */
-function checkAndLoadScriptFromURL() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let encodedScript = urlParams.get('script');
-    let loadSource = 'URL';
 
+/**
+ * 2. 顯示自訂匯入模態框 (取代原生 prompt)
+ */
+function showImportModal() {
+    const modal = document.getElementById('import-modal');
+    const modalContent = document.getElementById('import-modal-content');
+    const importTextarea = document.getElementById('import-data-textarea');
+    
+    // 清除上次的貼上內容
+    importTextarea.value = '';
+    
+    // 顯示模態框
+    modal.classList.remove('hidden');
+    // 讓 textarea 取得焦點 (啟用 Enter 提交)
+    importTextarea.focus(); 
+    
+    // 觸發過渡動畫
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+
+    // 清除狀態訊息
+    document.getElementById('status-message').textContent = '等待貼上數據...';
+}
+
+/**
+ * 關閉自訂匯入模態框
+ */
+function closeImportModal() {
+    const modal = document.getElementById('import-modal');
+    const modalContent = document.getElementById('import-modal-content');
+
+    // 觸發退出動畫
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+
+    // 隱藏模態框
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.getElementById('status-message').textContent = '準備就緒';
+    }, 300); // 配合 CSS transition 300ms
+}
+
+
+/**
+ * 3. 處理模態框中的確認匯入按鈕點擊
+ */
+function handleImportConfirmation() {
+    const dataString = document.getElementById('import-data-textarea').value;
+    const statusMessage = document.getElementById('status-message');
+
+    if (dataString.trim() === "") {
+        statusMessage.textContent = '⚠️ 請貼入數據字串。';
+        return;
+    }
+    
+    // 執行匯入邏輯
+    try {
+        // ** 關鍵修正：先進行 URI 解碼 **
+        const rawJsonString = decodeURIComponent(dataString);
+        
+        const result = loadImportedData(rawJsonString);
+        if (result) {
+            statusMessage.textContent = '✅ 劇本數據已成功貼上並載入！';
+            saveScriptToLocalStorage(); // 載入成功後儲存到 Local Storage
+            renderScript();
+            closeImportModal();
+        } else {
+            statusMessage.textContent = '❌ 貼上的數據格式無效或已損壞。';
+        }
+    } catch (e) {
+        statusMessage.textContent = '❌ 貼上的數據解析失敗，請檢查格式。';
+        console.error('Import failed:', e);
+    }
+}
+
+
+/**
+ * 4. 捲動腳本列表到最底部
+ */
+function scrollToBottom() {
+    const controlsContainer = document.getElementById('controls');
+    // 捲動到 controls 容器的最底部
+    controlsContainer.scrollTop = controlsContainer.scrollHeight;
+}
+
+
+/**
+ * 將簡化的數據字串解構並載入到 scriptSteps
+ * @param {string} rawJsonString - 匯入的 JSON 字串 (已URI解碼)
+ * @returns {boolean} - 成功載入返回 true
+ */
+function loadImportedData(rawJsonString) {
     // Helper to map icon letter back to full name
     const ICON_MAP = {
         't': 'train', 'w': 'walk', 'd': 'dine', 's': 'sleep', 'b': 'bus', 
         'm': 'motorcycle', 'c': 'car', 'v': 'view', 'p': 'shopping', 'a': 'airplane'
     };
 
-    // Helper to uncompact the script format
+    // Helper to uncompact the script format (從 compactArray 轉換回 fullScript)
     function uncompactScript(compactArray) {
         const fullScript = [];
-        let i = 0;
-        while (i < compactArray.length) {
-            const typeChar = compactArray[i++];
-            let step = {};
+        
+        // ** 修正: 外層迴圈應遍歷每一個步驟陣列 **
+        for (const compactStep of compactArray) {
+            let i = 0; // 內部索引
+            
+            // 檢查 compactStep 是否真的是一個數組，並且第一個元素是類型字符
+            if (!Array.isArray(compactStep) || compactStep.length === 0) {
+                 console.warn('Skipping invalid compact step:', compactStep);
+                 continue;
+            }
+
+            const typeChar = compactStep[i++];
+            let step = { label: '' }; // 預設 label
+            
             switch (typeChar) {
                 case 's': // start: s, lat, lng, [label]
                     step.type = 'start';
-                    step.lat = compactArray[i++];
-                    step.lng = compactArray[i++];
+                    step.lat = compactStep[i++];
+                    step.lng = compactStep[i++];
                     // Label is optional for start step in export, but we keep it simple here
                     step.label = '那霸機場 (初始位置)'; // Use default label for start for simplicity
                     // Skip label if present
-                    if (typeof compactArray[i] === 'string' && compactArray[i].length > 2) {
-                         i++;
+                    if (typeof compactStep[i] === 'string') {
+                         step.label = compactStep[i++];
                     }
                     break;
-                case 'g': // goto: g, lat, lng, iconChar, [words]
+                case 'g': // goto: g, lat, lng, iconChar, words
                     step.type = 'goto';
-                    step.lat = compactArray[i++];
-                    step.lng = compactArray[i++];
-                    const iconChar = compactArray[i++];
+                    step.lat = compactStep[i++];
+                    step.lng = compactStep[i++];
+                    const iconChar = compactStep[i++];
                     step.icon = iconChar ? ICON_MAP[iconChar] || iconChar : '';
-                    step.words = compactArray[i++];
+                    step.words = compactStep[i++];
+                    step.label = '載入的移動步驟';
                     break;
                 case 'a': // activity: a, sec, [iconChar]
                     step.type = 'activity';
-                    step.sec = compactArray[i++];
-                    step.icon = compactArray[i] ? (ICON_MAP[compactArray[i]] || compactArray[i++]) : '';
+                    step.sec = compactStep[i++];
+                    const activityIconChar = compactStep[i];
+                    step.icon = activityIconChar ? (ICON_MAP[activityIconChar] || activityIconChar) : '';
                     if (step.icon) i++;
                     step.label = '載入的活動';
                     break;
                 case 'h': // show: h, words
                     step.type = 'show';
-                    step.words = compactArray[i++];
+                    step.words = compactStep[i++];
                     step.label = '載入的訊息';
                     break;
                 case 'd': // dayoff: d, sec
                     step.type = 'dayoff';
-                    step.sec = compactArray[i++];
+                    step.sec = compactStep[i++];
                     step.label = '載入的休息過夜';
                     break;
                 default:
                     console.warn('Unknown compact step type:', typeChar);
-                    return fullScript; // Stop parsing on error
+                    return null; // 停止解析 (這是導致錯誤訊息的原因)
             }
             fullScript.push(step);
         }
         return fullScript;
     }
 
-
-    // 1. 只檢查 URL 參數載入
-    if (encodedScript) {
-        try {
-            // ** 使用 Pako 進行 Gzip 解壓縮 **
-            const jsonString = decompressScript(encodedScript);
-            
-            if (!jsonString) {
-                 console.error('解碼劇本字串失敗。');
-                 document.getElementById('status-message').textContent = '❌ 載入劇本失敗，數據可能已損壞。';
-            } else {
-                // 如果是 Pako 失敗退回的無壓縮字串，JSON.parse 仍然可以處理
-                const compactArray = JSON.parse(jsonString);
-                const loadedSteps = uncompactScript(compactArray);
-
-                if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
-                    // 成功載入，替換當前劇本
-                    scriptSteps = loadedSteps;
-                    document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
-                    
-                    // *** 為了防止使用者下次在同一瀏覽器編輯時丟失，我們仍然儲存到 Local Storage ***
-                    saveScriptToLocalStorage(); 
-                    return;
-                } else {
-                    console.error('載入的劇本格式無效。使用預設劇本。');
-                }
-            }
-        } catch (error) {
-            console.error('解析 URL 劇本失敗:', error);
-            document.getElementById('status-message').textContent = '❌ 載入劇本失敗，數據解析錯誤。';
+    // 1. 解析 JSON 字串
+    let compactArray;
+    try {
+        compactArray = JSON.parse(rawJsonString);
+        // 驗證最外層是否為數組
+        if (!Array.isArray(compactArray)) {
+            console.error('Parsed data is not an array.');
+            return false;
         }
+    } catch (e) {
+        console.error('JSON parse error after URI decoding:', e);
+        return false;
     }
+
+    // 2. 轉換回完整劇本結構
+    const loadedSteps = uncompactScript(compactArray);
+
+    // 3. 驗證並載入
+    if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
+        scriptSteps = loadedSteps;
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * 檢查並從 URL 參數或 Local Storage 載入劇本。
+ */
+function checkAndLoadScriptFromURL() {
+    // ** 移除 URL 參數檢查，只保留 Local Storage 檢查 **
     
-    // 2. 如果 URL 中沒有參數，則嘗試從 Local Storage 載入 (保留編輯器工作區功能)
+    // 1. 從 Local Storage 載入
     const storedJson = getLocalStorage(STORAGE_KEY);
-    loadSource = '本機儲存';
+    const loadSource = '本機儲存';
 
     if (storedJson) {
         try {
@@ -1062,7 +827,7 @@ function checkAndLoadScriptFromURL() {
         }
     }
 
-    // 如果 URL 和 Local Storage 都沒有有效劇本，則使用初始預設劇本
+    // 如果 Local Storage 中沒有有效劇本，則使用初始預設劇本
 }
 
 /**
@@ -1380,7 +1145,43 @@ function moveStep(index, direction) {
 document.addEventListener('DOMContentLoaded', () => {
     checkAndLoadScriptFromURL();
     renderScript();
+    
+    // 全域監聽鍵盤事件
+    document.addEventListener('keydown', handleKeydown); // <-- 新增鍵盤監聽
 });
+
+
+// --- 鍵盤事件處理函式 ---
+function handleKeydown(event) {
+    const modal = document.getElementById('import-modal');
+    const importTextarea = document.getElementById('import-data-textarea');
+    
+    // 只有在模態框顯示時才處理鍵盤事件
+    if (modal.classList.contains('hidden')) {
+        return;
+    }
+    
+    // 阻止事件冒泡，避免影響其他輸入框
+    event.stopPropagation();
+    
+    switch (event.key) {
+        case 'Escape':
+            closeImportModal();
+            break;
+        case 'Enter':
+            // 只有當焦點不在 textarea 時才觸發 (例如在確認按鈕上)
+            // 如果焦點在 textarea 內，除非同時按了 Ctrl/Cmd/Shift，否則按 Enter 應執行提交
+            if (document.activeElement === importTextarea && !event.shiftKey) {
+                 // 在 textarea 內，沒有按 shift，允許換行。
+                 return;
+            } else {
+                // 執行確認 (防止默認行為)
+                event.preventDefault(); 
+                handleImportConfirmation();
+            }
+            break;
+    }
+}
 </script>
 </body>
 </html>
