@@ -26,7 +26,7 @@
   }
   /* 自訂樣式：放大提示視窗 (Popup) */
   .custom-large-popup .leaflet-popup-content-wrapper {
-    /* 大約是預設大小的 3 倍 */
+    /* 桌面預設大小 (~3x) */
     font-size: 1.5rem; 
     line-height: 2rem;
     padding: 1.5rem;
@@ -92,6 +92,13 @@
     .leaflet-div-icon div {
         font-size: 40px !important;
     }
+    /* 修正 1: 行動裝置 POPUP 縮小到 1/3 */
+    .custom-large-popup .leaflet-popup-content-wrapper {
+        font-size: 0.85rem; /* 約 1/3 */
+        line-height: 1.25rem; 
+        padding: 0.75rem; /* 邊距縮小 */
+    }
+
     /* 修正 2: 行動裝置下，匯入模態框只覆蓋下半部 (controls 區) */
     #import-modal {
         top: 50%;       /* 從螢幕中間開始 */
@@ -546,11 +553,31 @@ function start(gps){ marker.setLatLng(gps); }
 function setIcon(name){ marker.setIcon(icons[name]); }
 function show(words){
   if(popup) mapInstance.closePopup(popup);
-  // **修改：增加 className 應用自訂大尺寸樣式**
+  
+  // *** 修正方案：動態調整 popupAnchor ***
+  const isMobileVertical = window.innerWidth <= 767;
+  let anchor = [0, -iconSize / 2]; // 預設 (往上彈)
+  
+  if (isMobileVertical) {
+      // 在手機縱向模式下，如果地圖點靠近頂部（例如緯度高，往北走），則向下彈
+      // 簡單判斷：如果地圖上的標記在容器的上半部分 (假設 y < 50%)
+      const mapContainerRect = document.getElementById('map').getBoundingClientRect();
+      const markerPoint = mapInstance.latLngToContainerPoint(marker.getLatLng());
+      
+      // 如果標記的 Y 座標在地圖容器的 40% 高度以內，就向下彈出
+      if (markerPoint.y < mapContainerRect.height * 0.4) {
+           // 強制往下彈出 (Y 座標為正值 + 額外緩衝 15px)
+           anchor = [0, iconSize / 2 + 15]; 
+      }
+      
+  }
+  
   popup = L.popup({
       closeButton:false, 
       autoClose:true, 
-      className: 'custom-large-popup' 
+      className: 'custom-large-popup',
+      autoPan: false, // 阻止地圖移動
+      offset: anchor // 使用計算出的錨點
     })
     .setLatLng(marker.getLatLng())
     .setContent(words)
@@ -802,13 +829,16 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     // --- 1. 狀態重建：確保標記從正確的位置和圖標開始 ---
     let currentLat = scriptSteps[0].lat;
     let currentLng = scriptSteps[0].lng;
-    let currentIcon = 'train'; // 預設圖標 (火車圖標)
+    let currentIcon = 'motorcycle'; // 預設圖標 (機車圖標)
 
     for (let j = 0; j < startIndex; j++) {
         const step = scriptSteps[j];
         if (step.type === 'start') {
             currentLat = step.lat;
             currentLng = step.lng;
+            if (step.icon) {
+                currentIcon = step.icon;
+            }
         } else if (step.type === 'goto') {
             currentLat = step.lat;
             currentLng = step.lng;
