@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Animated Journey Script Editor</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- 新增：載入 Pako (Zlib/Gzip) 壓縮函式庫 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   /* 確保地圖佔滿剩下的空間 */
@@ -113,93 +115,67 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // =================================================================
-// Pako (Zlib/Gzip) 壓縮/解壓縮核心程式碼 (取代 LZ-String)
-// 此處為 Pako 核心函式，用於處理 ArrayBuffer <-> Deflate/Inflate
-// 程式碼已裁剪至單純執行 compress/decompress 的最小必要部分
+// Pako (Gzip) 核心轉換函式
+// 依賴 Pako 庫提供的穩定 Deflate/Inflate 核心進行真正的壓縮
 // =================================================================
 
-// --- Pako Utility Functions ---
-function stringToUint8Array(str) {
-    const arr = new Uint8Array(str.length);
-    for (let i = 0; i < str.length; i++) {
-        arr[i] = str.charCodeAt(i) & 0xFF;
+/**
+ * 將字串轉換為 Uint8Array (處理 UTF-8)
+ */
+function strToU8(str) {
+    const buf = new Uint8Array(str.length);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+        buf[i] = str.charCodeAt(i);
     }
-    return arr;
+    return buf;
 }
 
-function uint8ArrayToString(arr) {
-    return String.fromCharCode.apply(null, arr);
+/**
+ * 將 Uint8Array 轉換為字串
+ */
+function u8ToStr(buf) {
+    return String.fromCharCode.apply(null, buf);
 }
 
-function base64ToUint8Array(base64) {
-    const binaryString = atob(base64);
-    return stringToUint8Array(binaryString);
-}
-
-function uint8ArrayToBase64(arr) {
-    let binary = '';
-    const len = arr.length;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(arr[i]);
-    }
-    return btoa(binary);
-}
-
-// Custom URI-safe Base64 functions: Replace non-URI safe chars
+/**
+ * 將 Uint8Array 轉換為 URI 安全的 Base64 字串 (壓縮核心)
+ * @param {Uint8Array} u8arr - 壓縮後的二進位數據
+ * @returns {string} - URI 安全的 Base64 字串
+ */
 function compressToUriSafeBase64(u8arr) {
-    let base64 = uint8ArrayToBase64(u8arr);
+    let binary = '';
+    const len = u8arr.length;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(u8arr[i]);
+    }
+    let base64 = btoa(binary);
+    // 轉為 URI 安全格式 (移除 + / =)
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+/**
+ * 將 URI 安全的 Base64 字串解碼回 Uint8Array
+ * @param {string} uriSafe - URI 安全的 Base64 字串
+ * @returns {Uint8Array} - 解碼後的二進位數據
+ */
 function decompressFromUriSafeBase64(uriSafe) {
-    // Add padding back
+    // 1. 轉回標準 Base64 格式 (加回 padding)
     while (uriSafe.length % 4) {
         uriSafe += '=';
     }
     let base64 = uriSafe.replace(/-/g, '+').replace(/_/g, '/');
-    return base64ToUint8Array(base64);
+    
+    // 2. Base64 解碼
+    const binaryString = atob(base64);
+    
+    // 3. 轉換為 Uint8Array
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
 }
-
-// --- Minimal Pako Core (Deflate/Inflate) ---
-// Note: Actual Pako implementation is complex. For a reliable single-file solution, 
-// we rely on a simplified, robust implementation of Zlib/Gzip here.
-
-const Pako = (function () {
-    
-    // Placeholder for actual Pako logic. 
-    // In a real environment, pako.js would handle the heavy lifting.
-    // For this demonstration, we use a simple placeholder logic that converts 
-    // to Uint8Array and back, relying on the assumption that complex Zlib 
-    // logic is handled by a complete library if this were production code.
-    // For a functional single-file solution without external JS, 
-    // we must simulate pako's interface but use standard JS functions:
-    
-    // We will use a very simplified approach for the single file mandate, 
-    // falling back to native browser compression/decompression 
-    // if available, or providing a stable mock.
-    
-    // Since we cannot reliably embed Pako's full source (it's massive and complex)
-    // and LZ-String has failed due to logic errors, we must use a functional mock 
-    // that uses the native web API (CompressionStream) if available, or 
-    // falls back to the simpler, repaired base64/URI encoding previously used, 
-    // which is more robust than the flawed LZ-String logic.
-    
-    // **Decision: Fallback to the reliable Base64 (non-LZ) compression,
-    // as it is simple and stable, though less space efficient.**
-    
-    return {
-        // Mock Deflate (Compress): Just converts string to Uint8Array for external Base64 encoding
-        deflate: function(data) {
-             // In a real Pako implementation, this is deflate logic. Here, raw string conversion.
-             return stringToUint8Array(data);
-        },
-        // Mock Inflate (Decompress): Just converts Uint8Array back to string
-        inflate: function(data) {
-             // In a real Pako implementation, this is inflate logic. Here, raw string conversion.
-             return uint8ArrayToString(data);
-        }
-    };
-})();
 
 // =================================================================
 // 1. 地圖與標記初始化
@@ -542,37 +518,100 @@ function saveScriptToLocalStorage() {
 }
 
 // =================================================================
-// 5. Pako/Gzip 壓縮與解壓縮邏輯 (最終採用穩定方案)
-// 由於不能引入外部文件，且LZ-String失敗，我們使用 Base64 (非LZ)
-// 這是最穩定的單一檔案傳輸方式，URL長度問題將透過使用短屬性名稱來緩解。
-//
-// 輔助函式：Base64/UTF-8 轉換
+// 5. 壓縮與解壓縮邏輯 (採用 Pako Gzip 壓縮 + URI 安全 Base64 傳輸)
 // =================================================================
 
-function compressToUriSafeBase64(str) {
-    // 1. 將 UTF-8 字串轉為 URI 編碼，以處理多位元組字元
-    const encodedStr = encodeURIComponent(str);
-    // 2. 將 URI 編碼的字串轉為 Base64
-    let base64 = btoa(encodedStr);
-    // 3. 轉為 URI 安全格式
+/**
+ * 將字串轉換為 Uint8Array (處理 UTF-8)
+ */
+function strToU8(str) {
+    // 使用 TextEncoder (較新的 API) 處理 UTF-8
+    return new TextEncoder().encode(str);
+}
+
+/**
+ * 將 Uint8Array 轉換為字串
+ */
+function u8ToStr(buf) {
+    // 使用 TextDecoder (較新的 API) 處理 UTF-8
+    return new TextDecoder().decode(buf);
+}
+
+/**
+ * 將 Uint8Array 轉換為 URI 安全的 Base64 字串
+ * @param {Uint8Array} u8arr - 壓縮後的二進位數據
+ */
+function compressToUriSafeBase64(u8arr) {
+    let binary = '';
+    const len = u8arr.length;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(u8arr[i]);
+    }
+    let base64 = btoa(binary);
+    // 轉為 URI 安全格式 (移除 + / =)
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+/**
+ * 將 URI 安全的 Base64 字串解碼回 Uint8Array
+ * @param {string} uriSafe - URI 安全的 Base64 字串
+ */
 function decompressFromUriSafeBase64(uriSafe) {
-    try {
-        // 1. 轉回標準 Base64 格式 (加回 padding)
-        while (uriSafe.length % 4) {
-            uriSafe += '=';
+    // 1. 轉回標準 Base64 格式 (加回 padding)
+    while (uriSafe.length % 4) {
+        uriSafe += '=';
+    }
+    let base64 = uriSafe.replace(/-/g, '+').replace(/_/g, '/');
+    
+    // 2. Base64 解碼
+    const binaryString = atob(base64);
+    
+    // 3. 轉換為 Uint8Array
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+
+/**
+ * 壓縮 JSON 字串並編碼為 URI 安全字串 (使用 Pako.deflate)
+ */
+function compressScript(jsonString) {
+    if (typeof pako === 'undefined' || !pako.deflate) {
+        console.error("Pako is not loaded or not defined. Falling back to uncompressed encoding.");
+        // 在 Pako 載入失敗時，退回使用無壓縮的 Base64 編碼，確保程式不會崩潰
+        return encodeURIComponent(jsonString);
+    }
+
+    const binaryString = strToU8(jsonString);
+    const compressed = pako.deflate(binaryString, { to: 'Uint8Array', level: 9 });
+    
+    return compressToUriSafeBase64(compressed);
+}
+
+/**
+ * 解碼 URI 安全字串並解壓縮為 JSON 字串 (使用 Pako.inflate)
+ */
+function decompressScript(encodedScript) {
+    if (typeof pako === 'undefined' || !pako.inflate) {
+        console.error("Pako is not loaded or not defined. Falling back to uncompressed decoding.");
+        // 在 Pako 載入失敗時，退回使用無壓縮的 Base64 解碼
+        try {
+            return decodeURIComponent(encodedScript);
+        } catch (e) {
+            return null;
         }
-        let base64 = uriSafe.replace(/-/g, '+').replace(/_/g, '/');
-        
-        // 2. Base64 解碼得到 URI 編碼的字串
-        const encodedStr = atob(base64);
-        
-        // 3. URI 解碼得到原始 UTF-8 字串
-        return decodeURIComponent(encodedStr);
+    }
+    
+    try {
+        const compressedU8 = decompressFromUriSafeBase64(encodedScript);
+        const decompressed = pako.inflate(compressedU8, { to: 'string' }); // 解壓縮為字串
+        return decompressed;
     } catch (e) {
-        console.error("Decompression failed:", e);
+        console.error("Pako decompression failed:", e);
         return null;
     }
 }
@@ -824,10 +863,39 @@ async function exportScript() {
     
     try {
         // --- 1. 數據轉換與 URL 構建 ---
-        const jsonString = JSON.stringify(scriptSteps);
         
-        // ** 變更：使用 Base64 URI 安全編碼 (最穩定方案) **
-        const encodedScript = compressToUriSafeBase64(jsonString);
+        // 使用 JSON 結構優化 + Pako 進行壓縮
+        const compactScript = scriptSteps.map(step => {
+            const compact = [];
+            switch (step.type) {
+                case 'start':
+                    compact.push('s', step.lat, step.lng);
+                    if (step.label) compact.push(step.label);
+                    return compact;
+                case 'goto':
+                    compact.push('g', step.lat, step.lng);
+                    if (step.icon) compact.push(step.icon.charAt(0)); // 只取圖標第一個字母
+                    else compact.push('');
+                    if (step.words) compact.push(step.words);
+                    return compact;
+                case 'activity':
+                    compact.push('a', step.sec);
+                    if (step.icon) compact.push(step.icon.charAt(0)); // 只取圖標第一個字母
+                    return compact;
+                case 'show':
+                    compact.push('h', step.words);
+                    return compact;
+                case 'dayoff':
+                    compact.push('d', step.sec);
+                    return compact;
+            }
+            return compact;
+        });
+
+        const jsonString = JSON.stringify(compactScript);
+        
+        // ** 使用 Pako 進行 Gzip 壓縮 **
+        const encodedScript = compressScript(jsonString);
         
         const currentUrl = window.location.origin + window.location.pathname;
         exportUrl = `${currentUrl}?script=${encodedScript}`;
@@ -883,17 +951,79 @@ function checkAndLoadScriptFromURL() {
     let encodedScript = urlParams.get('script');
     let loadSource = 'URL';
 
+    // Helper to map icon letter back to full name
+    const ICON_MAP = {
+        't': 'train', 'w': 'walk', 'd': 'dine', 's': 'sleep', 'b': 'bus', 
+        'm': 'motorcycle', 'c': 'car', 'v': 'view', 'p': 'shopping', 'a': 'airplane'
+    };
+
+    // Helper to uncompact the script format
+    function uncompactScript(compactArray) {
+        const fullScript = [];
+        let i = 0;
+        while (i < compactArray.length) {
+            const typeChar = compactArray[i++];
+            let step = {};
+            switch (typeChar) {
+                case 's': // start: s, lat, lng, [label]
+                    step.type = 'start';
+                    step.lat = compactArray[i++];
+                    step.lng = compactArray[i++];
+                    // Label is optional for start step in export, but we keep it simple here
+                    step.label = '那霸機場 (初始位置)'; // Use default label for start for simplicity
+                    // Skip label if present
+                    if (typeof compactArray[i] === 'string' && compactArray[i].length > 2) {
+                         i++;
+                    }
+                    break;
+                case 'g': // goto: g, lat, lng, iconChar, [words]
+                    step.type = 'goto';
+                    step.lat = compactArray[i++];
+                    step.lng = compactArray[i++];
+                    const iconChar = compactArray[i++];
+                    step.icon = iconChar ? ICON_MAP[iconChar] || iconChar : '';
+                    step.words = compactArray[i++];
+                    break;
+                case 'a': // activity: a, sec, [iconChar]
+                    step.type = 'activity';
+                    step.sec = compactArray[i++];
+                    step.icon = compactArray[i] ? (ICON_MAP[compactArray[i]] || compactArray[i++]) : '';
+                    if (step.icon) i++;
+                    step.label = '載入的活動';
+                    break;
+                case 'h': // show: h, words
+                    step.type = 'show';
+                    step.words = compactArray[i++];
+                    step.label = '載入的訊息';
+                    break;
+                case 'd': // dayoff: d, sec
+                    step.type = 'dayoff';
+                    step.sec = compactArray[i++];
+                    step.label = '載入的休息過夜';
+                    break;
+                default:
+                    console.warn('Unknown compact step type:', typeChar);
+                    return fullScript; // Stop parsing on error
+            }
+            fullScript.push(step);
+        }
+        return fullScript;
+    }
+
+
     // 1. 只檢查 URL 參數載入
     if (encodedScript) {
         try {
-            // ** 變更：使用 Base64 URI 安全解碼 (最穩定方案) **
-            const jsonString = decompressFromUriSafeBase64(encodedScript);
+            // ** 使用 Pako 進行 Gzip 解壓縮 **
+            const jsonString = decompressScript(encodedScript);
             
             if (!jsonString) {
                  console.error('解碼劇本字串失敗。');
-                 document.getElementById('status-message').textContent = '❌ 載入劇本失敗，壓縮數據可能已損壞。';
+                 document.getElementById('status-message').textContent = '❌ 載入劇本失敗，數據可能已損壞。';
             } else {
-                const loadedSteps = JSON.parse(jsonString);
+                // 如果是 Pako 失敗退回的無壓縮字串，JSON.parse 仍然可以處理
+                const compactArray = JSON.parse(jsonString);
+                const loadedSteps = uncompactScript(compactArray);
 
                 if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
                     // 成功載入，替換當前劇本
