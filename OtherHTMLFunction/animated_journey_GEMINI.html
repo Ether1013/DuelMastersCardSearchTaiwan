@@ -51,378 +51,107 @@
   .modal-transition {
       transition: opacity 0.3s, transform 0.3s;
   }
+  /* --- 錨點插入 UI (修正: 統一使用 CSS 處理懸停) --- */
+  .insert-anchor {
+      min-height: 10px; /* 確保最小點擊目標 */
+      margin: 8px 0;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+      background-color: #f9fafb; /* bg-gray-50 */
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb; /* 預設邊框 */
+  }
+  /* 懸停時的狀態: 增加高度，顯示虛線框和文字 */
+  .insert-anchor:hover {
+      min-height: 80px; /* 增加高度，接近一個步驟卡片 */
+      opacity: 1; 
+      border: 3px dashed #6366f1; /* indigo-500 */
+      background-color: #eef2ff; /* indigo-50 */
+  }
+  /* 懸停時才顯示文字 */
+  .insert-anchor:hover .insert-anchor-text {
+      opacity: 1;
+  }
+  .insert-anchor-text {
+      opacity: 0;
+      font-weight: bold;
+      color: #6366f1;
+      transition: opacity 0.2s;
+      pointer-events: none; /* 讓點擊穿透到 anchor */
+  }
 </style>
-</head>
-<body class="bg-gray-50">
-<div class="flex h-screen overflow-hidden">
-  
-  <!-- 左側控制面板 (可捲動區域) -->
-  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col relative">
-    <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2">🗺️ 旅程劇本設計器</h1>
-
-    <!-- 腳本步驟列表 - 這是捲動的內容 -->
-    <div id="script-list" class="space-y-3 flex-grow mb-4">
-      <!-- 步驟將在此處渲染 -->
-    </div>
-    
-    <!-- 新增：拉到最下面按鈕 (STICKY/固定位置) -->
-    <!-- 使用 sticky 配合 bottom-0 z-10 將按鈕固定在控制面板可視範圍的底部 -->
-    <div class="sticky bottom-0 left-0 right-0 p-2 -mx-4 bg-white shadow-md border-t border-gray-200 z-10">
-        <button onclick="scrollToBottom()" class="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition duration-150 text-sm">
-            👇 拉到最下面
-        </button>
-    </div>
-
-    <!-- 動作按鈕 -->
-    <div class="space-y-2 mb-4 p-4 border rounded-lg bg-indigo-50">
-        <p class="font-semibold text-sm text-indigo-700">新增動作：</p>
-        <div class="grid grid-cols-2 gap-2 text-sm">
-            <button onclick="addStep('goto')" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150">移動 (Goto)</button>
-            <button onclick="addStep('activity')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150">活動/狀態 (Activity)</button>
-            <button onclick="addStep('show')" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150">顯示訊息 (Show)</button>
-            <button onclick="addStep('dayoff')" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 col-span-2">休息過夜</button>
-        </div>
-    </div>
-    
-    <!-- 暫停/繼續按鈕 -->
-    <button id="pause-resume-button" onclick="pauseToggle()" 
-        class="w-full bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 transform hover:scale-[1.01] text-lg mb-2 disabled:opacity-50 disabled:cursor-not-allowed" 
-        disabled 
-        title="暫停播放">
-        <span class="text-lg">⏸️ 暫停/繼續</span>
-    </button>
-
-    <!-- 播放按鈕 -->
-    <button id="play-button" onclick="executeScript(1)" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] text-lg mb-2">
-      ▶️ 從頭開始播放 (PLAY)
-    </button>
-    
-    <!-- 匯出與刪除按鈕 (新佈局) -->
-    <div class="flex space-x-2 mb-2">
-        <!-- 匯出按鈕：只複製資料字串 -->
-        <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
-          📄 複製數據
-        </button>
-        <!-- 新增：匯入按鈕 -->
-        <button id="import-button" onclick="showImportModal()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
-          📥 貼上數據
-        </button>
-        <!-- 刪除按鈕 -->
-        <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
-          🗑️ 全部刪除
-        </button>
-    </div>
-
-    <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">準備就緒</div>
-
-    <!-- 錯誤時顯示的手動複製區域會動態插入此處 -->
-
-  </div> <!-- End #controls -->
-
-  <!-- 右側地圖顯示區 -->
-  <div id="map-container" class="w-full md:w-2/3 relative h-screen">
-    <div id="map"></div>
-    <!-- 新增：夜間動畫遮罩。絕對定位覆蓋地圖 -->
-    <div id="night-overlay" class="absolute inset-0 z-[1000]"></div>
-  </div>
-
-</div>
-
-<!-- 1. 自訂匯入數據模態框 (Modal UI) -->
-<!-- 變更: 從 absolute 改為 fixed top-0 bottom-0 left-0 w-1/3，使其不隨 #controls 捲動 -->
-<div id="import-modal" class="fixed top-0 bottom-0 left-0 w-full md:w-1/3 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-    <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg modal-transition scale-95 opacity-0" id="import-modal-content">
-        <h2 class="text-xl font-bold text-indigo-600 mb-4 border-b pb-2">📥 貼上劇本數據</h2>
-        <p class="text-sm text-gray-600 mb-4">請將複製的數據字串貼入下方的文字區域，它會覆蓋您目前的劇本。</p>
-        <!-- 新增 id="import-data-textarea" 以便在 JS 中獲取和監聽 -->
-        <textarea id="import-data-textarea" 
-                  class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none" 
-                  placeholder="請貼上已 URI 編碼的劇本數據..."></textarea>
-        <div class="flex justify-end space-x-3 mt-4">
-            <button onclick="closeImportModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                取消
-            </button>
-            <button onclick="handleImportConfirmation()" id="confirm-import-button" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
-                確認匯入
-            </button>
-        </div>
-    </div>
-</div>
-
+<!-- 引入 Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // =================================================================
-// 1. 地圖與標記初始化
+// 1. 全域常數與變數聲明 (最頂層)
 // =================================================================
-const map = L.map('map').setView([26.20178415387677, 127.64689003446611], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-const iconSize = 75; // <-- 圖示大小改為 75
-// 圖標名稱變更：rice -> dine，並新增 airplane
+const STORAGE_KEY = 'animatedJourneyScript';
+const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
+const iconSize = 75; 
 const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
 const icons = {
   train: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚆</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
   walk: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚶‍♂️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  dine: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🍽️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }), // 變更為餐具 emoji
+  dine: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🍽️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }), 
   sleep: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">😴</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
   bus: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚌</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
   motorcycle: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🏍️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
   car: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚗</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
   view: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🏞️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
   shopping: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🛍️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  airplane: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">✈️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }) // 新增飛機 emoji
+  airplane: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">✈️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }) 
 };
-
 const INITIAL_GPS = [26.20178415387677, 127.64689003446617];
-const marker = L.marker(INITIAL_GPS, { icon: icons.train }).addTo(map);
-
-let polyline = null;
-let popup = null;
-let currentAnimation = false;
-
-// 定義初始的 START 步驟結構 (用於重置)
 const START_STEP_DEFINITION = { 
     type: 'start', 
-    lat: 26.20178415387677, 
-    lng: 127.64689003446617, 
+    lat: INITIAL_GPS[0], 
+    lng: INITIAL_GPS[1], 
     label: '那霸機場 (初始位置)' 
 };
 
-// 初始劇本 (已將 setIcon 和 wait 轉換為 activity)
-let scriptSteps = [
-    START_STEP_DEFINITION,
-];
-
-// =================================================================
-// 2. 核心動畫與流程控制
-// =================================================================
-
-// 流程控制狀態
+// 使用 let 聲明，以便在 DOMContentLoaded 中賦值 (解決 Map container not found)
+let mapInstance = null;
+let marker = null;
+let polyline = null;
+let popup = null;
+let currentAnimation = false;
 let isScriptRunning = false;
 let isPaused = false;
-let pauseResolve = null; // Resolves when unpaused
+let pauseResolve = null; 
 let currentWaitTimeoutId = null;
 let currentWaitRemainingTime = 0;
 let currentWaitStartTime = 0;
-let currentWaitResolve = null; // Stores the resolve function of the active wait Promise
-let clearScriptTimeoutId = null; // 新增：用於全刪除確認計時器
+let currentWaitResolve = null; 
+let clearScriptTimeoutId = null; 
+let hoverTimeoutId = null; // 新增：用於錨點提示的計時器
+let insertAnchorIndex = -1; // 新增：儲存要插入步驟的索引位置 (-1 表示沒有錨點)
 
 
-// 距離計算 (Haversine 公式，回傳公尺)
-function distance(p1,p2){
-  const R=6371000; const toRad=x=>x*Math.PI/180;
-  const dLat=toRad(p2[0]-p1[0]); const dLon=toRad(p2[1]-p1[1]);
-  const lat1=toRad(p1[0]),lat2=toRad(p2[0]);
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
-  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  return R*c;
-}
+// 初始劇本
+let scriptSteps = [
+    START_STEP_DEFINITION,
+    { type: 'goto', lat: 26.217316099459758, lng: 127.69247463281796, label: '搭乘單軌到牧志站', icon: 'train', words: '抵達牧志站' },
+    { type: 'goto', lat: 26.216668604473377, lng: 127.69066831093619, label: '步行到山羊料理', icon: 'walk' },
+    { type: 'activity', icon: 'dine', sec: 0, label: '吃午餐' }, 
+    { type: 'show', words: '山羊料理さかえ', label: '顯示：山羊料理さかえ' }, 
+    { type: 'activity', sec: 3, icon: '', label: '等待 3 秒 (用餐)' },
+    { type: 'goto', lat: 26.212824672458485, lng: 127.6891822419568, label: '步行到飯店入住', icon: 'walk', words: 'CABIN & HOTEL CONSTANT NAHA' },
+    { type: 'dayoff', sec: 3, label: '入住休息 (過夜效果)' }, 
+    { type: 'goto', lat: 26.21139855196967, lng: 127.68811493682566, label: '步行到公車站牌', icon: 'walk', words: '公車31站牌' },
+    { type: 'goto', lat: 26.210618356446393, lng: 127.67917746391598, label: '搭乘公車到下車點', icon: 'bus', words: '下車' },
+    { type: 'goto', lat: 26.213092860874845, lng: 127.67687857621559, label: '步行到機車租賃', icon: 'walk', words: '機車租賃GOYA' },
+    { type: 'goto', lat: 26.332465967977257, lng: 127.79849563345437, label: '騎車到新世紀飯店', icon: 'motorcycle', words: '新世紀飯店' },
+    { type: 'activity', sec: 3, icon: '', label: '等待 3 秒' },
+];
 
-function start(gps){ marker.setLatLng(gps); }
-function setIcon(name){ marker.setIcon(icons[name]); }
-function show(words){
-  if(popup) map.closePopup(popup);
-  // **修改：增加 className 應用自訂大尺寸樣式**
-  popup = L.popup({
-      closeButton:false, 
-      autoClose:true, 
-      className: 'custom-large-popup' 
-    })
-    .setLatLng(marker.getLatLng())
-    .setContent(words)
-    .openOn(map);
-  setTimeout(()=>{ map.closePopup(popup); popup=null; }, 1000);
-}
-
-/**
- * 獲取暫停 Promise。如果已暫停，則阻塞執行。
- */
-function getPausePromise() {
-    if (isPaused) {
-        return new Promise(resolve => {
-            pauseResolve = resolve;
-        });
-    }
-    return Promise.resolve();
-}
-
-/**
- * 暫停/繼續 播放
- */
-function pauseToggle() {
-    const btn = document.getElementById('pause-resume-button');
-    if (!isScriptRunning) return;
-
-    isPaused = !isPaused;
-    btn.title = isPaused ? '繼續播放' : '暫停播放';
-    
-    // 根據狀態更新按鈕文字 (新：包含文字說明)
-    btn.querySelector('span').textContent = isPaused ? '▶️ 繼續播放' : '⏸️ 暫停播放';
-    
-    // Resume Logic: 從暫停切換到繼續
-    if (!isPaused && pauseResolve) {
-        pauseResolve(); // 繼續 executeScript loop
-        pauseResolve = null;
-
-        // Resume current WAIT animation
-        if (currentWaitResolve && currentWaitRemainingTime > 0) {
-            currentWaitStartTime = Date.now();
-            currentWaitTimeoutId = setTimeout(currentWaitResolve, currentWaitRemainingTime);
-        }
-    } 
-    // Pause Logic: 從運行切換到暫停
-    else if (isPaused) {
-        // Pause current WAIT animation (立即停止計時器)
-        if (currentWaitTimeoutId) {
-            clearTimeout(currentWaitTimeoutId);
-            currentWaitRemainingTime -= (Date.now() - currentWaitStartTime);
-            currentWaitTimeoutId = null;
-        }
-        
-        // Note: 'goto' animation is NOT paused, it will run to completion and then stop due to `getPausePromise()` check in the loop.
-    }
-}
-
-
-// 函式: 等待 (Promise 版本, 支援暫停)
-function wait(sec){
-    return new Promise(resolve => {
-        // 清除上一個 wait 的狀態
-        currentWaitResolve = resolve;
-        currentWaitStartTime = Date.now();
-        currentWaitRemainingTime = sec * 1000;
-
-        function resolveAndClear() {
-             currentWaitResolve = null;
-             currentWaitTimeoutId = null;
-             resolve();
-        }
-
-        currentWaitTimeoutId = setTimeout(resolveAndClear, currentWaitRemainingTime);
-    });
-}
-
-/**
- * 畫面變暗變亮動畫 (模擬過夜效果)
- * @param {number} sec - 等待秒數
- * @returns {Promise<void>}
- */
-function animateNight(sec) {
-    const overlay = document.getElementById('night-overlay');
-    const fadeDuration = 1000; // 1 秒變暗，1 秒變亮
-    
-    return new Promise(async (resolve) => {
-        // 設定 transition duration
-        overlay.style.transitionDuration = `${fadeDuration}ms`;
-        
-        // **修正：強制瀏覽器重繪 (Reflow)，確保 duration 設定生效，防止動畫被跳過**
-        overlay.offsetHeight; 
-
-        // --- 1. 變暗 (Fade In) ---
-        overlay.style.opacity = '1';
-        
-        // 等待變暗動畫完成
-        await wait(fadeDuration / 1000); 
-        await getPausePromise(); 
-
-        // --- 2. 保持黑暗 (Dark Hold) ---
-        // 確保 holdDuration 至少為 0.01s
-        const holdDuration = Math.max(0.01, sec - (2 * fadeDuration) / 1000); 
-        await wait(holdDuration);
-        await getPausePromise(); 
-
-        // --- 3. 變亮 (Fade Out) ---
-        overlay.style.opacity = '0';
-        
-        // 等待變亮動畫完成
-        await wait(fadeDuration / 1000); 
-        await getPausePromise(); 
-        
-        // 清理樣式
-        overlay.style.transitionDuration = `0ms`; 
-        resolve();
-    });
-}
-
-// 函式: 移動 (Promise 版本)
-function goto(gps){
-  return new Promise(resolve => {
-    if(currentAnimation) return;
-    currentAnimation=true;
-    const startPos=marker.getLatLng();
-    if(polyline) map.removeLayer(polyline);
-    polyline=L.polyline([startPos,gps],{color:'blue',opacity:0.6, weight: 5}).addTo(map);
-    const bounds=L.latLngBounds([startPos,gps]);
-    
-    // 放大地圖視圖
-    map.flyToBounds(bounds,{duration:1.5}); 
-    
-    // 等待地圖平移後開始標記動畫
-    setTimeout(()=>{
-      // 折線淡入動畫 (簡化：直接設置不淡入，避免與淡出動畫衝突)
-      polyline.setStyle({opacity: 0.8});
-
-      const dist=distance([startPos.lat,startPos.lng],gps); // 距離 (公尺)
-      let duration; // 動畫時長 (毫秒)
-      const MAX_DURATION = 6000; // 最長時長 6 秒 (毫秒)
-      
-      const iconName=Object.keys(icons).find(k=>icons[k]===marker.options.icon);
-      let speed; // 速度 (m/s)
-      
-      // 根據圖標名稱設定速度
-      if (iconName === 'walk' || iconName === 'dine' || iconName === 'view' || iconName === 'shopping') { 
-        speed = 100; // 步行和靜態動作速度
-      } else if (iconName === 'bus' || iconName === 'car' || iconName === 'airplane') { // 新增 airplane
-        speed = 400; // 調整為 400 m/s
-      } else {
-        speed = 700; // 預設速度 (火車/機車)
-      }
-      
-      duration = dist / speed * 1000;
-      duration = Math.min(duration, MAX_DURATION); // 強制設定最長時長為 6 秒
-
-      let startTime=null;
-
-      function animateMarker(ts){
-        if(!startTime) startTime=ts;
-        const progress=(ts-startTime)/duration;
-        if(progress>=1){
-          // 動畫結束
-          marker.setLatLng(gps);
-          
-          let removeProgress=1;
-          // 折線淡出和移除
-          function removeLine(){
-            removeProgress-=0.02;
-            polyline.setStyle({opacity:Math.max(removeProgress,0)});
-            if(removeProgress>0) requestAnimationFrame(removeLine);
-            else { 
-              map.removeLayer(polyline);
-              currentAnimation=false; 
-              resolve(); // 解決 Promise
-            }
-          }
-          requestAnimationFrame(removeLine);
-
-        }else{
-          // 標記移動
-          const lat=startPos.lat+(gps[0]-startPos.lat)*progress;
-          const lng=startPos.lng+(gps[1]-startPos.lng)*progress;
-          marker.setLatLng([lat,lng]);
-          requestAnimationFrame(animateMarker);
-        }
-      }
-      requestAnimationFrame(animateMarker);
-    },1500); // 等待 map.flyToBounds 結束
-  });
-}
 
 // =================================================================
-// 3. Local Storage 儲存與載入邏輯
+// 3. Local Storage 儲存與載入邏輯 (已提前定義，修復 ReferenceError)
 // =================================================================
-
-const STORAGE_KEY = 'animatedJourneyScript';
-const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
 
 /**
  * 輔助函式：儲存資料到 LocalStorage，包含到期時間
@@ -479,225 +208,9 @@ function saveScriptToLocalStorage() {
     }
 }
 
-
 // =================================================================
-// 5. 資料傳輸邏輯 (使用 JSON 字串複製/貼上，帶 URI 編碼)
+// 4. 數據載入與解析 (必須在 DOMContentLoaded 呼叫前定義)
 // =================================================================
-
-/**
- * 輔助函式：當自動複製失敗時，顯示手動複製的輸入欄位。
- */
-function showManualCopyPrompt(url) {
-    let promptDiv = document.getElementById('manual-copy-prompt');
-
-    // 移除舊的提示 (如果存在)
-    if (promptDiv) {
-        promptDiv.remove();
-    }
-
-    // 創建新的提示區塊
-    promptDiv = document.createElement('div');
-    promptDiv.id = 'manual-copy-prompt';
-    // 將其插入到狀態訊息下方
-    document.getElementById('status-message').insertAdjacentElement('afterend', promptDiv);
-    promptDiv.className = 'mt-3 p-3 bg-red-100 border border-red-400 rounded-lg shadow-inner';
-    
-    promptDiv.innerHTML = `
-        <p class="text-sm font-semibold text-red-700 mb-2">⚠️ **自動複製失敗** (沙盒模式限制)：請手動複製以下數據：</p>
-        <textarea id="manual-copy-textarea" class="w-full text-xs p-2 border border-gray-300 rounded-md resize-none" rows="3" readonly></textarea>
-    `;
-    
-    document.getElementById('manual-copy-textarea').value = url;
-    
-    // 自動選擇文本，方便用戶一鍵複製
-    document.getElementById('manual-copy-textarea').select();
-
-    // 15 秒後自動移除提示
-    setTimeout(() => {
-        const p = document.getElementById('manual-copy-prompt');
-        if (p) p.remove();
-    }, 15000); 
-}
-
-
-/**
- * 匯出劇本：將優化後的 JSON 字串複製到剪貼簿。
- */
-async function exportScript() {
-    const statusMessage = document.getElementById('status-message');
-    // 移除手動複製提示 (如果存在)
-    const p = document.getElementById('manual-copy-prompt');
-    if (p) p.remove();
-
-    let dataString = ''; 
-    
-    try {
-        // --- 1. 數據優化與轉換 (壓縮結構) ---
-        
-        const compactScript = scriptSteps.map(step => {
-            const compact = [];
-            switch (step.type) {
-                case 'start':
-                    compact.push('s', step.lat, step.lng);
-                    if (step.label) compact.push(step.label);
-                    return compact;
-                case 'goto':
-                    compact.push('g', step.lat, step.lng);
-                    if (step.icon) compact.push(step.icon.charAt(0)); 
-                    else compact.push('');
-                    if (step.words) compact.push(step.words);
-                    return compact;
-                case 'activity':
-                    compact.push('a', step.sec);
-                    if (step.icon) compact.push(step.icon.charAt(0)); 
-                    return compact;
-                case 'show':
-                    compact.push('h', step.words);
-                    return compact;
-                case 'dayoff':
-                    compact.push('d', step.sec);
-                    return compact;
-            }
-            return compact;
-        });
-
-        // 2. JSON.stringify 轉換為字串
-        const rawJsonString = JSON.stringify(compactScript);
-        
-        // ** 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸 **
-        dataString = encodeURIComponent(rawJsonString);
-        
-    } catch (error) {
-        statusMessage.textContent = '❌ 劇本數據轉換失敗。';
-        console.error('數據轉換失敗:', error);
-        return; 
-    }
-    
-    // --- 4. 複製到剪貼簿 (URI 編碼後的數據字串) ---
-    try {
-        await navigator.clipboard.writeText(dataString);
-
-        const p = document.getElementById('manual-copy-prompt');
-        if (p) p.remove();
-
-        statusMessage.textContent = '✅ 數據已複製！請貼上以分享。';
-        setTimeout(() => {
-            statusMessage.textContent = '準備就緒';
-        }, 3000);
-
-    } catch (error) {
-        // Clipboard API 失敗時，使用 document.execCommand('copy') 作為 fallback
-        try {
-            const tempInput = document.createElement('textarea');
-            tempInput.value = dataString; 
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            const p = document.getElementById('manual-copy-prompt');
-            if (p) p.remove();
-
-            statusMessage.textContent = '✅ 數據已複製！(使用備用複製) 請貼上以分享。';
-            setTimeout(() => {
-                statusMessage.textContent = '準備就緒';
-            }, 3000);
-        } catch (copyError) {
-             // 兩種複製方式皆失敗 (沙盒模式下預期行為)，顯示手動複製提示
-             statusMessage.textContent = '❌ 複製失敗！(沙盒模式限制) 請手動複製下方數據。';
-             showManualCopyPrompt(dataString); // 顯示 URI 編碼後的數據字串讓用戶手動複製
-        }
-    }
-}
-
-
-/**
- * 2. 顯示自訂匯入模態框 (取代原生 prompt)
- */
-function showImportModal() {
-    const modal = document.getElementById('import-modal');
-    const modalContent = document.getElementById('import-modal-content');
-    const importTextarea = document.getElementById('import-data-textarea');
-    
-    // 清除上次的貼上內容
-    importTextarea.value = '';
-    
-    // 顯示模態框
-    modal.classList.remove('hidden');
-    // 讓 textarea 取得焦點 (啟用 Enter 提交)
-    importTextarea.focus(); 
-    
-    // 觸發過渡動畫
-    setTimeout(() => {
-        modalContent.classList.remove('scale-95', 'opacity-0');
-        modalContent.classList.add('scale-100', 'opacity-100');
-    }, 10);
-
-    // 清除狀態訊息
-    document.getElementById('status-message').textContent = '等待貼上數據...';
-}
-
-/**
- * 關閉自訂匯入模態框
- */
-function closeImportModal() {
-    const modal = document.getElementById('import-modal');
-    const modalContent = document.getElementById('import-modal-content');
-
-    // 觸發退出動畫
-    modalContent.classList.remove('scale-100', 'opacity-100');
-    modalContent.classList.add('scale-95', 'opacity-0');
-
-    // 隱藏模態框
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        document.getElementById('status-message').textContent = '準備就緒';
-    }, 300); // 配合 CSS transition 300ms
-}
-
-
-/**
- * 3. 處理模態框中的確認匯入按鈕點擊
- */
-function handleImportConfirmation() {
-    const dataString = document.getElementById('import-data-textarea').value;
-    const statusMessage = document.getElementById('status-message');
-
-    if (dataString.trim() === "") {
-        statusMessage.textContent = '⚠️ 請貼入數據字串。';
-        return;
-    }
-    
-    // 執行匯入邏輯
-    try {
-        // ** 關鍵修正：先進行 URI 解碼 **
-        const rawJsonString = decodeURIComponent(dataString);
-        
-        const result = loadImportedData(rawJsonString);
-        if (result) {
-            statusMessage.textContent = '✅ 劇本數據已成功貼上並載入！';
-            saveScriptToLocalStorage(); // 載入成功後儲存到 Local Storage
-            renderScript();
-            closeImportModal();
-        } else {
-            statusMessage.textContent = '❌ 貼上的數據格式無效或已損壞。';
-        }
-    } catch (e) {
-        statusMessage.textContent = '❌ 貼上的數據解析失敗，請檢查格式。';
-        console.error('Import failed:', e);
-    }
-}
-
-
-/**
- * 4. 捲動腳本列表到最底部
- */
-function scrollToBottom() {
-    const controlsContainer = document.getElementById('controls');
-    // 捲動到 controls 容器的最底部
-    controlsContainer.scrollTop = controlsContainer.scrollHeight;
-}
-
 
 /**
  * 將簡化的數據字串解構並載入到 scriptSteps
@@ -801,13 +314,10 @@ function loadImportedData(rawJsonString) {
     return false;
 }
 
-
 /**
  * 檢查並從 URL 參數或 Local Storage 載入劇本。
  */
 function checkAndLoadScriptFromURL() {
-    // ** 移除 URL 參數檢查，只保留 Local Storage 檢查 **
-    
     // 1. 從 Local Storage 載入
     const storedJson = getLocalStorage(STORAGE_KEY);
     const loadSource = '本機儲存';
@@ -830,27 +340,813 @@ function checkAndLoadScriptFromURL() {
     // 如果 Local Storage 中沒有有效劇本，則使用初始預設劇本
 }
 
+
+// =================================================================
+// 5. 劇本編輯/操作輔助函數 (確保在渲染和按鈕調用前定義)
+// =================================================================
+
 /**
  * 輔助函式：找到上一個設定位置的步驟的位置
- * @param {number} currentIndex - 當前正在編輯的步驟索引
- * @returns {{lat: number, lng: number}} - 上一個位置的座標
  */
 function getPreviousPosition(currentIndex) {
     if (currentIndex <= 0) {
-        // 如果是第一個步驟，則沒有前一個位置
         return { lat: null, lng: null };
     }
     
-    // 從前一個步驟開始往回找
     for (let i = currentIndex - 1; i >= 0; i--) {
         const step = scriptSteps[i];
-        // 只有 start 和 goto 步驟設定位置
         if (step.type === 'start' || step.type === 'goto') {
             return { lat: step.lat, lng: step.lng };
         }
     }
-    // 理論上不應該到達這裡，但作為回退，返回第一個步驟的定義位置
     return { lat: scriptSteps[0].lat, lng: scriptSteps[0].lng };
+}
+
+/**
+ * 刪除步驟 (不能刪除第一個 'start' 步驟)
+ */
+function deleteStep(index) { // <-- HTML onclick 調用
+    if (index === 0) return; // 保護第一個步驟
+    scriptSteps.splice(index, 1);
+    renderScript();
+    saveScriptToLocalStorage(); // <--- 儲存
+}
+
+/**
+ * 移動步驟位置
+ */
+function moveStep(index, direction) { // <-- HTML onclick 調用
+    if (index === 0) return; // 保護第一個步驟
+    const newIndex = index + direction;
+    if (newIndex < 1 || newIndex >= scriptSteps.length) return; // 不能移出範圍 (特別是不能移到 index 0)
+    
+    // 進行交換
+    [scriptSteps[index], scriptSteps[newIndex]] = [scriptSteps[newIndex], scriptSteps[index]];
+    renderScript();
+    saveScriptToLocalStorage(); // <--- 儲存
+}
+
+/**
+ * 更新步驟資料
+ */
+function updateStep(index, field, value) { // <-- HTML onchange 調用
+    if (field === 'coords') {
+        // 處理 'coords' (緯度, 經度) 聯合輸入, 適用於 'start' 和 'goto'
+        const parts = String(value).split(',').map(s => s.trim());
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+
+        if (!isNaN(lat) && !isNaN(lng) && parts.length === 2) {
+            
+            // --- GPS Comparison/Validation ---
+            // 僅對 goto 步驟進行檢查 (index > 0)
+            if (index > 0 && scriptSteps[index].type === 'goto') {
+                const prevPos = getPreviousPosition(index);
+                
+                // 使用一個小容忍值進行浮點數比較
+                const EPSILON = 0.000001; 
+                const isSameLat = Math.abs(lat - prevPos.lat) < EPSILON;
+                const isSameLng = Math.abs(lng - prevPos.lng) < EPSILON;
+                
+                if (isSameLat && isSameLng) {
+                    console.error("GPS Error: New position is the same as the previous known position. Aborting update.");
+                    document.getElementById('status-message').textContent = '⚠️ 錯誤: 新位置與前一步驟的位置相同，移動將被忽略。';
+                    setTimeout(() => { document.getElementById('status-message').textContent = '準備就緒'; }, 3000);
+                    return; 
+                }
+            }
+            // --- End Validation ---
+
+            scriptSteps[index].lat = lat;
+            scriptSteps[index].lng = lng;
+            saveScriptToLocalStorage();
+        } else {
+            console.error("Invalid coordinate format. Please use 'lat, lng'.");
+        }
+    } else if (field === 'lat' || field === 'lng' || field === 'sec') {
+        // 處理單獨的數字欄位 (此邏輯現在主要用於 'sec')
+        scriptSteps[index][field] = parseFloat(value) || 0;
+        saveScriptToLocalStorage(); // <--- 儲存
+    } else {
+        // 處理文字欄位 (label, words, icon)
+        scriptSteps[index][field] = value;
+        saveScriptToLocalStorage(); // <--- 儲存
+    }
+}
+
+/**
+ * 新增步驟到劇本
+ */
+function addStep(type) { // <-- HTML onclick 調用
+    // 步驟 1: 將 label 預設為空字串，以便顯示 placeholder
+    const newStep = { label: '' }; 
+
+    switch (type) {
+        case 'goto':
+            // GPS 座標預設為 null，以便在渲染時顯示 placeholder
+            Object.assign(newStep, { type: 'goto', lat: null, lng: null, icon: 'walk', words: '' });
+            break;
+        case 'activity':
+            // 新增 Activity 動作，預設無 icon 且等待 1 秒
+            Object.assign(newStep, { type: 'activity', icon: '', sec: 1 });
+            break;
+        case 'show':
+            Object.assign(newStep, { type: 'show', words: '' }); // 訊息內容也預設為空字串
+            break;
+        case 'dayoff':
+            Object.assign(newStep, { type: 'dayoff', sec: 5 }); // 預設休息 5 秒
+            break;
+    }
+    
+    // ** 插入邏輯：檢查是否有錨點 **
+    if (insertAnchorIndex !== -1) {
+        scriptSteps.splice(insertAnchorIndex, 0, newStep);
+        // 插入後清除錨點狀態，並自動捲動到新插入的步驟附近
+        clearInsertAnchor(); 
+        // Note: 渲染後會自動清除所有錨點提示
+        // 這裡不需要額外捲動，因為 renderScript 會觸發 render，我們只需要確保狀態被清除
+    } else {
+        // 預設行為：添加到末尾
+        scriptSteps.push(newStep);
+        // 新增在末尾時，自動捲動到底部，讓使用者看到新步驟
+        setTimeout(scrollToBottom, 50); 
+    }
+
+    renderScript();
+    saveScriptToLocalStorage(); // <--- 儲存
+}
+
+/**
+ * 設定插入錨點 (點擊虛線框)
+ */
+function setInsertAnchor(index) {
+    insertAnchorIndex = index;
+    renderScript();
+    // 滾動到腳本列表的底部，讓使用者看到操作面板
+    scrollToBottom();
+}
+
+/**
+ * 取消插入錨點 (點擊取消按鈕)
+ */
+function clearInsertAnchor() {
+    insertAnchorIndex = -1;
+    renderScript();
+}
+
+// =================================================================
+// 6. 核心動畫與流程控制函數
+// =================================================================
+
+// 距離計算 (Haversine 公式，回傳公尺)
+function distance(p1,p2){
+  const R=6371000; const toRad=x=>x*Math.PI/180;
+  const dLat=toRad(p2[0]-p1[0]); const dLon=toRad(p2[1]-p1[1]);
+  const lat1=toRad(p1[0]),lat2=toRad(p2[0]);
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  return R*c;
+}
+
+function start(gps){ marker.setLatLng(gps); }
+function setIcon(name){ marker.setIcon(icons[name]); }
+function show(words){
+  if(popup) mapInstance.closePopup(popup);
+  // **修改：增加 className 應用自訂大尺寸樣式**
+  popup = L.popup({
+      closeButton:false, 
+      autoClose:true, 
+      className: 'custom-large-popup' 
+    })
+    .setLatLng(marker.getLatLng())
+    .setContent(words)
+    .openOn(mapInstance);
+  setTimeout(()=>{ mapInstance.closePopup(popup); popup=null; }, 1000);
+}
+
+/**
+ * 獲取暫停 Promise。如果已暫停，則阻塞執行。
+ */
+function getPausePromise() {
+    if (isPaused) {
+        return new Promise(resolve => {
+            pauseResolve = resolve;
+        });
+    }
+    return Promise.resolve();
+}
+
+/**
+ * 暫停/繼續 播放
+ */
+function pauseToggle() { // <-- HTML onclick 調用
+    const btn = document.getElementById('pause-resume-button');
+    if (!isScriptRunning) return;
+
+    isPaused = !isPaused;
+    btn.title = isPaused ? '繼續播放' : '暫停播放';
+    
+    // 根據狀態更新按鈕文字 (新：包含文字說明)
+    btn.querySelector('span').textContent = isPaused ? '▶️ 繼續播放' : '⏸️ 暫停播放';
+    
+    // Resume Logic: 從暫停切換到繼續
+    if (!isPaused && pauseResolve) {
+        pauseResolve(); // 繼續 executeScript loop
+        pauseResolve = null;
+
+        // Resume current WAIT animation
+        if (currentWaitResolve && currentWaitRemainingTime > 0) {
+            currentWaitStartTime = Date.now();
+            currentWaitTimeoutId = setTimeout(currentWaitResolve, currentWaitRemainingTime);
+        }
+    } 
+    // Pause Logic: 從運行切換到暫停
+    else if (isPaused) {
+        // Pause current WAIT animation (立即停止計時器)
+        if (currentWaitTimeoutId) {
+            clearTimeout(currentWaitTimeoutId);
+            currentWaitRemainingTime -= (Date.now() - currentWaitStartTime);
+            currentWaitTimeoutId = null;
+        }
+        
+        // Note: 'goto' animation is NOT paused, it will run to completion and then stop due to `getPausePromise()` check in the loop.
+    }
+}
+
+/**
+ * 停止播放 (新增功能)
+ */
+function stopScript() {
+    if (!isScriptRunning) return;
+
+    isScriptRunning = false;
+    isPaused = false;
+    
+    // 停止所有等待/暫停
+    if (pauseResolve) pauseResolve();
+    if (currentWaitTimeoutId) clearTimeout(currentWaitTimeoutId);
+    
+    // 清除狀態和UI
+    document.getElementById('play-button').disabled = false;
+    document.getElementById('pause-resume-button').disabled = true;
+    document.getElementById('stop-button').disabled = true;
+
+    document.getElementById('play-button').classList.add('bg-indigo-500', 'hover:bg-indigo-700');
+    document.getElementById('play-button').classList.remove('bg-gray-400');
+    
+    document.getElementById('pause-resume-button').querySelector('span').textContent = '⏸️ 暫停/繼續';
+    document.getElementById('status-message').textContent = '◼️ 播放已停止。';
+    
+    // 清除所有步驟高亮
+    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
+}
+
+
+// 函式: 等待 (Promise 版本, 支援暫停)
+function wait(sec){
+    return new Promise(resolve => {
+        // 清除上一個 wait 的狀態
+        currentWaitResolve = resolve;
+        currentWaitStartTime = Date.now();
+        currentWaitRemainingTime = sec * 1000;
+
+        function resolveAndClear() {
+             currentWaitResolve = null;
+             currentWaitTimeoutId = null;
+             resolve();
+        }
+
+        currentWaitTimeoutId = setTimeout(resolveAndClear, currentWaitRemainingTime);
+    });
+}
+
+/**
+ * 畫面變暗變亮動畫 (模擬過夜效果)
+ * @param {number} sec - 等待秒數
+ * @returns {Promise<void>}
+ */
+function animateNight(sec) {
+    const overlay = document.getElementById('night-overlay');
+    const fadeDuration = 1000; // 1 秒變暗，1 秒變亮
+    
+    return new Promise(async (resolve) => {
+        // 設定 transition duration
+        overlay.style.transitionDuration = `${fadeDuration}ms`;
+        
+        // **修正：強制瀏覽器重繪 (Reflow)，確保 duration 設定生效，防止動畫被跳過**
+        overlay.offsetHeight; 
+
+        // --- 1. 變暗 (Fade In) ---
+        overlay.style.opacity = '1';
+        
+        // 等待變暗動畫完成
+        await wait(fadeDuration / 1000); 
+        await getPausePromise(); 
+
+        // --- 2. 保持黑暗 (Dark Hold) ---
+        // 確保 holdDuration 至少為 0.01s
+        const holdDuration = Math.max(0.01, sec - (2 * fadeDuration) / 1000); 
+        await wait(holdDuration);
+        await getPausePromise(); 
+
+        // --- 3. 變亮 (Fade Out) ---
+        overlay.style.opacity = '0';
+        
+        // 等待變亮動畫完成
+        await wait(fadeDuration / 1000); 
+        await getPausePromise(); 
+        
+        // 清理樣式
+        overlay.style.transitionDuration = `0ms`; 
+        resolve();
+    });
+}
+
+// 函式: 移動 (Promise 版本)
+function goto(gps){
+  return new Promise(resolve => {
+    if(currentAnimation) return;
+    currentAnimation=true;
+    const startPos=marker.getLatLng();
+    if(polyline) mapInstance.removeLayer(polyline);
+    polyline=L.polyline([startPos,gps],{color:'blue',opacity:0.6, weight: 5}).addTo(mapInstance);
+    const bounds=L.latLngBounds([startPos,gps]);
+    
+    // 放大地圖視圖
+    mapInstance.flyToBounds(bounds,{duration:1.5}); 
+    
+    // 等待地圖平移後開始標記動畫
+    setTimeout(()=>{
+      // 折線淡入動畫 (簡化：直接設置不淡入，避免與淡出動畫衝突)
+      polyline.setStyle({opacity: 0.8});
+
+      const dist=distance([startPos.lat,startPos.lng],gps); // 距離 (公尺)
+      let duration; // 動畫時長 (毫秒)
+      const MAX_DURATION = 6000; // 最長時長 6 秒 (毫秒)
+      
+      const iconName=Object.keys(icons).find(k=>icons[k]===marker.options.icon);
+      let speed; // 速度 (m/s)
+      
+      // 根據圖標名稱設定速度
+      if (iconName === 'walk' || iconName === 'dine' || iconName === 'view' || iconName === 'shopping') { 
+        speed = 100; // 步行和靜態動作速度
+      } else if (iconName === 'bus' || iconName === 'car' || iconName === 'airplane') { // 新增 airplane
+        speed = 400; // 調整為 400 m/s
+      } else {
+        speed = 700; // 預設速度 (火車/機車)
+      }
+      
+      duration = dist / speed * 1000;
+      duration = Math.min(duration, MAX_DURATION); // 強制設定最長時長為 6 秒
+
+      let startTime=null;
+
+      function animateMarker(ts){
+        if(!startTime) startTime=ts;
+        const progress=(ts-startTime)/duration;
+        if(progress>=1){
+          // 動畫結束
+          marker.setLatLng(gps);
+          
+          let removeProgress=1;
+          // 折線淡出和移除
+          function removeLine(){
+            removeProgress-=0.02;
+            polyline.setStyle({opacity:Math.max(removeProgress,0)});
+            if(removeProgress>0) requestAnimationFrame(removeLine);
+            else { 
+              mapInstance.removeLayer(polyline);
+              currentAnimation=false; 
+              resolve(); // 解決 Promise
+            }
+          }
+          requestAnimationFrame(removeLine);
+
+        }else{
+          // 標記移動
+          const lat=startPos.lat+(gps[0]-startPos.lat)*progress;
+          const lng=startPos.lng+(gps[1]-startPos.lng)*progress;
+          marker.setLatLng([lat,lng]);
+          requestAnimationFrame(animateMarker);
+        }
+      }
+      requestAnimationFrame(animateMarker);
+    },1500); // 等待 mapInstance.flyToBounds 結束
+  });
+}
+
+/**
+ * 執行劇本
+ * @param {number} startIndex - 從哪個步驟索引開始執行 (0為START，1為第一個可執行步驟)
+ */
+function executeScript(startIndex = 1) { // <-- HTML onclick 調用
+    if (isScriptRunning) return;
+
+    const playButton = document.getElementById('play-button');
+    const statusMessage = document.getElementById('status-message');
+    const pauseButton = document.getElementById('pause-resume-button');
+    const stopButton = document.getElementById('stop-button'); // 新增停止按鈕
+
+    // 設置運行狀態
+    isScriptRunning = true;
+    isPaused = false; // 重設暫停狀態
+    
+    playButton.disabled = true;
+    pauseButton.disabled = false;
+    stopButton.disabled = false; // 啟用停止按鈕
+    pauseButton.title = '暫停播放';
+    // 更新按鈕文字
+    pauseButton.querySelector('span').textContent = '⏸️ 暫停播放';
+
+    playButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-700');
+    playButton.classList.add('bg-gray-400');
+    statusMessage.textContent = '▶️ 劇本開始執行...';
+    
+    // 清除所有步驟高亮
+    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
+
+    // --- 1. 狀態重建：確保標記從正確的位置和圖標開始 ---
+    let currentLat = scriptSteps[0].lat;
+    let currentLng = scriptSteps[0].lng;
+    let currentIcon = 'train'; // 預設圖標 (火車圖標)
+
+    for (let j = 0; j < startIndex; j++) {
+        const step = scriptSteps[j];
+        if (step.type === 'start') {
+            currentLat = step.lat;
+            currentLng = step.lng;
+        } else if (step.type === 'goto') {
+            currentLat = step.lat;
+            currentLng = step.lng;
+            if (step.icon) {
+                currentIcon = step.icon;
+            }
+        } else if (step.type === 'activity') { 
+            if (step.icon) {
+                currentIcon = step.icon;
+            }
+        } else if (step.type === 'dayoff') {
+            // Dayoff 不改變位置，但會強制設為 sleep
+            currentIcon = 'sleep';
+        }
+    }
+
+    // 應用重建的狀態
+    start([currentLat, currentLng]);
+    setIcon(currentIcon);
+    mapInstance.setView([currentLat, currentLng], 13);
+    // ----------------------------------------------------
+
+
+    // 2. 按照步驟順序執行
+    async function runSteps() { // 使用一個 async 內部函數來處理 await
+        for (let i = startIndex; i < scriptSteps.length; i++) {
+            
+            if (!isScriptRunning) break; // 檢查是否被 stopScript 停止
+
+            // 檢查暫停狀態 (如果已暫停，程式會在此處等待)
+            await getPausePromise(); 
+            
+            if (!isScriptRunning) break; // 再次檢查，防止在從暫停恢復後立即停止
+
+            const step = scriptSteps[i];
+            
+            // 更新當前執行狀態
+            statusMessage.textContent = `執行中: 步驟 ${i}. ${step.label || step.type}`;
+            document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
+
+            try {
+                switch (step.type) {
+                    case 'activity':
+                        // **Activity = setIcon (可選) + wait (可選)**
+                        // 1. setIcon (如果有 icon)
+                        if (step.icon) {
+                            setIcon(step.icon);
+                        }
+                        // 2. wait (如果有 sec 且 > 0)
+                        if (step.sec && step.sec > 0) {
+                            await wait(step.sec);
+                        }
+                        break;
+                    case 'show':
+                        // 保持 show 獨立功能
+                        show(step.words);
+                        await wait(1); // 顯示訊息後短暫等待，讓用戶看到
+                        break;
+                    case 'goto':
+                        // **如果 goto 帶有 icon，則先換圖標**
+                        if (step.icon) {
+                            setIcon(step.icon);
+                        }
+                        await goto([step.lat, step.lng]);
+                        
+                        // **如果 goto 帶有 words (且非空)，則接著顯示訊息**
+                        if (step.words && step.words.trim() !== '') {
+                            show(step.words);
+                            await wait(1); // 顯示訊息後短暫等待，讓用戶看到
+                        }
+                        break;
+                    case 'dayoff':
+                        // **Dayoff 步驟**
+                        setIcon('sleep');
+                        await animateNight(step.sec);
+                        break;
+                }
+            } catch (error) {
+                console.error(`步驟 ${i} 執行錯誤:`, error);
+                // 遇到錯誤，調用 stopScript 清理狀態
+                stopScript();
+                statusMessage.textContent = `❌ 錯誤: 步驟 ${i} 執行失敗，已中斷。`;
+                return; 
+            }
+            
+            // 清除當前步驟高亮
+            document.getElementById(`step-${i}`).classList.remove('ring-2', 'ring-indigo-500', 'shadow-md');
+        }
+
+        // 3. 執行結束
+        if (isScriptRunning) { // 只有在沒有被手動停止時才顯示完成
+            stopScript(); // 使用 stopScript 執行標準結束清理
+            statusMessage.textContent = '✅ 劇本執行完畢！';
+        }
+    }
+    
+    // 啟動執行
+    runSteps();
+}
+
+
+/**
+ * 全域鍵盤事件處理函式 
+ */
+function handleKeydown(event) {
+    const modal = document.getElementById('import-modal');
+    const importTextarea = document.getElementById('import-data-textarea');
+    
+    // 只有在模態框顯示時才處理鍵盤事件
+    if (!modal || modal.classList.contains('hidden')) { // 檢查 modal 是否存在且是否隱藏
+        return;
+    }
+    
+    // 阻止事件冒泡，避免影響其他輸入框
+    event.stopPropagation();
+    
+    switch (event.key) {
+        case 'Escape':
+            closeImportModal();
+            break;
+        case 'Enter':
+            // 只有當焦點不在 textarea 或按了 shift 鍵時，才允許換行
+            // 否則，執行確認
+            if (document.activeElement === importTextarea && event.shiftKey) {
+                 // 按下 Shift + Enter 允許換行
+                 return;
+            } else if (document.activeElement === importTextarea && !event.shiftKey) {
+                // 在 textarea 內，單獨按 Enter，執行確認
+                event.preventDefault(); 
+                handleImportConfirmation();
+            }
+            // 如果焦點在其他地方 (例如確認按鈕)，單按 Enter 觸發確認 (handleImportConfirmation())
+            break;
+    }
+}
+
+/**
+ * 提示並執行清除劇本動作 (兩步驟確認)
+ */
+function promptClearScript() { // <-- HTML onclick 調用
+    const btn = document.getElementById('delete-all-button');
+    const originalText = '🗑️ 全部刪除';
+    const confirmText = '⚠️ 確認全部刪除? (5s)';
+
+    // 檢查是否處於確認狀態
+    if (btn.textContent.includes('確認')) {
+        clearScript();
+        return;
+    }
+    
+    // 進入確認狀態
+    btn.textContent = confirmText;
+    btn.classList.remove('bg-red-400', 'hover:bg-red-600');
+    btn.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
+
+    // 設置 5 秒後重置按鈕
+    clearTimeout(clearScriptTimeoutId);
+    clearScriptTimeoutId = setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.add('bg-red-400', 'hover:bg-red-600');
+        btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
+    }, 5000);
+}
+
+/**
+ * 清除所有劇本步驟，只保留第一個 'start' 步驟
+ */
+function clearScript() {
+    const btn = document.getElementById('delete-all-button');
+    const statusMessage = document.getElementById('status-message');
+
+    // 清除確認狀態計時器
+    clearTimeout(clearScriptTimeoutId);
+
+    // 重設劇本為只有第一個 'start' 步驟 (使用 START_STEP_DEFINITION 來重設)
+    scriptSteps = [
+        { 
+            type: START_STEP_DEFINITION.type, 
+            lat: START_STEP_DEFINITION.lat, 
+            lng: START_STEP_DEFINITION.lng, 
+            label: START_STEP_DEFINITION.label 
+        }
+    ];
+
+    clearInsertAnchor(); // 清除錨點狀態
+    renderScript();
+    saveScriptToLocalStorage();
+
+    // 恢復按鈕和狀態訊息
+    btn.textContent = '🗑️ 全部刪除';
+    btn.classList.add('bg-red-400', 'hover:bg-red-600');
+    btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
+    statusMessage.textContent = '🗑️ 劇本已清除，已恢復初始步驟。';
+}
+
+
+/**
+ * 4. 捲動腳本列表到最底部
+ */
+function scrollToBottom() { // <-- HTML onclick 調用
+    const controlsContainer = document.getElementById('controls');
+    // 捲動到 controls 容器的最底部
+    controlsContainer.scrollTop = controlsContainer.scrollHeight;
+}
+
+
+/**
+ * 2. 顯示自訂匯入模態框 (取代原生 prompt)
+ */
+function showImportModal() { // <-- HTML onclick 調用
+    const modal = document.getElementById('import-modal');
+    const modalContent = document.getElementById('import-modal-content');
+    const importTextarea = document.getElementById('import-data-textarea');
+    
+    // 清除上次的貼上內容
+    importTextarea.value = '';
+    
+    // 顯示模態框
+    modal.classList.remove('hidden');
+    // 讓 textarea 取得焦點 (啟用 Enter 提交)
+    importTextarea.focus(); 
+    
+    // 觸發過渡動畫
+    setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }, 10);
+
+    // 清除狀態訊息
+    document.getElementById('status-message').textContent = '等待貼上數據...';
+}
+
+/**
+ * 關閉自訂匯入模態框
+ */
+function closeImportModal() { // <-- HTML onclick 調用
+    const modal = document.getElementById('import-modal');
+    const modalContent = document.getElementById('import-modal-content');
+
+    // 觸發退出動畫
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+
+    // 隱藏模態框
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.getElementById('status-message').textContent = '準備就緒';
+    }, 300); // 配合 CSS transition 300ms
+}
+
+
+/**
+ * 3. 處理模態框中的確認匯入按鈕點擊
+ */
+function handleImportConfirmation() { // <-- HTML onclick 調用
+    const dataString = document.getElementById('import-data-textarea').value;
+    const statusMessage = document.getElementById('status-message');
+
+    if (dataString.trim() === "") {
+        statusMessage.textContent = '⚠️ 請貼入數據字串。';
+        return;
+    }
+    
+    // 執行匯入邏輯
+    try {
+        // ** 關鍵修正：先進行 URI 解碼 **
+        const rawJsonString = decodeURIComponent(dataString);
+        
+        const result = loadImportedData(rawJsonString);
+        if (result) {
+            statusMessage.textContent = '✅ 劇本數據已成功貼上並載入！';
+            saveScriptToLocalStorage(); // 載入成功後儲存到 Local Storage
+            renderScript();
+            closeImportModal();
+        } else {
+            statusMessage.textContent = '❌ 貼上的數據格式無效或已損壞。';
+        }
+    } catch (e) {
+        statusMessage.textContent = '❌ 貼上的數據解析失敗，請檢查格式。';
+        console.error('Import failed:', e);
+    }
+}
+
+
+/**
+ * 匯出劇本：將優化後的 JSON 字串複製到剪貼簿。
+ */
+async function exportScript() { // <-- HTML onclick 調用
+    const statusMessage = document.getElementById('status-message');
+    // 移除手動複製提示 (如果存在)
+    const p = document.getElementById('manual-copy-prompt');
+    if (p) p.remove();
+
+    let dataString = ''; 
+    
+    try {
+        // --- 1. 數據優化與轉換 (壓縮結構) ---
+        
+        const compactScript = scriptSteps.map(step => {
+            const compact = [];
+            switch (step.type) {
+                case 'start':
+                    compact.push('s', step.lat, step.lng);
+                    if (step.label) compact.push(step.label);
+                    return compact;
+                case 'goto':
+                    compact.push('g', step.lat, step.lng);
+                    if (step.icon) compact.push(step.icon.charAt(0)); 
+                    else compact.push('');
+                    if (step.words) compact.push(step.words);
+                    return compact;
+                case 'activity':
+                    compact.push('a', step.sec);
+                    if (step.icon) compact.push(step.icon.charAt(0)); 
+                    return compact;
+                case 'show':
+                    compact.push('h', step.words);
+                    return compact;
+                case 'dayoff':
+                    compact.push('d', step.sec);
+                    return compact;
+            }
+            return compact;
+        });
+
+        // 2. JSON.stringify 轉換為字串
+        const rawJsonString = JSON.stringify(compactScript);
+        
+        // ** 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸 **
+        dataString = encodeURIComponent(rawJsonString);
+        
+    } catch (error) {
+        statusMessage.textContent = '❌ 劇本數據轉換失敗。';
+        console.error('數據轉換失敗:', error);
+        return; 
+    }
+    
+    // --- 4. 複製到剪貼簿 (URI 編碼後的數據字串) ---
+    try {
+        await navigator.clipboard.writeText(dataString);
+
+        const p = document.getElementById('manual-copy-prompt');
+        if (p) p.remove();
+
+        statusMessage.textContent = '✅ 數據已複製！請貼上以分享。';
+        setTimeout(() => {
+            statusMessage.textContent = '準備就緒';
+        }, 3000);
+
+    } catch (error) {
+        // Clipboard API 失敗時，使用 document.execCommand('copy') 作為 fallback
+        try {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = dataString; 
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const p = document.getElementById('manual-copy-prompt');
+            if (p) p.remove();
+
+            statusMessage.textContent = '✅ 數據已複製！(使用備用複製) 請貼上以分享。';
+            setTimeout(() => {
+                statusMessage.textContent = '準備就緒';
+            }, 3000);
+        } catch (copyError) {
+             // 兩種複製方式皆失敗 (沙盒模式下預期行為)，顯示手動複製提示
+             statusMessage.textContent = '❌ 複製失敗！(沙盒模式限制) 請手動複製下方數據。';
+             showManualCopyPrompt(dataString); // 顯示 URI 編碼後的數據字串讓用戶手動複製
+        }
+    }
 }
 
 
@@ -862,13 +1158,47 @@ function renderScript() {
     listContainer.innerHTML = '';
     
     // --- 顏色交替邏輯的變數 (修訂為日分組) ---
-    // Day 1/3... 使用 bg-indigo-100 (淡紫), Day 2/4... 使用 bg-pink-100 (淡粉紅)
     const DAY_COLORS = ['bg-indigo-100', 'bg-pink-100']; 
     const BORDER_COLORS = ['border-indigo-400', 'border-pink-400'];
     let dayIndex = 0; // 0 (Day 1, Indigo) 或 1 (Day 2, Pink)
     // ---------------------------------
 
+    // ** 修正：插入模式的提示 UI 移動到控制面板底部，這裡只需要清空內容 **
+    const insertStatusPanel = document.getElementById('insert-status-panel');
+    insertStatusPanel.innerHTML = ''; 
+
+    if (insertAnchorIndex !== -1) {
+        // 渲染插入模式提示到新的面板中 (不在 script-list 頂部)
+        insertStatusPanel.innerHTML = `
+            <div class="p-3 mb-3 bg-yellow-200 rounded-lg border border-yellow-500 flex justify-between items-center shadow-md">
+                <span class="font-bold text-yellow-800">📌 插入模式中：步驟將插入到 #${insertAnchorIndex} 位置。</span>
+                 <!-- 渲染取消按鈕 -->
+                 <button onclick="clearInsertAnchor()" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 transition duration-150 text-sm">
+                    ❌ 取消插入
+                </button>
+            </div>
+        `;
+    }
+    // ----------------------------------------------------
+
+
     scriptSteps.forEach((step, index) => {
+        
+        // 插入錨點 UI (在每個步驟上方插入)
+        if (index > 0) { // 除了第一個步驟 (0. START) 之外
+            const anchorElement = document.createElement('div');
+            // 修正：移除 opacity-0 和 h-0，只在懸停時改變樣式
+            anchorElement.className = 'insert-anchor transition-all duration-300'; 
+            anchorElement.dataset.index = index;
+            
+            anchorElement.onclick = () => { setInsertAnchor(index); }; // 直接設置點擊事件
+            
+            // 修正: 顯示可點擊的文本，懸停時通過 CSS 變成虛線框
+            anchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${index})</span>`;
+            
+            listContainer.appendChild(anchorElement);
+        }
+
         const stepElement = document.createElement('div');
         stepElement.id = `step-${index}`;
         // 步驟元素的基本樣式：圓角、陰影、過渡效果
@@ -1037,151 +1367,148 @@ function renderScript() {
         `;
         listContainer.appendChild(stepElement);
     });
+
+    // 最後一個錨點 (在最後一個步驟下方)
+    const finalAnchorElement = document.createElement('div');
+    finalAnchorElement.className = 'insert-anchor my-2 transition-all duration-300';
+    finalAnchorElement.dataset.index = scriptSteps.length;
+    finalAnchorElement.onclick = () => { setInsertAnchor(scriptSteps.length); };
+    // 修正: 顯示可點擊的文本，懸停時通過 CSS 變成虛線框
+    finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${scriptSteps.length})</span>`;
+    listContainer.appendChild(finalAnchorElement);
 }
+</script>
+</head>
+<body class="bg-gray-50">
+<div class="flex h-screen overflow-hidden">
+  
+  <!-- 左側控制面板 (可捲動區域) -->
+  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col relative">
+    <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2">🗺️ 旅程劇本設計器</h1>
 
-/**
- * 新增步驟到劇本
- */
-function addStep(type) {
-    // 步驟 1: 將 label 預設為空字串，以便顯示 placeholder
-    const newStep = { label: '' }; 
-
-    switch (type) {
-        case 'goto':
-            // GPS 座標預設為 null，以便在渲染時顯示 placeholder
-            Object.assign(newStep, { type: 'goto', lat: null, lng: null, icon: 'walk', words: '' });
-            break;
-        case 'activity':
-            // 新增 Activity 動作，預設無 icon 且等待 1 秒
-            Object.assign(newStep, { type: 'activity', icon: '', sec: 1 });
-            break;
-        case 'show':
-            Object.assign(newStep, { type: 'show', words: '' }); // 訊息內容也預設為空字串
-            break;
-        case 'dayoff':
-            Object.assign(newStep, { type: 'dayoff', sec: 5 }); // 預設休息 5 秒
-            break;
-    }
-    scriptSteps.push(newStep);
-    renderScript();
-    saveScriptToLocalStorage(); // <--- 儲存
-}
-
-/**
- * 刪除步驟 (不能刪除第一個 'start' 步驟)
- */
-function deleteStep(index) {
-    if (index === 0) return; // 保護第一個步驟
-    scriptSteps.splice(index, 1);
-    renderScript();
-    saveScriptToLocalStorage(); // <--- 儲存
-}
-
-/**
- * 更新步驟資料
- */
-function updateStep(index, field, value) {
-    if (field === 'coords') {
-        // 處理 'coords' (緯度, 經度) 聯合輸入, 適用於 'start' 和 'goto'
-        const parts = String(value).split(',').map(s => s.trim());
-        const lat = parseFloat(parts[0]);
-        const lng = parseFloat(parts[1]);
-
-        if (!isNaN(lat) && !isNaN(lng) && parts.length === 2) {
-            
-            // --- GPS Comparison/Validation ---
-            // 僅對 goto 步驟進行檢查 (index > 0)
-            if (index > 0 && scriptSteps[index].type === 'goto') {
-                const prevPos = getPreviousPosition(index);
-                
-                // 使用一個小容忍值進行浮點數比較
-                const EPSILON = 0.000001; 
-                const isSameLat = Math.abs(lat - prevPos.lat) < EPSILON;
-                const isSameLng = Math.abs(lng - prevPos.lng) < EPSILON;
-                
-                if (isSameLat && isSameLng) {
-                    console.error("GPS Error: New position is the same as the previous known position. Aborting update.");
-                    document.getElementById('status-message').textContent = '⚠️ 錯誤: 新位置與前一步驟的位置相同，移動將被忽略。';
-                    setTimeout(() => { document.getElementById('status-message').textContent = '準備就緒'; }, 3000);
-                    return; 
-                }
-            }
-            // --- End Validation ---
-
-            scriptSteps[index].lat = lat;
-            scriptSteps[index].lng = lng;
-            saveScriptToLocalStorage();
-        } else {
-            console.error("Invalid coordinate format. Please use 'lat, lng'.");
-        }
-    } else if (field === 'lat' || field === 'lng' || field === 'sec') {
-        // 處理單獨的數字欄位 (此邏輯現在主要用於 'sec')
-        scriptSteps[index][field] = parseFloat(value) || 0;
-        saveScriptToLocalStorage(); // <--- 儲存
-    } else {
-        // 處理文字欄位 (label, words, icon)
-        scriptSteps[index][field] = value;
-        saveScriptToLocalStorage(); // <--- 儲存
-    }
-}
-
-/**
- * 移動步驟位置
- */
-function moveStep(index, direction) {
-    if (index === 0) return; // 保護第一個步驟
-    const newIndex = index + direction;
-    if (newIndex < 1 || newIndex >= scriptSteps.length) return; // 不能移出範圍 (特別是不能移到 index 0)
+    <!-- 腳本步驟列表 - 這是捲動的內容 -->
+    <div id="script-list" class="space-y-3 flex-grow mb-4">
+      <!-- 步驟將在此處渲染 -->
+    </div>
     
-    // 進行交換
-    [scriptSteps[index], scriptSteps[newIndex]] = [scriptSteps[newIndex], scriptSteps[index]];
-    renderScript();
-    saveScriptToLocalStorage(); // <--- 儲存
-}
+    <!-- 新增：拉到最下面按鈕 (STICKY/固定位置) -->
+    <!-- 使用 sticky 配合 bottom-0 z-10 將按鈕固定在控制面板可視範圍的底部 -->
+    <div class="sticky bottom-0 left-0 right-0 p-2 -mx-4 bg-white shadow-md border-t border-gray-200 z-10">
+        <button onclick="scrollToBottom()" class="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition duration-150 text-sm">
+            👇 拉到最下面
+        </button>
+    </div>
 
+    <!-- 動作按鈕 -->
+    <div class="space-y-2 mb-4 p-4 border rounded-lg bg-indigo-50">
+        <p class="font-semibold text-sm text-indigo-700">新增動作：</p>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+            <button onclick="addStep('goto')" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150">移動 (Goto)</button>
+            <button onclick="addStep('activity')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150">活動/狀態 (Activity)</button>
+            <button onclick="addStep('show')" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150">顯示訊息 (Show)</button>
+            <button onclick="addStep('dayoff')" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 col-span-2">休息過夜</button>
+        </div>
+        <p class="text-xs text-indigo-500 mt-2 font-semibold">點擊步驟間的虛線框以設定插入點。</p>
+    </div>
+    
+    <!-- 新增：插入模式狀態與取消按鈕 (位於功能叢中) -->
+    <!-- 這裡放置取消按鈕，並由 JS 根據 insertAnchorIndex 渲染內容 -->
+    <div id="insert-status-panel" class="mb-4">
+        <!-- 內容由 renderScript 渲染 -->
+    </div>
+
+    <!-- 播放控制按鈕 -->
+    <div class="flex space-x-2 mb-2">
+        <!-- 暫停/繼續按鈕 -->
+        <button id="pause-resume-button" onclick="pauseToggle()" 
+            class="w-1/2 bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+            disabled 
+            title="暫停播放">
+            <span class="text-lg">⏸️ 暫停/繼續</span>
+        </button>
+         <!-- 停止播放按鈕 (新增) -->
+        <button id="stop-button" onclick="stopScript()" 
+            class="w-1/2 bg-gray-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+            disabled 
+            title="停止播放">
+            <span class="text-lg">◼️ 停止播放</span>
+        </button>
+    </div>
+
+
+    <!-- 播放按鈕 -->
+    <button id="play-button" onclick="executeScript(1)" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] text-lg mb-2">
+      ▶️ 從頭開始播放 (PLAY)
+    </button>
+    
+    <!-- 匯出與刪除按鈕 (新佈局) -->
+    <div class="flex space-x-2 mb-2">
+        <!-- 匯出按鈕：只複製資料字串 -->
+        <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
+          📄 複製數據
+        </button>
+        <!-- 新增：匯入按鈕 -->
+        <button id="import-button" onclick="showImportModal()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
+          📥 貼上數據
+        </button>
+        <!-- 刪除按鈕 -->
+        <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
+          🗑️ 全部刪除
+        </button>
+    </div>
+
+    <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">準備就緒</div>
+
+    <!-- 錯誤時顯示的手動複製區域會動態插入此處 -->
+
+  </div> <!-- End #controls -->
+
+  <!-- 右側地圖顯示區 -->
+  <div id="map-container" class="w-full md:w-2/3 relative h-screen">
+    <div id="map"></div>
+    <!-- 新增：夜間動畫遮罩。絕對定位覆蓋地圖 -->
+    <div id="night-overlay" class="absolute inset-0 z-[1000]"></div>
+  </div>
+
+</div>
+
+<!-- 1. 自訂匯入數據模態框 (Modal UI) -->
+<!-- 變更: 改為 fixed 頂部定位，與左側控制面板寬度一致 -->
+<div id="import-modal" class="fixed top-0 bottom-0 left-0 w-full md:w-1/3 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg modal-transition scale-95 opacity-0" id="import-modal-content">
+        <h2 class="text-xl font-bold text-indigo-600 mb-4 border-b pb-2">📥 貼上劇本數據</h2>
+        <p class="text-sm text-gray-600 mb-4">請將複製的數據字串貼入下方的文字區域，它會覆蓋您目前的劇本。</p>
+        <textarea id="import-data-textarea" 
+                  class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none" 
+                  placeholder="請貼上已 URI 編碼的劇本數據..."></textarea>
+        <div class="flex justify-end space-x-3 mt-4">
+            <button onclick="closeImportModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                取消
+            </button>
+            <button onclick="handleImportConfirmation()" id="confirm-import-button" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                確認匯入
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
 // --------------------------------------------------------
-// 初始化：檢查 URL 參數、Local Storage 並載入劇本，然後渲染 UI
+// 初始化： Leaflet/DOM 依賴的程式碼移入 DOMContentLoaded
 // --------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-    checkAndLoadScriptFromURL();
+    // 修正 Error 1: Map container not found.
+    // 確保 #map 元素存在後才進行初始化
+    mapInstance = L.map('map').setView(INITIAL_GPS, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
+    marker = L.marker(INITIAL_GPS, { icon: icons.train }).addTo(mapInstance);
+    
+    checkAndLoadScriptFromURL(); 
     renderScript();
     
     // 全域監聽鍵盤事件
-    document.addEventListener('keydown', handleKeydown); // <-- 新增鍵盤監聽
+    document.addEventListener('keydown', handleKeydown); 
 });
-
-
-// --- 鍵盤事件處理函式 ---
-function handleKeydown(event) {
-    const modal = document.getElementById('import-modal');
-    const importTextarea = document.getElementById('import-data-textarea');
-    
-    // 只有在模態框顯示時才處理鍵盤事件
-    if (modal.classList.contains('hidden')) {
-        return;
-    }
-    
-    // 阻止事件冒泡，避免影響其他輸入框
-    event.stopPropagation();
-    
-    switch (event.key) {
-        case 'Escape':
-            closeImportModal();
-            break;
-        case 'Enter':
-            // 只有當焦點不在 textarea 時才觸發 (例如在確認按鈕上)
-            // 如果焦點在 textarea 內，除非同時按了 Ctrl/Cmd/Shift，否則按 Enter 應執行提交
-            if (document.activeElement === importTextarea && !event.shiftKey) {
-                 // 在 textarea 內，沒有按 shift，允許換行。
-                 return;
-            } else {
-                // 執行確認 (防止默認行為)
-                event.preventDefault(); 
-                handleImportConfirmation();
-            }
-            break;
-    }
-}
 </script>
 </body>
 </html>
