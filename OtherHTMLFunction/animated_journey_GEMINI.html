@@ -127,22 +127,30 @@ const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
 const FILE_EXTENSION = '.txt'; // 修改為更通用的 .txt 以提高 iOS 兼容性
 const ARC_HEIGHT_DEG = 0.5; // 飛機弧線路徑的最高點抬升緯度 (約 55 公里)
 const ARC_SEGMENTS = 25; // 飛機弧線路徑分段數，越多越平滑
-const MAX_IMAGE_WIDTH = 200; // 新增：圖片壓縮後的寬度上限
+const MAX_IMAGE_WIDTH = 200; // 圖片壓縮後的寬度上限
+const PHOTO_STANDALONE_DURATION = 2.5; // 移動和訊息步驟照片獨立播放時長 (秒)
 
 const iconSize = 75; // 桌面預設大小
-const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
-const icons = {
-  train: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚆</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  walk: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚶‍♂️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  dine: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🍽️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }), 
-  sleep: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">😴</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  bus: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚌</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  motorcycle: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🏍️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  car: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🚗</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  view: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🏞️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  shopping: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">🛍️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }),
-  airplane: L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">✈️</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] }) 
-};
+// 調整 2: icon 下拉選單的選項呈現改為 emoji
+const ICON_NAMES = [
+    { name: 'train', emoji: '🚆' },
+    { name: 'walk', emoji: '🚶‍♂️' },
+    { name: 'dine', emoji: '🍽️' },
+    { name: 'sleep', emoji: '😴' },
+    { name: 'bus', emoji: '🚌' },
+    { name: 'motorcycle', emoji: '🏍️' },
+    { name: 'car', emoji: '🚗' },
+    { name: 'view', emoji: '🏞️' },
+    { name: 'shopping', emoji: '🛍️' },
+    { name: 'airplane', emoji: '✈️' }
+];
+
+// 根據 ICON_NAMES 建立 icons 物件，方便查找
+const icons = ICON_NAMES.reduce((acc, item) => {
+    acc[item.name] = L.divIcon({ html: `<div style="font-size:${iconSize}px; line-height:1;">${item.emoji}</div>`, className:'', iconSize:[iconSize,iconSize], iconAnchor:[iconSize/2,iconSize/2] });
+    return acc;
+}, {});
+
 const INITIAL_GPS = [26.20178415387677, 127.64689003446617];
 const START_STEP_DEFINITION = { 
     type: 'start', 
@@ -156,7 +164,7 @@ let mapInstance = null;
 let marker = null;
 let polyline = null;
 let popup = null;
-let imageModal = null; // 新增：圖片顯示模態框
+let imageModal = null; // 圖片顯示模態框
 let currentAnimation = false;
 let isScriptRunning = false;
 let isPaused = false;
@@ -240,17 +248,68 @@ function saveScriptToLocalStorage() {
 // =================================================================
 
 /**
+ * 輔助函式：優化載入的劇本，合併特定的連續步驟。
+ * 邏輯：將 'goto' (無圖) 後接 'activity' (有圖) 合併為單一的 'goto' (有圖)。
+ * @param {Array<Object>} steps - 完整的劇本步驟陣列 (會被 in-place 修改)
+ * @returns {Array<Object>} - 優化後的劇本步驟陣列
+ */
+function optimizeLoadedScript(steps) {
+    if (!Array.isArray(steps) || steps.length < 2) {
+        return steps;
+    }
+    
+    for (let i = 0; i < steps.length; i++) {
+        const currentStep = steps[i];
+        
+        // 檢查當前步驟是否為 goto 且沒有圖片
+        if (currentStep.type === 'goto' && !currentStep.image) {
+            const nextStep = steps[i + 1];
+            
+            // 檢查下一個步驟是否為 activity 且有圖片
+            // 這裡還需要檢查 activity 的等待時間是否為 0/null，因為 activity 的等待時間是會被捨棄的
+            // 為了簡化，只要 activity 有圖就合併，但提醒用戶活動時間會被忽略
+            if (nextStep && nextStep.type === 'activity' && nextStep.image) {
+                
+                // --- 執行合併 ---
+                
+                // 1. 轉移圖片：將 activity 的圖片轉移給 goto (這是主要目的)
+                currentStep.image = nextStep.image;
+                
+                // 2. 轉移 Icon (如果 goto 尚未指定 icon)
+                if (!currentStep.icon && nextStep.icon) {
+                    currentStep.icon = nextStep.icon;
+                }
+                
+                // 3. 轉移 Label (如果 goto 尚未指定 label 且 activity 有 label)
+                if (!currentStep.label && nextStep.label) {
+                    currentStep.label = nextStep.label;
+                }
+                
+                // 4. 移除下一個步驟 (activity)
+                steps.splice(i + 1, 1);
+                
+                // 5. 調整索引：因為移除了元素，i 必須減 1，以便在下一次迴圈中重新檢查當前位置 (即新的 nextStep)
+                i--; 
+            }
+        }
+    }
+    
+    return steps; // 由於是 in-place 修改，直接返回
+}
+
+
+/**
  * 將簡化的數據字串解構並載入到 scriptSteps
  * @param {string} rawJsonString - 匯入的 JSON 字串 (已URI解碼)
  * @returns {boolean} - 成功載入返回 true
  */
 function loadImportedData(rawJsonString) {
     // Helper to map icon letter back to full name
-    const ICON_MAP = {
-        't': 'train', 'w': 'walk', 'd': 'dine', 's': 'sleep', 'b': 'bus', 
-        'm': 'motorcycle', 'c': 'car', 'v': 'view', 'p': 'shopping', 'a': 'airplane'
-    };
-
+    const ICON_MAP = ICON_NAMES.reduce((map, item) => {
+        map[item.name.charAt(0)] = item.name;
+        return map;
+    }, {});
+    
     // Helper to uncompact the script format (從 compactArray 轉換回 fullScript)
     function uncompactScript(compactArray) {
         const fullScript = [];
@@ -289,8 +348,8 @@ function loadImportedData(rawJsonString) {
                     step.type = 'goto';
                     step.lat = compactStep[i++];
                     step.lng = compactStep[i++];
-                    const iconChar = compactStep[i++];
-                    step.icon = iconChar ? ICON_MAP[iconChar] || iconChar : '';
+                    const iconCharG = compactStep[i++];
+                    step.icon = iconCharG ? ICON_MAP[iconCharG] || iconCharG : '';
                     step.words = compactStep[i++];
                     step.label = '載入的移動步驟';
                     
@@ -356,11 +415,16 @@ function loadImportedData(rawJsonString) {
     }
 
     // 2. 轉換回完整劇本結構
-    const loadedSteps = uncompactScript(compactArray);
+    let loadedSteps = uncompactScript(compactArray);
+    
+    if (!loadedSteps) return false;
+
+    // 2.5. 新增：執行劇本優化合併 (處理 [goto, activity(photo)] 合併)
+    const optimizedSteps = optimizeLoadedScript(loadedSteps);
 
     // 3. 驗證並載入
-    if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
-        scriptSteps = loadedSteps;
+    if (Array.isArray(optimizedSteps) && optimizedSteps.length > 0 && optimizedSteps[0].type === 'start') {
+        scriptSteps = optimizedSteps; // 使用優化後的步驟
         return true;
     }
     return false;
@@ -380,7 +444,11 @@ function checkAndLoadScriptFromURL() {
             const loadedSteps = JSON.parse(storedJson); 
 
             if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
-                scriptSteps = loadedSteps;
+                
+                // 載入時也執行一次優化，以防本地存儲的是未優化格式
+                const optimizedSteps = optimizeLoadedScript(loadedSteps);
+                
+                scriptSteps = optimizedSteps;
                 document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
                 return; 
             }
@@ -784,6 +852,29 @@ function closeImageModal() {
     }, 300); // 匹配 CSS transition duration
 }
 
+/**
+ * 播放獨立照片並等待 2.5 秒
+ * @param {string} base64Image - Base64 圖片字串
+ * @returns {Promise<void>} - 等待 PHOTO_STANDALONE_DURATION 秒後關閉
+ */
+function playStepMedia(base64Image) {
+    if (!base64Image) return Promise.resolve();
+    
+    return new Promise(async (resolve) => {
+        // 1. 開啟模態框
+        openImageModal(base64Image); 
+        
+        // 2. 等待 2.5 秒 (支援暫停)
+        await wait(PHOTO_STANDALONE_DURATION); 
+        await getPausePromise(); 
+        
+        // 3. 關閉模態框
+        closeImageModal();
+        
+        resolve();
+    });
+}
+
 
 /**
  * 獲取暫停 Promise。如果已暫停，則阻塞執行。
@@ -1182,14 +1273,22 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             statusMessage.textContent = `執行中: 步驟 ${i}. ${step.label || step.type}`;
             // 播放時使用藍色高亮
             document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
+            
+            // 判斷是否為獨立播放照片的步驟類型 (goto, show)
+            const isStandalonePhotoStep = step.type === 'goto' || step.type === 'show';
+            
+            // 用於持續顯示照片的步驟類型 (activity, dayoff)
+            const isContinuousPhotoStep = step.type === 'activity' || step.type === 'dayoff';
+
 
             try {
-                // --- 新增: 處理圖片顯示 (步驟開始時開啟) ---
-                if (step.image) {
+                // --- 步驟開始時的邏輯 ---
+                if (isContinuousPhotoStep && step.image) {
+                    // 持續顯示類型的，動作開始時開啟照片
                     openImageModal(step.image); 
                 }
-                // --- 圖片顯示結束 ---
 
+                // --- 執行主要步驟動作 ---
                 switch (step.type) {
                     case 'activity':
                         // **Activity = setIcon (可選) + wait (可選)**
@@ -1218,6 +1317,15 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                         await animateNight(step.sec);
                         break;
                 }
+                
+                // --- 步驟結束時的邏輯 ---
+                if (isContinuousPhotoStep && step.image) {
+                    // 持續顯示類型的，動作結束時關閉照片
+                    closeImageModal();
+                } else if (isStandalonePhotoStep && step.image) {
+                    // 獨立播放類型的，動作結束後播放照片 2.5 秒
+                    await playStepMedia(step.image);
+                }
 
             } catch (error) {
                 console.error(`步驟 ${i} 執行錯誤:`, error);
@@ -1227,12 +1335,6 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                 return; 
             }
             
-            // --- 新增: 處理圖片關閉 (步驟結束時關閉) ---
-            if (step.image) {
-                closeImageModal(); 
-            }
-            // --- 圖片關閉結束 ---
-
             // 清除當前步驟高亮
             document.getElementById(`step-${i}`).classList.remove('ring-2', 'ring-indigo-500', 'shadow-md');
         }
@@ -1594,6 +1696,7 @@ function renderScript() {
         const fileInputId = `image-upload-${index}`;
         
         const hasImage = !!step.image;
+        // 起始點 (index 0) 不允許上傳照片
         const imageHtml = !isStartStep ? `
             <!-- 隱藏的檔案輸入元件 -->
             <input type="file" id="${fileInputId}" style="display:none;" accept="image/*" onchange="handleImageUpload(event, ${index})">
@@ -1666,7 +1769,7 @@ function renderScript() {
                     <select class="w-full text-sm border rounded px-2 mt-1" 
                         onchange="updateStep(${index}, 'icon', this.value)">
                         <option value="">(保持不變)</option>
-                        ${ICON_NAMES.map(name => `<option value="${name}" ${step.icon === name ? 'selected' : ''}>${name}</option>`).join('')}
+                        ${ICON_NAMES.map(item => `<option value="${item.name}" ${step.icon === item.name ? 'selected' : ''}>${item.emoji} ${item.name}</option>`).join('')}
                     </select>
                     
                     <small class="mt-2 block">抵達時顯示訊息 (可選):</small>
@@ -1695,7 +1798,7 @@ function renderScript() {
                             <select class="w-full text-sm border rounded px-2 mt-1" 
                                 onchange="updateStep(${index}, 'icon', this.value)">
                                 <option value="">(保持不變)</option>
-                                ${ICON_NAMES.map(name => `<option value="${name}" ${step.icon === name ? 'selected' : ''}>${name}</option>`).join('')}
+                                ${ICON_NAMES.map(item => `<option value="${item.name}" ${step.icon === item.name ? 'selected' : ''}>${item.emoji} ${item.name}</option>`).join('')}
                             </select>
                         </div>
                         <div>
