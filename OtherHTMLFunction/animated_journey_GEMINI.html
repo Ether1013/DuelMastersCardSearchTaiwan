@@ -83,6 +83,15 @@
       pointer-events: none; /* 讓點擊穿透到 anchor */
   }
 
+  /* 新增：編輯時的 Focus 效果 (橙色光環) */
+  .focused-step {
+      /* 使用自定義屬性來實現多重陰影和邊框的強烈高亮 */
+      --tw-ring-color: #f97316; /* 橙色 500 */
+      --tw-shadow-color: #f97316;
+      box-shadow: 0 0 0 3px var(--tw-ring-color), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      border: 1px solid #f97316 !important;
+  }
+
   /* 響應式：強制縱向佈局 */
   @media (max-width: 767px) {
     .mobile-h-half {
@@ -158,6 +167,7 @@ let currentWaitResolve = null;
 let clearScriptTimeoutId = null; 
 let hoverTimeoutId = null; // 用於錨點提示的計時器
 let insertAnchorIndex = -1; // 儲存要插入步驟的索引位置 (-1 表示沒有錨點)
+let stepIndexToFocus = -1; // **新增：儲存需要 Focus 的步驟索引**
 
 
 // 初始劇本
@@ -362,6 +372,14 @@ function checkAndLoadScriptFromURL() {
 // =================================================================
 
 /**
+ * 設定要 Focus 的步驟，並重新渲染。
+ */
+function setFocusAndRender(index) {
+    stepIndexToFocus = index;
+    renderScript();
+}
+
+/**
  * 輔助函式：找到上一個設定位置的步驟的位置
  */
 function getPreviousPosition(currentIndex) {
@@ -384,7 +402,9 @@ function getPreviousPosition(currentIndex) {
 function deleteStep(index) { // <-- HTML onclick 調用
     if (index === 0) return; // 保護第一個步驟
     scriptSteps.splice(index, 1);
-    renderScript();
+    
+    // Focus 刪除點的前一個步驟
+    setFocusAndRender(Math.max(0, index - 1));
     saveScriptToLocalStorage(); // <--- 儲存
 }
 
@@ -398,7 +418,9 @@ function moveStep(index, direction) { // <-- HTML onclick 調用
     
     // 進行交換
     [scriptSteps[index], scriptSteps[newIndex]] = [scriptSteps[newIndex], scriptSteps[index]];
-    renderScript();
+    
+    // Focus 移動後的步驟
+    setFocusAndRender(newIndex);
     saveScriptToLocalStorage(); // <--- 儲存
 }
 
@@ -436,6 +458,7 @@ function updateStep(index, field, value) { // <-- HTML onchange 調用
             scriptSteps[index].lat = lat;
             scriptSteps[index].lng = lng;
             saveScriptToLocalStorage();
+            setFocusAndRender(index); // **觸發 Focus**
         } else {
             console.error("Invalid coordinate format. Please use 'lat, lng'.");
         }
@@ -443,17 +466,21 @@ function updateStep(index, field, value) { // <-- HTML onchange 調用
         // 處理單獨的數字欄位 (此邏輯現在主要用於 'sec')
         scriptSteps[index][field] = parseFloat(value) || 0;
         saveScriptToLocalStorage(); // <--- 儲存
+        setFocusAndRender(index); // **觸發 Focus**
     } else {
         // 處理文字欄位 (label, words, icon)
         scriptSteps[index][field] = value;
         saveScriptToLocalStorage(); // <--- 儲存
+        setFocusAndRender(index); // **觸發 Focus**
     }
 }
 
 /**
- * 新增步驟到劇本
+ * 新增步驟到劇本 (已修改為可選的 targetIndex 參數)
+ * @param {string} type - 步驟類型
+ * @param {number} targetIndex - 要插入的索引位置 (可選，預設 -1 表示附加到末尾)
  */
-function addStep(type) { // <-- HTML onclick 調用
+function addStep(type, targetIndex = -1) { // <-- HTML onclick 調用
     // 步驟 1: 將 label 預設為空字串，以便顯示 placeholder
     const newStep = { label: '' }; 
 
@@ -474,30 +501,48 @@ function addStep(type) { // <-- HTML onclick 調用
             break;
     }
     
-    // ** 插入邏輯：檢查是否有錨點 **
-    if (insertAnchorIndex !== -1) {
-        scriptSteps.splice(insertAnchorIndex, 0, newStep);
-        // 插入後清除錨點狀態
-        clearInsertAnchor(); 
+    // 處理插入索引
+    let insertionIndex = parseInt(targetIndex, 10);
+    
+    // 如果 targetIndex 無效或未提供，則附加到末尾
+    if (insertionIndex === -1 || isNaN(insertionIndex)) {
+        insertionIndex = scriptSteps.length;
+    }
+    
+    scriptSteps.splice(insertionIndex, 0, newStep);
+
+    // 處理插入後的狀態和滾動
+    if (targetIndex !== -1) {
+        // 這是行內插入
+        clearInsertAnchor(); // 清除錨點狀態
+        setFocusAndRender(insertionIndex); // **觸發 Focus**
     } else {
-        // 預設行為：添加到末尾
-        scriptSteps.push(newStep);
-        // 新增在末尾時，自動捲動到底部，讓使用者看到新步驟
+        // 這是點擊底部按鈕 (已移除，但保留作為安全網)
+        setFocusAndRender(insertionIndex); // **觸發 Focus**
         setTimeout(scrollToBottom, 50); 
     }
 
-    renderScript();
     saveScriptToLocalStorage(); // <--- 儲存
 }
+
 
 /**
  * 設定插入錨點 (點擊虛線框)
  */
 function setInsertAnchor(index) {
-    insertAnchorIndex = index;
+    // 確保 index 是數字
+    const targetIndex = parseInt(index, 10); 
+    // 設定要顯示 action buttons 的索引
+    insertAnchorIndex = targetIndex;
     renderScript();
-    // 滾動到腳本列表的底部，讓使用者看到操作面板
-    scrollToBottom();
+    
+    // 滾動到 action panel 自身 (使用 timeout 確保 DOM 渲染完成)
+    setTimeout(() => {
+        const anchorElement = document.querySelector(`.insert-anchor-panel[data-index="${targetIndex}"]`);
+        if (anchorElement) {
+            anchorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50);
 }
 
 /**
@@ -629,7 +674,7 @@ function stopScript() {
     document.getElementById('status-message').textContent = '◼️ 播放已停止。';
     
     // 清除所有步驟高亮
-    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
+    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md', 'focused-step'));
 }
 
 
@@ -891,7 +936,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     statusMessage.textContent = '▶️ 劇本開始執行...';
     
     // 清除所有步驟高亮
-    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
+    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md', 'focused-step'));
 
     // --- 1. 狀態重建：確保標記從正確的位置和圖標開始 ---
     let currentLat = scriptSteps[0].lat;
@@ -944,6 +989,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             
             // 更新當前執行狀態
             statusMessage.textContent = `執行中: 步驟 ${i}. ${step.label || step.type}`;
+            // 播放時使用藍色高亮
             document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
 
             try {
@@ -1055,7 +1101,7 @@ function clearScript() {
     ];
 
     clearInsertAnchor(); // 清除錨點狀態
-    renderScript();
+    setFocusAndRender(0); // **清除時 Focus 初始步驟**
     saveScriptToLocalStorage();
 
     // 恢復按鈕和狀態訊息
@@ -1191,7 +1237,7 @@ function handleFileUpload(event) {
             if (result) {
                 statusMessage.textContent = '✅ 劇本檔案已成功載入！';
                 saveScriptToLocalStorage();
-                renderScript();
+                setFocusAndRender(0); // **載入時 Focus 初始步驟**
             } else {
                 statusMessage.textContent = '❌ 檔案內容格式無效或已損壞。';
             }
@@ -1225,40 +1271,40 @@ function renderScript() {
     let dayIndex = 0; // 0 (Day 1, Indigo) 或 1 (Day 2, Pink)
     // ---------------------------------
 
-    // ** 處理插入模式提示與取消按鈕 **
-    const insertStatusPanel = document.getElementById('insert-status-panel');
-    if(insertStatusPanel) insertStatusPanel.innerHTML = ''; // 檢查是否存在後再清空
-
-    if (insertAnchorIndex !== -1) {
-        // 渲染插入模式提示到新的面板中 (包含取消按鈕)
-        if(insertStatusPanel) insertStatusPanel.innerHTML = `
-            <div class="p-3 mb-3 bg-yellow-200 rounded-lg border border-yellow-500 flex justify-between items-center shadow-md">
-                <span class="font-bold text-yellow-800">📌 插入模式中：步驟將插入到 #${insertAnchorIndex} 位置。</span>
-                 <!-- 渲染取消按鈕 -->
-                 <button onclick="clearInsertAnchor()" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 transition duration-150 text-sm">
-                    ❌ 取消插入
-                </button>
-            </div>
-        `;
-    }
-    // ----------------------------------------------------
-
-
     scriptSteps.forEach((step, index) => {
         
-        // 插入錨點 UI (在每個步驟上方插入)
+        // 插入錨點/行內動作面板 UI (在每個步驟上方插入)
         if (index > 0) { // 除了第一個步驟 (0. START) 之外
-            const anchorElement = document.createElement('div');
-            // 修正：移除 opacity-0 和 h-0，只在懸停時改變樣式
-            anchorElement.className = 'insert-anchor transition-all duration-300'; 
-            anchorElement.dataset.index = index;
             
-            anchorElement.onclick = () => { setInsertAnchor(index); }; // 直接設置點擊事件
-            
-            // 修正: 顯示可點擊的文本，懸停時通過 CSS 變成虛線框
-            anchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${index})</span>`;
-            
-            listContainer.appendChild(anchorElement);
+            if (index === insertAnchorIndex) {
+                // RENDER INLINE ACTION PANEL
+                const actionPanel = document.createElement('div');
+                actionPanel.className = 'insert-anchor-panel p-3 my-2 bg-indigo-100 rounded-lg border-2 border-indigo-500 shadow-md';
+                actionPanel.dataset.index = index;
+                actionPanel.innerHTML = `
+                    <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 #${index} 插入動作：</p>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <button onclick="addStep('goto', ${index})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
+                        <button onclick="addStep('activity', ${index})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
+                        <button onclick="addStep('show', ${index})" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">💬 顯示訊息</button>
+                        <button onclick="addStep('dayoff', ${index})" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 font-semibold">🛌 休息過夜</button>
+                    </div>
+                    <button onclick="clearInsertAnchor()" class="w-full mt-3 text-xs text-indigo-700 hover:text-red-600 font-semibold">❌ 取消插入</button>
+                `;
+                listContainer.appendChild(actionPanel);
+
+            } else {
+                // RENDER STANDARD ANCHOR
+                const anchorElement = document.createElement('div');
+                anchorElement.className = 'insert-anchor transition-all duration-300'; 
+                anchorElement.dataset.index = index;
+                
+                // 點擊時，顯示動作選項
+                anchorElement.onclick = () => { setInsertAnchor(index); }; 
+                
+                anchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${index})</span>`;
+                listContainer.appendChild(anchorElement);
+            }
         }
 
         const stepElement = document.createElement('div');
@@ -1266,6 +1312,11 @@ function renderScript() {
         // 步驟元素的基本樣式：圓角、陰影、過渡效果
         stepElement.className = 'p-3 rounded-lg shadow-sm transition-all duration-200 border border-opacity-50'; 
         
+        // **套用 FOCUS 效果**
+        if (index === stepIndexToFocus) {
+             stepElement.classList.add('focused-step');
+        }
+
         let contentHtml = '';
         let stepColor = 'text-gray-700';
         let stepIcon = '🔹';
@@ -1431,13 +1482,41 @@ function renderScript() {
     });
 
     // 最後一個錨點 (在最後一個步驟下方)
-    const finalAnchorElement = document.createElement('div');
-    finalAnchorElement.className = 'insert-anchor my-2 transition-all duration-300';
-    finalAnchorElement.dataset.index = scriptSteps.length;
-    finalAnchorElement.onclick = () => { setInsertAnchor(scriptSteps.length); };
-    // 修正: 顯示可點擊的文本，懸停時通過 CSS 變成虛線框
-    finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${scriptSteps.length})</span>`;
-    listContainer.appendChild(finalAnchorElement);
+    if (scriptSteps.length === insertAnchorIndex) {
+        // RENDER FINAL INLINE ACTION PANEL
+        const actionPanel = document.createElement('div');
+        actionPanel.className = 'insert-anchor-panel p-3 my-2 bg-indigo-100 rounded-lg border-2 border-indigo-500 shadow-md';
+        actionPanel.dataset.index = scriptSteps.length;
+        actionPanel.innerHTML = `
+            <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 #${scriptSteps.length} (末尾) 插入動作：</p>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+                <button onclick="addStep('goto', ${scriptSteps.length})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
+                <button onclick="addStep('activity', ${scriptSteps.length})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
+                <button onclick="addStep('show', ${scriptSteps.length})" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">💬 顯示訊息</button>
+                <button onclick="addStep('dayoff', ${scriptSteps.length})" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 font-semibold">🛌 休息過夜</button>
+            </div>
+            <button onclick="clearInsertAnchor()" class="w-full mt-3 text-xs text-indigo-700 hover:text-red-600 font-semibold">❌ 取消插入</button>
+        `;
+        listContainer.appendChild(actionPanel);
+    } else {
+        // RENDER FINAL STANDARD ANCHOR
+        const finalAnchorElement = document.createElement('div');
+        finalAnchorElement.className = 'insert-anchor my-2 transition-all duration-300';
+        finalAnchorElement.dataset.index = scriptSteps.length;
+        finalAnchorElement.onclick = () => { setInsertAnchor(scriptSteps.length); };
+        finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${scriptSteps.length})</span>`;
+        listContainer.appendChild(finalAnchorElement);
+    }
+    
+    // --- FOCUS SCROLL LOGIC ---
+    if (stepIndexToFocus !== -1) {
+        const focusedElement = document.getElementById(`step-${stepIndexToFocus}`);
+        if (focusedElement) {
+            focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        stepIndexToFocus = -1; // 重設 Focus 狀態
+    }
+    // --------------------------
 
     // 處理 [拉到最下面] 按鈕的顯示/隱藏
     const controlsContainer = document.getElementById('controls');
@@ -1470,27 +1549,11 @@ function renderScript() {
     <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2">🗺️ 旅程劇本設計器</h1>
 
     <!-- 腳本步驟列表 - 這是捲動的內容 -->
+    <!-- 移除了原先的 Action 按鈕面板，讓插入動作改為行內處理 -->
     <div id="script-list" class="space-y-3 flex-grow mb-4">
       <!-- 步驟將在此處渲染 -->
     </div>
     
-    <!-- 動作按鈕 -->
-    <div class="space-y-2 mb-4 p-4 border rounded-lg bg-indigo-50">
-        <p class="font-semibold text-sm text-indigo-700">新增動作：</p>
-        <div class="grid grid-cols-2 gap-2 text-sm">
-            <button onclick="addStep('goto')" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150">移動 (Goto)</button>
-            <button onclick="addStep('activity')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150">活動/狀態 (Activity)</button>
-            <button onclick="addStep('show')" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150">顯示訊息 (Show)</button>
-            <button onclick="addStep('dayoff')" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150">休息過夜</button>
-        </div>
-        <p class="text-xs text-indigo-500 mt-2 font-semibold">點擊步驟間的虛線框以設定插入點。</p>
-    </div>
-    
-    <!-- 新增：插入模式狀態與取消按鈕 (位於功能叢中) -->
-    <div id="insert-status-panel" class="mb-4">
-        <!-- 內容由 renderScript 渲染 (包含取消按鈕) -->
-    </div>
-
     <!-- 播放控制按鈕 -->
     <div class="flex space-x-2 mb-2">
         <!-- 暫停/繼續按鈕 -->
