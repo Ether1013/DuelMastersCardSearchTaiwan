@@ -83,19 +83,11 @@
       pointer-events: none; /* 讓點擊穿透到 anchor */
   }
 
-  /* 新增：編輯時的 Focus 效果 (橙色光環) */
-  .focused-step {
-      /* 使用自定義屬性來實現多重陰影和邊框的強烈高亮 */
-      --tw-ring-color: #f97316; /* 橙色 500 */
-      --tw-shadow-color: #f97316;
-      box-shadow: 0 0 0 3px var(--tw-ring-color), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      border: 1px solid #f97316 !important;
-  }
-  /* 步驟卡片基礎樣式，允許點擊 */
+  /* 步驟卡片基礎樣式，允許點擊 (移除 Focus 相關樣式) */
   .step-card {
       transition: background-color 0.1s, box-shadow 0.2s;
   }
-  .step-card:not(.focused-step):hover {
+  .step-card:hover {
       background-color: #f3f4f6; /* bg-gray-100 */
   }
 
@@ -174,7 +166,7 @@ let currentWaitResolve = null;
 let clearScriptTimeoutId = null; 
 let hoverTimeoutId = null; // 用於錨點提示的計時器
 let insertAnchorIndex = -1; // 儲存要插入步驟的索引位置 (-1 表示沒有錨點)
-let stepIndexToFocus = -1; // **儲存需要 Focus 的步驟索引**
+// 移除了 stepIndexToFocus
 
 
 // 初始劇本
@@ -375,41 +367,8 @@ function checkAndLoadScriptFromURL() {
 
 
 // =================================================================
-// 5. 劇本編輯/操作輔助函數
+// 5. 劇本編輯/操作輔助函數 (Focus 邏輯已移除)
 // =================================================================
-
-/**
- * 核心 Focus 函式：手動應用 Focus 樣式並滾動，不觸發 DOM 重建。
- * @param {number} index - 要 Focus 的步驟索引
- */
-function focusStepInteractive(index) {
-    // 1. 清除所有舊的視覺 Focus 效果
-    document.querySelectorAll('.focused-step').forEach(el => el.classList.remove('focused-step'));
-
-    const targetIndex = parseInt(index, 10);
-    
-    // 2. 應用新的視覺 Focus 效果 & 滾動
-    const focusedElement = document.getElementById(`step-${targetIndex}`);
-    if (focusedElement) {
-        focusedElement.classList.add('focused-step');
-        
-        // 3. 滾動到元素
-        focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    
-    // 4. 更新狀態變數 (用於結構變更後的渲染)
-    stepIndexToFocus = targetIndex;
-}
-
-/**
- * 設定 Focus 狀態並觸發完整的 DOM 重建和滾動 (用於結構變更)
- * @param {number} index - 要 Focus 的步驟索引
- */
-function setFocusAndRender(index) {
-    stepIndexToFocus = index;
-    renderScript();
-}
-
 
 /**
  * 輔助函式：找到上一個設定位置的步驟的位置
@@ -435,8 +394,8 @@ function deleteStep(index) { // <-- HTML onclick 調用
     if (index === 0) return; // 保護第一個步驟
     scriptSteps.splice(index, 1);
     
-    // Focus 刪除點的前一個步驟，並觸發重建
-    setFocusAndRender(Math.max(0, index - 1));
+    // 移除 Focus 邏輯，僅重新渲染
+    renderScript(); 
     saveScriptToLocalStorage(); // <--- 儲存
 }
 
@@ -451,8 +410,8 @@ function moveStep(index, direction) { // <-- HTML onclick 調用
     // 進行交換
     [scriptSteps[index], scriptSteps[newIndex]] = [scriptSteps[newIndex], scriptSteps[index]];
     
-    // Focus 移動後的步驟，並觸發重建
-    setFocusAndRender(newIndex);
+    // 移除 Focus 邏輯，僅重新渲染
+    renderScript();
     saveScriptToLocalStorage(); // <--- 儲存
 }
 
@@ -460,7 +419,6 @@ function moveStep(index, direction) { // <-- HTML onclick 調用
  * 更新步驟資料
  */
 function updateStep(index, field, value) { // <-- HTML onchange 調用
-    // **注意：此處不再呼叫 renderScript，只更新 data 和儲存**
     
     let needsRender = false; // 追蹤是否需要完整重建
 
@@ -506,20 +464,20 @@ function updateStep(index, field, value) { // <-- HTML onchange 調用
     
     saveScriptToLocalStorage(); // <--- 儲存
 
-    // 如果是 icon 改變，需要重建以更新步驟圖標
-    if (field === 'icon') {
+    // 如果是 icon 改變或 Dayoff 相關，需要重建以更新步驟圖標和日數
+    if (field === 'icon' || scriptSteps[index].type === 'dayoff') {
         needsRender = true;
     }
 
     if (needsRender) {
-         setFocusAndRender(index); // 結構改變，重建並 Focus
-    } else {
-         focusStepInteractive(index); // 資料改變，只需更新視覺 Focus (避免重建)
+         // 移除 Focus 邏輯，僅重新渲染
+         renderScript(); 
     }
+    // 對於簡單的資料改變 (非結構性或非視覺相關)，無需任何額外操作
 }
 
 /**
- * 新增步驟到劇本 (已修改為可選的 targetIndex 參數)
+ * 新增步驟到劇本
  * @param {string} type - 步驟類型
  * @param {number} targetIndex - 要插入的索引位置 (可選，預設 -1 表示附加到末尾)
  */
@@ -556,12 +514,12 @@ function addStep(type, targetIndex = -1) { // <-- HTML onclick 調用
 
     // 處理插入後的狀態和滾動
     if (targetIndex !== -1) {
-        // 這是行內插入
-        clearInsertAnchor(); // 清除錨點狀態
+        // 這是行內插入，必須清除錨點狀態
+        insertAnchorIndex = -1; // 直接清除，避免多餘的 clearInsertAnchor() 渲染
     } 
 
-    // 結構變更，必須重建並 Focus
-    setFocusAndRender(insertionIndex);
+    // 移除 Focus 邏輯，僅重新渲染
+    renderScript();
     saveScriptToLocalStorage(); // <--- 儲存
 }
 
@@ -580,7 +538,8 @@ function setInsertAnchor(index) {
     setTimeout(() => {
         const anchorElement = document.querySelector(`.insert-anchor-panel[data-index="${targetIndex}"]`);
         if (anchorElement) {
-            anchorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // 使用 scrollIntoView 確保 action panel 可見
+            anchorElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
         }
     }, 50);
 }
@@ -726,8 +685,8 @@ function stopScript() {
     document.getElementById('pause-resume-button').querySelector('span').textContent = '⏸️ 暫停/繼續';
     document.getElementById('status-message').textContent = '◼️ 播放已停止。';
     
-    // 清除所有步驟高亮
-    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md', 'focused-step'));
+    // 清除所有步驟高亮 (focused-step 已移除)
+    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
 }
 
 
@@ -988,8 +947,8 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     playButton.classList.add('bg-gray-400');
     statusMessage.textContent = '▶️ 劇本開始執行...';
     
-    // 清除所有步驟高亮
-    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md', 'focused-step'));
+    // 清除所有步驟高亮 (focused-step 已移除)
+    document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
 
     // --- 1. 狀態重建：確保標記從正確的位置和圖標開始 ---
     let currentLat = scriptSteps[0].lat;
@@ -1154,7 +1113,7 @@ function clearScript() {
     ];
 
     clearInsertAnchor(); // 清除錨點狀態
-    setFocusAndRender(0); // 結構變更，重建並 Focus 初始步驟
+    renderScript(); // 重新渲染
     saveScriptToLocalStorage();
 
     // 恢復按鈕和狀態訊息
@@ -1290,7 +1249,7 @@ function handleFileUpload(event) {
             if (result) {
                 statusMessage.textContent = '✅ 劇本檔案已成功載入！';
                 saveScriptToLocalStorage();
-                setFocusAndRender(0); // 結構變更，重建並 Focus 初始步驟
+                renderScript(); // 重新渲染
             } else {
                 statusMessage.textContent = '❌ 檔案內容格式無效或已損壞。';
             }
@@ -1318,24 +1277,42 @@ function renderScript() {
     const listContainer = document.getElementById('script-list');
     listContainer.innerHTML = '';
     
+    // --- 日數與行程計數邏輯 (Day-Step Numbering) ---
+    let currentDay = 1;         // 當前日數
+    let dayStepCount = 0;       // 當前日數中的行程計數 (從 1 開始)
+    
     // --- 顏色交替邏輯的變數 (日分組) ---
     const DAY_COLORS = ['bg-indigo-100', 'bg-pink-100']; 
     const BORDER_COLORS = ['border-indigo-400', 'border-pink-400'];
-    let dayIndex = 0; // 0 (Day 1, Indigo) 或 1 (Day 2, Pink)
+    let dayIndex = 0; // 0 或 1，用於顏色交替
     // ---------------------------------
 
     scriptSteps.forEach((step, index) => {
         
-        // 插入錨點/行內動作面板 UI (在每個步驟上方插入)
-        if (index > 0) { // 除了第一個步驟 (0. START) 之外
+        let displayIndex; // 顯示的 Day-Step 字串
+
+        
+        // --- 錨點渲染 (在當前步驟上方) ---
+        if (index > 0) {
+            // 計算插入點的 Day-Step 號碼 (這是步驟 X 插入後應有的號碼)
+            let anchorDay = currentDay;
+            let anchorStep = dayStepCount + 1;
             
+            if (scriptSteps[index - 1].type === 'dayoff') {
+                anchorDay++;
+                anchorStep = 1;
+            }
+            
+            const anchorDisplay = `${anchorDay}-${anchorStep}`;
+
+
             if (index === insertAnchorIndex) {
                 // RENDER INLINE ACTION PANEL
                 const actionPanel = document.createElement('div');
                 actionPanel.className = 'insert-anchor-panel p-3 my-2 bg-indigo-100 rounded-lg border-2 border-indigo-500 shadow-md';
                 actionPanel.dataset.index = index;
                 actionPanel.innerHTML = `
-                    <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 #${index} 插入動作：</p>
+                    <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 ${anchorDisplay} 插入動作：</p>
                     <div class="grid grid-cols-2 gap-2 text-sm">
                         <button onclick="addStep('goto', ${index})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
                         <button onclick="addStep('activity', ${index})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
@@ -1355,23 +1332,39 @@ function renderScript() {
                 // 點擊時，顯示動作選項
                 anchorElement.onclick = () => { setInsertAnchor(index); }; 
                 
-                anchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${index})</span>`;
+                anchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (${anchorDisplay})</span>`;
                 listContainer.appendChild(anchorElement);
             }
         }
+
+        
+        // --- 步驟號碼與日數計數更新 ---
+        if (index === 0) {
+            displayIndex = '0'; // 起始步驟為 0
+        } else {
+            // 根據前一步驟類型更新 Day 和 Step Count
+            if (scriptSteps[index - 1].type === 'dayoff') {
+                currentDay++;
+                dayStepCount = 1;
+            } else {
+                dayStepCount++;
+            }
+            displayIndex = `${currentDay}-${dayStepCount}`;
+        }
+        
+        // --- 步驟顏色邏輯 (必須使用前一步驟類型) ---
+        if (index > 0 && scriptSteps[index - 1].type === 'dayoff') {
+            dayIndex = 1 - dayIndex; // 翻轉 0 <-> 1
+        }
+
 
         const stepElement = document.createElement('div');
         stepElement.id = `step-${index}`;
         // 步驟元素的基本樣式：圓角、陰影、過渡效果
         stepElement.className = 'p-3 rounded-lg shadow-sm transition-all duration-200 border border-opacity-50 step-card'; 
         
-        // **套用 Focus 效果**
-        if (index === stepIndexToFocus) {
-             stepElement.classList.add('focused-step');
-        }
-
-        // 移除原有的 stepElement.onclick 邏輯，避免與 onfocus 衝突
-
+        // 移除 Focus 樣式應用邏輯
+        
         let contentHtml = '';
         let stepColor = 'text-gray-700';
         let stepIcon = '🔹';
@@ -1382,13 +1375,7 @@ function renderScript() {
         const startButtonTitle = isStartStep ? '從頭撥放' : '從這邊開始撥放';
 
         
-        // --- 應用顏色邏輯 (修訂：日分組) ---
-        // 1. 檢查是否遇到 Dayoff，如果是，則翻轉日數 (從上一步驟來看)
-        if (index > 0 && scriptSteps[index - 1].type === 'dayoff') {
-            dayIndex = 1 - dayIndex; // 翻轉 0 <-> 1
-        }
-        
-        // 2. 應用當前日的基礎色
+        // 應用當前日的基礎色 (除了 Dayoff 步驟)
         if (step.type === 'dayoff') {
             // Dayoff 步驟：使用中性色突顯，並保留粉色的文字顏色
             stepElement.classList.add('bg-gray-200', 'border-gray-400');
@@ -1405,7 +1392,7 @@ function renderScript() {
             stepElement.classList.add('border-indigo-500');
             stepColor = 'text-purple-700';
             // Start 步驟不需要 hover 顏色，因為它不能被刪除/移動
-            stepElement.classList.remove('step-card:not(.focused-step):hover');
+            stepElement.classList.remove('step-card:hover');
         }
         // ------------------
 
@@ -1422,13 +1409,12 @@ function renderScript() {
                     <p class="text-xs text-red-500 font-semibold mb-2">⚠️ 這是旅程的**強制**初始點，不能刪除或移動。</p>
                     <span class="font-bold">初始位置</span><br>
                     <small>GPS 座標 (緯度, 經度, 例如: 26.2173, 127.6924):</small>
-                    <!-- 關鍵變動：新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" 
                            class="w-full text-sm border rounded px-2 mt-1" 
                            placeholder="緯度, 經度" 
                            value="${startCoordValue}" 
-                           onchange="updateStep(${index}, 'coords', this.value)"
-                           onfocus="focusStepInteractive(${index})">
+                           onchange="updateStep(${index}, 'coords', this.value)">
                 `;
                 break;
             case 'goto':
@@ -1438,37 +1424,33 @@ function renderScript() {
                 stepIcon = '➡️';
                 contentHtml = `
                     <span class="font-bold">移動到</span>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (ex: 到達牧志站)" value="${step.label || ''}" 
-                        onchange="updateStep(${index}, 'label', this.value)" 
-                        onfocus="focusStepInteractive(${index})">
+                        onchange="updateStep(${index}, 'label', this.value)">
 
                     <small>GPS 座標 (緯度, 經度, 例如: 26.2173, 127.6924):</small>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" 
                            class="w-full text-sm border rounded px-2 mt-1" 
                            placeholder="緯度, 經度" 
                            value="${coordValue}" 
-                           onchange="updateStep(${index}, 'coords', this.value)"
-                           onfocus="focusStepInteractive(${index})">
+                           onchange="updateStep(${index}, 'coords', this.value)">
                     
                     <small class="mt-2 block">移動圖標 (可選):</small>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <select class="w-full text-sm border rounded px-2 mt-1" 
-                        onchange="updateStep(${index}, 'icon', this.value)"
-                        onfocus="focusStepInteractive(${index})">
+                        onchange="updateStep(${index}, 'icon', this.value)">
                         <option value="">(保持不變)</option>
                         ${ICON_NAMES.map(name => `<option value="${name}" ${step.icon === name ? 'selected' : ''}>${name}</option>`).join('')}
                     </select>
                     
                     <small class="mt-2 block">抵達時顯示訊息 (可選):</small>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" 
                            class="w-full text-sm border rounded px-2 mt-1" 
                            placeholder="抵達時彈出訊息 (留空則不顯示)" 
                            value="${step.words || ''}" 
-                           onchange="updateStep(${index}, 'words', this.value)"
-                           onfocus="focusStepInteractive(${index})">
+                           onchange="updateStep(${index}, 'words', this.value)">
                 `;
                 break;
             case 'activity':
@@ -1477,31 +1459,28 @@ function renderScript() {
                 stepIcon = '🏃';
                 contentHtml = `
                     <span class="font-bold">活動/狀態 (變更圖標或等待)</span>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (ex: 正在拍照)" value="${step.label || ''}" 
-                        onchange="updateStep(${index}, 'label', this.value)"
-                        onfocus="focusStepInteractive(${index})">
+                        onchange="updateStep(${index}, 'label', this.value)">
                     
                     <div class="grid grid-cols-2 gap-2 mt-2">
                         <div>
                             <small class="block">圖標 (可選):</small>
-                            <!-- 新增 onfocus 觸發 Focus -->
+                            <!-- 移除 onfocus 觸發 Focus -->
                             <select class="w-full text-sm border rounded px-2 mt-1" 
-                                onchange="updateStep(${index}, 'icon', this.value)"
-                                onfocus="focusStepInteractive(${index})">
+                                onchange="updateStep(${index}, 'icon', this.value)">
                                 <option value="">(保持不變)</option>
                                 ${ICON_NAMES.map(name => `<option value="${name}" ${step.icon === name ? 'selected' : ''}>${name}</option>`).join('')}
                             </select>
                         </div>
                         <div>
                             <small class="block">持續時間 (秒數, 可選):</small>
-                            <!-- 新增 onfocus 觸發 Focus -->
+                            <!-- 移除 onfocus 觸發 Focus -->
                             <input type="number" 
                                    class="w-full text-sm border rounded px-2 mt-1" 
                                    placeholder="0" 
                                    value="${step.sec || ''}" 
-                                   onchange="updateStep(${index}, 'sec', parseFloat(this.value))"
-                                   onfocus="focusStepInteractive(${index})">
+                                   onchange="updateStep(${index}, 'sec', parseFloat(this.value))">
                         </div>
                     </div>
                     <p class="text-xs text-gray-500 mt-2">若秒數為 0 或留空，則只執行圖標變更。</p>
@@ -1512,14 +1491,12 @@ function renderScript() {
                 stepIcon = '💬';
                 contentHtml = `
                     <span class="font-bold">顯示訊息</span>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (ex: 顯示：牧志站)" value="${step.label || ''}" 
-                        onchange="updateStep(${index}, 'label', this.value)"
-                        onfocus="focusStepInteractive(${index})">
-                    <!-- 新增 onfocus 觸發 Focus -->
+                        onchange="updateStep(${index}, 'label', this.value)">
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="訊息內容" value="${step.words || ''}" 
-                        onchange="updateStep(${index}, 'words', this.value)"
-                        onfocus="focusStepInteractive(${index})">
+                        onchange="updateStep(${index}, 'words', this.value)">
                 `;
                 break;
             case 'dayoff':
@@ -1528,16 +1505,14 @@ function renderScript() {
                 contentHtml = `
                     <span class="font-bold">休息過夜</span>
                     <p class="text-xs text-gray-500 mt-1 mb-2">執行 setIcon='sleep' 並播放夜間動畫。</p>
-                    <!-- 新增 onfocus 觸發 Focus -->
+                    <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (ex: 入住休息)" value="${step.label || ''}" 
-                        onchange="updateStep(${index}, 'label', this.value)"
-                        onfocus="focusStepInteractive(${index})">
+                        onchange="updateStep(${index}, 'label', this.value)">
 
                     <small>持續時間 (秒數): 
-                        <!-- 新增 onfocus 觸發 Focus -->
+                        <!-- 移除 onfocus 觸發 Focus -->
                         <input type="number" class="w-20 text-xs border rounded px-1" value="${step.sec}" 
-                            onchange="updateStep(${index}, 'sec', parseFloat(this.value))"
-                            onfocus="focusStepInteractive(${index})">
+                            onchange="updateStep(${index}, 'sec', parseFloat(this.value))">
                     </small>
                 `;
                 break;
@@ -1546,7 +1521,7 @@ function renderScript() {
         stepElement.innerHTML = `
             <div class="flex justify-between items-start mb-1">
                 <div class="flex items-center">
-                    <span class="${stepColor} font-semibold">${stepIcon} ${index}. ${step.type.toUpperCase()}</span>
+                    <span class="${stepColor} font-semibold">${stepIcon} ${displayIndex}. ${step.type.toUpperCase()}</span>
                     <!-- 變更為圖示按鈕 -->
                     <button class="ml-2 text-base text-indigo-500 hover:text-indigo-700 transition"
                             onclick="${buttonAction}"
@@ -1575,6 +1550,28 @@ function renderScript() {
         listContainer.appendChild(stepElement);
     });
 
+    // --- FINAL ANCHOR RENDERING ---
+    
+    // 重新計算最後一個錨點的 Day-Step 號碼
+    let finalAnchorDay = currentDay;
+    let finalAnchorStep = dayStepCount;
+    
+    if (scriptSteps.length > 0) {
+        const lastStep = scriptSteps[scriptSteps.length - 1];
+        if (lastStep.type === 'dayoff') {
+            finalAnchorDay++;
+            finalAnchorStep = 1;
+        } else {
+            finalAnchorStep++;
+        }
+    } else {
+        // 僅包含起始步驟時 (Day 1, Step 1)
+        finalAnchorDay = 1;
+        finalAnchorStep = 1;
+    }
+    const finalAnchorDisplay = `${finalAnchorDay}-${finalAnchorStep}`;
+
+
     // 最後一個錨點 (在最後一個步驟下方)
     if (scriptSteps.length === insertAnchorIndex) {
         // RENDER FINAL INLINE ACTION PANEL
@@ -1582,7 +1579,7 @@ function renderScript() {
         actionPanel.className = 'insert-anchor-panel p-3 my-2 bg-indigo-100 rounded-lg border-2 border-indigo-500 shadow-md';
         actionPanel.dataset.index = scriptSteps.length;
         actionPanel.innerHTML = `
-            <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 #${scriptSteps.length} (末尾) 插入動作：</p>
+            <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 ${finalAnchorDisplay} (末尾) 插入動作：</p>
             <div class="grid grid-cols-2 gap-2 text-sm">
                 <button onclick="addStep('goto', ${scriptSteps.length})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
                 <button onclick="addStep('activity', ${scriptSteps.length})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
@@ -1598,23 +1595,12 @@ function renderScript() {
         finalAnchorElement.className = 'insert-anchor my-2 transition-all duration-300';
         finalAnchorElement.dataset.index = scriptSteps.length;
         finalAnchorElement.onclick = () => { setInsertAnchor(scriptSteps.length); };
-        finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${scriptSteps.length})</span>`;
+        finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (${finalAnchorDisplay})</span>`;
         listContainer.appendChild(finalAnchorElement);
     }
     
-    // --- SCROLL TO FOCUS POINT (僅用於結構變更後) ---
-    // 此邏輯在 renderScript 結束後執行，用於處理 add/delete/move 等結構變更
-    setTimeout(() => {
-        if (stepIndexToFocus !== -1) {
-            const focusedElement = document.getElementById(`step-${stepIndexToFocus}`);
-            if (focusedElement) {
-                focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-        stepIndexToFocus = -1; // 清除狀態
-    }, 0);
-    // --------------------------------------------------
-
+    // 移除所有的 Focus/Scroll 邏輯
+    
     // 處理 [拉到最下面] 按鈕的顯示/隱藏
     const controlsContainer = document.getElementById('controls');
     const scrollToBottomContainer = document.getElementById('scroll-to-bottom-container');
