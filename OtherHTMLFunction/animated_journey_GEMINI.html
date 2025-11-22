@@ -98,22 +98,6 @@
         line-height: 1.25rem; 
         padding: 0.75rem; /* 邊距縮小 */
     }
-
-    /* 修正 2: 行動裝置下，匯入模態框只覆蓋下半部 (controls 區) */
-    #import-modal {
-        top: 50%;       /* 從螢幕中間開始 */
-        height: 50%;    /* 只佔據下半部 */
-        bottom: 0;
-        /* 取消 flex items-center justify-center，讓內容從頂部開始 */
-        align-items: flex-start;
-        justify-content: flex-start;
-        padding-top: 1rem; /* 模擬 p-4 */
-    }
-    #import-modal-content {
-        margin-top: 0;
-        max-height: 100%;
-        overflow-y: auto;
-    }
   }
 
   /* 修正 1: 讓拉到底部按鈕在 controls 容器內正常浮動 */
@@ -132,6 +116,7 @@
 // =================================================================
 const STORAGE_KEY = 'animatedJourneyScript';
 const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
+const FILE_EXTENSION = '.trip'; // 新增：定義匯出檔案副檔名
 const iconSize = 75; // 桌面預設大小
 const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
 const icons = {
@@ -168,30 +153,18 @@ let currentWaitRemainingTime = 0;
 let currentWaitStartTime = 0;
 let currentWaitResolve = null; 
 let clearScriptTimeoutId = null; 
-let hoverTimeoutId = null; // 新增：用於錨點提示的計時器
-let insertAnchorIndex = -1; // 新增：儲存要插入步驟的索引位置 (-1 表示沒有錨點)
+let hoverTimeoutId = null; // 用於錨點提示的計時器
+let insertAnchorIndex = -1; // 儲存要插入步驟的索引位置 (-1 表示沒有錨點)
 
 
 // 初始劇本
 let scriptSteps = [
     START_STEP_DEFINITION,
-    { type: 'goto', lat: 26.217316099459758, lng: 127.69247463281796, label: '搭乘單軌到牧志站', icon: 'train', words: '抵達牧志站' },
-    { type: 'goto', lat: 26.216668604473377, lng: 127.69066831093619, label: '步行到山羊料理', icon: 'walk' },
-    { type: 'activity', icon: 'dine', sec: 0, label: '吃午餐' }, 
-    { type: 'show', words: '山羊料理さかえ', label: '顯示：山羊料理さかえ' }, 
-    { type: 'activity', sec: 3, icon: '', label: '等待 3 秒 (用餐)' },
-    { type: 'goto', lat: 26.212824672458485, lng: 127.6891822419568, label: '步行到飯店入住', icon: 'walk', words: 'CABIN & HOTEL CONSTANT NAHA' },
-    { type: 'dayoff', sec: 3, label: '入住休息 (過夜效果)' }, 
-    { type: 'goto', lat: 26.21139855196967, lng: 127.68811493682566, label: '步行到公車站牌', icon: 'walk', words: '公車31站牌' },
-    { type: 'goto', lat: 26.210618356446393, lng: 127.67917746391598, label: '搭乘公車到下車點', icon: 'bus', words: '下車' },
-    { type: 'goto', lat: 26.213092860874845, lng: 127.67687857621559, label: '步行到機車租賃', icon: 'walk', words: '機車租賃GOYA' },
-    { type: 'goto', lat: 26.332465967977257, lng: 127.79849563345437, label: '騎車到新世紀飯店', icon: 'motorcycle', words: '新世紀飯店' },
-    { type: 'activity', sec: 3, icon: '', label: '等待 3 秒' },
 ];
 
 
 // =================================================================
-// 3. Local Storage 儲存與載入邏輯 (已提前定義，修復 ReferenceError)
+// 3. Local Storage 儲存與載入邏輯
 // =================================================================
 
 /**
@@ -269,7 +242,7 @@ function loadImportedData(rawJsonString) {
     function uncompactScript(compactArray) {
         const fullScript = [];
         
-        // ** 修正: 外層迴圈應遍歷每一個步驟陣列 **
+        // 外層迴圈應遍歷每一個步驟陣列
         for (const compactStep of compactArray) {
             let i = 0; // 內部索引
             
@@ -287,7 +260,6 @@ function loadImportedData(rawJsonString) {
                     step.type = 'start';
                     step.lat = compactStep[i++];
                     step.lng = compactStep[i++];
-                    // Label is optional for start step in export, but we keep it simple here
                     step.label = '那霸機場 (初始位置)'; // Use default label for start for simplicity
                     // Skip label if present
                     if (typeof compactStep[i] === 'string') {
@@ -323,7 +295,7 @@ function loadImportedData(rawJsonString) {
                     break;
                 default:
                     console.warn('Unknown compact step type:', typeChar);
-                    return null; // 停止解析 (這是導致錯誤訊息的原因)
+                    return null; // 停止解析
             }
             fullScript.push(step);
         }
@@ -356,7 +328,7 @@ function loadImportedData(rawJsonString) {
 }
 
 /**
- * 檢查並從 URL 參數或 Local Storage 載入劇本。
+ * 檢查並從 Local Storage 載入劇本。
  */
 function checkAndLoadScriptFromURL() {
     // 1. 從 Local Storage 載入
@@ -383,7 +355,7 @@ function checkAndLoadScriptFromURL() {
 
 
 // =================================================================
-// 5. 劇本編輯/操作輔助函數 (確保在渲染和按鈕調用前定義)
+// 5. 劇本編輯/操作輔助函數
 // =================================================================
 
 /**
@@ -502,10 +474,8 @@ function addStep(type) { // <-- HTML onclick 調用
     // ** 插入邏輯：檢查是否有錨點 **
     if (insertAnchorIndex !== -1) {
         scriptSteps.splice(insertAnchorIndex, 0, newStep);
-        // 插入後清除錨點狀態，並自動捲動到新插入的步驟附近
+        // 插入後清除錨點狀態
         clearInsertAnchor(); 
-        // Note: 渲染後會自動清除所有錨點提示
-        // 這裡不需要額外捲動，因為 renderScript 會觸發 render，我們只需要確保狀態被清除
     } else {
         // 預設行為：添加到末尾
         scriptSteps.push(newStep);
@@ -554,23 +524,19 @@ function setIcon(name){ marker.setIcon(icons[name]); }
 function show(words){
   if(popup) mapInstance.closePopup(popup);
   
-  // *** 修正方案：動態調整 popupAnchor ***
+  // 動態調整 popupAnchor
   const isMobileVertical = window.innerWidth <= 767;
   let anchor = [0, -iconSize / 2]; // 預設 (往上彈)
   
   if (isMobileVertical) {
-      // 在手機縱向模式下，如果地圖點靠近頂部（例如緯度高，往北走），則向下彈
-      // 簡單判斷：如果地圖上的標記在容器的上半部分 (假設 y < 50%)
       const mapContainerRect = document.getElementById('map').getBoundingClientRect();
       const markerPoint = mapInstance.latLngToContainerPoint(marker.getLatLng());
       
       // 如果標記的 Y 座標在地圖容器的 40% 高度以內，就向下彈出
       if (markerPoint.y < mapContainerRect.height * 0.4) {
-           // 強制往下彈出 (Y 座標為正值 + 額外緩衝 15px)
-           // 額外增加 10 像素緩衝，確保完全避開裁切
+           // 強制往下彈出 (Y 座標為正值 + 額外緩衝 25px)
            anchor = [0, iconSize / 2 + 25]; 
       }
-      
   }
   
   popup = L.popup({
@@ -608,7 +574,7 @@ function pauseToggle() { // <-- HTML onclick 調用
     isPaused = !isPaused;
     btn.title = isPaused ? '繼續播放' : '暫停播放';
     
-    // 根據狀態更新按鈕文字 (新：包含文字說明)
+    // 根據狀態更新按鈕文字
     btn.querySelector('span').textContent = isPaused ? '▶️ 繼續播放' : '⏸️ 暫停播放';
     
     // Resume Logic: 從暫停切換到繼續
@@ -636,7 +602,7 @@ function pauseToggle() { // <-- HTML onclick 調用
 }
 
 /**
- * 停止播放 (新增功能)
+ * 停止播放
  */
 function stopScript() {
     if (!isScriptRunning) return;
@@ -695,7 +661,7 @@ function animateNight(sec) {
         // 設定 transition duration
         overlay.style.transitionDuration = `${fadeDuration}ms`;
         
-        // **修正：強制瀏覽器重繪 (Reflow)，確保 duration 設定生效，防止動畫被跳過**
+        // 強制瀏覽器重繪 (Reflow)
         overlay.offsetHeight; 
 
         // --- 1. 變暗 (Fade In) ---
@@ -706,7 +672,6 @@ function animateNight(sec) {
         await getPausePromise(); 
 
         // --- 2. 保持黑暗 (Dark Hold) ---
-        // 確保 holdDuration 至少為 0.01s
         const holdDuration = Math.max(0.01, sec - (2 * fadeDuration) / 1000); 
         await wait(holdDuration);
         await getPausePromise(); 
@@ -734,8 +699,9 @@ function goto(gps){
     polyline=L.polyline([startPos,gps],{color:'blue',opacity:0.6, weight: 5}).addTo(mapInstance);
     const bounds=L.latLngBounds([startPos,gps]);
     
-    // **修正：在縮放時加入 padding 緩衝，確保起訖點不會貼邊**
-    // 80px 緩衝在桌機和手機上都能提供良好的邊距
+    const MAX_DURATION = 4000; // 最長移動時間 4 秒
+    
+    // 在縮放時加入 padding 緩衝，確保起訖點不會貼邊
     mapInstance.flyToBounds(bounds, {duration: 1.5, padding: [80, 80]}); 
     
     // 等待地圖平移後開始標記動畫
@@ -745,7 +711,6 @@ function goto(gps){
 
       const dist=distance([startPos.lat,startPos.lng],gps); // 距離 (公尺)
       let duration; // 動畫時長 (毫秒)
-      const MAX_DURATION = 6000; // 最長時長 6 秒 (毫秒)
       
       const iconName=Object.keys(icons).find(k=>icons[k]===marker.options.icon);
       let speed; // 速度 (m/s)
@@ -753,14 +718,14 @@ function goto(gps){
       // 根據圖標名稱設定速度
       if (iconName === 'walk' || iconName === 'dine' || iconName === 'view' || iconName === 'shopping') { 
         speed = 100; // 步行和靜態動作速度
-      } else if (iconName === 'bus' || iconName === 'car' || iconName === 'airplane') { // 新增 airplane
+      } else if (iconName === 'bus' || iconName === 'car' || iconName === 'airplane') {
         speed = 400; // 調整為 400 m/s
       } else {
         speed = 700; // 預設速度 (火車/機車)
       }
       
       duration = dist / speed * 1000;
-      duration = Math.min(duration, MAX_DURATION); // 強制設定最長時長為 6 秒
+      duration = Math.min(duration, MAX_DURATION); // 強制設定最長時長為 4 秒
 
       let startTime=null;
 
@@ -941,42 +906,6 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     runSteps();
 }
 
-
-/**
- * 全域鍵盤事件處理函式 
- */
-function handleKeydown(event) {
-    const modal = document.getElementById('import-modal');
-    const importTextarea = document.getElementById('import-data-textarea');
-    
-    // 只有在模態框顯示時才處理鍵盤事件
-    if (!modal || modal.classList.contains('hidden')) { // 檢查 modal 是否存在且是否隱藏
-        return;
-    }
-    
-    // 阻止事件冒泡，避免影響其他輸入框
-    event.stopPropagation();
-    
-    switch (event.key) {
-        case 'Escape':
-            closeImportModal();
-            break;
-        case 'Enter':
-            // 只有當焦點不在 textarea 或按了 shift 鍵時，才允許換行
-            // 否則，執行確認
-            if (document.activeElement === importTextarea && event.shiftKey) {
-                 // 按下 Shift + Enter 允許換行
-                 return;
-            } else if (document.activeElement === importTextarea && !event.shiftKey) {
-                // 在 textarea 內，單獨按 Enter，執行確認
-                event.preventDefault(); 
-                handleImportConfirmation();
-            }
-            // 如果焦點在其他地方 (例如確認按鈕)，單按 Enter 觸發確認 (handleImportConfirmation())
-            break;
-    }
-}
-
 /**
  * 提示並執行清除劇本動作 (兩步驟確認)
  */
@@ -1038,7 +967,7 @@ function clearScript() {
 
 
 /**
- * 4. 捲動腳本列表到最底部
+ * 捲動腳本列表到最底部
  */
 function scrollToBottom() { // <-- HTML onclick 調用
     const controlsContainer = document.getElementById('controls');
@@ -1048,92 +977,10 @@ function scrollToBottom() { // <-- HTML onclick 調用
 
 
 /**
- * 2. 顯示自訂匯入模態框 (取代原生 prompt)
- */
-function showImportModal() { // <-- HTML onclick 調用
-    const modal = document.getElementById('import-modal');
-    const modalContent = document.getElementById('import-modal-content');
-    const importTextarea = document.getElementById('import-data-textarea');
-    
-    // 清除上次的貼上內容
-    importTextarea.value = '';
-    
-    // 顯示模態框
-    modal.classList.remove('hidden');
-    // 讓 textarea 取得焦點 (啟用 Enter 提交)
-    importTextarea.focus(); 
-    
-    // 觸發過渡動畫
-    setTimeout(() => {
-        modalContent.classList.remove('scale-95', 'opacity-0');
-        modalContent.classList.add('scale-100', 'opacity-100');
-    }, 10);
-
-    // 清除狀態訊息
-    document.getElementById('status-message').textContent = '等待貼上數據...';
-}
-
-/**
- * 關閉自訂匯入模態框
- */
-function closeImportModal() { // <-- HTML onclick 調用
-    const modal = document.getElementById('import-modal');
-    const modalContent = document.getElementById('import-modal-content');
-
-    // 觸發退出動畫
-    modalContent.classList.remove('scale-100', 'opacity-100');
-    modalContent.classList.add('scale-95', 'opacity-0');
-
-    // 隱藏模態框
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        document.getElementById('status-message').textContent = '準備就緒';
-    }, 300); // 配合 CSS transition 300ms
-}
-
-
-/**
- * 3. 處理模態框中的確認匯入按鈕點擊
- */
-function handleImportConfirmation() { // <-- HTML onclick 調用
-    const dataString = document.getElementById('import-data-textarea').value;
-    const statusMessage = document.getElementById('status-message');
-
-    if (dataString.trim() === "") {
-        statusMessage.textContent = '⚠️ 請貼入數據字串。';
-        return;
-    }
-    
-    // 執行匯入邏輯
-    try {
-        // ** 關鍵修正：先進行 URI 解碼 **
-        const rawJsonString = decodeURIComponent(dataString);
-        
-        const result = loadImportedData(rawJsonString);
-        if (result) {
-            statusMessage.textContent = '✅ 劇本數據已成功貼上並載入！';
-            saveScriptToLocalStorage(); // 載入成功後儲存到 Local Storage
-            renderScript();
-            closeImportModal();
-        } else {
-            statusMessage.textContent = '❌ 貼上的數據格式無效或已損壞。';
-        }
-    } catch (e) {
-        statusMessage.textContent = '❌ 貼上的數據解析失敗，請檢查格式。';
-        console.error('Import failed:', e);
-    }
-}
-
-
-/**
- * 匯出劇本：將優化後的 JSON 字串複製到剪貼簿。
+ * 匯出劇本：將優化後的 JSON 字串生成為檔案並下載。
  */
 async function exportScript() { // <-- HTML onclick 調用
     const statusMessage = document.getElementById('status-message');
-    // 移除手動複製提示 (如果存在)
-    const p = document.getElementById('manual-copy-prompt');
-    if (p) p.remove();
-
     let dataString = ''; 
     
     try {
@@ -1169,7 +1016,7 @@ async function exportScript() { // <-- HTML onclick 調用
         // 2. JSON.stringify 轉換為字串
         const rawJsonString = JSON.stringify(compactScript);
         
-        // ** 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸 **
+        // 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸
         dataString = encodeURIComponent(rawJsonString);
         
     } catch (error) {
@@ -1178,41 +1025,85 @@ async function exportScript() { // <-- HTML onclick 調用
         return; 
     }
     
-    // --- 4. 複製到剪貼簿 (URI 編碼後的數據字串) ---
+    // --- 4. 下載為 .trip 檔案 ---
     try {
-        await navigator.clipboard.writeText(dataString);
+        // 創建 Blob，MIME type 設為 text/plain
+        const blob = new Blob([dataString], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        a.href = url;
+        a.download = `journey_script${FILE_EXTENSION}`; // 使用新副檔名 .trip
+        document.body.appendChild(a);
+        a.click();
+        
+        // 清理
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-        const p = document.getElementById('manual-copy-prompt');
-        if (p) p.remove();
-
-        statusMessage.textContent = '✅ 數據已複製！請貼上以分享。';
+        statusMessage.textContent = `✅ 檔案已成功下載為 journey_script${FILE_EXTENSION}！`;
         setTimeout(() => {
             statusMessage.textContent = '準備就緒';
         }, 3000);
 
     } catch (error) {
-        // Clipboard API 失敗時，使用 document.execCommand('copy') 作為 fallback
-        try {
-            const tempInput = document.createElement('textarea');
-            tempInput.value = dataString; 
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-
-            const p = document.getElementById('manual-copy-prompt');
-            if (p) p.remove();
-
-            statusMessage.textContent = '✅ 數據已複製！(使用備用複製) 請貼上以分享。';
-            setTimeout(() => {
-                statusMessage.textContent = '準備就緒';
-            }, 3000);
-        } catch (copyError) {
-             // 兩種複製方式皆失敗 (沙盒模式下預期行為)，顯示手動複製提示
-             statusMessage.textContent = '❌ 複製失敗！(沙盒模式限制) 請手動複製下方數據。';
-             showManualCopyPrompt(dataString); // 顯示 URI 編碼後的數據字串讓用戶手動複製
-        }
+        statusMessage.textContent = '❌ 檔案下載失敗。';
+        console.error('檔案下載失敗:', error);
     }
+}
+
+
+/**
+ * 處理檔案上傳事件，讀取檔案內容並載入劇本。
+ */
+function handleFileUpload(event) {
+    const statusMessage = document.getElementById('status-message');
+    const file = event.target.files[0];
+
+    // 重設檔案輸入，以便可以連續上傳同一個檔案
+    event.target.value = null; 
+
+    if (!file) {
+        statusMessage.textContent = '準備就緒';
+        return;
+    }
+
+    if (!file.name.endsWith(FILE_EXTENSION) && file.type !== 'text/plain') {
+        statusMessage.textContent = `⚠️ 檔案類型錯誤。請上傳 ${FILE_EXTENSION} 檔案。`;
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+        const fileContent = e.target.result;
+        
+        try {
+            // 檔案內容預期是 URI-encoded compact JSON string，需要先解碼
+            const rawJsonString = decodeURIComponent(fileContent);
+            
+            const result = loadImportedData(rawJsonString);
+            if (result) {
+                statusMessage.textContent = '✅ 劇本檔案已成功載入！';
+                saveScriptToLocalStorage();
+                renderScript();
+            } else {
+                statusMessage.textContent = '❌ 檔案內容格式無效或已損壞。';
+            }
+        } catch (error) {
+            statusMessage.textContent = '❌ 檔案解析失敗，請檢查內容格式。';
+            console.error('File parsing failed:', error);
+        }
+    };
+
+    reader.onerror = () => {
+        statusMessage.textContent = '❌ 讀取檔案失敗。';
+        console.error('FileReader error:', reader.error);
+    };
+
+    // 讀取檔案為純文字
+    reader.readAsText(file);
+    statusMessage.textContent = `讀取檔案 ${file.name} 中...`;
 }
 
 
@@ -1223,7 +1114,7 @@ function renderScript() {
     const listContainer = document.getElementById('script-list');
     listContainer.innerHTML = '';
     
-    // --- 顏色交替邏輯的變數 (修訂為日分組) ---
+    // --- 顏色交替邏輯的變數 (日分組) ---
     const DAY_COLORS = ['bg-indigo-100', 'bg-pink-100']; 
     const BORDER_COLORS = ['border-indigo-400', 'border-pink-400'];
     let dayIndex = 0; // 0 (Day 1, Indigo) 或 1 (Day 2, Pink)
@@ -1443,12 +1334,11 @@ function renderScript() {
     finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此處添加行程 (#${scriptSteps.length})</span>`;
     listContainer.appendChild(finalAnchorElement);
 
-    // ** 修正 1: 處理 [拉到最下面] 按鈕的顯示/隱藏 **
+    // 處理 [拉到最下面] 按鈕的顯示/隱藏
     const controlsContainer = document.getElementById('controls');
     const scrollToBottomContainer = document.getElementById('scroll-to-bottom-container');
     
     // 只有當內容高度大於可視區域時才顯示按鈕
-    // 使用 setTimeout 確保 DOM 渲染完成後再計算高度
     setTimeout(() => {
         if (controlsContainer.scrollHeight > controlsContainer.clientHeight) {
             scrollToBottomContainer.classList.remove('hidden');
@@ -1460,7 +1350,7 @@ function renderScript() {
 </script>
 </head>
 <body class="bg-gray-50">
-<!-- 修正 1 & 3: 響應式佈局調整 -->
+<!-- 響應式佈局調整 -->
 <div class="flex flex-col md:flex-row h-screen overflow-hidden">
   
   <!-- 右側地圖顯示區 (在行動裝置上在上半部) -->
@@ -1486,7 +1376,7 @@ function renderScript() {
             <button onclick="addStep('goto')" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150">移動 (Goto)</button>
             <button onclick="addStep('activity')" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150">活動/狀態 (Activity)</button>
             <button onclick="addStep('show')" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150">顯示訊息 (Show)</button>
-            <button onclick="addStep('dayoff')" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 col-span-2">休息過夜</button>
+            <button onclick="addStep('dayoff')" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150">休息過夜</button>
         </div>
         <p class="text-xs text-indigo-500 mt-2 font-semibold">點擊步驟間的虛線框以設定插入點。</p>
     </div>
@@ -1522,13 +1412,13 @@ function renderScript() {
     
     <!-- 匯出與刪除按鈕 (新佈局) -->
     <div class="flex space-x-2 mb-2">
-        <!-- 匯出按鈕：只複製資料字串 -->
+        <!-- 匯出按鈕：現在是下載檔案 -->
         <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
-          📄 複製數據
+          💾 匯出檔案
         </button>
-        <!-- 新增：匯入按鈕 -->
-        <button id="import-button" onclick="showImportModal()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
-          📥 貼上數據
+        <!-- 匯入按鈕：現在是上傳檔案，點擊會觸發隱藏的 file input -->
+        <button id="import-file-button" onclick="document.getElementById('file-input').click()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
+          📤 匯入檔案
         </button>
         <!-- 刪除按鈕 -->
         <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
@@ -1550,32 +1440,14 @@ function renderScript() {
   </div> <!-- End #controls -->
 </div>
 
-<!-- 1. 自訂匯入數據模態框 (Modal UI) -->
-<!-- 修正 1 & 2: Z-index 提升到最高，並修正手機定位 -->
-<div id="import-modal" class="fixed top-0 bottom-0 left-0 w-full md:w-1/3 bg-black bg-opacity-50 z-[9999] flex items-center justify-center hidden">
-    <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-lg modal-transition scale-95 opacity-0" id="import-modal-content">
-        <h2 class="text-xl font-bold text-indigo-600 mb-4 border-b pb-2">📥 貼上劇本數據</h2>
-        <p class="text-sm text-gray-600 mb-4">請將複製的數據字串貼入下方的文字區域，它會覆蓋您目前的劇本。</p>
-        <textarea id="import-data-textarea" 
-                  class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none" 
-                  placeholder="請貼上已 URI 編碼的劇本數據..."></textarea>
-        <div class="flex justify-end space-x-3 mt-4">
-            <button onclick="closeImportModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                取消
-            </button>
-            <button onclick="handleImportConfirmation()" id="confirm-import-button" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
-                確認匯入
-            </button>
-        </div>
-    </div>
-</div>
+<!-- 隱藏的檔案輸入元件 -->
+<input type="file" id="file-input" style="display:none;" accept=".trip,text/plain" onchange="handleFileUpload(event)">
 
 <script>
 // --------------------------------------------------------
 // 初始化： Leaflet/DOM 依賴的程式碼移入 DOMContentLoaded
 // --------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-    // 修正 Error 1: Map container not found.
     // 確保 #map 元素存在後才進行初始化
     mapInstance = L.map('map').setView(INITIAL_GPS, 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
@@ -1583,9 +1455,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     checkAndLoadScriptFromURL(); 
     renderScript();
-    
-    // 全域監聽鍵盤事件
-    document.addEventListener('keydown', handleKeydown); 
 });
 </script>
 </body>
