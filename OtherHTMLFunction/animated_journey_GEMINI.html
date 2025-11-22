@@ -116,7 +116,7 @@
 // =================================================================
 const STORAGE_KEY = 'animatedJourneyScript';
 const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
-const FILE_EXTENSION = '.trip'; // 新增：定義匯出檔案副檔名
+const FILE_EXTENSION = '.txt'; // **修改為更通用的 .txt 以提高 iOS 兼容性**
 const iconSize = 75; // 桌面預設大小
 const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
 const icons = {
@@ -1025,7 +1025,7 @@ async function exportScript() { // <-- HTML onclick 調用
         return; 
     }
     
-    // --- 4. 下載為 .trip 檔案 ---
+    // --- 4. 下載為 .txt 檔案 (新副檔名) ---
     try {
         // 創建 Blob，MIME type 設為 text/plain
         const blob = new Blob([dataString], { type: 'text/plain;charset=utf-8' });
@@ -1033,7 +1033,8 @@ async function exportScript() { // <-- HTML onclick 調用
         const a = document.createElement('a');
         
         a.href = url;
-        a.download = `journey_script${FILE_EXTENSION}`; // 使用新副檔名 .trip
+        // 使用新的 .txt 副檔名
+        a.download = `journey_script${FILE_EXTENSION}`; 
         document.body.appendChild(a);
         a.click();
         
@@ -1068,8 +1069,12 @@ function handleFileUpload(event) {
         return;
     }
 
-    if (!file.name.endsWith(FILE_EXTENSION) && file.type !== 'text/plain') {
-        statusMessage.textContent = `⚠️ 檔案類型錯誤。請上傳 ${FILE_EXTENSION} 檔案。`;
+    // 接受 .txt (新的) 或 .trip (舊的) 檔案
+    const acceptedExtensions = ['.txt', '.trip'];
+    const isAcceptedFile = acceptedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+
+    if (!isAcceptedFile && file.type !== 'text/plain') {
+        statusMessage.textContent = `⚠️ 檔案類型錯誤。請上傳 .txt 或 .trip 格式的純文字檔案。`;
         return;
     }
 
@@ -1441,7 +1446,8 @@ function renderScript() {
 </div>
 
 <!-- 隱藏的檔案輸入元件 -->
-<input type="file" id="file-input" style="display:none;" accept=".trip,text/plain" onchange="handleFileUpload(event)">
+<!-- accept="text/plain" 是解決 iOS 相容性的關鍵 -->
+<input type="file" id="file-input" style="display:none;" accept="text/plain" onchange="handleFileUpload(event)">
 
 <script>
 // --------------------------------------------------------
