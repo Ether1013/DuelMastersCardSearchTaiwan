@@ -266,7 +266,6 @@ function optimizeLoadedScript(steps) {
             const nextStep = steps[i + 1];
             
             // 檢查下一個步驟是否為 activity 且有圖片
-            // 這裡還需要檢查 activity 的等待時間是否為 0/null，因為 activity 的等待時間是會被捨棄的
             // 為了簡化，只要 activity 有圖就合併，但提醒用戶活動時間會被忽略
             if (nextStep && nextStep.type === 'activity' && nextStep.image) {
                 
@@ -431,10 +430,92 @@ function loadImportedData(rawJsonString) {
 }
 
 /**
- * 檢查並從 Local Storage 載入劇本。
+ * 從指定的 URL 載入劇本檔案內容。
+ * 支援指數退避重試機制。
+ * @param {string} url - 劇本檔案的 URL (預期為 URI-encoded JSON string)
+ * @returns {Promise<string|null>} - 成功時返回檔案內容字串，失敗時返回 null
+ */
+async function fetchWithRetry(url, maxRetries = 3) {
+    const statusMessage = document.getElementById('status-message');
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            // 嘗試載入網路資源時，不要在控制台記錄錯誤
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP 錯誤: ${response.status} ${response.statusText}`);
+            }
+
+            const text = await response.text();
+            return text;
+
+        } catch (error) {
+            // 在控制台輸出錯誤
+            console.error(`嘗試從 URL 載入劇本失敗 (嘗試 ${attempt + 1}/${maxRetries}):`, error);
+            if (attempt < maxRetries - 1) {
+                const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+                statusMessage.textContent = `⚠️ 載入失敗，將在 ${delay / 1000} 秒後重試...`;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    statusMessage.textContent = '❌ 從 URL 載入劇本失敗，已達最大重試次數。';
+    return null;
+}
+
+/**
+ * 處理從 URL 載入劇本並更新狀態
+ * @param {string} url - 劇本檔案的 URL
+ */
+async function loadScriptFromUrl(url) {
+    const statusMessage = document.getElementById('status-message');
+    statusMessage.textContent = `🌐 正在從 URL 載入劇本...`;
+    const fileContent = await fetchWithRetry(url);
+
+    if (!fileContent) {
+        return false;
+    }
+    
+    try {
+        // 檔案內容預期是 URI-encoded compact JSON string，需要先解碼
+        const rawJsonString = decodeURIComponent(fileContent);
+        
+        const result = loadImportedData(rawJsonString);
+        if (result) {
+            statusMessage.textContent = '✅ 劇本檔案已從 URL 成功載入！';
+            saveScriptToLocalStorage();
+            renderScript(); // 重新渲染
+            return true;
+        } else {
+            statusMessage.textContent = '❌ URL 檔案內容格式無效或已損壞。';
+            return false;
+        }
+    } catch (error) {
+        statusMessage.textContent = '❌ URL 檔案解析失敗，請檢查內容格式。';
+        console.error('URL file parsing failed:', error);
+        return false;
+    }
+}
+
+/**
+ * 檢查並從 URL 參數或 Local Storage 載入劇本。
  */
 function checkAndLoadScriptFromURL() {
-    // 1. 從 Local Storage 載入
+    const statusMessage = document.getElementById('status-message');
+    
+    // 1. 檢查 URL 參數 (使用 scriptUrl)
+    const urlParams = new URLSearchParams(window.location.search);
+    const scriptUrl = urlParams.get('scriptUrl');
+
+    if (scriptUrl) {
+        // 發現 URL 參數，優先從 URL 載入
+        statusMessage.textContent = '🔍 偵測到 URL 劇本參數，正在嘗試載入...';
+        // 由於 DOMContentLoaded 已經完成，我們可以安全地呼叫 async 函式並忽略其結果
+        loadScriptFromUrl(scriptUrl); 
+        return; // 結束，讓 URL 載入去處理後續的渲染和儲存
+    }
+
+    // 2. 從 Local Storage 載入 (如果沒有 URL 參數)
     const storedJson = getLocalStorage(STORAGE_KEY);
     const loadSource = '本機儲存';
 
