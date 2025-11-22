@@ -166,7 +166,6 @@ let currentWaitResolve = null;
 let clearScriptTimeoutId = null; 
 let hoverTimeoutId = null; // 用於錨點提示的計時器
 let insertAnchorIndex = -1; // 儲存要插入步驟的索引位置 (-1 表示沒有錨點)
-// 移除了 stepIndexToFocus
 
 
 // 初始劇本
@@ -388,6 +387,23 @@ function getPreviousPosition(currentIndex) {
 }
 
 /**
+ * 輔助函式：找到上一個設定位置的步驟的 icon
+ * @param {number} insertionIndex - 要插入的索引位置
+ * @returns {string} - 上一個 goto 步驟的 icon 名稱，或預設值 'walk'
+ */
+function getLastGotoIcon(insertionIndex) {
+    // Search backward from the step immediately preceding the insertion point
+    for (let i = insertionIndex - 1; i >= 0; i--) {
+        const step = scriptSteps[i];
+        if (step.type === 'goto' && step.icon) {
+            return step.icon;
+        }
+    }
+    // Fallback: If no preceding goto step with an icon is found, use 'walk' 
+    return 'walk'; 
+}
+
+/**
  * 刪除步驟 (不能刪除第一個 'start' 步驟)
  */
 function deleteStep(index) { // <-- HTML onclick 調用
@@ -485,10 +501,26 @@ function addStep(type, targetIndex = -1) { // <-- HTML onclick 調用
     // 步驟 1: 將 label 預設為空字串，以便顯示 placeholder
     const newStep = { label: '' }; 
 
+    // 處理插入索引
+    let insertionIndex = parseInt(targetIndex, 10);
+    
+    // 如果 targetIndex 無效或未提供，則附加到末尾
+    if (insertionIndex === -1 || isNaN(insertionIndex)) {
+        insertionIndex = scriptSteps.length;
+    }
+
     switch (type) {
         case 'goto':
+            // 獲取上一個 goto 步驟的 icon
+            const defaultIcon = getLastGotoIcon(insertionIndex); 
             // GPS 座標預設為 null，以便在渲染時顯示 placeholder
-            Object.assign(newStep, { type: 'goto', lat: null, lng: null, icon: 'walk', words: '' });
+            Object.assign(newStep, { 
+                type: 'goto', 
+                lat: null, 
+                lng: null, 
+                icon: defaultIcon, // <-- 使用上一個 icon 作為預設值
+                words: '' 
+            });
             break;
         case 'activity':
             // 新增 Activity 動作，預設無 icon 且等待 1 秒
@@ -502,13 +534,6 @@ function addStep(type, targetIndex = -1) { // <-- HTML onclick 調用
             break;
     }
     
-    // 處理插入索引
-    let insertionIndex = parseInt(targetIndex, 10);
-    
-    // 如果 targetIndex 無效或未提供，則附加到末尾
-    if (insertionIndex === -1 || isNaN(insertionIndex)) {
-        insertionIndex = scriptSteps.length;
-    }
     
     scriptSteps.splice(insertionIndex, 0, newStep);
 
@@ -960,9 +985,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
         if (step.type === 'start') {
             currentLat = step.lat;
             currentLng = step.lng;
-            if (step.icon) {
-                currentIcon = step.icon;
-            }
+            // Start step doesn't have an icon property. The icon is set below.
         } else if (step.type === 'goto') {
             currentLat = step.lat;
             currentLng = step.lng;
@@ -977,6 +1000,11 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             // Dayoff 不改變位置，但會強制設為 sleep
             currentIcon = 'sleep';
         }
+    }
+    
+    // 初始狀態圖標必須設為 'train' (在 DOMContentLoaded 設置)
+    if (startIndex === 0 || scriptSteps[startIndex-1].type === 'start') {
+         currentIcon = 'train'; // 確保如果從 start 開始，圖標是 train
     }
 
     // 應用重建的狀態
