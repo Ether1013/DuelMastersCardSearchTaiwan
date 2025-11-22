@@ -567,7 +567,8 @@ function show(words){
       // 如果標記的 Y 座標在地圖容器的 40% 高度以內，就向下彈出
       if (markerPoint.y < mapContainerRect.height * 0.4) {
            // 強制往下彈出 (Y 座標為正值 + 額外緩衝 15px)
-           anchor = [0, iconSize / 2 + 15]; 
+           // 額外增加 10 像素緩衝，確保完全避開裁切
+           anchor = [0, iconSize / 2 + 25]; 
       }
       
   }
@@ -733,8 +734,9 @@ function goto(gps){
     polyline=L.polyline([startPos,gps],{color:'blue',opacity:0.6, weight: 5}).addTo(mapInstance);
     const bounds=L.latLngBounds([startPos,gps]);
     
-    // 放大地圖視圖
-    mapInstance.flyToBounds(bounds,{duration:1.5}); 
+    // **修正：在縮放時加入 padding 緩衝，確保起訖點不會貼邊**
+    // 80px 緩衝在桌機和手機上都能提供良好的邊距
+    mapInstance.flyToBounds(bounds, {duration: 1.5, padding: [80, 80]}); 
     
     // 等待地圖平移後開始標記動畫
     setTimeout(()=>{
