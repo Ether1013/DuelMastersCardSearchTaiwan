@@ -127,6 +127,7 @@ const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
 const FILE_EXTENSION = '.txt'; // 修改為更通用的 .txt 以提高 iOS 兼容性
 const ARC_HEIGHT_DEG = 0.5; // 飛機弧線路徑的最高點抬升緯度 (約 55 公里)
 const ARC_SEGMENTS = 25; // 飛機弧線路徑分段數，越多越平滑
+const MAX_IMAGE_WIDTH = 200; // 新增：圖片壓縮後的寬度上限
 
 const iconSize = 75; // 桌面預設大小
 const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
@@ -155,6 +156,7 @@ let mapInstance = null;
 let marker = null;
 let polyline = null;
 let popup = null;
+let imageModal = null; // 新增：圖片顯示模態框
 let currentAnimation = false;
 let isScriptRunning = false;
 let isPaused = false;
@@ -267,17 +269,23 @@ function loadImportedData(rawJsonString) {
             let step = { label: '' }; // 預設 label
             
             switch (typeChar) {
-                case 's': // start: s, lat, lng, [label]
+                case 's': // start: s, lat, lng, [label], [image]
                     step.type = 'start';
                     step.lat = compactStep[i++];
                     step.lng = compactStep[i++];
-                    step.label = '那霸機場 (初始位置)'; // Use default label for start for simplicity
-                    // Skip label if present
-                    if (typeof compactStep[i] === 'string') {
+                    step.label = '那霸機場 (初始位置)'; 
+                    
+                    // 檢查可選的 label
+                    if (compactStep.length > i && typeof compactStep[i] === 'string' && !compactStep[i].startsWith('data:image/')) {
                          step.label = compactStep[i++];
                     }
+                    // 檢查可選的 image (Base64)
+                    if (compactStep.length > i && typeof compactStep[i] === 'string' && compactStep[i].startsWith('data:image/')) {
+                        // 圖片字串在匯出時有 URI 內層編碼，故在此解碼
+                        step.image = decodeURIComponent(compactStep[i++]);
+                    }
                     break;
-                case 'g': // goto: g, lat, lng, iconChar, words
+                case 'g': // goto: g, lat, lng, iconChar, words, [image]
                     step.type = 'goto';
                     step.lat = compactStep[i++];
                     step.lng = compactStep[i++];
@@ -285,24 +293,44 @@ function loadImportedData(rawJsonString) {
                     step.icon = iconChar ? ICON_MAP[iconChar] || iconChar : '';
                     step.words = compactStep[i++];
                     step.label = '載入的移動步驟';
+                    
+                    // 檢查可選的 image (Base64)
+                    if (compactStep.length > i) {
+                        step.image = decodeURIComponent(compactStep[i++]);
+                    }
                     break;
-                case 'a': // activity: a, sec, [iconChar]
+                case 'a': // activity: a, sec, [iconChar], [image]
                     step.type = 'activity';
                     step.sec = compactStep[i++];
                     const activityIconChar = compactStep[i];
                     step.icon = activityIconChar ? (ICON_MAP[activityIconChar] || activityIconChar) : '';
                     if (step.icon) i++;
                     step.label = '載入的活動';
+                    
+                    // 檢查可選的 image (Base64)
+                    if (compactStep.length > i) {
+                        step.image = decodeURIComponent(compactStep[i++]);
+                    }
                     break;
-                case 'h': // show: h, words
+                case 'h': // show: h, words, [image]
                     step.type = 'show';
                     step.words = compactStep[i++];
                     step.label = '載入的訊息';
+                    
+                    // 檢查可選的 image (Base64)
+                    if (compactStep.length > i) {
+                        step.image = decodeURIComponent(compactStep[i++]);
+                    }
                     break;
-                case 'd': // dayoff: d, sec
+                case 'd': // dayoff: d, sec, [image]
                     step.type = 'dayoff';
                     step.sec = compactStep[i++];
                     step.label = '載入的休息過夜';
+                    
+                    // 檢查可選的 image (Base64)
+                    if (compactStep.length > i) {
+                        step.image = decodeURIComponent(compactStep[i++]);
+                    }
                     break;
                 default:
                     console.warn('Unknown compact step type:', typeChar);
@@ -577,6 +605,71 @@ function clearInsertAnchor() {
     renderScript();
 }
 
+/**
+ * 處理檔案上傳事件，壓縮圖片並轉換為 Base64
+ * @param {Event} event - change event
+ * @param {number} index - 劇本步驟索引
+ */
+function handleImageUpload(event, index) {
+    const statusMessage = document.getElementById('status-message');
+    const file = event.target.files[0];
+
+    // 清空 input，以便可以連續上傳同一個檔案
+    event.target.value = null; 
+
+    if (!file || !file.type.startsWith('image/')) {
+        statusMessage.textContent = '⚠️ 請選擇有效的圖片檔案。';
+        return;
+    }
+
+    statusMessage.textContent = '圖片上傳中，正在進行壓縮...';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            // 壓縮寬度
+            if (width > MAX_IMAGE_WIDTH) {
+                height = Math.round(height * (MAX_IMAGE_WIDTH / width));
+                width = MAX_IMAGE_WIDTH;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 壓縮成 JPEG 格式 (可以減少 Base64 字串長度)
+            const base64String = canvas.toDataURL('image/jpeg', 0.8); 
+
+            // 更新步驟資料
+            scriptSteps[index].image = base64String;
+            saveScriptToLocalStorage();
+            renderScript();
+            
+            statusMessage.textContent = '✅ 照片已壓縮並新增到步驟。';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+/**
+ * 刪除步驟中的照片
+ * @param {number} index - 劇本步驟索引
+ */
+function removeImage(index) {
+    scriptSteps[index].image = undefined;
+    saveScriptToLocalStorage();
+    renderScript();
+    document.getElementById('status-message').textContent = '🗑️ 照片已移除。';
+}
+
+
 // =================================================================
 // 6. 核心動畫與流程控制函數
 // =================================================================
@@ -636,6 +729,61 @@ function show(words){
     
   setTimeout(()=>{ mapInstance.closePopup(popup); popup=null; }, 1000);
 }
+
+/**
+ * 開啟照片的模態框 (非阻塞)
+ * @param {string} base64Image - Base64 圖片字串
+ */
+function openImageModal(base64Image) {
+    if (!base64Image) return;
+    
+    // 確保只創建一次模態框結構
+    if (!imageModal) {
+        imageModal = document.createElement('div');
+        imageModal.id = 'image-modal';
+        imageModal.className = 'fixed inset-0 bg-black bg-opacity-75 z-[2000] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none';
+        imageModal.innerHTML = `
+            <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-sm mx-4 transform scale-90 transition-transform duration-300">
+                <!-- 確保圖片寬度最大化，高度自適應，並使用壓縮後的圖片大小 -->
+                <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_IMAGE_WIDTH}px] mx-auto" alt="Journey Photo">
+                <p class="text-center text-sm text-gray-600 font-semibold">📸 行程照片</p>
+            </div>
+        `;
+        document.body.appendChild(imageModal);
+    }
+    
+    const imageElement = document.getElementById('modal-image');
+    const modalContent = document.getElementById('image-modal-content');
+
+    // 設置圖片源
+    imageElement.src = base64Image;
+    
+    // 顯示模態框 (帶有動畫)
+    imageModal.classList.remove('opacity-0', 'pointer-events-none');
+    modalContent.classList.remove('scale-90');
+    
+    // 這裡沒有 resolve，因為是即時開啟 (非阻塞)
+}
+
+
+/**
+ * 關閉照片的模態框
+ */
+function closeImageModal() {
+    if (!imageModal) return;
+    
+    const modalContent = document.getElementById('image-modal-content');
+    
+    // 隱藏模態框 (帶有動畫)
+    modalContent.classList.add('scale-90');
+    imageModal.classList.add('opacity-0');
+    
+    // 確保動畫結束後才移除事件
+    setTimeout(() => {
+        imageModal.classList.add('pointer-events-none');
+    }, 300); // 匹配 CSS transition duration
+}
+
 
 /**
  * 獲取暫停 Promise。如果已暫停，則阻塞執行。
@@ -712,6 +860,9 @@ function stopScript() {
     
     // 清除所有步驟高亮 (focused-step 已移除)
     document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
+
+    // 關閉圖片模態框
+    closeImageModal();
 }
 
 
@@ -1033,17 +1184,17 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
 
             try {
+                // --- 新增: 處理圖片顯示 (步驟開始時開啟) ---
+                if (step.image) {
+                    openImageModal(step.image); 
+                }
+                // --- 圖片顯示結束 ---
+
                 switch (step.type) {
                     case 'activity':
                         // **Activity = setIcon (可選) + wait (可選)**
-                        // 1. setIcon (如果有 icon)
-                        if (step.icon) {
-                            setIcon(step.icon);
-                        }
-                        // 2. wait (如果有 sec 論 > 0)
-                        if (step.sec && step.sec > 0) {
-                            await wait(step.sec);
-                        }
+                        if (step.icon) { setIcon(step.icon); }
+                        if (step.sec && step.sec > 0) { await wait(step.sec); }
                         break;
                     case 'show':
                         // 保持 show 獨立功能
@@ -1052,9 +1203,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                         break;
                     case 'goto':
                         // **如果 goto 帶有 icon，則先換圖標**
-                        if (step.icon) {
-                            setIcon(step.icon);
-                        }
+                        if (step.icon) { setIcon(step.icon); }
                         await goto([step.lat, step.lng]);
                         
                         // **如果 goto 帶有 words (且非空)，則接著顯示訊息**
@@ -1069,6 +1218,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                         await animateNight(step.sec);
                         break;
                 }
+
             } catch (error) {
                 console.error(`步驟 ${i} 執行錯誤:`, error);
                 // 遇到錯誤，調用 stopScript 清理狀態
@@ -1077,6 +1227,12 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                 return; 
             }
             
+            // --- 新增: 處理圖片關閉 (步驟結束時關閉) ---
+            if (step.image) {
+                closeImageModal(); 
+            }
+            // --- 圖片關閉結束 ---
+
             // 清除當前步驟高亮
             document.getElementById(`step-${i}`).classList.remove('ring-2', 'ring-indigo-500', 'shadow-md');
         }
@@ -1175,25 +1331,35 @@ async function exportScript() { // <-- HTML onclick 調用
         const compactScript = scriptSteps.map(step => {
             const compact = [];
             switch (step.type) {
-                case 'start':
+                case 'start': // s, lat, lng, [label], [image]
                     compact.push('s', step.lat, step.lng);
                     if (step.label) compact.push(step.label);
+                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
-                case 'goto':
+                case 'goto': // g, lat, lng, iconChar, words, [image]
                     compact.push('g', step.lat, step.lng);
                     if (step.icon) compact.push(step.icon.charAt(0)); 
                     else compact.push('');
                     if (step.words) compact.push(step.words);
+                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
-                case 'activity':
+                case 'activity': // a, sec, [iconChar], [image]
                     compact.push('a', step.sec);
                     if (step.icon) compact.push(step.icon.charAt(0)); 
+                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
-                case 'show':
+                case 'show': // h, words, [image]
                     compact.push('h', step.words);
+                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
-                case 'dayoff':
+                case 'dayoff': // d, sec, [image]
                     compact.push('d', step.sec);
+                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
             }
             return compact;
@@ -1202,7 +1368,7 @@ async function exportScript() { // <-- HTML onclick 調用
         // 2. JSON.stringify 轉換為字串
         const rawJsonString = JSON.stringify(compactScript);
         
-        // 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸
+        // 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸 (包括 Base64 字串)
         dataString = encodeURIComponent(rawJsonString);
         
     } catch (error) {
@@ -1423,6 +1589,37 @@ function renderScript() {
             stepElement.classList.remove('step-card:hover');
         }
         // ------------------
+        
+        // --- 照片上傳/顯示 UI (在 stepElement 內) ---
+        const fileInputId = `image-upload-${index}`;
+        
+        const hasImage = !!step.image;
+        const imageHtml = !isStartStep ? `
+            <!-- 隱藏的檔案輸入元件 -->
+            <input type="file" id="${fileInputId}" style="display:none;" accept="image/*" onchange="handleImageUpload(event, ${index})">
+            
+            <div class="flex items-center space-x-2 mt-2 pt-2 border-t border-gray-200">
+                ${hasImage ? 
+                    // Image Preview and Delete Button
+                    `<div class="flex items-center space-x-2 p-2 bg-white rounded-lg border shadow-sm">
+                        <img src="${step.image}" alt="Uploaded Photo" class="h-8 w-auto rounded object-cover">
+                        <span class="text-xs text-gray-600 font-medium whitespace-nowrap">照片已上傳</span>
+                        <button onclick="removeImage(${index})" 
+                                class="text-red-500 hover:text-red-700 p-1 rounded transition duration-150"
+                                title="刪除照片">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>`
+                    :
+                    // Upload Button
+                    `<button onclick="document.getElementById('${fileInputId}').click()" 
+                            class="flex items-center bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-200 transition duration-150 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        上傳照片 (${MAX_IMAGE_WIDTH}px)
+                    </button>`
+                }
+            </div>
+        ` : '';
 
 
         switch (step.type) {
@@ -1574,6 +1771,7 @@ function renderScript() {
                 </div>
             </div>
             ${contentHtml}
+            ${imageHtml} <!-- 插入照片上傳/顯示區塊 -->
         `;
         listContainer.appendChild(stepElement);
     });
