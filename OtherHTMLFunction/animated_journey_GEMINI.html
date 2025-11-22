@@ -116,7 +116,10 @@
 // =================================================================
 const STORAGE_KEY = 'animatedJourneyScript';
 const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
-const FILE_EXTENSION = '.txt'; // **修改為更通用的 .txt 以提高 iOS 兼容性**
+const FILE_EXTENSION = '.txt'; // 修改為更通用的 .txt 以提高 iOS 兼容性
+const ARC_HEIGHT_DEG = 0.5; // 飛機弧線路徑的最高點抬升緯度 (約 55 公里)
+const ARC_SEGMENTS = 25; // 飛機弧線路徑分段數，越多越平滑
+
 const iconSize = 75; // 桌面預設大小
 const ICON_NAMES = ['train', 'walk', 'dine', 'sleep', 'bus', 'motorcycle', 'car', 'view', 'shopping', 'airplane']; 
 const icons = {
@@ -223,7 +226,7 @@ function saveScriptToLocalStorage() {
 }
 
 // =================================================================
-// 4. 數據載入與解析 (必須在 DOMContentLoaded 呼叫前定義)
+// 4. 數據載入與解析
 // =================================================================
 
 /**
@@ -689,6 +692,49 @@ function animateNight(sec) {
     });
 }
 
+/**
+ * 輔助函數：生成弧線路徑的點
+ * @param {Array<number>} start [lat, lng]
+ * @param {Array<number>} end [lat, lng]
+ * @returns {Array<Array<number>>} 包含起點、中間弧頂點、終點的多個點
+ */
+function createArcPath(start, end) {
+    const latDiff = end[0] - start[0];
+    const lngDiff = end[1] - start[1];
+    const distanceInDegrees = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+    // 距離太短時，退化為直線
+    if (distanceInDegrees < 0.01) {
+        return [start, end];
+    }
+    
+    // 弧度高度：基於距離按比例縮放，但不超過最大值
+    // 讓弧線高度隨距離增長，看起來更自然
+    const arcHeight = Math.min(ARC_HEIGHT_DEG, distanceInDegrees * 0.5); 
+
+    const arcPoints = [];
+    for (let i = 0; i <= ARC_SEGMENTS; i++) {
+        const t = i / ARC_SEGMENTS; // 0 到 1 的進度
+        
+        // 直線插值 (基礎地理位置)
+        const currentLat = start[0] + latDiff * t;
+        const currentLng = start[1] + lngDiff * t;
+        
+        // 弧線高度調整 (使用二次函數模擬拋物線弧度，t=0.5 時達到最大)
+        // heightFactor = 4 * t * (1 - t)
+        const heightFactor = 4 * t * (1 - t); 
+        
+        // 緯度抬升 (模擬弧線)
+        // 這裡簡單地將緯度抬高，在平面地圖上會呈現弧線效果
+        const liftedLat = currentLat + arcHeight * heightFactor; 
+        
+        arcPoints.push([liftedLat, currentLng]);
+    }
+
+    return arcPoints;
+}
+
+
 // 函式: 移動 (Promise 版本)
 function goto(gps){
   return new Promise(resolve => {
@@ -696,7 +742,35 @@ function goto(gps){
     currentAnimation=true;
     const startPos=marker.getLatLng();
     if(polyline) mapInstance.removeLayer(polyline);
-    polyline=L.polyline([startPos,gps],{color:'blue',opacity:0.6, weight: 5}).addTo(mapInstance);
+    
+    const currentIconName = Object.keys(icons).find(k=>icons[k]===marker.options.icon);
+    const isAirplane = currentIconName === 'airplane'; // 檢查是否為飛機
+
+    let pathPoints;
+    let finalPathDistance;
+
+    if (isAirplane) {
+        // 飛機：使用弧線路徑
+        pathPoints = createArcPath([startPos.lat, startPos.lng], gps);
+        // 為了動畫平滑，我們需要知道路徑中有多少個點
+        finalPathDistance = pathPoints.length; 
+    } else {
+        // 其他交通工具：使用直線
+        pathPoints = [
+            [startPos.lat, startPos.lng],
+            gps
+        ];
+        finalPathDistance = distance([startPos.lat,startPos.lng],gps);
+    }
+
+    // 繪製路徑
+    polyline = L.polyline(pathPoints,{
+        color: isAirplane ? '#93c5fd' : 'blue', // 飛機用淡藍色
+        opacity: 0.8, 
+        weight: isAirplane ? 3 : 5,
+        dashArray: isAirplane ? '10, 10' : null // 飛機用虛線
+    }).addTo(mapInstance);
+
     const bounds=L.latLngBounds([startPos,gps]);
     
     const MAX_DURATION = 4000; // 最長移動時間 4 秒
@@ -707,19 +781,27 @@ function goto(gps){
     // 等待地圖平移後開始標記動畫
     setTimeout(()=>{
       // 折線淡入動畫 (簡化：直接設置不淡入，避免與淡出動畫衝突)
-      polyline.setStyle({opacity: 0.8});
+      polyline.setStyle({opacity: isAirplane ? 1 : 0.8});
 
-      const dist=distance([startPos.lat,startPos.lng],gps); // 距離 (公尺)
+      let dist; // 總距離 (公尺)
+      if (isAirplane) {
+          // 對飛機而言，距離設為直線距離，動畫時長基於直線距離計算
+          dist = distance([startPos.lat,startPos.lng],gps); 
+      } else {
+          dist = finalPathDistance;
+      }
+      
       let duration; // 動畫時長 (毫秒)
       
-      const iconName=Object.keys(icons).find(k=>icons[k]===marker.options.icon);
       let speed; // 速度 (m/s)
       
       // 根據圖標名稱設定速度
-      if (iconName === 'walk' || iconName === 'dine' || iconName === 'view' || iconName === 'shopping') { 
+      if (currentIconName === 'walk' || currentIconName === 'dine' || currentIconName === 'view' || currentIconName === 'shopping') { 
         speed = 100; // 步行和靜態動作速度
-      } else if (iconName === 'bus' || iconName === 'car' || iconName === 'airplane') {
+      } else if (currentIconName === 'bus' || currentIconName === 'car') {
         speed = 400; // 調整為 400 m/s
+      } else if (currentIconName === 'airplane') {
+        speed = 800; // 飛機速度最快
       } else {
         speed = 700; // 預設速度 (火車/機車)
       }
@@ -732,6 +814,7 @@ function goto(gps){
       function animateMarker(ts){
         if(!startTime) startTime=ts;
         const progress=(ts-startTime)/duration;
+        
         if(progress>=1){
           // 動畫結束
           marker.setLatLng(gps);
@@ -751,11 +834,28 @@ function goto(gps){
           requestAnimationFrame(removeLine);
 
         }else{
-          // 標記移動
-          const lat=startPos.lat+(gps[0]-startPos.lat)*progress;
-          const lng=startPos.lng+(gps[1]-startPos.lng)*progress;
-          marker.setLatLng([lat,lng]);
-          requestAnimationFrame(animateMarker);
+            // 標記移動
+            let lat, lng;
+
+            if (isAirplane) {
+                // 飛機：沿著弧線路徑移動
+                const pathIndex = Math.min(Math.floor(progress * ARC_SEGMENTS), ARC_SEGMENTS - 1);
+                const segmentProgress = (progress * ARC_SEGMENTS) - pathIndex;
+                
+                const p1 = pathPoints[pathIndex];
+                const p2 = pathPoints[pathIndex + 1] || pathPoints[ARC_SEGMENTS];
+
+                lat = p1[0] + (p2[0] - p1[0]) * segmentProgress;
+                lng = p1[1] + (p2[1] - p1[1]) * segmentProgress;
+
+            } else {
+                // 其他交通工具：直線移動
+                lat=startPos.lat+(gps[0]-startPos.lat)*progress;
+                lng=startPos.lng+(gps[1]-startPos.lng)*progress;
+            }
+
+            marker.setLatLng([lat,lng]);
+            requestAnimationFrame(animateMarker);
         }
       }
       requestAnimationFrame(animateMarker);
