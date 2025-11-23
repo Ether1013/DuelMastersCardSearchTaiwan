@@ -631,8 +631,10 @@ async function handleConflictResolution(resolution) { // <-- HTML onclick 調用
     
     switch (resolution) {
         case 'cancel':
-            // 1. 取消匯入，繼續編輯本地行程 (本地行程已載入，無需額外動作)
+            // 1. 取消匯入，繼續編輯本地行程 (本地行程已載入，但需要渲染)
             document.getElementById('status-message').textContent = '操作取消。繼續編輯本地行程。';
+            // FIX: 選擇取消後，強制重新渲染已在記憶體中的本地行程
+            renderScript();
             break;
             
         case 'save_and_import':
