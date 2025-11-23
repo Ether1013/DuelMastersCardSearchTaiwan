@@ -138,25 +138,34 @@
         flex-shrink: 0; /* 不壓縮底部面板 */
     }
     
-    /* 2. 播放模式 (mobile-playing): 隱藏行程列表，地圖和控制面板各佔 50% */
+    /* 2. 播放模式 (mobile-playing): 隱藏行程列表，地圖佔剩餘空間，控制面板貼底 (修正留白問題) */
+    .mobile-playing #script-list {
+        display: none !important;
+    }
+
     .mobile-playing #top-area-wrapper { /* 隱藏紅、橙區塊的父容器 */
         display: none !important;
     }
-    /* 確保播放時地圖和 controls 都可見且分佔 50% */
-    .mobile-playing #map-container,
-    .mobile-playing #controls {
-        height: 50% !important;
-        flex: 1 1 50% !important;
+    
+    .mobile-playing #map-container {
+        /* 讓地圖佔滿所有剩餘空間 */
+        height: auto !important; 
+        flex: 1 1 auto !important; 
     }
     .mobile-playing #controls {
-        /* 在播放模式下，只顯示底部控制面板 */
+        /* 只佔據內容所需的高度 */
+        height: auto !important;
+        flex: 0 0 auto !important; 
+        
+        /* 確保內部內容是垂直堆疊 */
         display: flex;
-        flex-direction: column;
-        justify-content: flex-end; /* 讓底部面板貼底 */
+        flex-direction: column; 
     }
+    
     .mobile-playing #bottom-controls {
-        /* 讓綠色區塊佔滿手機下半部 50% */
-        height: 100% !important; 
+        /* 移除強制 100% 高度，讓它使用 h-[190px] 的實際內容高度 */
+        height: auto !important; 
+        flex-shrink: 0 !important;
     }
   }
 
@@ -1425,7 +1434,7 @@ function updateMobileLayout() {
     }
 
     if (isScriptRunning) {
-        // 播放模式 (手機): 地圖和底部控制面板各佔 50%
+        // 播放模式 (手機): 地圖和底部控制面板佔用所需空間
         BODY_CONTAINER.classList.add('mobile-playing');
         BODY_CONTAINER.classList.remove('mobile-controls-only');
     } else {
