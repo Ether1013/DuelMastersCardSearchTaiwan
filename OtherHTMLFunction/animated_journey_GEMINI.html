@@ -629,32 +629,60 @@ async function handleConflictResolution(resolution) { // <-- HTML onclick 調用
     hideConflictModal();
     const url = conflictScriptUrl;
     
+    let needsRedirect = true; // 預設需要重新導向
+
     switch (resolution) {
         case 'cancel':
             // 1. 取消匯入，繼續編輯本地行程 (本地行程已載入，但需要渲染)
             document.getElementById('status-message').textContent = '操作取消。繼續編輯本地行程。';
-            // FIX: 選擇取消後，強制重新渲染已在記憶體中的本地行程
             renderScript();
+            // 在 'cancel' 情況下，本地資料已經在 checkAndLoadScriptFromURL 載入，
+            // 並且已經 renderScript() 渲染完成，我們只需移除 URL 參數即可，
+            // 不需要重新載入頁面 (replaceState 即可)。
+            needsRedirect = false; 
             break;
             
         case 'save_and_import':
             // 2. 儲存編輯中行程後再匯入新行程
             document.getElementById('status-message').textContent = '💾 正在儲存本地行程...';
-            // 靜默匯出當前本地腳本
+            // 靜默匯出當前本地腳本 (這會觸發下載)
             await exportScript(true); 
             
             // 延遲一下，確保下載觸發 (瀏覽器可能需要一點時間來處理下載)
-            setTimeout(async () => {
-                document.getElementById('status-message').textContent = '🌐 正在匯入新行程...';
-                await loadScriptFromUrl(url); // 匯入 URL 腳本
-            }, 500); 
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            document.getElementById('status-message').textContent = '🌐 正在匯入新行程...';
+            await loadScriptFromUrl(url); // 匯入 URL 腳本並覆蓋本地儲存
+            // 接下來將執行重新導向
             break;
             
         case 'overwrite':
             // 3. 覆蓋掉編輯中的行程 (直接匯入新行程)
             document.getElementById('status-message').textContent = '🌐 正在覆蓋本地行程，匯入新行程...';
-            await loadScriptFromUrl(url); // 匯入 URL 腳本
+            await loadScriptFromUrl(url); // 匯入 URL 腳本並覆蓋本地儲存
+            // 接下來將執行重新導向
             break;
+    }
+    
+    // --- 新增：處理 URL 參數移除 ---
+    // 獲取當前 URL 的所有參數
+    const currentUrl = new URL(window.location.href);
+    
+    // 檢查是否有 scriptUrl 參數存在
+    if (currentUrl.searchParams.has('scriptUrl')) {
+        // 如果選擇了 'cancel'，只需要替換 URL 狀態，不需要重新載入頁面
+        if (resolution === 'cancel' && !needsRedirect) {
+             currentUrl.searchParams.delete('scriptUrl');
+             window.history.replaceState({}, document.title, currentUrl.toString());
+             document.getElementById('status-message').textContent = '操作取消。已清除 URL 參數。';
+        } 
+        // 否則（'save_and_import' 或 'overwrite'），需要重新導向
+        else if (needsRedirect) {
+             currentUrl.searchParams.delete('scriptUrl');
+             // 使用 replace 避免歷史紀錄中留下帶有參數的頁面
+             window.location.replace(currentUrl.toString()); 
+             // 這裡不會執行到
+        }
     }
 }
 
@@ -703,7 +731,16 @@ function checkAndLoadScriptFromURL() {
             // 2.2. 無衝突：有 URL，本地是預設或空
             statusMessage.textContent = '🔍 偵測到 URL 劇本參數，正在嘗試載入...';
             // 由於 DOMContentLoaded 已經完成，我們可以直接呼叫 async 函式並忽略其結果
-            loadScriptFromUrl(scriptUrl); 
+            loadScriptFromUrl(scriptUrl)
+                .then(() => {
+                    // 確保非同步載入完成後，移除 URL 參數
+                    const currentUrl = new URL(window.location.href);
+                    if (currentUrl.searchParams.has('scriptUrl')) {
+                         currentUrl.searchParams.delete('scriptUrl');
+                         // 使用 replace 避免歷史紀錄中留下帶有參數的頁面
+                         window.location.replace(currentUrl.toString()); 
+                    }
+                });
             return; // 結束，讓 URL 載入去處理後續的渲染和儲存
         }
     }
@@ -1147,7 +1184,6 @@ function closeImageModal() {
     modalContent.classList.add('scale-90');
     imageModal.classList.add('opacity-0');
     
-    // 確保動畫結束後才移除事件
     setTimeout(() => {
         imageModal.classList.add('pointer-events-none');
     }, 300); // 匹配 CSS transition duration
@@ -1388,7 +1424,6 @@ function createArcPath(start, end) {
         const heightFactor = 4 * t * (1 - t); 
         
         // 緯度抬升 (模擬弧線)
-        // 這裡簡單地將緯度抬高，在平面地圖上會呈現弧線效果
         const liftedLat = currentLat + arcHeight * heightFactor; 
         
         arcPoints.push([liftedLat, currentLng]);
