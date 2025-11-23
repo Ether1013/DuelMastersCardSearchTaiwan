@@ -1331,8 +1331,23 @@ function goto(gps){
     
     const MAX_DURATION = 4000; // 最長移動時間 4 秒
     
-    // 已調整：將 padding 設置為 [40, 40]
-    mapInstance.flyToBounds(bounds, {duration: 1.5, padding: [40, 40]}); 
+    // NEW: 動態計算 padding (BUG 2 修正)
+    let paddingOptions = { duration: 1.5 };
+    
+    // 檢查是否為行動裝置且處於播放模式
+    if (isMobile && document.body.classList.contains('mobile-playing')) {
+        // 底部控制面板 h-[190px] + 額外安全邊距 20px = 210px
+        const bottomControlHeight = 210; 
+        // Leaflet padding 陣列: [top, right, bottom, left]
+        // 確保地圖的目標區域不會被底部的控制面板遮擋
+        paddingOptions.padding = [40, 40, bottomControlHeight, 40]; 
+    } else {
+        // 桌面版或編輯模式：使用標準的 [垂直, 水平] 邊距
+        // 由於 flyToBounds 接受 L.Point(vertical, horizontal)，我們在這裡明確傳遞
+        paddingOptions.padding = L.point(40, 40); 
+    }
+
+    mapInstance.flyToBounds(bounds, paddingOptions); 
     
     // 等待地圖平移後開始標記動畫
     setTimeout(()=>{
@@ -1430,17 +1445,22 @@ function updateMobileLayout() {
     // 如果是 PC (大於 767px)，清除所有 mobile 相關 class
     if (!isMobile) {
         BODY_CONTAINER.classList.remove('mobile-controls-only', 'mobile-playing');
-        return;
-    }
-
-    if (isScriptRunning) {
-        // 播放模式 (手機): 地圖和底部控制面板佔用所需空間
-        BODY_CONTAINER.classList.add('mobile-playing');
-        BODY_CONTAINER.classList.remove('mobile-controls-only');
     } else {
-        // 編輯模式 (手機): 隱藏地圖，顯示整個控制面板
-        BODY_CONTAINER.classList.add('mobile-controls-only');
-        BODY_CONTAINER.classList.remove('mobile-playing');
+        // 行動裝置佈局
+        if (isScriptRunning) {
+            // 播放模式 (手機): 地圖和底部控制面板佔用所需空間
+            BODY_CONTAINER.classList.add('mobile-playing');
+            BODY_CONTAINER.classList.remove('mobile-controls-only');
+        } else {
+            // 編輯模式 (手機): 隱藏地圖，顯示整個控制面板
+            BODY_CONTAINER.classList.add('mobile-controls-only');
+            BODY_CONTAINER.classList.remove('mobile-playing');
+        }
+    }
+    
+    // Leaflet 修正 (BUG 1 修正): 在佈局改變後通知地圖重新計算大小，防止地圖區空白。
+    if (mapInstance) {
+         mapInstance.invalidateSize(true);
     }
 }
 
@@ -1472,7 +1492,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     playButton.classList.add('bg-gray-400');
     statusMessage.textContent = '▶️ 劇本開始執行...';
     
-    // NEW: Update layout to playing mode
+    // NEW: Update layout to playing mode (這裡也會更新 isMobile 並呼叫 invalidateSize)
     updateMobileLayout();
     
     // 清除所有步驟高亮 (focused-step 已移除)
@@ -2482,7 +2502,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderScript();
 
     // NEW: Initial layout setup and resize listener
-    updateMobileLayout();
+    // 在初始化後立即設置佈局和 Leaflet 大小
+    updateMobileLayout(); 
     window.addEventListener('resize', updateMobileLayout);
 });
 </script>
