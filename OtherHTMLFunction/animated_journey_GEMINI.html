@@ -243,6 +243,7 @@ let insertAnchorIndex = -1; // 儲存要插入步驟的索引位置 (-1 表示�
 let freezeTimeoutId = null; // 凍結偵測計時器 ID (新增)
 let skipPhotoResolve = null; // 跳過照片等待的 Promise Resolver (新增)
 let isMobile = false; // 新增：是否為行動裝置
+let conflictScriptUrl = null; // 用於儲存衝突的 URL
 
 // 新增：儲存 Day-Start 步驟的索引
 // [ { day: 1, stepIndex: 1, colorIndex: 0 }, { day: 2, stepIndex: 5, colorIndex: 1 }, ... ]
@@ -535,12 +536,13 @@ async function fetchWithRetry(url, maxRetries = 3) {
 }
 
 /**
- * 處理從 URL 載入劇本並更新狀態
+ * 處理從指定的 URL 載入劇本，更新狀態，並儲存到本地。
  * @param {string} url - 劇本檔案的 URL
  */
 async function loadScriptFromUrl(url) {
     const statusMessage = document.getElementById('status-message');
-    statusMessage.textContent = `🌐 正在從 URL 載入劇本...`;
+    statusMessage.textContent = `🌐 正在從 URL 載入劇本: ${url.substring(0, 40)}...`;
+    
     const fileContent = await fetchWithRetry(url);
 
     if (!fileContent) {
@@ -569,47 +571,150 @@ async function loadScriptFromUrl(url) {
 }
 
 /**
+ * 輔助函式：檢查給定的步驟陣列是否與預設的初始步驟相同（即判斷是否有編輯過）。
+ * @param {Array<Object>} steps - 要檢查的劇本步驟陣列
+ * @returns {boolean} - 如果只有初始步驟且未被修改，則返回 true。
+ */
+function isScriptDefault(steps) {
+    if (!Array.isArray(steps) || steps.length !== 1) {
+        return false;
+    }
+    const step = steps[0];
+    const defaultStep = START_STEP_DEFINITION;
+    
+    // 檢查類型和關鍵座標是否與預設值匹配
+    return step.type === defaultStep.type &&
+           step.lat === defaultStep.lat &&
+           step.lng === defaultStep.lng &&
+           !step.image && // 確保沒有圖片
+           !step.label; // 確保沒有額外的標籤
+}
+
+/**
+ * 顯示行程衝突模態框
+ */
+function showConflictModal(scriptUrl) {
+    conflictScriptUrl = scriptUrl;
+    const overlay = document.getElementById('conflict-modal-overlay');
+    const modal = document.getElementById('conflict-modal');
+    
+    // 設置狀態訊息
+    document.getElementById('status-message').textContent = '⚠️ 偵測到匯入衝突，請選擇處理方式。';
+
+    overlay.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.remove('scale-90');
+}
+
+/**
+ * 隱藏行程衝突模態框
+ */
+function hideConflictModal() {
+    const overlay = document.getElementById('conflict-modal-overlay');
+    const modal = document.getElementById('conflict-modal');
+    
+    modal.classList.add('scale-90');
+    overlay.classList.add('opacity-0');
+    
+    setTimeout(() => {
+        overlay.classList.add('pointer-events-none');
+        conflictScriptUrl = null;
+    }, 300); 
+}
+
+/**
+ * 處理衝突解決方案
+ * @param {string} resolution - 'cancel', 'save_and_import', or 'overwrite'
+ */
+async function handleConflictResolution(resolution) { // <-- HTML onclick 調用
+    hideConflictModal();
+    const url = conflictScriptUrl;
+    
+    switch (resolution) {
+        case 'cancel':
+            // 1. 取消匯入，繼續編輯本地行程 (本地行程已載入，無需額外動作)
+            document.getElementById('status-message').textContent = '操作取消。繼續編輯本地行程。';
+            break;
+            
+        case 'save_and_import':
+            // 2. 儲存編輯中行程後再匯入新行程
+            document.getElementById('status-message').textContent = '💾 正在儲存本地行程...';
+            // 靜默匯出當前本地腳本
+            await exportScript(true); 
+            
+            // 延遲一下，確保下載觸發 (瀏覽器可能需要一點時間來處理下載)
+            setTimeout(async () => {
+                document.getElementById('status-message').textContent = '🌐 正在匯入新行程...';
+                await loadScriptFromUrl(url); // 匯入 URL 腳本
+            }, 500); 
+            break;
+            
+        case 'overwrite':
+            // 3. 覆蓋掉編輯中的行程 (直接匯入新行程)
+            document.getElementById('status-message').textContent = '🌐 正在覆蓋本地行程，匯入新行程...';
+            await loadScriptFromUrl(url); // 匯入 URL 腳本
+            break;
+    }
+}
+
+
+/**
  * 檢查並從 URL 參數或 Local Storage 載入劇本。
  */
 function checkAndLoadScriptFromURL() {
     const statusMessage = document.getElementById('status-message');
     
-    // 1. 檢查 URL 參數 (使用 scriptUrl)
-    const urlParams = new URLSearchParams(window.location.search);
-    const scriptUrl = urlParams.get('scriptUrl');
-
-    if (scriptUrl) {
-        // 發現 URL 參數，優先從 URL 載入
-        statusMessage.textContent = '🔍 偵測到 URL 劇本參數，正在嘗試載入...';
-        // 由於 DOMContentLoaded 已經完成，我們可以安全地呼叫 async 函式並忽略其結果
-        loadScriptFromUrl(scriptUrl); 
-        return; // 結束，讓 URL 載入去處理後續的渲染和儲存
-    }
-
-    // 2. 從 Local Storage 載入 (如果沒有 URL 參數)
+    // 1. 檢查 Local Storage 並載入 (無論是否為 default)
     const storedJson = getLocalStorage(STORAGE_KEY);
-    const loadSource = '本機儲存';
-
+    let hasLocalNonDefaultScript = false;
+    
     if (storedJson) {
         try {
-            // Local Storage 儲存的是純 JSON 字串，直接解析
             const loadedSteps = JSON.parse(storedJson); 
-
-            if (Array.isArray(loadedSteps) && loadedSteps.length > 0 && loadedSteps[0].type === 'start') {
+            
+            if (Array.isArray(loadedSteps) && loadedSteps.length > 0) {
+                // 載入本地步驟到 scriptSteps
+                scriptSteps = optimizeLoadedScript(loadedSteps);
                 
-                // 載入時也執行一次優化，以防本地存儲的是未優化格式
-                const optimizedSteps = optimizeLoadedScript(loadedSteps);
-                
-                scriptSteps = optimizedSteps;
-                document.getElementById('status-message').textContent = `📥 劇本已從 ${loadSource} 載入。`;
-                return; 
+                // 檢查是否為非預設腳本
+                if (!isScriptDefault(scriptSteps)) {
+                    hasLocalNonDefaultScript = true;
+                    document.getElementById('status-message').textContent = `📥 劇本已從本機儲存載入。`;
+                }
             }
         } catch (error) {
             console.error('解析本地儲存劇本失敗:', error);
         }
     }
 
-    // 如果 Local Storage 中沒有有效劇本，則使用初始預設劇本
+    // 2. 檢查 URL 參數
+    const urlParams = new URLSearchParams(window.location.search);
+    const scriptUrl = urlParams.get('scriptUrl');
+
+    if (scriptUrl) {
+        // 發現 URL 參數
+        if (hasLocalNonDefaultScript) {
+            // 2.1. 衝突：有 URL 且本地非預設
+            statusMessage.textContent = '🔍 偵測到匯入衝突...';
+            showConflictModal(scriptUrl);
+            return; 
+        } else {
+            // 2.2. 無衝突：有 URL，本地是預設或空
+            statusMessage.textContent = '🔍 偵測到 URL 劇本參數，正在嘗試載入...';
+            // 由於 DOMContentLoaded 已經完成，我們可以直接呼叫 async 函式並忽略其結果
+            loadScriptFromUrl(scriptUrl); 
+            return; // 結束，讓 URL 載入去處理後續的渲染和儲存
+        }
+    }
+    
+    // 3. 既無 URL 參數，本地腳本也已處理
+    if (!hasLocalNonDefaultScript) {
+         // 如果本地腳本是 default，且沒有 URL 參數，則設置初始提示
+        document.getElementById('status-message').textContent = '💡 歡迎！開始添加您的第一個行程。';
+    }
+
+    // 最後確保渲染 (非同步載入路徑會自己呼叫 renderScript)
+    // 這裡的 renderScript 確保了在沒有 URL 且載入本地/使用預設時，UI 是最新的
+    renderScript(); 
 }
 
 
@@ -1780,8 +1885,9 @@ function scrollToDayStart(dayNumber) {
 
 /**
  * 匯出劇本：將優化後的 JSON 字串生成為檔案並下載。
+ * @param {boolean} [isSilent=false] - 如果為 true，則不更新狀態訊息，用於衝突解決。
  */
-async function exportScript() { // <-- HTML onclick 調用
+async function exportScript(isSilent = false) { // <-- HTML onclick 調用
     const statusMessage = document.getElementById('status-message');
     let dataString = ''; 
     
@@ -1832,9 +1938,11 @@ async function exportScript() { // <-- HTML onclick 調用
         dataString = encodeURIComponent(rawJsonString);
         
     } catch (error) {
-        statusMessage.textContent = '❌ 劇本數據轉換失敗。';
+        if (!isSilent) {
+            statusMessage.textContent = '❌ 劇本數據轉換失敗。';
+        }
         console.error('數據轉換失敗:', error);
-        return; 
+        return false; 
     }
     
     // --- 4. 下載為 .txt 檔案 (新副檔名) ---
@@ -1854,14 +1962,20 @@ async function exportScript() { // <-- HTML onclick 調用
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        statusMessage.textContent = `✅ 檔案已成功下載為 journey_script${FILE_EXTENSION}！`;
-        setTimeout(() => {
-            statusMessage.textContent = '準備就緒';
-        }, 3000);
+        if (!isSilent) {
+            statusMessage.textContent = `✅ 檔案已成功下載為 journey_script${FILE_EXTENSION}！`;
+            setTimeout(() => {
+                statusMessage.textContent = '準備就緒';
+            }, 3000);
+        }
+        return true;
 
     } catch (error) {
-        statusMessage.textContent = '❌ 檔案下載失敗。';
+        if (!isSilent) {
+            statusMessage.textContent = '❌ 檔案下載失敗。';
+        }
         console.error('檔案下載失敗:', error);
+        return false;
     }
 }
 
@@ -2488,6 +2602,28 @@ function renderScript() {
 <!-- accept="text/plain" 是解決 iOS 相容性的關鍵 -->
 <input type="file" id="file-input" style="display:none;" accept="text/plain" onchange="handleFileUpload(event)">
 
+<!-- Conflict Modal Structure (行程衝突模態框) -->
+<div id="conflict-modal-overlay" class="fixed inset-0 bg-black bg-opacity-75 z-[3000] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none">
+    <div id="conflict-modal" class="bg-white p-6 rounded-xl shadow-2xl max-w-lg mx-4 transform scale-90 transition-transform duration-300">
+        <h2 class="text-xl font-bold text-indigo-600 mb-4">行程匯入衝突</h2>
+        <p class="text-gray-700 mb-6">
+            我們同時偵測到 URL 提供的自動匯入行程參數，以及您在本地編輯中的非預設行程記錄。
+            請問您希望如何處理？
+        </p>
+        <div class="space-y-3">
+            <button onclick="handleConflictResolution('cancel')" class="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition">
+                1. 取消匯入，繼續編輯本地行程
+            </button>
+            <button onclick="handleConflictResolution('save_and_import')" class="w-full bg-yellow-500 text-gray-800 font-bold py-3 rounded-lg hover:bg-yellow-600 transition">
+                2. 💾 儲存編輯中行程後再匯入新行程
+            </button>
+            <button onclick="handleConflictResolution('overwrite')" class="w-full bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 transition">
+                3. 覆蓋掉編輯中的行程 (直接匯入新行程)
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 // --------------------------------------------------------
 // 初始化： Leaflet/DOM 依賴的程式碼移入 DOMContentLoaded
@@ -2498,9 +2634,9 @@ document.addEventListener('DOMContentLoaded', () => {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
     marker = L.marker(INITIAL_GPS, { icon: icons.train }).addTo(mapInstance);
     
+    // 優先執行載入邏輯（包含衝突處理）
     checkAndLoadScriptFromURL(); 
-    renderScript();
-
+    
     // NEW: Initial layout setup and resize listener
     // 在初始化後立即設置佈局和 Leaflet 大小
     updateMobileLayout(); 
