@@ -93,9 +93,6 @@
 
   /* 響應式：強制縱向佈局 */
   @media (max-width: 767px) {
-    .mobile-h-half {
-        height: 50%;
-    }
     /* 修正 2: 行動裝置 ICON 縮小到 40px */
     .leaflet-div-icon div {
         font-size: 40px !important;
@@ -106,15 +103,63 @@
         line-height: 1.25rem; 
         padding: 0.75rem; /* 邊距縮小 */
     }
+
+    /* --- 行動裝置佈局邏輯 (根據 body 上的 class 切換) --- */
+
+    /* 1. 編輯模式 (mobile-controls-only): 隱藏地圖，顯示整個 #controls (滿高) */
+    .mobile-controls-only #map-container {
+        display: none !important;
+    }
+    .mobile-controls-only #controls {
+        height: 100vh !important;
+        flex: 1 1 100% !important; 
+        display: flex;
+        flex-direction: column;
+    }
+    /* 在手機編輯模式下，讓列表佔滿空間且可捲動 */
+    .mobile-controls-only #top-area-wrapper {
+        flex-grow: 1;
+        /* 行動裝置上也要保留橙色區塊，所以這裡改為水平 flex */
+        flex-direction: row; /* 保持水平分割 */
+        min-height: 0; /* 確保在 flex 容器內能正確計算高度 */
+    }
+    
+    /* 確保橙色區塊在手機編輯模式下可見 */
+    .mobile-controls-only #day-progress-bar { /* 改名後的 ID */
+        display: block !important; /* 覆蓋 hidden md:block */
+        flex-shrink: 0;
+    }
+    
+    .mobile-controls-only #script-list-wrapper {
+        flex-grow: 1; 
+        overflow-y: auto; 
+    }
+    .mobile-controls-only #bottom-controls {
+        flex-shrink: 0; /* 不壓縮底部面板 */
+    }
+    
+    /* 2. 播放模式 (mobile-playing): 隱藏行程列表，地圖和控制面板各佔 50% */
+    .mobile-playing #top-area-wrapper { /* 隱藏紅、橙區塊的父容器 */
+        display: none !important;
+    }
+    /* 確保播放時地圖和 controls 都可見且分佔 50% */
+    .mobile-playing #map-container,
+    .mobile-playing #controls {
+        height: 50% !important;
+        flex: 1 1 50% !important;
+    }
+    .mobile-playing #controls {
+        /* 在播放模式下，只顯示底部控制面板 */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end; /* 讓底部面板貼底 */
+    }
+    .mobile-playing #bottom-controls {
+        /* 讓綠色區塊佔滿手機下半部 50% */
+        height: 100% !important; 
+    }
   }
 
-  /* 修正 1: 讓拉到底部按鈕在 controls 容器內正常浮動 */
-  #scroll-to-bottom-container {
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
-      /* 移除絕對定位，使用 sticky */
-  }
 </style>
 <!-- 引入 Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -127,8 +172,17 @@ const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
 const FILE_EXTENSION = '.txt'; // 修改為更通用的 .txt 以提高 iOS 兼容性
 const ARC_HEIGHT_DEG = 0.5; // 飛機弧線路徑的最高點抬升緯度 (約 55 公里)
 const ARC_SEGMENTS = 25; // 飛機弧線路徑分段數，越多越平滑
-const MAX_IMAGE_WIDTH = 200; // 圖片壓縮後的寬度上限
+const MAX_IMAGE_WIDTH = 230; // 圖片壓縮後的寬度上限 (200 * 1.15 = 230)
 const PHOTO_STANDALONE_DURATION = 2.5; // 移動和訊息步驟照片獨立播放時長 (秒)
+const FREEZE_TIMEOUT_SEC = 15; // 凍結偵測超時時間 (秒)
+
+// 定義 2 種顏色 (低飽和度: 淡銘黃/琥珀色 和 淡紫/紫色) 供 Day-Step 輪替使用
+const DAY_COLORS_PALETTE = [
+    // 淺橘黃色 (淡銘黃)
+    { bg: 'bg-amber-100', border: 'border-amber-400', text: 'text-amber-700' },
+    // 淺紫色 (淡紫)
+    { bg: 'bg-purple-100', border: 'border-purple-400', text: 'text-purple-700' },
+];
 
 const iconSize = 75; // 桌面預設大小
 // 調整 2: icon 下拉選單的選項呈現改為 emoji
@@ -151,12 +205,13 @@ const icons = ICON_NAMES.reduce((acc, item) => {
     return acc;
 }, {});
 
-const INITIAL_GPS = [26.20178415387677, 127.64689003446617];
+// 預設行程的起始 GPS 座標 (由用戶指定: 25.08100786985067, 121.23348442971395)
+const INITIAL_GPS = [25.08100786985067, 121.23348442971395];
 const START_STEP_DEFINITION = { 
     type: 'start', 
     lat: INITIAL_GPS[0], 
     lng: INITIAL_GPS[1], 
-    label: '那霸機場 (初始位置)' 
+    label: '桃園國際機場 (TPE, 初始位置)' 
 };
 
 // 使用 let 聲明，以便在 DOMContentLoaded 中賦值 (解決 Map container not found)
@@ -176,6 +231,13 @@ let currentWaitResolve = null;
 let clearScriptTimeoutId = null; 
 let hoverTimeoutId = null; // 用於錨點提示的計時器
 let insertAnchorIndex = -1; // 儲存要插入步驟的索引位置 (-1 表示沒有錨點)
+let freezeTimeoutId = null; // 凍結偵測計時器 ID (新增)
+let skipPhotoResolve = null; // 跳過照片等待的 Promise Resolver (新增)
+let isMobile = false; // 新增：是否為行動裝置
+
+// 新增：儲存 Day-Start 步驟的索引
+// [ { day: 1, stepIndex: 1, colorIndex: 0 }, { day: 2, stepIndex: 5, colorIndex: 1 }, ... ]
+let dayStartIndices = [];
 
 
 // 初始劇本
@@ -331,7 +393,7 @@ function loadImportedData(rawJsonString) {
                     step.type = 'start';
                     step.lat = compactStep[i++];
                     step.lng = compactStep[i++];
-                    step.label = '那霸機場 (初始位置)'; 
+                    step.label = '桃園國際機場 (TPE, 初始位置)'; 
                     
                     // 檢查可選的 label
                     if (compactStep.length > i && typeof compactStep[i] === 'string' && !compactStep[i].startsWith('data:image/')) {
@@ -492,7 +554,7 @@ async function loadScriptFromUrl(url) {
         }
     } catch (error) {
         statusMessage.textContent = '❌ URL 檔案解析失敗，請檢查內容格式。';
-        console.error('URL file parsing failed:', error);
+            console.error('URL file parsing failed:', error);
         return false;
     }
 }
@@ -820,7 +882,40 @@ function removeImage(index) {
 
 
 // =================================================================
-// 6. 核心動畫與流程控制函數
+// 6. 凍結偵測與播放控制輔助函數 (新增)
+// =================================================================
+
+/**
+ * 開始凍結偵測計時器
+ * @param {number} stepIndex - 當前步驟的索引
+ * @param {number} timeoutSec - 超時時間（秒）
+ */
+function startFreezeDetection(stepIndex, timeoutSec) {
+    clearFreezeDetection(); // 確保沒有舊的計時器
+    
+    freezeTimeoutId = setTimeout(() => {
+        // 超時觸發
+        const statusMessage = document.getElementById('status-message');
+        console.error(`Freeze Detected: Step ${stepIndex} exceeded ${timeoutSec} seconds.`);
+        // Note: stopScript() will clear the freezeTimeoutId.
+        stopScript(); 
+        statusMessage.textContent = `❌ 偵測到錯誤: 步驟 ${stepIndex} 執行超過 ${timeoutSec} 秒，已自動停止。`;
+    }, timeoutSec * 1000);
+}
+
+/**
+ * 清除凍結偵測計時器
+ */
+function clearFreezeDetection() {
+    if (freezeTimeoutId) {
+        clearTimeout(freezeTimeoutId);
+        freezeTimeoutId = null;
+    }
+}
+
+
+// =================================================================
+// 7. 核心動畫與流程控制函數 (原有代碼)
 // =================================================================
 
 // 距離計算 (Haversine 公式，回傳公尺)
@@ -890,15 +985,24 @@ function openImageModal(base64Image) {
     if (!imageModal) {
         imageModal = document.createElement('div');
         imageModal.id = 'image-modal';
+        // 允許點擊背景跳過
         imageModal.className = 'fixed inset-0 bg-black bg-opacity-75 z-[2000] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none';
         imageModal.innerHTML = `
-            <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-sm mx-4 transform scale-90 transition-transform duration-300">
+            <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-sm mx-4 transform scale-90 transition-transform duration-300" 
+                 onclick="event.stopPropagation()">
                 <!-- 確保圖片寬度最大化，高度自適應，並使用壓縮後的圖片大小 -->
                 <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_IMAGE_WIDTH}px] mx-auto" alt="Journey Photo">
-                <p class="text-center text-sm text-gray-600 font-semibold">📸 行程照片</p>
+                <p class="text-center text-sm text-gray-600 font-semibold mb-2">📸 行程照片</p>
+                <!-- 新增 SKIP 按鈕 -->
+                <button onclick="skipPhoto()" id="skip-photo-button" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition duration-150">
+                    SKIP (跳過)
+                </button>
             </div>
         `;
         document.body.appendChild(imageModal);
+        
+        // 讓點擊背景也能跳過
+        imageModal.onclick = skipPhoto; 
     }
     
     const imageElement = document.getElementById('modal-image');
@@ -934,6 +1038,35 @@ function closeImageModal() {
 }
 
 /**
+ * 點擊跳過按鈕，強制結束照片播放的等待。
+ */
+function skipPhoto() {
+    if (skipPhotoResolve) {
+        // 1. 關閉模態框
+        closeImageModal();
+        // 2. 停止當前 wait/pause
+        if (currentWaitTimeoutId) {
+            clearTimeout(currentWaitTimeoutId);
+            currentWaitRemainingTime = 0;
+            currentWaitTimeoutId = null;
+        }
+        // 3. 解決 playStepMedia 中的 wait Promise
+        if (currentWaitResolve) {
+            currentWaitResolve();
+        }
+        // 4. 解決 playStepMedia 中的主要 Pause Promise (如果 still paused)
+        if (pauseResolve) {
+            pauseResolve();
+        }
+
+        const resolveFn = skipPhotoResolve;
+        skipPhotoResolve = null; // 清除狀態
+        document.getElementById('status-message').textContent = '📸 照片已跳過。';
+        resolveFn(); // 解決 playStepMedia 的主 Promise
+    }
+}
+
+/**
  * 播放獨立照片並等待 2.5 秒
  * @param {string} base64Image - Base64 圖片字串
  * @returns {Promise<void>} - 等待 PHOTO_STANDALONE_DURATION 秒後關閉
@@ -942,6 +1075,9 @@ function playStepMedia(base64Image) {
     if (!base64Image) return Promise.resolve();
     
     return new Promise(async (resolve) => {
+        // 設定主 Promise Resolver
+        skipPhotoResolve = resolve; 
+
         // 1. 開啟模態框
         openImageModal(base64Image); 
         
@@ -949,10 +1085,12 @@ function playStepMedia(base64Image) {
         await wait(PHOTO_STANDALONE_DURATION); 
         await getPausePromise(); 
         
-        // 3. 關閉模態框
-        closeImageModal();
-        
-        resolve();
+        // 3. 關閉模態框 (如果不是被 skipPhoto 關閉)
+        if (skipPhotoResolve) {
+            closeImageModal();
+            skipPhotoResolve = null; // 清除狀態
+            resolve();
+        }
     });
 }
 
@@ -1018,6 +1156,7 @@ function stopScript() {
     // 停止所有等待/暫停
     if (pauseResolve) pauseResolve();
     if (currentWaitTimeoutId) clearTimeout(currentWaitTimeoutId);
+    clearFreezeDetection(); // <-- 清除凍結偵測計時器
     
     // 清除狀態和UI
     document.getElementById('play-button').disabled = false;
@@ -1035,6 +1174,9 @@ function stopScript() {
 
     // 關閉圖片模態框
     closeImageModal();
+    
+    // NEW: Update layout back to editing mode
+    updateMobileLayout();
 }
 
 
@@ -1269,6 +1411,32 @@ function goto(gps){
 }
 
 /**
+ * 根據螢幕大小和播放狀態更新行動裝置佈局
+ */
+function updateMobileLayout() {
+    const BODY_CONTAINER = document.body;
+    // 檢查是否為行動裝置 (小于 768px)
+    isMobile = window.innerWidth <= 767; 
+    
+    // 如果是 PC (大於 767px)，清除所有 mobile 相關 class
+    if (!isMobile) {
+        BODY_CONTAINER.classList.remove('mobile-controls-only', 'mobile-playing');
+        return;
+    }
+
+    if (isScriptRunning) {
+        // 播放模式 (手機): 地圖和底部控制面板各佔 50%
+        BODY_CONTAINER.classList.add('mobile-playing');
+        BODY_CONTAINER.classList.remove('mobile-controls-only');
+    } else {
+        // 編輯模式 (手機): 隱藏地圖，顯示整個控制面板
+        BODY_CONTAINER.classList.add('mobile-controls-only');
+        BODY_CONTAINER.classList.remove('mobile-playing');
+    }
+}
+
+
+/**
  * 執行劇本
  * @param {number} startIndex - 從哪個步驟索引開始執行 (0為START，1為第一個可執行步驟)
  */
@@ -1294,6 +1462,9 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     playButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-700');
     playButton.classList.add('bg-gray-400');
     statusMessage.textContent = '▶️ 劇本開始執行...';
+    
+    // NEW: Update layout to playing mode
+    updateMobileLayout();
     
     // 清除所有步驟高亮 (focused-step 已移除)
     document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
@@ -1339,14 +1510,56 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
 
     // 2. 按照步驟順序執行
     async function runSteps() { // 使用一個 async 內部函數來處理 await
+        let currentDay = 1; // 追蹤 Day 數
+        
+        // --- 預先計算 DAY 數到 startIndex 之前 ---
+        // 這是必要的，因為我們需要知道從 startIndex 開始時，目前是第幾天
+        for (let j = 0; j < startIndex; j++) {
+            if (j > 0 && scriptSteps[j - 1].type === 'dayoff') {
+                currentDay++;
+            }
+        }
+        // ----------------------------------------
+
         for (let i = startIndex; i < scriptSteps.length; i++) {
             
-            if (!isScriptRunning) break; // 檢查是否被 stopScript 停止
+            if (!isScriptRunning) {
+                clearFreezeDetection(); // 確保停止時清除計時器
+                break; 
+            }
 
-            // 檢查暫停狀態 (如果已暫停，程式會在此處等待)
+            // --- 1. 自動產生 DAY X START 訊息 (新需求) ---
+            let isDayStartStep = false;
+            // 判斷是否為 Day 1 的開始 (i=1, startIndex=1)
+            if (i === 1 && startIndex === 1) {
+                isDayStartStep = true;
+            } 
+            // 判斷是否為 Day X 的開始 (前一步驟是 Dayoff)
+            else if (i > 1 && scriptSteps[i - 1].type === 'dayoff') {
+                isDayStartStep = true;
+            }
+
+            if (isDayStartStep) {
+                // 確保訊息顯示不會被 Pause 阻塞
+                show(`🌞 DAY ${currentDay} 開始！`); 
+                // 給予 1 秒顯示時間，且這 1 秒需要支援 Pause
+                await wait(1); 
+                await getPausePromise(); 
+            }
+            // ------------------------------------
+            
+            // 檢查暫停狀態 (必須在執行任何動作前檢查)
             await getPausePromise(); 
             
-            if (!isScriptRunning) break; // 再次檢查，防止在從暫停恢復後立即停止
+            if (!isScriptRunning) {
+                 clearFreezeDetection(); // 確保恢復後立即停止時清除計時器
+                 break; 
+            } 
+            
+            // ----------------------------------------------------
+            // 啟動凍結偵測：確保單一步驟（不含用戶主動暫停時間）不會超時
+            // ----------------------------------------------------
+            startFreezeDetection(i, FREEZE_TIMEOUT_SEC);
 
             const step = scriptSteps[i];
             
@@ -1399,6 +1612,9 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                         break;
                 }
                 
+                // 清除凍結偵測（在所有阻塞操作之後）
+                clearFreezeDetection();
+                
                 // --- 步驟結束時的邏輯 ---
                 if (isContinuousPhotoStep && step.image) {
                     // 持續顯示類型的，動作結束時關閉照片
@@ -1407,10 +1623,18 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                     // 獨立播放類型的，動作結束後播放照片 2.5 秒
                     await playStepMedia(step.image);
                 }
+                
+                // --- 更新 Day 計數器 (用於下一個迴圈的 currentDay 追蹤) ---
+                if (step.type === 'dayoff') {
+                    currentDay++;
+                }
+                // --- End Day Counting ---
+
 
             } catch (error) {
                 console.error(`步驟 ${i} 執行錯誤:`, error);
                 // 遇到錯誤，調用 stopScript 清理狀態
+                clearFreezeDetection();
                 stopScript();
                 statusMessage.textContent = `❌ 錯誤: 步驟 ${i} 執行失敗，已中斷。`;
                 return; 
@@ -1421,7 +1645,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
         }
 
         // 3. 執行結束
-        if (isScriptRunning) { // 只有在沒有被手動停止時才顯示完成
+        if (isScriptRunning) { 
             stopScript(); // 使用 stopScript 執行標準結束清理
             statusMessage.textContent = '✅ 劇本執行完畢！';
         }
@@ -1495,9 +1719,33 @@ function clearScript() {
  * 捲動腳本列表到最底部
  */
 function scrollToBottom() { // <-- HTML onclick 調用
-    const controlsContainer = document.getElementById('controls');
-    // 捲動到 controls 容器的最底部
-    controlsContainer.scrollTop = controlsContainer.scrollHeight;
+    // 捲動目標變更為新的列表容器
+    const listWrapper = document.getElementById('script-list-wrapper');
+    // 捲動到 listWrapper 容器的最底部
+    if (listWrapper) {
+        listWrapper.scrollTop = listWrapper.scrollHeight;
+    }
+}
+
+/**
+ * 捲動行程列表到指定天數的第一個行程。
+ * @param {number} dayNumber - 要捲動到的目標天數 (1, 2, 3...)
+ */
+function scrollToDayStart(dayNumber) {
+    const targetDay = dayStartIndices.find(item => item.day === dayNumber);
+    if (!targetDay) {
+        console.warn(`找不到 Day ${dayNumber} 的起始步驟。`);
+        return;
+    }
+    
+    // 步驟 0 (start) 沒有卡片，所以從步驟 1 開始。
+    const stepElement = document.getElementById(`step-${targetDay.stepIndex}`);
+    const listWrapper = document.getElementById('script-list-wrapper');
+
+    if (stepElement && listWrapper) {
+        // 使用 scrollIntoView 配合 'start' 確保元素對齊到父容器頂部
+        stepElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 
@@ -1648,21 +1896,131 @@ function handleFileUpload(event) {
 
 
 /**
+ * 渲染日進度條 (Day Progress Bar)
+ * 1. 計算每天的步驟數量。
+ * 2. 根據比例渲染垂直的條棒。
+ */
+function renderDayProgressBar() {
+    const progressBarContainer = document.getElementById('day-progress-bar');
+    if (!progressBarContainer) return;
+
+    // 清空舊內容
+    progressBarContainer.innerHTML = '';
+    
+    // 確保 bar 容器是垂直堆疊的 flex
+    progressBarContainer.classList.add('flex', 'flex-col');
+    
+    // 1. 計算每天的步驟數量 (忽略 START 步驟)
+    const dayStepCounts = []; // [Day1_Count, Day2_Count, ...]
+    dayStartIndices = [];     // 重置 Day Start Index 列表
+    
+    let totalStepsForBar = 0; // 總步驟數 (不含 START)
+    let currentDayStepCount = 0;
+    let currentDay = 1;
+    let dayColorIndex = 0; // 0, 1, 2, ...
+    
+    // 處理 Day 1 的開始 (Step 1)
+    if (scriptSteps.length > 1) {
+        dayStartIndices.push({ day: 1, stepIndex: 1, colorIndex: 0 });
+    }
+
+    for (let i = 1; i < scriptSteps.length; i++) {
+        const step = scriptSteps[i];
+        
+        // 遇到 Dayoff 步驟時，代表前一天行程結束
+        if (step.type === 'dayoff') {
+            if (currentDayStepCount > 0) {
+                dayStepCounts.push(currentDayStepCount);
+                totalStepsForBar += currentDayStepCount;
+            }
+            
+            // 進入下一天
+            currentDay++;
+            // FIX: 使用 (currentDay - 1) 確保索引正確輪替 (1 -> 0, 2 -> 1, 3 -> 0)
+            dayColorIndex = (currentDay - 1) % DAY_COLORS_PALETTE.length;
+            
+            // 檢查下一天是否有行程 (i + 1 < scriptSteps.length)
+            if (i + 1 < scriptSteps.length) {
+                dayStartIndices.push({ day: currentDay, stepIndex: i + 1, colorIndex: dayColorIndex });
+            }
+            
+            currentDayStepCount = 0; 
+        } else {
+            // 計算步驟 (goto, activity, show)
+            currentDayStepCount++;
+        }
+    }
+    // 加上最後一天的步驟數 (如果存在)
+    if (currentDayStepCount > 0) {
+        dayStepCounts.push(currentDayStepCount);
+        totalStepsForBar += currentDayStepCount;
+    }
+    
+    // 如果總步驟數為 0 (只有 START)，則使用一個中性背景
+    if (totalStepsForBar === 0) {
+        progressBarContainer.classList.add('bg-gray-100');
+        return; 
+    }
+
+    // 2. 根據比例渲染條棒
+    
+    // 條棒背景顏色使用 PALETTE 中低飽和度的 BG 顏色
+    const BAR_COLORS_PALETTE = DAY_COLORS_PALETTE.map(c => c.bg); // bg-X-100
+    // 條棒文字顏色使用 PALETTE 中深色的 TEXT 顏色
+    const BAR_TEXT_COLORS = DAY_COLORS_PALETTE.map(c => c.text); // text-X-700
+
+    dayStepCounts.forEach((dayCount, index) => {
+        const heightPercent = (dayCount / totalStepsForBar) * 100;
+        const colorClass = BAR_COLORS_PALETTE[index % BAR_COLORS_PALETTE.length];
+        const textColorClass = BAR_TEXT_COLORS[index % BAR_COLORS_PALETTE.length];
+        const dayNumber = index + 1; // Day 1, Day 2, ...
+        
+        const dayBar = document.createElement('div');
+        dayBar.id = `day-bar-${dayNumber}`;
+        // 使用低飽和度顏色 (colorClass)
+        dayBar.className = `w-full flex-shrink-0 ${colorClass} transition-all duration-500 cursor-pointer hover:bg-opacity-80`;
+        dayBar.onclick = () => scrollToDayStart(dayNumber);
+        
+        // 設置高度 (使用 style 確保精確的百分比)
+        dayBar.style.height = `${heightPercent}%`;
+        
+        // 視覺調整：增加 Day X 提示 (使用深色文字)
+        dayBar.innerHTML = `<span class="text-xs ${textColorClass} font-bold opacity-80 transition-opacity duration-300">${dayNumber}</span>`;
+        dayBar.style.display = 'flex';
+        dayBar.style.justifyContent = 'center';
+        dayBar.style.alignItems = 'center';
+        
+        // 僅在條棒較高時顯示數字 (例如 > 5%)
+        if (heightPercent < 5) {
+            dayBar.querySelector('span').classList.add('hidden');
+        }
+
+        progressBarContainer.appendChild(dayBar);
+    });
+}
+
+
+/**
  * 渲染劇本列表
  */
 function renderScript() {
+    // 更改目標容器
     const listContainer = document.getElementById('script-list');
     listContainer.innerHTML = '';
+    
+    // 預先渲染天數進度條
+    renderDayProgressBar(); 
     
     // --- 日數與行程計數邏輯 (Day-Step Numbering) ---
     let currentDay = 1;         // 當前日數
     let dayStepCount = 0;       // 當前日數中的行程計數 (從 1 開始)
     
     // --- 顏色交替邏輯的變數 (日分組) ---
-    const DAY_COLORS = ['bg-indigo-100', 'bg-pink-100']; 
-    const BORDER_COLORS = ['border-indigo-400', 'border-pink-400'];
-    let dayIndex = 0; // 0 或 1，用於顏色交替
-    // ---------------------------------
+    let dayIndex = 0; // 0, 1, 2，用於顏色輪替
+    
+    // 確保 START 步驟是 Day 1 的第一部分
+    const startStepColor = DAY_COLORS_PALETTE[0]; 
+
 
     scriptSteps.forEach((step, index) => {
         
@@ -1676,27 +2034,32 @@ function renderScript() {
             let anchorStep = dayStepCount + 1;
             
             if (scriptSteps[index - 1].type === 'dayoff') {
+                // 如果前一個是 Dayoff，則 Day+1，Step 從 1 開始
                 anchorDay++;
                 anchorStep = 1;
             }
             
             const anchorDisplay = `${anchorDay}-${anchorStep}`;
 
+            // 錨點使用下一個 Day 的顏色
+            const nextDayIndex = anchorDay % DAY_COLORS_PALETTE.length;
+            const anchorColor = DAY_COLORS_PALETTE[nextDayIndex];
 
             if (index === insertAnchorIndex) {
                 // RENDER INLINE ACTION PANEL
                 const actionPanel = document.createElement('div');
-                actionPanel.className = 'insert-anchor-panel p-3 my-2 bg-indigo-100 rounded-lg border-2 border-indigo-500 shadow-md';
+                // 使用下一個 Day 的顏色
+                actionPanel.className = `insert-anchor-panel p-3 my-2 ${anchorColor.bg} rounded-lg border-2 ${anchorColor.border} shadow-md`;
                 actionPanel.dataset.index = index;
                 actionPanel.innerHTML = `
-                    <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 ${anchorDisplay} 插入動作：</p>
+                    <p class="font-bold text-sm ${anchorColor.text} mb-2 text-center">📌 在 ${anchorDisplay} 插入動作：</p>
                     <div class="grid grid-cols-2 gap-2 text-sm">
                         <button onclick="addStep('goto', ${index})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
                         <button onclick="addStep('activity', ${index})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
                         <button onclick="addStep('show', ${index})" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">💬 顯示訊息</button>
                         <button onclick="addStep('dayoff', ${index})" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 font-semibold">🛌 休息過夜</button>
                     </div>
-                    <button onclick="clearInsertAnchor()" class="w-full mt-3 text-xs text-indigo-700 hover:text-red-600 font-semibold">❌ 取消插入</button>
+                    <button onclick="clearInsertAnchor()" class="w-full mt-3 text-xs ${anchorColor.text} hover:text-red-600 font-semibold">❌ 取消插入</button>
                 `;
                 listContainer.appendChild(actionPanel);
 
@@ -1723,27 +2086,24 @@ function renderScript() {
             if (scriptSteps[index - 1].type === 'dayoff') {
                 currentDay++;
                 dayStepCount = 1;
+                // FIX: 使用 (currentDay - 1) 確保索引正確輪替
+                dayIndex = (currentDay - 1) % DAY_COLORS_PALETTE.length; 
             } else {
                 dayStepCount++;
             }
             displayIndex = `${currentDay}-${dayStepCount}`;
         }
         
-        // --- 步驟顏色邏輯 (必須使用前一步驟類型) ---
-        if (index > 0 && scriptSteps[index - 1].type === 'dayoff') {
-            dayIndex = 1 - dayIndex; // 翻轉 0 <-> 1
-        }
-
-
+        // --- 步驟顏色邏輯 ---
+        let currentDayColor = DAY_COLORS_PALETTE[dayIndex];
+        
         const stepElement = document.createElement('div');
         stepElement.id = `step-${index}`;
         // 步驟元素的基本樣式：圓角、陰影、過渡效果
-        stepElement.className = 'p-3 rounded-lg shadow-sm transition-all duration-200 border border-opacity-50 step-card'; 
-        
-        // 移除 Focus 樣式應用邏輯
+        stepElement.className = `p-3 rounded-lg shadow-sm transition-all duration-200 border border-opacity-50 step-card ${currentDayColor.bg} ${currentDayColor.border}`; 
         
         let contentHtml = '';
-        let stepColor = 'text-gray-700';
+        let stepColor = currentDayColor.text; // 預設使用當天的文字顏色
         let stepIcon = '🔹';
 
         const isStartStep = index === 0;
@@ -1752,26 +2112,20 @@ function renderScript() {
         const startButtonTitle = isStartStep ? '從頭撥放' : '從這邊開始撥放';
 
         
-        // 應用當前日的基礎色 (除了 Dayoff 步驟)
-        if (step.type === 'dayoff') {
-            // Dayoff 步驟：使用中性色突顯，並保留粉色的文字顏色
-            stepElement.classList.add('bg-gray-200', 'border-gray-400');
-            stepColor = 'text-pink-700'; 
-        } else {
-            // Start 和所有其他步驟：應用 Day N 的顏色
-            stepElement.classList.add(DAY_COLORS[dayIndex]); // 應用淡紫或淡粉紅
-            stepElement.classList.add(BORDER_COLORS[dayIndex]); // 應用對應的邊框色
-        }
-
         if (step.type === 'start') {
-            // Start Step: 強制使用 Day 1 的深色邊框和突顯文字色
+            // Start Step: 強制使用 Day 1 的深色邊框和突顯文字色 (Day 1 的顏色)
+            stepElement.classList.add(startStepColor.border, startStepColor.bg);
             stepElement.classList.remove('border-opacity-50');
-            stepElement.classList.add('border-indigo-500');
-            stepColor = 'text-purple-700';
-            // Start 步驟不需要 hover 顏色，因為它不能被刪除/移動
+            stepColor = startStepColor.text; // 確保文字顏色一致
+            stepIcon = '📍';
             stepElement.classList.remove('step-card:hover');
+        } else if (step.type === 'dayoff') {
+             // Dayoff 步驟：使用中性色突顯
+            stepElement.classList.remove(currentDayColor.bg, currentDayColor.border);
+            stepElement.classList.add('bg-gray-200', 'border-gray-400');
+            stepColor = DAY_COLORS_PALETTE[0].text; // 保持使用第一組顏色文字
+            stepIcon = '🛌';
         }
-        // ------------------
         
         // --- 照片上傳/顯示 UI (在 stepElement 內) ---
         const fileInputId = `image-upload-${index}`;
@@ -1809,7 +2163,6 @@ function renderScript() {
         switch (step.type) {
             case 'start':
                 // (Start stepColor/Icon已在上面設定)
-                stepIcon = '📍';
                 
                 // 組合為單一座標字串
                 const startCoordValue = (step.lat && step.lng) ? `${step.lat}, ${step.lng}` : '';
@@ -1829,7 +2182,6 @@ function renderScript() {
             case 'goto':
                 // 組合為單一座標字串
                 const coordValue = (step.lat && step.lng) ? `${step.lat}, ${step.lng}` : '';
-                stepColor = 'text-blue-700';
                 stepIcon = '➡️';
                 contentHtml = `
                     <span class="font-bold">移動到</span>
@@ -1864,7 +2216,6 @@ function renderScript() {
                 break;
             case 'activity':
                 // **新邏輯：Activity = setIcon (可選) + wait (可選)**
-                stepColor = 'text-green-700';
                 stepIcon = '🏃';
                 contentHtml = `
                     <span class="font-bold">活動/狀態 (變更圖標或等待)</span>
@@ -1896,7 +2247,6 @@ function renderScript() {
                 `;
                 break;
             case 'show':
-                stepColor = 'text-yellow-700';
                 stepIcon = '💬';
                 contentHtml = `
                     <span class="font-bold">顯示訊息</span>
@@ -1981,22 +2331,26 @@ function renderScript() {
     }
     const finalAnchorDisplay = `${finalAnchorDay}-${finalAnchorStep}`;
 
+    // 計算最後錨點的顏色索引 (下一個 Day 的顏色)
+    const finalAnchorColor = DAY_COLORS_PALETTE[finalAnchorDay % DAY_COLORS_PALETTE.length];
+
 
     // 最後一個錨點 (在最後一個步驟下方)
     if (scriptSteps.length === insertAnchorIndex) {
         // RENDER FINAL INLINE ACTION PANEL
         const actionPanel = document.createElement('div');
-        actionPanel.className = 'insert-anchor-panel p-3 my-2 bg-indigo-100 rounded-lg border-2 border-indigo-500 shadow-md';
+        // 使用下一個 Day 的顏色
+        actionPanel.className = `insert-anchor-panel p-3 my-2 ${finalAnchorColor.bg} rounded-lg border-2 ${finalAnchorColor.border} shadow-md`;
         actionPanel.dataset.index = scriptSteps.length;
         actionPanel.innerHTML = `
-            <p class="font-bold text-sm text-indigo-700 mb-2 text-center">📌 在 ${finalAnchorDisplay} (末尾) 插入動作：</p>
+            <p class="font-bold text-sm ${finalAnchorColor.text} mb-2 text-center">📌 在 ${finalAnchorDisplay} (末尾) 插入動作：</p>
             <div class="grid grid-cols-2 gap-2 text-sm">
                 <button onclick="addStep('goto', ${scriptSteps.length})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
                 <button onclick="addStep('activity', ${scriptSteps.length})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
                 <button onclick="addStep('show', ${scriptSteps.length})" class="bg-yellow-500 text-gray-800 p-2 rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">💬 顯示訊息</button>
                 <button onclick="addStep('dayoff', ${scriptSteps.length})" class="bg-pink-500 text-white p-2 rounded-lg hover:bg-pink-600 transition duration-150 font-semibold">🛌 休息過夜</button>
             </div>
-            <button onclick="clearInsertAnchor()" class="w-full mt-3 text-xs text-indigo-700 hover:text-red-600 font-semibold">❌ 取消插入</button>
+            <button onclick="clearInsertAnchor()" class="w-full mt-3 text-xs ${finalAnchorColor.text} hover:text-red-600 font-semibold">❌ 取消插入</button>
         `;
         listContainer.appendChild(actionPanel);
     } else {
@@ -2011,18 +2365,10 @@ function renderScript() {
     
     // 移除所有的 Focus/Scroll 邏輯
     
-    // 處理 [拉到最下面] 按鈕的顯示/隱藏
-    const controlsContainer = document.getElementById('controls');
-    const scrollToBottomContainer = document.getElementById('scroll-to-bottom-container');
+    // 處理 [拉到最下面] 按鈕的顯示/隱藏: 由於按鈕已移除，此處無需動作
     
-    // 只有當內容高度大於可視區域時才顯示按鈕
-    setTimeout(() => {
-        if (controlsContainer.scrollHeight > controlsContainer.clientHeight) {
-            scrollToBottomContainer.classList.remove('hidden');
-        } else {
-            scrollToBottomContainer.classList.add('hidden');
-        }
-    }, 100);
+    // NEW: 渲染完成後更新一次佈局
+    updateMobileLayout();
 }
 </script>
 </head>
@@ -2031,72 +2377,80 @@ function renderScript() {
 <div class="flex flex-col md:flex-row h-screen overflow-hidden">
   
   <!-- 右側地圖顯示區 (在行動裝置上在上半部) -->
-  <div id="map-container" class="w-full md:w-2/3 relative mobile-h-half h-full">
+  <div id="map-container" class="w-full md:w-2/3 relative h-full">
     <div id="map"></div>
     <!-- 新增：夜間動畫遮罩。絕對定位覆蓋地圖 -->
     <div id="night-overlay" class="absolute inset-0 z-[1000]"></div>
   </div>
 
   <!-- 左側控制面板 (在行動裝置上在下半部) -->
-  <div id="controls" class="w-full md:w-1/3 p-4 bg-white shadow-xl overflow-y-auto flex flex-col relative mobile-h-half h-full">
-    <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2">🗺️ 旅程劇本設計器</h1>
-
-    <!-- 腳本步驟列表 - 這是捲動的內容 -->
-    <!-- 移除了原先的 Action 按鈕面板，讓插入動作改為行內處理 -->
-    <div id="script-list" class="space-y-3 flex-grow mb-4">
-      <!-- 步驟將在此處渲染 -->
-    </div>
+  <!-- 變更: 設置為 Flex Column 容器 -->
+  <div id="controls" class="w-full md:w-1/3 bg-white shadow-xl relative h-full flex flex-col">
     
-    <!-- 播放控制按鈕 -->
-    <div class="flex space-x-2 mb-2">
-        <!-- 暫停/繼續按鈕 -->
-        <button id="pause-resume-button" onclick="pauseToggle()" 
-            class="w-1/2 bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled 
-            title="暫停播放">
-            <span class="text-lg">⏸️ 暫停/繼續</span>
-        </button>
-         <!-- 停止播放按鈕 (新增) -->
-        <button id="stop-button" onclick="stopScript()" 
-            class="w-1/2 bg-gray-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled 
-            title="停止播放">
-            <span class="text-lg">◼️ 停止播放</span>
-        </button>
-    </div>
+    <!-- A. 上方區域 (紅 + 橙) - 佔滿剩餘空間，Flex Row 佈局 -->
+    <div id="top-area-wrapper" class="flex flex-row flex-grow min-h-0">
+        
+        <!-- A.1 橙色區塊 (左側長條) - 固定寬度 16px，佔滿高度 -->
+        <!-- 使用 w-4 (16px)。將 ID 改為 #day-progress-bar -->
+        <div id="day-progress-bar" class="h-full w-4 flex-shrink-0 hidden md:block">
+          <!-- 比例條棒將在此處渲染 -->
+        </div>
 
-
-    <!-- 播放按鈕 -->
-    <button id="play-button" onclick="executeScript(1)" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] text-lg mb-2">
-      ▶️ 從頭開始播放 (PLAY)
-    </button>
+        <!-- A.2 紅色區塊：行程列表容器 (右側，可捲動) - 佔滿剩餘寬度，設置滾動 -->
+        <div id="script-list-wrapper" class="flex-grow h-full overflow-y-auto p-4 min-h-0">
+          <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2 sticky top-0 bg-white z-10">🗺️ 旅程劇本設計器</h1>
+          <!-- 腳本步驟列表 - 這是捲動的內容 -->
+          <div id="script-list" class="space-y-3">
+            <!-- 步驟將在此處渲染 -->
+          </div>
+        </div>
+    </div> <!-- End #top-area-wrapper -->
     
-    <!-- 匯出與刪除按鈕 (新佈局) -->
-    <div class="flex space-x-2 mb-2">
-        <!-- 匯出按鈕：現在是下載檔案 -->
-        <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
-          💾 匯出檔案
-        </button>
-        <!-- 匯入按鈕：現在是上傳檔案，點擊會觸發隱藏的 file input -->
-        <button id="import-file-button" onclick="document.getElementById('file-input').click()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
-          📤 匯入檔案
-        </button>
-        <!-- 刪除按鈕 -->
-        <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
-          🗑️ 全部刪除
-        </button>
-    </div>
+    <!-- B. 綠色/藍色區塊：固定操作面板 (底部) - 固定高度 190px，不被壓縮 -->
+    <div id="bottom-controls" class="flex-shrink-0 h-[190px] bg-white shadow-2xl p-4 border-t border-gray-200">
+      
+      <!-- 播放控制按鈕 -->
+      <div class="flex space-x-2 mb-2">
+          <!-- 暫停/繼續按鈕 -->
+          <button id="pause-resume-button" onclick="pauseToggle()" 
+              class="w-1/2 bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+              disabled 
+              title="暫停播放">
+              <span class="text-lg">⏸️ 暫停/繼續</span>
+          </button>
+           <!-- 停止播放按鈕 (新增) -->
+          <button id="stop-button" onclick="stopScript()" 
+              class="w-1/2 bg-gray-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+              disabled 
+              title="停止播放">
+              <span class="text-lg">◼️ 停止播放</span>
+          </button>
+      </div>
 
-    <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">準備就緒</div>
+      <!-- 播放按鈕 -->
+      <button id="play-button" onclick="executeScript(1)" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] text-lg mb-2">
+        ▶️ 從頭開始播放 (PLAY)
+      </button>
+      
+      <!-- 匯出與刪除按鈕 -->
+      <div class="flex space-x-2 mb-2">
+          <!-- 匯出按鈕：現在是下載檔案 -->
+          <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
+            💾 匯出檔案
+          </button>
+          <!-- 匯入按鈕：現在是上傳檔案，點擊會觸發隱藏的 file input -->
+          <button id="import-file-button" onclick="document.getElementById('file-input').click()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
+            📤 匯入檔案
+          </button>
+          <!-- 刪除按鈕 -->
+          <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
+            🗑️ 全部刪除
+          </button>
+      </div>
 
-    <!-- 錯誤時顯示的手動複製區域會動態插入此處 -->
+      <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">準備就緒</div>
 
-    <!-- 新增：拉到最下面按鈕 (STICKY/固定在內容底部) -->
-    <div id="scroll-to-bottom-container" class="w-full p-2 -mx-4 bg-white shadow-md border-t border-gray-200 z-10 hidden">
-        <button onclick="scrollToBottom()" class="w-full bg-gray-100 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-200 transition duration-150 text-sm">
-            👇 拉到最下面
-        </button>
-    </div>
+    </div> <!-- End #bottom-controls -->
 
   </div> <!-- End #controls -->
 </div>
@@ -2117,6 +2471,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     checkAndLoadScriptFromURL(); 
     renderScript();
+
+    // NEW: Initial layout setup and resize listener
+    updateMobileLayout();
+    window.addEventListener('resize', updateMobileLayout);
 });
 </script>
 </body>
