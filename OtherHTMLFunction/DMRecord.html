@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025年度個人總結表格 (新增匯出)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 html2canvas 函式庫用於將 HTML 渲染成圖片 -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        /* 設定字體為 Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+
+        /* 內容單元格的基本樣式 */
+        .content-cell {
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+            border: 1px solid #000;
+            transition: all 0.2s;
+            display: flex; /* 使用 flex 來居中模式選擇器或內容 */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px; /* 內邊距 */
+            /* 讓 div 獲得焦點時有視覺回饋 */
+            outline: none; 
+        }
+
+        .content-cell:focus {
+            box-shadow: 0 0 0 2px #f97316, 0 0 0 4px rgba(249, 115, 22, 0.5); /* 聚焦時的橙色外框 */
+        }
+
+        .content-cell:hover {
+            background-color: #eef;
+        }
+        
+        /* 圖片容器：用於拖曳和縮放 */
+        .image-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 修正 1: 移除會與屬性選擇器衝突的 display: none; */
+            overflow: hidden; /* 裁剪路徑(clip-path)的關鍵 */
+            display: block; /* 讓它總是存在，由內層的 img 和 clip-path 控制顯示區域 */
+        }
+        
+        /* 實際圖片樣式 */
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            pointer-events: all;
+            position: absolute;
+            transform-origin: 0 0;
+            transition: opacity 0.3s;
+            /* 讓 img 元素預設隱藏，只在有 src 時才由 JS 或 CSS 顯示 */
+            display: none; 
+        }
+
+        /* ------------------ Dual Image / Diagonal Split Styles ------------------ */
+
+        /* 對角線分隔線: 左下到右上 (45度) */
+        .diagonal-line {
+            position: absolute;
+            /* 讓線段寬度足以覆蓋對角線 (sqrt(2)*100% 約 141.4%) */
+            width: 142.8%; 
+            height: 2px;
+            background: #000;
+            top: 50%;
+            left: -21.4%; 
+            transform: rotate(45deg); 
+            transform-origin: 50% 50%;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+        }
+        
+        /* 修正 2: 移除會與 data-image-count 選擇器衝突的規則 */
+        /* .content-cell[data-mode='image'] .image-wrapper {
+            display: none;
+        } */
+
+        /* 單張圖片模式: Image 1 佔滿整個空間 */
+        .content-cell[data-image-count='1'] .image-wrapper-1 {
+            display: block;
+            clip-path: none;
+            pointer-events: all;
+        }
+        .content-cell[data-image-count='1'] .image-wrapper-2 {
+            display: none;
+        }
+
+        /* 雙圖模式: Image 1 (左下角三角形) */
+        .content-cell[data-image-count='2'] .image-wrapper-1 {
+            display: block;
+            /* 左下角三角形: (0, 0), (100%, 100%), (0, 100%) */
+            clip-path: polygon(0 0, 100% 100%, 0 100%); 
+            pointer-events: all; 
+        }
+
+        /* 雙圖模式: Image 2 (右上角三角形) */
+        .content-cell[data-image-count='2'] .image-wrapper-2 {
+            display: block;
+            /* 右上角三角形: (0, 0), (100%, 0), (100%, 100%) */
+            clip-path: polygon(0 0, 100% 0, 100% 100%); 
+            pointer-events: all; 
+        }
+        
+        /* 內容文字區域樣式 */
+        .cell-text-input {
+            /* 讓文字輸入框佔滿單元格 */
+            position: absolute; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 104px; 
+            outline: none;
+            cursor: text;
+            padding: 4px;
+            overflow-y: auto;
+            text-align: center; /* 讓文字居中顯示 */
+            display: flex;
+            /* 允許文字斷行 */
+            white-space: normal; 
+            word-break: break-all;
+            justify-content: center;
+            align-items: center;
+            background-color: transparent; 
+            /* 啟用 CSS 過渡效果，讓文字大小變化更流暢 */
+            transition: font-size 0.2s ease-out; 
+        }
+        .cell-text-input:focus {
+            background-color: #fffbe6;
+            border: 1px solid #f97316; /* 聚焦時的邊框 */
+            padding: 3px;
+        }
+
+        /* 標題和可編輯文字樣式 */
+        .editable-text {
+            outline: none;
+            cursor: text;
+        }
+        .editable-text:focus {
+            background-color: #fffbe6;
+        }
+
+        /* 提示訊息和清除按鈕樣式 */
+        .toast-message {
+            z-index: 100;
+        }
+        .clear-button {
+            z-index: 20;
+        }
+        .mode-selector-overlay {
+            z-index: 5;
+            padding: 10px;
+            /* 確保選擇介面在最上層並居中 */
+            position: absolute; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9); /* 輕微透明背景 */
+        }
+    </style>
+    
+    <!-- 主要應用程式邏輯 -->
+    <script>
+        const ZOOM_STEP = 0.1;
+        const MIN_SCALE = 0.1;
+        const MAX_SCALE = 5.0;
+
+        // --- 輔助函式 ---
+        
+        /**
+         * 根據模式切換單元格內元件的顯示狀態
+         * @param {HTMLElement} cell - 內容單元格
+         * @param {string} mode - 'select', 'image', or 'text'
+         */
+        function updateCellView(cell, mode) {
+            cell.dataset.mode = mode;
+            const count = parseInt(cell.dataset.imageCount || 0);
+            
+            const selectOverlay = cell.querySelector('.mode-selector-overlay');
+            const wrapper1 = cell.querySelector('.image-wrapper-1');
+            const wrapper2 = cell.querySelector('.image-wrapper-2');
+            const textInput = cell.querySelector('.cell-text-input');
+            const diagonalLine = cell.querySelector('.diagonal-line');
+            
+            // 預設隱藏模式選擇器和文字輸入
+            if (selectOverlay) selectOverlay.style.display = 'none';
+            if (textInput) textInput.style.display = 'none';
+            if (diagonalLine) diagonalLine.style.display = 'none';
+            removeClearButton(cell);
+
+            // 確保圖片 wrapper 的內聯 display 樣式被清除，讓 CSS 屬性選擇器生效
+            if (wrapper1) wrapper1.style.display = '';
+            if (wrapper2) wrapper2.style.display = '';
+
+
+            if (mode === 'select') {
+                if (selectOverlay) selectOverlay.style.display = 'flex';
+                cell.style.cursor = 'default';
+            } else if (mode === 'image') {
+                // 圖片模式
+                if (count >= 1) {
+                    // 圖片顯示由 CSS 屬性選擇器控制
+                    if (count === 2) {
+                        if (diagonalLine) diagonalLine.style.display = 'block';
+                        addClearButton(cell, count); // 雙圖顯示兩個清除選項
+                    } else {
+                        addClearButton(cell, count); // 單圖顯示一個清除選項
+                    }
+                } else {
+                    // count === 0 時，模式仍設定為 image，讓貼上事件生效，但顯示 overlay
+                    if (selectOverlay) selectOverlay.style.display = 'flex';
+                    // 這裡不將 data-mode 設回 select，因為我們希望貼上事件能被捕獲
+                }
+                
+                cell.style.cursor = 'move';
+            } else if (mode === 'text') {
+                if (textInput) textInput.style.display = 'flex';
+                // 文字模式下，只要有文字就顯示清除按鈕
+                if (textInput && textInput.textContent.trim()) {
+                    addClearButton(cell, 0, true); 
+                }
+                cell.style.cursor = 'text';
+            }
+        }
+
+        // --- 模式切換邏輯 ---
+        
+        function switchToImageMode(cell) {
+            const count = parseInt(cell.dataset.imageCount || 0);
+            
+            // 強制設定為 image 模式，允許貼上事件被捕獲
+            cell.dataset.mode = 'image';
+            
+            // 檢查如果已經有圖片，則不需要模式選擇器
+            if (count > 0) {
+                 updateCellView(cell, 'image');
+                 const message = count === 1 ? "請貼上第二張圖片 (Ctrl+V) 以啟用對角線分割。" : "已達最大圖片數量 (2張)。若要替換，請先清除。";
+                 showToast(cell, message, count === 2 ? 'warning' : 'success');
+                 if (cell) cell.focus();
+                 return;
+            }
+            
+            // 如果 count === 0，則正常切換到 image 模式並提示貼第一張圖
+            updateCellView(cell, 'image');
+            showToast(cell, "已切換到圖片模式，請貼上第一張圖片 (Ctrl+V)。", 'success');
+            
+            if (cell) {
+                cell.focus();
+            }
+        }
+
+        function switchToTextMode(cell) {
+            updateCellView(cell, 'text');
+            showToast(cell, "已切換到文字模式，請直接輸入。", 'success');
+            const textInput = cell.querySelector('.cell-text-input');
+            if (textInput && document.activeElement !== textInput) {
+                textInput.focus();
+            }
+        }
+
+        // --- 圖片操作邏輯 ---
+        
+        /**
+         * 處理貼上事件 (僅在 'image' 模式下有效)
+         * @param {Event} e - 貼上事件
+         */
+        function handlePaste(e) {
+            const cell = this;
+            if (cell.dataset.mode !== 'image') return; 
+
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let imageFound = false;
+            let targetImgElement, targetImageId, currentCount;
+            
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+
+                    currentCount = parseInt(cell.dataset.imageCount || 0);
+
+                    if (currentCount === 0) {
+                        targetImageId = 1;
+                        cell.dataset.imageCount = 1; // 設置新的圖片數量
+                    } else if (currentCount === 1) {
+                        targetImageId = 2;
+                        cell.dataset.imageCount = 2; // 設置新的圖片數量
+                    } else {
+                        showToast(cell, "已貼上兩張圖片，請先清除其中一張。", 'warning');
+                        imageFound = true; 
+                        return;
+                    }
+                    
+                    targetImgElement = cell.querySelector(`.image-wrapper-${targetImageId} img`);
+
+                    reader.onload = (event) => {
+                        const base64Data = event.target.result;
+                        
+                        targetImgElement.src = base64Data;
+                        
+                        // 確保圖片本身在有 src 時顯示
+                        targetImgElement.style.display = 'block';
+
+                        // 初始化狀態
+                        cell.dataset[`scale${targetImageId}`] = 1.0;
+                        cell.dataset[`offsetX${targetImageId}`] = 0;
+                        cell.dataset[`offsetY${targetImageId}`] = 0;
+                        updateImageTransform(cell, targetImageId); // 應用初始 transform
+                        
+                        // 更新視圖 (會觸發 CSS 根據 data-image-count 顯示正確的 wrapper)
+                        updateCellView(cell, 'image');
+
+                        showToast(cell, `圖片 ${targetImageId} 已貼上。`, 'success');
+                    };
+                    reader.readAsDataURL(blob);
+                    imageFound = true;
+                    break;
+                }
+            }
+            
+            if (!imageFound) {
+                showToast(cell, "請貼上圖片檔案。", 'warning');
+            }
+        }
+
+        // --- 拖曳和縮放邏輯 (現支援雙圖) ---
+        
+        /**
+         * 獲取當前互動的圖片 ID (1 或 2)
+         * @param {HTMLElement} target - 觸發事件的元素
+         */
+        function getActiveImageId(target) {
+            // 只有在 mode='image' 且 wrapper 有顯示時才算有效
+            const cell = target.closest('.content-cell');
+            if (!cell || cell.dataset.mode !== 'image') return 0;
+            
+            const wrapper1 = target.closest('.image-wrapper-1');
+            const wrapper2 = target.closest('.image-wrapper-2');
+
+            // 根據 data-image-count 判斷點擊是否有效
+            const count = parseInt(cell.dataset.imageCount || 0);
+
+            if (wrapper1 && count >= 1) return 1;
+            if (wrapper2 && count === 2) return 2;
+            
+            return 0;
+        }
+
+        /**
+         * 處理滾輪縮放事件
+         * @param {Event} e - 滾輪事件
+         */
+        function handleZoom(e) {
+            const cell = this;
+            if (cell.dataset.mode !== 'image') return;
+
+            const activeId = getActiveImageId(e.target);
+            if (activeId === 0) return;
+
+            const img = cell.querySelector(`.image-wrapper-${activeId} img`);
+            if (!img || !img.src) return;
+            
+            e.preventDefault();
+            
+            let currentScale = parseFloat(cell.dataset[`scale${activeId}`]) || 1.0;
+            const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+            let newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, currentScale + delta));
+            
+            cell.dataset[`scale${activeId}`] = newScale.toFixed(2);
+            updateImageTransform(cell, activeId);
+        }
+
+        let isDragging = false;
+        let startX, startY;
+        let currentCell;
+        let activeDragId = 0; // 新增：追蹤目前拖曳的是哪張圖片 (1 或 2)
+
+
+        /**
+         * 處理拖曳開始
+         * @param {Event} e - 滑鼠按下事件
+         */
+        function handleDragStart(e) {
+            currentCell = this;
+            if (currentCell.dataset.mode !== 'image') return;
+            
+            const targetWrapper = e.target.closest('.image-wrapper-1') || e.target.closest('.image-wrapper-2');
+            if (!targetWrapper) return;
+            
+            activeDragId = getActiveImageId(targetWrapper);
+
+            const imgElement = currentCell.querySelector(`.image-wrapper-${activeDragId} img`); 
+            // 排除清除按鈕和無圖片
+            if (!imgElement || e.target.closest('.clear-button') || !imgElement.src) {
+                activeDragId = 0; 
+                return;
+            } 
+
+            e.preventDefault(); 
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            let currentX = parseFloat(currentCell.dataset[`offsetX${activeDragId}`]) || 0;
+            let currentY = parseFloat(currentCell.dataset[`offsetY${activeDragId}`]) || 0;
+            currentCell.dataset.startX = currentX; // 使用通用的 startX/Y 暫存
+            currentCell.dataset.startY = currentY;
+            
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', handleDragEnd);
+            document.body.style.cursor = 'grabbing';
+        }
+
+        /**
+         * 處理拖曳中
+         * @param {Event} e - 滑鼠移動事件
+         */
+        function handleDrag(e) {
+            // 檢查 activeDragId
+            if (!isDragging || !currentCell || currentCell.dataset.mode !== 'image' || activeDragId === 0) return;
+
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+
+            let newX = parseFloat(currentCell.dataset.startX) + dx;
+            let newY = parseFloat(currentCell.dataset.startY) + dy;
+
+            currentCell.dataset[`offsetX${activeDragId}`] = newX;
+            currentCell.dataset[`offsetY${activeDragId}`] = newY;
+
+            updateImageTransform(currentCell, activeDragId);
+        }
+
+        /**
+         * 處理拖曳結束
+         */
+        function handleDragEnd() {
+            if (!isDragging) return;
+
+            isDragging = false;
+            activeDragId = 0; // 重置拖曳圖片 ID
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.body.style.cursor = 'default';
+            
+            currentCell = null;
+        }
+
+        /**
+         * 應用單元格的 scale/offset 數據到指定的圖片的 CSS transform 屬性
+         * @param {HTMLElement} cell - 內容單元格元素
+         * @param {number} id - 圖片 ID (1 或 2)。若未指定則更新所有。
+         */
+        function updateImageTransform(cell, id = 0) {
+            // 確定要更新的圖片 ID 列表
+            const wrappers = id === 0 ? [1, 2] : [id];
+
+            wrappers.forEach(imgId => {
+                const img = cell.querySelector(`.image-wrapper-${imgId} img`);
+                if (!img) return;
+
+                // 確保狀態值是存在的
+                const scale = cell.dataset[`scale${imgId}`] || 1.0;
+                const offsetX = cell.dataset[`offsetX${imgId}`] || 0;
+                const offsetY = cell.dataset[`offsetY${imgId}`] || 0;
+
+                img.style.transform = `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`;
+            });
+        }
+        
+        // --- 文字操作邏輯 (不變) ---
+        
+        const MAX_FONT_SIZE = 1.2; 
+        const MIN_FONT_SIZE = 0.6; 
+        const THRESHOLD_CHARS_MIN = 10; 
+        const THRESHOLD_CHARS_MAX = 100; 
+
+        function adjustFontSize(textInput) {
+            const text = textInput.textContent.trim();
+            const length = text.length;
+            let newSize;
+
+            if (length <= THRESHOLD_CHARS_MIN) {
+                newSize = MAX_FONT_SIZE;
+            } else if (length >= THRESHOLD_CHARS_MAX) {
+                newSize = MIN_FONT_SIZE;
+            } else {
+                const range = THRESHOLD_CHARS_MAX - THRESHOLD_CHARS_MIN;
+                const position = length - THRESHOLD_CHARS_MIN;
+                const scaleFactor = position / range; 
+                const fontRange = MAX_FONT_SIZE - MIN_FONT_SIZE;
+                newSize = MAX_FONT_SIZE - (fontRange * scaleFactor);
+            }
+            textInput.style.fontSize = `${newSize}em`;
+        }
+
+        function handleTextEdit(e) {
+            const cell = e.target.closest('.content-cell');
+            const textInput = e.target;
+            if (cell.dataset.mode !== 'text') return;
+
+            adjustFontSize(textInput);
+
+            const textContent = textInput.textContent.trim();
+            if (textContent) {
+                 addClearButton(cell, 0, true);
+            } else {
+                 removeClearButton(cell);
+            }
+        }
+
+        function handleHeaderEdit(e) {
+            // 無需任何儲存邏輯，直接讓 contenteditable 處理
+        }
+
+        // --- 通用操作邏輯 ---
+        
+        /**
+         * 創建並添加/顯示內容清除按鈕
+         * @param {HTMLElement} cell - 單元格
+         * @param {number} count - 當前圖片數量 (1 或 2)。
+         * @param {boolean} isTextMode - 是否為文字模式
+         */
+        function addClearButton(cell, count, isTextMode = false) {
+            let clearButtonMain = cell.querySelector('.clear-button-main');
+            let clearButton2 = cell.querySelector('.clear-button-2');
+
+            // 1. 主要清除按鈕 (清空所有 / 清除文字)
+            if (!clearButtonMain) {
+                clearButtonMain = document.createElement('button');
+                clearButtonMain.className = 'clear-button clear-button-main absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
+                clearButtonMain.innerHTML = 'X';
+                clearButtonMain.title = '清除所有內容並重選模式';
+                clearButtonMain.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    clearCell(cell); // 完整清空
+                });
+                cell.appendChild(clearButtonMain);
+            }
+            clearButtonMain.title = isTextMode ? '清除文字內容並重選模式' : '清除所有內容並重選模式';
+            clearButtonMain.style.display = 'flex';
+
+            // 2. 第二圖片清除按鈕 (僅在雙圖模式下)
+            if (count === 2 && !isTextMode) {
+                if (!clearButton2) {
+                    clearButton2 = document.createElement('button');
+                    clearButton2.className = 'clear-button clear-button-2 absolute top-1 right-8 p-1 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
+                    clearButton2.innerHTML = '2'; // 標示清除第二張
+                    clearButton2.title = '清除第二張圖片 (右上方)';
+                    clearButton2.addEventListener('click', (e) => {
+                        e.stopPropagation(); 
+                        clearImage2(cell); // 清除第二張圖片
+                    });
+                    cell.appendChild(clearButton2);
+                }
+                clearButton2.style.display = 'flex';
+            } else if (clearButton2) {
+                clearButton2.style.display = 'none';
+            }
+        }
+
+        /**
+         * 移除/隱藏所有內容清除按鈕
+         * @param {HTMLElement} cell - 單元格
+         */
+        function removeClearButton(cell) {
+            const clearButtons = cell.querySelectorAll('.clear-button');
+            clearButtons.forEach(btn => btn.style.display = 'none');
+        }
+
+        /**
+         * 清除第二張圖片的內容和狀態
+         * @param {HTMLElement} cell - 單元格
+         */
+        function clearImage2(cell) {
+            const img2 = cell.querySelector('.image-wrapper-2 img');
+            if (img2) {
+                img2.src = '';
+                img2.style.display = 'none'; // 隱藏圖片元素
+            }
+            
+            // 清除狀態
+            cell.dataset.scale2 = 1.0;
+            cell.dataset.offsetX2 = 0;
+            cell.dataset.offsetY2 = 0;
+            cell.dataset.imageCount = 1; // 圖片數量變為 1
+            
+            // 更新視圖，回到單圖模式
+            updateCellView(cell, 'image');
+            showToast(cell, "第二張圖片已清除，回到單圖模式。", 'success');
+        }
+
+        /**
+         * 清除單元格中的所有內容和狀態，並返回模式選擇介面
+         * @param {HTMLElement} cell - 單元格
+         */
+        function clearCell(cell) {
+            // 清除圖片 1 和 2
+            const img1 = cell.querySelector('.image-wrapper-1 img');
+            if (img1) {
+                img1.src = '';
+                img1.style.display = 'none';
+            }
+            const img2 = cell.querySelector('.image-wrapper-2 img');
+            if (img2) {
+                img2.src = '';
+                img2.style.display = 'none';
+            }
+            
+            // 清除文字狀態
+            const textInput = cell.querySelector('.cell-text-input');
+            if (textInput) {
+                textInput.textContent = '';
+                textInput.style.fontSize = ''; 
+            }
+            
+            // 移除按鈕
+            removeClearButton(cell);
+            
+            // 重設 dataset 狀態
+            cell.dataset.scale1 = 1.0;
+            cell.dataset.offsetX1 = 0;
+            cell.dataset.offsetY1 = 0;
+            cell.dataset.scale2 = 1.0;
+            cell.dataset.offsetX2 = 0;
+            cell.dataset.offsetY2 = 0;
+            cell.dataset.imageCount = 0; // 圖片數量歸零
+
+            // 重新切換回模式選擇
+            updateCellView(cell, 'select');
+            showToast(cell, "內容已清除，請選擇新的模式。", 'success');
+        }
+
+
+        /**
+         * 初始化所有內容單元格的事件監聽器
+         */
+        function initListeners() {
+            const contentCells = document.querySelectorAll('.content-cell');
+            contentCells.forEach(cell => {
+                if (cell.dataset.listenersInitialized) return;
+
+                // 預設將 dataset 狀態設為初始值
+                cell.dataset.scale1 = 1.0;
+                cell.dataset.offsetX1 = 0;
+                cell.dataset.offsetY1 = 0;
+                cell.dataset.scale2 = 1.0;
+                cell.dataset.offsetX2 = 0;
+                cell.dataset.offsetY2 = 0;
+                cell.dataset.imageCount = 0; // 初始圖片數量
+
+                // 圖片模式專用事件 (貼上、滾輪、拖曳)
+                cell.addEventListener('paste', handlePaste);
+                cell.addEventListener('wheel', handleZoom);
+                cell.addEventListener('mousedown', handleDragStart);
+                
+                // 文字模式專用事件
+                const textInput = cell.querySelector('.cell-text-input');
+                if (textInput) {
+                    textInput.addEventListener('input', handleTextEdit);
+                }
+                
+                // 模式選擇按鈕事件
+                const selectOverlay = cell.querySelector('.mode-selector-overlay');
+                if (selectOverlay) {
+                    selectOverlay.querySelector('.btn-image').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        switchToImageMode(cell);
+                    });
+                    selectOverlay.querySelector('.btn-text').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        switchToTextMode(cell);
+                    });
+                }
+
+                // 初始化時，所有單元格都應處於 'select' 模式
+                updateCellView(cell, 'select');
+                
+                cell.dataset.listenersInitialized = 'true';
+            });
+            
+            // 標題文字編輯事件 (只綁定輸入事件，不執行儲存)
+            document.querySelectorAll('.editable-text').forEach(cell => {
+                cell.addEventListener('input', handleHeaderEdit);
+            });
+            
+            // 首次加載時，應用初始 transform 
+            document.querySelectorAll('.content-cell').forEach(cell => updateImageTransform(cell));
+        }
+
+        /**
+         * 顯示短暫的提示訊息 (不變)
+         * @param {HTMLElement} element - 提示訊息要顯示的單元格
+         * @param {string} message - 提示文字
+         * @param {string} type - 類型 ('success', 'warning')
+         */
+        function showToast(element, message, type = 'success') {
+            let toast = element.querySelector('.toast-message');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'toast-message absolute bottom-1 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs rounded shadow-lg z-10 transition-opacity duration-300';
+                element.appendChild(toast);
+            }
+            
+            toast.textContent = message;
+            toast.style.opacity = 1;
+            
+            if (type === 'warning') {
+                toast.classList.add('bg-yellow-100', 'text-yellow-800');
+                toast.classList.remove('bg-green-100', 'text-green-800');
+            } else {
+                toast.classList.add('bg-green-100', 'text-green-800');
+                toast.classList.remove('bg-yellow-100', 'text-yellow-800');
+            }
+
+            clearTimeout(toast.hideTimeout);
+            toast.hideTimeout = setTimeout(() => {
+                toast.style.opacity = 0;
+            }, 3000);
+        }
+
+        /**
+         * 將指定的 HTML 元素內容渲染成 Canvas 並下載為 PNG (不變)
+         */
+        async function exportAsImage() {
+            const container = document.getElementById('summary-container');
+            const button = document.getElementById('export-button');
+            
+            // 隱藏匯出按鈕本身，以免被截圖
+            button.style.display = 'none';
+
+            // 鎖定使用者介面
+            const originalBodyCursor = document.body.style.cursor;
+            document.body.style.cursor = 'wait';
+            
+            try {
+                // 暫時移除所有單元格的聚焦外框 (如果有)，以獲得更乾淨的截圖
+                document.querySelectorAll('.content-cell:focus').forEach(cell => cell.blur());
+                
+                // 移除所有的清除按鈕，避免出現在截圖中
+                const clearButtons = document.querySelectorAll('.clear-button');
+                clearButtons.forEach(btn => btn.style.display = 'none');
+
+
+                // 使用 html2canvas 進行渲染
+                const canvas = await html2canvas(container, {
+                    // 確保背景色能被正確捕獲
+                    backgroundColor: '#ffffff', 
+                    // 增加縮放比例以獲得高解析度圖片 (例如 2x)
+                    scale: 2, 
+                    // 忽略 mode-selector-overlay
+                    ignoreElements: (element) => {
+                        return element.classList.contains('mode-selector-overlay');
+                    }
+                });
+
+                // 獲取圖片的 Data URL
+                const image = canvas.toDataURL("image/png");
+                
+                // 創建一個虛擬連結進行下載
+                const link = document.createElement('a');
+                link.href = image;
+                
+                // 根據標題設定檔案名稱
+                const titleText = document.getElementById('title_main').textContent.trim() || 'DM_Summary';
+                link.download = `${titleText}.png`;
+                
+                // 觸發下載
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // 顯示成功提示 (使用主容器的空間來顯示)
+                const header = document.querySelector('.header-container');
+                if(header) {
+                     showToast(header, "表格已成功匯出為 PNG 圖片！", 'success');
+                }
+
+            } catch (error) {
+                console.error("匯出圖片時發生錯誤:", error);
+                const header = document.querySelector('.header-container');
+                if(header) {
+                    showToast(header, "匯出失敗，請檢查瀏覽器控制台。", 'warning');
+                }
+            } finally {
+                // 恢復匯出按鈕的顯示狀態
+                button.style.display = 'inline-flex';
+                // 恢復清除按鈕的顯示狀態 (基於當前狀態)
+                document.querySelectorAll('.content-cell').forEach(cell => {
+                    const mode = cell.dataset.mode;
+                    const count = parseInt(cell.dataset.imageCount || 0);
+                    const textInput = cell.querySelector('.cell-text-input');
+
+                    if (mode === 'text' && textInput && textInput.textContent.trim()) {
+                        addClearButton(cell, 0, true);
+                    } else if (mode === 'image' && count > 0) {
+                        addClearButton(cell, count, false);
+                    } else {
+                        removeClearButton(cell);
+                    }
+                });
+                
+                // 恢復鼠標
+                document.body.style.cursor = originalBodyCursor;
+            }
+        }
+
+        // --- 應用程式啟動 ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initListeners();
+        });
+    </script>
+</head>
+<body class="p-6 md:p-12 min-h-screen">
+
+    <!-- 主容器，用於 html2canvas 截圖 -->
+    <div id="summary-container" class="max-w-4xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
+        
+        <!-- 標題和匯出按鈕區塊 -->
+        <div class="header-container text-center py-4 border-b-2 border-black bg-gray-50 relative">
+            <h1 id="title_main" contenteditable="true" class="editable-text text-2xl md:text-3xl font-bold leading-none p-2 tracking-wider">
+                2025年度個人 DM 總結
+            </h1>
+            <!-- 匯出按鈕：只保留 HTML 內聯 onclick 綁定 -->
+            <button id="export-button" onclick="exportAsImage()" 
+                    class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-green-400">
+                <!-- SVG Icon for Download -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v7a1 1 0 11-2 0V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>匯出 PNG</span>
+            </button>
+        </div>
+
+        <!-- 表格主體，使用 Grid 佈局 -->
+        <div class="grid grid-cols-5 border-l border-black">
+            
+            <!-- R1 (Title 1-5) -->
+            <div id="header_r1_c1" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">年初玩的牌組</div>
+            <div id="header_r1_c2" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">年底玩的牌組</div>
+            <div id="header_r1_c3" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最常玩的牌組</div>
+            <div id="header_r1_c4" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最喜歡的卡</div>
+            <div id="header_r1_c5" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最喜歡的Combo</div>
+
+            <!-- 內容格 (Content Cells) - R2 -->
+            
+            <!-- Cell R2 C1 -->
+            <div id="content_r2_c1" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- Cell R2 C2 -->
+            <div id="content_r2_c2" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- Cell R2 C3 -->
+            <div id="content_r2_c3" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- Cell R2 C4 -->
+            <div id="content_r2_c4" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- Cell R2 C5 -->
+            <div id="content_r2_c5" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- R3 (Title 6-10) -->
+            <div id="header_r3_c1" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">卡圖最好看的卡</div>
+            <div id="header_r3_c2" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最想放寬限制的卡</div>
+            <div id="header_r3_c3" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最想禁止的卡</div>
+            <div id="header_r3_c4" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最不想上手的卡</div>
+            <div id="header_r3_c5" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最不想遇上的卡</div>
+
+            <!-- R4 (Content 6-10) -->
+            <!-- Cell R4 C1 -->
+            <div id="content_r4_c1" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R4 C2 -->
+            <div id="content_r4_c2" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R4 C3 -->
+            <div id="content_r4_c3" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R4 C4 -->
+            <div id="content_r4_c4" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R4 C5 -->
+            <div id="content_r4_c5" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- R5 (Title 11-15) -->
+            <div id="header_r5_c1" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最被低估的卡</div>
+            <div id="header_r5_c2" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最過譽的卡</div>
+            <div id="header_r5_c3" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">買過最貴的卡</div>
+            <div id="header_r5_c4" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">買了但沒用到的卡</div>
+            <div id="header_r5_c5" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">想買但沒買的卡</div>
+
+            <!-- R6 (Content 11-15) -->
+            <!-- Cell R6 C1 -->
+            <div id="content_r6_c1" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R6 C2 -->
+            <div id="content_r6_c2" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R6 C3 -->
+            <div id="content_r6_c3" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R6 C4 -->
+            <div id="content_r6_c4" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R6 C5 -->
+            <div id="content_r6_c5" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+
+            <!-- R7 (Title 16-20) -->
+            <div id="header_r7_c1" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">組過最奇葩的牌組</div>
+            <div id="header_r7_c2" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最常遇上的牌組</div>
+            <div id="header_r7_c3" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最離譜的牌組</div>
+            <div id="header_r7_c4" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最不喜歡的牌組</div>
+            <div id="header_r7_c5" contenteditable="true" class="editable-text text-center font-medium p-2 border-r border-b border-black bg-gray-100">最喜歡的頻道</div>
+
+            <!-- R8 (Content 16-20) -->
+            <!-- Cell R8 C1 -->
+            <div id="content_r8_c1" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R8 C2 -->
+            <div id="content_r8_c2" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R8 C3 -->
+            <div id="content_r8_c3" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R8 C4 -->
+            <div id="content_r8_c4" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            <!-- Cell R8 C5 -->
+            <div id="content_r8_c5" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
+                <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
+                    <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
+                </div>
+                <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
+                <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="diagonal-line"></div>
+                <div class="cell-text-input break-words" contenteditable="true"></div>
+            </div>
+            
+        </div>
+        
+        <!-- 底部資訊/狀態欄 -->
+        <div class="p-2 border-t border-black text-xs text-gray-600 text-center">
+            <p><strong>操作提示:</strong> 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。</p>
+            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片，滾輪縮放，拖曳調整位置。雙圖模式下，點擊**左下角**區域可操作圖片 1，點擊**右上角**區域可操作圖片 2。</p>
+            <p class="text-blue-500 font-bold">目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。</p>
+        </div>
+
+    </div>
+    
+</body>
+</html>
