@@ -85,39 +85,75 @@
             display: none;
         }
         
-        /* 單張圖片模式: Image 1 佔滿整個空間 */
+        /* 單張圖片模式 (Count=1): Image 1 佔滿整個空間 */
         .content-cell[data-image-count='1'] .image-wrapper-1 {
-            /* 讓 CSS 屬性選擇器來控制顯示，覆蓋 JS 中的隱藏設定 */
             display: block !important; 
             clip-path: none;
             pointer-events: all;
         }
-        .content-cell[data-image-count='1'] .image-wrapper-2 {
+        .content-cell[data-image-count='1'] .image-wrapper-2,
+        .content-cell[data-image-count='1'] .image-wrapper-3 {
             display: none !important;
         }
 
-        /* 雙圖模式: Image 1 (左半邊矩形) */
+        /* 雙圖模式 (Count=2): Image 1 (左半邊矩形), Image 2 (右半邊矩形) */
         .content-cell[data-image-count='2'] .image-wrapper-1 {
-            /* 讓 CSS 屬性選擇器來控制顯示，覆蓋 JS 中的隱藏設定 */
             display: block !important;
-            /* 修正: 改用 width 和 left 屬性定義左半邊，讓 html2canvas 更好地理解矩形裁剪 */
             width: 50%; 
+            height: 100%; /* 確保 Image 1 覆蓋整個左側 */
             left: 0;
-            clip-path: none; /* 確保不使用 clip-path，讓容器邊界作為裁剪邊界 */
+            top: 0;
+            clip-path: none;
             pointer-events: all; 
         }
 
-        /* 雙圖模式: Image 2 (右半邊矩形) */
         .content-cell[data-image-count='2'] .image-wrapper-2 {
-            /* 讓 CSS 屬性選擇器來控制顯示，覆蓋 JS 中的隱藏設定 */
             display: block !important;
-            /* 修正: 改用 width 和 left 屬性定義右半邊 */
             width: 50%; 
+            height: 100%; /* Image 2 覆蓋整個右側 */
             left: 50%;
-            clip-path: none; /* 確保不使用 clip-path，讓容器邊界作為裁剪邊界 */
+            top: 0;
+            clip-path: none; 
             pointer-events: all; 
         }
+        .content-cell[data-image-count='2'] .image-wrapper-3 {
+            display: none !important;
+        }
         
+        /* 三圖模式 (Count=3): 左(長), 右上(方), 右下(方) */
+        /* 三圖模式: Image 1 (左側長方形) */
+        .content-cell[data-image-count='3'] .image-wrapper-1 {
+            display: block !important;
+            width: 50%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            clip-path: none;
+            pointer-events: all;
+        }
+
+        /* 三圖模式: Image 2 (右上長方形) */
+        .content-cell[data-image-count='3'] .image-wrapper-2 {
+            display: block !important;
+            width: 50%;
+            height: 50%;
+            top: 0;
+            left: 50%;
+            clip-path: none;
+            pointer-events: all;
+        }
+
+        /* 三圖模式: Image 3 (右下長方形) */
+        .content-cell[data-image-count='3'] .image-wrapper-3 {
+            display: block !important;
+            width: 50%;
+            height: 50%;
+            top: 50%;
+            left: 50%;
+            clip-path: none;
+            pointer-events: all;
+        }
+
         /* 內容文字區域樣式 */
         .cell-text-input {
             /* 讓文字輸入框佔滿單元格 */
@@ -165,6 +201,11 @@
         .clear-button {
             z-index: 20;
         }
+        /* 調整第三個清除按鈕的位置 */
+        .clear-button-3 {
+            right: 15px; /* 放在 clearButton2 (right-8) 旁邊 */
+            background-color: #3b82f6 !important; /* Blue color for Image 3 clear */
+        }
         .mode-selector-overlay {
             z-index: 5;
             padding: 10px;
@@ -201,6 +242,7 @@
             const selectOverlay = cell.querySelector('.mode-selector-overlay');
             const wrapper1 = cell.querySelector('.image-wrapper-1');
             const wrapper2 = cell.querySelector('.image-wrapper-2');
+            const wrapper3 = cell.querySelector('.image-wrapper-3'); // <--- 調整：新增 Image 3 Wrapper
             const textInput = cell.querySelector('.cell-text-input');
             const diagonalLine = cell.querySelector('.diagonal-line');
             
@@ -209,14 +251,15 @@
             if (selectOverlay) selectOverlay.style.display = 'none';
             if (textInput) {
                 textInput.style.display = 'none';
-                // *** 修正 BUG: 確保在隱藏時明確禁用 contenteditable ***
+                // 確保在隱藏時明確禁用 contenteditable
                 textInput.contentEditable = 'false'; 
             }
             if (diagonalLine) diagonalLine.style.display = 'none';
             
-            // 隱藏圖片容器 (使用內聯樣式覆蓋，但 CSS 屬性選擇器有 !important，故仍可強制顯示)
+            // 隱藏圖片容器
             if (wrapper1) wrapper1.style.display = 'none'; 
             if (wrapper2) wrapper2.style.display = 'none';
+            if (wrapper3) wrapper3.style.display = 'none'; // <--- 調整：隱藏 Image 3 Wrapper
             
             removeClearButton(cell);
 
@@ -225,15 +268,15 @@
                 if (selectOverlay) selectOverlay.style.display = 'flex';
                 cell.style.cursor = 'default';
             } else if (mode === 'image') {
-                // 圖片容器的顯示由 CSS 屬性選擇器 (display: block !important) 控制，
-                // 這會覆蓋上面設定的 'none'，確保它們能根據 data-image-count 顯示正確的 wrapper)
                 
                 if (count >= 1) {
-                    // 圖片顯示由 CSS 屬性選擇器控制
-                    if (count === 2) {
-                        addClearButton(cell, count); // 雙圖顯示兩個清除選項
+                    // 圖片顯示由 CSS 屬性選擇器控制 (根據 data-image-count)
+                    if (count === 3) {
+                        addClearButton(cell, 3); // 三圖顯示三個清除選項
+                    } else if (count === 2) {
+                        addClearButton(cell, 2); // 雙圖顯示兩個清除選項
                     } else {
-                        addClearButton(cell, count); // 單圖顯示一個清除選項
+                        addClearButton(cell, 1); // 單圖顯示一個清除選項
                     }
                 }
                 
@@ -241,7 +284,7 @@
             } else if (mode === 'text') {
                 if (textInput) {
                     textInput.style.display = 'flex';
-                    // *** 修正 BUG: 確保在文字模式下明確啟用 contenteditable ***
+                    // 確保在文字模式下明確啟用 contenteditable
                     textInput.contentEditable = 'true'; 
                 }
                 // 文字模式下，只要有文字就顯示清除按鈕
@@ -263,8 +306,16 @@
             // 檢查如果已經有圖片，則不需要模式選擇器
             if (count > 0) {
                  updateCellView(cell, 'image');
-                 const message = count === 1 ? "請貼上第二張圖片 (Ctrl+V) 以啟用左右分割。" : "已達最大圖片數量 (2張)。若要替換，請先清除。";
-                 showToast(cell, message, count === 2 ? 'warning' : 'success');
+                 // --- 調整：更新三圖模式的提示訊息 ---
+                 let message;
+                 if (count === 1) {
+                    message = "請貼上第二張圖片 (Ctrl+V) 以啟用左右分割模式。";
+                 } else if (count === 2) {
+                    message = "請貼上第三張圖片 (Ctrl+V) 以啟用左(長)右(方)分割模式。";
+                 } else { // count === 3
+                    message = "已達最大圖片數量 (3張)。若要替換，請先清除。";
+                 }
+                 showToast(cell, message, count === 3 ? 'warning' : 'success');
                  if (cell) cell.focus();
                  return;
             }
@@ -284,7 +335,6 @@
             showToast(cell, "已切換到文字模式，請直接輸入。", 'success');
             const textInput = cell.querySelector('.cell-text-input');
             if (textInput && document.activeElement !== textInput) {
-                // *** 移除 setTimeout，並信任 contentEditable 設置已在 updateCellView 中完成 ***
                 textInput.focus();
             }
         }
@@ -311,14 +361,18 @@
 
                     currentCount = parseInt(cell.dataset.imageCount || 0);
 
+                    // --- 調整：支援最多 3 張圖片 ---
                     if (currentCount === 0) {
                         targetImageId = 1;
                         cell.dataset.imageCount = 1; // 設置新的圖片數量
                     } else if (currentCount === 1) {
                         targetImageId = 2;
                         cell.dataset.imageCount = 2; // 設置新的圖片數量
+                    } else if (currentCount === 2) {
+                        targetImageId = 3;
+                        cell.dataset.imageCount = 3; // 設置新的圖片數量
                     } else {
-                        showToast(cell, "已貼上兩張圖片，請先清除其中一張。", 'warning');
+                        showToast(cell, "已貼上三張圖片，請先清除其中一張。", 'warning');
                         imageFound = true; 
                         return;
                     }
@@ -355,10 +409,10 @@
             }
         }
 
-        // --- 拖曳和縮放邏輯 (現支援雙圖) ---
+        // --- 拖曳和縮放邏輯 (現支援三圖) ---
         
         /**
-         * 獲取當前互動的圖片 ID (1 或 2)
+         * 獲取當前互動的圖片 ID (1, 2 或 3)
          * @param {HTMLElement} target - 觸發事件的元素
          */
         function getActiveImageId(target) {
@@ -368,12 +422,14 @@
             
             const wrapper1 = target.closest('.image-wrapper-1');
             const wrapper2 = target.closest('.image-wrapper-2');
+            const wrapper3 = target.closest('.image-wrapper-3'); // <--- 調整：新增 Image 3 Wrapper
 
             // 根據 data-image-count 判斷點擊是否有效
             const count = parseInt(cell.dataset.imageCount || 0);
 
             if (wrapper1 && count >= 1) return 1;
-            if (wrapper2 && count === 2) return 2;
+            if (wrapper2 && count >= 2) return 2;
+            if (wrapper3 && count === 3) return 3; // <--- 調整：Image 3 僅在三圖模式下有效
             
             return 0;
         }
@@ -405,7 +461,7 @@
         let isDragging = false;
         let startX, startY;
         let currentCell;
-        let activeDragId = 0; // 新增：追蹤目前拖曳的是哪張圖片 (1 或 2)
+        let activeDragId = 0; // 新增：追蹤目前拖曳的是哪張圖片 (1, 2 或 3)
 
 
         /**
@@ -416,7 +472,7 @@
             currentCell = this;
             if (currentCell.dataset.mode !== 'image') return;
             
-            const targetWrapper = e.target.closest('.image-wrapper-1') || e.target.closest('.image-wrapper-2');
+            const targetWrapper = e.target.closest('.image-wrapper-1') || e.target.closest('.image-wrapper-2') || e.target.closest('.image-wrapper-3'); // <--- 調整：新增 Image 3 Wrapper
             if (!targetWrapper) return;
             
             activeDragId = getActiveImageId(targetWrapper);
@@ -481,11 +537,11 @@
         /**
          * 應用單元格的 scale/offset 數據到指定的圖片的 CSS transform 屬性
          * @param {HTMLElement} cell - 內容單元格元素
-         * @param {number} id - 圖片 ID (1 或 2)。若未指定則更新所有。
+         * @param {number} id - 圖片 ID (1, 2 或 3)。若未指定則更新所有。
          */
         function updateImageTransform(cell, id = 0) {
             // 確定要更新的圖片 ID 列表
-            const wrappers = id === 0 ? [1, 2] : [id];
+            const wrappers = id === 0 ? [1, 2, 3] : [id]; // <--- 調整：包含 Image 3
 
             wrappers.forEach(imgId => {
                 const img = cell.querySelector(`.image-wrapper-${imgId} img`);
@@ -550,12 +606,13 @@
         /**
          * 創建並添加/顯示內容清除按鈕
          * @param {HTMLElement} cell - 單元格
-         * @param {number} count - 當前圖片數量 (1 或 2)。
+         * @param {number} count - 當前圖片數量 (1, 2 或 3)。
          * @param {boolean} isTextMode - 是否為文字模式
          */
         function addClearButton(cell, count, isTextMode = false) {
             let clearButtonMain = cell.querySelector('.clear-button-main');
             let clearButton2 = cell.querySelector('.clear-button-2');
+            let clearButton3 = cell.querySelector('.clear-button-3'); // <--- 調整：新增 Image 3 清除按鈕
 
             // 1. 主要清除按鈕 (清空所有 / 清除文字)
             if (!clearButtonMain) {
@@ -572,32 +629,75 @@
             clearButtonMain.title = isTextMode ? '清除文字內容並重選模式' : '清除所有內容並重選模式';
             clearButtonMain.style.display = 'flex';
 
-            // 2. 第二圖片清除按鈕 (僅在雙圖模式下)
-            if (count === 2 && !isTextMode) {
+            // 2. 第二圖片清除按鈕 (僅在雙圖或三圖模式下)
+            if (count >= 2 && !isTextMode) {
                 if (!clearButton2) {
                     clearButton2 = document.createElement('button');
+                    // Positioning right-8
                     clearButton2.className = 'clear-button clear-button-2 absolute top-1 right-8 p-1 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
                     clearButton2.innerHTML = '2'; // 標示清除第二張
-                    clearButton2.title = '清除第二張圖片 (右半部)';
+                    clearButton2.title = '清除第二張圖片';
                     clearButton2.addEventListener('click', (e) => {
                         e.stopPropagation(); 
-                        clearImage2(cell); // 清除第二張圖片
+                        clearImage2(cell); // 清除第二張圖片 (含三圖模式下的特殊處理)
                     });
                     cell.appendChild(clearButton2);
                 }
                 clearButton2.style.display = 'flex';
+                clearButton2.title = count === 3 ? '清除第二張圖片 (右上部)' : '清除第二張圖片 (右半部)';
             } else if (clearButton2) {
                 clearButton2.style.display = 'none';
+            }
+            
+            // 3. 第三圖片清除按鈕 (僅在三圖模式下)
+            if (count === 3 && !isTextMode) {
+                if (!clearButton3) {
+                    clearButton3 = document.createElement('button');
+                    // Positioning right-15
+                    clearButton3.className = 'clear-button clear-button-3 absolute top-1 right-15 p-1 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
+                    clearButton3.innerHTML = '3'; 
+                    clearButton3.title = '清除第三張圖片 (右下部)';
+                    clearButton3.addEventListener('click', (e) => {
+                        e.stopPropagation(); 
+                        clearImage3(cell); // 清除第三張圖片
+                    });
+                    cell.appendChild(clearButton3);
+                }
+                clearButton3.style.display = 'flex';
+            } else if (clearButton3) {
+                clearButton3.style.display = 'none';
             }
         }
 
         /**
-         * 移除/隱藏所有內容清除按鈕
+         * 移除/隱藏所有內容清除按鈕 (不變)
          * @param {HTMLElement} cell - 單元格
          */
         function removeClearButton(cell) {
             const clearButtons = cell.querySelectorAll('.clear-button');
             clearButtons.forEach(btn => btn.style.display = 'none');
+        }
+        
+        /**
+         * 清除第三張圖片的內容和狀態
+         * @param {HTMLElement} cell - 單元格
+         */
+        function clearImage3(cell) {
+            const img3 = cell.querySelector('.image-wrapper-3 img');
+            if (img3) {
+                img3.src = '';
+                img3.style.display = 'none'; // 隱藏圖片元素
+            }
+            
+            // 清除狀態
+            cell.dataset.scale3 = 1.0;
+            cell.dataset.offsetX3 = 0;
+            cell.dataset.offsetY3 = 0;
+            cell.dataset.imageCount = 2; // 圖片數量變為 2 (雙圖模式)
+            
+            // 更新視圖，回到雙圖模式 (Image 2 會自動佔據整個右側)
+            updateCellView(cell, 'image');
+            showToast(cell, "第三張圖片 (右下部) 已清除，回到左右分割模式。", 'success');
         }
 
         /**
@@ -605,22 +705,65 @@
          * @param {HTMLElement} cell - 單元格
          */
         function clearImage2(cell) {
-            const img2 = cell.querySelector('.image-wrapper-2 img');
-            if (img2) {
-                img2.src = '';
-                img2.style.display = 'none'; // 隱藏圖片元素
+            const currentCount = parseInt(cell.dataset.imageCount || 0);
+
+            if (currentCount === 3) {
+                // 如果是三圖模式，清除 Image 2 (右上) 時，Image 3 (右下) 需上移至 Image 2 的位置
+                const img2 = cell.querySelector('.image-wrapper-2 img');
+                const img3 = cell.querySelector('.image-wrapper-3 img');
+                
+                // 1. 將 Image 3 的內容和狀態轉移給 Image 2
+                if (img3 && img3.src) {
+                    img2.src = img3.src;
+                    img2.style.display = 'block'; 
+                    cell.dataset.scale2 = cell.dataset.scale3 || 1.0;
+                    cell.dataset.offsetX2 = cell.dataset.offsetX3 || 0;
+                    cell.dataset.offsetY2 = cell.dataset.offsetY3 || 0;
+                    updateImageTransform(cell, 2);
+                } else {
+                    // 如果 Image 3 不存在或已經空了，就只是清空 Image 2
+                    img2.src = '';
+                    img2.style.display = 'none';
+                    cell.dataset.scale2 = 1.0;
+                    cell.dataset.offsetX2 = 0;
+                    cell.dataset.offsetY2 = 0;
+                }
+                
+                // 2. 清空 Image 3
+                if (img3) {
+                    img3.src = '';
+                    img3.style.display = 'none';
+                    cell.dataset.scale3 = 1.0;
+                    cell.dataset.offsetX3 = 0;
+                    cell.dataset.offsetY3 = 0;
+                }
+                
+                cell.dataset.imageCount = 2; // 圖片數量變為 2 (雙圖模式)
+                updateCellView(cell, 'image');
+                showToast(cell, "第二張圖片 (右上部) 已清除，第三張圖片已上移並切換為左右分割模式。", 'success');
+
+            } else if (currentCount === 2) {
+                // 原有的雙圖模式 (Image 1 + Image 2)
+                const img2 = cell.querySelector('.image-wrapper-2 img');
+                if (img2) {
+                    img2.src = '';
+                    img2.style.display = 'none'; // 隱藏圖片元素
+                }
+                
+                // 清除狀態
+                cell.dataset.scale2 = 1.0;
+                cell.dataset.offsetX2 = 0;
+                cell.dataset.offsetY2 = 0;
+                cell.dataset.imageCount = 1; // 圖片數量變為 1
+                
+                // 更新視圖，回到單圖模式
+                updateCellView(cell, 'image');
+                showToast(cell, "第二張圖片已清除，回到單圖模式。", 'success');
+            } else {
+                 // Nothing to clear (count is 1 or 0)
             }
-            
-            // 清除狀態
-            cell.dataset.scale2 = 1.0;
-            cell.dataset.offsetX2 = 0;
-            cell.dataset.offsetY2 = 0;
-            cell.dataset.imageCount = 1; // 圖片數量變為 1
-            
-            // 更新視圖，回到單圖模式
-            updateCellView(cell, 'image');
-            showToast(cell, "第二張圖片已清除，回到單圖模式。", 'success');
         }
+
 
         /**
          * 清除單元格中的所有內容和狀態，並返回模式選擇介面
@@ -639,10 +782,17 @@
                 img2.style.display = 'none';
             }
             
+            // 清除圖片 3
+            const img3 = cell.querySelector('.image-wrapper-3 img'); // <--- 調整：清除 Image 3
+            if (img3) {
+                img3.src = '';
+                img3.style.display = 'none';
+            }
+            
             // 清除文字狀態
             const textInput = cell.querySelector('.cell-text-input');
             if (textInput) {
-                // *** 修正: 確保文字輸入框失去焦點，避免潛在的狀態殘留 ***
+                // 確保文字輸入框失去焦點，避免潛在的狀態殘留
                 textInput.blur(); 
                 textInput.textContent = '';
                 textInput.style.fontSize = ''; 
@@ -658,6 +808,9 @@
             cell.dataset.scale2 = 1.0;
             cell.dataset.offsetX2 = 0;
             cell.dataset.offsetY2 = 0;
+            cell.dataset.scale3 = 1.0; // <--- 調整：重設 Image 3 狀態
+            cell.dataset.offsetX3 = 0; // <--- 調整：重設 Image 3 狀態
+            cell.dataset.offsetY3 = 0; // <--- 調整：重設 Image 3 狀態
             cell.dataset.imageCount = 0; // 圖片數量歸零
 
             // 重新切換回模式選擇
@@ -683,6 +836,9 @@
                 cell.dataset.scale2 = 1.0;
                 cell.dataset.offsetX2 = 0;
                 cell.dataset.offsetY2 = 0;
+                cell.dataset.scale3 = 1.0; // <--- 調整：初始化 Image 3 狀態
+                cell.dataset.offsetX3 = 0; // <--- 調整：初始化 Image 3 狀態
+                cell.dataset.offsetY3 = 0; // <--- 調整：初始化 Image 3 狀態
                 cell.dataset.imageCount = 0; // 初始圖片數量
 
                 // 圖片模式專用事件 (貼上、滾輪、拖曳)
@@ -727,7 +883,7 @@
         }
 
         /**
-         * 顯示短暫的提示訊息 (不變)
+         * 顯示短暫的提示訊息
          * @param {HTMLElement} element - 提示訊息要顯示的單元格
          * @param {string} message - 提示文字
          * @param {string} type - 類型 ('success', 'warning')
@@ -736,6 +892,7 @@
             let toast = element.querySelector('.toast-message');
             if (!toast) {
                 toast = document.createElement('div');
+                // 修正 BUG: 使用 transition-opacity duration-300 使其與 JS 中的 300ms 延遲匹配
                 toast.className = 'toast-message absolute bottom-1 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs rounded shadow-lg z-10 transition-opacity duration-300';
                 element.appendChild(toast);
             }
@@ -756,7 +913,7 @@
             clearTimeout(toast.hideTimeout);
             toast.hideTimeout = setTimeout(() => {
                 toast.style.opacity = 0;
-                // *** 修正 BUG: 在過渡結束後，將 display 設為 none，使其不再阻擋點擊事件 ***
+                // 修正 BUG: 在過渡結束後，將 display 設為 none，使其不再阻擋點擊事件
                 setTimeout(() => {
                     toast.style.display = 'none';
                 }, 300); // 300ms 應與 CSS transition duration 匹配
@@ -897,6 +1054,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -909,6 +1067,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -921,6 +1080,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -933,6 +1093,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -945,6 +1106,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -965,6 +1127,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -976,6 +1139,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -987,6 +1151,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -998,6 +1163,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1009,6 +1175,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1029,6 +1196,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1040,6 +1208,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1051,6 +1220,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1062,6 +1232,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1073,6 +1244,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1093,6 +1265,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1104,6 +1277,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1115,6 +1289,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1126,6 +1301,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1137,6 +1313,7 @@
                 </div>
                 <div class="image-wrapper image-wrapper-1" data-image-id="1"><img alt="卡牌圖片 1"></div>
                 <div class="image-wrapper image-wrapper-2" data-image-id="2"><img alt="卡牌圖片 2"></div>
+                <div class="image-wrapper image-wrapper-3" data-image-id="3"><img alt="卡牌圖片 3"></div>
                 <div class="diagonal-line"></div>
                 <div class="cell-text-input break-words" contenteditable="true"></div>
             </div>
@@ -1146,7 +1323,7 @@
         <!-- 底部資訊/狀態欄 -->
         <div class="p-2 border-t border-black text-xs text-gray-600 text-center">
             <p><strong>操作提示:</strong> 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。</p>
-            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片，滾輪縮放，拖曳調整位置。雙圖模式下，圖片會自動**左右分割**。點擊**左半部**可操作圖片 1，點擊**右半部**可操作圖片 2。</p>
+            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片，滾輪縮放，拖曳調整位置。三圖模式下，圖片會呈現**左(長方形)/右上/右下**分割。</p>
             <p class="text-blue-500 font-bold">目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。</p>
         </div>
 

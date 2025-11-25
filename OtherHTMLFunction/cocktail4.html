@@ -1,0 +1,711 @@
+﻿<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="cocktailDetails.js"></script>
+	<style type="text/css">
+		.listBlock{
+			padding-top: 10px;
+			overflow-y: auto;
+			height: 100%;
+		}
+		.grayBtn{
+			opacity: 0.3 !important;
+		}
+		.sourcesList > div{
+			padding-bottom : 40px;
+		}
+		.usingSources{
+			display: none;
+		}
+		.listTC{
+			display: none;
+		}
+		.table{
+			display: table;
+			width:100%;
+		}
+		.table > div{
+			display: table-row;
+			width:100%;
+		}
+		.table > div > div{
+			display: table-cell;
+			vertical-align: middle;
+		}
+		.table.cocktailListFunction > div > div:nth-child(1){
+			width:30%;
+			vertical-align: bottom;
+		}
+		.table.cocktailListFunction > div > div:nth-child(2){
+			width:50%;
+			padding-right: 20px;
+		}
+		.table.cocktailListFunction > div > div:nth-child(3){
+			width:20%;
+		}
+		#mainContent{
+			padding-top: 40px;
+		}
+		.table.cocktailDetailHeader > div > div:nth-child(1){
+			text-align: left;
+			vertical-align: bottom;
+		}
+		.table.cocktailDetailHeader > div > div:nth-child(2){
+			text-align: right;
+		}
+		.sourceListHint{
+			margin-left: 20px;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+        /* 新增的樣式：材料標籤 */
+        .sourceListHint h4 {
+            margin: 0 0 5px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+        .sourceListHint .material-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-right: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: normal;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.1s;
+        }
+        .sourceListHint .required {
+            background-color: #007bff; /* 藍色：指定材料 */
+        }
+        .sourceListHint .forbidden {
+            background-color: #dc3545; /* 紅色：不可材料 */
+        }
+
+	</style>
+</head>
+<body>
+	<div data-role="page">
+
+		<div data-role="header" data-position="fixed" data-tap-toggle="false">
+			<div class="sourceListHint"></div>
+		</div>
+		
+		<div data-role="content" id="mainContent">
+			<div class="listBlock rasipyList">
+				<div class="table cocktailListFunction">
+					<div>
+						<div><h2>自動顯示</h2></div>
+						<div>
+							<div data-role="fieldcontain" id="autoChangePageBtns">
+								<input type="checkbox" checked id="autoChangePage" data-role="flipswitch" data-on-text="ON" data-off-text="OFF" />
+							</div>
+						</div>
+						<div></div>
+					</div>
+					<div>
+						<div><h2>調酒名</h2></div>
+						<div>
+							<div data-role="fieldcontain">
+								<input type="text" name="cocktailNameFilter" id="cocktailNameFilter" value="" />
+							</div>	
+						</div>
+						<div id="filterDIV">
+						</div>
+					</div>
+				</div>
+				
+				<h2 class="listTC listTitle_include">指定材料酒譜：</h2>
+				<h2 class="listTC listTitle_include_empty">指定材料未有酒譜</h2>
+				<div class="actionRasipy"></div>
+				<h2 class="listTC listTitle_all">所有酒譜：</h2>
+				<h2 class="listTC listTitle_all_other">所有其他酒譜：</h2>
+				<div class="allRasipy"></div>
+			</div>
+			<div class="listBlock sourceList">
+				<div class="functions"></div>
+				<div class="sourcesList"></div>
+			</div>
+			<div class="listBlock rasipy">
+				<div class="usingSources">
+					<div class="table cocktailDetailHeader">
+						<div>
+							<div><h3>【<span id="cocktailName"></span>】</h3></div>
+							<div>
+								<fieldset data-role="controlgroup" data-type="horizontal">
+									<input type="radio" name="mixType" id="mixType1" value="1">
+									<label for="mixType1">注入</label>
+									<input type="radio" name="mixType" id="mixType2" value="2">
+									<label for="mixType2">甩盪</label>
+									<input type="radio" name="mixType" id="mixType3" value="3">
+									<label for="mixType3">其他</label>
+								</fieldset>
+							</div>
+						</div>
+					</div>
+					
+					<ul data-role="listview" data-count-theme="b" data-inset="true">
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div data-role="footer" data-position="fixed" data-id="footernav" data-position="fixed" data-tap-toggle="false">
+			<div data-role="navbar">
+				<ul id="headerFunctionList">
+					<li><a href="#" block="sourceList" data-icon="bullets">材料列表</a></li>
+					<li><a href="#" block="rasipyList" data-icon="bars">酒譜列表</a></li>
+					<li><a href="#" block="rasipy" data-icon="grid">酒譜</a></li>
+				</ul>		
+			</div>
+		</div>
+		
+	</div>
+				
+</body>
+<script>
+    // 檢查 jQuery 和 jQuery Mobile 是否成功載入。
+    // 結果會在瀏覽器的 Console 顯示，請務必檢查。
+    if (typeof jQuery === 'undefined') {
+        console.error('【重要錯誤】jQuery 載入失敗！請檢查網路連線或 CDN 路徑。');
+    } else {
+        console.log('jQuery 載入成功 (v' + jQuery.fn.jquery + ')。');
+    }
+    if (typeof $.mobile === 'undefined') {
+        console.error('【警告】jQuery Mobile 載入失敗！部分 UI 功能可能無法正常運作。');
+    } else {
+        console.log('jQuery Mobile 載入成功 (v' + $.mobile.version + ')。');
+    }
+
+	$(document).ready(function(){
+	
+		//功能列表與對應功能區塊開關
+		$(".listBlock").hide();
+		$("#headerFunctionList").find("li > a").on('click',function(){
+			$(".listBlock").hide();
+			$(".listBlock."+$(this).attr("block")).show();
+			var title = $(this).text();
+			if ( $(this).attr("block") == "rasipy" && $("#cocktailName").text() != "" ){
+				title += "：" + $("#cocktailName").text();
+			}
+			document.title = title;
+		});
+		
+		//崁入清除名稱過濾按鈕
+		var clearFilter = createBtnInDIV("清除");
+		$("#filterDIV").append( clearFilter );
+//		clearFilter.find("input[type=button]").on('click',function(){
+		clearFilter.on('click',function(){
+			$("#cocktailNameFilter").val("");
+			//隱藏酒譜畫面
+			$(".usingSources").hide();
+			//整理酒譜列表
+			arrange();
+		});
+		
+		//崁入酒譜按鈕
+		for ( var i = 0 ; i < datas.length ; i++ ){
+		
+			//計算文字數量
+			//一個大寫算一個字，其餘英數符號均不計
+			var clearName = datas[i].name.replace( /[a-z0-9\*_\-\.]/g, '' );
+			//尋找插入點
+			var nextBtnDIV = null;
+			var allBtnDIV = $("div[clearName]");
+			for ( var nl = 0 ; nl < allBtnDIV.length ; nl++ ){
+				if ( nextBtnDIV != null )
+					break;
+				var compareTarget = $(allBtnDIV[nl]);
+				if ( compareTarget.attr("clearName").length == clearName.length && 
+						compareTarget.attr("clearName") > clearName ){
+					nextBtnDIV = compareTarget;
+				} else if ( compareTarget.attr("clearName").length > clearName.length ){
+					nextBtnDIV = compareTarget;
+				}
+			}
+		
+			var btnDIV = createBtnInDIV( datas[i].name, "rasipy-btn" );
+			btnDIV.attr("clearName",clearName);
+			btnDIV.attr("value",datas[i].name);
+/*			
+			var btn = btnDIV.find("input[type=button]");
+			btn.attr("value",datas[i].name);
+			btn.on('click',function(){
+*/			
+			btnDIV.on('click',function(){
+//				var btnDIV = $(this).getBtnDIV();
+				var btnDIV = $(this);
+				
+				var isChecked = btnDIV.isSelectedBtn();
+				$(".rasipy-btn").unselectedBtn();
+				$(".usingSources > ul").empty();
+				$(".usingSources").hide();
+				//如果勾選了某酒譜的話
+				if ( !isChecked ){
+					btnDIV.selectedBtn();
+					var rasipy = btnDIV.getRecipe();
+					if ( rasipy != null ){
+
+						//列出材料與比例
+						var sList = Object.keys(rasipy.recipe);
+						for ( var r = 0 ; r < sList.length ; r++ ){
+							var sourceName = sList[r];
+							var capacity = rasipy.recipe[ sourceName ];
+							if ( $.isNumeric( capacity ) ){
+								capacity += " oz";
+							}
+							var newSpan = $(document.createElement("span"));
+							newSpan.addClass("ui-li-count");
+							newSpan.text( capacity );
+							
+							var newA = $(document.createElement("a"));
+							newA.text( sourceName + " " );
+							newA.attr( "href", "#" );
+							newA.append( newSpan );
+							
+							var newLi = $(document.createElement("li"));
+							newLi.append( newA );
+							
+							$(".usingSources > ul").append( newLi );
+						}
+						$(".usingSources > ul").listview('refresh');
+						
+						//調製法UI
+						$("[name=mixType]").prop("checked",false).checkboxradio('refresh');
+						$("[name=mixType][value="+(rasipy.method)+"]").prop("checked",true).checkboxradio('refresh');
+					}
+					$("#cocktailName").text( rasipy.name );
+					$(".usingSources").show();
+					
+					//自動轉頁
+					if ( $("#autoChangePage").is(":checked") ){
+						$("#headerFunctionList a[block=rasipy]").click();
+					}
+				}
+			});
+			
+			if ( nextBtnDIV == null ){
+				$(".allRasipy").append( btnDIV );
+			} else {
+				// 修正：變數名稱從 nextBtnBtnDIV 改為 nextBtnDIV
+				nextBtnDIV.before( btnDIV );
+			}
+			
+			//給所有酒譜按鈕上排序順位
+			var allRB = $(".rasipy-btn");
+			for ( var i = 0 ; i < allRB.length ; i++ ){
+				$(allRB[i]).attr("sortIndex",i);
+			}
+		}
+				
+		//崁入重置材料按鈕
+		var resetBtn = createBtnInDIV( "重置材料選項" );
+		resetBtn.css("color","red");
+//		resetBtn.find("input[type=button]").on('click',function(){
+		resetBtn.on('click',function(){
+			$(".source-btn").commonSource();
+//			$(".sourcesList .source-btn").removeClass("ui-btn-active").removeClass("grayBtn");
+			$("#cocktailNameFilter").val("");
+			$(".usingSources").hide();
+			arrange();
+		});
+		$(".functions").append( resetBtn );
+		
+		//雞尾酒名過濾 (修正：改為 keyup 事件以實現即時過濾)
+		$("#cocktailNameFilter").on('keyup',function(){
+			$(this).val($(this).val().trim());
+			$(".usingSources").hide();
+			arrange();
+		});
+		
+		//崁入材料按鈕
+		var sourceTypes = Object.keys( sourceList );
+		for ( var st = 0 ; st < sourceTypes.length ; st++ ){
+			
+			var title = document.createElement("h2");
+			$(title).text( sourceTypes[st] );
+			$(".sourcesList").append( $(title) );
+			
+			var sourceListDIV = document.createElement("div");
+			$(".sourcesList").append( $(sourceListDIV) );
+
+			var sourcesInType = sourceList[ sourceTypes[st] ];
+			for ( var s = 0 ; s < sourcesInType.length ; s++ ){
+
+				var sourceName = sourcesInType[s];
+				var clearSourceName = sourceName.replace( /[a-z0-9\*_\-\.]/g, '' );
+
+				var btnDIV = createBtnInDIV( sourceName, "source-btn" );
+				btnDIV.attr("clearSourceName",clearSourceName);
+				btnDIV.attr("value",sourceName);
+/*				
+				var btn = btnDIV.find("input[type=button]");
+				btn.on('click',function(){
+*/				
+				btnDIV.on('click',function(){
+//					var btnDIV = $(this).getBtnDIV();
+					var btnDIV = $(this);
+					
+					if ( btnDIV.isCommonSource() ){
+						//變成[勾選]
+						btnDIV.selectedSource();
+					} else if ( btnDIV.isSelectedSource() ){
+						//變成[拒絕]
+						btnDIV.forbiddenSource();
+					} else if ( btnDIV.isForbiddenSource() ){
+						//變成[無狀態]
+						btnDIV.commonSource();
+					}
+					
+					//隱藏酒譜畫面
+					$(".usingSources").hide();
+					//整理酒譜列表
+					arrange();
+					
+				});
+				
+				var nextBtnDIV = null;
+				var listInType = $(sourceListDIV).find(".source-btn");
+				for ( var is = 0 ; is < listInType.length ; is++ ){
+					if ( nextBtnDIV != null )
+						break;
+					var compareTarget = $(listInType[is]);
+					if ( compareTarget.attr("clearSourceName").length > clearSourceName.length ){
+						nextBtnDIV = compareTarget;
+					}
+				}
+				
+				$(sourceListDIV).append( btnDIV );
+				if ( nextBtnDIV == null ){
+					$(sourceListDIV).append( btnDIV );
+				} else {
+					nextBtnDIV.before( btnDIV );
+				}
+			}
+		}
+		
+		//預設開啟酒譜列表
+		$("#headerFunctionList a[block=rasipyList]").click();
+		
+		//建立客製化功能
+			//通用功能
+				/*
+				//取得按鈕Object
+				$.fn.getBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") || $(this).hasClass("source-btn") ){
+						return $(this).find("input[type=button]");
+					}
+				};
+				*/
+				//取得按鈕文字
+				$.fn.getText = function() {
+					if ( $(this).hasClass("rasipy-btn") || $(this).hasClass("source-btn") ){
+//						return $(this).getBtn().attr("value");
+						return $(this).attr("value");
+					}
+				};
+				//取得ButtonDIV
+				$.fn.getBtnDIV = function() {
+					if ( $(this).parent().has("rasipy-btn") || $(this).parent().has("source-btn") ){
+						return $(this).parent();
+					}
+					return null;
+				}
+
+			//酒譜按鈕功能
+				//取得酒譜
+				$.fn.getRecipe = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						return getDataByName( $(this).getText() );
+					}
+				};
+				//判斷是否包含禁止材料
+				$.fn.containForbiddenSource = function( forbiddenSources ) {
+					if ( $(this).hasClass("rasipy-btn") ){
+						var containSources = Object.keys( $(this).getRecipe().recipe );
+						for ( var f = 0 ; f < forbiddenSources.length ; f++ ){
+							if ( containSources.includes( forbiddenSources[f] ) )
+								return true;
+						}
+						return false;
+					}
+				};
+				//判斷是否包含所有材料
+				$.fn.containAllSource = function( includeSources ) {
+					if ( $(this).hasClass("rasipy-btn") ){
+						var containSources = Object.keys( $(this).getRecipe().recipe );
+						for ( var i = 0 ; i < includeSources.length ; i++ ){
+							if ( !containSources.includes( includeSources[i] ) )
+								return false;
+						}
+						return true;
+					}
+				};
+				//DISABLED
+				$.fn.disabledBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						$(this).addClass("ui-state-disabled");
+					}
+				};
+				//isDisabled
+				$.fn.isDisabledBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						return $(this).hasClass("ui-state-disabled");
+					}
+				}
+				//ENABLED
+				$.fn.enabledBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+//						$(this).getBtn().attr("disabled",false);
+						$(this).removeClass("ui-state-disabled");
+					}
+				};
+				//isEnabled
+				$.fn.isEnabledBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						return !$(this).isDisabledBtn();
+					}
+				}
+				//SELECTED
+				$.fn.selectedBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						$(this).addClass("ui-btn-active");
+					}
+				};
+				//isSelected
+				$.fn.isSelectedBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						return $(this).hasClass("ui-btn-active");
+					}
+				}
+				//UNSELECTED
+				$.fn.unselectedBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						$(this).removeClass("ui-btn-active");
+					}
+				};
+				//isUnselected
+				$.fn.isUnselectedBtn = function() {
+					if ( $(this).hasClass("rasipy-btn") ){
+						return !$(this).isSelectedBtn();
+					}
+				}
+				
+			//材料按鈕功能
+				//材料是否為未指定狀態
+				$.fn.isCommonSource = function() {
+					if ( $(this).hasClass("source-btn") ){
+						return !$(this).hasClass("ui-btn-active") && !$(this).hasClass("grayBtn");
+					}
+				}
+				//取消材料指定狀態
+				$.fn.commonSource = function() {
+					if ( $(this).hasClass("source-btn") ){
+						$(this).removeClass("ui-btn-active");
+						$(this).removeClass("grayBtn");
+					}
+				}
+				//材料是否為選用狀態
+				$.fn.isSelectedSource = function() {
+					if ( $(this).hasClass("source-btn") ){
+						return $(this).hasClass("ui-btn-active");
+					}
+				}
+				//選用此材料
+				$.fn.selectedSource = function() {
+					if ( $(this).hasClass("source-btn") ){
+						$(this).commonSource();
+						$(this).addClass("ui-btn-active");
+					}
+				}
+				//材料是否為禁用狀態
+				$.fn.isForbiddenSource = function() {
+					if ( $(this).hasClass("source-btn") ){
+						return $(this).hasClass("grayBtn");
+					}
+				}
+				//禁用此材料
+				$.fn.forbiddenSource = function() {
+					if ( $(this).hasClass("source-btn") ){
+						$(this).commonSource();
+						$(this).addClass("grayBtn");
+					}
+				}
+				
+	});
+	
+	//進行酒譜列表整理
+	function arrange(){
+
+		//必須材料
+		var includeSource = [];
+		$.each( $(".source-btn"), function( index, obj ){
+			if ( $(obj).isSelectedSource() ){
+				includeSource.push( $(obj).getText() );
+			}
+		} );
+		//不可材料
+		var excludeSource = [];
+		$.each( $(".source-btn"), function( index, obj ){
+			if ( $(obj).isForbiddenSource() ){
+				excludeSource.push( $(obj).getText() );
+			}
+		} );
+		
+		//取出全部酒譜並排序
+		var allRBtns = $(".rasipy-btn");
+		var sortRBtns = new Array( allRBtns.length );
+		var selectedRBtn = null;
+		for ( var b = 0 ; b < allRBtns.length ; b++ ){
+			var theBtn = $(allRBtns[b]);
+			sortRBtns[ parseInt(theBtn.attr("sortIndex")) ] = theBtn;
+			// 移除此處的 enable/disable 邏輯，在主迴圈中處理以確保正確的狀態
+			if ( theBtn.isSelectedBtn() ){
+				selectedRBtn = theBtn;
+				theBtn.unselectedBtn();
+			}
+		}
+		
+		// 新增：用於優化 DOM 插入的 DocumentFragment
+		var actionRasipyFragment = $(document.createDocumentFragment());
+		var allRasipyFragment = $(document.createDocumentFragment());
+
+		//置入 (使用 Fragment 優化效能)
+		for ( var s = 0 ; s < sortRBtns.length ; s++ ){
+			var srb = sortRBtns[s];
+			
+			// 判斷是否需要被禁用
+			var keyWordsFilterFailure = ( $("#cocktailNameFilter").val() != "" && srb.getText().indexOf( $("#cocktailNameFilter").val() ) == -1 );
+			var keyWordsFilterSuccess = ( $("#cocktailNameFilter").val() != "" && srb.getText().indexOf( $("#cocktailNameFilter").val() ) != -1 );
+			
+			var shouldBeDisabled = keyWordsFilterFailure || srb.containForbiddenSource( excludeSource );
+			
+			if ( shouldBeDisabled ){
+				srb.disabledBtn();
+			} else {
+				srb.enabledBtn(); // 確保符合條件時按鈕是可用的
+			}
+			
+			// 判斷是否屬於「指定材料酒譜」區塊 (.actionRasipy)
+			var belongsToActionList = 
+				(includeSource.length > 0 && srb.containAllSource( includeSource )) || 
+				(includeSource.length == 0 && keyWordsFilterSuccess);
+			
+			if ( belongsToActionList ){
+				actionRasipyFragment.append(srb);
+			} else {
+				allRasipyFragment.append(srb);
+			}
+		}
+		
+		// 批量操作 DOM：一次清空並插入所有元素
+		$(".actionRasipy").empty().append(actionRasipyFragment);
+		$(".allRasipy").empty().append(allRasipyFragment);
+
+
+		//酒譜列表標題與內容區塊顯示調整
+		$(".listTC").show();
+		if ( $(".actionRasipy").children().length == 0 ){
+			$(".listTitle_include").hide();
+			$(".listTitle_all").hide();
+			if ( includeSource.length == 0 ){
+				$(".listTitle_include_empty").hide();
+				$(".listTitle_all_other").hide();
+			}
+		} else {
+			$(".listTitle_include_empty").hide();
+			$(".listTitle_all_other").hide();
+		}
+
+		//材料列表提示區塊 (已重寫為標籤樣式)
+		$(".sourceListHint").empty();
+		
+		if ( includeSource.length > 0 || excludeSource.length > 0 ){
+			
+			// --- 必須材料區塊 ---
+			var requiredBlock = $(document.createElement("div")).css('margin-bottom', '5px');
+			var requiredTitle = $(document.createElement("h4")).text("指定材料：");
+			requiredBlock.append(requiredTitle);
+
+			if ( includeSource.length > 0 ){
+				for ( var i = 0 ; i < includeSource.length ; i++ ){
+					var ctName = $(document.createElement("span"));
+					ctName.addClass("material-tag required");
+					ctName.text( includeSource[i] );
+					// 點擊事件：取消指定
+					ctName.on('click',function(){
+						$(".source-btn[value="+($(this).text())+"]").commonSource();
+						arrange();
+					});
+					requiredBlock.append( ctName );
+				}
+			} else {
+				requiredBlock.append( $(document.createElement("span")).text("無") );
+			}
+			$(".sourceListHint").append(requiredBlock);
+
+			// --- 不可材料區塊 ---
+			var forbiddenBlock = $(document.createElement("div"));
+			var forbiddenTitle = $(document.createElement("h4")).text("不可材料：");
+			forbiddenBlock.append(forbiddenTitle);
+			
+			if ( excludeSource.length > 0 ){
+				for ( var i = 0 ; i < excludeSource.length ; i++ ){
+					var ctName = $(document.createElement("span"));
+					ctName.addClass("material-tag forbidden");
+					ctName.text( excludeSource[i] );
+					// 點擊事件：取消禁用
+					ctName.on('click',function(){
+						$(".source-btn[value="+($(this).text())+"]").commonSource();
+						arrange();
+					});
+					forbiddenBlock.append( ctName );
+				}
+			} else {
+				forbiddenBlock.append( $(document.createElement("span")).text("無") );
+			}
+			$(".sourceListHint").append(forbiddenBlock);
+		}
+	}
+	
+	//製造按鈕區塊
+	function createBtnInDIV( text, className ){
+	
+		var btnDIV = document.createElement("div");
+		$(btnDIV).addClass("ui-input-btn");
+		$(btnDIV).addClass("ui-btn");
+		$(btnDIV).addClass("ui-corner-all");
+		$(btnDIV).addClass("ui-btn-inline");
+		$(btnDIV).text( text );
+		if ( className != null ){
+			$(btnDIV).addClass( className );
+		}
+		/*
+		var btn = document.createElement("input");
+		$(btn).attr("type","button");
+		$(btn).attr("data-enhanced",true);
+		$(btn).attr("value",text);
+
+		$(btnDIV).append( btn );
+		*/
+		return $(btnDIV);
+	}
+	
+	//依調酒名稱找尋酒譜資料
+	function getDataByName( name ){
+		for ( var d = 0 ; d < datas.length ; d++ ){
+			if ( datas[d].name == name ){
+				return datas[d];
+			}
+		}
+		return null;
+	}
+
+</script>
+</html>
