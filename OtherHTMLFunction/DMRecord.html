@@ -46,6 +46,9 @@
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 2; /* 確保高於文字輸入區(z-index: 1) */
+            /* 修正 3: 強制創建堆疊上下文以改善 html2canvas 渲染 clip-path 的問題 */
+            transform: translateZ(0); 
             /* 修正 1: 移除會與屬性選擇器衝突的 display: none; */
             overflow: hidden; /* 裁剪路徑(clip-path)的關鍵 */
             display: block; /* 讓它總是存在，由內層的 img 和 clip-path 控制顯示區域 */
@@ -66,7 +69,7 @@
 
         /* ------------------ Dual Image / Diagonal Split Styles ------------------ */
 
-        /* 對角線分隔線: 左下到右上 (45度) */
+        /* 對角線分隔線: 左下到右上 (45度) - 在左右分割模式下保持隱藏 */
         .diagonal-line {
             position: absolute;
             /* 讓線段寬度足以覆蓋對角線 (sqrt(2)*100% 約 141.4%) */
@@ -82,34 +85,36 @@
             display: none;
         }
         
-        /* 修正 2: 移除會與 data-image-count 選擇器衝突的規則 */
-        /* .content-cell[data-mode='image'] .image-wrapper {
-            display: none;
-        } */
-
         /* 單張圖片模式: Image 1 佔滿整個空間 */
         .content-cell[data-image-count='1'] .image-wrapper-1 {
-            display: block;
+            /* 讓 CSS 屬性選擇器來控制顯示，覆蓋 JS 中的隱藏設定 */
+            display: block !important; 
             clip-path: none;
             pointer-events: all;
         }
         .content-cell[data-image-count='1'] .image-wrapper-2 {
-            display: none;
+            display: none !important;
         }
 
-        /* 雙圖模式: Image 1 (左下角三角形) */
+        /* 雙圖模式: Image 1 (左半邊矩形) */
         .content-cell[data-image-count='2'] .image-wrapper-1 {
-            display: block;
-            /* 左下角三角形: (0, 0), (100%, 100%), (0, 100%) */
-            clip-path: polygon(0 0, 100% 100%, 0 100%); 
+            /* 讓 CSS 屬性選擇器來控制顯示，覆蓋 JS 中的隱藏設定 */
+            display: block !important;
+            /* 修正: 改用 width 和 left 屬性定義左半邊，讓 html2canvas 更好地理解矩形裁剪 */
+            width: 50%; 
+            left: 0;
+            clip-path: none; /* 確保不使用 clip-path，讓容器邊界作為裁剪邊界 */
             pointer-events: all; 
         }
 
-        /* 雙圖模式: Image 2 (右上角三角形) */
+        /* 雙圖模式: Image 2 (右半邊矩形) */
         .content-cell[data-image-count='2'] .image-wrapper-2 {
-            display: block;
-            /* 右上角三角形: (0, 0), (100%, 0), (100%, 100%) */
-            clip-path: polygon(0 0, 100% 0, 100% 100%); 
+            /* 讓 CSS 屬性選擇器來控制顯示，覆蓋 JS 中的隱藏設定 */
+            display: block !important;
+            /* 修正: 改用 width 和 left 屬性定義右半邊 */
+            width: 50%; 
+            left: 50%;
+            clip-path: none; /* 確保不使用 clip-path，讓容器邊界作為裁剪邊界 */
             pointer-events: all; 
         }
         
@@ -134,6 +139,7 @@
             justify-content: center;
             align-items: center;
             background-color: transparent; 
+            z-index: 1; /* 修正: 明確設定 Z-index，低於圖片容器 */
             /* 啟用 CSS 過渡效果，讓文字大小變化更流暢 */
             transition: font-size 0.2s ease-out; 
         }
@@ -198,39 +204,46 @@
             const textInput = cell.querySelector('.cell-text-input');
             const diagonalLine = cell.querySelector('.diagonal-line');
             
-            // 預設隱藏模式選擇器和文字輸入
+            // **修正核心: 1. 隱藏所有模式的專屬元素**
+            // 預設隱藏模式選擇器、文字輸入和分隔線
             if (selectOverlay) selectOverlay.style.display = 'none';
-            if (textInput) textInput.style.display = 'none';
+            if (textInput) {
+                textInput.style.display = 'none';
+                // *** 修正 BUG: 確保在隱藏時明確禁用 contenteditable ***
+                textInput.contentEditable = 'false'; 
+            }
             if (diagonalLine) diagonalLine.style.display = 'none';
+            
+            // 隱藏圖片容器 (使用內聯樣式覆蓋，但 CSS 屬性選擇器有 !important，故仍可強制顯示)
+            if (wrapper1) wrapper1.style.display = 'none'; 
+            if (wrapper2) wrapper2.style.display = 'none';
+            
             removeClearButton(cell);
-
-            // 確保圖片 wrapper 的內聯 display 樣式被清除，讓 CSS 屬性選擇器生效
-            if (wrapper1) wrapper1.style.display = '';
-            if (wrapper2) wrapper2.style.display = '';
 
 
             if (mode === 'select') {
                 if (selectOverlay) selectOverlay.style.display = 'flex';
                 cell.style.cursor = 'default';
             } else if (mode === 'image') {
-                // 圖片模式
+                // 圖片容器的顯示由 CSS 屬性選擇器 (display: block !important) 控制，
+                // 這會覆蓋上面設定的 'none'，確保它們能根據 data-image-count 顯示正確的 wrapper)
+                
                 if (count >= 1) {
                     // 圖片顯示由 CSS 屬性選擇器控制
                     if (count === 2) {
-                        if (diagonalLine) diagonalLine.style.display = 'block';
                         addClearButton(cell, count); // 雙圖顯示兩個清除選項
                     } else {
                         addClearButton(cell, count); // 單圖顯示一個清除選項
                     }
-                } else {
-                    // count === 0 時，模式仍設定為 image，讓貼上事件生效，但顯示 overlay
-                    if (selectOverlay) selectOverlay.style.display = 'flex';
-                    // 這裡不將 data-mode 設回 select，因為我們希望貼上事件能被捕獲
                 }
                 
                 cell.style.cursor = 'move';
             } else if (mode === 'text') {
-                if (textInput) textInput.style.display = 'flex';
+                if (textInput) {
+                    textInput.style.display = 'flex';
+                    // *** 修正 BUG: 確保在文字模式下明確啟用 contenteditable ***
+                    textInput.contentEditable = 'true'; 
+                }
                 // 文字模式下，只要有文字就顯示清除按鈕
                 if (textInput && textInput.textContent.trim()) {
                     addClearButton(cell, 0, true); 
@@ -250,7 +263,7 @@
             // 檢查如果已經有圖片，則不需要模式選擇器
             if (count > 0) {
                  updateCellView(cell, 'image');
-                 const message = count === 1 ? "請貼上第二張圖片 (Ctrl+V) 以啟用對角線分割。" : "已達最大圖片數量 (2張)。若要替換，請先清除。";
+                 const message = count === 1 ? "請貼上第二張圖片 (Ctrl+V) 以啟用左右分割。" : "已達最大圖片數量 (2張)。若要替換，請先清除。";
                  showToast(cell, message, count === 2 ? 'warning' : 'success');
                  if (cell) cell.focus();
                  return;
@@ -266,10 +279,12 @@
         }
 
         function switchToTextMode(cell) {
+            // 修正: 直接切換到 text 模式，並確保 textInput 顯示
             updateCellView(cell, 'text');
             showToast(cell, "已切換到文字模式，請直接輸入。", 'success');
             const textInput = cell.querySelector('.cell-text-input');
             if (textInput && document.activeElement !== textInput) {
+                // *** 移除 setTimeout，並信任 contentEditable 設置已在 updateCellView 中完成 ***
                 textInput.focus();
             }
         }
@@ -563,7 +578,7 @@
                     clearButton2 = document.createElement('button');
                     clearButton2.className = 'clear-button clear-button-2 absolute top-1 right-8 p-1 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
                     clearButton2.innerHTML = '2'; // 標示清除第二張
-                    clearButton2.title = '清除第二張圖片 (右上方)';
+                    clearButton2.title = '清除第二張圖片 (右半部)';
                     clearButton2.addEventListener('click', (e) => {
                         e.stopPropagation(); 
                         clearImage2(cell); // 清除第二張圖片
@@ -627,6 +642,8 @@
             // 清除文字狀態
             const textInput = cell.querySelector('.cell-text-input');
             if (textInput) {
+                // *** 修正: 確保文字輸入框失去焦點，避免潛在的狀態殘留 ***
+                textInput.blur(); 
                 textInput.textContent = '';
                 textInput.style.fontSize = ''; 
             }
@@ -646,6 +663,8 @@
             // 重新切換回模式選擇
             updateCellView(cell, 'select');
             showToast(cell, "內容已清除，請選擇新的模式。", 'success');
+            
+            // 移除 cell.focus()，避免焦點衝突
         }
 
 
@@ -682,10 +701,12 @@
                 if (selectOverlay) {
                     selectOverlay.querySelector('.btn-image').addEventListener('click', (e) => {
                         e.stopPropagation();
+                        e.preventDefault(); // 確保點擊事件被可靠處理
                         switchToImageMode(cell);
                     });
                     selectOverlay.querySelector('.btn-text').addEventListener('click', (e) => {
                         e.stopPropagation();
+                        e.preventDefault(); // 確保點擊事件被可靠處理
                         switchToTextMode(cell);
                     });
                 }
@@ -720,6 +741,8 @@
             }
             
             toast.textContent = message;
+            // 每次顯示時，確保它是可見的
+            toast.style.display = 'block'; 
             toast.style.opacity = 1;
             
             if (type === 'warning') {
@@ -733,6 +756,10 @@
             clearTimeout(toast.hideTimeout);
             toast.hideTimeout = setTimeout(() => {
                 toast.style.opacity = 0;
+                // *** 修正 BUG: 在過渡結束後，將 display 設為 none，使其不再阻擋點擊事件 ***
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 300); // 300ms 應與 CSS transition duration 匹配
             }, 3000);
         }
 
@@ -1119,7 +1146,7 @@
         <!-- 底部資訊/狀態欄 -->
         <div class="p-2 border-t border-black text-xs text-gray-600 text-center">
             <p><strong>操作提示:</strong> 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。</p>
-            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片，滾輪縮放，拖曳調整位置。雙圖模式下，點擊**左下角**區域可操作圖片 1，點擊**右上角**區域可操作圖片 2。</p>
+            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片，滾輪縮放，拖曳調整位置。雙圖模式下，圖片會自動**左右分割**。點擊**左半部**可操作圖片 1，點擊**右半部**可操作圖片 2。</p>
             <p class="text-blue-500 font-bold">目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。</p>
         </div>
 
