@@ -17,7 +17,7 @@
 		{		name : "学校男/ゾンビ・カーニバル",								count : 2,	},
 		{		name : "闇参謀グラン・ギニョール",									count : 2,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "NET-041"
 	var setName = "新加坡官方CS大賽2024 1st【Heavens Gate＠Don】"
@@ -38,7 +38,7 @@
 		{		name : "護天！銀河MAX",											count : 1,	},
 		{		name : "閃光の精霊カンビアーレ",								count : 1,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-045"
 	var setName = "睿哥神藝術盃2024 1st【青黑COPMPLEX＠胃】"
@@ -59,7 +59,7 @@
 		{		name : "闇参謀グラン・ギニョール",									count : 1,	},
 		{		name : "SSS級天災 デッドダムド",									count : 1,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-050"
 	var setName = "台灣CS大賽2025 1st【小茜Full Course＠派大】"
@@ -80,7 +80,7 @@
 		{		name : "完璧妖精マリニャンX",				count : 1,	},
 		{		name : "♪立ち上がる 悪魔に天使 堕ちるかな",	count : 2,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-055"
 	var setName = "睿哥神藝術盃2025 1st【龍娘使我強大＠武林】"
@@ -101,7 +101,7 @@
 		{		name : "竜皇神 ボルシャック・バクテラス",	count : 4,	},
 		{		name : "「GG」-001",	count : 1,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-059"
 	var setName = "台灣CS大賽20251025 1st【5C褻瀆者＠Funky】"
@@ -129,7 +129,7 @@
 		{		name : "零獄接続王 ロマノグリラ0世",				count : 1,	},
 		{		name : "大樹王 ギガンディダノス",					count : 1,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-063"
 	var setName = "台灣CS大賽20251026 1st【火闇自然巴羅姆邪道車＠德爾塔】"
@@ -148,7 +148,7 @@
 		{		name : "魔誕の封殺ディアス Z（ゼータ）",			count : 4,	},
 		{		name : "悪夢神バロム・ナイトメア",					count : 2,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	setDatas.addSet( setCode , setName , isDeck , setCardList );	
 	
 	var setCode = "NET-067"
 	var setName = "台灣CS大賽20251109 1st【水闇火深淵＠蒼炎】"
@@ -172,4 +172,4 @@
 		{		name : "終止の時計 ザ・ミュート",	count : 3,	},
 		{		name : "忍蛇の聖沌 c0br4",	count : 2,	},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );	
+	setDatas.addSet( setCode , setName , isDeck , setCardList );	

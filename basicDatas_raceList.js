@@ -1,10 +1,12 @@
 ﻿	
-	//種族中英日對照表
-	var raceMapping = {
+	//種族中英日對照表 (使用 Map 結構優化查找)
+	const raceMapping = {
 	
-		//資料集合
-		map :
-			[
+		//資料集合: Map<JapName, RaceData>
+		map : new Map(),
+		
+		init: function() {
+			const initialData = [
 				{	Jap : "アーマード・ドラゴン",				Eng : "Armored Dragon",			Chi : "裝甲龍",			isCategory : false,	},
 				{	Jap : "ルナーズ・サンガイザー",				Eng : "Luna's Sun Geyser",		Chi : "月神的日泉",		isCategory : false,	},
 				{	Jap : "ルナティック・エンペラー",				Eng : "Lunatic Emperor",		Chi : "瘋狂皇帝",			isCategory : false,	},
@@ -109,7 +111,6 @@
 				{	Jap : "アースイーター",					Eng : "Earth Eater",			Chi : "噬地獸",			isCategory : false,	},
 				{	Jap : "シャイン・モンスター",				Eng : "Shine Monster",			Chi : "閃光獸",			isCategory : false,	},
 				{	Jap : "アウトレイジOMG",					Eng : "Outrage Omega",			Chi : "無法者Ω",			isCategory : false,	},
-				{	Jap : "バーサーカー",					Eng : "Berserker",				Chi : "狂戰士",			isCategory : false,	},
 				{	Jap : "ホーン・ビースト",					Eng : "Horn Beast",				Chi : "角獸",			isCategory : false,	},
 				{	Jap : "リキシ・コマンド・ドラゴン",			Eng : "Rikishi Command Dragon",	Chi : "力士指揮龍",		isCategory : false,	},
 				{	Jap : "チルドレン",						Eng : "Children",				Chi : "小屁孩",			isCategory : false,	},
@@ -414,7 +415,6 @@
 				{	Jap : "ミズガミ",						Eng : "Water God",				Chi : "水神",			isCategory : false,	},
 				{	Jap : "ロスト・クルセイダー・ドラゴン",			Eng : "Lost Crusader Dragon",	Chi : "逝軍龍",			isCategory : false,	},
 				{	Jap : "メカ・ゴッド",						Eng : "Mecha God",				Chi : "機械神",			isCategory : false,	},
-				
 
 
 				{	Jap : "エンジェル",						Eng : "Angel",					Chi : "天使",			isCategory : true,	},
@@ -427,33 +427,25 @@
 				{	Jap : "アビス",						Eng : "Abyss",					Chi : "深淵",			isCategory : true,		pop : true	},
 				{	Jap : "アーマード",						Eng : "Armored",				Chi : "裝甲",			isCategory : true,		pop : true	},
 				{	Jap : "メカ",							Eng : "Mecha",					Chi : "機械",			isCategory : true,		pop : true	},
-				
-				/*
-				{	Jap : "",						Eng : "",					Chi : "",			isCategory : false,	},
-				*/
-			],
+			];
+
+			initialData.forEach(item => this.map.set(item.Jap, item));
+		},
 		
-		//用日文種族名去取得種族資料
+		//用日文種族名去取得種族資料 (O(1) 查找)
 		getDataByJap : function( value ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].Jap == value ){
-					return this.map[i];
-				}
-			}
-			return null;
+			return this.map.get(value) || null;
 		},
 		
 		//將日文種族名轉成英文種族名
 		transJapToEng : function( value ){
-			var theData = this.getDataByJap( value );
-			return theData == null ? null : theData.Eng;
+			return this.getDataByJap( value )?.Eng;
 		},
 		
 		//將日文種族名轉成中文種族名
 		transJapToChi : function( value ){
-			var theData = this.getDataByJap( value );
-			return theData == null ? null : theData.Chi;
+			return this.getDataByJap( value )?.Chi;
 		},
 		
-	}
-	
+	};
+	raceMapping.init();

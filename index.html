@@ -4,32 +4,37 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>簡易決鬥王卡牌效果搜尋器(Author:Ether/Supporter:Sky/Picture Source:takaratomy.co.jp)</title>
 <script>
-	var startLoading = new Date();
+	const startLoading = new Date();
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="./tw_cn.js" id="tc2cJS"></script>
 <script src="./functions.js?v=20251114"></script>
 <script>
-	function gotoMobile(){
+	const gotoMobile = () => {
 		location.href = "./indexMobile2.html"+window.location.search;
-	}
-	var debugMode = [];
+	};
+	const debugMode = [];
 </script>
 <script src="./moment.js"></script>
 <script src="./fuse.js"></script>
 <script src="./basicDatas.js?v=20251114"></script>
 <script src="./basicDatas_abilities.js?v=20251114"></script>
 <script src="./basicDatas_raceList.js?v=20251114"></script>
-<script src="./parseDMVault.js?v=20251114"></script>
-
+<script src="./parseDMVault.js"></script>
 <script src="./AllCards.js?v=20251114"></script>
+<script src="./parseDMVault.js"></script>
 <script src="./OfficeSets.js?v=20251114"></script>
 <script src="./OriginalSets.js?v=20251114"></script>
-<script src="./NewCards.js?v=20251114"></script>
 <script src="./html2canvas.js"></script>
 <script src="./canvas2image.js"></script>
 <style type="text/css">
 <!--
+	.backdrop {
+		/* ... styles ... */
+		z-index: 999;
+		display: none; /* <-- 確定有這行 */
+		/* ... other styles ... */
+	}
 	.bbfw {  
 		background : #000;
 		color: #FFFFFF;
@@ -97,7 +102,6 @@
 	<table style="width:100%;height:100%;" border="0" cellpadding="0" cellspacing="0">
 		<tr style="width:98%;height:40px;">
 			<td colspan="4" style="padding-left:5px;">
-				<!-- 使用人次 -->
 				<script language="Javascript">
 					document.write('<a href="http://www.f-counter.com/"></a>');
 				</script>
@@ -106,12 +110,11 @@
 				</noscript>
 				【使用人次】<a href=http://www.free-counter.jp/><img src="http://www.f-counter.net/j/21/1414393183/" alt="AccessCounter" border="0"></a>
 				【桌機/<a href="#" style="color:blue;" onclick="gotoMobile();" >行動</a>+<span id="tran_tw">臺繁</span>/<span id="tran_hk">港繁</span>/<span id="tran_cn">中簡</span>】
-				【原始資源】<span onclick="window.open('http://dmvault.ath.cx/');" style="cursor:pointer;color:blue;text-decoration:underline;">DM Vault</span>、
+				【原始資源】
 							<span onclick="window.open('http://dm.takaratomy.co.jp');" style="cursor:pointer;color:blue;text-decoration:underline;">Duel Masters@TakaraTomy</span>
 			</td>
 		</tr>
 		<tr style="height:30px;">
-			<!-- 頁籤區塊 -->
 			<td id="filterBar" style="vertical-align:middle;width:15%;text-align:center;cursor:pointer;font-weight:bold;background-color:#FFC6CA;" onclick="changeLeftPage(this);">
 				<span class="filterTitle">基本搜尋</span>[<span id="filter_plus" onclick="filter_adv(this);" style="cursor:pointer;">＋</span>]
 			</td>
@@ -122,7 +125,6 @@
 				FB留言
 			</td>
 			<td rowspan="2" style="vertical-align:top;width:66%;">
-				<!-- 卡牌Detail -->
 				<table style="display:none;width:98%;" id="cardDataBlock" border="0" cellpadding="0" cellspacing="0">
 					<tr id="arrowsArea" style="width:100%;">
 						<td style="text-align:center;width:100%;padding-top:10px;padding-bottom:10px;">
@@ -158,7 +160,7 @@
 											<table width="100%" style="font-size:10px;" >
 												<tr>
 													<td style="text-align:left;width:25%;">
-														<span onclick="shiftAA(gobi('lastAAIndex').value);" id="lastAATd" style="cursor:pointer;text-decoration:underline;color:blue;">
+														<span onclick="shiftAA(getById('lastAAIndex').value);" id="lastAATd" style="cursor:pointer;text-decoration:underline;color:blue;">
 															&lt;&lt;
 															<input type="hidden" id="lastAAIndex">
 															&nbsp;
@@ -169,7 +171,7 @@
 													</td>
 													<td style="text-align:right;width:25%;">
 														&nbsp;
-														<span onclick="shiftAA(gobi('nextAAIndex').value);" id="nextAATd" style="cursor:pointer;text-decoration:underline;color:blue;">
+														<span onclick="shiftAA(getById('nextAAIndex').value);" id="nextAATd" style="cursor:pointer;text-decoration:underline;color:blue;">
 															&gt;&gt;
 															<input type="hidden" id="nextAAIndex">
 														</span>
@@ -250,14 +252,7 @@
 														<span class="enWiki" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="findEnWiki();">【Duel Masters WIKI】</span>
 													</td>
 												</tr>
-<!--												
-												<tr id="tr_function">
-													<td class="bbfw h36">測試功能</td>
-													<td class="tvc">
-														<span class="screenshot" style="font-size:12px;cursor:pointer;text-decoration:underline;" onclick="screenshot();">【截圖】</span>
-													</td>
-												</tr>
--->												
+												
 											</table>
 										</div>
 									</td>
@@ -267,14 +262,7 @@
 										DM Vault 功能連結
 									</td>
 									<td colspan="2" style="vertical-align:middle;" id="dmValutFunctions">
-										[<span class="dvLinkCSS" >基本情報</span>]
-										[<span class="dvLinkCSS" >牌庫</span>]
-										[<span class="dvLinkCSS" >評價</span>]
-										[<span class="dvLinkCSS" >FAQ</span>]
-										[<span class="dvLinkCSS" >組合技</span>]
-										[<span class="dvLinkCSS" >外部連結</span>]
-										[<span class="dvLinkCSS" >日拍</span>]
-									</td>
+										</td>
 								</tr>	
 							</table>
 						</td>
@@ -292,11 +280,9 @@
 		</tr>
 		<tr>
 			<td colspan="3">
-				<!-- 過濾選項、功能選項、查詢列表區塊 -->
 				<table style="width:100%;height:100%;" border="0" cellpadding="0" cellspacing="0">
 					<tr id="leftMain" style="width:98%;height:98%;background-color:#FFC6CA;">
 						<td style="width:98%;height:100%;vertical-align:top;padding-left:5px;padding-right:5px;padding-top:15px;">
-							<!-- 過濾選項、功能選項區塊 -->
 							<div id="filterBlock" style="width:98%;height:98%;display:inline;vertical-align:top;">
 								<form id="queryForm">
 									<table style="width:98%;height:98%;">
@@ -332,15 +318,6 @@
 										<tr style="width:98%;">
 											<td style="width:53px;vertical-align:top;">費用</td>
 											<td>
-											<!--
-												<select id="cost_calc" style="width:40px;display:none;">
-													<option value="e">＝</option>
-													<option value="m">＞</option>
-													<option value="em">≧</option>
-													<option value="l">＜</option>
-													<option value="el">≦</option>
-												</select>
-											-->
 												<select id="cost" style="width:80px;">
 													<option value="">全部</option>
 												</select>
@@ -355,15 +332,6 @@
 										<tr style="width:98%;">
 											<td style="width:53px;vertical-align:top;">攻擊力</td>
 											<td>
-											<!--
-												<select id="power_calc" style="width:40px;display:none;">
-													<option value="e">＝</option>
-													<option value="m">＞</option>
-													<option value="em">≧</option>
-													<option value="l">＜</option>
-													<option value="el">≦</option>
-												</select>
-											-->
 												<select id="power" style="width:80px;">
 													<option value="">全部</option>
 												</select>
@@ -520,7 +488,7 @@
 											<td style="width:53px;vertical-align:top;">卡名</td>
 											<td>
 												<input type="text" name="cardName" id="cardName" style="width:172px;">
-												<input type="button" value="清除" onclick="gobi('cardName').value='';">
+												<input type="button" value="清除" onclick="getById('cardName').value='';">
 											</td>
 										</tr>
 										<tr style="width:98%;display:none;">
@@ -565,7 +533,6 @@
 									</table>
 								</form>
 							</div>
-							<!-- 查詢列表區塊 -->
 							<div id="listBlock" style="overflow-x:auto;width:98%;height:98%;display:none;">
 								<div style="height:98%;" id="td_names_list">
 									<table id="names" border="1" cellpadding="1" cellspacing="1" width="100%;height:100%;" style="background-color:#FFFFFF;">
@@ -580,11 +547,9 @@
 										<input type="button" style="width:32%;height:24px;" value="列表截圖" onclick="doWriteCanvas2('names',true, lastSelectedSetCode);">
 										<input type="button" style="width:32%;height:24px;" value="匯出牌庫" onclick="codingDeck();">
 										<input type="button" style="width:32%;height:24px;" value="匯出連結" onclick="popListToOutter();">
-<!--										<input type="button" style="width:49%;height:24px;" value="估價" onclick="price();" id="priceBtn">-->
 									</span>
 								</div>
 							</div>
-							<!-- FB留言區塊 -->
 							<div id="fbBlock" style="overflow-x:auto;width:98%;height:98%;display:none;">
 								<div id="fb-root"></div>
 								<script>
@@ -604,14 +569,13 @@
 			</td>
 		</tr>
 		<tr style="height:30px;">
-			<!-- 頁籤區塊 -->
-			<td id="filterBar2" style="vertical-align:middle;text-align:center;cursor:pointer;font-weight:bold;background-color:#FFC6CA;" onclick="gobi('filterBar').onclick();">
+			<td id="filterBar2" style="vertical-align:middle;text-align:center;cursor:pointer;font-weight:bold;background-color:#FFC6CA;" onclick="getById('filterBar').onclick();">
 				<span class="filterTitle">基本搜尋</span>
 			</td>
-			<td id="listBar2"   style="vertical-align:middle;text-align:center;cursor:pointer;background-color:#FFD3D6;" onclick="gobi('listBar').onclick();">
+			<td id="listBar2"   style="vertical-align:middle;text-align:center;cursor:pointer;background-color:#FFD3D6;" onclick="getById('listBar').onclick();">
 				列表
 			</td>
-			<td id="fbBar2"   style="vertical-align:middle;text-align:center;cursor:pointer;background-color:#FFE5E7;" onclick="gobi('fbBar').onclick();">
+			<td id="fbBar2"   style="vertical-align:middle;text-align:center;cursor:pointer;background-color:#FFE5E7;" onclick="getById('fbBar').onclick();">
 				FB留言
 			</td>
 			<td style="text-align:center;">
@@ -619,16 +583,24 @@
 		</tr>
 	</table>
 	<div class="backdrop"><div><img src="./waiting.gif"></div></div>
+	<div id="customAlertOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center;">
+		<div id="customAlertBox" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); max-width: 400px; text-align: center;">
+			<p id="customAlertMessage" style="margin-bottom: 20px; color: #370D00;"></p>
+			<button id="customAlertButton" style="padding: 8px 15px; background-color: #E8747D; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+				確定
+			</button>
+		</div>
+	</div>
 <script src="./dataTail.js"></script>
 </body>
 <script>		
 	if ( !popListOnly ){
 		//Local端開啟Coding用功能
 		if ( isRD() ){
-			gobi("codingBtnSpan").style.display="inline";
+			getById("codingBtnSpan").style.display="inline";
 		}
-		var endLoad = new Date();
-		var loadingTime = ( endLoad.getTime() - startLoading.getTime() ) / 1000;
+		const endLoad = new Date();
+		const loadingTime = ( endLoad.getTime() - startLoading.getTime() ) / 1000;
 	}
 	if ( isMobile() ){
 		if ( confirm(translateText("請問是否要轉去手機版以達到更佳的畫面體驗？",isTC2C)) ){

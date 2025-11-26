@@ -889,7 +889,7 @@
 			id : "DMR01 110/110",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-02";
 	var setName = "ダークサイド";
@@ -1339,7 +1339,7 @@
 			id : "DMR02 54/54",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-03";
 	var setName = "ガイアール・ビクトリー";
@@ -1786,7 +1786,7 @@
 			id : "DMR03 54/54",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-04";
 	var setName = "ライジング・ホープ";
@@ -2230,7 +2230,7 @@
 			id : "DMR04 55a/55",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-05";
 	var setName = "ゴールデン・エイジ";
@@ -3110,7 +3110,7 @@
 			id : "DMR05 110/110",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-06";
 	var setName = "ビクトリー・ラッシュ";
@@ -3569,7 +3569,7 @@
 			id : [ "DMR06 55/55","DMR06 55m/55" ],
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-07";
 	var setName = "ゴールデン・ドラゴン";
@@ -4045,7 +4045,7 @@
 			id : "DMR07 55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-08";
 	var setName = "グレイト・ミラクル";
@@ -4524,7 +4524,7 @@
 			id : "DMR08 55/55",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-08S";
 	var setName = "グレイト・ミラクル セブン・ヒーローVer.";
@@ -4580,7 +4580,7 @@
 			id : "DMR08-S 7/7",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-09";
 	var setName = "レイジVSゴッド";
@@ -5478,7 +5478,7 @@
 			id : "DMR09 110/110",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-10";
 	var setName = "デッド&ビート";
@@ -5954,7 +5954,7 @@
 			id : "DMR10 55/55",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-11";
 	var setName = "ウルトラVマスター";
@@ -6395,7 +6395,7 @@
 			id : "DMR11 55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMR-12";
 	var setName = "オメガ∞マックス";
@@ -6842,7 +6842,7 @@
 			id : "DMR12 55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-13";
 	var setName = "ドラゴン・サーガ";
@@ -7804,7 +7804,7 @@
 			id : "DMR13 110/110",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMR-14";
 	var setName = "暴龍ガイグレン";
@@ -8301,7 +8301,7 @@
 			id : "DMR14 55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-15";
 	var setName = "双剣オウギンガ";
@@ -8814,7 +8814,7 @@
 			id : "DMR15 55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-16";
 	var setName = "超戦ガイネクスト×極";
@@ -9278,7 +9278,7 @@
 			id : "DMR16極 54/54",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-16-2";
 	var setName = "超戦ガイネクスト×真";
@@ -9758,7 +9758,7 @@
 			id : "DMR16真 54/54",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-17";
 	var setName = "燃えろドギラゴン!!";
@@ -10527,7 +10527,7 @@
 			id : "DMR17 94/94",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-18";
 	var setName = "時よ止まれミラダンテ!!";
@@ -11129,7 +11129,7 @@
 			id : "DMR18 71/71",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-19";
 	var setName = "禁断のドキンダムX!!";
@@ -11836,7 +11836,7 @@
 			id : "DMR19 87/87",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-20";
 	var setName = "正体判明のギュウジン丸!!";
@@ -12425,7 +12425,7 @@
 			id : "DMR20 70/70",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-21";
 	var setName = "革命ファイナル";
@@ -13197,7 +13197,7 @@
 			id : "DMR21 94/94",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-22";
 	var setName = "世界は0だ!! ブラックアウト!!";
@@ -13810,7 +13810,7 @@
 			id : "DMR22 74/74",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMR-23";
 	var setName = "ドギラゴールデンvsドルマゲドンX";
@@ -14434,7 +14434,7 @@
 			id : "DMR23 74/74",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-01";
 	var setName = "ジョーカーズ参上！！";
@@ -15169,7 +15169,7 @@
 			id : "RP01 93/93",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-01";
 	var setName = "キング・オブ・デュエルロード ストロング7";
@@ -15487,7 +15487,7 @@
 			id : "40/40 DMX01",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-02";
 	var setName = "デッキビルダーDX ハンター・エディション";
@@ -15870,7 +15870,7 @@
 			id : "DMX02 42/42",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-03";
 	var setName = "デッキビルダーDX エイリアン・エディション";
@@ -16253,7 +16253,7 @@
 			id : "DMX03 42/42",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-04";
 	var setName = "フルホイルパック リバイバル・ヒーロー ザ・ハンター";
@@ -16422,7 +16422,7 @@
 			id : "DMX04 16/16",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-05";
 	var setName = "フルホイルパック リバイバル・ヒーロー ザ・エイリアン";
@@ -16597,7 +16597,7 @@
 			id : "DMX05 16/16",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-06";
 	var setName = "大乱闘！ヒーローズ・ビクトリー・パック 燃えるド根性大作戦";
@@ -16786,7 +16786,7 @@
 			id : "DMX06 21/21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-07";
 	var setName = "大乱闘！ヒーローズ・ビクトリー・パック 咆えろ野生の大作戦";
@@ -16975,7 +16975,7 @@
 			id : "DMX07 21/21",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-SD1";
 	var setName = "竜軍・オブ・ボルシャック";
@@ -17106,7 +17106,7 @@
 			count : 4,
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM-06";
 	var setName = "闘魂編";
@@ -17946,7 +17946,7 @@
 			id : "110/110",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-06";
 	var setName = "神アート スーパー・ヴィジュアル・ショック ドラゴン編";
@@ -18022,7 +18022,7 @@
 			],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-07";
 	var setName = "神アート COLORFUL＊SNOW";
@@ -18102,7 +18102,7 @@
 			],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-05";
 	var setName = "神アート 五人祭でドラゴン♡サマー";
@@ -18149,7 +18149,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-04";
 	var setName = "神アート 超獣創造 ～松本しげのぶの世界～";
@@ -18196,7 +18196,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-01";
 	var setName = "神アート 鬼札覇王絵巻";
@@ -18243,7 +18243,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-02";
 	var setName = "神アート Bolshack by Toshiaki Takayama";
@@ -18290,7 +18290,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-03";
 	var setName = "神アート フェアリー・ライブラリー";
@@ -18337,7 +18337,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-RP2";
 	var setName = "「轟炎の竜皇」";
@@ -19184,7 +19184,7 @@
 			id : "22RP2 SP5/SP5",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-RP1";
 	var setName = "アビス・レボリューション 第1弾 「双竜戦記」";
@@ -19954,7 +19954,7 @@
 			id : "23RP1 SP5/SP5",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-ThankYou20th!!";
 	var setName = "ThankYou20th!!";
@@ -19968,7 +19968,7 @@
 			id : "ThankYou20th!!",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-COROCOROY19";
 	var setName = "デュエマGR爆速スタート52枚デッキセット";
@@ -20095,7 +20095,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y22";
 	var setName = "第22期プロモーション・カード";
@@ -20116,7 +20116,7 @@
 			id : "P50/Y21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y22 SPP2022-1";
 	var setName = "スペシャルプロモパック2022 vol.1";
@@ -20172,7 +20172,7 @@
 			id : "P49/Y21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y22 SPP2022-2";
 	var setName = "スペシャルプロモパック2022 vol.2";
@@ -20235,7 +20235,7 @@
 			id : "PROMOY21 P75/Y21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "OF-Y23 SPP2023-1";
 	var setName = "スペシャルプロモパック2023 vol.1";
@@ -20298,7 +20298,7 @@
 			id : "PROMOY22 P9/Y22",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-RP2X";
 	var setName = "「轟炎の竜皇」超刺激パック";
@@ -20900,7 +20900,7 @@
 			id : "22RP2X SP6/SP5",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-SP2";
 	var setName = "「轟炎の竜皇」暴竜爵からの招待状";
@@ -20935,7 +20935,7 @@
 			id : "22SP2 4/4",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMX-08";
 	var setName = "激熱！ガチンコBEST";
@@ -21243,7 +21243,7 @@
 			id : "DMX08 37/37",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-09";
 	var setName = "デッキビルダー鬼DX ガンバ！勝太編";
@@ -21698,7 +21698,7 @@
 			id : "DMX09 56/56",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-10";
 	var setName = "デッキビルダー鬼DX キラリ！レオ編";
@@ -22153,7 +22153,7 @@
 			id : "DMX10 56/56",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-11";
 	var setName = "大決戦オールスター12";
@@ -22748,7 +22748,7 @@
 			id : "DMX11 84/84",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-12";
 	var setName = "ブラック・ボックス・パック";
@@ -23826,7 +23826,7 @@
 			id : [ "DMX12-b 108/???","DMX12-b 109/???","DMX12-b 110/???","DMX12-b 111/???" ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-13";
 	var setName = "ホワイト・ゼニス・パック";
@@ -24106,7 +24106,7 @@
 			id : "DMX13 36/36",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-14";
 	var setName = "最強戦略 パーフェクト12";
@@ -24753,7 +24753,7 @@
 			id : "DMX14 84/84",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-15";
 	var setName = "フルホイルVSパック";
@@ -25048,7 +25048,7 @@
 			id : "DMX15 30/30",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-16";
 	var setName = "超王道戦略ファンタジスタ12";
@@ -25643,7 +25643,7 @@
 			id : "DMX16 84/84",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMX-17";
 	var setName = "龍の祭典! ドラゴン魂フェス!!";
@@ -25951,7 +25951,7 @@
 			id : "DMX17 37/37",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-18";
 	var setName = "三段変形！龍解オールスターズ";
@@ -26448,7 +26448,7 @@
 			id : "DMX18 50/50",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMX-19";
 	var setName = "スーパーレア100%パック";
@@ -27390,7 +27390,7 @@
 			],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-20";
 	var setName = "デッキー撃完成！！デュエルマックス160";
@@ -27941,7 +27941,7 @@
 			id : "DMX20 68/68",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-21";
 	var setName = "マスターズ・クロニクル・パック";
@@ -28447,7 +28447,7 @@
 			id : "DMX21 70/70",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMX-22";
 	var setName = "超ブラック・ボックス・パック";
@@ -30196,7 +30196,7 @@
 			id : "DMX22-b 167/???",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMX-23";
 	var setName = "奥義伝授！！デッキLv.マックスパック";
@@ -30623,7 +30623,7 @@
 			id : "DMX23 60/60",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMX-24";
 	var setName = "輝け！デュエデミー賞パック";
@@ -31068,7 +31068,7 @@
 			id : "DMX24 54/54",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMX-25";
 	var setName = "ファイナル・メモリアル・パック ～E1・E2・E3編～";
@@ -31646,7 +31646,7 @@
 			id : "DMX-25 51/51",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMX-26";
 	var setName = "ファイナル・メモリアル・パック ～DS・Rev・RevF編～";
@@ -32248,7 +32248,7 @@
 			id : "DMX-26 54/54",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-01";
 	var setName = "スタートダッシュ・デッキ 火&自然編";
@@ -32359,7 +32359,7 @@
 			id : "13/13 DMD01",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-02";
 	var setName = "スタートダッシュ・デッキ 水&闇編";
@@ -32486,7 +32486,7 @@
 			id : "15/13 DMD02",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-03";
 	var setName = "ストロング・メタル・デッキ 爆裂ダッシュ";
@@ -32621,7 +32621,7 @@
 			id : "DMD03 15/15",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-04";
 	var setName = "ストロング・メタル・デッキ 最強国技";
@@ -32756,7 +32756,7 @@
 			id : "DMD04 15/15",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-05";
 	var setName = "無限アタック！";
@@ -32883,7 +32883,7 @@
 			id : "DMD05 15/15",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-06";
 	var setName = "反撃ブロック！";
@@ -33002,7 +33002,7 @@
 			id : "DMD06 14/14",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-07";
 	var setName = "DX鬼ドラゴン";
@@ -33201,7 +33201,7 @@
 			id : "DMD07 24/24",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-08";
 	var setName = "DX鬼エンジェル";
@@ -33400,7 +33400,7 @@
 			id : "DMD08 24/24",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-09";
 	var setName = "アウトレイジ・ダッシュ";
@@ -33519,7 +33519,7 @@
 			id : "DMD09 14/14",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-10";
 	var setName = "オラクル・ダッシュ";
@@ -33638,7 +33638,7 @@
 			id : "DMD10 14/14",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-11";
 	var setName = "アウトレイジの書";
@@ -33813,7 +33813,7 @@
 			id : "DMD11-c 21/21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-12";
 	var setName = "オラクルの書";
@@ -33988,7 +33988,7 @@
 			id : "DMD12-c 21/21",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-13";
 	var setName = "～カツキングと伝説の秘宝～";
@@ -34171,7 +34171,7 @@
 			id : "DMD13 22/22",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-14";
 	var setName = "～逆襲のイズモと聖邪神の秘宝～";
@@ -34285,7 +34285,7 @@
 			id : "DMD14 13/13",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-15";
 	var setName = "熱血の戦闘龍";
@@ -34420,7 +34420,7 @@
 			id : "dmd15 16/16",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-16";
 	var setName = "正義の天聖龍";
@@ -34531,7 +34531,7 @@
 			id : "DMD16 13/13",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 
 	var setCode = "DMD-17";
@@ -34651,7 +34651,7 @@
 			id : "DMD17 14/14",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	
 	var setCode = "DMD-18";
@@ -34851,7 +34851,7 @@
 			id : "DMD18 20/20",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-19";
 	var setName = "滅びの龍刃 ディアボロス";
@@ -35082,7 +35082,7 @@
 			id : "dmd19 22b/22",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-20";
 	var setName = "勝利の将龍剣ガイオウバーン";
@@ -35283,7 +35283,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-21";
 	var setName = "無敵の火文明";
@@ -35386,7 +35386,7 @@
 			id : "DMD21 12/12",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-22";
 	var setName = "破滅の闇文明";
@@ -35489,7 +35489,7 @@
 			id : "DMD22 12/12",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-23";
 	var setName = "奇跡の光文明";
@@ -35592,7 +35592,7 @@
 			id : "DMD23 12/12",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-24";
 	var setName = "ボルメテウス・リターンズ";
@@ -35883,7 +35883,7 @@
 			id : "DMD24 37/37",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-25";
 	var setName = "ロマノフ 煉獄からの復活";
@@ -36026,7 +36026,7 @@
 			id : "DMD25 17/17",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-26";
 	var setName = "サバイバー進化論 α to Ω";
@@ -36169,7 +36169,7 @@
 			id : "DMD26 17/17",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMD-27";
 	var setName = "カスタム変形デッキ 爆熱の火文明";
@@ -36336,7 +36336,7 @@
 			id : "DMD27-c 20/20",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-28";
 	var setName = "カスタム変形デッキ 龍極の光文明";
@@ -36495,7 +36495,7 @@
 			id : "DMD28-c 19/19",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-29";
 	var setName = "勝太の疾風速攻";
@@ -36606,7 +36606,7 @@
 			id : "DMD29 13/13",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-30";
 	var setName = "ルシファーの時間停止";
@@ -36717,7 +36717,7 @@
 			id : "DMD30 13/13",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-31";
 	var setName = "バサラの禁断";
@@ -36820,7 +36820,7 @@
 			id : "DMD31 12/12",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-32";
 	var setName = "聖霊王の創世";
@@ -36947,7 +36947,7 @@
 			id : "DMD32 15/15",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-33";
 	var setName = "終焉の悪魔神";
@@ -37106,7 +37106,7 @@
 			id : "DMD33 19/15",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-34";
 	var setName = "銀刃の勇者ドギラゴン";
@@ -37217,7 +37217,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMD-35";
 	var setName = "禁星の壊者ドキンダム";
@@ -37320,7 +37320,7 @@
 			count : 3,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 		
 	var setCode = "DMSD-01";
 	var setName = "ジョーのジョーカーズ";
@@ -37427,7 +37427,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-02";
 	var setName = "キラのラビリンス";
@@ -37530,7 +37530,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-03";
 	var setName = "ボルツのB・A・D";
@@ -37633,7 +37633,7 @@
 			id : "SD03 12/12",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-14";
 	var setName = "ジョーのキリフダッシュ";
@@ -37760,7 +37760,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMSD-15";
 	var setName = "鬼札の鬼タイム";
@@ -37879,7 +37879,7 @@
 			count : 3,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-09";
 	var setName = "Wチーム切札＆チームウェイブ";
@@ -38244,7 +38244,7 @@
 			id : "DMEX09 42/42",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-10";
 	var setName = "W王国 鬼札王国＆不死樹王国";
@@ -38594,7 +38594,7 @@
 			id : "DMEX10 42/42",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-11";
 	var setName = "Wチーム銀河＆チームボンバー";
@@ -38971,7 +38971,7 @@
 			id : "EX11 42/42",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-13";
 	var setName = "切札x鬼札 キングウォーズ!!!";
@@ -39751,7 +39751,7 @@
 			id : "RP13 95/95",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-14";
 	var setName = "爆皇×爆誕 ダイナボルト!!!";
@@ -40532,7 +40532,7 @@
 			id : "RP14 95/95",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-12";
 	var setName = "最強戦略!!ドラリンパック";
@@ -41491,7 +41491,7 @@
 			id : "EX12 DR3/DR6",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-13";
 	var setName = "クロニクル最終決戦デッキ 覚醒流星譚";
@@ -41727,7 +41727,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-14";
 	var setName = "クロニクル最終決戦デッキ ⿓魂紅蓮譚";
@@ -41987,7 +41987,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-16";
 	var setName = "ゼーロJr.のムゲンクライム";
@@ -42106,7 +42106,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-15";
 	var setName = "幻龍×凶襲 ゲンムエンペラー!!!";
@@ -42878,7 +42878,7 @@
 			id : "RP15 95/95",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-13";
 	var setName = "四強集結→最強直結パック";
@@ -43543,7 +43543,7 @@
 			id : "EX13 84/84",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-EX1";
 	var setName = "黄金戦略!!デュエキングMAX 2022";
@@ -44880,7 +44880,7 @@
 			id : "22EX1 超50/超50",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMPCD-03";
 	var setName = "デュエマプレイス・コラボデッキ 激竜の英雄＆邪眼の始祖";
@@ -45159,7 +45159,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMPCD-01";
 	var setName = "デュエマプレイス・コラボデッキ 超竜の君臨＆天門の降臨";
@@ -45430,7 +45430,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMPCD-02";
 	var setName = "デュエマプレイス・コラボデッキ 竜装の武者＆魔弾の騎士";
@@ -45693,7 +45693,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-18";
 	var setName = "メモリアルパック 裏の章 パラレル･マスターズ";
@@ -46351,7 +46351,7 @@
 			id : "EX18 75/75",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-21";
 	var setName = "アバクの鬼レクスターズ";
@@ -46478,7 +46478,7 @@
 			count : 1,
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-20";
 	var setName = "ジョーのS-MAX進化";
@@ -46621,7 +46621,7 @@
 			count : 1,
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-16";
 	var setName = "百王×邪王 鬼レヴォリューション";
@@ -47391,7 +47391,7 @@
 			id : "RP16 KM3/KM3",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-RP1";
 	var setName = "「伝説の邪神」";
@@ -48250,7 +48250,7 @@
 			id : "22RP1 SP5/SP5",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
 
 	var setCode = "DMEX-15";
 	var setName = "メモリアルパック 魂の章 名場面BEST";
@@ -49321,7 +49321,7 @@
 			id : "EX15 100/100",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-08";
 	var setName = "謎のブラックボックスパック";
@@ -51428,7 +51428,7 @@
 			id : "EX08 308/???",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-18";
 	var setName = "禁時王の凶来";
@@ -52268,7 +52268,7 @@
 			id : ["RP18 20B/20","RP18 20A/20"],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-16";
 	var setName = "メモリアルパック 技の章 英雄戦略パーフェクト20";
@@ -52975,7 +52975,7 @@
 			id : "EX16 100/100",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-SP1";
 	var setName = "「伝説の邪神」深淵からの招待状";
@@ -53010,7 +53010,7 @@
 			id : "22SP1 4/4",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
 
 	var setCode = "DM-05";
 	var setName = "漂流大陸の末裔";
@@ -53437,7 +53437,7 @@
 			id : "(DM05) 55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM-36";
 	var setName = "サイキック・ショック";
@@ -54375,7 +54375,7 @@
 			id : "110/110 DM36",
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM-37";
 	var setName = "暗黒の野望";
@@ -54853,7 +54853,7 @@
 			id : [ "55/55 DM37","55/55 DM37" ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DM-38";
 	var setName = "超竜VS悪魔";
@@ -55332,7 +55332,7 @@
 			id : "55/55 DM38",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM-39";
 	var setName = "覚醒爆発";
@@ -55817,7 +55817,7 @@
 			id : "55/55 DM39",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "OF-NEW";
 	var setName = "【情報卡牌】";
@@ -55825,7 +55825,7 @@
 	var color = "red";
 	var setCardList = [
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList , false , color );
+	setDatas.addSet( setCode , setName , isDeck , setCardList , false , color );
 
 	var setCode = "OF-Sanctuary";
 	var setName = "殿堂";
@@ -55842,7 +55842,7 @@
 		}
 	}
 	sanctuarities = null;
-	setDatas.addMap( setCode , setName , isDeck , setCardList , false , color );
+	setDatas.addSet( setCode , setName , isDeck , setCardList , false , color );
 
 	var setCode = "OF-Holiday";
 	var setName = "VIP配布卡";
@@ -55870,7 +55870,7 @@
 			id : "1/1/2016",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-SD1";
 	var setName = "邪神・フロム・アビス";
@@ -55990,7 +55990,7 @@
 			count :4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, isTWSurroundings );
 
 	var setCode = "OF-Y09";
 	var setName = "第9期プロモーション・カード";
@@ -56011,7 +56011,7 @@
 			id : "P99b/Y9",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "OF-Y10";
 	var setName = "第10期プロモーション・カード";
@@ -56399,7 +56399,7 @@
 			id : "P53/Y10",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "OF-Y11";
 	var setName = "第11期プロモーション・カード";
@@ -57003,7 +57003,7 @@
 			id : "P83/Y11",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "OF-Y12";
 	var setName = "第12期プロモーション・カード";
@@ -57585,7 +57585,7 @@
 			id : "P90/Y13",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "OF-Y13";
 	var setName = "第13期プロモーション・カード";
@@ -58318,7 +58318,7 @@
 			id : "P99/Y13",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 		
 	var setCode = "OF-Y14";
 	var setName = "第14期プロモーション・カード";
@@ -58863,7 +58863,7 @@
 			id : "P74/Y14",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "OF-Y15";
 	var setName = "第15期プロモーション・カード";
@@ -58891,7 +58891,7 @@
 			id : "P4/Y15",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-14";
 	var setName = "弩闘×十王超ファイナルウォーズ!!!";
@@ -59738,7 +59738,7 @@
 			id : "EX14 110/110",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSP-02";
 	var setName = "超獣王来烈伝";
@@ -59829,7 +59829,7 @@
 			id : "SP02 12/12",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-18";
 	var setName = "ジェンドルのディスペクター";
@@ -59948,7 +59948,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSD-17";
 	var setName = "ジョーのスター進化";
@@ -60067,7 +60067,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-17";
 	var setName = "王星伝説超動";
@@ -60914,7 +60914,7 @@
 			id : "RP17 コロ10/コロ10",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-BD1";
 	var setName = "レジェンドスーパーデッキ 龍覇爆炎";
@@ -61137,7 +61137,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y20-Fest1";
 	var setName = "DMフェスパック王来篇vol.1";
@@ -61172,7 +61172,7 @@
 			id : "P11/Y20",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMSD-19";
 	var setName = "ハイドのディスペクターN・EXT";
@@ -61299,7 +61299,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-17";
 	var setName = "熱血!! アウトレイジ・ビクトリー";
@@ -61497,7 +61497,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-16";
 	var setName = "決闘!! ボルシャック・デュエル";
@@ -61695,7 +61695,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-15";
 	var setName = "レジェンドスーパーデッキ 蒼龍革命";
@@ -61926,7 +61926,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-17";
 	var setName = "メモリアルパック 究極の章 デュエキングMAX";
@@ -62220,7 +62220,7 @@
 			id : "EX17 40/138",
 		},
 		{
-			name : "オブラディ・ホーネット/「Let it Bee！」",
+			name : "オブラディ・ホーネット/「var it Bee！」",
 			pic : "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dmex17-041a.jpg",
 			rarity : "VR",
 			flavor : [ "" ],
@@ -63382,7 +63382,7 @@
 			id : "EX17 W20/W20",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-18";
 	var setName = "レジェンドスーパーデッキ 神歌繚嵐";
@@ -63581,7 +63581,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMSP-04";
 	var setName = "デュエマ・ストロング・ドリーム ジョーカーズGR";
@@ -63672,7 +63672,7 @@
 			id : "SP04 12/12",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-19";
 	var setName = "禁断龍VS禁断竜";
@@ -64512,7 +64512,7 @@
 			id : ["RP19 20A/20","RP19 20B/20"],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-20";
 	var setName = "終末王龍大戦";
@@ -65366,7 +65366,7 @@
 			id : ["RP20 20A/20","RP20 20B/20"],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-21";
 	var setName = "クロニクル・ダークサイド・デッキ 「終焉」";
@@ -65613,7 +65613,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM22-BD2";
 	var setName = "開発部セレクションデッキ 「光水火鬼羅.Star」";
@@ -65756,7 +65756,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-BD3";
 	var setName = "開発部セレクションデッキ 「7軸ガチロボ」";
@@ -65875,7 +65875,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-BD1";
 	var setName = "レジェンドスーパーデッキ 禁王創来";
@@ -66114,7 +66114,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM22-EX2";
 	var setName = "ヒーローズ・ダークサイド・パック ～闇のキリフダたち～";
@@ -66772,7 +66772,7 @@
 			id : "22EX2 秘3/秘3",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMBD-20";
 	var setName = "開発部セレクションデッキ 「水闇魔導具」";
@@ -66875,7 +66875,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-22";
 	var setName = "王来MAX最終弾 切札!マスターCRYMAX!!";
@@ -67736,7 +67736,7 @@
 			id : ["RP22 SP6/SP6"],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMEX-19";
 	var setName = "マスター・ファイナル・メモリアル・パック";
@@ -68709,7 +68709,7 @@
 			id : "EX19 M秘10/M秘10",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMRP-21";
 	var setName = "王来MAX第1弾 鬼ヤバ逆襲S-MAX!!";
@@ -69570,7 +69570,7 @@
 			id : "RP21 SP5/SP5",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-22";
 	var setName = "クロニクル・ダークサイド・デッキ 「零誕」";
@@ -69785,7 +69785,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-SP1";
 	var setName = "スタートWIN・スーパーデッキ 深淵の邪襲";
@@ -69928,7 +69928,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DMBD-07";
 	var setName = "超誕!!ツインヒーローデッキ80 Jの超機兵 VS 聖剣神話†";
@@ -70159,7 +70159,7 @@
 			count : 4,
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMBD-19";
 	var setName = "開発部セレクションデッキ 「火水覇道」";
@@ -70278,7 +70278,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM-04";
 	var setName = "闇騎士団の逆襲";
@@ -70705,7 +70705,7 @@
 			id : "4 55/55",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM-03";
 	var setName = "超戦士襲撃";
@@ -71132,7 +71132,7 @@
 			id : "55/55",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM-02";
 	var setName = "進化獣降臨";
@@ -71559,7 +71559,7 @@
 			id : "55/55",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-RP2";
 	var setName = "アビス・レボリューション 第2弾 「忍邪乱武」";
@@ -72322,7 +72322,7 @@
 			id : "23RP2 SP5/SP4",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-RP2X";
 	var setName = "アビス・レボリューション 第2弾 「忍邪乱武」 超刺激パック";
@@ -73085,7 +73085,7 @@
 			id : "23RP2X SPX/SP4",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-RP3";
 	var setName = "アビス・レボリューション 第3弾 「魔覇革命」";
@@ -73855,7 +73855,7 @@
 			id : "23RP3 SP5/SP5",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-EX1";
 	var setName = "大感謝祭 ビクトリーBEST";
@@ -74450,7 +74450,7 @@
 			id : "23EX1 84/84",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-EX2";
 	var setName = "頂上決戦!!デュエキングMAX 2023";
@@ -75661,7 +75661,7 @@
 			id : "23EX2 超38/超38",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-BD2";
 	var setName = "開発部セレクションデッキ 「火闇邪王門」";
@@ -75796,7 +75796,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-BD3";
 	var setName = "開発部セレクションデッキ 「水闇自然ハンデス」";
@@ -75931,7 +75931,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-SD2";
 	var setName = "スタートWINデッキ 聖沌・クノイチ・チェンジ";
@@ -76050,7 +76050,7 @@
 			count : 3,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-BD1";
 	var setName = "ドリーム英雄譚デッキ ドギラゴンの書";
@@ -76225,7 +76225,7 @@
 			count : 1,
 		},	
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-BD2";
 	var setName = "ドリーム英雄譚デッキ ジョニーの書";
@@ -76360,7 +76360,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM23-SD3";
 	var setName = "スタートWINデッキ 革命・アメイジン・マジック";
@@ -76487,7 +76487,7 @@
 			count : 3,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM-01";
 	var setName = "DM-01";
@@ -77334,7 +77334,7 @@
 			id : "110/110",
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-RP4";
 	var setName = "アビス・レボリューション 第4弾 「竜皇神爆輝」";
@@ -78096,7 +78096,7 @@
 			id : [ "23RP4 SP5/SP4", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM23-RP4X";
 	var setName = "アビス・レボリューション 第4弾 「竜皇神爆輝」 超刺激パック";
@@ -78859,7 +78859,7 @@
 			id : [ "23RP4X SPX/SP4", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM23-BD7";
 	var setName = "エキサイティング・デュエパ・デッキ 「ネゴシエートの偽衒学者」";
@@ -79346,7 +79346,7 @@
 			count : 1,
 		},		
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM23-BD4";
 	var setName = "エキサイティング・デュエパ・デッキ 「ドラドラドラゴン龍幻郷」";
@@ -79833,7 +79833,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM23-BD5";
 	var setName = "エキサイティング・デュエパ・デッキ 「不敬なり！真邪眼騎士団」";
@@ -80320,7 +80320,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 		
 		var setCode = "DM23-BD6";
 	var setName = "エキサイティング・デュエパ・デッキ 「双極のアカシックZ計画」";
@@ -80807,7 +80807,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 		
 	var setCode = "DMART-11";
 	var setName = "神アート ドラゴン娘の青春アオハル☆パラダイス";
@@ -80854,7 +80854,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 		
 	var setCode = "DMART-08";
 	var setName = "神アート 輝かしき新世界";
@@ -80925,7 +80925,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 		
 	var setCode = "DMART-09";
 	var setName = "神アート ディスペクター・デュエマリウム";
@@ -80972,7 +80972,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 		
 	var setCode = "DMART-10";
 	var setName = "神アート デュエマ×TRANSFORMERS";
@@ -81027,7 +81027,7 @@
 			count : 1,
 		}
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 		
 	var setCode = "DMART-12";
 	var setName = "神アート エンジェリック・ウィズダム";
@@ -81074,7 +81074,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-13";
 	var setName = "神アート デュエマ×デュエプレ";
@@ -81137,7 +81137,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMART-14";
 	var setName = "神アート フェアリー・タイムライン";
@@ -81200,7 +81200,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMART-15";
 	var setName = "神アート 激筆!!超獣戯画";
@@ -81279,7 +81279,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMART-16";
 	var setName = "神アート 禁断 ~封印されしアート~";
@@ -81342,7 +81342,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMART-17";
 	var setName = "神アート 蛍光少女";
@@ -81397,7 +81397,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DMART-18";
 	var setName = "神アート 超獣世界の歩き方 ～アセビ見聞録～";
@@ -81452,7 +81452,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DMART-19";
 	var setName = "神アート RPD-ロールプレイングデュエマ リュウセイ・カイザーが転生したら勇者だった件";
@@ -81507,7 +81507,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM23-EX3";
 	var setName = "アビス・レボリューション外伝 「邪神と水晶の華」";
@@ -82445,7 +82445,7 @@
 			id : [ "23EX3 SSP3/SSP3", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "OF-Y23 SPP2023-2"
 	var setName = "スペシャルプロモパック2023 vol.2"
@@ -82501,7 +82501,7 @@
 			id : "PROMOY22 P25/Y22",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y23 SPP2023-3"
 	var setName = "スペシャルプロモパック2023 vol.3"
@@ -82564,7 +82564,7 @@
 			id : "PROMOY22 P51/Y22",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y23 SPP2023-4"
 	var setName = "スペシャルプロモパック2023 vol.4"
@@ -82627,7 +82627,7 @@
 			id : "PROMOY22 P71/Y22",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y24 SPP2024-1"
 	var setName = "スペシャルプロモパック2024 vol.1"
@@ -82690,7 +82690,7 @@
 			id : "PROMOY24 P23/Y23",
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "OF-Y24 SPP2024-2"
 	var setName = "スペシャルプロモパック2024 vol.2"
@@ -82754,7 +82754,7 @@
 		},
 
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-SD1";
 	var setName = "「いきなりつよいデッキ 攻めの王道」";
@@ -82857,7 +82857,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-SD2";
 	var setName = "「いきなりつよいデッキ 守りの王道」";
@@ -82952,7 +82952,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-SP1";
 	var setName = "キャラプレミアムデッキ「ドラゴン娘になりたくないっ！」 イェーイめっちゃドラゴン!!";
@@ -83087,7 +83087,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-RP1";
 	var setName = "王道篇第1弾 「デーモン・オブ・ハイパームーン」";
@@ -83906,7 +83906,7 @@
 			id : [ "24RP1 SP5/SP5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-RP2";
 	var setName = "王道篇 第2弾 「カイザー・オブ・ハイパードラゴン」";
@@ -84725,7 +84725,7 @@
 			id : [ "24RP2 SP5/SP5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-RP3";
 	var setName = "王道篇第3弾 「ゴールド・オブ・ハイパーエンジェル」";
@@ -85558,7 +85558,7 @@
 			id : [ "24RP3 SP5/SP5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-EX2";
 	var setName = "天下夢双!!デュエキングDreaM 2024";
@@ -86664,7 +86664,7 @@
 			id : [ "24EX2 DM4/DM4", "24EX2 DM4秘/DM4", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-EX1";
 	var setName = "超感謝祭 ファンタジーBEST";
@@ -87385,7 +87385,7 @@
 			id : [ "24EX1 PR5/PR5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-BD3";
 	var setName = "ドリーム英雄譚デッキ モモキングの書";
@@ -87512,7 +87512,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-BD4";
 	var setName = "ナイトメア黙示録デッキ バロムの章";
@@ -87639,7 +87639,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM24-SP2";
 	var setName = "キャラプレミアムデッキ「デュエル・マスターズLOST」誓いの水晶";
@@ -87750,7 +87750,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 		var setCode = "DM24-RP4";
 	var setName = "王道篇第4弾 「悪魔神、復活」";
@@ -88583,7 +88583,7 @@
 			id : [ "24RP4 SP5/SP5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-EX3";
 	var setName = "刺激爆発デュエナマイトパック";
@@ -90550,7 +90550,7 @@
 			id : [ "24EX3 TF46/TF46", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 		var setCode = "DM24-BD5";
 	var setName = "エキサイティング・デュエパ・デッキ アセビと異世界フェアリーたち";
@@ -91037,7 +91037,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-BD6";
 	var setName = "エキサイティング・デュエパ・デッキ ツラトゥストラは水晶と語らう";
@@ -91524,7 +91524,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM24-EX4";
 	var setName = "にじさんじコラボ・マスターズ「異次元の超獣使い」";
@@ -92231,7 +92231,7 @@
 			id : [ "24EX4 100/100", "24EX4 PR60/PR60", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM25-SD1";
 	var setName = "いきなりつよいデッキ 技の王道";
@@ -92342,7 +92342,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM25-SD2";
 	var setName = "いきなりつよいデッキ 力の王道";
@@ -92437,7 +92437,7 @@
 			count : 4,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM25-SP1";
 	var setName = "キャラプレミアムデッキ 「ドラゴン娘になりたくないっ!」Jack-Pot-Live!! in 桜龍高校";
@@ -92572,7 +92572,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM25-RP2";
 	var setName = "王道W 第2弾 邪神vs邪神Ⅱ ～ジャシン・イン・ザ・シェル～";
@@ -93412,7 +93412,7 @@
 			id : [ "25RP2 TR9/TR9", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM25-RP1";
 	var setName = "王道W 第1弾 邪神vs邪神 ～ソウル・オブ・ジ・アビス～";
@@ -94252,7 +94252,7 @@
 			id : [ "25RP1 TR9/TR9", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM25-EX1";
 	var setName = "デュエル・マスターズTCG 愛感謝祭 ヒロインBEST";
@@ -95022,7 +95022,7 @@
 			id : [ "25EX1 SPR秘5超/SPR秘5", "25EX1 SPR秘5/SPR秘5", "25EX1 SPR5/SPR5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DMRP-12";
 	var setName = "超超超天！覚醒ジョギラゴン vs. 零龍卍誕";
@@ -95953,7 +95953,7 @@
 			id : [ "RP12 MZ1/MZ5", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "DM25-BD2";
 	var setName = "デュエル・マスターズTCG ドリーム英雄譚デッキ アルカディアスの書";
@@ -96096,7 +96096,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM25-BD1";
 	var setName = "ドリーム英雄譚デッキ ボルシャックの書";
@@ -96247,7 +96247,7 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM25-SP2";
 	var setName = "ドラゴン娘になりたくないっ！ はじけろスポーツ！青春☆ワールドカップ!!";
@@ -96390,7 +96390,7 @@
 			count : 2,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = "DM-07";
 	var setName = "闘魂編第2弾 時空超獣の呪";
@@ -96817,7 +96817,7 @@
 			id : [ "7 55/55", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList );
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "DM25-RP3";
 	var setName = "邪神vs時皇 ～ビヨンド・ザ・タイム～";
@@ -97657,7 +97657,7 @@
 			id : [ "25RP3 TR9/TR9", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 	
 	var setCode = "DM25-EX2";
 	var setName = "王道vs邪道 デュエキングWDreaM 2025";
@@ -98847,7 +98847,7 @@
 			id : [ "25EX2 超G8b/超G11", ],
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, false, false, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, false, false, true );
 	
 	var setCode = "DM25-BD3";
 	var setName = "ドリーム英雄譚デッキ グレンモルトの書";
@@ -99086,13 +99086,13 @@
 			count : 1,
 		},
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList, null, null, true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList, null, null, true );
 
 	var setCode = queryHistorySetCode;
 	var setName = "【歷史查詢】";
 	var isDeck = isRD();
 	var setCardList = [
 	];
-	setDatas.addMap( setCode , setName , isDeck , setCardList , true );
+	setDatas.addSet( setCode , setName , isDeck , setCardList , true );
 	
 	

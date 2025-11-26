@@ -1,112 +1,114 @@
-﻿	//卡牌資料
-	var cardDatas = {
+﻿	//卡牌資料 (使用 Map 結構優化查詢)
+	const cardDatas = {
 	
-		//資料集合
-		map : [
-		],
+		//資料集合: Map<CardName, CardData>
+		map : new Map(),
 		
 		//取得list
 		getList : function( setCode ){
 		
 			if ( setCode == null ){
-				return this.map;
+				return Array.from(this.map.values());
 			} else {
 			
-				var setCards = [];
-				var setData = setDatas.getSetDatas( setCode );
+				let setCards = [];
+				const setData = setDatas.getSetDatas( setCode );
 				if ( setData != null ){
 					setCards = setData.setCards;
 				}
-				var rtnList = [];
-				for ( var i = 0 ; i < setCards.length ; i++ ){
-					var cardData = cardDatas.getDataByName( setCards[i].name , setCode );
+				const rtnList = [];
+				for (const setCard of setCards) {
+					const cardData = cardDatas.getDataByName( setCard.name , setCode );
 					if ( cardData != null ){
 						rtnList.push( cardData );
 					}
 				}
+				return rtnList;
 			}
-			return rtnList;
 		},
 		
 		//增加資料
 		addMap : function( jsDatas ){
 			if ( jsDatas != null ){
-				for ( var i = 0 ; i < jsDatas.length ; i++ ){
+				for (const jsData of jsDatas) {
 					
 					//增加debugMode
-					if ( debugMode.length > 0 && !debugMode.include( jsDatas[i].name ) ){
+					if ( debugMode.length > 0 && !debugMode.includes( jsData.name ) ){
 						continue;
 					}
 					
-					if ( jsDatas[i].race != null && jsDatas[i].race.length == 1 ){
-						jsDatas[i].race = jsDatas[i].race[0].split("/");
+					if ( jsData.race != null && jsData.race.length === 1 && typeof jsData.race[0] === 'string' && jsData.race[0].includes("/") ){
+						jsData.race = jsData.race[0].split("/");
 					}
-					if ( jsDatas[i].type != null ){
-						jsDatas[i].type = jsDatas[i].type.split("/");
-					} else if ( jsDatas[i].wData != null ){
-						for ( var w = 0 ; w < jsDatas[i].wData.length ; w++ ){
-							jsDatas[i].wData[w].type = jsDatas[i].wData[w].type.split("/");
-						}
-					}
-					this.map.push( jsDatas[i] );
-				}
-			}
-		},
-		
-		//動態增加DMVault連結資料
-		addDMVaultID : function( name , vid ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){	
-				//去掉注音之後符合也允許
-				if ( ( this.map[i].name == name ) || ( clearSubName( this.map[i].name ) == name ) ){
-					this.map[i].vid = vid;
-					break;
-				}
-			}
-		},
-		
-		//用卡名找出資料
-		getDataByName : function( name , setCode , aaIndex, udIndex ){
-			//判斷有沒有指定set以及set資料
-			var setData = null;
-			if ( setCode != null ){
-				setData = setDatas.getSetDatas( setCode );
-			}
-			for ( var i = 0 ; i < this.map.length ; i++ ){	
-				//去掉注音之後符合也允許
-				if ( ( this.map[i].name == name ) || ( clearSubName( this.map[i].name ) == name ) ){
-					var rtn = null;
-					if ( setData != null ){
-						var cardDataInSet = setData.getCardData( name , aaIndex );
-						if ( cardDataInSet != null ){
-//							return cloneCardData( this.map[i] , cardDataInSet );
-							rtn = cloneCardData( this.getSelectedCardByUdIndex( this.map[i], udIndex ) , cardDataInSet );
-						}
-					}
-//					return this.map[i];
-					if ( rtn == null ){
-						rtn = this.getSelectedCardByUdIndex( this.map[i], udIndex );
-					}
-					//如果原始資料沒有卡圖的話，就去SET資料裡面找專屬卡圖
-					if ( rtn != null && lastSelectedSetCode == null && rtn.pic == "" ){
-						for ( var s = 0 ; s < setDatas.map.length ; s++ ){
-							for ( var c = 0 ; c < setDatas.map[s].length ; c++ ){
-								var tdis = (setDatas.map[s])[c];
-								var sps = tdis.pic instanceof Array ? tdis.pic : [ tdis.pic ];
-								for ( var p = 0 ; p < sps.length ; p++ ){
-									if ( tdis.name == rtn.name && sps[p] != null && sps[p] != "" ){
-										rtn.pic = sps[p];
-										c = setDatas.map[s].length-1;
-										s = setDatas.map.length-1;
-										break;
-									}
-								}
+					if ( jsData.type != null && typeof jsData.type === 'string' ){
+						jsData.type = jsData.type.split("/");
+					} else if ( jsData.wData != null ){
+						for (const wData of jsData.wData) {
+							if (typeof wData.type === 'string') {
+								wData.type = wData.type.split("/");
 							}
 						}
 					}
-					return rtn;
+					this.map.set(jsData.name, jsData);
 				}
 			}
-			return null;
+		},
+		
+		//動態增加DMVault連結資料 (已移除，DMVault相關代碼已清理)
+		// addDMVaultID : function( name , vid ){ ... },
+		
+		//用卡名找出資料 (O(1) 查找)
+		getDataByName : function( name , setCode , aaIndex, udIndex ){
+		
+			if ( name == null )
+				return null;
+		
+			// 1. 嘗試直接查找
+			let baseCard = this.map.get(name);
+			
+			// 2. 如果直接查找失敗，嘗試使用清理後的卡名查找 (處理注音/括號)
+			if (!baseCard) {
+				const cleanedName = clearSubName(name);
+				for (const card of this.map.values()) {
+					if (card.name === name || clearSubName(card.name) === cleanedName) {
+						baseCard = card;
+						break;
+					}
+				}
+			}
+
+			if (!baseCard) {
+				return null;
+			}
+
+			// 3. 獲取單側 (UD) 數據
+			let selectedCard = this.getSelectedCardByUdIndex(baseCard, udIndex);
+
+			// 4. 合併 Set 數據 (包括 AA Index 處理)
+			const setData = setCode ? setDatas.getSetDatas( setCode ) : null;
+			if ( setData != null ){
+				const cardDataInSet = setData.getCardData( name , aaIndex );
+				if ( cardDataInSet != null ){
+					selectedCard = cloneCardData( selectedCard , cardDataInSet );
+				}
+			}
+
+			// 5. 如果是主資料且無圖，嘗試從 Set 中找卡圖
+			if (selectedCard && lastSelectedSetCode === null && selectedCard.pic === "") {
+				for (const setData of setDatas.set.values()) {
+					for (const setCard of setData.setCards) {
+						if (setCard.name === selectedCard.name) {
+							const sps = Array.isArray(setCard.pic) ? setCard.pic : [setCard.pic];
+							if (sps[0] != null && sps[0] !== "") {
+								selectedCard.pic = sps[0];
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			return selectedCard;
 		},
 		
 		getSelectedCardByUdIndex : function( mapData, udIndex ){
@@ -114,15 +116,12 @@
 				udIndex = 0;
 			}
 			if ( udIndex != null && udIndex >= 0 && mapData.wData != null && mapData.wData.length > 0 && udIndex < mapData.wData.length ){
-				var rtnData = clone( mapData.wData[ udIndex ] );
+				const rtnData = clone( mapData.wData[ udIndex ] );
 				rtnData.name = mapData.name;
 				rtnData.pic = mapData.pic;
 				rtnData.mana = mapData.mana;
 				rtnData.mType = mapData.mType;
-				rtnData.ws = [];
-				for ( var w = 0 ; w < mapData.wData.length ; w++ ){
-					rtnData.ws.push( mapData.wData[w].type );
-				}
+				rtnData.ws = mapData.wData.map(w => w.type); // 使用 map 生成 types 陣列
 				return rtnData;
 			} else {
 				return mapData;
@@ -133,171 +132,137 @@
 		
 	};
 	
-	//牌庫/SET資料
-	var setDatas = {
+	//牌庫/SET資料 (使用 Map 結構優化查詢)
+	const setDatas = {
 	
-		set : [
-/*		
-		{
-			setCode : "",
-			setName : "",
-		},
-*/
-		],
+		// 資料集合: Map<setCode, {set: SetData, map: CardList}>
+		set : new Map(),
 
-		map : [
-/*
-		{
-			name : "",
-			pic : "",
-			flavor : "",
-			id : "",
-		},
-*/
-		],
+		// 存儲 Set 內卡片列表的 Map: Map<SetCode, CardList>
+		map : new Map(),
 		
 		//增加資料
-		addMap : function( setCode , setName , isDeck , setDatas , isListSkip , optionColor, isTWSurroundings ){
-			if ( setCode != null && setDatas != null ){
-				var setObj = {
+		addSet : function( setCode , setName , isDeck , setCards , isListSkip , optionColor, isTWSurroundings ){
+			if ( setCode != null && setCards != null ){
+				const setObj = {
 					setCode : setCode,
 					setName : setName,
 					isDeck : isDeck,
 					optionColor : optionColor,
 					isListSkip : ( isListSkip == null ? false : isListSkip ),
 					isTWSurroundings : isTWSurroundings,
+					setCards: setCards // 直接引用卡片列表
 				};
-				this.set.push( setObj );
-				this.map.push( setDatas );
+				this.set.set(setCode, setObj);
+				this.map.set(setCode, setCards);
+
 				//如果是台灣環境的話，就把卡名記起來
 				if ( isTWSurroundings ){
 					twsdSets.push( setCode );
-					for ( var m = 0 ; m < setDatas.length ; m++ ){
-						var cardName = setDatas[m].name;
-						if ( !twsdCards.include( cardName ) ){
-							twsdCards.push( cardName );
+					for (const setCard of setCards) {
+						if ( !twsdCards.includes( setCard.name ) ){
+							twsdCards.push( setCard.name );
 						}
 					}
 				}
 			}
 		},
 		
-		//用SetCode找出系列資料
+		//用SetCode找出系列資料 (O(1) 查找)
 		getSetDatas : function( setCode ){
+		
+			if ( setCode == null )
+				return null;
 			
-			for ( var i = 0 ; i < this.set.length ; i++ ){
-				if ( this.set[i].setCode == setCode ){
-					return {
-						setCode : this.set[i].setCode,
-						setName : this.set[i].setName,
-						isDeck : this.set[i].isDeck,
-						isListSkip : this.set[i].isListSkip,
-						setCards : this.map[i],
-						//判斷指定卡名是否存在於此set中
-						includeCardName : function( cardName ){
-							return this.getCardIndex( cardName ) != -1;
-						},
-						//取得指定卡名Index
-						getCardIndex : function( cardName ){
-							for ( var c = 0 ; c < this.setCards.length ; c++ ){
-								if ( this.setCards[c].name == cardName ){
-									return c;
-								}
+			const baseSet = this.set.get(setCode);
+			if (!baseSet) return null;
+
+			// 返回一個帶有必要方法的物件
+			return {
+				...baseSet,
+				setCards : this.map.get(setCode) || [],
+				//判斷指定卡名是否存在於此set中
+				includeCardName : function( cardName ){
+					return this.setCards.findIndex(c => c.name === cardName) !== -1;
+				},
+				//取得指定卡名Index
+				getCardIndex : function( cardName ){
+					return this.setCards.findIndex(c => c.name === cardName);
+				},
+				//取得指定卡名資料
+				getCardData : function( cardName , aaIndex ){
+					const index = this.getCardIndex( cardName );
+					if ( index === -1 ){
+						return null;
+					} else {
+						const rtnData = clone( this.setCards[ index ] );
+						//追加總版本數
+						rtnData.idSize = Array.isArray( rtnData.id ) ? rtnData.id.length : 1;
+						if ( Array.isArray( rtnData.id ) ){
+							if ( aaIndex == null || aaIndex < 0 || aaIndex >= rtnData.id.length ){
+								aaIndex = 0;
 							}
-							return -1;
-						},
-						//取得指定卡名資料
-						getCardData : function( cardName , aaIndex ){
-							var index = this.getCardIndex( cardName );
-							if ( index == -1 ){
-								return null;
-							} else {
-								var rtnData = clone( this.setCards[ index ] );
-								//追加總版本數
-								rtnData.idSize = ( rtnData.id instanceof Array ) ? rtnData.id.length : 1;
-								if ( rtnData.id instanceof Array ){
-									if ( aaIndex == null || aaIndex < 0 || aaIndex > rtnData.id.length ){
-										aaIndex = 0;
-									}
-									aaIndex = parseInt( aaIndex );
-									if ( aaIndex > 0 ){
-										rtnData.lastAAIndex = aaIndex - 1;
-									}
-									if ( aaIndex < rtnData.id.length - 1 ){
-										rtnData.nextAAIndex = aaIndex + 1;
-									}
-									rtnData.id = rtnData.id[aaIndex];
-									rtnData.flavor = rtnData.flavor[aaIndex];
-									rtnData.pic = rtnData.pic[aaIndex];
-								}
-								return rtnData;
+							aaIndex = parseInt( aaIndex );
+							if ( aaIndex > 0 ){
+								rtnData.lastAAIndex = aaIndex - 1;
 							}
-//							return index == -1 ? null : this.setCards[ index ];
-						},
-					};
-				}
-			}
-			return null;
-			
+							if ( aaIndex < rtnData.id.length - 1 ){
+								rtnData.nextAAIndex = aaIndex + 1;
+							}
+							rtnData.id = rtnData.id[aaIndex];
+							// 確保這些屬性也是陣列才能使用 aaIndex
+							rtnData.flavor = Array.isArray(rtnData.flavor) ? rtnData.flavor[aaIndex] : rtnData.flavor;
+							rtnData.pic = Array.isArray(rtnData.pic) ? rtnData.pic[aaIndex] : rtnData.pic;
+						}
+						return rtnData;
+					}
+				},
+			};
 		},
 		
 		//取得指定SET的指定卡牌資料
 		getCardDataInSet : function( setCode , cardName ){
 		
 			if ( setCode != null && cardName != null ){
-				var setData = this.getSetDatas( setCode );
-				if ( setData != null ){
-					setCards = setData.setCards;
-				}
-				for ( var i = 0 ; i < setCards.length ; i++ ){
-					if ( setCards[i].name == cardName ){
-						return setCards[i];
-					}
+				const setCards = this.map.get(setCode);
+				if ( setCards ) {
+					return setCards.find(c => c.name === cardName) || null;
 				}
 			}
 			return null;
 		},
 	};
 	
-	//文明資料
-	var civilMapping = {
+	//文明資料 (使用 Map 結構優化查詢)
+	const civilMapping = {
 	
-		//資料集合
-		map : 
-			[
+		//資料集合: Map<value, CivilData>
+		map : new Map(),
+		
+		init: function() {
+			const initialData = [
 				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#FEF0A0",	},
 				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#8BD1F8",	},
 				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#BBB7B7",	},
 				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#E8747D",	},
 				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#8BCF8D",	},
 				{	value : 32,	text : "無色文明",			eText : "Zero",		headerPic : "card_list_header_zero.gif",	dvBGColor : "#ffffff",	},
-//				{	value : 16,	text : "光文明",			eText : "Light",	headerPic : "card_list_header_light.gif",	dvBGColor : "#ffffcc",	},
-//				{	value : 8,	text : "水文明",			eText : "Water",	headerPic : "card_list_header_water.gif",	dvBGColor : "#ccffff",	},
-//				{	value : 4,	text : "闇文明",			eText : "Darkness",	headerPic : "card_list_header_dark.gif",	dvBGColor : "#cccccc",	},
-//				{	value : 2,	text : "火文明",			eText : "Fire",		headerPic : "card_list_header_fire.gif",	dvBGColor : "#ffcecc",	},
-//				{	value : 1,	text : "自然文明",			eText : "Nature",	headerPic : "card_list_header_nature.gif",	dvBGColor : "#ccffd0",	},
-//				{	value : 32,	text : "無色文明",			eText : "Zero",		headerPic : "card_list_header_zero.gif",	dvBGColor : "#ffffff",	},
-			],
+			];
+			initialData.forEach(item => this.map.set(item.value, item));
+		},
 
-		//用單一文明代碼取得文明資料
+		//用單一文明代碼取得文明資料 (O(1) 查找)
 		getDataByValue : function( value ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].value == value ){
-					return this.map[i];
-				}
-			}
-			return null;
+			return this.map.get(value) || null;
 		},
 		
 		//用文明代碼取得所有文明資料
 		getDatasByValue : function( value ){
-			var rtnCivils = [];
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( 
-						( value == 0 && this.map[i].value == value ) || 
-						( value > 0 && ( ( this.map[i].value & value ) > 0 ) ) 
-					){
-					rtnCivils.push( this.map[i] );
+			const rtnCivils = [];
+			for (const data of this.map.values()) {
+				if ( ( value === 0 && data.value === value ) || 
+					 ( value > 0 && ( ( data.value & value ) > 0 ) ) ){
+					rtnCivils.push( data );
 				}
 			}
 			return rtnCivils;
@@ -305,98 +270,70 @@
 			
 		//用文明代碼取得對應中文文明
 		getTextByValue : function( value ){
-			var theDatas = this.getDatasByValue( value );
-			if ( theDatas == null ){
+			const theDatas = this.getDatasByValue( value );
+			if ( theDatas.length === 0 ){
 				return "";
 			} else {
-				var rtnChis = "";
-				for ( var i = 0 ; i < theDatas.length ; i++ ){
-					rtnChis += ( i > 0 ? " / " : "" ) + theDatas[i].text;
-				}
-				return rtnChis;
+				return theDatas.map(data => data.text).join(" / ");
 			}
 		},
 		
 		//用日文取得文明
 		getValueByText : function( value ){
-			var rtn = 0;
-			value = value.split( /[\/,]/g );
-			for ( var t = 0 ; t < value.length ; t++ ){
-				if ( value[t] == "光" )
+			let rtn = 0;
+			const values = value.split( /[\/,]/g );
+			for (const val of values) {
+				if ( val === "光" )
 					rtn += 16;
-				if ( value[t] == "水" )
+				if ( val === "水" )
 					rtn += 8;
-				if ( value[t] == "闇" )
+				if ( val === "闇" )
 					rtn += 4;
-				if ( value[t] == "火" )
+				if ( val === "火" )
 					rtn += 2;
-				if ( value[t] == "自然" )
+				if ( val === "自然" )
 					rtn += 1;
 			}
-			if ( rtn == 0 )
+			if ( rtn === 0 )
 				rtn = 32;
 			return rtn;
 		},
 			
 		//取得該文明的資料標頭圖片
 		getHeaderPicByValue : function( value ){
-			var theData = this.getDataByValue( value );
+			const theData = this.getDataByValue( value );
 			return theData == null ? "card_list_header_rainbow.jpg" : theData.headerPic;
-		},
-		
-		//取得DMVault的卡圖背景連結(需給檔名)
-		getDMVaultListURL : function( picName ){
-			return "http://dmvault.ath.cx/images/" + picName + ".gif";
 		},
 		
 		//取得動態背景漸層CSS
 		getBackgroundCSS : function( value ){
-			var civils = this.getDatasByValue( value );
-			if ( civils == null || civils.length == 0 )
+			let civils = this.getDatasByValue( value );
+			if ( civils.length === 0 )
 				civils = [ { dvBGColor : "#FFFFFF" } ];
-			if ( civils.length == 1 ){
+			if ( civils.length === 1 ){
 				civils.push( civils[0] );
 			}
-			var rtn = "";
+			let rtn = "";
 			rtn += backgroundImageHeader + "linear-gradient( -45deg, ";
-			for ( var i = 0 ; i < civils.length ; i++ ){
+			for ( let i = 0 ; i < civils.length ; i++ ){
 				rtn += ( i > 0 ? "," : "" ) + civils[i].dvBGColor + " " + ( Math.floor( 100 * i / ( civils.length - 1 ) ) ) + "%";
 			}
  			rtn += ")";
-			/*
-			background: #ff0000; // Old browsers
-			background: -moz-linear-gradient(-45deg,  #ff0000 0%, #ff0505 25%, #ff0000 50%, #ff0000 75%, #ff0000 100%); / FF3.6-15
-			background: -webkit-linear-gradient(-45deg,  #ff0000 0%,#ff0505 25%,#ff0000 50%,#ff0000 75%,#ff0000 100%); // Chrome10-25,Safari5.1-6
-			background: linear-gradient(135deg,  #ff0000 0%,#ff0505 25%,#ff0000 50%,#ff0000 75%,#ff0000 100%); // W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+
-			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0000', endColorstr='#ff0000',GradientType=1 ); // IE6-9 fallback on horizontal gradient
-			*/
 			return rtn;
 		}
 	};
+	civilMapping.init();
 	
 	//單色列表
-	var singleColors = [];
-	for ( var c = 0 ; c < civilMapping.map.length ; c++ ){
-		singleColors.push( civilMapping.map[c].value );
-	}
+	const singleColors = Array.from(civilMapping.map.keys()).filter(key => key !== 0);
 	
-//	var takaratomyRarityPicRoot = "http://dm.takaratomy.co.jp/card/list/images/newstyle/";
-	var takaratomyRarityPicRoot = "http://dm.takaratomy.co.jp/wp-content/uploads/";
-	//稀有度卡圖
-	var rarityPic = {
-		map : 
-		/*
-			[
-				{	rarity : "VVC", 	pic : [ "victory_w" , "victory_w" ],},
-				{	rarity : "VC", 		pic : "victory_w",					},
-				{	rarity : "SR", 		pic : "superrare_w",				},
-				{	rarity : "VR", 		pic : "veryrare_w",					},
-				{	rarity : "R", 		pic : "rare_w",						},
-				{	rarity : "UC", 		pic : "uncommon_w",					},
-				{	rarity : "C", 		pic : "common_w",					},
-			],
-		*/
-			[
+	//稀有度卡圖 (使用 Object 結構優化查找)
+	const rarityPic = {
+		//資料集合: Map<rarity, RarityData>
+		map : new Map(),
+		
+		init: function() {
+			const initialData = [
 				{	rarity : "OR", 																},
 				{	rarity : "KGM", 															},
 				{	rarity : "MHZ", 															},
@@ -411,34 +348,39 @@
 				{	rarity : "UC", 		pic : "card_list_uncommon_w",							},
 				{	rarity : "C", 		pic : "card_list_common_w",								},
 				{	rarity : "", 																},
-			],
-		
+			];
+			initialData.forEach(item => this.map.set(item.rarity, item));
+		},
 			
-		//取得稀有度卡圖陣列(IMG TAG)
+		//取得稀有度卡圖陣列(IMG TAG) (O(1) 查找)
 		getRarityPicture : function( rarity ){
-			var results = [];
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].rarity == rarity ){
-					if ( this.map[i].pic == null )
-						break;
-					var pics = ( this.map[i].pic instanceof Array ) ? this.map[i].pic : [ this.map[i].pic ];
-					for ( var p = 0 ; p < pics.length ; p++ ){
-						var img = document.createElement('img');
-						img.src = takaratomyRarityPicRoot + pics[p] + ".gif";
-						results.push( img );
-					}
-					break;
+			const results = [];
+			const data = this.map.get(rarity);
+			
+			if (data && data.pic != null) {
+				const pics = Array.isArray(data.pic) ? data.pic : [data.pic];
+				const takaratomyRarityPicRoot = "http://dm.takaratomy.co.jp/wp-content/uploads/";
+				for (const picName of pics) {
+					const img = document.createElement('img');
+					img.src = takaratomyRarityPicRoot + picName + ".gif";
+					results.push( img );
 				}
 			}
 			return results;
 		},
 	};
+	rarityPic.init();
 	
-	//卡片種類
-	var cardTypeMapping = {
+//... (接續上一段被截斷的程式碼)
+
+	//卡片種類 (使用 Map 結構優化查找)
+	const cardTypeMapping = {
 	
-		map : 
-			[
+		//資料集合: Map<value, TypeData>
+		map : new Map(),
+
+		init: function() {
+			const initialData = [
 				{	value : "C",	text : "生物",				Jap : "クリーチャー",						Location : "M", horizontal : false,								main:true,	},
 				{	value : "EC",	text : "進化生物",			Jap : "進化クリーチャー",						Location : "M", horizontal : false,	parents: [ "C" ], 			main:true,	},
 				{	value : "SEC",	text : "星進化生物",			Jap : "スター進化クリーチャー",					Location : "M", horizontal : false,	parents: [ "EC" ],			main:true,	},
@@ -503,878 +445,324 @@
 				{					text : "雙極卡",				Jap : "ツインパクトカード",														descript : "一張同時有下兩側不同效果的卡"										},
 				{					text : "NEO進化生物",			Jap : "NEO進化クリーチャー",														descript : "指下方有卡牌的NEO生物，亦視為進化生物"								},
 				{					text : "靈氣",				Jap : "オーラ",																descript : "泛指自靈氣",														},
-			],			
-			
-		getDataByValue : function( value ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].value == value ){
-					return this.map[i];
+			];			
+
+			initialData.forEach(item => {
+				if (item.value) {
+					this.map.set(item.value, item);
 				}
-			}
-			return null;
+				if (item.Jap) {
+					this.map.set(item.Jap, item);
+				}
+			});
+		},
+			
+		// O(1) 查找
+		getDataByValue : function( value ){
+			return this.map.get(value) || null;
 		},
 		getTextByValue : function( value ){
-			var theData = this.getDataByValue( value );
+			const theData = this.map.get(value);
 			return theData == null ? null : theData.text;
 		},
 		getObjByJap : function( value ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].Jap == value ){
-					return this.map[i];
-				}
-			}
-			return null;
+			return this.map.get(value) || null;
 		},
 		hasParent : function( childCode, parentCode ){
-			var child = this.getDataByValue( childCode );
-			if ( child.parents == null )
+			const child = this.map.get(childCode);
+			if ( child == null || child.parents == null )
 				return false;
-			for ( var p = 0 ; p < child.parents.length ; p++ )
-				if ( child.parents[p] == parentCode )
-					return true;
-				else if ( this.hasParent( child.parents[p], parentCode ) )
-					return true;
-			return false;
+			if ( child.parents.includes( parentCode ) )
+				return true;
+			return child.parents.some(parent => this.hasParent(parent, parentCode));
 		},
-	}
-
-	//特殊標籤
-	var keyWords = {
+	};
+	cardTypeMapping.init();
 	
-		keywordHeaderTag : "(K)",		//關鍵字首標籤
-		keywordTailTag : "(/K)",		//關鍵字尾標籤
-		raceHeaderTag : "(R)",			//種族首標籤
-		raceTailTag : "(/R)",			//種族尾標籤
-		nameHeaderTag : "(N)",			//卡名首標籤
-		nameTailTag : "(/N)",			//卡名尾標籤
-		absoluteNameHeaderTag : "(AN)",	//卡名首標籤(不考慮卡名種類)
-		absoluteNameTailTag : "(/AN)",	//卡名尾標籤(不考慮卡名種類)
-		typeHeaderTag : "(T)",			//卡種首標籤
-		typeTailTag : "(/T)",			//卡種尾標籤
-		soulHeaderTag : "(S)",			//魂首標籤
-		soulTailTag : "(/S)",			//魂尾標籤
-		exNameHeaderTag : "(XN)",		//放逐生物卡名關鍵字首標籤
-		exNameTailTag : "(/XN)",		//放逐生物卡名關鍵字尾標籤
+	//魂 (使用 Map 結構優化查找)
+	const soulMapping = {
 	
-		//標籤集合，兩兩一組
-		tagPackages : [
-			"(K)", "(/K)",
-			"(R)", "(/R)",
-			"(N)", "(/N)",
-			"(AN)", "(/AN)",
-			"(T)", "(/T)",
-			"(S)", "(/S)",
-			"(XN)", "(/XN)",
-		],
+		//資料集合: Map<key, SoulData>
+		map : new Map(),
 		
-		//找出目前能力內容當中的第一組標籤資料
-		findFirstTagInfo : function( str ){
-
-			var indexes = [];
-			for ( var i = 0 ; i < this.tagPackages.length ; i++ ){
-				indexes.push( str.indexOf( this.tagPackages[i] ) );
-			}
-			var minIndexOfStr = -1;
-			var minIndexOfIndexes = -1;
-			for ( var i = 0 ; i < indexes.length ; i+=2 ){
-				if ( indexes[i] != -1 && ( ( minIndexOfStr == -1 ) || ( indexes[i] < minIndexOfStr ) ) ){
-					minIndexOfStr = indexes[i];
-					minIndexOfIndexes = i;
-				}
-			}
-			if ( minIndexOfIndexes == -1 ){
-				return null;
-			} else {
-				var rtn = {
-					headerTag : this.tagPackages[ minIndexOfIndexes ],			//首標籤
-					tailTag : this.tagPackages[ minIndexOfIndexes + 1 ],		//尾標籤
-					headerIndex : indexes[ minIndexOfIndexes ],					//首標籤index
-					tailIndex : indexes[ minIndexOfIndexes + 1 ],				//尾標籤index
-				}
-				return rtn;
-			}
+		init: function() {
+			const initialData = [
+				{ code : "H",	Jap : "ホーリー・ソウル",	Eng : "Holy Soul",		Chi : "聖魂", 	},
+				{ code : "M",	Jap : "マジック・ソウル",	Eng : "Magic Soul",		Chi : "術魂", 	},
+				{ code : "E",	Jap : "エヴィル・ソウル",	Eng : "Evil Soul",		Chi : "邪魂", 	},
+				{ code : "B",	Jap : "ブラッディ・ソウル",	Eng : "Bloody Soul",	Chi : "血魂", 	},
+				{ code : "K",	Jap : "カンフー・ソウル",	Eng : "KongFu Soul",	Chi : "功夫魂", },
+				{ code : "W",	Jap : "ワイルド・ソウル",	Eng : "Wild Soul",		Chi : "野魂", 	},
+				{ code : "U",	Jap : "ウルトラ・ソウル",	Eng : "Ultra Soul",		Chi : "超魂", 	},
+				{ code : "C",	Jap : "キャット・ソウル",	Eng : "Cat Soul",		Chi : "貓魂", 	},
+				{ code : "D",	Jap : "ドッグ・ソウル",		Eng : "Dog Soul",		Chi : "犬魂", 	},
+			];
+			initialData.forEach(item => {
+				this.map.set(item.code, item);
+				this.map.set(item.Jap, item);
+			});
 		},
 		
-		//將能力字串轉換成DOM Object陣列
-		transTags : function( str ){
-		
-			var rtnElements = [];
-			var findTag = null;
-			while( ( findTag = this.findFirstTagInfo( str ) ) != null ){
-			
-				var hTag = findTag.headerTag;
-				var tTag = findTag.tailTag;
-				
-				var hIndex = findTag.headerIndex;
-				var tIndex = findTag.tailIndex;
-
-				
-				var beforeTextNode = document.createTextNode( str.substr( 0 , hIndex ) );
-				var kWord = str.substr( hIndex + hTag.length , tIndex - ( hIndex + hTag.length ) );
-				var showName = kWord;
-				//如果kWord裡有<=>記號的話、則視為一種特殊格式，表示<=>前者為原文、<=>後者為實際目標
-				var showAndReal = kWord.split("<=>");
-				if ( showAndReal.length == 2 ){
-					showName = showAndReal[0];
-					kWord = showAndReal[1];
-				}
-				var keywordSpan = document.createElement('span');
-				keywordSpan.setAttribute( "keyJap" , kWord );
-				keywordSpan.style.cursor = "pointer";
-				keywordSpan.style.color = "blue";
-//				keywordSpan.style.fontWeight = "bold";
-				//依TAG不同處理不同的EVENT
-				if ( hTag == this.raceHeaderTag ){
-					var raceObject = raceMapping.getDataByJap( kWord );
-					if ( raceObject != null ){
-						keywordSpan.setAttribute( "title" , ( ( raceObject.isCategory ? "(類別種族) " : "" ) + raceObject.Jap + " / " + raceObject.Chi + " / " + raceObject.Eng ) );
-						keywordSpan.setAttribute( "sTagType" , "R" );
-					}
-				} else if ( hTag == this.keywordHeaderTag ){
-					var abilityObject = abilityMapping.getDataByJap( kWord );
-					if ( abilityObject != null ){
-						keywordSpan.setAttribute( "title" , abilityObject.Jap + " / " + abilityObject.Chi + " / " + abilityObject.Eng + "\n" + abilityObject.descript );
-						keywordSpan.setAttribute( "sTagType" , "K" );
-					}
-				} else if ( hTag == this.nameHeaderTag || hTag == this.absoluteNameHeaderTag ){
-				
-					//如果是指定卡名、但資料裡沒有的話就不處理標籤
-					var doWork = true;
-					if ( hTag == this.nameHeaderTag ){
-						if ( !nameCategory.isCategory( kWord ) && cardDatas.getDataByName( kWord ) == null ){
-							doWork = false;
-						}
-					} else if ( hTag == this.absoluteNameHeaderTag ){
-						if ( cardDatas.getDataByName( kWord ) == null ){
-							doWork = false;
-						}
-					}
-					if ( !doWork ){
-						keywordSpan.style.cursor = "";
-						keywordSpan.style.color = "black";
-					} else {
-						keywordSpan.setAttribute( "sTagType" , "N" );
-						keywordSpan.style.textDecoration = "underline";
-						keywordSpan.setAttribute( "queryByName" , kWord );
-						if ( kWord != showName ){
-							keywordSpan.setAttribute( "title" , clearSubName( kWord ) );
-						}
-						//如果是類別卡名的話，就進行搜尋
-						if ( hTag == this.nameHeaderTag && nameCategory.isCategory( kWord ) ){
-							keywordSpan.onclick = function(){
-								var cardName = this.getAttribute( "queryByName" );
-								queryByNameOnly( cardName , false );
-								//如果是手機版型的話，就跳去列表頁
-								if ( isVM() ){
-									gobi("listBar").onclick();
-								}
-							}
-						//不是的話就直接跳內容
-						} else {
-							keywordSpan.onclick = function(){
-								var cardName = this.getAttribute( "queryByName" );
-								lastSelectedCardName = cardName;
-								openDataBlock();
-								changeListCSS();
-							}
-						}
-					}
-				} else if ( hTag == this.typeHeaderTag ){
-					var typeObject = cardTypeMapping.getObjByJap( kWord );
-					if ( typeObject != null ){
-						keywordSpan.setAttribute( "title" , "卡牌類型：" + typeObject.text + ( ( typeObject.descript == null ) ? "" : ( "\n" + typeObject.descript ) ) );
-					}
-				} else if ( hTag == this.soulHeaderTag ){
-					var typeObject = soulMapping.getObjByJap( kWord );
-					if ( typeObject != null ){
-						keywordSpan.setAttribute( "title" , typeObject.Chi + " / " + typeObject.Eng );
-					}
-				} else if ( hTag == this.exNameHeaderTag ){
-					//如果是放逐生物類別卡名的話，就進行搜尋
-					if ( exNameCategory.isKeyName( kWord ) ){
-						keywordSpan.style.textDecoration = "underline";
-						keywordSpan.setAttribute( "queryByName" , kWord );
-						keywordSpan.onclick = function(){
-							var cardName = this.getAttribute( "queryByName" );
-							queryByNameOnly( cardName , true );
-							//如果是手機版型的話，就跳去列表頁
-							if ( isVM() ){
-								gobi("listBar").onclick();
-							}
-						}
-					}
-				}
-				//如果關鍵字沒有點擊效果、又有說明的話、又是行動裝置的話，就增加點擊ALERT詳細說明
-				setTitleAlert( keywordSpan );
-				//TAG本文不進行繁簡轉換
-				var tagMainWords = document.createElement('span');
-				tagMainWords.appendChild( document.createTextNode( showName ) );
-				keywordSpan.appendChild( tagMainWords );
-				setNoTrans( keywordSpan );
-				
-				str = str.substr( tIndex + tTag.length );
-								
-				rtnElements.push( beforeTextNode );
-				rtnElements.push( keywordSpan );
-			}
-			if ( str.length > 0 ){
-				rtnElements.push( document.createTextNode( str ) );
-			}
-			return rtnElements;
-		},
-	}
-
-	//魂
-	var soulMapping = {
-	
-		map : [
-			{ code : "H",	Jap : "ホーリー・ソウル",	Eng : "Holy Soul",		Chi : "聖魂", 	},
-			{ code : "M",	Jap : "マジック・ソウル",	Eng : "Magic Soul",		Chi : "術魂", 	},
-			{ code : "E",	Jap : "エヴィル・ソウル",	Eng : "Evil Soul",		Chi : "邪魂", 	},
-			{ code : "B",	Jap : "ブラッディ・ソウル",	Eng : "Bloody Soul",	Chi : "血魂", 	},
-			{ code : "K",	Jap : "カンフー・ソウル",	Eng : "KongFu Soul",	Chi : "功夫魂", },
-			{ code : "W",	Jap : "ワイルド・ソウル",	Eng : "Wild Soul",		Chi : "野魂", 	},
-			{ code : "U",	Jap : "ウルトラ・ソウル",	Eng : "Ultra Soul",		Chi : "超魂", 	},
-			{ code : "C",	Jap : "キャット・ソウル",	Eng : "Cat Soul",		Chi : "貓魂", 	},
-			{ code : "D",	Jap : "ドッグ・ソウル",		Eng : "Dog Soul",		Chi : "犬魂", 	},
-		],
-		
-		//依魂代號取得混物件
+		//依魂代號取得混物件 (O(1) 查找)
 		getDataByCode : function( value ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].code == value ){
-					return this.map[i];
-				}
-			}
-			return null;
+			return this.map.get(value) || null;
 		},
 		
-		//將魂代號轉成日文魂名
 		transCodeToJap : function( value ){
-			var theData = this.getDataByCode( value );
-			return theData == null ? null : theData.Jap;
+			return this.getDataByCode( value )?.Jap;
 		},
 		
-		//將魂代號轉成英文魂名
 		transCodeToEng : function( value ){
-			var theData = this.getDataByCode( value );
-			return theData == null ? null : theData.Eng;
+			return this.getDataByCode( value )?.Eng;
 		},
 		
-		//將魂代號轉成中文魂名
 		transCodeToChi : function( value ){
-			var theData = this.getDataByCode( value );
-			return theData == null ? null : theData.Chi;
+			return this.getDataByCode( value )?.Chi;
 		},
 		
-		//由日文值取得物件
+		//由日文值取得物件 (O(1) 查找)
 		getObjByJap : function( value ){
-			for ( var i = 0 ; i < this.map.length ; i++ ){
-				if ( this.map[i].Jap == value ){
-					return this.map[i];
-				}
-			}
-			return null;
+			return this.map.get(value) || null;
 		},
 		
-	}
+	};
+	soulMapping.init();
 	
-	//卡名關鍵字
-	var nameCategory = {
+	//卡名關鍵字 (使用 Set 結構優化查找)
+	const nameCategory = {
 		
-		map : [
-			"ロマノフ",
-			"ルピア",
-			"ケンゲキオージャ",
-			"ゴウケンオー",
-			"ケンゴウグレンオー",
-			"ワンケングレンオー",
-			"ケングレンオー",
-			"神帝",
-			"プリン",
-			"テスタ・ロッサ",
-			"神（シェン）",
-			"ガイアール",
-			"リュウセイ",
-			"パラス",
-			"ボルシャック",
-			"一撃奪取",
-			"インガ",
-			"シンリ",
-			"サトリ",
-			"イザナイ",
-			"メシア",
-			"カノン",
-			"カルマ",
-			"マントラ",
-			"ファミリア",
-			"ボルバルザーク",
-			"パーロック",
-			"ゼン",
-			"アク",
-			"真実の名",
-			"偽りの名",
-			"ヘブンズ",
-			"スパーク",
-			"遊撃師団",
-			"バルガ",
-			"XX（ダブルクロス）",
-			"XXX（トリプルクロス）",
-			"NEX（ネックス）",
-			"Z（ゼータ）",
-			"GENJI（ゲンジ）",
-			"G（ゲンジ）",
-			"ゲンジ",
-			"アイニー",
-			"母なる",
-			"白騎士",
-			"超次元",
-			"覚醒者",
-			"死神",
-			"ファイブスター",
-			"GENJI（ゲンジ）・XX（ダブルクロス）",
-			"G（ジー）・ホーガン",
-			"ガンヴィート",
-			"カンクロウ",
-			"三界",
-			"奇天烈",
-			"復讐",
-			"獣軍隊",
-			"音速",
-			"邪眼",
-			"ボルメテウス",
-			"氷牙",
-			"天雷",
-			"魔光",
-			"騎士",
-			"海帝",
-			"幻影",
-			"武者（むしゃ）",
-			"大和",
-			"紫電",
-			"聖霊王",
-			"バロム",
-			"ボルベルグ",
-			"破壊神デス",
-			"龍神ヘヴィ",
-			"龍神メタル",
-			"アルファ",
-			"ボルメテウス・武者（むしゃ）・ドラゴン",
-			"九極",
-			"原始",
-			"不死（ゾンビ）",
-			"ドキンダム",
-			"アメッチ",
-			"ガイアール・カイザー",
-			"ボルバルザーク・紫電・ドラゴン",
-			"アリス",
-			"禁断",
-			"U・S・A",
-			"モモダチ",
-			"罪無",
-			"戯具",
-			"クイーン・オブ・プロテクション",
-			"ロード・オブ・レジェンドソード",
-			"蒼狼",
-			"創世神",
-			"起源神",
-			"ジョニー",
-			"ブレイン",
-			"蓄積された魔力",
-			"究極神アク",
-			"超絶神ゼン",
-			"魔光大帝ネロ・グリフィス",
-			"ミステリー",
-			"ナゾ",
-			"謎",
-			"クエスチョン",
-			"モモキング",
-			"グレンオー",
-			"トラップ",
-			"漢（メン）",
-			"アクア・アタック",
-			"アクア・カスケード",
-			"・",
-			"名人",
-			"タイピング＝タップ",
-			"ドギラゴン",
-			"ジャシン",
-			"ホーリー・スパーク",
-			"ボルメテウス・ホワイト・ドラゴン",
-			"モルト",
-		],
+		map : new Set(),
 		
+		init: function() {
+			const initialData = [
+				"ロマノフ", "ルピア", "ケンゲキオージャ", "ゴウケンオー", "ケンゴウグレンオー", "ワンケングレンオー", "ケングレンオー", "神帝", "プリン", "テスタ・ロッサ", 
+				"神（シェン）", "ガイアール", "リュウセイ", "パラス", "ボルシャック", "一撃奪取", "インガ", "シンリ", "サトリ", "イザナイ", 
+				"メシア", "カノン", "カルマ", "マントラ", "ファミリア", "ボルバルザーク", "パーロック", "ゼン", "アク", "真実の名", 
+				"偽りの名", "ヘブンズ", "スパーク", "遊撃師団", "バルガ", "XX（ダブルクロス）", "XXX（トリプルクロス）", "NEX（ネックス）", "Z（ゼータ）", "GENJI（ゲンジ）", 
+				"G（ゲンジ）", "ゲンジ", "アイニー", "母なる", "白騎士", "超次元", "覚醒者", "死神", "ファイブスター", "GENJI（ゲンジ）・XX（ダブルクロス）", 
+				"G（ジー）・ホーガン", "ガンヴィート", "カンクロウ", "三界", "奇天烈", "復讐", "獣軍隊", "音速", "邪眼", "ボルメテウス", 
+				"氷牙", "天雷", "魔光", "騎士", "海帝", "幻影", "武者（むしゃ）", "大和", "紫電", "聖霊王", 
+				"バロム", "ボルベルグ", "破壊神デス", "龍神ヘヴィ", "龍神メタル", "アルファ", "ボルメテウス・武者（むしゃ）・ドラゴン", "九極", "原始", "不死（ゾンビ）", 
+				"ドキンダム", "アメッチ", "ガイアール・カイザー", "ボルバルザーク・紫電・ドラゴン", "アリス", "禁断", "U・S・A", "モモダチ", "罪無", "戯具", 
+				"クイーン・オブ・プロテクション", "ロード・オブ・レジェンドソード", "蒼狼", "創世神", "起源神", "ジョニー", "ブレイン", "蓄積された魔力", "究極神アク", "超絶神ゼン", 
+				"魔光大帝ネロ・グリフィス", "ミステリー", "ナゾ", "謎", "クエスチョン", "モモキング", "グレンオー", "トラップ", "漢（メン）", "アクア・アタック", 
+				"アクア・カスケード", "・", "名人", "タイピング＝タップ", "ドギラゴン", "ジャシン", "ホーリー・スパーク", "ボルメテウス・ホワイト・ドラゴン", "モルト",
+			];
+			initialData.forEach(item => this.map.add(item));
+		},
+		
+		// O(1) 查找
 		isCategory : function( name ){
-			return this.map.include( name );
+			return this.map.has( name );
 		},
-	}
+	};
+	nameCategory.init();
 	
-	//放逐生物卡名關鍵字
-	var exNameCategory = {
+	//放逐生物卡名關鍵字 (使用 Set 結構優化查找)
+	const exNameCategory = {
 		
-		map : [
-			"神",
-			"無",
-			"法",
-			"無法",
-			"錬金魔砲",
-			"翔帆轟音",
-			"テスタ・ロッサ",
-			"灼熱連鎖",
-			"天空美麗",
-			"超法",
-			"神（シェン）",
-			"神（シェン）豚（トン）",
-			"神撃の カツドン DASH",
-			"無敵",
-			"魔槍",
-			"絶頂神話 カツムゲン",
-			"乱舞",
-			"友情",
-			"R（ロビン）",
-			"学友情 ロビー・R（ロビン）",
-			"M（ニケミケラン）",
-			"愛友情 ニケ・M（ニケミケラン）",
-			"G（グローバル）",
-			"猛友情 五郎丸・G（グローバル）",
-			"友情集結 R（ロビン）・M（ニケミケラン）・G（グローバル）",
-			"百仙",
-			"閻魔",
-			"マジックマ瀧",
-			"極太",
-			"太陽",
-			"シャイニング・キンジ",
-			"サンサン",
-			"しずく",
-			"クーマン",
-			"菌次郎",
-			"拳銃",
-			"鼓笛",
-			"武闘",
-			"剣砲",
-			"最終章 カツエンド",
-			"漢のキズナ カツブードン",
-			"宇宙",
-			"合金",
-			"暴剣",
-		],
+		map : new Set(),
 		
+		init: function() {
+			const initialData = [
+				"神", "無", "法", "無法", "錬金魔砲", "翔帆轟音", "テスタ・ロッサ", "灼熱連鎖", "天空美麗", "超法", 
+				"神（シェン）", "神（シェン）豚（トン）", "神撃の カツドン DASH", "無敵", "魔槍", "絶頂神話 カツムゲン", "乱舞", "友情", "R（ロビン）", "学友情 ロビー・R（ロビン）", 
+				"M（ニケミケラン）", "愛友情 ニケ・M（ニケミケラン）", "G（グローバル）", "猛友情 五郎丸・G（グローバル）", "友情集結 R（ロビン）・M（ニケミケラン）・G（グローバル）", "百仙", "閻魔", "マジックマ瀧", "極太", "太陽", 
+				"シャイニング・キンジ", "サンサン", "しずく", "クーマン", "菌次郎", "拳銃", "鼓笛", "武闘", "剣砲", "最終章 カツエンド", 
+				"漢のキズナ カツブードン", "宇宙", "合金", "暴剣",
+			];
+			initialData.forEach(item => this.map.add(item));
+		},
+		
+		// O(1) 查找
 		isKeyName : function( name ){
-			return this.map.include( name );
+			return this.map.has( name );
 		},
-	}
+	};
+	exNameCategory.init();
 	
-	//殿堂
-	var sanctuary = {
+	//殿堂 (使用 Set 結構優化查找)
+	const sanctuary = {
 	
 		//殿堂卡
-		sanctuary1 : [
-			"アラゴト・ムスビ",
-			"不敵怪人アンダケイン",
-			"インフィニティ・ドラゴン",
-			"インフェルノ・サイン",
-			"エメラル",
-			"エンペラー・キリコ",
-			"斬隠オロチ",
-			"海底鬼面城",
-			"カラフル・ダンス",
-			"無双恐皇ガラムタ",
-			"魔導管理室 カリヤドネ/ハーミット・サークル",
-			"怨念怪人ギャスカ",
-			"疾封怒闘 キューブリック",
-			"クローン・バイス",
-			"蛇手の親分ゴエモンキー!",
-			"“轟轟轟”ブランド",
-			"再誕の社",
-			"瞬封の使徒サグラダ・ファミリア",
-			"Ｓ級原始 サンマッド",
-			"次元の霊峰",
-			"ジョット・ガン・ジョラゴン",
-			"ストリーミング・シェイパー",
-			"セイレーン・コンチェルト",
-			"凄惨なる牙 パラノーマル",
-			"暗黒鎧 ダースシスK",
-			"“龍装”チュリス",
-			"大勇者「鎖風車」",
-			"常勝ディス・オプティマス",
-			"デビル・ドレーン",
-			"蒼き団長 ドギラゴン剣",
-			"MEGATOON・ドッカンデイヤー",
-			"龍素知新",
-			"ドリル・スコール",
-			"腐敗勇騎ドルマークス",
-			"侵革目 パラスラプト",
-			"バロン・ゴーヤマ",
-			"ハイドロ・ハリケーン",
-			"超竜バジュラ",
-			"バジュラズ・ソウル",
-			"魔龍バベルギヌス",
-			"光牙忍ハヤブサマル",
-			"ビックリ・イリュージョン",
-			"フェアリー・ギフト",
-			"黒神龍ブライゼナーガ",
-			"禁断機関 VV-8",
-			"復讐 ブラックサイコ",
-			"邪帝斧 ボアロアックス",
-			"暴龍警報",
-			"ホーガン・ブラスター",
-			"ポジトロン・サイン",
-			"単騎連射 マグナム",
-			"魔天降臨",
-			"予言者マリエル",
-			"陰陽の舞",
-			"BAKUOOON・ミッツァイル",
-			"時の法皇 ミラダンテXII",
-			"メガ・マナロック・ドラゴン",
-			"Dの牢閣 メメント守神宮",
-			"盗掘人形モールス",
-			"目的不明の作戦",
-			"ラッキー・ダーツ",
-			"熱き侵略 レッドゾーンZ",
-			"ミラクルとミステリーの扉",
-			"邪神M・ロマノフ",
-			"竜魔神王バルカディア・NEX（ネックス）",
-			"樹食の超人",
-			"超七極 Gio/巨大設計図",
-			"暗黒鎧 ザロスト",
-			"ガル・ラガンザーク",
-			"一なる部隊 イワシン",
-			"絶望神サガ",
-			"蝕王の晩餐",
-			"超神星アポロヌス・ドラゲリオン",
-			"幻緑の双月/母なる星域",
-			"「無月」の頂 ＄スザーク＄",
-			"天命龍装 ホーリーエンド/ナウ・オア・ネバー",
-			"緊急再誕",
-			"邪幽 ジャガイスト",
-			"瞬閃と疾駆と双撃の決断",
-			"マーシャル・クイーン",
-			"DARK MATERIAL COMPLEX",
-			"困惑の影トラブル・アルケミスト",
-			"逆転の影ガレック",
-			"アリスの突撃インタビュー",
-			"頂上混成 BAKUONSOOO8th",
-			"死神覇王 ブラックXENARCH",
-			"爆熱剣 バトライ刃",
-			"爆熱天守 バトライ閣",
-			"爆熱DX バトライ武神",
-		],
+		sanctuary1 : new Set(),
 		
 		//白金殿堂
-		sanctuary0 : [
-			"der'Zen Mondo/♪必殺で つわものどもが 夢の跡",
-			"ツタンメカーネン",
-			"フォース・アゲイン",
-			"雷炎翔鎧バルピアレスク",
-			"アクア・パトロール",
-			"アクア・メルゲ",
-			"蒼狼の始祖アマテラス",
-			"インフェルノ・ゲート",
-			"裏切りの魔狼月下城",
-			"ヴォルグ・サンダー",
-			"呪紋の化身",
-			"緊急プレミアム殿堂",
-			"聖鎧亜キング・アルカディアス",
-			"天雷王機ジョバンニX世",
-			"スケルトン・バイス",
-			"ソウル・アドバンテージ",
-			"鎧亜戦隊ディス・マジシャン",
-			"母なる大地",
-			"母なる紋章",
-			"ヒラメキ・プログラム",
-			"フューチャー・スラッシュ",
-			"転生プログラム",
-			"ベイB ジャック",
-			"ヘブンズ・フォース",
-			"ヘル・スラッシュ",
-			"無双竜機ボルバルザーク",
-			"マリゴルドⅢ",
-			"奇跡の精霊ミルザム",
-			"ヨミジ 丁-二式",
-			"音精 ラフルル",
-			"レアリティ・レジスタンス",
-			"ロスト・チャージャー",
-			"ダンディ・ナスオ",
-			"希望のジョー星",
-			"生命と大地と轟破の決断",
-			"機術士ディール/「本日のラッキーナンバー！」",
-			"神の試練",
-		],
+		sanctuary0 : new Set(),
 		
 		//組合殿堂
-		sanctuaryC : [
-			"未来王龍 モモキングJO",
-			"禁断英雄 モモキングダムX",
-		],
+		sanctuaryC : [],
+
+		init: function() {
+			const s1Data = [
+				"アラゴト・ムスビ", "不敵怪人アンダケイン", "インフィニティ・ドラゴン", "インフェルノ・サイン", "エメラル", "エンペラー・キリコ", "斬隠オロチ", "海底鬼面城", "カラフル・ダンス", "無双恐皇ガラムタ", 
+				"魔導管理室 カリヤドネ/ハーミット・サークル", "怨念怪人ギャスカ", "疾封怒闘 キューブリック", "クローン・バイス", "蛇手の親分ゴエモンキー!", "“轟轟轟”ブランド", "再誕の社", "瞬封の使徒サグラダ・ファミリア", "Ｓ級原始 サンマッド", "次元の霊峰", 
+				"ジョット・ガン・ジョラゴン", "ストリーミング・シェイパー", "セイレーン・コンチェルト", "凄惨なる牙 パラノーマル", "暗黒鎧 ダースシスK", "“龍装”チュリス", "大勇者「鎖風車」", "常勝ディス・オプティマス", "デビル・ドレーン", "蒼き団長 ドギラゴン剣", 
+				"MEGATOON・ドッカンデイヤー", "龍素知新", "ドリル・スコール", "腐敗勇騎ドルマークス", "侵革目 パラスラプト", "バロン・ゴーヤマ", "ハイドロ・ハリケーン", "超竜バジュラ", "バジュラズ・ソウル", "魔龍バベルギヌス", 
+				"光牙忍ハヤブサマル", "ビックリ・イリュージョン", "フェアリー・ギフト", "黒神龍ブライゼナーガ", "禁断機関 VV-8", "復讐 ブラックサイコ", "邪帝斧 ボアロアックス", "暴龍警報", "ホーガン・ブラスター", "ポジトロン・サイン", 
+				"単騎連射 マグナム", "魔天降臨", "予言者マリエル", "陰陽の舞", "BAKUOOON・ミッツァイル", "時の法皇 ミラダンテXII", "メガ・マナロック・ドラゴン", "Dの牢閣 メメント守神宮", "盗掘人形モールス", "目的不明の作戦", 
+				"ラッキー・ダーツ", "熱き侵略 レッドゾーンZ", "ミラクルとミステリーの扉", "邪神M・ロマノフ", "竜魔神王バルカディア・NEX（ネックス）", "樹食の超人", "超七極 Gio/巨大設計図", "暗黒鎧 ザロスト", "ガル・ラガンザーク", "一なる部隊 イワシン", 
+				"絶望神サガ", "蝕王の晩餐", "超神星アポロヌス・ドラゲリオン", "幻緑の双月/母なる星域", "「無月」の頂 ＄スザーク＄", "天命龍装 ホーリーエンド/ナウ・オア・ネバー", "緊急再誕", "邪幽 ジャガイスト", "瞬閃と疾駆と双撃の決断", "マーシャル・クイーン", 
+				"DARK MATERIAL COMPLEX", "困惑の影トラブル・アルケミスト", "逆転の影ガレック", "アリスの突撃インタビュー", "頂上混成 BAKUONSOOO8th", "死神覇王 ブラックXENARCH", "爆熱剣 バトライ刃", "爆熱天守 バトライ閣", "爆熱DX バトライ武神",
+			];
+			s1Data.forEach(item => this.sanctuary1.add(item));
+
+			const s0Data = [
+				"der'Zen Mondo/♪必殺で つわものどもが 夢の跡", "ツタンメカーネン", "フォース・アゲイン", "雷炎翔鎧バルピアレスク", "アクア・パトロール", "アクア・メルゲ", "蒼狼の始祖アマテラス", "インフェルノ・ゲート", "裏切りの魔狼月下城", "ヴォルグ・サンダー", 
+				"呪紋の化身", "緊急プレミアム殿堂", "聖鎧亜キング・アルカディアス", "天雷王機ジョバンニX世", "スケルトン・バイス", "ソウル・アドバンテージ", "鎧亜戦隊ディス・マジシャン", "母なる大地", "母なる紋章", "ヒラメキ・プログラム", 
+				"フューチャー・スラッシュ", "転生プログラム", "ベイB ジャック", "ヘブンズ・フォース", "ヘル・スラッシュ", "無双竜機ボルバルザーク", "マリゴルドⅢ", "奇跡の精霊ミルザム", "ヨミジ 丁-二式", "音精 ラフルル", 
+				"レアリティ・レジスタンス", "ロスト・チャージャー", "ダンディ・ナスオ", "希望のジョー星", "生命と大地と轟破の決断", "機術士ディール/「本日のラッキーナンバー！」", "神の試練",
+			];
+			s0Data.forEach(item => this.sanctuary0.add(item));
+
+			this.sanctuaryC = [
+				"未来王龍 モモキングJO",
+				"禁断英雄 モモキングダムX",
+			];
+		},
 		
 		//取得組合殿堂卡的index
 		getSanctuaryCIndex : function( name ){
-			for ( var i = 0 ; i < this.sanctuaryC.length ; i++ ){
-				if ( this.sanctuaryC[i] == name ){
-					return i;
-				}
-			}
-			for ( var i = 0 ; i < this.sanctuaryC.length ; i++ ){
-				if ( name.indexOf( this.sanctuaryC[i] ) != -1 ){
+			for ( let i = 0 ; i < this.sanctuaryC.length ; i++ ){
+				if ( this.sanctuaryC[i] === name || name.includes(this.sanctuaryC[i])) {
 					return i;
 				}
 			}
 			return -1;
 		},
-	}
+	};
+	sanctuary.init();
 	
-	//綽號對照表
-	var nickNamesMap = {
-	
-		map : [
-			{
-				realName : "斬斬人形コダマンマ", 				
-				nickNames : [ "コダマンマ", "赤コダマンマ" ],
-			},{
-				realName : "福腹人形コダマンマ", 				
-				nickNames : [ "黒コダマンマ" ],
-			},{
-				realName : "百発人形マグナム", 				
-				nickNames : [ "黒マグナム","マグナム" ],
-			},{
-				realName : "早撃人形マグナム", 				
-				nickNames : [ "赤マグナム" ],
-			},{
-				realName : "凶殺皇 デス・ハンズ", 				
-				nickNames : [ "デスハンズ" ],
-			},{
-				realName : "終末の時計 ザ・クロック", 				
-				nickNames : [ "クロック" ],
-			},{
-				realName : "次元流の豪力", 				
-				nickNames : [ "ミランダ" ],
-			},{
-				realName : "ガイアール・カイザー", 				
-				nickNames : [ "ガイアール" ],
-			},{
-				realName : "デーモン・ハンド", 				
-				nickNames : [ "ハンド", "デモハン" ],
-			},{
-				realName : "青銅の鎧", 				
-				nickNames : [ "ブロンズ", "青銅" ],
-			},{
-				realName : "大勇者「ふたつ牙」", 				
-				nickNames : [ "ファング", "牙" ],
-			},{
-				realName : "ロスト・ソウル", 				
-				nickNames : [ "ロスソ" ],
-			},{
-				realName : "ストリーミング・シェイパー", 				
-				nickNames : [ "シェイパー" ],
-			},{
-				realName : "デビル・ドレーン", 				
-				nickNames : [ "ドレーン" ],
-			},{
-				realName : "アストラル・リーフ", 				
-				nickNames : [ "リーフ" ],
-			},{
-				realName : "雷鳴の守護者ミスト・リエス", 				
-				nickNames : [ "ミスト" ],
-			},{
-				realName : "神々の逆流", 				
-				nickNames : [ "逆流" ],
-			},{
-				realName : "フェアリー・ライフ", 				
-				nickNames : [ "ライフ" ],
-			},{
-				realName : "光器ペトローバ", 				
-				nickNames : [ "老婆", "ペト" ],
-			},{
-				realName : "冥府の覇者ガジラビュート", 				
-				nickNames : [ "ガジラ" ],
-			},{
-				realName : "魂と記憶の盾", 				
-				nickNames : [ "エタガ" ],
-			},{
-				realName : "剛撃戦攻ドルゲーザ", 				
-				nickNames : [ "ドルゲ" ],
-			},{
-				realName : "幻緑の双月", 				
-				nickNames : [ "ドリーミング", "ナイフ" ],
-			},{
-				realName : "バジュラズ・ソウル", 				
-				nickNames : [ "バジュソ" ],
-			},{
-				realName : "ヘブンズ・ゲート", 				
-				nickNames : [ "天門" ],
-			},{
-				realName : "イモータル・ブレード", 				
-				nickNames : [ "芋ブレ", "芋", "イモブレ" ],
-			},{
-				realName : "ダンディ・ナスオ", 				
-				nickNames : [ "茄子", "ナスオ" ],
-			},{
-				realName : "黒神龍グールジェネレイド", 				
-				nickNames : [ "グール" ],
-			},{
-				realName : "ボルメテウス・武者（むしゃ）・ドラゴン", 				
-				nickNames : [ "ボル武者" ],
-			},{
-				realName : "スーパー・スパーク", 				
-				nickNames : [ "スパスパ" ],
-			},{
-				realName : "アクア・スーパーエメラル", 				
-				nickNames : [ "スパエメ" ],
-			},{
-				realName : "ミラクルとミステリーの扉", 				
-				nickNames : [ "ミラミス" ],
-			},{
-				realName : "カラフル・ダンス", 				
-				nickNames : [ "ダンス", "カラダン" ],
-			},{
-				realName : "不滅の精霊パーフェクト・ギャラクシー", 				
-				nickNames : [ "パギャラ", "PG", "不滅" ],
-			},{
-				realName : "光牙忍ハヤブサマル", 				
-				nickNames : [ "隼" ],
-			},{
-				realName : "威牙忍ヤミノザンジ", 				
-				nickNames : [ "ザンジ" ],
-			},{
-				realName : "西南の超人", 				
-				nickNames : [ "キリノ" ],
-			},{
-				realName : "悪魔神王バルカディアス", 				
-				nickNames : [ "バルカ", "バルス" ],
-			},{
-				realName : "時空の支配者ディアボロスZ（ゼータ）", 				
-				nickNames : [ "DDZ" ],
-			},{
-				realName : "時空の凶兵ブラック・ガンヴィート", 				
-				nickNames : [ "ガンヴィート" ],
-			},{
-				realName : "超次元ガード・ホール", 				
-				nickNames : [ "ガドホ", "盾穴" ],
-			},{
-				realName : "偽りの名 ゾルゲ", 				
-				nickNames : [ "社会のダニ" ],
-			},{
-				realName : "ドンドン吸い込むナウ", 				
-				nickNames : [ "ドスコ", "ナウ" ],
-			},{
-				realName : "勝利のガイアール・カイザー", 				
-				nickNames : [ "勝ガ", "生姜" ],
-			},{
-				realName : "勝利のリュウセイ・カイザー", 				
-				nickNames : [ "昇竜", "醤油" ],
-			},{
-				realName : "希望の親衛隊ファンク", 				
-				nickNames : [ "ファンク" ],
-			},{
-				realName : "勝利宣言 鬼丸「覇」", 				
-				nickNames : [ "覇" ],
-			},{
-				realName : "ウェディング・ゲート", 				
-				nickNames : [ "祝門" ],
-			},{
-				realName : "ガチンコ・ルーレット", 				
-				nickNames : [ "ガレット" ],
-			},{
-				realName : "その子供、凶暴につき", 				
-				nickNames : [ "ともお" ],
-			},{
-				realName : "トンギヌスの槍", 				
-				nickNames : [ "槍" ],
-			},{
-				realName : "ボルメテウス・サファイア・ドラゴン", 				
-				nickNames : [ "サファイア" ],
-			},{
-				realName : "光器パーフェクト・マドンナ", 				
-				nickNames : [ "パドンナ" ],
-			},{
-				realName : "クリスティ・ゲート", 				
-				nickNames : [ "推理門" ],
-			},{
-				realName : "デュエマの鬼!キクチ師範代", 				
-				nickNames : [ "鬼畜" ],
-			},{
-				realName : "超閃機 ヴィルヴィスヴィード", 				
-				nickNames : [ "ヴヴヴ" ],
-			},{
-				realName : "超法無敵宇宙合金武闘鼓笛魔槍絶頂百仙閻魔神（シェン）拳銃極太陽友情暴剣R（ロビン）・M（ニケミケラン）・G（グローバル） チーム・エグザイル～カツドンと仲間たち～", 				
-				nickNames : [ "名前の長い奴" ],
-			},{
-				realName : "轟く侵略 レッドゾーン", 				
-				nickNames : [ "新車" ],
-			},{
-				realName : "S級不死（ゾンビ） デッドゾーン", 				
-				nickNames : [ "廃車" ],
-			},{
-				realName : "禁断の轟速 レッドゾーンX", 				
-				nickNames : [ "中古車" ],
-			},{
-				realName : "メンデルスゾーン", 				
-				nickNames : [ "MZ" ],
-			},{
-				realName : "ボルシャック・栄光・ルピア", 				
-				nickNames : [ "榮光" ],
-			},{
-				realName : "ボルシャック・ドギラゴン", 				
-				nickNames : [ "米津","米津龍" ],
-			},
-		],
+	//綽號對照表 (使用 Map 結構優化查找)
+	const nickNamesMap = {
+		// Map<nickName, realName>
+		map : new Map(),
+
+		init: function() {
+			const initialData = [
+				{ realName : "斬斬人形コダマンマ", 				nickNames : [ "コダマンマ", "赤コダマンマ" ]},
+				{ realName : "福腹人形コダマンマ", 				nickNames : [ "黒コダマンマ" ]},
+				{ realName : "百発人形マグナム", 				nickNames : [ "黒マグナム","マグナム" ]},
+				{ realName : "早撃人形マグナム", 				nickNames : [ "赤マグナム" ]},
+				{ realName : "凶殺皇 デス・ハンズ", 				nickNames : [ "デスハンズ" ]},
+				{ realName : "終末の時計 ザ・クロック", 				nickNames : [ "クロック" ]},
+				{ realName : "次元流の豪力", 				nickNames : [ "ミランダ" ]},
+				{ realName : "ガイアール・カイザー", 				nickNames : [ "ガイアール" ]},
+				{ realName : "デーモン・ハンド", 				nickNames : [ "ハンド", "デモハン" ]},
+				{ realName : "青銅の鎧", 				nickNames : [ "ブロンズ", "青銅" ]},
+				{ realName : "大勇者「ふたつ牙」", 				nickNames : [ "ファング", "牙" ]},
+				{ realName : "ロスト・ソウル", 				nickNames : [ "ロスソ" ]},
+				{ realName : "ストリーミング・シェイパー", 				nickNames : [ "シェイパー" ]},
+				{ realName : "デビル・ドレーン", 				nickNames : [ "ドレーン" ]},
+				{ realName : "アストラル・リーフ", 				nickNames : [ "リーフ" ]},
+				{ realName : "雷鳴の守護者ミスト・リエス", 				nickNames : [ "ミスト" ]},
+				{ realName : "神々の逆流", 				nickNames : [ "逆流" ]},
+				{ realName : "フェアリー・ライフ", 				nickNames : [ "ライフ" ]},
+				{ realName : "光器ペトローバ", 				nickNames : [ "老婆", "ペト" ]},
+				{ realName : "冥府の覇者ガジラビュート", 				nickNames : [ "ガジラ" ]},
+				{ realName : "魂と記憶の盾", 				nickNames : [ "エタガ" ]},
+				{ realName : "剛撃戦攻ドルゲーザ", 				nickNames : [ "ドルゲ" ]},
+				{ realName : "幻緑の双月", 				nickNames : [ "ドリーミング", "ナイフ" ]},
+				{ realName : "バジュラズ・ソウル", 				nickNames : [ "バジュソ" ]},
+				{ realName : "ヘブンズ・ゲート", 				nickNames : [ "天門" ]},
+				{ realName : "イモータル・ブレード", 				nickNames : [ "芋ブレ", "芋", "イモブレ" ]},
+				{ realName : "ダンディ・ナスオ", 				nickNames : [ "茄子", "ナスオ" ]},
+				{ realName : "黒神龍グールジェネレイド", 				nickNames : [ "グール" ]},
+				{ realName : "ボルメテウス・武者（むしゃ）・ドラゴン", 				nickNames : [ "ボル武者" ]},
+				{ realName : "スーパー・スパーク", 				nickNames : [ "スパスパ" ]},
+				{ realName : "アクア・スーパーエメラル", 				nickNames : [ "スパエメ" ]},
+				{ realName : "ミラクルとミステリーの扉", 				nickNames : [ "ミラミス" ]},
+				{ realName : "カラフル・ダンス", 				nickNames : [ "ダンス", "カラダン" ]},
+				{ realName : "不滅の精霊パーフェクト・ギャラクシー", 				nickNames : [ "パギャラ", "PG", "不滅" ]},
+				{ realName : "光牙忍ハヤブサマル", 				nickNames : [ "隼" ]},
+				{ realName : "威牙忍ヤミノザンジ", 				nickNames : [ "ザンジ" ]},
+				{ realName : "西南の超人", 				nickNames : [ "キリノ" ]},
+				{ realName : "悪魔神王バルカディアス", 				nickNames : [ "バルカ", "バルス" ]},
+				{ realName : "時空の支配者ディアボロスZ（ゼータ）", 				nickNames : [ "DDZ" ]},
+				{ realName : "時空の凶兵ブラック・ガンヴィート", 				nickNames : [ "ガンヴィート" ]},
+				{ realName : "超次元ガード・ホール", 				nickNames : [ "ガドホ", "盾穴" ]},
+				{ realName : "偽りの名 ゾルゲ", 				nickNames : [ "社会のダニ" ]},
+				{ realName : "ドンドン吸い込むナウ", 				nickNames : [ "ドスコ", "ナウ" ]},
+				{ realName : "勝利のガイアール・カイザー", 				nickNames : [ "勝ガ", "生姜" ]},
+				{ realName : "勝利のリュウセイ・カイザー", 				nickNames : [ "昇竜", "醤油" ]},
+				{ realName : "希望の親衛隊ファンク", 				nickNames : [ "ファンク" ]},
+				{ realName : "勝利宣言 鬼丸「覇」", 				nickNames : [ "覇" ]},
+				{ realName : "ウェディング・ゲート", 				nickNames : [ "祝門" ]},
+				{ realName : "ガチンコ・ルーレット", 				nickNames : [ "ガレット" ]},
+				{ realName : "その子供、凶暴につき", 				nickNames : [ "ともお" ]},
+				{ realName : "トンギヌスの槍", 				nickNames : [ "槍" ]},
+				{ realName : "ボルメテウス・サファイア・ドラゴン", 				nickNames : [ "サファイア" ]},
+				{ realName : "光器パーフェクト・マドンナ", 				nickNames : [ "パドンナ" ]},
+				{ realName : "クリスティ・ゲート", 				nickNames : [ "推理門" ]},
+				{ realName : "デュエマの鬼!キクチ師範代", 				nickNames : [ "鬼畜" ]},
+				{ realName : "超閃機 ヴィルヴィスヴィード", 				nickNames : [ "ヴヴヴ" ]},
+				{ realName : "超法無敵宇宙合金武闘鼓笛魔槍絶頂百仙閻魔神（シェン）拳銃極太陽友情暴剣R（ロビン）・M（ニケミケラン）・G（グローバル） チーム・エグザイル～カツドンと仲間たち～", 				nickNames : [ "名前の長い奴" ]},
+				{ realName : "轟く侵略 レッドゾーン", 				nickNames : [ "新車" ]},
+				{ realName : "S級不死（ゾンビ） デッドゾーン", 				nickNames : [ "廃車" ]},
+				{ realName : "禁断の轟速 レッドゾーンX", 				nickNames : [ "中古車" ]},
+				{ realName : "メンデルスゾーン", 				nickNames : [ "MZ" ]},
+				{ realName : "ボルシャック・栄光・ルピア", 				nickNames : [ "榮光" ]},
+				{ realName : "ボルシャック・ドギラゴン", 				nickNames : [ "米津","米津龍" ]},
+			];
+
+			initialData.forEach(item => {
+				item.nickNames.forEach(nick => this.map.set(nick, item.realName));
+			});
+		},
 		
 		getRealName : function( nickName ){
-			for ( var i = 0 ; i < this.map.length ; i++ )
-				for ( var n = 0 ; n < this.map[i].nickNames.length ; n++ )
-					if ( this.map[i].nickNames[n] == nickName )
-						return this.map[i].realName;
-			return null;
+			return this.map.get(nickName) || null;
 		},
 	};
+	nickNamesMap.init();
 	
-	var abilitiesHintHeader = "HINT:";
+	const abilitiesHintHeader = "HINT:";
 	
 	//記錄台灣環境卡表
-	var twsdCards = [];
+	const twsdCards = [];
 	
 	//記錄台灣卡包
-	var twsdSets = [];
+	const twsdSets = [];
 
 	//更新日誌按鍵最後更新時間
-	function setButtonValueOfUpdateLog(){
+	const setButtonValueOfUpdateLog = () => {
 		if ( updateLog.logAndDate.length > 0 ){	
-			var lastUpdateDate = updateLog.logAndDate[0].date;
-			var btnObj = gobi("logBtn");
-			if ( moment(new Date()).format("YYYY/MM/DD") == lastUpdateDate ){
+			const lastUpdateDate = updateLog.logAndDate[0].date;
+			const btnObj = getById("logBtn");
+			if ( moment(new Date()).format("YYYY/MM/DD") === lastUpdateDate ){
 				btnObj.value = btnObj.value + " NEW!";
 				btnObj.style.color = "red";
 			}
 		}
-	}
+	};
 	
 	//最新推薦
-	var newestSets = [
+	const newestSets = [
 		"DM25-BD3",
 		"NET-067",
 		"DM25-EX2",
-	]
+	];
 	
 	//系統更新日誌
-	var updateLog = {
+	const updateLog = {
 		
 		showLastLogContent : function(){
 
-			var content = "";
-			for ( var i = 0 ; i < Math.min( 3 , this.logAndDate.length ) ; i++ ){
+			let content = "";
+			for ( let i = 0 ; i < Math.min( 3 , this.logAndDate.length ) ; i++ ){
 				
-				var isLast = ( i == 0 );
-				var date = this.logAndDate[i].date;
-				var logs = this.logAndDate[i].log;
+				const isLast = ( i === 0 );
+				const date = this.logAndDate[i].date;
+				const logs = this.logAndDate[i].log;
 				
 				content += ( isLast ? "最後更新日期：" : "\n" ) + "\n" + date;
 				
-				for ( var li = 0 ; li < logs.length ; li++ ){
+				for ( let li = 0 ; li < logs.length ; li++ ){
 					content += "\n["+(li+1)+"] " + logs[li];
 				}
 			}
-			if ( content != "" ){
-				alert( translateText( content, isTC2C ) );
+			if ( content !== "" ){
+				customAlert( translateText( content, isTC2C ) );
 			}
 		},
 		
