@@ -9,7 +9,7 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         /* 設定字體為 Inter */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f4f7f9;
@@ -220,6 +220,27 @@
             align-items: center;
             background-color: rgba(255, 255, 255, 0.9); /* 輕微透明背景 */
         }
+        /* 按鈕容器樣式調整：從縱疊改成水平，並位於標題下方居中 */
+        .default-buttons-container {
+            /* 移除絕對定位，讓它佔據正常流空間 */
+            position: static; 
+            margin-top: 8px; /* 與標題 H1 隔開 */
+            margin-bottom: 8px; /* 與表格隔開 */
+            display: flex;
+            flex-direction: row; /* 水平排列 */
+            gap: 8px; /* 增加間距 */
+            justify-content: center; /* 居中 */
+            align-items: center;
+            z-index: 30;
+            /* 移除 transform: translateY(-50%); 和 left: 4px; */
+            
+        }
+        .default-buttons-container button {
+             padding: 4px 8px;
+             font-size: 0.75rem; /* text-xs */
+             line-height: 1;
+             white-space: nowrap;
+        }
     </style>
     
     <!-- 主要應用程式邏輯 -->
@@ -227,6 +248,45 @@
         const ZOOM_STEP = 0.1;
         const MIN_SCALE = 0.1;
         const MAX_SCALE = 5.0;
+
+        // --- 新增：預設值定義 ---
+        const DEFAULT_HEADERS = {
+            zh: {
+                mainTitle: "2025年度個人 決鬥王 總結",
+                titles: [
+                    "年初玩的牌組", "年底玩的牌組", "最常玩的牌組", "最喜歡的卡", "最喜歡的Combo",
+                    "卡圖最好看的卡", "最想放寬限制的卡", "最想禁止的卡", "最不想上手的卡", "最不想遇上的卡",
+                    "最被低估的卡", "最過譽的卡", "買過最貴的卡", "買了但沒用到的卡", "想買但沒買的卡",
+                    "組過最奇葩的牌組", "最常遇上的牌組", "最離譜的牌組", "最不喜歡的牌組", "最喜歡的頻道"
+                ]
+            },
+            en: {
+                mainTitle: "2025 Personal Duel Masters Summary",
+                titles: [
+                    "Deck Played Early Year", "Deck Played Late Year", "Most Played Deck", "Favorite Card", "Favorite Combo",
+                    "Best Card Art", "Most Wanted Unbanned Card", "Most Wanted Banned Card", "Least Wanted Opening Hand", "Least Wanted Opponent Card",
+                    "Most Underrated Card", "Most Overrated Card", "Most Expensive Card Purchased", "Purchased But Unused Card", "Wanted But Didn't Buy Card",
+                    "Weirdest Deck Built", "Most Frequently Encountered Deck", "Most Absurd Deck", "Least Favorite Deck", "Favorite Channel"
+                ]
+            },
+            jp: {
+                mainTitle: "2025年度個人 デュエマ まとめ",
+                titles: [
+                    "年明け使ってたデッキ", "年末使ってたデッキ", "一番使ったデッキ", "一番好きなカード", "一番好きなコンボ",
+                    "イラストが一番好きなカード", "緩和してほしいカード", "禁止にしてほしいカード", "一番手札に来てほしくないカード", "一番対面したくないカード",
+                    "一番過小評価されてるカード", "一番過大評価されてるカード", "一番高かったカード", "買ったけど使わなかったカード", "欲しいけど買えなかったカード",
+                    "一番奇抜なデッキ", "一番対面したデッキ", "一番理不尽なデッキ", "一番嫌いなデッキ", "一番好きなチャンネル"
+                ]
+            }
+        };
+        // --- 預設值定義結束 ---
+
+        /**
+         * 簡單判斷是否為行動裝置環境（小螢幕或支援觸控）
+         */
+        function isMobileDevice() {
+            return window.innerWidth < 768 || ('ontouchstart' in window);
+        }
 
         // --- 輔助函式 ---
         
@@ -322,7 +382,13 @@
             
             // 如果 count === 0，則正常切換到 image 模式並提示貼第一張圖
             updateCellView(cell, 'image');
-            showToast(cell, "已切換到圖片模式，請貼上第一張圖片 (Ctrl+V)。", 'success');
+            
+            // 根據裝置顯示不同的提示
+            if (isMobileDevice()) {
+                showToast(cell, "已切換到圖片模式，請點擊按鈕選擇圖片。", 'success');
+            } else {
+                showToast(cell, "已切換到圖片模式，請貼上第一張圖片 (Ctrl+V)。", 'success');
+            }
             
             if (cell) {
                 cell.focus();
@@ -342,12 +408,13 @@
         // --- 圖片操作邏輯 ---
         
         /**
-         * 處理貼上事件 (僅在 'image' 模式下有效)
+         * 處理貼上事件 (僅在 'image' 模式下有效 - 桌面專用)
          * @param {Event} e - 貼上事件
          */
         function handlePaste(e) {
             const cell = this;
-            if (cell.dataset.mode !== 'image') return; 
+            // 確保只有在非行動裝置模式下，且模式為 'image' 時才執行貼上
+            if (isMobileDevice() || cell.dataset.mode !== 'image') return; 
 
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             let imageFound = false;
@@ -361,21 +428,15 @@
 
                     currentCount = parseInt(cell.dataset.imageCount || 0);
 
-                    // --- 調整：支援最多 3 張圖片 ---
-                    if (currentCount === 0) {
-                        targetImageId = 1;
-                        cell.dataset.imageCount = 1; // 設置新的圖片數量
-                    } else if (currentCount === 1) {
-                        targetImageId = 2;
-                        cell.dataset.imageCount = 2; // 設置新的圖片數量
-                    } else if (currentCount === 2) {
-                        targetImageId = 3;
-                        cell.dataset.imageCount = 3; // 設置新的圖片數量
-                    } else {
+                    // 貼上只處理單張圖片，且不能超過 3 張
+                    if (currentCount >= 3) {
                         showToast(cell, "已貼上三張圖片，請先清除其中一張。", 'warning');
                         imageFound = true; 
                         return;
                     }
+                    
+                    targetImageId = currentCount + 1;
+                    cell.dataset.imageCount = targetImageId; // 設置新的圖片數量
                     
                     targetImgElement = cell.querySelector(`.image-wrapper-${targetImageId} img`);
 
@@ -408,6 +469,72 @@
                 showToast(cell, "請貼上圖片檔案。", 'warning');
             }
         }
+
+        /**
+         * 處理從檔案輸入中選擇的多個圖片檔案 (行動裝置專用)
+         * @param {FileList} files - 選擇的檔案列表
+         * @param {HTMLElement} cell - 內容單元格
+         */
+        function handleFileSelect(files, cell) {
+            if (!files || files.length === 0) return;
+            
+            let initialCount = parseInt(cell.dataset.imageCount || 0);
+            let nextImageId = initialCount + 1;
+            // 處理數量：最多 3 張，不能超過上限
+            const maxFilesToProcess = Math.min(3 - initialCount, files.length);
+
+            if (maxFilesToProcess === 0) {
+                 showToast(cell, "已達最大圖片數量 (3張)。若要替換，請先清除。", 'warning');
+                 return;
+            }
+
+            let filesProcessed = 0;
+            const filesToProcess = [];
+
+            // 準備要處理的檔案列表
+            for (let i = 0; i < maxFilesToProcess; i++) {
+                 filesToProcess.push({ 
+                     file: files[i], 
+                     id: nextImageId + i 
+                 });
+            }
+            
+            // 立即更新圖片計數器
+            cell.dataset.imageCount = initialCount + maxFilesToProcess;
+            updateCellView(cell, 'image');
+            showToast(cell, `開始上傳 ${maxFilesToProcess} 張圖片...`, 'success');
+
+            // 異步處理每個檔案
+            filesToProcess.forEach(({ file, id }) => {
+                // 確保是圖片格式
+                if (file.type.indexOf('image') === -1) return;
+
+                const reader = new FileReader();
+                const targetImgElement = cell.querySelector(`.image-wrapper-${id} img`);
+
+                reader.onload = (event) => {
+                    const base64Data = event.target.result;
+                    
+                    targetImgElement.src = base64Data;
+                    targetImgElement.style.display = 'block';
+
+                    // 初始化狀態
+                    cell.dataset[`scale${id}`] = 1.0;
+                    cell.dataset[`offsetX${id}`] = 0;
+                    cell.dataset[`offsetY${id}`] = 0;
+                    updateImageTransform(cell, id);
+                    
+                    filesProcessed++;
+
+                    // 所有檔案處理完成後給出最終提示
+                    if (filesProcessed === maxFilesToProcess) {
+                        showToast(cell, `${maxFilesToProcess} 張圖片已載入完成。`, 'success');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
 
         // --- 拖曳和縮放邏輯 (現支援三圖) ---
         
@@ -653,8 +780,8 @@
             if (count === 3 && !isTextMode) {
                 if (!clearButton3) {
                     clearButton3 = document.createElement('button');
-                    // Positioning right-15
-                    clearButton3.className = 'clear-button clear-button-3 absolute top-1 right-15 p-1 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
+                    // Positioning right-[3.5rem]
+                    clearButton3.className = 'clear-button clear-button-3 absolute top-1 right-[3.5rem] p-1 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all shadow-lg z-20 w-5 h-5 flex items-center justify-center text-xs font-bold leading-none focus:outline-none';
                     clearButton3.innerHTML = '3'; 
                     clearButton3.title = '清除第三張圖片 (右下部)';
                     clearButton3.addEventListener('click', (e) => {
@@ -716,10 +843,11 @@
                 if (img3 && img3.src) {
                     img2.src = img3.src;
                     img2.style.display = 'block'; 
+                    // 轉移狀態
                     cell.dataset.scale2 = cell.dataset.scale3 || 1.0;
                     cell.dataset.offsetX2 = cell.dataset.offsetX3 || 0;
                     cell.dataset.offsetY2 = cell.dataset.offsetY3 || 0;
-                    updateImageTransform(cell, 2);
+                    updateImageTransform(cell, 2); // 應用新的 transform
                 } else {
                     // 如果 Image 3 不存在或已經空了，就只是清空 Image 2
                     img2.src = '';
@@ -820,6 +948,60 @@
             // 移除 cell.focus()，避免焦點衝突
         }
 
+        /**
+         * 完整清除所有標題格的內容。
+         */
+        function clearAllContentAndHeaders() {
+            // 清除主標題
+            const mainTitleElement = document.getElementById('title_main');
+            if (mainTitleElement) {
+                 mainTitleElement.textContent = "2025年度個人 DM 總結";
+            }
+            
+            // 清除所有 20 個副標題
+            document.querySelectorAll('.editable-text').forEach(header => {
+                // 排除主標題，因為上面已處理
+                if (header.id !== 'title_main') {
+                    header.textContent = ''; 
+                }
+            });
+            
+            showToast(document.querySelector('.header-container'), "所有標題已清除。", 'warning'); // 使用 warning 提醒用戶內容未清除
+        }
+
+        /**
+         * 根據指定的語言設定標題預設值
+         * @param {string} lang - 語言代碼 ('zh', 'en', 'jp')
+         */
+        function setDefaults(lang) {
+            const defaults = DEFAULT_HEADERS[lang];
+            if (!defaults) return;
+
+            // 1. 設定主標題
+            const mainTitleElement = document.getElementById('title_main');
+            if (mainTitleElement) {
+                 mainTitleElement.textContent = defaults.mainTitle;
+            }
+
+            // 2. 設定所有 20 個副標題 (header_rX_cY)
+            const headerIds = [
+                'header_r1_c1', 'header_r1_c2', 'header_r1_c3', 'header_r1_c4', 'header_r1_c5',
+                'header_r3_c1', 'header_r3_c2', 'header_r3_c3', 'header_r3_c4', 'header_r3_c5',
+                'header_r5_c1', 'header_r5_c2', 'header_r5_c3', 'header_r5_c4', 'header_r5_c5',
+                'header_r7_c1', 'header_r7_c2', 'header_r7_c3', 'header_r7_c4', 'header_r7_c5'
+            ];
+            
+            defaults.titles.forEach((title, index) => {
+                const id = headerIds[index];
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = title;
+                }
+            });
+            
+            showToast(document.querySelector('.header-container'), `${lang.toUpperCase()} 預設標題已設定完成。`, 'success');
+        }
+
 
         /**
          * 初始化所有內容單元格的事件監聽器
@@ -855,11 +1037,64 @@
                 // 模式選擇按鈕事件
                 const selectOverlay = cell.querySelector('.mode-selector-overlay');
                 if (selectOverlay) {
-                    selectOverlay.querySelector('.btn-image').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        e.preventDefault(); // 確保點擊事件被可靠處理
-                        switchToImageMode(cell);
-                    });
+                    const btnImage = selectOverlay.querySelector('.btn-image');
+                    
+                    // --- 行動裝置/桌面 UI 調整和邏輯綁定 ---
+                    const mobile = isMobileDevice();
+                    let fileInput = cell.querySelector('.file-upload-input');
+
+                    if (mobile) {
+                        // 1. 更新按鈕文字
+                        btnImage.textContent = "從圖庫/檔案庫選擇 (最多3張)";
+                        
+                        // 2. 創建/確保檔案輸入欄位存在
+                        if (!fileInput) {
+                            fileInput = document.createElement('input');
+                            fileInput.type = 'file';
+                            fileInput.accept = 'image/*';
+                            fileInput.multiple = true;
+                            // 隱藏在 UI 上
+                            fileInput.className = 'hidden file-upload-input absolute w-0 h-0 opacity-0'; 
+                            cell.appendChild(fileInput);
+                        }
+                        
+                        // 3. 綁定檔案變更事件來處理上傳
+                        fileInput.addEventListener('change', (e) => {
+                            // 檢查當前模式，防止在非圖片模式下觸發上傳
+                            if (cell.dataset.mode === 'image') {
+                                handleFileSelect(e.target.files, cell);
+                            }
+                            // 清空 file input 的值，以便用戶可以重複上傳相同的檔案
+                            e.target.value = '';
+                        });
+                        
+                        // 4. 修改圖片按鈕點擊行為: 點擊按鈕觸發檔案選擇
+                        // 移除舊的點擊監聽器以避免重複或錯誤的行為（如果有）
+                        const cloneBtn = btnImage.cloneNode(true);
+                        btnImage.parentNode.replaceChild(cloneBtn, btnImage);
+                        
+                        cloneBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            e.preventDefault(); 
+                            switchToImageMode(cell); // 仍需切換模式
+                            // 確保 fileInput 已經存在
+                            const currentFileInput = cell.querySelector('.file-upload-input');
+                            if (currentFileInput) {
+                                currentFileInput.click(); // 打開檔案選擇器
+                            }
+                        });
+
+                    } else {
+                        // 桌面行為 (保持不變: Ctrl+V 提示)
+                        btnImage.textContent = "貼上圖片 (Ctrl+V)"; 
+                        btnImage.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            e.preventDefault(); 
+                            switchToImageMode(cell);
+                        });
+                    }
+
+                    // 文字按鈕的事件保持不變
                     selectOverlay.querySelector('.btn-text').addEventListener('click', (e) => {
                         e.stopPropagation();
                         e.preventDefault(); // 確保點擊事件被可靠處理
@@ -880,6 +1115,14 @@
             
             // 首次加載時，應用初始 transform 
             document.querySelectorAll('.content-cell').forEach(cell => updateImageTransform(cell));
+            
+            // --- 新增：按鈕事件監聽器 ---
+            document.getElementById('btn-default-zh').addEventListener('click', () => setDefaults('zh'));
+            document.getElementById('btn-default-en').addEventListener('click', () => setDefaults('en'));
+            document.getElementById('btn-default-jp').addEventListener('click', () => setDefaults('jp'));
+            // 綁定清除標題功能
+            document.getElementById('btn-clear-all').addEventListener('click', clearAllContentAndHeaders); 
+            // --- 新增按鈕事件監聽器結束 ---
         }
 
         /**
@@ -930,6 +1173,13 @@
             // 隱藏匯出按鈕本身，以免被截圖
             button.style.display = 'none';
 
+            // 隱藏所有額外按鈕
+            const defaultButtonsContainer = document.querySelector('.default-buttons-container');
+            if (defaultButtonsContainer) {
+                defaultButtonsContainer.style.display = 'none';
+            }
+
+
             // 鎖定使用者介面
             const originalBodyCursor = document.body.style.cursor;
             document.body.style.cursor = 'wait';
@@ -949,9 +1199,9 @@
                     backgroundColor: '#ffffff', 
                     // 增加縮放比例以獲得高解析度圖片 (例如 2x)
                     scale: 2, 
-                    // 忽略 mode-selector-overlay
+                    // 忽略 mode-selector-overlay 和 hidden file inputs
                     ignoreElements: (element) => {
-                        return element.classList.contains('mode-selector-overlay');
+                        return element.classList.contains('mode-selector-overlay') || element.classList.contains('file-upload-input');
                     }
                 });
 
@@ -984,8 +1234,12 @@
                     showToast(header, "匯出失敗，請檢查瀏覽器控制台。", 'warning');
                 }
             } finally {
-                // 恢復匯出按鈕的顯示狀態
+                // 恢復匯出按鈕和所有額外按鈕的顯示狀態
                 button.style.display = 'inline-flex';
+                if (defaultButtonsContainer) {
+                    defaultButtonsContainer.style.display = 'flex';
+                }
+                
                 // 恢復清除按鈕的顯示狀態 (基於當前狀態)
                 document.querySelectorAll('.content-cell').forEach(cell => {
                     const mode = cell.dataset.mode;
@@ -1022,7 +1276,25 @@
             <h1 id="title_main" contenteditable="true" class="editable-text text-2xl md:text-3xl font-bold leading-none p-2 tracking-wider">
                 2025年度個人 DM 總結
             </h1>
-            <!-- 匯出按鈕：只保留 HTML 內聯 onclick 綁定 -->
+            
+            <!-- 調整：預設值按鈕和全清除按鈕容器 - 改為水平排列並居中 -->
+            <div class="default-buttons-container">
+                <button id="btn-default-zh" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
+                    中文預設值
+                </button>
+                <button id="btn-default-en" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
+                    英文預設值
+                </button>
+                <button id="btn-default-jp" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
+                    日文預設值
+                </button>
+                <button id="btn-clear-all" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
+                    全清除 (標題)
+                </button>
+            </div>
+
+
+            <!-- 匯出按鈕：維持絕對定位靠右 -->
             <button id="export-button" onclick="exportAsImage()" 
                     class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors flex items-center space-x-1 focus:outline-none focus:ring-2 focus:ring-green-400">
                 <!-- SVG Icon for Download -->
@@ -1049,6 +1321,7 @@
             <!-- Cell R2 C1 -->
             <div id="content_r2_c1" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
                 <div class="mode-selector-overlay flex flex-col space-y-2">
+                    <!-- 按鈕文本將在 JS 中根據裝置類型更新 -->
                     <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
                     <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
                 </div>
@@ -1323,7 +1596,7 @@
         <!-- 底部資訊/狀態欄 -->
         <div class="p-2 border-t border-black text-xs text-gray-600 text-center">
             <p><strong>操作提示:</strong> 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。</p>
-            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片，滾輪縮放，拖曳調整位置。三圖模式下，圖片會呈現**左(長方形)/右上/右下**分割。</p>
+            <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片 (桌面) 或點擊按鈕選擇圖片 (行動裝置/最多三張)，滾輪縮放，拖曳調整位置。三圖模式下，圖片會呈現**左(長方形)/右上/右下**分割。</p>
             <p class="text-blue-500 font-bold">目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。</p>
         </div>
 

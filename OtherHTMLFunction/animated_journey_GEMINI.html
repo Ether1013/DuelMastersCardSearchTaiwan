@@ -576,7 +576,7 @@ async function loadScriptFromUrl(url) {
  * @returns {boolean} - 如果只有初始步驟且未被修改，則返回 true。
  */
 function isScriptDefault(steps) {
-    if (!Array.isArray(steps) || steps.length !== 1) {
+    if (!ArrayOfSteps(steps) || steps.length !== 1) {
         return false;
     }
     const step = steps[0];
@@ -1463,10 +1463,12 @@ function goto(gps){
 
     // 繪製路徑
     polyline = L.polyline(pathPoints,{
-        color: isAirplane ? '#93c5fd' : 'blue', // 飛機用淡藍色
-        opacity: 0.8, 
+        // --- 修正開始：設置 opacity 為 0 以隱藏路線 ---
+        color: isAirplane ? '#93c5fd' : 'blue', 
+        opacity: 0, // <--- 隱藏路線軌跡
         weight: isAirplane ? 3 : 5,
-        dashArray: isAirplane ? '10, 10' : null // 飛機用虛線
+        dashArray: isAirplane ? '10, 10' : null 
+        // --- 修正結束 ---
     }).addTo(mapInstance);
 
     const bounds=L.latLngBounds([startPos,gps]);
@@ -1493,8 +1495,10 @@ function goto(gps){
     
     // 等待地圖平移後開始標記動畫
     setTimeout(()=>{
-      // 折線淡入動畫 (簡化：直接設置不淡入，避免與淡出動畫衝突)
-      polyline.setStyle({opacity: isAirplane ? 1 : 0.8});
+      
+      // --- 修正：移除折線淡入邏輯 (因路線已隱藏) ---
+      // polyline.setStyle({opacity: isAirplane ? 1 : 0.8}); 
+      // ---------------------------------------------
 
       let dist; // 總距離 (公尺)
       if (isAirplane) {
@@ -1532,20 +1536,11 @@ function goto(gps){
           // 動畫結束
           marker.setLatLng(gps);
           
-          let removeProgress=1;
-          // 折線淡出和移除
-          function removeLine(){
-            removeProgress-=0.02;
-            polyline.setStyle({opacity:Math.max(removeProgress,0)});
-            if(removeProgress>0) requestAnimationFrame(removeLine);
-            else { 
-              mapInstance.removeLayer(polyline);
-              currentAnimation=false; 
-              resolve(); // 解決 Promise
-            }
-          }
-          requestAnimationFrame(removeLine);
-
+          // --- 修正：直接移除折線，不再執行淡出動畫 ---
+          mapInstance.removeLayer(polyline);
+          currentAnimation=false; 
+          resolve(); // 解決 Promise
+          // ---------------------------------------------
         }else{
             // 標記移動
             let lat, lng;
@@ -1940,14 +1935,15 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
                     // 新增：如果存在圖片，進行 URI 編碼後加入
                     if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
-                case 'goto': // g, lat, lng, iconChar, words, [image]
-                    compact.push('g', step.lat, step.lng);
-                    if (step.icon) compact.push(step.icon.charAt(0)); 
-                    else compact.push('');
-                    if (step.words) compact.push(step.words);
-                    // 新增：如果存在圖片，進行 URI 編碼後加入
-                    if (step.image) compact.push(encodeURIComponent(step.image)); 
-                    return compact;
+				case 'goto': // g, lat, lng, iconChar, words, [image]
+					compact.push('g', step.lat, step.lng);
+					// 修正 BUG：icon 欄位即使為空也必須推入空字串，以維持 compact array 的固定長度
+					compact.push(step.icon ? step.icon.charAt(0) : ''); // <-- 訂正處
+					compact.push(step.words || '');
+					// 新增：如果存在圖片，進行 URI 編碼後加入
+					if (step.image) compact.push(encodeURIComponent(step.image));
+					return compact;
+			
                 case 'activity': // a, sec, [iconChar], [image]
                     compact.push('a', step.sec);
                     if (step.icon) compact.push(step.icon.charAt(0)); 
