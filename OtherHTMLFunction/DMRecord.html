@@ -107,10 +107,11 @@
             pointer-events: all; 
         }
 
+        /* 雙圖模式 (Count=2): Image 2 覆蓋整個右側 */
         .content-cell[data-image-count='2'] .image-wrapper-2 {
             display: block !important;
             width: 50%; 
-            height: 100%; /* Image 2 覆蓋整個右側 */
+            height: 100%; 
             left: 50%;
             top: 0;
             clip-path: none; 
@@ -232,7 +233,6 @@
             justify-content: center; /* 居中 */
             align-items: center;
             z-index: 30;
-            /* 移除 transform: translateY(-50%); 和 left: 4px; */
             
         }
         .default-buttons-container button {
@@ -248,8 +248,11 @@
         const ZOOM_STEP = 0.1;
         const MIN_SCALE = 0.1;
         const MAX_SCALE = 5.0;
+        
+        // 記錄當前介面語言，初始化為 'zh'
+        let currentLanguage = 'zh'; 
 
-        // --- 新增：預設值定義 ---
+        // --- 新增：預設值定義 (包含介面翻譯) ---
         const DEFAULT_HEADERS = {
             zh: {
                 mainTitle: "2025年度個人 決鬥王 總結",
@@ -258,7 +261,17 @@
                     "卡圖最好看的卡", "最想放寬限制的卡", "最想禁止的卡", "最不想上手的卡", "最不想遇上的卡",
                     "最被低估的卡", "最過譽的卡", "買過最貴的卡", "買了但沒用到的卡", "想買但沒買的卡",
                     "組過最奇葩的牌組", "最常遇上的牌組", "最離譜的牌組", "最不喜歡的牌組", "最喜歡的頻道"
-                ]
+                ],
+                interface: {
+                    btn_clear: "全清除 (標題)",
+                    btn_export: "匯出 PNG",
+                    footer_p1: "操作提示: 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。",
+                    footer_p2: "圖片模式下：按 Ctrl+V 貼上圖片 (桌面) 或點擊按鈕選擇圖片 (行動裝置/最多三張)，滾輪縮放，拖曳調整位置。三圖模式下，圖片會呈現**左(長方形)/右上/右下**分割。",
+                    footer_p3: "目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。",
+                    paste_image_desktop: "貼上圖片 (Ctrl+V)",
+                    select_image_mobile: "從圖庫/檔案庫選擇 (最多3張)",
+                    enter_text: "輸入文字"
+                }
             },
             en: {
                 mainTitle: "2025 Personal Duel Masters Summary",
@@ -267,7 +280,17 @@
                     "Best Card Art", "Most Wanted Unbanned Card", "Most Wanted Banned Card", "Least Wanted Opening Hand", "Least Wanted Opponent Card",
                     "Most Underrated Card", "Most Overrated Card", "Most Expensive Card Purchased", "Purchased But Unused Card", "Wanted But Didn't Buy Card",
                     "Weirdest Deck Built", "Most Frequently Encountered Deck", "Most Absurd Deck", "Least Favorite Deck", "Favorite Channel"
-                ]
+                ],
+                interface: {
+                    btn_clear: "Clear All (Titles)",
+                    btn_export: "Export PNG",
+                    footer_p1: "Instructions: Click a content cell, then select **Paste Image** or **Enter Text**.",
+                    footer_p2: "Image Mode: Press Ctrl+V to paste image (Desktop) or click button to select images (Mobile/Max 3). Use scroll to zoom, drag to adjust position. Triple image mode shows **Left (long) / Top-Right / Bottom-Right** split.",
+                    footer_p3: "Current Mode: All entered content and state will be cleared upon page refresh.",
+                    paste_image_desktop: "Paste Image (Ctrl+V)",
+                    select_image_mobile: "Select from gallery/files (Max 3)",
+                    enter_text: "Enter Text"
+                }
             },
             jp: {
                 mainTitle: "2025年度個人 デュエマ まとめ",
@@ -276,7 +299,17 @@
                     "イラストが一番好きなカード", "緩和してほしいカード", "禁止にしてほしいカード", "一番手札に来てほしくないカード", "一番対面したくないカード",
                     "一番過小評価されてるカード", "一番過大評価されてるカード", "一番高かったカード", "買ったけど使わなかったカード", "欲しいけど買えなかったカード",
                     "一番奇抜なデッキ", "一番対面したデッキ", "一番理不尽なデッキ", "一番嫌いなデッキ", "一番好きなチャンネル"
-                ]
+                ],
+                interface: {
+                    btn_clear: "全てクリア (タイトル)",
+                    btn_export: "PNGを出力",
+                    footer_p1: "操作ヒント: コンテンツセルをクリックした後、**画像を貼る**または**文字を入力**を選択します。",
+                    footer_p2: "画像モード: Ctrl+Vで画像を貼り付け (デスクトップ) またはボタンをクリックして画像を選択 (モバイル/最大3枚)。スクロールで拡大縮小、ドラッグで位置調整。三枚モードでは**左(縦長)/右上/右下**に分割されます。",
+                    footer_p3: "現在のモード: ページ更新後、入力されたコンテンツと状態はすべてクリアされます。",
+                    paste_image_desktop: "画像を貼る (Ctrl+V)",
+                    select_image_mobile: "ギャラリー/ファイルから選択 (最大3枚)",
+                    enter_text: "文字を入力"
+                }
             }
         };
         // --- 預設值定義結束 ---
@@ -970,12 +1003,74 @@
         }
 
         /**
+         * 根據指定的語言設定介面翻譯
+         * @param {string} lang - 語言代碼 ('zh', 'en', 'jp')
+         */
+        function updateInterfaceLanguage(lang) {
+            const ui = DEFAULT_HEADERS[lang].interface;
+            const mobile = isMobileDevice();
+            
+            // 更新當前語言狀態
+            currentLanguage = lang;
+
+            // 1. 更新主功能按鈕 (語言按鈕固定，只需要更新清除和匯出按鈕)
+            document.getElementById('btn-clear-all').textContent = ui.btn_clear;
+            document.getElementById('export-button').querySelector('span').textContent = ui.btn_export;
+
+            // 2. 更新底部提示 (footer)
+            const footer = document.querySelector('.footer-info');
+            if (footer) {
+                const paragraphs = footer.querySelectorAll('p');
+                if (paragraphs.length >= 3) {
+                    // 提示文字 P1
+                    paragraphs[0].innerHTML = `<strong>${ui.footer_p1.split(':')[0]}</strong>: ${ui.footer_p1.split(':')[1]}`;
+                    
+                    // 提示文字 P2 (圖片模式提示)
+                    const p2Text = ui.footer_p2;
+                    // 將 p2 中的關鍵詞用 span 包裝起來，並使用正確的顏色類別
+                    const p2Html = p2Text
+                        .replace(/圖片模式下：/, `<span class="text-red-500">圖片模式下：</span>`)
+                        .replace(/Image Mode:/, `<span class="text-red-500">Image Mode:</span>`)
+                        .replace(/画像モード:/, `<span class="text-red-500">画像モード:</span>`)
+                        .replace(/Ctrl\+V/, 'Ctrl+V')
+                        .replace(/最多三張/, '最多三張'); 
+                    paragraphs[1].innerHTML = p2Html;
+                    
+                    // 提示文字 P3 (狀態提示)
+                    paragraphs[2].innerHTML = `<strong>${ui.footer_p3.split(':')[0]}</strong>: ${ui.footer_p3.split(':')[1]}`;
+                }
+            }
+
+            // 3. 更新所有模式選擇器按鈕 (.mode-selector-overlay)
+            const modeButtons = document.querySelectorAll('.mode-selector-overlay');
+
+            modeButtons.forEach(overlay => {
+                const btnImage = overlay.querySelector('.btn-image');
+                const btnText = overlay.querySelector('.btn-text');
+
+                // Update Image Button Text
+                if (btnImage) {
+                    // 根據裝置類型設定不同的文字
+                    btnImage.textContent = mobile ? ui.select_image_mobile : ui.paste_image_desktop;
+                }
+                
+                // Update Text Button Text
+                if (btnText) {
+                    btnText.textContent = ui.enter_text;
+                }
+            });
+        }
+
+        /**
          * 根據指定的語言設定標題預設值
          * @param {string} lang - 語言代碼 ('zh', 'en', 'jp')
          */
         function setDefaults(lang) {
             const defaults = DEFAULT_HEADERS[lang];
             if (!defaults) return;
+            
+            // 優先更新介面語言
+            updateInterfaceLanguage(lang);
 
             // 1. 設定主標題
             const mainTitleElement = document.getElementById('title_main');
@@ -999,7 +1094,7 @@
                 }
             });
             
-            showToast(document.querySelector('.header-container'), `${lang.toUpperCase()} 預設標題已設定完成。`, 'success');
+            showToast(document.querySelector('.header-container'), `${lang.toUpperCase()} 預設標題和介面語言已設定完成。`, 'success');
         }
 
 
@@ -1044,10 +1139,7 @@
                     let fileInput = cell.querySelector('.file-upload-input');
 
                     if (mobile) {
-                        // 1. 更新按鈕文字
-                        btnImage.textContent = "從圖庫/檔案庫選擇 (最多3張)";
-                        
-                        // 2. 創建/確保檔案輸入欄位存在
+                        // 1. 創建/確保檔案輸入欄位存在
                         if (!fileInput) {
                             fileInput = document.createElement('input');
                             fileInput.type = 'file';
@@ -1058,7 +1150,7 @@
                             cell.appendChild(fileInput);
                         }
                         
-                        // 3. 綁定檔案變更事件來處理上傳
+                        // 2. 綁定檔案變更事件來處理上傳
                         fileInput.addEventListener('change', (e) => {
                             // 檢查當前模式，防止在非圖片模式下觸發上傳
                             if (cell.dataset.mode === 'image') {
@@ -1068,8 +1160,8 @@
                             e.target.value = '';
                         });
                         
-                        // 4. 修改圖片按鈕點擊行為: 點擊按鈕觸發檔案選擇
-                        // 移除舊的點擊監聽器以避免重複或錯誤的行為（如果有）
+                        // 3. 修改圖片按鈕點擊行為: 點擊按鈕觸發檔案選擇
+                        // 替換按鈕以確保沒有重複的事件監聽器，但這次不設定文字，文字由 updateInterfaceLanguage 處理
                         const cloneBtn = btnImage.cloneNode(true);
                         btnImage.parentNode.replaceChild(cloneBtn, btnImage);
                         
@@ -1085,8 +1177,7 @@
                         });
 
                     } else {
-                        // 桌面行為 (保持不變: Ctrl+V 提示)
-                        btnImage.textContent = "貼上圖片 (Ctrl+V)"; 
+                        // 桌面行為 (Ctrl+V 提示)
                         btnImage.addEventListener('click', (e) => {
                             e.stopPropagation();
                             e.preventDefault(); 
@@ -1122,6 +1213,9 @@
             document.getElementById('btn-default-jp').addEventListener('click', () => setDefaults('jp'));
             // 綁定清除標題功能
             document.getElementById('btn-clear-all').addEventListener('click', clearAllContentAndHeaders); 
+            
+            // 初始化時設定預設介面語言 (中文)
+            updateInterfaceLanguage('zh'); 
             // --- 新增按鈕事件監聽器結束 ---
         }
 
@@ -1257,6 +1351,9 @@
                 
                 // 恢復鼠標
                 document.body.style.cursor = originalBodyCursor;
+                
+                // 恢復介面語言
+                updateInterfaceLanguage(currentLanguage);
             }
         }
 
@@ -1279,14 +1376,15 @@
             
             <!-- 調整：預設值按鈕和全清除按鈕容器 - 改為水平排列並居中 -->
             <div class="default-buttons-container">
+                <!-- 語言按鈕固定為該語言的名稱 -->
                 <button id="btn-default-zh" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
                     中文預設值
                 </button>
                 <button id="btn-default-en" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
-                    英文預設值
+                    English Defaults
                 </button>
                 <button id="btn-default-jp" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
-                    日文預設值
+                    日本語の初期値
                 </button>
                 <button id="btn-clear-all" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-2 rounded-lg shadow-md transition-colors">
                     全清除 (標題)
@@ -1321,7 +1419,7 @@
             <!-- Cell R2 C1 -->
             <div id="content_r2_c1" class="content-cell border-r border-b border-black" data-mode="select" tabindex="0" data-image-count="0">
                 <div class="mode-selector-overlay flex flex-col space-y-2">
-                    <!-- 按鈕文本將在 JS 中根據裝置類型更新 -->
+                    <!-- 按鈕文本將由 JS 動態切換 -->
                     <button class="btn-image bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">貼上圖片 (Ctrl+V)</button>
                     <button class="btn-text bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1 px-3 rounded-lg shadow-md transition-colors">輸入文字</button>
                 </div>
@@ -1594,7 +1692,8 @@
         </div>
         
         <!-- 底部資訊/狀態欄 -->
-        <div class="p-2 border-t border-black text-xs text-gray-600 text-center">
+        <div class="p-2 border-t border-black text-xs text-gray-600 text-center footer-info">
+            <!-- 這些內容將在 JS 中被更新 -->
             <p><strong>操作提示:</strong> 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。</p>
             <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片 (桌面) 或點擊按鈕選擇圖片 (行動裝置/最多三張)，滾輪縮放，拖曳調整位置。三圖模式下，圖片會呈現**左(長方形)/右上/右下**分割。</p>
             <p class="text-blue-500 font-bold">目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。</p>
