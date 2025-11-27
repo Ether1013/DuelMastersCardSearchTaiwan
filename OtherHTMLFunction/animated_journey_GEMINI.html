@@ -181,7 +181,8 @@ const EXPIRY_MS = 2 * 24 * 60 * 60 * 1000; // 2 天 (毫秒)
 const FILE_EXTENSION = '.txt'; // 修改為更通用的 .txt 以提高 iOS 兼容性
 const ARC_HEIGHT_DEG = 0.5; // 飛機弧線路徑的最高點抬升緯度 (約 55 公里)
 const ARC_SEGMENTS = 25; // 飛機弧線路徑分段數，越多越平滑
-const MAX_IMAGE_WIDTH = 230; // 圖片壓縮後的寬度上限 (200 * 1.15 = 230)
+// 圖片壓縮後的長邊上限 (寬或高)
+const MAX_LONG_SIDE = 400; 
 const PHOTO_STANDALONE_DURATION = 2.5; // 移動和訊息步驟照片獨立播放時長 (秒)
 const FREEZE_TIMEOUT_SEC = 15; // 凍結偵測超時時間 (秒)
 
@@ -576,7 +577,7 @@ async function loadScriptFromUrl(url) {
  * @returns {boolean} - 如果只有初始步驟且未被修改，則返回 true。
  */
 function isScriptDefault(steps) {
-    if (!ArrayOfSteps(steps) || steps.length !== 1) {
+    if (!Array.isArray(steps) || steps.length !== 1) {
         return false;
     }
     const step = steps[0];
@@ -995,12 +996,24 @@ function handleImageUpload(event, index) {
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
+            
+            const maxDimension = MAX_LONG_SIDE; // 使用新的長邊上限常數
 
-            // 壓縮寬度
-            if (width > MAX_IMAGE_WIDTH) {
-                height = Math.round(height * (MAX_IMAGE_WIDTH / width));
-                width = MAX_IMAGE_WIDTH;
+            // --- 新的壓縮邏輯: 將長邊壓縮到 maxDimension ---
+            if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                    // 橫向圖片或正方形圖片 (寬度較長或相等)
+                    const ratio = maxDimension / width;
+                    width = maxDimension;
+                    height = Math.round(height * ratio);
+                } else {
+                    // 縱向圖片 (高度較長)
+                    const ratio = maxDimension / height;
+                    height = maxDimension;
+                    width = Math.round(width * ratio);
+                }
             }
+            // --- 結束新的壓縮邏輯 ---
 
             canvas.width = width;
             canvas.height = height;
@@ -1141,10 +1154,11 @@ function openImageModal(base64Image) {
         // 允許點擊背景跳過
         imageModal.className = 'fixed inset-0 bg-black bg-opacity-75 z-[2000] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none';
         imageModal.innerHTML = `
-            <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-sm mx-4 transform scale-90 transition-transform duration-300" 
+            <!-- 使用 custom max-width 確保能容納 400px 長邊圖片 + padding -->
+            <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-[450px] mx-4 transform scale-90 transition-transform duration-300" 
                  onclick="event.stopPropagation()">
                 <!-- 確保圖片寬度最大化，高度自適應，並使用壓縮後的圖片大小 -->
-                <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_IMAGE_WIDTH}px] mx-auto" alt="Journey Photo">
+                <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_LONG_SIDE}px] mx-auto" alt="Journey Photo">
                 <p class="text-center text-sm text-gray-600 font-semibold mb-2">📸 行程照片</p>
                 <!-- 新增 SKIP 按鈕 -->
                 <button onclick="skipPhoto()" id="skip-photo-button" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition duration-150">
@@ -2329,7 +2343,7 @@ function renderScript() {
                     `<button onclick="document.getElementById('${fileInputId}').click()" 
                             class="flex items-center bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-gray-200 transition duration-150 whitespace-nowrap">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                        上傳照片 (${MAX_IMAGE_WIDTH}px)
+                        上傳照片 (${MAX_LONG_SIDE}px 長邊)
                     </button>`
                 }
             </div>
