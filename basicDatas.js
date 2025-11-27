@@ -810,10 +810,10 @@
 				const date = this.logAndDate[i].date;
 				const logs = this.logAndDate[i].log;
 				
-				content += ( isLast ? "最後更新日期：" : "\n" ) + "\n" + date;
+				content += ( isLast ? "最後更新日期：" : "\r\n" ) + "\r\n" + date;
 				
 				for ( let li = 0 ; li < logs.length ; li++ ){
-					content += "\n["+(li+1)+"] " + logs[li];
+					content += "\r\n["+(li+1)+"] " + logs[li];
 				}
 			}
 			if ( content !== "" ){
