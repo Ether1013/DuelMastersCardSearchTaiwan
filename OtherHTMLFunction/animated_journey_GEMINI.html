@@ -334,7 +334,7 @@ function optimizeLoadedScript(steps) {
     for (let i = 0; i < steps.length; i++) {
         const currentStep = steps[i];
         
-        // 檢查當前步驟是否為 goto 且沒有圖片
+        // 檢查當前步驟是否為 goto 對且沒有圖片
         if (currentStep.type === 'goto' && !currentStep.image) {
             const nextStep = steps[i + 1];
             
@@ -369,10 +369,9 @@ function optimizeLoadedScript(steps) {
     return steps; // 由於是 in-place 修改，直接返回
 }
 
-
 /**
  * 將簡化的數據字串解構並載入到 scriptSteps
- * @param {string} rawJsonString - 匯入的 JSON 字串 (已URI解碼)
+ * @param {string} rawJsonString - 匯入的 JSON 字串 (已 URI 解碼，如果匯出時有編碼的話)
  * @returns {boolean} - 成功載入返回 true
  */
 function loadImportedData(rawJsonString) {
@@ -412,8 +411,8 @@ function loadImportedData(rawJsonString) {
                     }
                     // 檢查可選的 image (Base64)
                     if (compactStep.length > i && typeof compactStep[i] === 'string' && compactStep[i].startsWith('data:image/')) {
-                        // 圖片字串在匯出時有 URI 內層編碼，故在此解碼
-                        step.image = decodeURIComponent(compactStep[i++]);
+                        // FIX: 移除 decodeURIComponent()，因為現在匯出時只在單一圖片層級進行編碼，外層 JSON 已在 handleFileUpload/loadScriptFromUrl 解碼
+                        step.image = compactStep[i++];
                     }
                     break;
                 case 'g': // goto: g, lat, lng, iconChar, words, [image]
@@ -427,7 +426,8 @@ function loadImportedData(rawJsonString) {
                     
                     // 檢查可選的 image (Base64)
                     if (compactStep.length > i) {
-                        step.image = decodeURIComponent(compactStep[i++]);
+                        // FIX: 移除 decodeURIComponent()
+                        step.image = compactStep[i++];
                     }
                     break;
                 case 'a': // activity: a, sec, [iconChar], [image]
@@ -440,17 +440,45 @@ function loadImportedData(rawJsonString) {
                     
                     // 檢查可選的 image (Base64)
                     if (compactStep.length > i) {
-                        step.image = decodeURIComponent(compactStep[i++]);
+                        // FIX: 移除 decodeURIComponent()
+                        step.image = compactStep[i++];
                     }
                     break;
-                case 'h': // show: h, words, [image]
+                case 'h': // show: h, words, [image], [sec]
                     step.type = 'show';
-                    step.words = compactStep[i++];
                     step.label = '載入的訊息';
                     
-                    // 檢查可選的 image (Base64)
-                    if (compactStep.length > i) {
-                        step.image = decodeURIComponent(compactStep[i++]);
+                    // i = 1 (指向 words, image, or sec)
+                    let potentialWords = compactStep[i];
+                    
+                    // --- 關鍵修復邏輯 ---
+                    // 1. 檢查當前元素是否是 Base64 圖片 (這是舊版 Bug 檔案的特徵: words 被省略)
+                    if (compactStep.length > i && typeof compactStep[i] === 'string' && compactStep[i].startsWith('data:image/')) {
+                        // 舊版 Bug 檔案：words 被省略。跳過 words 讀取，words 設為空
+                        step.words = '';
+                        // i 不遞增，繼續指向圖片 Base64 (讓後面的圖片檢查讀取它)
+                    }
+                    // 2. 檢查當前元素是否是 words (新版或舊版非 Bug 檔案: words 存在)
+                    else if (compactStep.length > i && typeof compactStep[i] === 'string') {
+                        // 讀取 words，i 遞增
+                        step.words = compactStep[i++]; 
+                    }
+                    else {
+                        // Words 欄位缺失 (不應該發生)
+                        step.words = '';
+                    }
+                    
+                    // 3. 檢查可選的 image (Base64)
+                    // i 現在指向圖片或 sec
+                    if (compactStep.length > i && typeof compactStep[i] === 'string' && compactStep[i].startsWith('data:image/')) {
+                        // FIX: 移除 decodeURIComponent()
+                        step.image = compactStep[i++];
+                    }
+
+                    // 4. 檢查可選的 sec (持續時間)
+                    // i 現在指向 sec 或結束
+                    if (compactStep.length > i && typeof compactStep[i] === 'number') {
+                        step.sec = compactStep[i++];
                     }
                     break;
                 case 'd': // dayoff: d, sec, [image]
@@ -460,7 +488,8 @@ function loadImportedData(rawJsonString) {
                     
                     // 檢查可選的 image (Base64)
                     if (compactStep.length > i) {
-                        step.image = decodeURIComponent(compactStep[i++]);
+                        // FIX: 移除 decodeURIComponent()
+                        step.image = compactStep[i++];
                     }
                     break;
                 default:
@@ -551,9 +580,17 @@ async function loadScriptFromUrl(url) {
     }
     
     try {
-        // 檔案內容預期是 URI-encoded compact JSON string，需要先解碼
-        const rawJsonString = decodeURIComponent(fileContent);
-        
+        // FIX: 因為 exportScript 移除了對整個 JSON 的編碼，但舊檔案可能仍存在編碼，
+        // 為了兼容性，我們在此仍嘗試解碼。
+        let rawJsonString;
+        try {
+            // 嘗試解碼 (應對舊版或某些 URL 編碼)
+            rawJsonString = decodeURIComponent(fileContent);
+        } catch (e) {
+            // 如果解碼失敗，則假設內容未編碼
+            rawJsonString = fileContent;
+        }
+
         const result = loadImportedData(rawJsonString);
         if (result) {
             statusMessage.textContent = '✅ 劇本檔案已從 URL 成功載入！';
@@ -920,7 +957,8 @@ function addStep(type, targetIndex = -1) { // <-- HTML onclick 調用
             Object.assign(newStep, { type: 'activity', icon: '', sec: 1 });
             break;
         case 'show':
-            Object.assign(newStep, { type: 'show', words: '' }); // 訊息內容也預設為空字串
+            // 修正: 新增 sec 欄位，預設使用獨立照片時長 2.5 秒
+            Object.assign(newStep, { type: 'show', words: '', sec: PHOTO_STANDALONE_DURATION }); 
             break;
         case 'dayoff':
             Object.assign(newStep, { type: 'dayoff', sec: 5 }); // 預設休息 5 秒
@@ -1143,8 +1181,9 @@ function show(words){
 /**
  * 開啟照片的模態框 (非阻塞)
  * @param {string} base64Image - Base64 圖片字串
+ * @param {string} [message=null] - 額外顯示在圖片上的訊息 (NEW: 新增參數)
  */
-function openImageModal(base64Image) {
+function openImageModal(base64Image, message = null) { // <-- 修正 1: 新增 message 參數
     if (!base64Image) return;
     
     // 確保只創建一次模態框結構
@@ -1157,6 +1196,8 @@ function openImageModal(base64Image) {
             <!-- 使用 custom max-width 確保能容納 400px 長邊圖片 + padding -->
             <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-[450px] mx-4 transform scale-90 transition-transform duration-300" 
                  onclick="event.stopPropagation()">
+                <!-- 修正 2: 訊息顯示區 -->
+                <div id="modal-message" class="text-xl font-bold text-gray-800 text-center mb-3 p-2 bg-gray-100 rounded-lg hidden"></div>
                 <!-- 確保圖片寬度最大化，高度自適應，並使用壓縮後的圖片大小 -->
                 <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_LONG_SIDE}px] mx-auto" alt="Journey Photo">
                 <p class="text-center text-sm text-gray-600 font-semibold mb-2">📸 行程照片</p>
@@ -1174,9 +1215,19 @@ function openImageModal(base64Image) {
     
     const imageElement = document.getElementById('modal-image');
     const modalContent = document.getElementById('image-modal-content');
+    const messageElement = document.getElementById('modal-message'); // <-- 取得訊息元素
 
     // 設置圖片源
     imageElement.src = base64Image;
+    
+    // 設置訊息內容 (NEW: 處理訊息顯示)
+    if (message && message.trim() !== '') {
+        messageElement.textContent = message;
+        messageElement.classList.remove('hidden');
+    } else {
+        messageElement.textContent = '';
+        messageElement.classList.add('hidden');
+    }
     
     // 顯示模態框 (帶有動畫)
     imageModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -1197,6 +1248,13 @@ function closeImageModal() {
     // 隱藏模態框 (帶有動畫)
     modalContent.classList.add('scale-90');
     imageModal.classList.add('opacity-0');
+    
+    // 修正: 關閉時也清空 message，避免下次閃爍
+    const messageElement = document.getElementById('modal-message');
+    if (messageElement) {
+        messageElement.textContent = '';
+        messageElement.classList.add('hidden');
+    }
     
     setTimeout(() => {
         imageModal.classList.add('pointer-events-none');
@@ -1233,22 +1291,24 @@ function skipPhoto() {
 }
 
 /**
- * 播放獨立照片並等待 2.5 秒
+ * 播放獨立照片並等待 N 秒
  * @param {string} base64Image - Base64 圖片字串
- * @returns {Promise<void>} - 等待 PHOTO_STANDALONE_DURATION 秒後關閉
+ * @param {number} [duration=PHOTO_STANDALONE_DURATION] - 顯示秒數
+ * @param {string} [message=null] - 額外顯示在圖片上的訊息 (NEW: 新增參數)
+ * @returns {Promise<void>} - 等待 duration 秒後關閉
  */
-function playStepMedia(base64Image) {
+function playStepMedia(base64Image, duration = PHOTO_STANDALONE_DURATION, message = null) { // <-- 修正 3: 新增 message 參數
     if (!base64Image) return Promise.resolve();
     
     return new Promise(async (resolve) => {
         // 設定主 Promise Resolver
         skipPhotoResolve = resolve; 
 
-        // 1. 開啟模態框
-        openImageModal(base64Image); 
+        // 1. 開啟模態框 (傳入訊息)
+        openImageModal(base64Image, message); 
         
-        // 2. 等待 2.5 秒 (支援暫停)
-        await wait(PHOTO_STANDALONE_DURATION); 
+        // 2. 等待 N 秒 (支援暫停)
+        await wait(duration); // <--- 使用傳入的 duration
         await getPausePromise(); 
         
         // 3. 關閉模態框 (如果不是被 skipPhoto 關閉)
@@ -1748,67 +1808,91 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             // 播放時使用藍色高亮
             document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
             
-            // 判斷是否為獨立播放照片的步驟類型 (goto, show)
-            const isStandalonePhotoStep = step.type === 'goto' || step.type === 'show';
+            // 新增變量來控制流程
+            const wordsPresent = step.words && step.words.trim() !== '';
+            const imagePresent = !!step.image;
+            const stepDuration = step.sec || PHOTO_STANDALONE_DURATION; 
             
-            // 用於持續顯示照片的步驟類型 (activity, dayoff)
-            const isContinuousPhotoStep = step.type === 'activity' || step.type === 'dayoff';
-
+            // 獨立媒體播放控制 (用於步驟結束時)
+            let runStandaloneModal = false;
+            let modalMessage = null; // 訊息傳遞給 modal
+            let modalDuration = PHOTO_STANDALONE_DURATION;
 
             try {
                 // --- 步驟開始時的邏輯 ---
-                if (isContinuousPhotoStep && step.image) {
-                    // 持續顯示類型的，動作開始時開啟照片
+                // 只有 Activity/Dayoff（持續顯示類型）才在開始時打開照片
+                if ((step.type === 'activity' || step.type === 'dayoff') && imagePresent) {
                     openImageModal(step.image); 
                 }
-
+                
                 // --- 執行主要步驟動作 ---
                 switch (step.type) {
                     case 'activity':
-                        // **Activity = setIcon (可選) + wait (可選)**
                         if (step.icon) { setIcon(step.icon); }
                         if (step.sec && step.sec > 0) { await wait(step.sec); }
                         break;
+                        
                     case 'show':
-                        // 保持 show 獨立功能
-                        show(step.words);
-                        await wait(1); // 顯示訊息後短暫等待，讓用戶看到
+                        if (wordsPresent && imagePresent) {
+                            // **新需求: 訊息+圖片 -> 訊息放入圖片模態框**
+                            runStandaloneModal = true;
+                            modalMessage = step.words; // 傳遞訊息
+                            modalDuration = stepDuration; // 使用設定的秒數
+                            // 不執行等待，讓 playStepMedia 處理
+                        } else if (wordsPresent && !imagePresent) {
+                            // 只有訊息 (無圖) -> Leaflet Popup
+                            show(step.words);
+                            await wait(1); 
+                        } else if (!wordsPresent && imagePresent) {
+                            // 只有圖片 (無訊息) -> 獨立模態框
+                            runStandaloneModal = true;
+                            modalDuration = stepDuration; // 使用設定的秒數
+                            // 不執行等待，讓 playStepMedia 處理
+                        } else {
+                            // 無訊息，無圖片 -> 純等待
+                            await wait(stepDuration); 
+                        }
                         break;
+                        
                     case 'goto':
-                        // **如果 goto 帶有 icon，則先換圖標**
                         if (step.icon) { setIcon(step.icon); }
                         await goto([step.lat, step.lng]);
                         
-                        // **如果 goto 帶有 words (且非空)，則接著顯示訊息**
-                        if (step.words && step.words.trim() !== '') {
+                        if (wordsPresent) {
+                            // Goto 訊息仍然使用 Leaflet Popup
                             show(step.words);
-                            await wait(1); // 顯示訊息後短暫等待，讓用戶看到
+                            await wait(1);
+                        }
+                        
+                        if (imagePresent) {
+                            // Goto 圖片在移動和訊息後播放 (獨立，無訊息)
+                            runStandaloneModal = true;
+                            // Goto 圖片使用預設時長 2.5s
+                            modalDuration = PHOTO_STANDALONE_DURATION;
+                            // modalMessage 保持 null
                         }
                         break;
+                        
                     case 'dayoff':
-                        // **Dayoff 步驟**
                         setIcon('sleep');
                         await animateNight(step.sec);
                         break;
                 }
                 
-                // 清除凍結偵測（在所有阻塞操作之後）
+                // 清除凍結偵測
                 clearFreezeDetection();
                 
                 // --- 步驟結束時的邏輯 ---
-                if (isContinuousPhotoStep && step.image) {
-                    // 持續顯示類型的，動作結束時關閉照片
+                // 1. 處理 Activity/Dayoff 的關閉
+                if ((step.type === 'activity' || step.type === 'dayoff') && imagePresent) {
                     closeImageModal();
-                } else if (isStandalonePhotoStep && step.image) {
-                    // 獨立播放類型的，動作結束後播放照片 2.5 秒
-                    await playStepMedia(step.image);
-                }
+                } 
                 
-                // --- 更新 Day 計數器 (用於下一個迴圈的 currentDay 追蹤) ---
-                if (step.type === 'dayoff') {
-                    currentDay++;
+                // 2. 處理 SHOW 或 GOTO 的獨立模態框播放
+                else if (runStandaloneModal) {
+                    // 注意：此處已包含了 SHOW + 訊息 + 圖片的組合，並將訊息傳入
+                    await playStepMedia(step.image, modalDuration, modalMessage); 
                 }
-                // --- End Day Counting ---
 
 
             } catch (error) {
@@ -1935,7 +2019,7 @@ function scrollToDayStart(dayNumber) {
  */
 async function exportScript(isSilent = false) { // <-- HTML onclick 調用
     const statusMessage = document.getElementById('status-message');
-    let dataString = ''; 
+    let rawJsonString = ''; 
     
     try {
         // --- 1. 數據優化與轉換 (壓縮結構) ---
@@ -1946,7 +2030,7 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
                 case 'start': // s, lat, lng, [label], [image]
                     compact.push('s', step.lat, step.lng);
                     if (step.label) compact.push(step.label);
-                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    // 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
                     if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
 				case 'goto': // g, lat, lng, iconChar, words, [image]
@@ -1954,24 +2038,31 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
 					// 修正 BUG：icon 欄位即使為空也必須推入空字串，以維持 compact array 的固定長度
 					compact.push(step.icon ? step.icon.charAt(0) : ''); // <-- 訂正處
 					compact.push(step.words || '');
-					// 新增：如果存在圖片，進行 URI 編碼後加入
+					// 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
 					if (step.image) compact.push(encodeURIComponent(step.image));
 					return compact;
 			
                 case 'activity': // a, sec, [iconChar], [image]
                     compact.push('a', step.sec);
                     if (step.icon) compact.push(step.icon.charAt(0)); 
-                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    // 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
                     if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
-                case 'show': // h, words, [image]
-                    compact.push('h', step.words);
-                    // 新增：如果存在圖片，進行 URI 編碼後加入
-                    if (step.image) compact.push(encodeURIComponent(step.image)); 
+                case 'show': // h, words, [image], [sec]
+                    compact.push('h'); 
+                    // 1. WORDS: 必須推送，即使為空字串，以保持結構穩定性
+                    compact.push(step.words || ''); 
+                    // 2. 圖片 (可選) - 強化檢查，確保圖片字串有效且非空
+                    if (step.image && typeof step.image === 'string' && step.image.length > 10) {
+                         // 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
+                         compact.push(encodeURIComponent(step.image)); 
+                    }
+                    // 3. 持續時間 (可選)
+                    if (step.sec) compact.push(step.sec); 
                     return compact;
                 case 'dayoff': // d, sec, [image]
                     compact.push('d', step.sec);
-                    // 新增：如果存在圖片，進行 URI 編碼後加入
+                    // 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
                     if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
             }
@@ -1979,10 +2070,10 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
         });
 
         // 2. JSON.stringify 轉換為字串
-        const rawJsonString = JSON.stringify(compactScript);
+        rawJsonString = JSON.stringify(compactScript);
         
-        // 3. 關鍵修正：URI 編碼以確保非 ASCII 字符的安全傳輸 (包括 Base64 字串)
-        dataString = encodeURIComponent(rawJsonString);
+        // 3. 關鍵修正：移除對整個 JSON 字串的 URI 編碼，讓檔案內容保持為純 JSON (Base64 已在步驟中編碼)
+        const dataString = rawJsonString; 
         
     } catch (error) {
         if (!isSilent) {
@@ -1995,7 +2086,7 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
     // --- 4. 下載為 .txt 檔案 (新副檔名) ---
     try {
         // 創建 Blob，MIME type 設為 text/plain
-        const blob = new Blob([dataString], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob([rawJsonString], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         
@@ -2057,8 +2148,15 @@ function handleFileUpload(event) {
         const fileContent = e.target.result;
         
         try {
-            // 檔案內容預期是 URI-encoded compact JSON string，需要先解碼
-            const rawJsonString = decodeURIComponent(fileContent);
+            // FIX: 為了兼容舊版雙重編碼的檔案，這裡先嘗試進行一次 URI 解碼
+            let rawJsonString;
+            try {
+                // 嘗試解碼 (應對舊版雙重編碼中的外層編碼)
+                rawJsonString = decodeURIComponent(fileContent);
+            } catch (e) {
+                // 如果解碼失敗，則假設內容未編碼 (新版格式)
+                rawJsonString = fileContent;
+            }
             
             const result = loadImportedData(rawJsonString);
             if (result) {
@@ -2438,14 +2536,28 @@ function renderScript() {
                 break;
             case 'show':
                 stepIcon = '💬';
+                // 確保 sec 有默認值，以便在渲染時顯示
+                const currentSec = step.sec || PHOTO_STANDALONE_DURATION;
                 contentHtml = `
-                    <span class="font-bold">顯示訊息</span>
+                    <span class="font-bold">顯示訊息/停留</span>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (ex: 顯示：牧志站)" value="${step.label || ''}" 
                         onchange="updateStep(${index}, 'label', this.value)">
                     <!-- 移除 onfocus 觸發 Focus -->
-                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="訊息內容" value="${step.words || ''}" 
+                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="訊息內容 (留空則不彈出訊息視窗)" value="${step.words || ''}" 
                         onchange="updateStep(${index}, 'words', this.value)">
+                    
+                    <small class="mt-2 block">持續時間 (秒數):</small>
+                    <!-- 移除 onfocus 觸發 Focus -->
+                    <input type="number" 
+                           class="w-full text-sm border rounded px-2 mt-1" 
+                           placeholder="2.5" 
+                           value="${currentSec}" 
+                           onchange="updateStep(${index}, 'sec', parseFloat(this.value))">
+                    <p class="text-xs text-gray-500 mt-2">
+                        如果**沒有**訊息內容：此秒數將作為地圖上**停留**的持續時間。
+                        <br>如果**有**訊息內容：若有圖片，會與圖片一同顯示；若無圖片，則以彈窗形式顯示 1 秒。
+                    </p>
                 `;
                 break;
             case 'dayoff':
