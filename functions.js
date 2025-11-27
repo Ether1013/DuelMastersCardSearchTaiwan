@@ -1494,7 +1494,7 @@
 					}
 					abText = translateText( abText, isTC2C );
 					for (const filterValue of customerAbilitiesFilterValue) {
-						if ( abText.includes( filterValue ) === -1 ){
+						if ( !abText.includes( filterValue ) ){ 
 							absAllow = false;
 							break;
 						}
