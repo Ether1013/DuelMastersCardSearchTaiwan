@@ -149,7 +149,7 @@
 	const carTypeSpan = getById( "carTypeSpan" );
 	const carTypeSpanEx = getById( "carTypeSpanEx" );
 
-	for (const cardType of cardTypeMapping.map.values()) {
+	for (const cardType of cardTypeMapping.initMap.values()) {
 		if ( cardType.value == null ){
 			continue;
 		}

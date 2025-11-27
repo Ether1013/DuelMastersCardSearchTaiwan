@@ -378,6 +378,7 @@
 	
 		//資料集合: Map<value, TypeData>
 		map : new Map(),
+		initMap : new Map(),
 
 		init: function() {
 			const initialData = [
@@ -453,6 +454,7 @@
 				}
 				if (item.Jap) {
 					this.map.set(item.Jap, item);
+					this.initMap.set(item.Jap, item);
 				}
 			});
 		},
@@ -768,6 +770,12 @@
 		
 		logAndDate : [
 			{	
+				date : "2025/11/27",
+				log : [ 
+						"全面更新寫法，將程式改為ES6+",
+				],	
+			},
+			{	
 				date : "2025/11/14",
 				log : [ 
 						"新增DM25-BD3【ドリーム英雄譚デッキ グレンモルトの書】的資料",
@@ -779,18 +787,6 @@
 				log : [ 
 						"新增台灣CS 20251025/20251026的前四名牌組",
 						"新增【Vチャロン】的資料",
-				],	
-			},
-			{	
-				date : "2025/10/20",
-				log : [ 
-						"新增DM25-EX2「王道vs邪道 デュエキングWDreaM 2025」的資料",
-				],	
-			},
-			{	
-				date : "2025/10/13",
-				log : [ 
-						"卡種過濾新增「向下相容」過濾",
 				],	
 			},
 		],

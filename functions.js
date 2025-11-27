@@ -1601,7 +1601,7 @@
 		//將詳細資料表格初始化並隱藏
 		$('#cardDataBlock').hide();
 		$('#card_name_header').css('background', '');
-		$('#card_rarity, #card_name, #card_picture, #card_type, #card_cost, #card_civil, #card_race, #card_soul, #card_power, #card_back, #card_flavor, #card_sets, #card_sanctuary').empty();
+		$('#card_rarity, #card_name, #card_picture, #card_type, #card_cost, #card_civil, #card_mana, #card_race, #card_soul, #card_power, #card_back, #card_flavor, #card_sets, #card_sanctuary, #card_abilities').empty();
 		
 		showDataPicture( false );
 		
