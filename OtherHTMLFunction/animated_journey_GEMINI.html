@@ -580,7 +580,8 @@ async function loadScriptFromUrl(url) {
     }
     
     try {
-        // FIX: 為了兼容舊版雙重編碼的檔案，這裡先嘗試進行一次 URI 解碼
+        // FIX: 因為 exportScript 移除了對整個 JSON 的編碼，但舊檔案可能仍存在編碼，
+        // 為了兼容性，我們在此仍嘗試解碼。
         let rawJsonString;
         try {
             // 嘗試解碼 (應對舊版或某些 URL 編碼)
@@ -888,7 +889,7 @@ function updateStep(index, field, value) { // <-- HTML onchange 調用
                 if (isSameLat && isSameLng) {
                     console.error("GPS Error: New position is the same as the previous known position. Aborting update.");
                     document.getElementById('status-message').textContent = '⚠️ 錯誤: 新位置與前一步驟的位置相同，移動將被忽略。';
-                    setTimeout(() => { document.getElementById('status-message').textContent = 'Ready'; }, 3000);
+                    setTimeout(() => { document.getElementById('status-message').textContent = '準備就緒'; }, 3000);
                     return; 
                 }
             }
@@ -1136,10 +1137,8 @@ function setIcon(name){ marker.setIcon(icons[name]); }
 
 /**
  * 顯示訊息彈出視窗 (Popup)
- * @param {string} words - 訊息內容
- * @param {number} [autoCloseDelay=1] - 自動關閉延遲時間 (秒)。0 或負值表示手動關閉。
  */
-function show(words, autoCloseDelay = 1){
+function show(words){
   if(popup) mapInstance.closePopup(popup);
   
   // 動態調整 popupAnchor (維持上/下彈的邏輯，但 Leaflet 會自動平移以避免切邊)
@@ -1147,6 +1146,8 @@ function show(words, autoCloseDelay = 1){
   let anchor = [0, -iconSize / 2]; // 預設 (往上彈)
   
   if (isMobileVertical) {
+      // 在 Leaflet 完成渲染後才能正確計算點座標
+      // 此處的邏輯僅用於決定初始彈出方向，Leaflet 的 autoPan 會處理最終位置
       try {
         const mapContainerRect = document.getElementById('map').getBoundingClientRect();
         const markerPoint = mapInstance.latLngToContainerPoint(marker.getLatLng());
@@ -1157,6 +1158,7 @@ function show(words, autoCloseDelay = 1){
             anchor = [0, iconSize / 2 + 25]; 
         }
       } catch (e) {
+          // 容錯處理，使用預設 anchor
           anchor = [0, -iconSize / 2]; 
       }
   }
@@ -1173,20 +1175,15 @@ function show(words, autoCloseDelay = 1){
     .setContent(words)
     .openOn(mapInstance);
     
-  // 根據 autoCloseDelay 設置定時器 (修正：允許超過 1 秒的持續時間)
-  if (autoCloseDelay > 0) {
-      setTimeout(()=>{ 
-          if(popup) mapInstance.closePopup(popup); 
-          popup=null; 
-      }, autoCloseDelay * 1000);
-  }
+  setTimeout(()=>{ mapInstance.closePopup(popup); popup=null; }, 1000);
 }
 
 /**
  * 開啟照片的模態框 (非阻塞)
  * @param {string} base64Image - Base64 圖片字串
+ * @param {string} [message=null] - 額外顯示在圖片上的訊息 (NEW: 新增參數)
  */
-function openImageModal(base64Image) {
+function openImageModal(base64Image, message = null) { // <-- 修正 1: 新增 message 參數
     if (!base64Image) return;
     
     // 確保只創建一次模態框結構
@@ -1199,12 +1196,14 @@ function openImageModal(base64Image) {
             <!-- 使用 custom max-width 確保能容納 400px 長邊圖片 + padding -->
             <div id="image-modal-content" class="bg-white p-4 rounded-lg shadow-2xl max-w-[450px] mx-4 transform scale-90 transition-transform duration-300" 
                  onclick="event.stopPropagation()">
+                <!-- 修正 2: 訊息顯示區 -->
+                <div id="modal-message" class="text-xl font-bold text-gray-800 text-center mb-3 p-2 bg-gray-100 rounded-lg hidden"></div>
                 <!-- 確保圖片寬度最大化，高度自適應，並使用壓縮後的圖片大小 -->
                 <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_LONG_SIDE}px] mx-auto" alt="Journey Photo">
                 <p class="text-center text-sm text-gray-600 font-semibold mb-2">📸 行程照片</p>
                 <!-- 新增 SKIP 按鈕 -->
                 <button onclick="skipPhoto()" id="skip-photo-button" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition duration-150">
-                    SKIP (Skip Photo)
+                    SKIP (跳過)
                 </button>
             </div>
         `;
@@ -1216,9 +1215,19 @@ function openImageModal(base64Image) {
     
     const imageElement = document.getElementById('modal-image');
     const modalContent = document.getElementById('image-modal-content');
+    const messageElement = document.getElementById('modal-message'); // <-- 取得訊息元素
 
     // 設置圖片源
     imageElement.src = base64Image;
+    
+    // 設置訊息內容 (NEW: 處理訊息顯示)
+    if (message && message.trim() !== '') {
+        messageElement.textContent = message;
+        messageElement.classList.remove('hidden');
+    } else {
+        messageElement.textContent = '';
+        messageElement.classList.add('hidden');
+    }
     
     // 顯示模態框 (帶有動畫)
     imageModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -1240,6 +1249,13 @@ function closeImageModal() {
     modalContent.classList.add('scale-90');
     imageModal.classList.add('opacity-0');
     
+    // 修正: 關閉時也清空 message，避免下次閃爍
+    const messageElement = document.getElementById('modal-message');
+    if (messageElement) {
+        messageElement.textContent = '';
+        messageElement.classList.add('hidden');
+    }
+    
     setTimeout(() => {
         imageModal.classList.add('pointer-events-none');
     }, 300); // 匹配 CSS transition duration
@@ -1252,47 +1268,44 @@ function skipPhoto() {
     if (skipPhotoResolve) {
         // 1. 關閉模態框
         closeImageModal();
-        
-        // 2. 確保 Popup 也被關閉 (如果它還開著的話)
-        if(popup) { mapInstance.closePopup(popup); popup = null; }
-        
-        // 3. 停止當前 wait/pause
+        // 2. 停止當前 wait/pause
         if (currentWaitTimeoutId) {
             clearTimeout(currentWaitTimeoutId);
             currentWaitRemainingTime = 0;
             currentWaitTimeoutId = null;
         }
-        // 4. 解決 playStepMedia 中的 wait Promise
+        // 3. 解決 playStepMedia 中的 wait Promise
         if (currentWaitResolve) {
             currentWaitResolve();
         }
-        // 5. 解決 playStepMedia 中的主要 Pause Promise (如果 still paused)
+        // 4. 解決 playStepMedia 中的主要 Pause Promise (如果 still paused)
         if (pauseResolve) {
             pauseResolve();
         }
 
         const resolveFn = skipPhotoResolve;
         skipPhotoResolve = null; // 清除狀態
-        document.getElementById('status-message').textContent = '📸 Photo skipped.'; // 英文修正
+        document.getElementById('status-message').textContent = '📸 照片已跳過。';
         resolveFn(); // 解決 playStepMedia 的主 Promise
     }
 }
 
 /**
- * 播放獨立照片並等待 N 秒 (用於 GOTO 步驟)
+ * 播放獨立照片並等待 N 秒
  * @param {string} base64Image - Base64 圖片字串
  * @param {number} [duration=PHOTO_STANDALONE_DURATION] - 顯示秒數
+ * @param {string} [message=null] - 額外顯示在圖片上的訊息 (NEW: 新增參數)
  * @returns {Promise<void>} - 等待 duration 秒後關閉
  */
-function playStepMedia(base64Image, duration = PHOTO_STANDALONE_DURATION) {
+function playStepMedia(base64Image, duration = PHOTO_STANDALONE_DURATION, message = null) { // <-- 修正 3: 新增 message 參數
     if (!base64Image) return Promise.resolve();
     
     return new Promise(async (resolve) => {
         // 設定主 Promise Resolver
         skipPhotoResolve = resolve; 
 
-        // 1. 開啟模態框
-        openImageModal(base64Image); 
+        // 1. 開啟模態框 (傳入訊息)
+        openImageModal(base64Image, message); 
         
         // 2. 等待 N 秒 (支援暫停)
         await wait(duration); // <--- 使用傳入的 duration
@@ -1328,10 +1341,10 @@ function pauseToggle() { // <-- HTML onclick 調用
     if (!isScriptRunning) return;
 
     isPaused = !isPaused;
-    btn.title = isPaused ? 'Resume Playback' : 'Pause Playback'; // 英文修正
+    btn.title = isPaused ? '繼續播放' : '暫停播放';
     
     // 根據狀態更新按鈕文字
-    btn.querySelector('span').textContent = isPaused ? '▶️ Resume' : '⏸️ Pause'; // 英文修正
+    btn.querySelector('span').textContent = isPaused ? '▶️ 繼續播放' : '⏸️ 暫停播放';
     
     // Resume Logic: 從暫停切換到繼續
     if (!isPaused && pauseResolve) {
@@ -1379,15 +1392,14 @@ function stopScript() {
     document.getElementById('play-button').classList.add('bg-indigo-500', 'hover:bg-indigo-700');
     document.getElementById('play-button').classList.remove('bg-gray-400');
     
-    document.getElementById('pause-resume-button').querySelector('span').textContent = '⏸️ Pause'; // 英文修正
-    document.getElementById('status-message').textContent = '◼️ Playback stopped.'; // 英文修正
+    document.getElementById('pause-resume-button').querySelector('span').textContent = '⏸️ 暫停/繼續';
+    document.getElementById('status-message').textContent = '◼️ 播放已停止。';
     
     // 清除所有步驟高亮 (focused-step 已移除)
     document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
 
-    // 關閉圖片模態框和彈窗
+    // 關閉圖片模態框
     closeImageModal();
-    if(popup) { mapInstance.closePopup(popup); popup = null; }
     
     // NEW: Update layout back to editing mode
     updateMobileLayout();
@@ -1683,13 +1695,13 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     playButton.disabled = true;
     pauseButton.disabled = false;
     stopButton.disabled = false; // 啟用停止按鈕
-    pauseButton.title = 'Pause Playback'; // 英文修正
+    pauseButton.title = '暫停播放';
     // 更新按鈕文字
-    pauseButton.querySelector('span').textContent = '⏸️ Pause'; // 英文修正
+    pauseButton.querySelector('span').textContent = '⏸️ 暫停播放';
 
     playButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-700');
     playButton.classList.add('bg-gray-400');
-    statusMessage.textContent = '▶️ Script execution started...'; // 英文修正
+    statusMessage.textContent = '▶️ 劇本開始執行...';
     
     // NEW: Update layout to playing mode (這裡也會更新 isMobile 並呼叫 invalidateSize)
     updateMobileLayout();
@@ -1701,8 +1713,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     let currentLat = scriptSteps[0].lat;
     let currentLng = scriptSteps[0].lng;
     let currentIcon = 'motorcycle'; // 預設圖標 (機車圖標)
-    let currentDay = 1; // 新增：追蹤 Day 數
-    
+
     for (let j = 0; j < startIndex; j++) {
         const step = scriptSteps[j];
         if (step.type === 'start') {
@@ -1722,8 +1733,6 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
         } else if (step.type === 'dayoff') {
             // Dayoff 不改變位置，但會強制設為 sleep
             currentIcon = 'sleep';
-            // 經過 Dayoff，天數增加
-            currentDay++; 
         }
     }
     
@@ -1741,7 +1750,16 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
 
     // 2. 按照步驟順序執行
     async function runSteps() { // 使用一個 async 內部函數來處理 await
-        // currentDay 已經從狀態重建中獲得正確的值
+        let currentDay = 1; // 追蹤 Day 數
+        
+        // --- 預先計算 DAY 數到 startIndex 之前 ---
+        // 這是必要的，因為我們需要知道從 startIndex 開始時，目前是第幾天
+        for (let j = 0; j < startIndex; j++) {
+            if (j > 0 && scriptSteps[j - 1].type === 'dayoff') {
+                currentDay++;
+            }
+        }
+        // ----------------------------------------
 
         for (let i = startIndex; i < scriptSteps.length; i++) {
             
@@ -1753,18 +1771,17 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             // --- 1. 自動產生 DAY X START 訊息 (新需求) ---
             let isDayStartStep = false;
             // 判斷是否為 Day 1 的開始 (i=1, startIndex=1)
-            if (i === 1 && startIndex <= 1) { // 處理從 1 開始和從 0 (start) 開始但 i=1 的情況
+            if (i === 1 && startIndex === 1) {
                 isDayStartStep = true;
             } 
             // 判斷是否為 Day X 的開始 (前一步驟是 Dayoff)
             else if (i > 1 && scriptSteps[i - 1].type === 'dayoff') {
                 isDayStartStep = true;
-                // 如果是 Dayoff 後的第一步，currentDay 在 Dayoff 步驟中已經是正確的 Day X
             }
 
             if (isDayStartStep) {
                 // 確保訊息顯示不會被 Pause 阻塞
-                show(`🌞 DAY ${currentDay} Start!`, 1); // 修正：確保 Day Start 訊息只持續 1 秒
+                show(`🌞 DAY ${currentDay} 開始！`); 
                 // 給予 1 秒顯示時間，且這 1 秒需要支援 Pause
                 await wait(1); 
                 await getPausePromise(); 
@@ -1775,7 +1792,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             await getPausePromise(); 
             
             if (!isScriptRunning) {
-                 clearFreezeDetection(); 
+                 clearFreezeDetection(); // 確保恢復後立即停止時清除計時器
                  break; 
             } 
             
@@ -1787,89 +1804,103 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             const step = scriptSteps[i];
             
             // 更新當前執行狀態
-            statusMessage.textContent = `Executing: Step ${i}. ${step.label || step.type}`; // 英文修正
+            statusMessage.textContent = `執行中: 步驟 ${i}. ${step.label || step.type}`;
             // 播放時使用藍色高亮
             document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
             
-            // 預先計算常用變數
+            // 新增變量來控制流程
             const wordsPresent = step.words && step.words.trim() !== '';
-            const hasImage = !!step.image;
-            const stepDuration = step.sec || PHOTO_STANDALONE_DURATION;
+            const imagePresent = !!step.image;
+            const stepDuration = step.sec || PHOTO_STANDALONE_DURATION; 
+            
+            // 獨立媒體播放控制 (用於步驟結束時)
+            let runStandaloneModal = false;
+            let modalMessage = null; // 訊息傳遞給 modal
+            let modalDuration = PHOTO_STANDALONE_DURATION;
 
             try {
-
+                // --- 步驟開始時的邏輯 ---
+                // 只有 Activity/Dayoff（持續顯示類型）才在開始時打開照片
+                if ((step.type === 'activity' || step.type === 'dayoff') && imagePresent) {
+                    openImageModal(step.image); 
+                }
+                
                 // --- 執行主要步驟動作 ---
                 switch (step.type) {
                     case 'activity':
-                        // **ACTIVITY 步驟：同時開/關照片，與 wait(sec) 同步**
-                        if (hasImage) { openImageModal(step.image); } 
                         if (step.icon) { setIcon(step.icon); }
                         if (step.sec && step.sec > 0) { await wait(step.sec); }
-                        if (hasImage) { closeImageModal(); } 
                         break;
-                    
+                        
                     case 'show':
-                        // **修正 SHOW 步驟：同時開啟 Popup 和 Modal，並在 stepDuration 後同時關閉**
-                        if (wordsPresent) { 
-                            // 1. 顯示 Popup，並讓它持續 stepDuration 時間
-                            show(step.words, stepDuration);
-                        }
-                        if (hasImage) {
-                            // 2. 開啟 Image Modal
-                            openImageModal(step.image);
-                        }
-                        
-                        // 3. 等待設定的持續時間 (阻塞執行)
-                        await wait(stepDuration);
-                        await getPausePromise(); // 支援等待期間的暫停/繼續
-                        
-                        // 4. 圖片 Modal 必須手動關閉 (Popup 由 show() 內部定時器關閉)
-                        if (hasImage) {
-                            closeImageModal();
+                        if (wordsPresent && imagePresent) {
+                            // **新需求: 訊息+圖片 -> 訊息放入圖片模態框**
+                            runStandaloneModal = true;
+                            modalMessage = step.words; // 傳遞訊息
+                            modalDuration = stepDuration; // 使用設定的秒數
+                            // 不執行等待，讓 playStepMedia 處理
+                        } else if (wordsPresent && !imagePresent) {
+                            // 只有訊息 (無圖) -> Leaflet Popup
+                            show(step.words);
+                            await wait(1); 
+                        } else if (!wordsPresent && imagePresent) {
+                            // 只有圖片 (無訊息) -> 獨立模態框
+                            runStandaloneModal = true;
+                            modalDuration = stepDuration; // 使用設定的秒數
+                            // 不執行等待，讓 playStepMedia 處理
+                        } else {
+                            // 無訊息，無圖片 -> 純等待
+                            await wait(stepDuration); 
                         }
                         break;
                         
                     case 'goto':
-                        // **GOTO 步驟**
                         if (step.icon) { setIcon(step.icon); }
-                        await goto([step.lat, step.lng]); // Blocks during move
+                        await goto([step.lat, step.lng]);
                         
-                        // **抵達後顯示訊息 (如果存在)**
                         if (wordsPresent) {
-                            show(step.words, 1); // 修正：確保抵達訊息只持續 1 秒
-                            await wait(1); // Give time for popup
+                            // Goto 訊息仍然使用 Leaflet Popup
+                            show(step.words);
+                            await wait(1);
                         }
                         
-                        // GOTO 的圖片會在 switch 之後的獨立區塊中處理 (Sequential)
+                        if (imagePresent) {
+                            // Goto 圖片在移動和訊息後播放 (獨立，無訊息)
+                            runStandaloneModal = true;
+                            // Goto 圖片使用預設時長 2.5s
+                            modalDuration = PHOTO_STANDALONE_DURATION;
+                            // modalMessage 保持 null
+                        }
                         break;
                         
                     case 'dayoff':
-                        // **Dayoff 步驟：同時開/關照片，與 animateNight 同步**
-                        if (hasImage) { openImageModal(step.image); }
                         setIcon('sleep');
                         await animateNight(step.sec);
-                        if (hasImage) { closeImageModal(); }
-
-                        // 更新 Day 計數器 (這步驟完成了，所以準備進入下一天)
-                        currentDay++; 
                         break;
                 }
                 
                 // 清除凍結偵測
                 clearFreezeDetection();
-
-                // --- 步驟結束時的邏輯 (只處理 GOTO 獨立播放的圖片) ---
-                if (step.type === 'goto' && hasImage) { 
-                    // GOTO 的圖片在移動結束後單獨展示 (Sequential)
-                    await playStepMedia(step.image, PHOTO_STANDALONE_DURATION);
+                
+                // --- 步驟結束時的邏輯 ---
+                // 1. 處理 Activity/Dayoff 的關閉
+                if ((step.type === 'activity' || step.type === 'dayoff') && imagePresent) {
+                    closeImageModal();
+                } 
+                
+                // 2. 處理 SHOW 或 GOTO 的獨立模態框播放
+                else if (runStandaloneModal) {
+                    // 注意：此處已包含了 SHOW + 訊息 + 圖片的組合，並將訊息傳入
+                    await playStepMedia(step.image, modalDuration, modalMessage); 
                 }
+
 
             } catch (error) {
                 console.error(`步驟 ${i} 執行錯誤:`, error);
                 // 遇到錯誤，調用 stopScript 清理狀態
                 clearFreezeDetection();
                 stopScript();
-                statusMessage.textContent = `❌ Error: Step ${i} failed and playback stopped.`; // 英文修正
+                statusMessage.textContent = `❌ 錯誤: 步驟 ${i} 執行失敗，已中斷。`;
                 return; 
             }
             
@@ -1880,7 +1911,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
         // 3. 執行結束
         if (isScriptRunning) { 
             stopScript(); // 使用 stopScript 執行標準結束清理
-            statusMessage.textContent = '✅ Script execution finished!'; // 英文修正
+            statusMessage.textContent = '✅ 劇本執行完畢！';
         }
     }
     
@@ -2072,7 +2103,7 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
         if (!isSilent) {
             statusMessage.textContent = `✅ 檔案已成功下載為 journey_script${FILE_EXTENSION}！`;
             setTimeout(() => {
-                statusMessage.textContent = 'Ready'; // 英文修正
+                statusMessage.textContent = '準備就緒';
             }, 3000);
         }
         return true;
@@ -2098,7 +2129,7 @@ function handleFileUpload(event) {
     event.target.value = null; 
 
     if (!file) {
-        statusMessage.textContent = 'Ready'; // 英文修正
+        statusMessage.textContent = '準備就緒';
         return;
     }
 
@@ -2129,26 +2160,26 @@ function handleFileUpload(event) {
             
             const result = loadImportedData(rawJsonString);
             if (result) {
-                statusMessage.textContent = '✅ Script file loaded successfully!'; // 英文修正
+                statusMessage.textContent = '✅ 劇本檔案已成功載入！';
                 saveScriptToLocalStorage();
                 renderScript(); // 重新渲染
             } else {
-                statusMessage.textContent = '❌ File content format is invalid or corrupted.'; // 英文修正
+                statusMessage.textContent = '❌ 檔案內容格式無效或已損壞。';
             }
         } catch (error) {
-            statusMessage.textContent = '❌ File parsing failed, please check the content format.'; // 英文修正
+            statusMessage.textContent = '❌ 檔案解析失敗，請檢查內容格式。';
             console.error('File parsing failed:', error);
         }
     };
 
     reader.onerror = () => {
-        statusMessage.textContent = '❌ Failed to read file.'; // 英文修正
+        statusMessage.textContent = '❌ 讀取檔案失敗。';
         console.error('FileReader error:', reader.error);
     };
 
     // 讀取檔案為純文字
     reader.readAsText(file);
-    statusMessage.textContent = `Reading file ${file.name} ...`; // 英文修正
+    statusMessage.textContent = `讀取檔案 ${file.name} 中...`;
 }
 
 
@@ -2366,7 +2397,7 @@ function renderScript() {
         const isStartStep = index === 0;
         const buttonAction = `executeScript(${isStartStep ? 1 : index})`;
         const startIcon = isStartStep ? '🏠' : '▶️';
-        const startButtonTitle = isStartStep ? 'Play from Start' : 'Play from here'; // 英文修正
+        const startButtonTitle = isStartStep ? '從頭撥放' : '從這邊開始撥放';
 
         
         if (step.type === 'start') {
@@ -2524,7 +2555,8 @@ function renderScript() {
                            value="${currentSec}" 
                            onchange="updateStep(${index}, 'sec', parseFloat(this.value))">
                     <p class="text-xs text-gray-500 mt-2">
-                        此秒數將作為訊息彈窗/照片模態框的**持續顯示時間**。
+                        如果**沒有**訊息內容：此秒數將作為地圖上**停留**的持續時間。
+                        <br>如果**有**訊息內容：若有圖片，會與圖片一同顯示；若無圖片，則以彈窗形式顯示 1 秒。
                     </p>
                 `;
                 break;
@@ -2681,25 +2713,25 @@ function renderScript() {
       
       <!-- 播放控制按鈕 -->
       <div class="flex space-x-2 mb-2">
-          <!-- 暫停/繼續按鈕 (英文修正) -->
+          <!-- 暫停/繼續按鈕 -->
           <button id="pause-resume-button" onclick="pauseToggle()" 
               class="w-1/2 bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
               disabled 
-              title="Pause Playback">
-              <span class="text-lg">⏸️ Pause</span>
+              title="暫停播放">
+              <span class="text-lg">⏸️ 暫停/繼續</span>
           </button>
-           <!-- 停止播放按鈕 (英文修正) -->
+           <!-- 停止播放按鈕 (新增) -->
           <button id="stop-button" onclick="stopScript()" 
               class="w-1/2 bg-gray-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
               disabled 
-              title="Stop Playback">
-              <span class="text-lg">◼️ Stop</span>
+              title="停止播放">
+              <span class="text-lg">◼️ 停止播放</span>
           </button>
       </div>
 
-      <!-- 播放按鈕 (英文修正) -->
+      <!-- 播放按鈕 -->
       <button id="play-button" onclick="executeScript(1)" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] text-lg mb-2">
-        ▶️ Start Playback
+        ▶️ 從頭開始播放 (PLAY)
       </button>
       
       <!-- 匯出與刪除按鈕 -->
@@ -2718,7 +2750,7 @@ function renderScript() {
           </button>
       </div>
 
-      <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">Ready</div>
+      <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">準備就緒</div>
 
     </div> <!-- End #bottom-controls -->
 
@@ -2772,4 +2804,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
