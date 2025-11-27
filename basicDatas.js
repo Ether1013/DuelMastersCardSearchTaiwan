@@ -1,4 +1,15 @@
-﻿	//卡牌資料 (使用 Map 結構優化查詢)
+﻿
+	// 優先級定義: 數字越大，越排在前面 (根據五色循環和視覺效果排序)
+	const colorPriority = {
+		16: 60, // 光 (Light)
+		 4: 50, // 闇 (Darkness)
+		 2: 40, // 火 (Fire)
+		 1: 30, // 自 (Nature)
+		 8: 20, // 水 (Water)
+		32: 10, // 無 (Zero)
+	};
+
+	//卡牌資料 (使用 Map 結構優化查詢)
 	const cardDatas = {
 	
 		//資料集合: Map<CardName, CardData>
@@ -305,20 +316,62 @@
 			return theData == null ? "card_list_header_rainbow.jpg" : theData.headerPic;
 		},
 		
-		//取得動態背景漸層CSS
-		getBackgroundCSS : function( value ){
-			let civils = this.getDatasByValue( value );
+		getBackgroundCSS: function(value) {
+			let civils = this.getDatasByValue(value);
+			
+			// 步驟 1: 根據預設優先級進行排序 (確保多色漸層順序更協調)
+			civils.sort((a, b) => {
+				const priorityA = colorPriority[a.value] || 0;
+				const priorityB = colorPriority[b.value] || 0;
+				return priorityB - priorityA; // 降序排列 (Priority 高的排在前面)
+			});
+			
+			// 步驟 2: 處理邊界情況
 			if ( civils.length === 0 )
 				civils = [ { dvBGColor : "#FFFFFF" } ];
 			if ( civils.length === 1 ){
 				civils.push( civils[0] );
 			}
+
 			let rtn = "";
 			rtn += backgroundImageHeader + "linear-gradient( -45deg, ";
-			for ( let i = 0 ; i < civils.length ; i++ ){
-				rtn += ( i > 0 ? "," : "" ) + civils[i].dvBGColor + " " + ( Math.floor( 100 * i / ( civils.length - 1 ) ) ) + "%";
+			
+			const numCivils = civils.length;
+
+			// 步驟 3: 通用分段渲染邏輯（適用於所有情況，避免過度混合）
+			const step = 100 / numCivils;
+			let colorStops = [];
+
+			for (let i = 0; i < numCivils; i++) {
+				const color = civils[i].dvBGColor;
+				// 確保起始點在區間內
+				const startPct = Math.floor(step * i);
+				// 確保結束點剛好是下一個顏色的起點
+				const endPct = Math.floor(step * (i + 1));
+				
+				// 1. 設置顏色塊的開始點
+				if (i === 0) {
+					// 第一個顏色必須從 0% 開始
+					colorStops.push(`${color} 0%`);
+				} else {
+					// 隨後的顏色從前一個顏色的結束點開始 (這步驟是實現漸層的關鍵)
+					colorStops.push(`${color} ${startPct}%`);
+				}
+				
+				// 2. 設置顏色塊的結束點 (確保顏色在大部分區間保持純色)
+				if (i < numCivils - 1) {
+					 // 如果不是最後一個顏色，讓它佔滿整個分段
+					colorStops.push(`${color} ${endPct}%`);
+				} else {
+					// 最後一個顏色延伸到 100%
+					colorStops.push(`${color} 100%`);
+				}
 			}
- 			rtn += ")";
+			
+			// 最終組合
+			rtn += colorStops.join(", ");
+			rtn += ")";
+			
 			return rtn;
 		}
 	};
