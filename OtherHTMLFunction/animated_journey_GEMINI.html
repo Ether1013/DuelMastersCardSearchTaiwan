@@ -22,9 +22,10 @@
   .target-star-icon {
     /* 確保沒有背景 */
     background: none !important;
+    /* 新增：確保移除 DIV 的邊框 */
+    border: none !important; 
     /* 預設 Leaflet marker Z-index 是 200，這裡設為 100 */
     z-index: 100 !important; 
-	border: none !important;
   }
   .target-star-icon div {
       /* 縮小到約 1/3 (從 75px 縮小到 25px 或 30px) */
@@ -209,18 +210,25 @@ const DAY_COLORS_PALETTE = [
 ];
 
 const iconSize = 75; // 桌面預設大小
-// 調整 2: icon 下拉選單的選項呈現改為 emoji
+// 調整 3: 重新排序 ICON_NAMES (交通在上、活動在下、睡覺最後)
 const ICON_NAMES = [
+    // 交通 (Traffic)
+    { name: 'airplane', emoji: '✈️' },
     { name: 'train', emoji: '🚆' },
-    { name: 'walk', emoji: '🚶‍♂️' },
-    { name: 'dine', emoji: '🍽️' },
-    { name: 'sleep', emoji: '😴' },
+    { name: 'car', emoji: '🚗' },
+    { name: 'taxi', emoji: '🚕' },
     { name: 'bus', emoji: '🚌' },
     { name: 'motorcycle', emoji: '🏍️' },
-    { name: 'car', emoji: '🚗' },
+    
+    // 活動/狀態 (Activity/Status)
+    { name: 'walk', emoji: '🚶‍♂️' },
     { name: 'view', emoji: '🏞️' },
+    { name: 'amusement', emoji: '🎡' }, 
     { name: 'shopping', emoji: '🛍️' },
-    { name: 'airplane', emoji: '✈️' }
+    { name: 'dine', emoji: '🍽️' },
+    
+    // 休息 (Sleep)
+    { name: 'sleep', emoji: '😴' } 
 ];
 
 // 根據 ICON_NAMES 建立 icons 物件，方便查找
@@ -560,7 +568,7 @@ async function fetchWithRetry(url, maxRetries = 3) {
             const response = await fetch(url);
             
             if (!response.ok) {
-                throw new Error(`HTTP 錯誤: ${response.status} ${response.statusText}`);
+                throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
             }
 
             const text = await response.text();
@@ -571,12 +579,12 @@ async function fetchWithRetry(url, maxRetries = 3) {
             console.error(`嘗試從 URL 載入劇本失敗 (嘗試 ${attempt + 1}/${maxRetries}):`, error);
             if (attempt < maxRetries - 1) {
                 const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
-                statusMessage.textContent = `⚠️ 載入失敗，將在 ${delay / 1000} 秒後重試...`;
+                statusMessage.textContent = `⚠️ Load failed, retrying in ${delay / 1000}s...`;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
     }
-    statusMessage.textContent = '❌ 從 URL 載入腳本失敗。已達到最大重試次數。';
+    statusMessage.textContent = '❌ Failed to load script from URL. Max retries reached.';
     return null;
 }
 
@@ -586,7 +594,7 @@ async function fetchWithRetry(url, maxRetries = 3) {
  */
 async function loadScriptFromUrl(url) {
     const statusMessage = document.getElementById('status-message');
-    statusMessage.textContent = `🌐 正在從 URL 載入腳本： ${url.substring(0, 40)}...`;
+    statusMessage.textContent = `🌐 Loading script from URL: ${url.substring(0, 40)}...`;
     
     const fileContent = await fetchWithRetry(url);
 
@@ -608,16 +616,16 @@ async function loadScriptFromUrl(url) {
 
         const result = loadImportedData(rawJsonString);
         if (result) {
-            statusMessage.textContent = '✅ 腳本檔案已從 URL 成功載入！';
+            statusMessage.textContent = '✅ Script file successfully loaded from URL!';
             saveScriptToLocalStorage();
             renderScript(); // 重新渲染
             return true;
         } else {
-            statusMessage.textContent = '❌ URL 檔案內容無效或已損壞。';
+            statusMessage.textContent = '❌ URL file content is invalid or corrupted.';
             return false;
         }
     } catch (error) {
-        statusMessage.textContent = '❌ URL 檔案解析失敗，請檢查格式。';
+        statusMessage.textContent = '❌ URL file parsing failed, please check the format.';
             console.error('URL 檔案解析失敗:', error);
         return false;
     }
@@ -652,7 +660,7 @@ function showConflictModal(scriptUrl) {
     const modal = document.getElementById('conflict-modal');
     
     // 設置狀態訊息
-    document.getElementById('status-message').textContent = '⚠️ 偵測到匯入衝突，請選擇解決方案。';
+    document.getElementById('status-message').textContent = '⚠️ Import conflict detected, please choose resolution.';
 
     overlay.classList.remove('opacity-0', 'pointer-events-none');
     modal.classList.remove('scale-90');
@@ -687,7 +695,7 @@ async function handleConflictResolution(resolution) { // <-- HTML onclick 調用
     switch (resolution) {
         case 'cancel':
             // 1. 取消匯入，繼續編輯本地行程 (本地行程已載入，但需要渲染)
-            document.getElementById('status-message').textContent = '操作已取消。繼續使用本地腳本。';
+            document.getElementById('status-message').textContent = 'Operation cancelled. Continuing with local script.';
             renderScript();
             // 在 'cancel' 情況下，本地資料已經在 checkAndLoadScriptFromURL 載入，
             // 並且已經 renderScript() 渲染完成，我們只需移除 URL 參數即可，
@@ -697,21 +705,21 @@ async function handleConflictResolution(resolution) { // <-- HTML onclick 調用
             
         case 'save_and_import':
             // 2. 儲存編輯中行程後再匯入新行程
-            document.getElementById('status-message').textContent = '💾 正在儲存本地腳本...';
+            document.getElementById('status-message').textContent = '💾 Saving local script...';
             // 靜默匯出當前本地腳本 (這會觸發下載)
             await exportScript(true); 
             
             // 延遲一下，確保下載觸發 (瀏覽器可能需要一點時間來處理下載)
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            document.getElementById('status-message').textContent = '🌐 正在匯入新腳本...';
+            document.getElementById('status-message').textContent = '🌐 Importing new script...';
             await loadScriptFromUrl(url); // 匯入 URL 腳本並覆蓋本地儲存
             // 接下來將執行重新導向
             break;
             
         case 'overwrite':
             // 3. 覆蓋掉編輯中的行程 (直接匯入新行程)
-            document.getElementById('status-message').textContent = '🌐 正在覆蓋本地腳本，匯入新腳本...';
+            document.getElementById('status-message').textContent = '🌐 Overwriting local script, importing new script...';
             await loadScriptFromUrl(url); // 匯入 URL 腳本並覆蓋本地儲存
             // 接下來將執行重新導向
             break;
@@ -727,7 +735,7 @@ async function handleConflictResolution(resolution) { // <-- HTML onclick 調用
         if (resolution === 'cancel' && !needsRedirect) {
              currentUrl.searchParams.delete('scriptUrl');
              window.history.replaceState({}, document.title, currentUrl.toString());
-             document.getElementById('status-message').textContent = '操作已取消。已清除 URL 參數。';
+             document.getElementById('status-message').textContent = 'Operation cancelled. URL parameter cleared.';
         } 
         // 否則（'save_and_import' 或 'overwrite'），需要重新導向
         else if (needsRedirect) {
@@ -761,11 +769,11 @@ function checkAndLoadScriptFromURL() {
                 // 檢查是否為非預設腳本
                 if (!isScriptDefault(scriptSteps)) {
                     hasLocalNonDefaultScript = true;
-                    document.getElementById('status-message').textContent = `📥 已從本地儲存載入腳本。`;
+                    document.getElementById('status-message').textContent = `📥 Script loaded from local storage.`;
                 }
             }
         } catch (error) {
-            console.error('Failed to parse local stored script:', error); // 改為英文
+            console.error('Failed to parse local stored script:', error);
         }
     }
 
@@ -777,12 +785,12 @@ function checkAndLoadScriptFromURL() {
         // 發現 URL 參數
         if (hasLocalNonDefaultScript) {
             // 2.1. 衝突：有 URL 且本地非預設
-            statusMessage.textContent = '🔍 偵測到衝突...';
+            statusMessage.textContent = '🔍 Conflict detected...';
             showConflictModal(scriptUrl);
             return; 
         } else {
             // 2.2. 無衝突：有 URL，本地是預設或空
-            statusMessage.textContent = '🔍 找到 URL 腳本參數，正在嘗試載入...';
+            statusMessage.textContent = '🔍 URL script parameter found, attempting to load...';
             // 由於 DOMContentLoaded 已經完成，我們可以直接呼叫 async 函式並忽略其結果
             loadScriptFromUrl(scriptUrl)
                 .then(() => {
@@ -801,7 +809,7 @@ function checkAndLoadScriptFromURL() {
     // 3. 既無 URL 參數，本地腳本也已處理
     if (!hasLocalNonDefaultScript) {
          // 如果本地腳本是 default，且沒有 URL 參數，則設置初始提示
-        document.getElementById('status-message').textContent = '💡 歡迎！請開始新增您的第一個步驟。';
+        document.getElementById('status-message').textContent = '💡 Welcome! Start adding your first step.';
     }
 
     // 最後確保渲染 (非同步載入路徑會自己呼叫 renderScript)
@@ -902,9 +910,9 @@ function updateStep(index, field, value) { // <-- HTML onchange 調用
                 const isSameLng = Math.abs(lng - prevPos.lng) < EPSILON;
                 
                 if (isSameLat && isSameLng) {
-                    console.error("GPS 錯誤：新位置與上一個已知位置相同。中止更新。");
-                    document.getElementById('status-message').textContent = '⚠️ 錯誤：新位置與上一個已知位置相同。移動將被忽略。';
-                    setTimeout(() => { document.getElementById('status-message').textContent = '準備就緒'; }, 3000);
+                    console.error("GPS Error: New position is the same as the previous known position. Aborting update.");
+                    document.getElementById('status-message').textContent = '⚠️ Error: New position is the same as the previous known position. Move will be ignored.';
+                    setTimeout(() => { document.getElementById('status-message').textContent = 'Ready'; }, 3000);
                     return; 
                 }
             }
@@ -913,7 +921,7 @@ function updateStep(index, field, value) { // <-- HTML onchange 調用
             scriptSteps[index].lat = lat;
             scriptSteps[index].lng = lng;
         } else {
-            console.error("無效的座標格式。請使用 '緯度, 經度'。");
+            console.error("Invalid coordinate format. Please use 'lat, lng'.");
         }
     } else if (field === 'lat' || field === 'lng' || field === 'sec') {
         // 處理單獨的數字欄位 (此邏輯現在主要用於 'sec')
@@ -1036,11 +1044,11 @@ function handleImageUpload(event, index) {
     event.target.value = null; 
 
     if (!file || !file.type.startsWith('image/')) {
-        statusMessage.textContent = '⚠️ 請選擇一個有效的圖片檔案。';
+        statusMessage.textContent = '⚠️ Please select a valid image file.';
         return;
     }
 
-    statusMessage.textContent = '正在上傳圖片，進行壓縮...';
+    statusMessage.textContent = 'Uploading image, compressing...';
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -1081,7 +1089,7 @@ function handleImageUpload(event, index) {
             saveScriptToLocalStorage();
             renderScript();
             
-            statusMessage.textContent = '✅ 照片已壓縮並新增至步驟。';
+            statusMessage.textContent = '✅ Photo compressed and added to step.';
         };
         img.src = e.target.result;
     };
@@ -1096,7 +1104,7 @@ function removeImage(index) {
     scriptSteps[index].image = undefined;
     saveScriptToLocalStorage();
     renderScript();
-    document.getElementById('status-message').textContent = '🗑️ 照片已移除。';
+    document.getElementById('status-message').textContent = '🗑️ Photo removed.';
 }
 
 
@@ -1118,7 +1126,7 @@ function startFreezeDetection(stepIndex, timeoutSec) {
         console.error(`Freeze Detected: Step ${stepIndex} exceeded ${timeoutSec} seconds.`);
         // Note: stopScript() will clear the freezeTimeoutId.
         stopScript(); 
-        statusMessage.textContent = `❌ 錯誤：步驟 ${stepIndex} 執行超過 ${timeoutSec} 秒，已自動停止。`;
+        statusMessage.textContent = `❌ Error: Step ${stepIndex} execution exceeded ${timeoutSec}s, automatically stopped.`;
     }, timeoutSec * 1000);
 }
 
@@ -1175,17 +1183,17 @@ function getDurationMultiplier(text) { // <-- 需求 4: 新增
 
 /**
  * 顯示訊息彈出視窗 (Popup)
+ * 修正：移除內建的 1 秒關閉計時器，讓調用者控制關閉時間。
  */
 function show(words){
-  if(popup) mapInstance.closePopup(popup);
+  // 確保在打開新的之前關閉現有的
+  if(popup) mapInstance.closePopup(popup); 
   
   // 動態調整 popupAnchor (維持上/下彈的邏輯，但 Leaflet 會自動平移以避免切邊)
   const isMobileVertical = window.innerWidth <= 767;
   let anchor = [0, -iconSize / 2]; // 預設 (往上彈)
   
   if (isMobileVertical) {
-      // 在 Leaflet 完成渲染後才能正確計算點座標
-      // 此處的邏輯僅用於決定初始彈出方向，Leaflet 的 autoPan 會處理最終位置
       try {
         const mapContainerRect = document.getElementById('map').getBoundingClientRect();
         const markerPoint = mapInstance.latLngToContainerPoint(marker.getLatLng());
@@ -1203,7 +1211,7 @@ function show(words){
   
   popup = L.popup({
       closeButton:false, 
-      autoClose:true, 
+      autoClose:false, // 修正: 設為 false，由程式碼手動關閉
       className: 'custom-large-popup',
       // 設定足夠的邊距，防止 Pop-up 被邊緣切到
       autoPanPadding: L.point(50, 50), 
@@ -1213,8 +1221,20 @@ function show(words){
     .setContent(words)
     .openOn(mapInstance);
     
-  setTimeout(()=>{ mapInstance.closePopup(popup); popup=null; }, 1000);
+  // 修正: 移除這行，由 executeScript 負責計時後關閉
+  // setTimeout(()=>{ mapInstance.closePopup(popup); popup=null; }, 1000); 
 }
+
+/**
+ * 輔助函式：手動隱藏彈出視窗
+ */
+function hidePopup() {
+    if (popup) {
+        mapInstance.closePopup(popup);
+        popup = null;
+    }
+}
+
 
 /**
  * 開啟照片的模態框 (非阻塞)
@@ -1237,8 +1257,8 @@ function openImageModal(base64Image, message = null) { // <-- 修正 1: 新增 m
                 <!-- 修正 2: 訊息顯示區 -->
                 <div id="modal-message" class="text-xl font-bold text-gray-800 text-center mb-3 p-2 bg-gray-100 rounded-lg hidden"></div>
                 <!-- 確保圖片寬度最大化，高度自適應，並使用壓縮後的圖片大小 -->
-                <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_LONG_SIDE}px] mx-auto" alt="旅程照片">
-                <p class="text-center text-sm text-gray-600 font-semibold mb-2">📸 旅程照片</p>
+                <img id="modal-image" class="w-full h-auto rounded-lg mb-2 max-w-[${MAX_LONG_SIDE}px] mx-auto" alt="Journey Photo">
+                <p class="text-center text-sm text-gray-600 font-semibold mb-2">📸 Journey Photo</p>
                 <!-- 新增 SKIP 按鈕 -->
                 <button onclick="skipPhoto()" id="skip-photo-button" class="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition duration-150">
                     SKIP
@@ -1323,7 +1343,7 @@ function skipPhoto() {
 
         const resolveFn = skipPhotoResolve;
         skipPhotoResolve = null; // 清除狀態
-        document.getElementById('status-message').textContent = '📸 照片已跳過。';
+        document.getElementById('status-message').textContent = '📸 Photo skipped.';
         resolveFn(); // 解決 playStepMedia 的主 Promise
     }
 }
@@ -1379,10 +1399,10 @@ function pauseToggle() { // <-- HTML onclick 調用
     if (!isScriptRunning) return;
 
     isPaused = !isPaused;
-    btn.title = isPaused ? '繼續播放' : '暫停播放';
+    btn.title = isPaused ? 'Resume Playback' : 'Pause Playback';
     
     // 根據狀態更新按鈕文字
-    btn.querySelector('span').textContent = isPaused ? '▶️ 繼續' : '⏸️ 暫停';
+    btn.querySelector('span').textContent = isPaused ? '▶️ RESUME' : '⏸️ PAUSE';
     
     // Resume Logic: 從暫停切換到繼續
     if (!isPaused && pauseResolve) {
@@ -1436,14 +1456,16 @@ function stopScript() {
     document.getElementById('play-button').classList.add('bg-indigo-500', 'hover:bg-indigo-700');
     document.getElementById('play-button').classList.remove('bg-gray-400');
     
-    document.getElementById('pause-resume-button').querySelector('span').textContent = '⏸️ 暫停/繼續';
-    document.getElementById('status-message').textContent = '◼️ 播放已停止。';
+    document.getElementById('pause-resume-button').querySelector('span').textContent = '⏸️ PAUSE/RESUME';
+    document.getElementById('status-message').textContent = '◼️ Playback stopped.';
     
     // 清除所有步驟高亮 (focused-step 已移除)
     document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.remove('ring-2', 'ring-indigo-500', 'shadow-md'));
 
     // 關閉圖片模態框
     closeImageModal();
+    // 修正：停止時也要關閉彈出視窗
+    hidePopup(); 
     
     // NEW: Update layout back to editing mode
     updateMobileLayout();
@@ -1552,7 +1574,12 @@ function createArcPath(start, end) {
 
 
 // 函式: 移動 (Promise 版本)
-function goto(gps){
+/**
+ * * @param {Array<number>} gps - [lat, lng]
+ * @param {Object} step - 當前的步驟物件 (用於判斷是否需要星號)
+ * @returns {Promise<void>}
+ */
+function goto(gps, step){ // <-- 調整 2: 新增 step 參數
   return new Promise(resolve => {
     if(currentAnimation) return;
     currentAnimation=true;
@@ -1564,24 +1591,32 @@ function goto(gps){
 
     let pathPoints;
     let finalPathDistance;
-    
-    // ------------------------------------------------------------------
-    // 需求 3. START: 在目標位置標上大星號
-    // ------------------------------------------------------------------
-    // 調整：使用 CSS 類別 `target-star-icon` 控制大小、背景和 Z-index
-    const starIcon = L.divIcon({ 
-        html: '<div style="font-size: 30px; color: red; line-height:1;">⭐</div>', // 內聯樣式僅確保圖標是星號且紅色
-        className: 'leaflet-div-icon target-star-icon', 
-        iconSize: [30, 30], // 確保容器大小匹配
-        iconAnchor: [15, 15] // 錨點調整為中心
-    });
 
-    // 移除舊的星號 (如果存在)
-    if (targetMarker) {
-        mapInstance.removeLayer(targetMarker);
-    }
+    // --- 調整 2: 條件式星號邏輯 ---
+    const wordsPresent = step.words && step.words.trim() !== '';
+    const imagePresent = !!step.image;
+    const shouldShowStar = wordsPresent || imagePresent; // 僅當有訊息或圖片時才顯示星號
     
-    targetMarker = L.marker(gps, { icon: starIcon }).addTo(mapInstance);
+    // ------------------------------------------------------------------
+    // 需求 3. START: 在目標位置標上大星號 (現在是條件式)
+    // ------------------------------------------------------------------
+    
+    if (shouldShowStar) {
+        // 調整：使用 CSS 類別 `target-star-icon` 控制大小、背景和 Z-index
+        const starIcon = L.divIcon({ 
+            html: '<div style="font-size: 30px; color: red; line-height:1;">⭐</div>', // 內聯樣式僅確保圖標是星號且紅色
+            className: 'leaflet-div-icon target-star-icon', 
+            iconSize: [30, 30], // 確保容器大小匹配
+            iconAnchor: [15, 15] // 錨點調整為中心
+        });
+
+        // 移除舊的星號 (如果存在)
+        if (targetMarker) {
+            mapInstance.removeLayer(targetMarker);
+        }
+        
+        targetMarker = L.marker(gps, { icon: starIcon }).addTo(mapInstance);
+    }
     // ------------------------------------------------------------------
 
 
@@ -1653,7 +1688,7 @@ function goto(gps){
       // 根據圖標名稱設定速度
       if (currentIconName === 'walk' || currentIconName === 'dine' || currentIconName === 'view' || currentIconName === 'shopping') { 
         speed = 100; // 步行和靜態動作速度
-      } else if (currentIconName === 'bus' || currentIconName === 'car') {
+      } else if (currentIconName === 'bus' || currentIconName === 'car' || currentIconName === 'taxi') { // 新增 taxi
         speed = 400; // 調整為 400 m/s
       } else if (currentIconName === 'airplane') {
         speed = 800; // 飛機速度最快
@@ -1675,9 +1710,10 @@ function goto(gps){
           marker.setLatLng(gps);
           
           // ------------------------------------------------------------------
-          // 需求 3. END: 移除目標位置的星號
+          // 需求 3. END: 移除目標位置的星號 (現在是條件式)
           // ------------------------------------------------------------------
-          if (targetMarker) {
+          // 只有當初有新增星號時才移除
+          if (targetMarker) { 
               mapInstance.removeLayer(targetMarker);
               targetMarker = null;
           }
@@ -1768,13 +1804,13 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
     playButton.disabled = true;
     pauseButton.disabled = false;
     stopButton.disabled = false; // 啟用停止按鈕
-    pauseButton.title = '暫停播放';
+    pauseButton.title = 'Pause Playback';
     // 更新按鈕文字
-    pauseButton.querySelector('span').textContent = '⏸️ 暫停';
+    pauseButton.querySelector('span').textContent = '⏸️ PAUSE';
 
     playButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-700');
     playButton.classList.add('bg-gray-400');
-    statusMessage.textContent = '▶️ 腳本執行開始...';
+    statusMessage.textContent = '▶️ Script execution started...';
     
     // NEW: Update layout to playing mode (這裡也會更新 isMobile 並呼叫 invalidateSize)
     updateMobileLayout();
@@ -1858,10 +1894,11 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             
             if (isDayStartStep) {
                 // 確保訊息顯示不會被 Pause 阻塞
-                show(`🌞 第 ${currentDay} 天開始！`);
-                // 給予 1 秒顯示時間，且這 1 秒需要支援 Pause
+                show(`🌞 DAY ${currentDay} Start!`);
                 await wait(1); 
                 await getPausePromise(); 
+                // 修正：手動關閉彈出視窗
+                hidePopup(); 
             }
             // ------------------------------------
             
@@ -1881,7 +1918,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
             const step = scriptSteps[i];
             
             // 更新當前執行狀態
-            statusMessage.textContent = `執行步驟 ${i}. ${step.label || step.type}...`;
+            statusMessage.textContent = `Executing: Step ${i}. ${step.label || step.type}...`;
             // 播放時使用藍色高亮
             document.getElementById(`step-${i}`).classList.add('ring-2', 'ring-indigo-500', 'shadow-md');
             
@@ -1918,10 +1955,11 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                             // 不執行等待，讓 playStepMedia 處理
                         } else if (wordsPresent && !imagePresent) {
                             // 只有訊息 (無圖) -> Leaflet Popup
-                            // 需求 4: 根據文字長度計算持續時間
+                            // 修正：現在 calculatedDuration 真正決定了顯示時間
                             const calculatedDuration = getDurationMultiplier(step.words); 
                             show(step.words);
                             await wait(calculatedDuration); // <-- 使用計算的時間
+                            hidePopup(); // 修正：手動關閉彈出視窗
                         } else if (!wordsPresent && imagePresent) {
                             // 只有圖片 (無訊息) -> 獨立模態框
                             runStandaloneModal = true;
@@ -1935,14 +1973,15 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
                         
                     case 'goto':
                         if (step.icon) { setIcon(step.icon); }
-                        await goto([step.lat, step.lng]); // <-- goto 內部已包含星號標記邏輯
+                        await goto([step.lat, step.lng], step); // <-- 調整 2: 傳入 step 物件
                         
                         if (wordsPresent) {
                             // Goto 訊息仍然使用 Leaflet Popup
-                            // 需求 4: 根據文字長度計算持續時間
+                            // 修正：現在 calculatedDuration 真正決定了顯示時間
                             const calculatedDuration = getDurationMultiplier(step.words); 
                             show(step.words);
                             await wait(calculatedDuration); // <-- 使用計算的時間
+                            hidePopup(); // 修正：手動關閉彈出視窗
                         }
                         
                         if (imagePresent) {
@@ -1977,11 +2016,11 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
 
 
             } catch (error) {
-                console.error(`Step ${i} execution error:`, error); // 改為英文
+                console.error(`Step ${i} execution error:`, error);
                 // 遇到錯誤，調用 stopScript 清理狀態
                 clearFreezeDetection();
                 stopScript();
-                statusMessage.textContent = `❌ 錯誤：步驟 ${i} 執行失敗，已中止。`;
+                statusMessage.textContent = `❌ Error: Step ${i} execution failed, aborted.`;
                 return; 
             }
             
@@ -1992,7 +2031,7 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
         // 3. 執行結束
         if (isScriptRunning) { 
             stopScript(); // 使用 stopScript 執行標準結束清理
-            statusMessage.textContent = '✅ 腳本執行完成！';
+            statusMessage.textContent = '✅ Script execution completed!';
         }
     }
     
@@ -2005,11 +2044,11 @@ function executeScript(startIndex = 1) { // <-- HTML onclick 調用
  */
 function promptClearScript() { // <-- HTML onclick 調用
     const btn = document.getElementById('delete-all-button');
-    const originalText = '🗑️ 刪除所有';
-    const confirmText = '⚠️ 確認刪除所有？ (5秒)';
+    const originalText = '🗑️ DELETE ALL';
+    const confirmText = '⚠️ CONFIRM DELETE ALL? (5s)';
 
     // 檢查是否處於確認狀態
-    if (btn.textContent.includes('確認')) {
+    if (btn.textContent.includes('CONFIRM')) {
         clearScript();
         return;
     }
@@ -2053,10 +2092,10 @@ function clearScript() {
     saveScriptToLocalStorage();
 
     // 恢復按鈕和狀態訊息
-    btn.textContent = '🗑️ 刪除所有';
+    btn.textContent = '🗑️ DELETE ALL';
     btn.classList.add('bg-red-400', 'hover:bg-red-600');
     btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
-    statusMessage.textContent = '🗑️ 腳本已清除，已恢復為初始步驟。';
+    statusMessage.textContent = '🗑️ Script cleared, restored to initial step.';
 }
 
 
@@ -2079,7 +2118,7 @@ function scrollToBottom() { // <-- HTML onclick 調用
 function scrollToDayStart(dayNumber) {
     const targetDay = dayStartIndices.find(item => item.day === dayNumber);
     if (!targetDay) {
-        console.warn(`Could not find start step for Day ${dayNumber}.`); // 改為英文
+        console.warn(`Could not find start step for Day ${dayNumber}.`);
         return;
     }
     
@@ -2158,7 +2197,7 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
         
     } catch (error) {
         if (!isSilent) {
-            statusMessage.textContent = '❌ 腳本數據轉換失敗。';
+            statusMessage.textContent = '❌ Script data conversion failed.';
         }
         console.error('數據轉換失敗:', error);
         return false; 
@@ -2182,16 +2221,16 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
         URL.revokeObjectURL(url);
 
         if (!isSilent) {
-            statusMessage.textContent = `✅ 檔案已成功下載為 journey_script${FILE_EXTENSION}！`;
+            statusMessage.textContent = `✅ File successfully downloaded as journey_script${FILE_EXTENSION}!`;
             setTimeout(() => {
-                statusMessage.textContent = '準備就緒';
+                statusMessage.textContent = 'Ready';
             }, 3000);
         }
         return true;
 
     } catch (error) {
         if (!isSilent) {
-            statusMessage.textContent = '❌ 檔案下載失敗。';
+            statusMessage.textContent = '❌ File download failed.';
         }
         console.error('File download failed:', error);
         return false;
@@ -2210,7 +2249,7 @@ function handleFileUpload(event) {
     event.target.value = null; 
 
     if (!file) {
-        statusMessage.textContent = '準備就緒';
+        statusMessage.textContent = 'Ready';
         return;
     }
 
@@ -2219,7 +2258,7 @@ function handleFileUpload(event) {
     const isAcceptedFile = acceptedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
 
     if (!isAcceptedFile && file.type !== 'text/plain') {
-        statusMessage.textContent = `⚠️ 無效的檔案類型。請上傳 .txt 或 .trip 格式的純文字檔案。`;
+        statusMessage.textContent = `⚠️ Invalid file type. Please upload a plain text file in .txt or .trip format.`;
         return;
     }
 
@@ -2241,26 +2280,26 @@ function handleFileUpload(event) {
             
             const result = loadImportedData(rawJsonString);
             if (result) {
-                statusMessage.textContent = '✅ 腳本檔案已成功載入！';
+                statusMessage.textContent = '✅ Script file successfully loaded!';
                 saveScriptToLocalStorage();
                 renderScript(); // 重新渲染
             } else {
-                statusMessage.textContent = '❌ 檔案內容無效或已損壞。';
+                statusMessage.textContent = '❌ File content is invalid or corrupted.';
             }
         } catch (error) {
-            statusMessage.textContent = '❌ 檔案解析失敗，請檢查內容格式。';
+            statusMessage.textContent = '❌ File parsing failed, please check the content format.';
             console.error('檔案解析失敗:', error);
         }
     };
 
     reader.onerror = () => {
-        statusMessage.textContent = '❌ 讀取檔案失敗。';
+        statusMessage.textContent = '❌ Failed to read file.';
         console.error('FileReader error:', reader.error);
     };
 
     // 讀取檔案為純文字
     reader.readAsText(file);
-    statusMessage.textContent = `正在讀取檔案 ${file.name}...`;
+    statusMessage.textContent = `Reading file ${file.name}...`;
 }
 
 
@@ -2354,7 +2393,7 @@ function renderDayProgressBar() {
         dayBar.style.height = `${heightPercent}%`;
         
         // 視覺調整：增加 Day X 提示 (使用深色文字)
-        dayBar.innerHTML = `<span class="text-xs ${textColorClass} font-bold opacity-80 transition-opacity duration-300">第 ${dayNumber} 天</span>`;
+        dayBar.innerHTML = `<span class="text-xs ${textColorClass} font-bold opacity-80 transition-opacity duration-300">${dayNumber}</span>`;
         dayBar.style.display = 'flex';
         dayBar.style.justifyContent = 'center';
         dayBar.style.alignItems = 'center';
@@ -2420,8 +2459,9 @@ function renderScript() {
                 // 使用下一個 Day 的顏色
                 actionPanel.className = `insert-anchor-panel p-3 my-2 ${anchorColor.bg} rounded-lg border-2 ${anchorColor.border} shadow-md`;
                 actionPanel.dataset.index = index;
+                // 調整 1: 中文化行程插入面板
                 actionPanel.innerHTML = `
-                    <p class="font-bold text-sm ${anchorColor.text} mb-2 text-center">📌 插入動作於 ${anchorDisplay}：</p>
+                    <p class="font-bold text-sm ${anchorColor.text} mb-2 text-center">📌 在 ${anchorDisplay} 插入動作:</p>
                     <div class="grid grid-cols-2 gap-2 text-sm">
                         <button onclick="addStep('goto', ${index})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
                         <button onclick="addStep('activity', ${index})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
@@ -2441,6 +2481,7 @@ function renderScript() {
                 // 點擊時，顯示動作選項
                 anchorElement.onclick = () => { setInsertAnchor(index); }; 
                 
+                // 調整 1: 中文化錨點文字
                 anchorElement.innerHTML = `<span class="insert-anchor-text">在此新增步驟 (${anchorDisplay})</span>`;
                 listContainer.appendChild(anchorElement);
             }
@@ -2478,7 +2519,8 @@ function renderScript() {
         const isStartStep = index === 0;
         const buttonAction = `executeScript(${isStartStep ? 1 : index})`;
         const startIcon = isStartStep ? '🏠' : '▶️';
-        const startButtonTitle = isStartStep ? '從頭播放' : '從此處開始播放';
+        // 調整 1: 中文化播放按鈕標題
+        const startButtonTitle = isStartStep ? '從頭開始播放' : '從此處開始播放'; 
 
         
         if (step.type === 'start') {
@@ -2536,10 +2578,11 @@ function renderScript() {
                 // 組合為單一座標字串
                 const startCoordValue = (step.lat && step.lng) ? `${step.lat}, ${step.lng}` : '';
 
+                // 調整 1: 中文化起始步驟內容
                 contentHtml = `
-                    <p class="text-xs text-red-500 font-semibold mb-2">⚠️ 這是旅程的 **必要** 起始點，不能刪除或移動。</p>
+                    <p class="text-xs text-red-500 font-semibold mb-2">⚠️ 這是**強制**的旅程起點，無法刪除或移動。</p>
                     <span class="font-bold">起始位置</span><br>
-                    <small>GPS 座標 (緯度, 經度，例如: 26.2173, 127.6924):</small>
+                    <small>GPS 座標 (緯度, 經度, 例如: 26.2173, 127.6924):</small>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" 
                            class="w-full text-sm border rounded px-2 mt-1" 
@@ -2552,13 +2595,14 @@ function renderScript() {
                 // 組合為單一座標字串
                 const coordValue = (step.lat && step.lng) ? `${step.lat}, ${step.lng}` : '';
                 stepIcon = '➡️';
+                // 調整 1: 中文化移動步驟內容
                 contentHtml = `
                     <span class="font-bold">移動至</span>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (例如: 抵達牧志車站)" value="${step.label || ''}" 
                         onchange="updateStep(${index}, 'label', this.value)">
 
-                    <small>GPS 座標 (緯度, 經度，例如: 26.2173, 127.6924):</small>
+                    <small>GPS 座標 (緯度, 經度, 例如: 26.2173, 127.6924):</small>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" 
                            class="w-full text-sm border rounded px-2 mt-1" 
@@ -2566,19 +2610,19 @@ function renderScript() {
                            value="${coordValue}" 
                            onchange="updateStep(${index}, 'coords', this.value)">
                     
-                    <small class="mt-2 block">移動圖標 (可選):</small>
+                    <small class="mt-2 block">移動圖示 (選填):</small>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <select class="w-full text-sm border rounded px-2 mt-1" 
                         onchange="updateStep(${index}, 'icon', this.value)">
-                        <option value="">(保持目前圖標)</option>
+                        <option value="">(保持目前圖示)</option>
                         ${ICON_NAMES.map(item => `<option value="${item.name}" ${step.icon === item.name ? 'selected' : ''}>${item.emoji} ${item.name}</option>`).join('')}
                     </select>
                     
-                    <small class="mt-2 block">抵達時彈出訊息 (可選):</small>
+                    <small class="mt-2 block">抵達時的訊息 (選填):</small>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" 
                            class="w-full text-sm border rounded px-2 mt-1" 
-                           placeholder="抵達時彈出的訊息 (留空則不顯示訊息)" 
+                           placeholder="抵達時的彈出訊息 (留空則無訊息)" 
                            value="${step.words || ''}" 
                            onchange="updateStep(${index}, 'words', this.value)">
                 `;
@@ -2586,24 +2630,25 @@ function renderScript() {
             case 'activity':
                 // **新邏輯：Activity = setIcon (可選) + wait (可選)**
                 stepIcon = '🏃';
+                // 調整 1: 中文化活動步驟內容
                 contentHtml = `
-                    <span class="font-bold">活動/狀態 (變更圖標或等待)</span>
+                    <span class="font-bold">活動/狀態 (變更圖示或等待)</span>
                     <!-- 移除 onfocus 觸發 Focus -->
-                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (例如: 正在拍照)" value="${step.label || ''}" 
+                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (例如: 拍照留念)" value="${step.label || ''}" 
                         onchange="updateStep(${index}, 'label', this.value)">
                     
                     <div class="grid grid-cols-2 gap-2 mt-2">
                         <div>
-                            <small class="block">圖標 (可選):</small>
+                            <small class="block">圖示 (選填):</small>
                             <!-- 移除 onfocus 觸發 Focus -->
                             <select class="w-full text-sm border rounded px-2 mt-1" 
                                 onchange="updateStep(${index}, 'icon', this.value)">
-                                <option value="">(保持目前圖標)</option>
+                                <option value="">(保持目前圖示)</option>
                                 ${ICON_NAMES.map(item => `<option value="${item.name}" ${step.icon === item.name ? 'selected' : ''}>${item.emoji} ${item.name}</option>`).join('')}
                             </select>
                         </div>
                         <div>
-                            <small class="block">持續時間 (秒，可選):</small>
+                            <small class="block">持續時間 (秒, 選填):</small>
                             <!-- 移除 onfocus 觸發 Focus -->
                             <input type="number" 
                                    class="w-full text-sm border rounded px-2 mt-1" 
@@ -2612,20 +2657,21 @@ function renderScript() {
                                    onchange="updateStep(${index}, 'sec', parseFloat(this.value))">
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">如果秒數為 0 或留空，則只會執行圖標變更。</p>
+                    <p class="text-xs text-gray-500 mt-2">如果秒數為 0 或空白，則只會執行圖示變更。</p>
                 `;
                 break;
             case 'show':
                 stepIcon = '💬';
                 // 確保 sec 有默認值，以便在渲染時顯示
                 const currentSec = step.sec || PHOTO_STANDALONE_DURATION;
+                // 調整 1: 中文化顯示訊息步驟內容
                 contentHtml = `
-                    <span class="font-bold">顯示訊息/定格</span>
+                    <span class="font-bold">顯示訊息/暫停</span>
                     <!-- 移除 onfocus 觸發 Focus -->
                     <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (例如: 訊息: 牧志車站)" value="${step.label || ''}" 
                         onchange="updateStep(${index}, 'label', this.value)">
                     <!-- 移除 onfocus 觸發 Focus -->
-                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="訊息內容 (留空則不顯示彈出視窗)" value="${step.words || ''}" 
+                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="訊息內容 (留空則無彈出視窗)" value="${step.words || ''}" 
                         onchange="updateStep(${index}, 'words', this.value)">
                     
                     <small class="mt-2 block">持續時間 (秒):</small>
@@ -2636,19 +2682,20 @@ function renderScript() {
                            value="${currentSec}" 
                            onchange="updateStep(${index}, 'sec', parseFloat(this.value))">
                     <p class="text-xs text-gray-500 mt-2">
-                        如果**沒有**訊息內容：此持續時間是地圖上的**定格時間**。
-                        <br>如果有**訊息**內容：有照片時，會與照片一起顯示；沒有照片時，會根據文字長度彈出 1 秒 + 額外持續時間。
+                        如果**沒有**訊息內容：此持續時間為地圖上的**暫停時間**。
+                        <br>如果**有**訊息內容：有照片時，它會與照片一起顯示；沒有照片時，此持續時間為**彈出視窗顯示時間**。
                     </p>
                 `;
                 break;
             case 'dayoff':
                 // (Dayoff stepColor已在上面設定)
                 stepIcon = '🛌';
+                // 調整 1: 中文化過夜休息步驟內容
                 contentHtml = `
                     <span class="font-bold">過夜休息</span>
                     <p class="text-xs text-gray-500 mt-1 mb-2">執行 setIcon='sleep' 並播放夜間動畫。</p>
                     <!-- 移除 onfocus 觸發 Focus -->
-                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (例如: 登記入住並休息)" value="${step.label || ''}" 
+                    <input type="text" class="w-full text-sm border rounded px-2 mt-1" placeholder="步驟標籤 (例如: 辦理入住和休息)" value="${step.label || ''}" 
                         onchange="updateStep(${index}, 'label', this.value)">
 
                     <small>持續時間 (秒): 
@@ -2725,8 +2772,9 @@ function renderScript() {
         // 使用下一個 Day 的顏色
         actionPanel.className = `insert-anchor-panel p-3 my-2 ${finalAnchorColor.bg} rounded-lg border-2 ${finalAnchorColor.border} shadow-md`;
         actionPanel.dataset.index = scriptSteps.length;
+        // 調整 1: 中文化行程插入面板
         actionPanel.innerHTML = `
-            <p class="font-bold text-sm ${finalAnchorColor.text} mb-2 text-center">📌 插入動作於 ${finalAnchorDisplay} (結束)：</p>
+            <p class="font-bold text-sm ${finalAnchorColor.text} mb-2 text-center">📌 在 ${finalAnchorDisplay} 插入動作 (結束):</p>
             <div class="grid grid-cols-2 gap-2 text-sm">
                 <button onclick="addStep('goto', ${scriptSteps.length})" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition duration-150 font-semibold">➡️ 移動</button>
                 <button onclick="addStep('activity', ${scriptSteps.length})" class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition duration-150 font-semibold">🏃 活動/狀態</button>
@@ -2742,6 +2790,7 @@ function renderScript() {
         finalAnchorElement.className = 'insert-anchor my-2 transition-all duration-300';
         finalAnchorElement.dataset.index = scriptSteps.length;
         finalAnchorElement.onclick = () => { setInsertAnchor(scriptSteps.length); };
+        // 調整 1: 中文化錨點文字
         finalAnchorElement.innerHTML = `<span class="insert-anchor-text">在此新增步驟 (${finalAnchorDisplay})</span>`;
         listContainer.appendChild(finalAnchorElement);
     }
@@ -2781,7 +2830,7 @@ function renderScript() {
 
         <!-- A.2 紅色區塊：行程列表容器 (右側，可捲動) - 佔滿剩餘寬度，設置滾動 -->
         <div id="script-list-wrapper" class="flex-grow h-full overflow-y-auto p-4 min-h-0">
-          <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2 sticky top-0 bg-white z-10">🗺️ 旅程腳本編輯器</h1>
+          <h1 class="text-2xl font-bold text-indigo-600 mb-4 border-b pb-2 sticky top-0 bg-white z-10">🗺️ Journey Script Editor (行程腳本編輯器)</h1>
           <!-- 腳本步驟列表 - 這是捲動的內容 -->
           <div id="script-list" class="space-y-3">
             <!-- 步驟將在此處渲染 -->
@@ -2794,44 +2843,44 @@ function renderScript() {
       
       <!-- 播放控制按鈕 -->
       <div class="flex space-x-2 mb-2">
-          <!-- 暫停/繼續按鈕 (需求 2: 改為中文) -->
+          <!-- 暫停/繼續按鈕 (調整 1: 保持英文) -->
           <button id="pause-resume-button" onclick="pauseToggle()" 
               class="w-1/2 bg-yellow-500 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
               disabled 
-              title="暫停播放">
-              <span class="text-lg">⏸️ 暫停/繼續</span>
+              title="Pause Playback">
+              <span class="text-lg">⏸️ PAUSE/RESUME</span>
           </button>
-           <!-- 停止播放按鈕 (需求 2: 改為中文) -->
+           <!-- 停止播放按鈕 (調整 1: 保持英文) -->
           <button id="stop-button" onclick="stopScript()" 
               class="w-1/2 bg-gray-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-600 transition duration-300 transform hover:scale-[1.01] text-lg disabled:opacity-50 disabled:cursor-not-allowed" 
               disabled 
-              title="停止播放">
-              <span class="text-lg">◼️ 停止</span>
+              title="Stop Playback">
+              <span class="text-lg">◼️ STOP</span>
           </button>
       </div>
 
-      <!-- 播放按鈕 (需求 2: 改為中文) -->
+      <!-- 播放按鈕 (調整 1: 保持英文) -->
       <button id="play-button" onclick="executeScript(1)" class="w-full bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] text-lg mb-2">
-        ▶️ 開始播放 (PLAY)
+        ▶️ Start Playback (PLAY)
       </button>
       
-      <!-- 匯出與刪除按鈕 -->
+      <!-- 匯出與刪除按鈕 (調整 1: 保持英文) -->
       <div class="flex space-x-2 mb-2">
           <!-- 匯出按鈕：現在是下載檔案 -->
           <button id="export-button" onclick="exportScript()" class="w-1/3 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl shadow-lg hover:bg-gray-300 transition duration-300 transform hover:scale-[1.01] text-lg">
-            💾 匯出檔案
+            💾 Export File
           </button>
           <!-- 匯入按鈕：現在是上傳檔案，點擊會觸發隱藏的 file input -->
           <button id="import-file-button" onclick="document.getElementById('file-input').click()" class="w-1/3 bg-gray-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-gray-500 transition duration-300 transform hover:scale-[1.01] text-lg">
-            📤 匯入檔案
+            📤 Import File
           </button>
-          <!-- 刪除按鈕 (需求 2: 改為中文) -->
+          <!-- 刪除按鈕 -->
           <button id="delete-all-button" onclick="promptClearScript()" class="w-1/3 bg-red-400 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:scale-[1.01] text-lg">
-            🗑️ 刪除所有
+            🗑️ DELETE ALL
           </button>
       </div>
 
-      <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">準備就緒</div>
+      <div id="status-message" class="mt-2 text-center text-sm font-medium text-gray-600">Ready</div>
 
     </div> <!-- End #bottom-controls -->
 
@@ -2842,23 +2891,23 @@ function renderScript() {
 <!-- accept="text/plain" 是解決 iOS 相容性的關鍵 -->
 <input type="file" id="file-input" style="display:none;" accept="text/plain" onchange="handleFileUpload(event)">
 
-<!-- Conflict Modal Structure (行程衝突模態框) -->
+<!-- Conflict Modal Structure (行程衝突模態框) (調整 1: 保持英文) -->
 <div id="conflict-modal-overlay" class="fixed inset-0 bg-black bg-opacity-75 z-[3000] flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none">
     <div id="conflict-modal" class="bg-white p-6 rounded-xl shadow-2xl max-w-lg mx-4 transform scale-90 transition-transform duration-300">
-        <h2 class="text-xl font-bold text-indigo-600 mb-4">腳本匯入衝突</h2>
+        <h2 class="text-xl font-bold text-indigo-600 mb-4">Script Import Conflict</h2>
         <p class="text-gray-700 mb-6">
-            我們偵測到 URL 中有腳本參數，同時您的本地編輯會話中也有非預設的腳本記錄。
-            您希望如何處理？
+            We detected both a script parameter in the URL and non-default script records in your local editing session.
+            How would you like to proceed?
         </p>
         <div class="space-y-3">
             <button onclick="handleConflictResolution('cancel')" class="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition">
-                1. 取消匯入，繼續編輯本地腳本
+                1. Cancel Import, Continue Editing Local Script
             </button>
             <button onclick="handleConflictResolution('save_and_import')" class="w-full bg-yellow-500 text-gray-800 font-bold py-3 rounded-lg hover:bg-yellow-600 transition">
-                2. 💾 儲存本地腳本 **然後** 匯入新腳本
+                2. 💾 Save Local Script THEN Import New Script
             </button>
             <button onclick="handleConflictResolution('overwrite')" class="w-full bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 transition">
-                3. 覆蓋本地腳本 (直接匯入新腳本)
+                3. Overwrite Local Script (Import New Script Directly)
             </button>
         </div>
     </div>
