@@ -1164,7 +1164,7 @@ function setIcon(name){ marker.setIcon(icons[name]); }
 /**
  * 輔助函式：根據字串長度計算時間乘數
  * 中文字符 (UTF-8) 通常佔 3 bytes。
- * 每 16 bytes (約 5-6 個中文字) 增加 1.0 秒。
+ * 每 24 bytes (約 5-6 個中文字) 增加 1.0 秒。
  * @param {string} text - 待計算的文字
  * @returns {number} - 額外等待時間 (秒)
  */
@@ -1175,9 +1175,9 @@ function getDurationMultiplier(text) { // <-- 需求 4: 新增
     const encoder = new TextEncoder();
     const byteLength = encoder.encode(text).length;
     
-    // 2. 基礎閱讀時間為 1.0 秒，每超過 16 bytes 增加 1.0 秒。
-    // Math.floor(byteLength / 16) = 超過 16 bytes 的塊數
-    const multiplier = Math.floor(byteLength / 16);
+    // 2. 基礎閱讀時間為 1.0 秒，每超過 24 bytes 增加 1.0 秒。
+    // Math.floor(byteLength / 24) = 超過 24 bytes 的塊數
+    const multiplier = Math.floor(byteLength / 24);
     
     // Base 1.0s + multiplier * 1.0s
     return 1.0 + multiplier; 
