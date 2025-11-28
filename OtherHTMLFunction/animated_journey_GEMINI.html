@@ -210,25 +210,25 @@ const DAY_COLORS_PALETTE = [
 ];
 
 const iconSize = 75; // 桌面預設大小
-// 調整 3: 重新排序 ICON_NAMES (交通在上、活動在下、睡覺最後)
+// 修正 BUG：為有衝突的圖示指定唯一的 `char` 屬性用於匯出代號
 const ICON_NAMES = [
-    // 交通 (Traffic)
-    { name: 'airplane', emoji: '✈️' },
-    { name: 'train', emoji: '🚆' },
-    { name: 'car', emoji: '🚗' },
-    { name: 'taxi', emoji: '🚕' },
-    { name: 'bus', emoji: '🚌' },
-    { name: 'motorcycle', emoji: '🏍️' },
+    // 交通 (Traffic) - char: a, t, c, x, b, o
+    { name: 'airplane', emoji: '✈️', char: 'a' },   // 飛機 (a)
+    { name: 'train', emoji: '🚆', char: 't' },        // 火車 (t)
+    { name: 'car', emoji: '🚗', char: 'c' },          // 汽車 (c)
+    { name: 'taxi', emoji: '🚕', char: 'x' },         // 計程車 (x) - 避免與 t 衝突
+    { name: 'bus', emoji: '🚌', char: 'b' },          // 巴士 (b)
+    { name: 'motorcycle', emoji: '🏍️', char: 'o' },   // 機車 (o) - 避免與 m 衝突
     
-    // 活動/狀態 (Activity/Status)
-    { name: 'walk', emoji: '🚶‍♂️' },
-    { name: 'view', emoji: '🏞️' },
-    { name: 'amusement', emoji: '🎡' }, 
-    { name: 'shopping', emoji: '🛍️' },
-    { name: 'dine', emoji: '🍽️' },
+    // 活動/狀態 (Activity/Status) - char: w, v, m, s, d
+    { name: 'walk', emoji: '🚶‍♂️', char: 'w' },         // 步行 (w)
+    { name: 'view', emoji: '🏞️', char: 'v' },         // 景點 (v)
+    { name: 'amusement', emoji: '🎡', char: 'm' },    // 遊樂 (m) - 避免與 a 衝突
+    { name: 'shopping', emoji: '🛍️', char: 's' },     // 購物 (s)
+    { name: 'dine', emoji: '🍽️', char: 'd' },         // 用餐 (d)
     
-    // 休息 (Sleep)
-    { name: 'sleep', emoji: '😴' } 
+    // 休息 (Sleep) - char: z
+    { name: 'sleep', emoji: '😴', char: 'z' }        // 睡眠 (z) - 避免與 s 衝突
 ];
 
 // 根據 ICON_NAMES 建立 icons 物件，方便查找
@@ -398,9 +398,10 @@ function optimizeLoadedScript(steps) {
  * @returns {boolean} - 成功載入返回 true
  */
 function loadImportedData(rawJsonString) {
-    // Helper to map icon letter back to full name
-    const ICON_MAP = ICON_NAMES.reduce((map, item) => {
-        map[item.name.charAt(0)] = item.name;
+    // Helper to map icon char back to full name
+    const ICON_CHAR_MAP = ICON_NAMES.reduce((map, item) => {
+        // 使用 char 屬性作為 key，name 屬性作為 value
+        map[item.char] = item.name; 
         return map;
     }, {});
     
@@ -443,7 +444,8 @@ function loadImportedData(rawJsonString) {
                     step.lat = compactStep[i++];
                     step.lng = compactStep[i++];
                     const iconCharG = compactStep[i++];
-                    step.icon = iconCharG ? ICON_MAP[iconCharG] || iconCharG : '';
+                    // 修正：使用 ICON_CHAR_MAP 進行轉換
+                    step.icon = iconCharG ? ICON_CHAR_MAP[iconCharG] || iconCharG : '';
                     step.words = compactStep[i++];
                     step.label = '載入的移動步驟';
                     
@@ -457,7 +459,8 @@ function loadImportedData(rawJsonString) {
                     step.type = 'activity';
                     step.sec = compactStep[i++];
                     const activityIconChar = compactStep[i];
-                    step.icon = activityIconChar ? (ICON_MAP[activityIconChar] || activityIconChar) : '';
+                    // 修正：使用 ICON_CHAR_MAP 進行轉換
+                    step.icon = activityIconChar ? (ICON_CHAR_MAP[activityIconChar] || activityIconChar) : '';
                     if (step.icon) i++;
                     step.label = '載入的活動';
                     
@@ -2145,6 +2148,10 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
         // --- 1. 數據優化與轉換 (壓縮結構) ---
         
         const compactScript = scriptSteps.map(step => {
+            // 找出當前 icon 對應的 char
+            const iconItem = ICON_NAMES.find(item => item.name === step.icon);
+            const iconChar = iconItem ? iconItem.char : ''; // 如果沒有找到，則為空字串
+
             const compact = [];
             switch (step.type) {
                 case 'start': // s, lat, lng, [label], [image]
@@ -2155,8 +2162,8 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
                     return compact;
 				case 'goto': // g, lat, lng, iconChar, words, [image]
 					compact.push('g', step.lat, step.lng);
-					// 修正 BUG：icon 欄位即使為空也必須推入空字串，以維持 compact array 的固定長度
-					compact.push(step.icon ? step.icon.charAt(0) : ''); // <-- 訂正處
+					// 修正：使用唯一 char
+					compact.push(iconChar); 
 					compact.push(step.words || '');
 					// 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
 					if (step.image) compact.push(encodeURIComponent(step.image));
@@ -2164,7 +2171,8 @@ async function exportScript(isSilent = false) { // <-- HTML onclick 調用
 			
                 case 'activity': // a, sec, [iconChar], [image]
                     compact.push('a', step.sec);
-                    if (step.icon) compact.push(step.icon.charAt(0)); 
+                    // 修正：使用唯一 char
+                    if (iconChar) compact.push(iconChar); 
                     // 關鍵修正：圖片 Base64 字串在此處進行 URI 編碼，確保字串安全
                     if (step.image) compact.push(encodeURIComponent(step.image)); 
                     return compact;
