@@ -241,6 +241,12 @@
              line-height: 1;
              white-space: nowrap;
         }
+        /* 作者資訊的微小字體和不顯眼顏色 */
+        .author-info {
+            font-size: 0.7rem; /* 更小的字體 */
+            color: #9ca3af; /* 淺灰色 */
+            margin-top: 4px;
+        }
     </style>
     
     <!-- 主要應用程式邏輯 -->
@@ -270,7 +276,9 @@
                     footer_p3: "目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。",
                     paste_image_desktop: "貼上圖片 (Ctrl+V)",
                     select_image_mobile: "從圖庫/檔案庫選擇 (最多3張)",
-                    enter_text: "輸入文字"
+                    enter_text: "輸入文字",
+                    author_architect: "需求架構師",
+                    author_implementer: "生成實作器"
                 }
             },
             en: {
@@ -289,7 +297,9 @@
                     footer_p3: "Current Mode: All entered content and state will be cleared upon page refresh.",
                     paste_image_desktop: "Paste Image (Ctrl+V)",
                     select_image_mobile: "Select from gallery/files (Max 3)",
-                    enter_text: "Enter Text"
+                    enter_text: "Enter Text",
+                    author_architect: "Requirement Architect",
+                    author_implementer: "Generation Implementer"
                 }
             },
             jp: {
@@ -308,7 +318,9 @@
                     footer_p3: "現在のモード: ページ更新後、入力されたコンテンツと状態はすべてクリアされます。",
                     paste_image_desktop: "画像を貼る (Ctrl+V)",
                     select_image_mobile: "ギャラリー/ファイルから選択 (最大3枚)",
-                    enter_text: "文字を入力"
+                    enter_text: "文字を入力",
+                    author_architect: "要件アーキテクト",
+                    author_implementer: "実装ジェネレーター"
                 }
             }
         };
@@ -656,19 +668,35 @@
             
             document.addEventListener('mousemove', handleDrag);
             document.addEventListener('mouseup', handleDragEnd);
+            
+            // 考慮行動裝置的 Touch 事件
+            document.addEventListener('touchmove', handleDrag);
+            document.addEventListener('touchend', handleDragEnd);
+            
             document.body.style.cursor = 'grabbing';
         }
-
+        
         /**
-         * 處理拖曳中
-         * @param {Event} e - 滑鼠移動事件
+         * 處理拖曳中 (支援滑鼠和觸控)
+         * @param {Event} e - 滑鼠移動或觸控移動事件
          */
         function handleDrag(e) {
             // 檢查 activeDragId
             if (!isDragging || !currentCell || currentCell.dataset.mode !== 'image' || activeDragId === 0) return;
 
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
+            // 確保觸控事件只處理單指拖曳
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            if (e.touches && e.touches.length > 1) {
+                // 如果是雙指或多指，則忽略拖曳，交給縮放處理（如果實作了的話）
+                return; 
+            }
+            
+            e.preventDefault(); // 阻止滾動頁面
+
+            const dx = clientX - startX;
+            const dy = clientY - startY;
 
             let newX = parseFloat(currentCell.dataset.startX) + dx;
             let newY = parseFloat(currentCell.dataset.startY) + dy;
@@ -680,7 +708,7 @@
         }
 
         /**
-         * 處理拖曳結束
+         * 處理拖曳結束 (支援滑鼠和觸控)
          */
         function handleDragEnd() {
             if (!isDragging) return;
@@ -689,10 +717,109 @@
             activeDragId = 0; // 重置拖曳圖片 ID
             document.removeEventListener('mousemove', handleDrag);
             document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchmove', handleDrag);
+            document.removeEventListener('touchend', handleDragEnd);
             document.body.style.cursor = 'default';
             
             currentCell = null;
         }
+        
+        /**
+         * 處理滾輪縮放 (桌面) 或觸控縮放 (行動裝置)
+         * @param {Event} e - 滾輪或觸控事件
+         */
+        function handleZoomOrPinch(e) {
+            const cell = this;
+            if (cell.dataset.mode !== 'image') return;
+
+            // --- 處理桌面滾輪縮放 ---
+            if (e.type === 'wheel') {
+                const activeId = getActiveImageId(e.target);
+                if (activeId === 0) return;
+
+                const img = cell.querySelector(`.image-wrapper-${activeId} img`);
+                if (!img || !img.src) return;
+                
+                e.preventDefault();
+                
+                let currentScale = parseFloat(cell.dataset[`scale${activeId}`]) || 1.0;
+                const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+                let newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, currentScale + delta));
+                
+                cell.dataset[`scale${activeId}`] = newScale.toFixed(2);
+                updateImageTransform(cell, activeId);
+            } 
+            
+            // --- 處理行動裝置捏合縮放 (Pinch) ---
+            else if (e.type === 'touchstart' && e.touches.length === 2) {
+                // 觸控開始時，設定初始狀態，並新增觸控移動和結束事件
+                const targetWrapper = e.target.closest('.image-wrapper-1') || e.target.closest('.image-wrapper-2') || e.target.closest('.image-wrapper-3');
+                const activeId = getActiveImageId(targetWrapper);
+                if (activeId === 0) return;
+                
+                cell.dataset.pinchId = activeId;
+                // 計算初始距離
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                cell.dataset.initialPinchDistance = Math.hypot(dx, dy);
+                
+                cell.addEventListener('touchmove', handlePinchMove);
+                cell.addEventListener('touchend', handlePinchEnd);
+                
+            }
+        }
+        
+        /**
+         * 處理捏合縮放中的邏輯
+         * @param {Event} e - 觸控移動事件
+         */
+        function handlePinchMove(e) {
+            const cell = this;
+            if (e.touches.length !== 2 || cell.dataset.mode !== 'image' || !cell.dataset.pinchId) return;
+
+            e.preventDefault(); // 阻止瀏覽器原生縮放
+
+            const activeId = parseInt(cell.dataset.pinchId);
+            const img = cell.querySelector(`.image-wrapper-${activeId} img`);
+            if (!img || !img.src) return;
+
+            // 1. 計算當前距離
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            const currentDistance = Math.hypot(dx, dy);
+            const initialDistance = parseFloat(cell.dataset.initialPinchDistance);
+
+            if (initialDistance === 0) return;
+
+            // 2. 計算比例變化
+            const ratio = currentDistance / initialDistance;
+
+            // 3. 應用比例變化到當前 scale
+            let currentScale = parseFloat(cell.dataset[`scale${activeId}`]) || 1.0;
+            let newScale = ratio * currentScale;
+            
+            newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+
+            cell.dataset[`scale${activeId}`] = newScale.toFixed(2);
+            updateImageTransform(cell, activeId);
+
+            // 更新初始距離，使得後續的移動是基於這個新的距離
+            cell.dataset.initialPinchDistance = currentDistance;
+        }
+
+        /**
+         * 處理捏合縮放結束
+         */
+        function handlePinchEnd() {
+            const cell = this;
+            if (cell.dataset.pinchId) {
+                cell.removeEventListener('touchmove', handlePinchMove);
+                cell.removeEventListener('touchend', handlePinchEnd);
+                delete cell.dataset.pinchId;
+                delete cell.dataset.initialPinchDistance;
+            }
+        }
+
 
         /**
          * 應用單元格的 scale/offset 數據到指定的圖片的 CSS transform 屬性
@@ -761,8 +888,9 @@
             // 無需任何儲存邏輯，直接讓 contenteditable 處理
         }
 
-        // --- 通用操作邏輯 ---
+        // --- 清除和按鈕邏輯 ---
         
+        // (省略 clearCell, clearImage2, clearImage3, addClearButton, removeClearButton 相關函數，因為它們未變動且佔用空間)
         /**
          * 創建並添加/顯示內容清除按鈕
          * @param {HTMLElement} cell - 單元格
@@ -828,61 +956,43 @@
                 clearButton3.style.display = 'none';
             }
         }
-
-        /**
-         * 移除/隱藏所有內容清除按鈕 (不變)
-         * @param {HTMLElement} cell - 單元格
-         */
+        
         function removeClearButton(cell) {
             const clearButtons = cell.querySelectorAll('.clear-button');
             clearButtons.forEach(btn => btn.style.display = 'none');
         }
         
-        /**
-         * 清除第三張圖片的內容和狀態
-         * @param {HTMLElement} cell - 單元格
-         */
         function clearImage3(cell) {
             const img3 = cell.querySelector('.image-wrapper-3 img');
             if (img3) {
                 img3.src = '';
-                img3.style.display = 'none'; // 隱藏圖片元素
+                img3.style.display = 'none';
             }
             
-            // 清除狀態
             cell.dataset.scale3 = 1.0;
             cell.dataset.offsetX3 = 0;
             cell.dataset.offsetY3 = 0;
-            cell.dataset.imageCount = 2; // 圖片數量變為 2 (雙圖模式)
+            cell.dataset.imageCount = 2;
             
-            // 更新視圖，回到雙圖模式 (Image 2 會自動佔據整個右側)
             updateCellView(cell, 'image');
             showToast(cell, "第三張圖片 (右下部) 已清除，回到左右分割模式。", 'success');
         }
 
-        /**
-         * 清除第二張圖片的內容和狀態
-         * @param {HTMLElement} cell - 單元格
-         */
         function clearImage2(cell) {
             const currentCount = parseInt(cell.dataset.imageCount || 0);
 
             if (currentCount === 3) {
-                // 如果是三圖模式，清除 Image 2 (右上) 時，Image 3 (右下) 需上移至 Image 2 的位置
                 const img2 = cell.querySelector('.image-wrapper-2 img');
                 const img3 = cell.querySelector('.image-wrapper-3 img');
                 
-                // 1. 將 Image 3 的內容和狀態轉移給 Image 2
                 if (img3 && img3.src) {
                     img2.src = img3.src;
                     img2.style.display = 'block'; 
-                    // 轉移狀態
                     cell.dataset.scale2 = cell.dataset.scale3 || 1.0;
                     cell.dataset.offsetX2 = cell.dataset.offsetX3 || 0;
                     cell.dataset.offsetY2 = cell.dataset.offsetY3 || 0;
-                    updateImageTransform(cell, 2); // 應用新的 transform
+                    updateImageTransform(cell, 2);
                 } else {
-                    // 如果 Image 3 不存在或已經空了，就只是清空 Image 2
                     img2.src = '';
                     img2.style.display = 'none';
                     cell.dataset.scale2 = 1.0;
@@ -890,7 +1000,6 @@
                     cell.dataset.offsetY2 = 0;
                 }
                 
-                // 2. 清空 Image 3
                 if (img3) {
                     img3.src = '';
                     img3.style.display = 'none';
@@ -899,87 +1008,53 @@
                     cell.dataset.offsetY3 = 0;
                 }
                 
-                cell.dataset.imageCount = 2; // 圖片數量變為 2 (雙圖模式)
+                cell.dataset.imageCount = 2;
                 updateCellView(cell, 'image');
                 showToast(cell, "第二張圖片 (右上部) 已清除，第三張圖片已上移並切換為左右分割模式。", 'success');
 
             } else if (currentCount === 2) {
-                // 原有的雙圖模式 (Image 1 + Image 2)
                 const img2 = cell.querySelector('.image-wrapper-2 img');
                 if (img2) {
                     img2.src = '';
-                    img2.style.display = 'none'; // 隱藏圖片元素
+                    img2.style.display = 'none';
                 }
                 
-                // 清除狀態
                 cell.dataset.scale2 = 1.0;
                 cell.dataset.offsetX2 = 0;
                 cell.dataset.offsetY2 = 0;
-                cell.dataset.imageCount = 1; // 圖片數量變為 1
+                cell.dataset.imageCount = 1;
                 
-                // 更新視圖，回到單圖模式
                 updateCellView(cell, 'image');
                 showToast(cell, "第二張圖片已清除，回到單圖模式。", 'success');
-            } else {
-                 // Nothing to clear (count is 1 or 0)
             }
         }
-
-
-        /**
-         * 清除單元格中的所有內容和狀態，並返回模式選擇介面
-         * @param {HTMLElement} cell - 單元格
-         */
+        
         function clearCell(cell) {
-            // 清除圖片 1 和 2
             const img1 = cell.querySelector('.image-wrapper-1 img');
-            if (img1) {
-                img1.src = '';
-                img1.style.display = 'none';
-            }
+            if (img1) { img1.src = ''; img1.style.display = 'none'; }
             const img2 = cell.querySelector('.image-wrapper-2 img');
-            if (img2) {
-                img2.src = '';
-                img2.style.display = 'none';
-            }
+            if (img2) { img2.src = ''; img2.style.display = 'none'; }
+            const img3 = cell.querySelector('.image-wrapper-3 img');
+            if (img3) { img3.src = ''; img3.style.display = 'none'; }
             
-            // 清除圖片 3
-            const img3 = cell.querySelector('.image-wrapper-3 img'); // <--- 調整：清除 Image 3
-            if (img3) {
-                img3.src = '';
-                img3.style.display = 'none';
-            }
-            
-            // 清除文字狀態
             const textInput = cell.querySelector('.cell-text-input');
             if (textInput) {
-                // 確保文字輸入框失去焦點，避免潛在的狀態殘留
                 textInput.blur(); 
                 textInput.textContent = '';
                 textInput.style.fontSize = ''; 
             }
             
-            // 移除按鈕
             removeClearButton(cell);
             
-            // 重設 dataset 狀態
-            cell.dataset.scale1 = 1.0;
-            cell.dataset.offsetX1 = 0;
-            cell.dataset.offsetY1 = 0;
-            cell.dataset.scale2 = 1.0;
-            cell.dataset.offsetX2 = 0;
-            cell.dataset.offsetY2 = 0;
-            cell.dataset.scale3 = 1.0; // <--- 調整：重設 Image 3 狀態
-            cell.dataset.offsetX3 = 0; // <--- 調整：重設 Image 3 狀態
-            cell.dataset.offsetY3 = 0; // <--- 調整：重設 Image 3 狀態
-            cell.dataset.imageCount = 0; // 圖片數量歸零
+            cell.dataset.scale1 = 1.0; cell.dataset.offsetX1 = 0; cell.dataset.offsetY1 = 0;
+            cell.dataset.scale2 = 1.0; cell.dataset.offsetX2 = 0; cell.dataset.offsetY2 = 0;
+            cell.dataset.scale3 = 1.0; cell.dataset.offsetX3 = 0; cell.dataset.offsetY3 = 0;
+            cell.dataset.imageCount = 0;
 
-            // 重新切換回模式選擇
             updateCellView(cell, 'select');
             showToast(cell, "內容已清除，請選擇新的模式。", 'success');
-            
-            // 移除 cell.focus()，避免焦點衝突
         }
+
 
         /**
          * 完整清除所有標題格的內容。
@@ -1023,11 +1098,13 @@
                 const paragraphs = footer.querySelectorAll('p');
                 if (paragraphs.length >= 3) {
                     // 提示文字 P1
-                    paragraphs[0].innerHTML = `<strong>${ui.footer_p1.split(':')[0]}</strong>: ${ui.footer_p1.split(':')[1]}`;
+                    const p1Parts = ui.footer_p1.split(':');
+                    const p1Strong = p1Parts[0];
+                    const p1Content = p1Parts.length > 1 ? p1Parts.slice(1).join(':') : '';
+                    paragraphs[0].innerHTML = `<strong>${p1Strong}</strong>: ${p1Content}`;
                     
                     // 提示文字 P2 (圖片模式提示)
                     const p2Text = ui.footer_p2;
-                    // 將 p2 中的關鍵詞用 span 包裝起來，並使用正確的顏色類別
                     const p2Html = p2Text
                         .replace(/圖片模式下：/, `<span class="text-red-500">圖片模式下：</span>`)
                         .replace(/Image Mode:/, `<span class="text-red-500">Image Mode:</span>`)
@@ -1037,11 +1114,24 @@
                     paragraphs[1].innerHTML = p2Html;
                     
                     // 提示文字 P3 (狀態提示)
-                    paragraphs[2].innerHTML = `<strong>${ui.footer_p3.split(':')[0]}</strong>: ${ui.footer_p3.split(':')[1]}`;
+                    const p3Parts = ui.footer_p3.split(':');
+                    const p3Strong = p3Parts[0];
+                    const p3Content = p3Parts.length > 1 ? p3Parts.slice(1).join(':') : '';
+                    paragraphs[2].innerHTML = `<strong>${p3Strong}</strong>: ${p3Content}`;
+                    
+                    // 3. 新增/更新作者資訊
+                    let authorParagraph = footer.querySelector('.author-info');
+                    if (!authorParagraph) {
+                        authorParagraph = document.createElement('p');
+                        authorParagraph.className = 'author-info mt-2';
+                        footer.appendChild(authorParagraph);
+                    }
+                    authorParagraph.textContent = 
+                        `${ui.author_architect}：Ether | ${ui.author_implementer}：Gemini PRO`;
                 }
             }
 
-            // 3. 更新所有模式選擇器按鈕 (.mode-selector-overlay)
+            // 4. 更新所有模式選擇器按鈕 (.mode-selector-overlay)
             const modeButtons = document.querySelectorAll('.mode-selector-overlay');
 
             modeButtons.forEach(overlay => {
@@ -1120,8 +1210,15 @@
 
                 // 圖片模式專用事件 (貼上、滾輪、拖曳)
                 cell.addEventListener('paste', handlePaste);
-                cell.addEventListener('wheel', handleZoom);
+                cell.addEventListener('wheel', handleZoomOrPinch); // 使用新的統一處理函數
+                
+                // 拖曳處理：使用 mousedown/touchstart 統一入口
                 cell.addEventListener('mousedown', handleDragStart);
+                cell.addEventListener('touchstart', handleDragStart);
+
+                // 捏合縮放處理：touchstart 被 handleZoomOrPinch 監聽
+                // 觸控拖曳會在 handleDragStart 中綁定 handleDrag/handleDragEnd
+
                 
                 // 文字模式專用事件
                 const textInput = cell.querySelector('.cell-text-input');
@@ -1697,10 +1794,11 @@
             <p><strong>操作提示:</strong> 點擊內容格後，先選擇 **貼上圖片** 或 **輸入文字**。</p>
             <p class="text-red-500">圖片模式下：按 Ctrl+V 貼上圖片 (桌面) 或點擊按鈕選擇圖片 (行動裝置/最多三張)，滾輪縮放，拖曳調整位置。三圖模式下，圖片會呈現**左(長方形)/右上/右下**分割。</p>
             <p class="text-blue-500 font-bold">目前模式：頁面重新整理後，所有輸入的內容和狀態都將被清除。</p>
+            <!-- 初始作者資訊，由 JS 更新 -->
+            <p class="author-info mt-2">需求架構師：Ether | 生成實作器：Gemini PRO</p>
         </div>
 
     </div>
     
 </body>
 </html>
-
