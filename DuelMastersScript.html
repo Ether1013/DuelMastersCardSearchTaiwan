@@ -2673,7 +2673,7 @@ function handleCardSingleClick(e, cardId) {
     }
 
     // 1. 抽取出的共用匯入邏輯 (請新增此函式)
-    function processGameData(data) {
+   function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
         globalAbilityStyleRegistry = data.abilityRegistry || {}; 
         
@@ -2694,7 +2694,8 @@ function handleCardSingleClick(e, cardId) {
         }
 
         history = loadedHistory;
-        currentIndex = data.currentIndex || 0;
+        // 修改: 若 resetToStart 為 true，則強制設為 0；否則使用存檔中的位置
+        currentIndex = resetToStart ? 0 : (data.currentIndex || 0);
         
         storageQuotaExceeded = false;
         hasAlertedQuota = false;
@@ -2722,7 +2723,8 @@ function handleCardSingleClick(e, cardId) {
         if (choice === 'save' || choice === 'overwrite') {
             if (pendingImportData) {
                 try {
-                    processGameData(pendingImportData);
+                    // 修改: 從 URL 匯入衝突解決後，強制從 Action 0 開始
+                    processGameData(pendingImportData, true);
                     alert("匯入成功！");
                 } catch(e) {
                     alert("匯入失敗：" + e.message);
@@ -2867,9 +2869,6 @@ function handleCardSingleClick(e, cardId) {
         const scriptUrl = urlParams.get('scriptUrl');
 
         if (scriptUrl) {
-            // 讀取到參數後，立即清除網址列參數但不刷新頁面
-            window.history.replaceState({}, document.title, window.location.pathname);
-
             console.log("Found scriptUrl:", scriptUrl);
             fetch(scriptUrl)
                 .then(res => {
@@ -2886,9 +2885,12 @@ function handleCardSingleClick(e, cardId) {
                         document.getElementById('import-conflict-modal').style.display = 'flex';
                     } else {
                         // 本地無資料：直接匯入
-                        processGameData(data);
+                        // 修改: 強制從 Action 0 開始
+                        processGameData(data, true);
                         console.log("Auto-imported script from URL");
                     }
+                    // 清除 URL 參數
+                    window.history.replaceState({}, document.title, window.location.pathname);
                 })
                 .catch(e => {
                     console.error("Failed to load scriptUrl:", e);
