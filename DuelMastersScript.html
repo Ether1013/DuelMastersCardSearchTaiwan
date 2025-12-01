@@ -2847,15 +2847,18 @@ function handleCardSingleClick(e, cardId) {
         document.getElementById('position-selector-modal').style.display = 'none';
     }
 
+    // Window Unload Warning for Storage Quota
     window.addEventListener('beforeunload', (e) => {
         if (storageQuotaExceeded) {
+            // Standard way to trigger "Leave Site?" dialog in modern browsers.
+            // Custom text is usually ignored by browsers for security, but we set it anyway.
             e.preventDefault();
             e.returnValue = '儲存空間已滿，您的資料可能尚未儲存。建議先匯出資料。';
             return e.returnValue;
         }
     });
 
-	window.onload = function() {
+    window.onload = function() {
         // 先嘗試讀取本地存檔
         const hasLocalData = loadFromStorage();
         
@@ -2864,6 +2867,9 @@ function handleCardSingleClick(e, cardId) {
         const scriptUrl = urlParams.get('scriptUrl');
 
         if (scriptUrl) {
+            // 讀取到參數後，立即清除網址列參數但不刷新頁面
+            window.history.replaceState({}, document.title, window.location.pathname);
+
             console.log("Found scriptUrl:", scriptUrl);
             fetch(scriptUrl)
                 .then(res => {
