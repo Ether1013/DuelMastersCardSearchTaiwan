@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM TCG Editor v0.9.44 - Fix Missing Functions</title>
+    <style>
+        :root {
+            --card-width: 50px;
+            --card-height: 70px;
+            --bg-color: #dcdcdc;
+            --p1-color: #e3f2fd;
+            --p2-color: #fce4ec;
+            --timeline-width: 320px;
+            --highlight-color: #f1c40f;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #toolbar {
+            height: 45px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 50;
+        }
+
+        #draft-bar {
+            background: #e67e22;
+            color: white;
+            padding: 5px 10px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #draft-bar label {
+            display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;
+            background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 4px;
+        }
+
+        #point-bar {
+            background: #8e44ad; /* Changed color for Pointing mode */
+            color: white;
+            padding: 5px 10px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #card-action-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: none;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid #555;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 95vw;
+        }
+        
+        button {
+            background: #34495e;
+            color: white;
+            border: 1px solid #566573;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        button:hover { background: #4e6479; transform: translateY(-1px); }
+        button:active { transform: translateY(1px); }
+        
+        button.primary { background: #2ecc71; border-color: #27ae60; font-weight: bold; }
+        button.primary:hover { background: #27ae60; }
+        
+        button.danger { background: #c0392b; border-color: #e74c3c; }
+        button.danger:hover { background: #e74c3c; }
+
+        input[type="text"], input[type="number"] {
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 0.85rem;
+        }
+
+        #workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #svg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 999; 
+        }
+        
+        .arrow-line {
+            stroke: rgba(231, 76, 60, 0.8);
+            stroke-width: 4;
+            stroke-dasharray: 10, 5;
+            animation: dash 1s linear infinite;
+            marker-end: url(#arrowhead);
+            fill: none; /* Important for curved lines */
+        }
+        @keyframes dash { to { stroke-dashoffset: -15; } }
+
+        #ability-stack-zone {
+            width: 100px;
+            background: #bdc3c7;
+            border-right: 2px solid #7f8c8d;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        #ability-stack-zone.rotated-view {
+            flex-direction: column-reverse;
+        }
+
+        .ability-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px 0;
+            overflow-y: auto;
+            position: relative;
+            gap: 5px;
+        }
+
+        #ability-zone-p2 { background: rgba(252, 228, 236, 0.5); }
+        #ability-zone-p1 { background: rgba(227, 242, 253, 0.5); }
+
+        #ability-stack-zone:not(.rotated-view) #ability-zone-p2 { border-bottom: 2px dashed #7f8c8d; }
+        #ability-stack-zone.rotated-view #ability-zone-p1 { border-bottom: 2px dashed #7f8c8d; }
+
+        .ability-label {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            opacity: 0.7;
+        }
+
+        #game-board-container {
+            flex: 1;
+            background: #95a5a6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden; 
+        }
+
+        #main-board {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            /* Remove rotation transform */
+        }
+
+        /* Turn Indicators */
+        .turn-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            background: #95a5a6;
+            z-index: 50;
+            transition: all 0.5s ease;
+            border-right: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        /* P1 Active Turn (Blue) */
+        #player1-area.active-turn .turn-bar {
+            background: #3498db;
+            box-shadow: 0 0 15px 2px rgba(52, 152, 219, 0.8);
+            animation: pulse-blue 2s infinite;
+        }
+        
+        /* P2 Active Turn (Red/Pink) */
+        #player2-area.active-turn .turn-bar {
+            background: #e91e63;
+            box-shadow: 0 0 15px 2px rgba(233, 30, 99, 0.8);
+            animation: pulse-red 2s infinite;
+        }
+        
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 10px 2px rgba(52, 152, 219, 0.5); }
+            50% { box-shadow: 0 0 20px 5px rgba(52, 152, 219, 0.9); }
+            100% { box-shadow: 0 0 10px 2px rgba(52, 152, 219, 0.5); }
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 10px 2px rgba(233, 30, 99, 0.5); }
+            50% { box-shadow: 0 0 20px 5px rgba(233, 30, 99, 0.9); }
+            100% { box-shadow: 0 0 10px 2px rgba(233, 30, 99, 0.5); }
+        }
+
+        /* 展示區樣式 */
+        #reveal-zone {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 200px;
+            min-height: 120px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px dashed #f1c40f;
+            border-radius: 10px;
+            z-index: 300; 
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 30px 20px 20px 20px; 
+            transition: opacity 0.3s;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+        }
+        
+        #reveal-zone .zone-label {
+            top: 5px;
+            left: 10px;
+            width: auto;
+            transform: none;
+            color: #f1c40f;
+            text-shadow: none;
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        #timeline-panel {
+            width: var(--timeline-width);
+            background: #ecf0f1;
+            border-left: 1px solid #bdc3c7;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        #timeline-header {
+            padding: 8px;
+            background: #34495e;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        #action-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            padding-bottom: 20px;
+        }
+
+        .timeline-gap {
+            height: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .timeline-gap:hover::after {
+            content: "+";
+            background: #3498db;
+            color: white;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+            position: absolute;
+            z-index: 5;
+        }
+        .timeline-gap::before {
+            content: "";
+            height: 2px;
+            background: #ccc;
+            width: 80%;
+            position: absolute;
+        }
+
+        .action-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #dcdcdc;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background: #fdfdfd;
+            border-left: 4px solid transparent;
+        }
+        .action-item:hover { background: #f0f4f7; }
+        .action-item.active { background: #e8f6fd; border-left-color: #2980b9;}
+        .action-item.editing { background: #fff3e0; border-left-color: #e67e22; }
+
+        .action-item.p1-action { border-left: 4px solid #3498db; background: rgba(52, 152, 219, 0.05); }
+        .action-item.p1-action.active { background: rgba(52, 152, 219, 0.2); }
+        
+        .action-item.p2-action { border-left: 4px solid #e91e63; background: rgba(233, 30, 99, 0.05); }
+        .action-item.p2-action.active { background: rgba(233, 30, 99, 0.2); }
+
+        .action-header { display: flex; align-items: center; width: 100%; justify-content: space-between; }
+        .action-index { font-weight: bold; margin-right: 6px; min-width: 18px; text-align: right; color: #7f8c8d;}
+        .action-desc { flex: 1; white-space: pre-wrap; word-break: break-all; font-weight: 500;}
+        
+        .action-controls {
+            display: flex; gap: 5px; margin-top: 5px; padding-left: 24px; opacity: 0.4; transition: opacity 0.2s;
+        }
+        .action-item:hover .action-controls, .action-item.active .action-controls { opacity: 1; }
+        
+        .mini-btn { font-size: 0.75rem; padding: 3px 8px; background: #bdc3c7; border: none; color: #2c3e50; border-radius: 3px; cursor: pointer;}
+        .mini-btn:hover { background: #95a5a6; color: white; }
+        .mini-btn.play-from { background: #2ecc71; color: white; }
+        .mini-btn.play-from:hover { background: #27ae60; }
+        .mini-btn.play-step { background: #3498db; color: white; }
+        .mini-btn.play-step:hover { background: #2980b9; }
+        .mini-btn.edit { background: #f39c12; color: white; }
+        .mini-btn.edit:hover { background: #e67e22; }
+        .mini-btn.delete-all { background: #c0392b; color: white; font-weight:bold; padding: 2px 6px; border-radius:3px; cursor:pointer; border:none;}
+
+        .icon-btn { background: none; border: none; cursor: pointer; padding: 2px; opacity: 0.5; font-size: 1rem; }
+        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
+        .icon-btn.delete { color: #c0392b; }
+
+        .player-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2px;
+            position: relative;
+            padding-left: 15px; /* Space for turn bar */
+        }
+
+        #player2-area {
+            background-color: var(--p2-color);
+            border-bottom: 2px dashed #999;
+            /* Remove Rotate */
+        }
+        
+        /* Make P2 layout reversed vertically to simulate opponent view without rotating text */
+        #player2-area .bottom-row { order: -1; } /* Hand on top */
+        #player2-area .mana-zone { order: 0; }
+        #player2-area .shield-zone { order: 1; }
+        #player2-area .battle-zone { order: 2; }
+        
+        #player1-area { background-color: var(--p1-color); }
+
+        .zone {
+            border: 1px solid rgba(0,0,0,0.15);
+            margin: 1px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            min-height: var(--card-height);
+            border-radius: 3px;
+        }
+        
+        .zone.target-highlight {
+            background-color: rgba(46, 204, 113, 0.4);
+            border: 2px dashed #27ae60;
+            box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.5);
+            cursor: copy;
+            z-index: 100;
+        }
+        
+        /* Pointing Highlights */
+        .zone.point-target-highlight {
+            background-color: rgba(142, 68, 173, 0.2); /* Purple tint */
+            border: 2px dashed #9b59b6;
+            cursor: crosshair;
+            z-index: 100;
+        }
+        .card.point-target-highlight {
+            box-shadow: 0 0 10px 5px rgba(155, 89, 182, 0.8);
+            z-index: 101;
+            cursor: crosshair;
+        }
+        .card.point-target-selected {
+            box-shadow: 0 0 15px 8px #8e44ad;
+            border: 2px solid #8e44ad;
+        }
+
+        .zone-label {
+            position: absolute; font-size: 0.8rem; color: rgba(0,0,0,0.25);
+            font-weight: 900; pointer-events: none; z-index: 0; width: 100%; text-align: center;
+            top: 50%; transform: translateY(-50%); text-transform: uppercase;
+        }
+
+        .bottom-row { display: flex; height: var(--card-height); margin-top: auto; }
+        .hand-zone { flex: 1; overflow-x: auto; padding: 2px; scrollbar-width: thin;}
+        .side-zone-group { width: 170px; display: flex; gap: 3px; padding-left: 3px; flex-shrink: 0; }
+        
+        .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
+        .mana-zone { height: calc(var(--card-height) * 0.6); background: rgba(0,0,0,0.05); }
+        .shield-zone { height: calc(var(--card-height) * 0.85); justify-content: center; gap: 5px; }
+        .battle-zone { flex: 1; background: rgba(255,255,255,0.6); justify-content: center; gap: 4px; padding: 5px; }
+
+        .card-group {
+            position: relative;
+            width: var(--card-width);
+            height: var(--card-height);
+            margin: 0 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .card-group:hover {
+            z-index: 500;
+        }
+        .card-group:hover .card {
+            transition: top 0.3s, z-index 0s;
+        }
+        /* Hover Fan-out */
+        .card-group:hover .stack-base { top: 0px !important; z-index: 100; }
+        .card-group:hover .stack-top { top: -40px !important; z-index: 101; }
+        .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
+        .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
+        .card-group:hover .stack-bottom { top: 40px !important; z-index: 102; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+        .card {
+            width: var(--card-width); height: var(--card-height);
+            background-color: white; border: 1px solid #333; border-radius: 3px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; font-size: 9px; cursor: pointer;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4); user-select: none;
+            transition: box-shadow 0.2s, border-color 0.2s; 
+            z-index: 1; flex-shrink: 0; overflow: hidden;
+            will-change: transform, top, left;
+            background-size: cover; /* Ensure image covers card */
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        /* When image is set */
+        .card.has-image {
+            border: none; /* 移除外框 */
+        }
+        /* 如果有發光，需要顯示邊框 */
+        .card.has-image[class*="glow-"] {
+            border: 1px solid transparent; /* 讓 box-shadow 負責發光，border 留給 glow class 覆寫 */
+        }
+        
+        .card.has-image .card-text {
+             display: none;
+        }
+
+        .card.interactive { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .card:hover { z-index: 200; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .card.selected { box-shadow: 0 0 0 3px #f1c40f, 0 0 8px #f1c40f; z-index: 100; }
+        .card.face-down { 
+            background: #2c3e50;
+            background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
+            background-size: 15px 15px; border: 1px solid white; color: transparent; 
+        }
+        
+        /* Note Style */
+        .card-note {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            right: 2px;
+            background: #f1c40f;
+            color: black;
+            font-size: 8px;
+            text-align: center;
+            border: 1px solid #d35400;
+            z-index: 5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Stacking classes used in JS */
+        .stack-base { z-index: 10; position: absolute; }
+        .stack-top { z-index: 20; position: absolute; }
+        .stack-bottom { z-index: 5; position: absolute; }
+        .stack-shift-up { z-index: 20; position: absolute; }
+        .stack-shift-down { z-index: 20; position: absolute; }
+        .stack-bottom-exposed { z-index: 5; position: absolute; }
+        .stack-top-offset { z-index: 20; position: absolute; }
+
+        .glow-red { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8) !important; border-color: red !important; }
+        .glow-yellow { box-shadow: 0 0 8px 4px rgba(255, 215, 0, 0.8) !important; border-color: gold !important; }
+        .glow-green { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8) !important; border-color: lime !important; }
+        .glow-blue { box-shadow: 0 0 8px 4px rgba(0, 191, 255, 0.8) !important; border-color: deepskyblue !important; }
+        .glow-black { box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.8) !important; border-color: black !important; }
+        .glow-white { box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.9) !important; border-color: white !important; }
+        .glow-rainbow { animation: rainbow 2s linear infinite !important; }
+        
+        @keyframes rainbow {
+            0% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
+            50% { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8); border-color: blue; }
+            100% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
+        }
+
+        .ability-card { width: 80px; height: 35px; flex-direction: row; font-size: 8px; transform: none !important; cursor: pointer; overflow: hidden; }
+        .ability-card .card-text { font-size: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 90%; }
+        .ability-card .card-power { display: none; }
+
+        .card-power { 
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: rgba(255,255,255,0.9); border-top: 1px solid #000; 
+            text-align: center; font-weight: bold; font-size: 9px; color: black;
+        }
+        .card-text { padding: 2px; text-align: center; line-height: 1.1; font-weight: 500;}
+
+        .count-badge {
+            position: absolute; top: -6px; right: -6px;
+            background: #e74c3c; color: white;
+            border-radius: 50%; width: 20px; height: 20px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 10px; font-weight: bold; z-index: 50;
+            border: 1px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 2000;
+            justify-content: center; align-items: center; backdrop-filter: blur(2px);
+        }
+        .modal-content {
+            background: white; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 20px; display: flex; flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+        
+        #setup-modal { display: none; }
+        #setup-modal .modal-content { width: 320px; gap: 15px; }
+        .input-group { display: flex; justify-content: space-between; align-items: center; }
+        .input-group label { font-weight: bold; font-size: 0.9rem; }
+        .input-group input { width: 60px; text-align: center; }
+
+        #card-selector-modal .modal-content { width: 85%; max-width: 900px; height: 85%; }
+        #modal-body { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 12px; padding: 15px; background: #f8f9fa; border-radius: 4px; align-content: flex-start; }
+
+        #position-selector-modal .modal-content { width: 90%; max-width: 600px; height: auto; max-height: 80vh; display: flex; flex-direction: column; }
+        #position-list {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;
+            padding: 10px; background: #eee; border-radius: 4px; min-height: 0;
+        }
+        .position-slot {
+            padding: 10px; background: white; border: 2px dashed #bbb;
+            text-align: center; cursor: pointer; color: #555;
+            transition: all 0.2s;
+        }
+        .position-slot:hover { background: #dff9fb; border-color: #2980b9; color: #2980b9; font-weight: bold;}
+        .position-card-ref {
+            display: flex; align-items: center; gap: 10px; padding: 5px;
+            background: #fff; border: 1px solid #ccc; opacity: 0.8;
+        }
+        
+        #stack-gui {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .stack-option {
+            background: #f8f9fa; border: 2px solid #ddd;
+            border-radius: 8px; padding: 15px;
+            text-align: center; cursor: pointer;
+            transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .stack-option:hover { border-color: #3498db; background: #ebf5fb; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+        .stack-icon {
+            width: 40px; height: 50px; background: #ccc; border: 1px solid #999;
+            position: relative; display: block;
+        }
+        .icon-top .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#3498db; border:1px solid white; z-index:2; opacity:0.8; }
+        .icon-bottom .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#2c3e50; border:1px solid white; z-index:-1; }
+        .icon-up .child { position: absolute; top:-15px; left:0; width:100%; height:100%; background:#e67e22; border:1px solid white; z-index:2; opacity:0.9; }
+        .icon-down .child { position: absolute; top:15px; left:0; width:100%; height:100%; background:#9b59b6; border:1px solid white; z-index:2; opacity:0.9; }
+        .icon-bottom-exp .child { position: absolute; top:20px; left:0; width:100%; height:100%; background:#27ae60; border:1px solid white; z-index:-1; opacity: 0.9; }
+
+        .rotated-view #main-board { transform: rotate(180deg); }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<!-- SVG Layer for Arrows -->
+<svg id="svg-layer">
+    <defs>
+        <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+        </marker>
+    </defs>
+</svg>
+
+<div id="toolbar">
+    <div style="font-weight: 800; font-size: 1.1rem; margin-right: 10px; color: #f1c40f;">DM Editor</div>
+    <button onclick="openSetupModal()">Setup / Clear</button>
+    <button onclick="rotateBoard()">🔄 換人 (Switch Turn)</button>
+    <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
+    <button onclick="resetBoard(1)" title="重置 P1 盤面">P1 重置</button>
+    <button onclick="resetBoard(2)" title="重置 P2 盤面">P2 重置</button>
+    <div style="flex:1"></div>
+    <button onclick="document.getElementById('import-input').click()">匯入 (Import)</button>
+    <input type="file" id="import-input" style="display:none" onchange="importData(this)">
+    <button onclick="exportData()">匯出 (Export)</button>
+</div>
+
+<div id="draft-bar">
+    <span>⚠️ 編輯中... (已累積 <span id="draft-count">0</span> 個操作)</span>
+    <label title="開啟此選項後，本次編輯的結果將會影響後續所有步驟的狀態 (可能導致不可預期的結果)">
+        <input type="checkbox" id="propagate-check"> 🔗 連動更新後續
+    </label>
+    <div style="display:flex; gap:10px;">
+        <button onclick="cancelDraft()" class="danger">取消</button>
+        <button onclick="saveDraft()" class="primary">💾 儲存此步</button>
+    </div>
+</div>
+
+<div id="point-bar">
+    <span>👉 指向模式：請選擇目標 (可選擇任意卡片或區域)</span>
+    <div style="display:flex; gap:10px;">
+        <span id="point-target-info" style="font-size:0.8rem; align-self:center;"></span>
+        <button id="btn-confirm-point" class="primary" style="display:none;" onclick="confirmPointTargets()">✅ 確認指向</button>
+        <button onclick="cancelPointMode()" class="danger">取消</button>
+    </div>
+</div>
+
+<div id="workspace">
+    <div id="ability-stack-zone">
+        <div id="ability-zone-p2" class="ability-column">
+            <div class="ability-label">P2 能力 (待處理)</div>
+        </div>
+        <div id="ability-zone-p1" class="ability-column">
+            <div class="ability-label">P1 能力 (待處理)</div>
+        </div>
+    </div>
+
+    <div id="game-board-container">
+        <div id="phase-display">PHASE</div>
+        <div id="main-board">
+            
+            <!-- Reveal Zone -->
+            <div id="reveal-zone" class="zone" data-zone="reveal-zone">
+                <span class="zone-label">展示區 (Reveal Zone)</span>
+                <button class="mini-btn danger" style="position:absolute; top:5px; right:5px;" onclick="closeRevealZone()">✕</button>
+            </div>
+
+            <div id="player2-area" class="player-area">
+                <div class="turn-bar"></div>
+                <div class="battle-zone zone" data-zone="p2-battle" onclick="handleZoneClick('p2-battle')"><span class="zone-label">P2 戰鬥場</span></div>
+                <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label">P2 護盾區</span></div>
+                <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label">P2 魔力區</span></div>
+                <div class="bottom-row">
+                    <div class="hand-zone zone" data-zone="p2-hand" onclick="handleZoneClick('p2-hand')"><span class="zone-label">P2 手牌</span></div>
+                    <div class="side-zone-group">
+                        <div class="hyper-zone zone stacked" data-zone="p2-hyper" onclick="handleZoneClick('p2-hyper')"><span class="zone-label">超次元</span></div>
+                        <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label">墓地</span></div>
+                        <div class="deck-zone zone stacked" data-zone="p2-deck" onclick="handleZoneClick('p2-deck')"><span class="zone-label">牌庫</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="player1-area" class="player-area">
+                <div class="turn-bar"></div>
+                <div class="battle-zone zone" data-zone="p1-battle" onclick="handleZoneClick('p1-battle')"><span class="zone-label">P1 戰鬥場</span></div>
+                <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label">P1 護盾區</span></div>
+                <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label">P1 魔力區</span></div>
+                <div class="bottom-row">
+                    <div class="hand-zone zone" data-zone="p1-hand" onclick="handleZoneClick('p1-hand')"><span class="zone-label">P1 手牌</span></div>
+                    <div class="side-zone-group">
+                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label">牌庫</span></div>
+                        <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label">墓地</span></div>
+                        <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label">超次元</span></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="timeline-panel">
+        <div id="timeline-header">
+            <span style="flex:1;">Action Log</span>
+            <small style="font-weight:normal; opacity:0.8; margin-right:5px;" id="step-counter">0/0</small>
+            <button class="mini-btn delete-all" onclick="deleteAllActions()" title="刪除所有動作並重新設定">🗑️重設</button>
+        </div>
+        <ul id="action-list"></ul>
+        <div style="padding: 10px; background: #ecf0f1; border-top:1px solid #bdc3c7;">
+            <div style="display: flex; gap:5px; justify-content: center; margin-bottom: 5px;">
+                <button onclick="prevStep()">◀</button>
+                <button onclick="togglePlay()" id="btn-play">▶ 播放</button>
+                <button onclick="nextStep()">▶</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="card-action-panel">
+    <button onclick="rotateCard(-90)">↶</button>
+    <button onclick="rotateCard(90)">↷</button>
+    <button onclick="flipCard()">翻面</button>
+    <button onclick="toggleGlow()">💡發光</button>
+    <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
+    <button onclick="copyToAbility()">⚡能力</button>
+    <button onclick="revealCards()">👁️ 展示</button>
+    <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()">👉 指向</button>
+    <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()">🛑 結束指向</button>
+    <button onclick="pasteImageMode()">🖼️ 上圖 (Ctrl+V)</button>
+    <button id="btn-remove-image" style="display:none; background:#e74c3c;" onclick="removeImage()">✕ 圖</button>
+    <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
+    <input type="text" id="rename-input" placeholder="名稱..." onkeydown="if(event.key==='Enter') renameCard()" style="width: 80px;">
+    <button onclick="renameCard()">更名</button>
+    <input type="text" id="note-input" placeholder="註記..." onkeydown="if(event.key==='Enter') addCardNote()" style="width: 80px;">
+    <button onclick="addCardNote()">📝註記</button>
+    
+    <!-- Ability Adjustment Controls (only visible when ability card selected) -->
+    <div id="ability-adjust-controls" style="display:none; border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
+    <div id="ability-adjust-buttons" style="display:none; gap:5px; align-items:center;">
+        <small>位移:</small>
+        <button onclick="adjustAbilityCard('panX', -10)">⬅</button>
+        <button onclick="adjustAbilityCard('panX', 10)">➡</button>
+        <button onclick="adjustAbilityCard('panY', -10)">⬆</button>
+        <button onclick="adjustAbilityCard('panY', 10)">⬇</button>
+        <small>縮放:</small>
+        <button onclick="adjustAbilityCard('scale', 0.1)">+</button>
+        <button onclick="adjustAbilityCard('scale', -0.1)">-</button>
+    </div>
+
+    <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
+    <button id="btn-delete-card" class="danger" style="display:none;" onclick="deleteSelectedCard()">🗑️ 刪除</button>
+    <button class="danger" onclick="cancelSelection()">✕ (ESC)</button>
+</div>
+
+<div id="setup-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; text-align:center;">開局設定</h3>
+        <div style="background:#fff3cd; padding:5px; margin-bottom:10px; font-size:0.85rem; border-radius:4px; text-align:center;">
+            注意：開始新局會清除當前未匯出的進度。
+        </div>
+        <div class="input-group">
+            <label>P1 牌庫數:</label>
+            <input type="number" id="setup-p1-deck" value="40" min="40" max="60">
+        </div>
+        <div class="input-group">
+            <label>P1 超次元:</label>
+            <input type="number" id="setup-p1-hyper" value="8" min="0" max="8">
+        </div>
+        <hr style="width:100%; border:0; border-top:1px dashed #ccc;">
+        <div class="input-group">
+            <label>P2 牌庫數:</label>
+            <input type="number" id="setup-p2-deck" value="40" min="40" max="60">
+        </div>
+        <div class="input-group">
+            <label>P2 超次元:</label>
+            <input type="number" id="setup-p2-hyper" value="8" min="0" max="8">
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:space-between;">
+            <button onclick="clearStorage()" style="background:#7f8c8d;">清除存檔</button>
+            <button onclick="finishSetup()" class="primary">開始遊戲 (Start)</button>
+        </div>
+    </div>
+</div>
+
+<div id="card-selector-modal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span id="modal-title" style="font-weight:bold; font-size:1.2rem;">Zone</span>
+            <button onclick="closeSelectorModal()" style="border:none; background:none; font-size:1.5rem;">✕</button>
+        </div>
+        <div id="modal-body"></div>
+        <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="actionShuffleZone()" style="background:#8e44ad;">洗牌此區</button>
+            <button onclick="prepareMove(true)" style="background:#d35400;">洗牌選取牌並移動...</button>
+            <button onclick="revealFromSelector()" style="background:#3498db;">👁️ 展示</button>
+            <button onclick="prepareMove(false)" style="background:#2980b9;">移動選取牌...</button>
+        </div>
+    </div>
+</div>
+
+<!-- 新版 GUI 堆疊視窗 (含第5選項) -->
+<div id="position-selector-modal" class="modal">
+    <div class="modal-content">
+        <div id="pos-modal-title" style="font-weight:bold; font-size:1.2rem; margin-bottom:10px;">堆疊操作</div>
+        <div style="margin-bottom:10px; font-size:0.9rem; color:#666;">請點擊圖示選擇堆疊方式：</div>
+        
+        <div id="stack-gui">
+            <div class="stack-option" onclick="confirmStackMove('top')">
+                <div class="stack-icon icon-top"><div class="child"></div></div>
+                <span>疊在上方<br>(Cover Top)</span>
+            </div>
+            <div class="stack-option" onclick="confirmStackMove('bottom')">
+                <div class="stack-icon icon-bottom"><div class="child"></div></div>
+                <span>疊在下方<br>(Underneath)</span>
+            </div>
+            <div class="stack-option" onclick="confirmStackMove('shift_up')">
+                <div class="stack-icon icon-up"><div class="child"></div></div>
+                <span>上方 (露出底)<br>(Shift Up)</span>
+            </div>
+            <div class="stack-option" onclick="confirmStackMove('shift_down')">
+                <div class="stack-icon icon-down"><div class="child"></div></div>
+                <span>上方 (露出頂)<br>(Shift Down)</span>
+            </div>
+            <div class="stack-option" onclick="confirmStackMove('bottom_exposed')">
+                <div class="stack-icon icon-bottom-exp"><div class="child"></div></div>
+                <span>下方 (露出底)<br>(Bottom Exposed)</span>
+            </div>
+        </div>
+        <div id="position-list" style="display:none;"></div> 
+        <div style="margin-top:15px; text-align:right;">
+            <button onclick="closePositionModal()" class="danger">取消</button>
+        </div>
+    </div>
+</div>
+<!-- 新增: 劇本匯入衝突 Modal -->
+<div id="import-conflict-modal" class="modal">
+    <div class="modal-content" style="width: 400px; text-align: center;">
+        <h3>發現外部劇本</h3>
+        <p>網址參數包含劇本檔，但偵測到您有未儲存的本地進度。</p>
+        <p>請問要如何處理？</p>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <button onclick="resolveImportConflict('cancel')" style="padding: 10px;">❌ 不匯入 (使用本地存檔)</button>
+            <button onclick="resolveImportConflict('save')" style="padding: 10px; background: #2ecc71;">💾 存檔然後匯入</button>
+            <button onclick="resolveImportConflict('overwrite')" style="padding: 10px; background: #e74c3c;">⚠️ 不存檔直接匯入</button>
+        </div>
+    </div>
+</div>
+<script>
+    class Card {
+        constructor(id, ownerId, text, zone) {
+            this.id = id;
+            this.ownerId = ownerId;
+            this.text = text;
+            this.zone = zone;
+            this.faceUp = false;
+            this.rotation = 0; 
+            this.power = 0;
+            this.image = null;
+            this.isHyper = false;
+            this.glow = null; 
+            this.parentId = null; 
+            this.stackType = null; 
+            this.note = "";
+            this.imageKey = 'img_' + id;
+            this.backImageKey = 'img_back_' + id;
+            this.bgX = 50; 
+            this.bgY = 50; 
+            this.bgScale = 1; 
+        }
+    }
+
+    class GameState {
+        constructor() {
+            this.cards = [];
+            this.turnPlayer = 1;
+            this.phase = 'SETUP';
+            this.globalRotation = false; 
+            this.cardIdCounter = 1;
+        }
+    }
+
+    class Action {
+        constructor(description) {
+            this.id = Date.now() + Math.random();
+            this.description = description;
+            this.operations = []; 
+        }
+    }
+
+    let history = [];
+    let currentIndex = -1;
+    let initialState = null;
+    let isDrafting = false;
+    let draftOperations = []; 
+    let insertIndex = -1; 
+    let tempState = null; 
+    let selectedCardsInModal = []; 
+    let pendingMove = null; 
+    let playInterval = null;
+    let lastRenderedState = null;
+    let editModeType = 'INSERT';
+    
+    let isPointing = false;
+    let pointerId = null;
+    let pointTargets = []; 
+    let currentStackTargetId = null;
+    
+    let globalImageRegistry = {}; 
+    let globalAbilityStyleRegistry = {}; 
+    let storageQuotaExceeded = false; 
+    let hasAlertedQuota = false;    
+	let pendingImportData = null; // 用於暫存網址匯入的資料
+  
+
+    const STORAGE_KEY = 'dm_editor_data';
+    const STORAGE_EXPIRY = 7 * 24 * 60 * 60 * 1000; 
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const cardModal = document.getElementById('card-selector-modal');
+            const posModal = document.getElementById('position-selector-modal');
+            
+            if (posModal && posModal.style.display === 'flex') {
+                closePositionModal();
+            } else if (cardModal && cardModal.style.display === 'flex') {
+                closeSelectorModal();
+            } else if (isPointing) {
+                cancelPointMode();
+            } else {
+                cancelSelection();
+            }
+        }
+    });
+    
+    // Paste Image Handling
+    document.addEventListener('paste', (e) => {
+        if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+        
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let index in items) {
+            const item = items[index];
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+                const blob = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    processImage(event.target.result);
+                };
+                reader.readAsDataURL(blob);
+                break;
+            }
+        }
+    });
+    
+    function pasteImageMode() {
+        if (!pendingMove || pendingMove.cardIds.length !== 1) {
+            alert("請先選擇一張卡片，然後按下 Ctrl+V 貼上圖片");
+            return;
+        }
+        window.focus();
+    }
+    
+    function processImage(dataUrl) {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const targetW = 100;
+            const targetH = 140;
+            canvas.width = targetW;
+            canvas.height = targetH;
+            ctx.drawImage(img, 0, 0, targetW, targetH);
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            updateCardImageGlobal(pendingMove.cardIds[0], compressedBase64);
+        };
+        img.src = dataUrl;
+    }
+    
+    function updateCardImageGlobal(cardId, base64) {
+        if(!confirm("確定要替換此卡片的圖片嗎？(這將影響所有劇本)")) return;
+        
+        const state = getCurrentDisplayState();
+        const targetCard = state.cards.find(c => c.id === cardId);
+        if(!targetCard) return;
+
+        if (!targetCard.imageKey) {
+            targetCard.imageKey = 'img_' + targetCard.id;
+            targetCard.backImageKey = 'img_back_' + targetCard.id;
+        }
+
+        let keyToUpdate = targetCard.imageKey;
+        if (targetCard.isHyper && !targetCard.faceUp) {
+             keyToUpdate = targetCard.backImageKey;
+        }
+
+        globalImageRegistry[keyToUpdate] = base64;
+
+        const setFlag = (s) => {
+            const c = s.cards.find(x => x.id === cardId);
+            if(c) {
+                if (!c.imageKey) {
+                    c.imageKey = 'img_' + c.id;
+                    c.backImageKey = 'img_back_' + c.id;
+                }
+                c.image = true; 
+            }
+            
+            s.cards.forEach(other => {
+                if (!other.imageKey && other.id === cardId) { 
+                     other.imageKey = 'img_' + other.id; 
+                }
+                
+                if (other.imageKey === keyToUpdate || other.backImageKey === keyToUpdate) {
+                    other.image = true;
+                }
+            });
+        };
+        
+        setFlag(initialState);
+        history.forEach(h => setFlag(h.state));
+        if (tempState) setFlag(tempState);
+        
+        renderUI();
+        saveToStorage();
+    }
+    
+    function removeImage() {
+        if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+        const cardId = pendingMove.cardIds[0];
+        const state = getCurrentDisplayState();
+        const card = state.cards.find(c => c.id === cardId);
+        if(!card) return;
+
+        if (!card.imageKey) {
+            card.imageKey = 'img_' + card.id;
+            card.backImageKey = 'img_back_' + card.id;
+        }
+
+        let keyToUpdate = card.imageKey;
+        if (card.isHyper && !card.faceUp) {
+             keyToUpdate = card.backImageKey;
+        }
+        
+        if(!confirm("確定移除圖片？")) return;
+        
+        delete globalImageRegistry[keyToUpdate];
+
+        const unsetFlag = (s) => {
+            const c = s.cards.find(x => x.id === cardId);
+            if(c) c.image = false;
+            
+            s.cards.forEach(other => {
+                if (other.imageKey === keyToUpdate || other.backImageKey === keyToUpdate) {
+                    other.image = false;
+                }
+            });
+        };
+
+        unsetFlag(initialState);
+        history.forEach(h => unsetFlag(h.state));
+        if (tempState) unsetFlag(tempState);
+
+        saveToStorage();
+        renderUI();
+    }
+
+    function cloneState(state) {
+        return JSON.parse(JSON.stringify(state));
+    }
+
+    function openSetupModal() {
+        const modal = document.getElementById('setup-modal');
+        if(modal) modal.style.display = 'flex';
+    }
+
+    function clearStorage() {
+        if(confirm("確定要清除所有自動存檔嗎？")) {
+            localStorage.removeItem(STORAGE_KEY);
+            alert("存檔已清除。");
+            location.reload();
+        }
+    }
+    
+    function deleteAllActions() {
+        if(!confirm("確定要刪除所有動作並重新開始新局嗎？")) return;
+        
+        // Clear Data
+        history = [];
+        initialState = null;
+        currentIndex = -1;
+        draftOperations = [];
+        isDrafting = false;
+        
+        // Clear Storage
+        localStorage.removeItem(STORAGE_KEY);
+        storageQuotaExceeded = false;
+        hasAlertedQuota = false;
+
+        // Reset UI to blank
+        document.getElementById('action-list').innerHTML = '';
+        document.getElementById('step-counter').innerText = '0/0';
+        updateDraftBar();
+        
+        // Open Setup for reconfiguration
+        openSetupModal();
+    }
+
+    function finishSetup() {
+        try {
+            const getVal = (id, def) => {
+                const el = document.getElementById(id);
+                if(!el) return def;
+                const val = parseInt(el.value);
+                return isNaN(val) ? def : val;
+            };
+
+            const p1d = getVal('setup-p1-deck', 40);
+            const p1h = getVal('setup-p1-hyper', 8);
+            const p2d = getVal('setup-p2-deck', 40);
+            const p2h = getVal('setup-p2-hyper', 8);
+            
+            initGame({p1d, p1h, p2d, p2h});
+            document.getElementById('setup-modal').style.display = 'none';
+        } catch (e) {
+            console.error(e);
+            alert("初始化失敗: " + e.message);
+        }
+    }
+
+    function initGame(config) {
+        const state = new GameState();
+        globalImageRegistry = {}; 
+        globalAbilityStyleRegistry = {}; // Reset global styles
+        
+        if(!config) config = {p1d:40, p1h:8, p2d:40, p2h:8};
+
+        const zones = [
+            {id: 'p1-deck', count: config.p1d, prefix: 'C'}, {id: 'p1-hyper', count: config.p1h, prefix: 'H', hyper:true},
+            {id: 'p2-deck', count: config.p2d, prefix: 'C'}, {id: 'p2-hyper', count: config.p2h, prefix: 'H', hyper:true}
+        ];
+        
+        state.cards = []; 
+        
+        zones.forEach(z => {
+            for(let i=0; i<z.count; i++) {
+                let c = new Card(state.cardIdCounter++, z.id.startsWith('p1')?1:2, `${z.prefix}-${i+1}`, z.id);
+                if(z.hyper) { c.isHyper=true; c.faceUp=true; }
+                state.cards.push(c);
+            }
+        });
+
+        initialState = cloneState(state);
+        history = [];
+        let initAct = new Action('遊戲開始');
+        initAct.operations.push({type: 'INIT'});
+        history.push({ action: initAct, state: initialState });
+        currentIndex = 0;
+
+        isDrafting = false;
+        draftOperations = [];
+        updateDraftBar();
+        renderUI();
+        saveToStorage();
+    }
+
+    function saveToStorage() {
+        try {
+            const data = {
+                timestamp: Date.now(),
+                history: history,
+                initialState: initialState,
+                currentIndex: currentIndex,
+                imageRegistry: globalImageRegistry,
+                abilityRegistry: globalAbilityStyleRegistry // Save global styles
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            
+            // If successful, reset quota flags
+            if (storageQuotaExceeded) {
+                storageQuotaExceeded = false;
+                hasAlertedQuota = false;
+            }
+        } catch(e) {
+            console.warn("Storage save failed (Quota?)", e);
+            storageQuotaExceeded = true;
+            // Only alert once per session
+            if (!hasAlertedQuota) {
+                alert("⚠️ 自動存檔失敗：儲存空間已滿。\n\n建議您立即「匯出」保存進度，否則關閉視窗後資料將會遺失。");
+                hasAlertedQuota = true;
+            }
+        }
+    }
+
+    function loadFromStorage() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        try {
+            const data = JSON.parse(raw);
+            
+            // 1. 基礎檢查：確保關鍵資料存在
+            if (!data || !data.history || !data.initialState) {
+                console.warn("Storage data incomplete.");
+                return false;
+            }
+
+            // 2. 過期檢查 (如果沒有 timestamp 則視為有效，保持相容)
+            if (data.timestamp && (Date.now() - data.timestamp > STORAGE_EXPIRY)) {
+                console.warn("Storage expired.");
+                localStorage.removeItem(STORAGE_KEY);
+                return false;
+            }
+            
+            // 3. 資料遷移 (Migration)：包在 try-catch 中，即使失敗也不影響讀取
+            try {
+                const ensureKey = (card) => {
+                    if (card && typeof card === 'object') {
+                        if (!card.imageKey) {
+                            card.imageKey = 'img_' + card.id;
+                            card.backImageKey = 'img_back_' + card.id;
+                        }
+                    }
+                };
+                
+                if (data.initialState.cards && Array.isArray(data.initialState.cards)) {
+                    data.initialState.cards.forEach(ensureKey);
+                }
+                
+                if (Array.isArray(data.history)) {
+                    data.history.forEach(h => {
+                        if (h.state && h.state.cards && Array.isArray(h.state.cards)) {
+                            h.state.cards.forEach(ensureKey);
+                        }
+                    });
+                }
+            } catch (migErr) {
+                console.warn("Data migration warning (non-fatal):", migErr);
+            }
+
+            // 4. 載入資料
+            history = data.history;
+            initialState = data.initialState;
+            // 確保 currentIndex 合法
+            currentIndex = (typeof data.currentIndex === 'number' && data.currentIndex >= -1 && data.currentIndex < history.length) 
+                           ? data.currentIndex 
+                           : (history.length - 1);
+                           
+            globalImageRegistry = data.imageRegistry || {}; 
+            globalAbilityStyleRegistry = data.abilityRegistry || {}; 
+            
+            // 5. 嘗試渲染畫面
+            // 即使渲染失敗 (例如 DOM 問題)，也不要讓讀檔失敗，至少保留資料讓使用者可以再操作
+            try {
+                renderUI();
+            } catch(e) {
+                console.error("UI Render failed during load (recovered):", e);
+                // 嘗試至少更新步數顯示
+                const counter = document.getElementById('step-counter');
+                if(counter) counter.innerText = `${currentIndex}/${Math.max(0, history.length-1)}`;
+            }
+            
+            return true;
+        } catch (e) {
+            console.error("Critical Load failed", e);
+            return false;
+        }
+    }
+
+    function getCurrentDisplayState() {
+        return isDrafting ? tempState : ((currentIndex >= 0 && currentIndex < history.length) ? history[currentIndex].state : initialState);
+    }
+
+    function startDraftAtEnd() {
+        startDraft(history.length);
+    }
+
+    function startDraft(index) {
+        if (isDrafting) {
+            if(!confirm("目前有未儲存的變更，是否捨棄並開始新步驟？")) return;
+        }
+        
+        isDrafting = true;
+        insertIndex = index;
+        draftOperations = [];
+        editModeType = 'INSERT';
+        
+        let baseIndex = index - 1;
+        if (baseIndex < 0) baseIndex = 0; 
+        
+        tempState = cloneState(history[baseIndex].state);
+        
+        updateDraftBar();
+        renderUI();
+    }
+
+    function editAction(index) {
+        if (isDrafting) {
+            if(!confirm("目前有未儲存的變更，是否捨棄並編輯此步驟？")) return;
+        }
+        
+        isDrafting = true;
+        insertIndex = index; 
+        editModeType = 'EDIT';
+        
+        let baseIndex = index - 1;
+        if (baseIndex < 0) {
+            tempState = cloneState(initialState);
+        } else {
+            tempState = cloneState(history[baseIndex].state);
+        }
+        
+        const actionToEdit = history[index].action;
+        draftOperations = [...actionToEdit.operations];
+        
+        draftOperations.forEach(op => applyOperation(tempState, op));
+        
+        updateDraftBar();
+        renderUI();
+    }
+
+    function addOperation(op) {
+        if (!isDrafting) startDraftAtEnd();
+        applyOperation(tempState, op);
+        draftOperations.push(op);
+        updateDraftBar();
+        renderUI();
+    }
+
+    function saveDraft(customDesc) {
+        if (draftOperations.length === 0) {
+            isDrafting = false;
+            updateDraftBar();
+            renderUI();
+            return;
+        }
+
+        let desc = customDesc;
+        if (!desc && editModeType === 'EDIT' && insertIndex < history.length) {
+             desc = history[insertIndex].action.description;
+        }
+        if (!desc) {
+            const opCount = draftOperations.length;
+            const firstOp = draftOperations[0];
+            let map = {
+                'MOVE': '移動', 'SHUFFLE': '洗牌', 'ROTATE': '旋轉視角', 
+                'ROTATE_CARD': '旋轉卡片', 'FLIP_CARD': '翻轉卡片', 'RENAME_CARD': '更名', 
+                'RESET_BOARD': '重置盤面', 'SET_GLOW': '設定發光', 'CREATE_ABILITY': '產生能力', 'DELETE_CARD': '刪除卡片',
+                'POINT': '指向', 'ATTACK': '攻擊', 'ADD_NOTE': '新增註記', 'ADJUST_STYLE': '調整樣式', 'SWITCH_TURN': '換人'
+            };
+            let typeDesc = map[firstOp.type] || '操作';
+            if (firstOp.type === 'POINT') {
+                desc = firstOp.desc || '指向';
+            } else if (firstOp.type === 'ATTACK') {
+                desc = firstOp.desc || '攻擊宣言';
+            } else {
+                desc = `${typeDesc} 等 ${opCount} 個動作`;
+            }
+        }
+
+        const newAction = new Action(desc);
+        newAction.operations = [...draftOperations];
+        const finalState = cloneState(tempState);
+        const newItem = { action: newAction, state: finalState };
+
+        const propagate = document.getElementById('propagate-check').checked;
+
+        const head = history.slice(0, insertIndex);
+        let tail = [];
+        
+        if (editModeType === 'EDIT') {
+            tail = history.slice(insertIndex + 1);
+        } else {
+            tail = history.slice(insertIndex);
+        }
+
+        if (propagate) {
+            let runningState = cloneState(finalState);
+            tail = tail.map(item => {
+                try {
+                    item.action.operations.forEach(op => applyOperation(runningState, op));
+                } catch(e) { console.error("Propagate Error", e); }
+                return { action: item.action, state: cloneState(runningState) };
+            });
+        }
+
+        history = [...head, newItem, ...tail];
+
+        isDrafting = false;
+        currentIndex = insertIndex; 
+        insertIndex = -1;
+        draftOperations = [];
+        updateDraftBar();
+        renderUI();
+        saveToStorage();
+    }
+
+    function cancelDraft() {
+        isDrafting = false;
+        draftOperations = [];
+        cancelSelection();
+        updateDraftBar();
+        if(currentIndex >= history.length) currentIndex = history.length - 1;
+        renderUI();
+    }
+
+    function updateDraftBar() {
+        const bar = document.getElementById('draft-bar');
+        if (isDrafting) {
+            bar.style.display = 'flex';
+            document.getElementById('draft-count').innerText = draftOperations.length;
+        } else {
+            bar.style.display = 'none';
+        }
+    }
+
+    function deleteAction(index) {
+        if (index === 0) return alert("無法刪除初始狀態");
+        if (!confirm("確定刪除此步驟？")) return;
+
+        const head = history.slice(0, index);
+        let tail = history.slice(index + 1);
+        
+        history = [...head, ...tail];
+
+        lastRenderedState = null; 
+        if (currentIndex >= history.length) currentIndex = history.length - 1;
+        
+        cancelSelection(); 
+        renderUI();
+        saveToStorage();
+    }
+
+    function applyOperation(state, op) {
+        if (op.type === 'PASS') return;
+        if (op.type === 'MOVE') {
+            const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
+            let movingCards = state.cards.filter(c => cardIds.includes(c.id));
+            
+            if(shuffleSelection) movingCards.sort(() => Math.random() - 0.5); 
+            
+            state.cards = state.cards.filter(c => !cardIds.includes(c.id));
+            movingCards.forEach(c => {
+                c.zone = toZone;
+                c.parentId = null;
+                c.stackType = null;
+                if (faceUp !== undefined) c.faceUp = faceUp;
+                if (toZone.includes('hand') || toZone.includes('deck')) c.rotation = 0; 
+                if (stackTargetId) {
+                    c.parentId = stackTargetId;
+                    c.stackType = stackType;
+                }
+            });
+
+            if (insertIndex !== undefined && insertIndex !== -1) {
+                let zoneCards = state.cards.filter(c => c.zone === toZone);
+                let otherCards = state.cards.filter(c => c.zone !== toZone);
+                zoneCards.splice(insertIndex, 0, ...movingCards);
+                state.cards = [...otherCards, ...zoneCards];
+            } else {
+                state.cards.push(...movingCards);
+            }
+
+        } else if (op.type === 'SHUFFLE') {
+            const { zoneId, order } = op; 
+            
+            let zoneCards = state.cards.filter(c => c.zone === zoneId);
+            let otherCards = state.cards.filter(c => c.zone !== zoneId);
+            
+            if (order) {
+                zoneCards = order.map(id => state.cards.find(c => c.id === id)).filter(c=>c);
+            } else {
+                zoneCards.sort(() => Math.random() - 0.5);
+            }
+            state.cards = [...otherCards, ...zoneCards];
+
+        } else if (op.type === 'ROTATE') {
+            // Replace legacy rotate with switch turn logic if encountered
+            state.turnPlayer = state.turnPlayer === 1 ? 2 : 1;
+        } 
+        else if (op.type === 'SWITCH_TURN') {
+            state.turnPlayer = state.turnPlayer === 1 ? 2 : 1;
+        }
+        else if (op.type === 'ROTATE_CARD') {
+            const { cardIds, deg, finalRotation } = op;
+            state.cards.forEach(c => {
+                if (cardIds.includes(c.id)) {
+                    if (finalRotation !== undefined) c.rotation = finalRotation;
+                    else c.rotation = (c.rotation + deg) % 360;
+                }
+            });
+        }
+        else if (op.type === 'FLIP_CARD') {
+            const { cardIds, finalFaceUp } = op;
+            state.cards.forEach(c => {
+                if (cardIds.includes(c.id)) {
+                    if (finalFaceUp !== undefined) c.faceUp = finalFaceUp;
+                    else c.faceUp = !c.faceUp;
+                }
+            });
+        }
+        else if (op.type === 'RENAME_CARD') {
+            const { cardIds, text } = op;
+            // Legacy rename: keep updating for backward compatibility replay
+            const targets = state.cards.filter(c => cardIds.includes(c.id));
+            targets.forEach(target => {
+                 // Sync Update
+                 state.cards.forEach(c => {
+                     if (c.imageKey === target.imageKey) {
+                         c.text = text;
+                     }
+                 });
+            });
+        }
+        else if (op.type === 'RESET_BOARD') {
+            const { playerId } = op;
+            state.cards.forEach(c => {
+                if (c.zone.includes(`p${playerId}-battle`)) {
+                    c.rotation = 0;
+                }
+                else if (c.zone.includes(`p${playerId}-mana`)) {
+                    c.rotation = 180;
+                }
+            });
+        }
+        else if (op.type === 'SET_GLOW') {
+            const { cardIds, color } = op;
+            state.cards.forEach(c => {
+                if (cardIds.includes(c.id)) c.glow = color;
+            });
+        }
+        else if (op.type === 'CREATE_ABILITY') {
+            const { sourceCardId, targetZone, newId } = op;
+            const source = state.cards.find(c => c.id === sourceCardId);
+            if (source) {
+                let idToUse = newId;
+                if (!idToUse) {
+                     idToUse = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1;
+                }
+                const newCard = new Card(idToUse, source.ownerId, source.text + " (Eff)", targetZone);
+                newCard.faceUp = true;
+                newCard.rotation = 0;
+                
+                // Copy props
+                newCard.imageKey = source.imageKey; 
+                newCard.backImageKey = source.backImageKey;
+                newCard.image = source.image; // Sync image flag
+                newCard.text = source.text;
+                newCard.glow = source.glow; 
+                
+                state.cards.push(newCard);
+            }
+        }
+        else if (op.type === 'DELETE_CARD') {
+            const { cardIds } = op;
+            state.cards = state.cards.filter(c => !cardIds.includes(c.id));
+        }
+        else if (op.type === 'POINT') { 
+            // Visual operation only, no state change (Cards do not rotate)
+        }
+        else if (op.type === 'ATTACK') {
+            // Restore Legacy Behavior: ATTACK rotates the card
+            // This ensures old replays/saves correctly show tapped creatures
+            const { attackerId } = op;
+            const card = state.cards.find(c => c.id === attackerId);
+            if(card) {
+                card.rotation = 90; 
+            }
+        }
+        else if (op.type === 'ADD_NOTE') {
+            const { cardIds, note } = op;
+            state.cards.forEach(c => {
+                if(cardIds.includes(c.id)) c.note = note;
+            });
+        }
+        else if (op.type === 'ADJUST_STYLE') {
+            const { cardIds, key, val, isDelta } = op;
+            state.cards.forEach(c => {
+                if(cardIds.includes(c.id)) {
+                    if (isDelta) c[key] += val;
+                    else c[key] = val;
+                }
+            });
+        }
+    }
+
+    function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
+        if (!pendingMove) return;
+        
+        let finalCardIds = [...pendingMove.cardIds];
+        if (pendingMove.shuffle) {
+            finalCardIds.sort(() => Math.random() - 0.5);
+        }
+
+        let faceUp = true;
+        if (toZone.includes('shield') || toZone.includes('deck')) faceUp = false;
+        if (toZone.includes('hand') && toZone.includes('p2')) faceUp = true;
+
+        addOperation({
+            type: 'MOVE',
+            cardIds: finalCardIds, 
+            toZone: toZone,
+            faceUp: faceUp,
+            shuffleSelection: false, 
+            insertIndex: insertIdx,
+            stackTargetId: stackTargetId,
+            stackType: stackType
+        });
+
+        cancelSelection();
+        closeSelectorModal();
+        closePositionModal();
+    }
+
+    function actionShuffleZone() {
+        const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
+        if(!zoneId) return;
+        
+        const state = getCurrentDisplayState();
+        const cards = getCardsInZone(state, zoneId);
+        const ids = cards.map(c => c.id);
+        ids.sort(() => Math.random() - 0.5); 
+        
+        addOperation({ type: 'SHUFFLE', zoneId: zoneId, order: ids });
+        closeSelectorModal();
+    }
+
+    function rotateCard(deg) {
+        if (!pendingMove) return;
+        addOperation({ type: 'ROTATE_CARD', cardIds: pendingMove.cardIds, deg: deg });
+    }
+
+    function flipCard() {
+        if (!pendingMove) return;
+        const state = getCurrentDisplayState();
+        const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+        const targetFace = !card.faceUp;
+        addOperation({ type: 'FLIP_CARD', cardIds: pendingMove.cardIds, finalFaceUp: targetFace });
+    }
+
+    function renameCard() {
+        if (!pendingMove || pendingMove.cardIds.length === 0) return;
+        
+        const text = document.getElementById('rename-input').value;
+        const state = getCurrentDisplayState();
+        
+        // Find keys to sync names (like Card 20 and Wait 20-1)
+        const targetKeys = new Set();
+        pendingMove.cardIds.forEach(id => {
+            const c = state.cards.find(x => x.id === id);
+            if(c) {
+                if(c.imageKey) targetKeys.add(c.imageKey);
+                if(c.backImageKey) targetKeys.add(c.backImageKey);
+            }
+        });
+
+        // Update function
+        const applyRename = (cardList) => {
+            cardList.forEach(c => {
+                const isTarget = pendingMove.cardIds.includes(c.id) || 
+                                 (c.imageKey && targetKeys.has(c.imageKey)) ||
+                                 (c.backImageKey && targetKeys.has(c.backImageKey));
+                if (isTarget) {
+                    c.text = text;
+                }
+            });
+        };
+
+        // Execute Global Update (No Confirm for speed)
+        applyRename(initialState.cards);
+        history.forEach(h => { if(h.state) applyRename(h.state.cards); });
+        if(tempState) applyRename(tempState.cards);
+        
+        renderUI();
+        saveToStorage();
+    }
+    
+    function addCardNote() {
+        if (!pendingMove) return;
+        const note = document.getElementById('note-input').value;
+        addOperation({ type: 'ADD_NOTE', cardIds: pendingMove.cardIds, note: note });
+    }
+    
+    // Adjusted: Update global registry to sync ability card styles across all history
+    function adjustAbilityCard(key, val) {
+        if (!pendingMove || pendingMove.cardIds.length === 0) return;
+        
+        const state = getCurrentDisplayState();
+        const targetIds = pendingMove.cardIds;
+        
+        // 1. 找出被選取卡片的 imageKey
+        const keysToUpdate = new Set();
+        targetIds.forEach(id => {
+            const c = state.cards.find(card => card.id === id);
+            if (c) {
+                // 優先使用 imageKey，如果沒有則嘗試使用 backImageKey
+                if (c.imageKey) keysToUpdate.add(c.imageKey);
+                else if (c.backImageKey) keysToUpdate.add(c.backImageKey);
+            }
+        });
+
+        if (keysToUpdate.size === 0) return;
+
+        // 2. 更新全域註冊表 (Global Registry)
+        // 這樣所有共用此圖片的卡片（無論是過去的還是未來產生的）都會同步
+        keysToUpdate.forEach(imgKey => {
+            let currentStyle = globalAbilityStyleRegistry[imgKey] || { x: 50, y: 50, scale: 1 };
+            
+            // 複製一份以免直接修改參照
+            let newStyle = { ...currentStyle };
+
+            if (key === 'panX') newStyle.x += val;
+            else if (key === 'panY') newStyle.y += val;
+            else if (key === 'scale') newStyle.scale += val;
+
+            globalAbilityStyleRegistry[imgKey] = newStyle;
+        });
+
+        // 3. 強制重新渲染介面以套用新設定
+        renderUI();
+        saveToStorage();
+    }
+    
+    function resetBoard(playerId) {
+        if(!confirm(`確定要重置 Player ${playerId} 的戰場與魔力區方向嗎？`)) return;
+        addOperation({ type: 'RESET_BOARD', playerId: playerId });
+    }
+
+    function toggleGlow() {
+        if (!pendingMove) return;
+        const colors = ['red', 'yellow', 'green', 'blue', 'black', 'white', 'rainbow', null];
+        
+        const state = getCurrentDisplayState();
+        const firstId = pendingMove.cardIds[0];
+        const card = state.cards.find(c => c.id === firstId);
+        let currentGlow = card ? card.glow : null;
+        let idx = colors.indexOf(currentGlow);
+        if (idx === -1) idx = 7; 
+        let nextColor = colors[(idx + 1) % colors.length];
+        
+        addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: nextColor });
+    }
+
+    function removeGlow() {
+        if (!pendingMove) return;
+        addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: null });
+    }
+    
+    function revealCards() {
+        if(!pendingMove) return;
+        finishMove('reveal-zone', undefined);
+    }
+    
+    function revealFromSelector() {
+        if(selectedCardsInModal.length === 0) return;
+        pendingMove = { cardIds: [...selectedCardsInModal], shuffle: false };
+        closeSelectorModal();
+        finishMove('reveal-zone', undefined);
+    }
+    
+    function closeRevealZone() {
+        if(confirm("將展示區卡片全部送入墓地並關閉？")) {
+             const state = getCurrentDisplayState();
+             const cards = state.cards.filter(c => c.zone === 'reveal-zone');
+             const p1Cards = cards.filter(c => c.ownerId === 1).map(c=>c.id);
+             const p2Cards = cards.filter(c => c.ownerId === 2).map(c=>c.id);
+             
+             if (!isDrafting) startDraftAtEnd();
+             
+             if(p1Cards.length > 0) {
+                 addOperation({
+                    type: 'MOVE',
+                    cardIds: p1Cards,
+                    toZone: 'p1-grave',
+                    faceUp: true,
+                    shuffleSelection: false
+                 });
+             }
+             if(p2Cards.length > 0) {
+                 addOperation({
+                    type: 'MOVE',
+                    cardIds: p2Cards,
+                    toZone: 'p2-grave',
+                    faceUp: true,
+                    shuffleSelection: false
+                 });
+             }
+             saveDraft("結束展示 (End Reveal)");
+        }
+    }
+
+    function endPoint() {
+        if (isDrafting) {
+            alert("請先儲存當前步驟，再結束指向");
+            return;
+        }
+        startDraftAtEnd();
+        addOperation({ type: 'PASS' });
+        saveDraft("結束指向 (End Pointing)");
+    }
+
+    function copyToAbility() {
+        if (!pendingMove) return;
+        if (pendingMove.cardIds.length !== 1) return alert("請一次選擇一張牌進行複製");
+        
+        const state = getCurrentDisplayState();
+        const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+        if (!card) return;
+        
+        const targetZone = card.ownerId === 1 ? 'p1-ability' : 'p2-ability';
+        const newId = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1; 
+        
+        addOperation({ type: 'CREATE_ABILITY', sourceCardId: card.id, targetZone: targetZone, newId: newId });
+    }
+
+    function deleteSelectedCard() {
+        if (!pendingMove) return;
+        if(!confirm("確定要刪除選取的卡片嗎？(僅建議用於能力處理區)")) return;
+        
+        addOperation({ type: 'DELETE_CARD', cardIds: pendingMove.cardIds });
+        cancelSelection();
+    }
+
+    // --- Point Mode Logic ---
+    function enterPointMode() {
+        if (!pendingMove || pendingMove.cardIds.length !== 1) return alert("請選擇一張卡片進行指向");
+        
+        pointerId = pendingMove.cardIds[0];
+        
+        // Removed validation to allow pointing from anywhere
+        isPointing = true;
+        pointTargets = [];
+        
+        document.getElementById('card-action-panel').style.display = 'none';
+        document.getElementById('point-bar').style.display = 'flex';
+        updatePointInfo();
+        
+        // Highlight everything as potential target
+        document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
+        
+        renderUI(); 
+    }
+
+    function cancelPointMode() {
+        isPointing = false;
+        pointerId = null;
+        pointTargets = [];
+        document.getElementById('point-bar').style.display = 'none';
+        document.querySelectorAll('.point-target-highlight').forEach(el => el.classList.remove('point-target-highlight'));
+        document.querySelectorAll('.point-target-selected').forEach(el => el.classList.remove('point-target-selected'));
+        cancelSelection(); 
+    }
+
+    function handlePointClick(zoneId, cardId) {
+        if (!isPointing) return;
+        
+        if (!cardId && zoneId.includes('deck')) {
+             // Handle Deck target (Player target)
+             // We use a dummy ID convention or zone name for deck targeting if needed
+             // For now, treat deck click as "Target Player"
+             if (confirm("指向玩家/牌庫?")) {
+                 finishPoint('PLAYER', null); // Generic Player/Deck target
+             }
+             return;
+        }
+
+        if (cardId) {
+            // Self-pointing is allowed
+            // Toggle selection
+            if (pointTargets.includes(cardId)) {
+                pointTargets = pointTargets.filter(id => id !== cardId);
+            } else {
+                pointTargets.push(cardId);
+            }
+            updatePointInfo();
+            renderUI(); 
+        }
+    }
+
+    function updatePointInfo() {
+        const btn = document.getElementById('btn-confirm-point');
+        const info = document.getElementById('point-target-info');
+        
+        if (pointTargets.length > 0) {
+            info.innerText = `已選擇 ${pointTargets.length} 個目標`;
+            btn.style.display = 'block';
+        } else {
+            info.innerText = "請點擊目標...";
+            btn.style.display = 'none';
+        }
+    }
+
+    function confirmPointTargets() {
+        if (pointTargets.length === 0) return;
+        finishPoint('CARD', pointTargets);
+    }
+
+    function finishPoint(type, targetIds) {
+        const state = getCurrentDisplayState();
+        const pointer = state.cards.find(c => c.id === pointerId);
+        
+        let desc = `[指向] ${pointer.text} 指向 `;
+        if (type === 'PLAYER') desc += '玩家/牌庫';
+        else if (type === 'CARD') {
+            desc += `${targetIds.length} 個目標`;
+        }
+
+        addOperation({
+            type: 'POINT',
+            attackerId: pointerId, // Keeping legacy prop name for compatibility or rename to pointerId
+            targetType: type,
+            targetIds: targetIds,
+            desc: desc
+        });
+
+        // Exit mode but allow re-entering quickly (user can select another card)
+        cancelPointMode();
+    }
+
+    function handleZoneClick(zoneId) {
+        if (isPointing) {
+            handlePointClick(zoneId, null); 
+            return;
+        }
+
+        if (pendingMove) {
+            const state = getCurrentDisplayState();
+            const hasAbilityCard = pendingMove.cardIds.some(id => {
+                const c = state.cards.find(card => card.id === id);
+                return c && c.zone.includes('ability');
+            });
+            if(hasAbilityCard) {
+                alert("能力待處理區的卡片不能移動");
+                return;
+            }
+
+            if (isStackZone(zoneId)) {
+                openPositionSelector(zoneId, pendingMove);
+            } else {
+                finishMove(zoneId, undefined);
+            }
+            return;
+        }
+        openSelectorModal(zoneId);
+    }
+    
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.card') || e.target.closest('.zone') || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal')) return;
+        if (!isPointing) cancelSelection();
+    });
+
+    function cancelSelection() {
+        if (pendingMove) {
+            pendingMove = null;
+            document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
+            document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
+            document.getElementById('card-action-panel').style.display = 'none';
+        }
+    }
+
+    function isStackZone(zid) {
+        return zid.includes('deck') || zid.includes('shield') || zid.includes('hyper');
+    }
+
+function handleCardSingleClick(e, cardId) {
+        e.stopPropagation(); 
+        
+        if (isPointing) {
+            handlePointClick(null, cardId); // Pass null zone, valid cardId
+            return;
+        }
+
+        if (pendingMove) {
+            if (pendingMove.cardIds.includes(cardId)) {
+                 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
+                 if (pendingMove.cardIds.length === 0) {
+                     cancelSelection();
+                     return;
+                 }
+                 updateSelectionUI();
+                 return;
+            }
+            
+            const state = getCurrentDisplayState();
+            const targetCard = state.cards.find(c => c.id === cardId);
+            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave')) {
+                openStackingModal(targetCard);
+                return;
+            }
+        }
+        
+        if (!pendingMove) {
+            pendingMove = { cardIds: [cardId], shuffle: false };
+        } else {
+            pendingMove.cardIds.push(cardId);
+        }
+        updateSelectionUI();
+    }
+
+    function openStackingModal(targetCard) {
+        const modal = document.getElementById('position-selector-modal');
+        const list = document.getElementById('position-list');
+        list.innerHTML = '';
+        
+        document.getElementById('pos-modal-title').innerText = `堆疊操作: 目標 [${targetCard.text}]`;
+        
+        // Show grid, hide list
+        document.getElementById('position-list').style.display = 'none';
+        document.getElementById('stack-gui').style.display = 'grid';
+        
+        // Define confirmStackMove globally
+        window.confirmStackMove = (type) => {
+            let stackType = type;
+            // Map types
+            if(type === 'top') stackType = 'top'; 
+            else if(type === 'bottom') stackType = 'bottom';
+            else if(type === 'shift_up') stackType = 'shift_up'; 
+            else if(type === 'shift_down') stackType = 'shift_down'; 
+            else if(type === 'bottom_exposed') stackType = 'bottom_exposed'; 
+            
+            // We need currentStackTargetId
+            finishMove(targetCard.zone, undefined, targetCard.id, stackType);
+        };
+        
+        modal.style.display = 'flex';
+    }
+
+    function updateSelectionUI() {
+        document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
+        
+        if (pendingMove && pendingMove.cardIds.length > 0) {
+            const state = getCurrentDisplayState();
+            
+            let allAbility = true;
+            let anyBattle = false;
+            let allRevealed = true;
+            pendingMove.cardIds.forEach(id => {
+                const card = state.cards.find(c => c.id === id);
+                if (!card) return;
+                if (!card.zone.includes('ability')) allAbility = false;
+                // Allow pointing from anywhere, so anyBattle check is not needed for pointing
+                // if (card.zone.includes('battle')) anyBattle = true;
+                if (!card.zone.includes('reveal')) allRevealed = false;
+            });
+            
+            document.getElementById('btn-delete-card').style.display = (allAbility || allRevealed) ? 'block' : 'none';
+            // Show Point button if single card selected (or multiple if generic)
+            document.getElementById('btn-point').style.display = (pendingMove.cardIds.length === 1) ? 'block' : 'none';
+            document.getElementById('btn-end-point').style.display = 'block'; 
+
+            const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+            document.getElementById('btn-unglow').style.display = (firstCard && firstCard.glow) ? 'block' : 'none';
+            document.getElementById('btn-remove-image').style.display = (firstCard && firstCard.image) ? 'block' : 'none';
+            
+            // Ability Adjust Controls
+            document.getElementById('ability-adjust-controls').style.display = allAbility ? 'block' : 'none';
+            document.getElementById('ability-adjust-buttons').style.display = allAbility ? 'flex' : 'none';
+
+            const panel = document.getElementById('card-action-panel');
+            panel.style.display = 'flex';
+            
+            if (pendingMove.cardIds.length === 1 && firstCard) {
+                document.getElementById('rename-input').value = firstCard.text;
+                document.getElementById('note-input').value = firstCard.note || "";
+            } else {
+                document.getElementById('rename-input').value = '';
+                document.getElementById('note-input').value = '';
+            }
+            
+            document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+        } else {
+            document.getElementById('card-action-panel').style.display = 'none';
+        }
+        
+        renderUI(); 
+    }
+
+    function getCardPositions() {
+        const positions = {};
+        document.querySelectorAll('.card').forEach(el => {
+            if(el.dataset.id) {
+                const rect = el.getBoundingClientRect();
+                positions[el.dataset.id] = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+            }
+        });
+        document.querySelectorAll('.zone').forEach(el => {
+            if(el.dataset.zone) {
+                const rect = el.getBoundingClientRect();
+                positions['ZONE_' + el.dataset.zone] = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+            }
+        });
+        return positions;
+    }
+
+    function getCardsInZone(state, zoneName) {
+        return state.cards.filter(c => c.zone === zoneName);
+    }
+
+    function getZoneName(zoneId) {
+        return zoneId.toUpperCase(); 
+    }
+
+    function renderUI() {
+        const firstPositions = getCardPositions();
+        const state = getCurrentDisplayState();
+        
+        const board = document.getElementById('game-board-container');
+        const abilityZone = document.getElementById('ability-stack-zone');
+        
+        // Turn Indicators Logic
+        const p1Area = document.getElementById('player1-area');
+        const p2Area = document.getElementById('player2-area');
+        
+        if (p1Area && p2Area) {
+            p1Area.classList.remove('active-turn');
+            p2Area.classList.remove('active-turn');
+            
+            if (state.turnPlayer === 1) {
+                p1Area.classList.add('active-turn');
+            } else {
+                p2Area.classList.add('active-turn');
+            }
+        }
+        
+        if (state.globalRotation) {
+            board.classList.add('rotated-view');
+            abilityZone.classList.add('rotated-view');
+        } else {
+            board.classList.remove('rotated-view');
+            abilityZone.classList.remove('rotated-view');
+        }
+
+        document.querySelectorAll('.zone, .ability-column').forEach(el => {
+            const label = el.querySelector('.zone-label, .ability-label');
+            el.innerHTML = '';
+            if(label) el.appendChild(label);
+            el.classList.remove('target-highlight');
+            el.classList.remove('point-target-highlight'); 
+        });
+        
+        const revealZoneEl = document.getElementById('reveal-zone');
+        const revealCards = state.cards.filter(c => c.zone === 'reveal-zone');
+        if (revealCards.length > 0) {
+            revealZoneEl.style.display = 'flex';
+            revealZoneEl.innerHTML = `
+                <span class="zone-label">展示區 (Reveal Zone)</span>
+                <button class="mini-btn danger" style="position:absolute; top:5px; right:5px;" onclick="closeRevealZone()">✕</button>
+            `;
+            revealCards.forEach(c => revealZoneEl.appendChild(createCardElement(c)));
+        } else {
+            revealZoneEl.style.display = 'none';
+            revealZoneEl.innerHTML = '';
+        }
+
+        if (pendingMove) {
+            document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+        }
+        if (isPointing) {
+            document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
+        }
+
+        const zoneMap = {};
+        const childMap = {}; 
+        const rootCards = []; 
+
+        state.cards.forEach(card => {
+            if (card.zone === 'reveal-zone') return;
+            
+            if(!zoneMap[card.zone]) zoneMap[card.zone] = [];
+            zoneMap[card.zone].push(card);
+
+            if (card.parentId) {
+                if (!childMap[card.parentId]) childMap[card.parentId] = [];
+                childMap[card.parentId].push(card);
+            } else {
+                rootCards.push(card);
+            }
+        });
+
+        const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
+
+        const renderCardTree = (card, container) => {
+            const isSpreadZone = !stackedZones.includes(card.zone) || card.zone.includes('shield');
+            
+            if (isSpreadZone) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'card-group';
+                
+                if (Math.abs(card.rotation % 180) === 90) {
+                    groupDiv.style.width = 'var(--card-height)';
+                    groupDiv.style.margin = '0 4px'; 
+                }
+
+                container.appendChild(groupDiv);
+                
+                const renderNode = (currentCard, currentTop, currentZ, depth) => {
+                    const cardEl = createCardElement(currentCard);
+                    
+                    let offset = 0;
+                    let zVal = currentZ;
+                    let className = '';
+
+                    if (depth === 0) {
+                        className = 'stack-base';
+                        zVal = 10;
+                    } else {
+                        if (currentCard.stackType === 'top') {
+                            className = 'stack-top';
+                            zVal += 1; 
+                        } else if (currentCard.stackType === 'bottom') {
+                            className = 'stack-bottom';
+                            zVal -= 1; 
+                        } else if (currentCard.stackType === 'shift_up') {
+                            className = 'stack-shift-up';
+                            offset = -25;
+                            zVal += 1;
+                        } else if (currentCard.stackType === 'shift_down') {
+                            className = 'stack-shift-down';
+                            offset = 25;
+                            zVal += 1;
+                        } else if (currentCard.stackType === 'bottom_exposed') {
+                            className = 'stack-bottom-exposed';
+                            offset = 20;
+                            zVal -= 1;
+                        } else if (currentCard.stackType === 'top_offset') {
+                            className = 'stack-top-offset';
+                            offset = -20;
+                            zVal += 1;
+                        } else {
+                            className = 'stack-top';
+                            zVal += 1;
+                        }
+                    }
+
+                    if (className) cardEl.classList.add(className);
+                    
+                    if (depth > 0) {
+                        const nextTop = currentTop + offset;
+                        cardEl.style.top = `${nextTop}px`;
+                        cardEl.style.zIndex = zVal;
+                        cardEl.style.position = 'absolute';
+                        groupDiv.appendChild(cardEl);
+                        
+                        const children = childMap[currentCard.id] || [];
+                        children.forEach(child => renderNode(child, nextTop, zVal, depth + 1));
+                    } else {
+                        cardEl.classList.add('stack-base');
+                        cardEl.style.zIndex = 10;
+                        groupDiv.appendChild(cardEl);
+                        
+                        const children = childMap[currentCard.id] || [];
+                        children.forEach(child => renderNode(child, 0, 10, depth + 1));
+                    }
+                };
+
+                renderNode(card, 0, 10, 0);
+
+            } else {
+                // Stacked Zone
+            }
+        };
+
+        Object.keys(zoneMap).forEach(zoneId => {
+            const cardsInZone = zoneMap[zoneId];
+            
+            if (zoneId.includes('ability')) {
+                const zoneEl = document.getElementById(zoneId === 'p1-ability' ? 'ability-zone-p1' : 'ability-zone-p2');
+                cardsInZone.forEach(card => zoneEl.appendChild(createCardElement(card)));
+                return;
+            }
+
+            const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
+            if (!zoneEl) return;
+
+            if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
+                if (cardsInZone.length > 0) {
+                    const topCard = cardsInZone[cardsInZone.length - 1];
+                    zoneEl.appendChild(createCardElement(topCard));
+                }
+                const badge = document.createElement('div');
+                badge.className = 'count-badge';
+                badge.innerText = cardsInZone.length;
+                zoneEl.appendChild(badge);
+            } else {
+                const roots = rootCards.filter(c => c.zone === zoneId);
+                roots.forEach(root => renderCardTree(root, zoneEl));
+            }
+        });
+
+        renderTimeline();
+        renderArrows(); 
+
+        requestAnimationFrame(() => {
+            const lastPositions = getCardPositions();
+            
+            Object.keys(lastPositions).forEach(id => {
+                if (id.startsWith('ZONE_')) return;
+
+                const cardEl = document.querySelector(`.card[data-id="${id}"]`);
+                if (!cardEl) return;
+
+                let start = firstPositions[id];
+                
+                if (!start && lastRenderedState) {
+                    const prevCard = lastRenderedState.cards.find(c => c.id == id);
+                    if (prevCard) {
+                        start = firstPositions['ZONE_' + prevCard.zone];
+                    }
+                }
+
+                if (start) {
+                    const last = lastPositions[id];
+                    const deltaX = start.left - last.left;
+                    const deltaY = start.top - last.top;
+                    
+                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                        const cardData = state.cards.find(c => c.id == id);
+                        const rotation = cardData ? cardData.rotation : 0;
+                        const isAbility = cardData && cardData.zone.includes('ability');
+                        
+                        cardEl.style.transition = 'none';
+                        cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+                        
+                        requestAnimationFrame(() => {
+                            cardEl.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                            cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+                        });
+                    }
+                }
+            });
+            
+            lastRenderedState = cloneState(state);
+        });
+    }
+
+    function createCardElement(card) {
+        const el = document.createElement('div');
+        el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
+        el.dataset.id = card.id; 
+        
+        if (card.glow) el.classList.add(`glow-${card.glow}`);
+        
+        if (card.image && (card.faceUp || card.isHyper)) {
+            const imageSrc = globalImageRegistry[card.imageKey];
+            if (imageSrc) {
+                el.style.backgroundImage = `url(${imageSrc})`;
+                el.classList.add('has-image');
+                
+                // 待處理區 (Ability Zone) 的特殊樣式處理 (Modified to use Global Registry)
+                if (card.zone.includes('ability')) {
+                    // 從全域註冊表讀取樣式，確保所有相同圖片的卡片位置一致
+                    const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[card.imageKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
+                    
+                    el.style.backgroundPosition = `${style.x}% ${style.y}%`;
+                    el.style.backgroundSize = `${100 * style.scale}%`;
+                } else {
+                     el.style.backgroundSize = 'cover';
+                     el.style.backgroundPosition = 'center';
+                     el.style.backgroundRepeat = 'no-repeat';
+                }
+            }
+        }
+
+        if (card.zone.includes('ability')) {
+            el.classList.add('ability-card');
+            if (!card.faceUp) el.className = `card ability-card`; 
+        } else {
+            el.style.transform = `rotate(${card.rotation}deg)`;
+        }
+        
+        if (pendingMove && pendingMove.cardIds.includes(card.id)) {
+            el.classList.add('selected');
+            if (!card.zone.includes('ability') && el.classList.contains('selected')) {
+               el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
+            }
+        }
+        
+        if (isPointing && pointTargets.includes(card.id)) {
+            el.classList.add('point-target-selected');
+        }
+        
+        if (card.note) {
+            const noteEl = document.createElement('div');
+            noteEl.className = 'card-note';
+            noteEl.innerText = card.note;
+            noteEl.title = card.note; 
+            el.appendChild(noteEl);
+        }
+
+        if (card.faceUp || card.zone.includes('ability')) {
+            const contentDiv = document.createElement('div');
+            contentDiv.style.marginTop = card.note ? '10px' : '0';
+            contentDiv.innerHTML = `<div class="card-text">${card.text}</div>`;
+            if (card.power > 0) contentDiv.innerHTML += `<div class="card-power">${card.power}</div>`;
+            el.appendChild(contentDiv);
+        }
+        
+        const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
+        
+        if (!isViewerZone) {
+             el.onclick = (e) => handleCardSingleClick(e, card.id);
+        } else {
+             el.onclick = (e) => {
+                 e.stopPropagation(); 
+                 handleZoneClick(card.zone);
+             };
+        }
+        
+        setTimeout(() => el.classList.add('interactive'), 0);
+        
+        return el;
+    }
+
+    function renderArrows() {
+        const svg = document.getElementById('svg-layer');
+        svg.innerHTML = `
+            <defs>
+                <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+                    <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+                </marker>
+            </defs>
+        `;
+        
+        let ops = [];
+        if (isDrafting) {
+            ops = draftOperations;
+        } else if (currentIndex >= 0 && history[currentIndex]) {
+            ops = history[currentIndex].action.operations;
+        }
+
+        if (ops) {
+            // Filter all pointing operations to support multiple arrows
+            const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+            
+            pointOps.forEach(op => {
+                const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
+                if (!attacker) return;
+                
+                let targetEls = [];
+                if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
+                    // Defensive check for targetIds
+                    if (Array.isArray(op.targetIds)) {
+                        op.targetIds.forEach(tid => {
+                            const el = document.querySelector(`.card[data-id="${tid}"]`);
+                            if(el) targetEls.push(el);
+                        });
+                    }
+                } else if (op.targetType === 'PLAYER') {
+                    const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
+                    const oppId = attackerOwner === 1 ? 2 : 1;
+                    const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
+                    if(deck) targetEls.push(deck);
+                }
+                
+                const startRect = attacker.getBoundingClientRect();
+                // SVG is fixed to viewport (body), so we use client rects directly without workspace offset
+                
+                const x1 = startRect.left + startRect.width / 2;
+                const y1 = startRect.top + startRect.height / 2;
+                
+                targetEls.forEach(target => {
+                    const endRect = target.getBoundingClientRect();
+                    const x2 = endRect.left + endRect.width / 2;
+                    const y2 = endRect.top + endRect.height / 2;
+                    
+                    const isSelf = (target === attacker);
+                    
+                    if (isSelf) {
+                        // Draw a circular loop for self-pointing
+                        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        // Curve logic: go up-right, loop around, come back to up-left
+                        const r = 40; // loop radius
+                        const d = `M ${x1},${y1} C ${x1+r*2},${y1-r*2} ${x1-r*2},${y1-r*2} ${x1},${y1}`;
+                        
+                        path.setAttribute("d", d);
+                        path.setAttribute("class", "arrow-line");
+                        path.setAttribute("fill", "none");
+                        svg.appendChild(path);
+                    } else {
+                        // Draw straight line for normal pointing
+                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", x1);
+                        line.setAttribute("y1", y1);
+                        line.setAttribute("x2", x2);
+                        line.setAttribute("y2", y2);
+                        line.setAttribute("class", "arrow-line");
+                        svg.appendChild(line);
+                    }
+                });
+            });
+        }
+    }
+
+    function renderTimeline() {
+        const list = document.getElementById('action-list');
+        list.innerHTML = '';
+        
+        history.forEach((item, index) => {
+            const gap = document.createElement('div');
+            gap.className = 'timeline-gap';
+            gap.title = "插入新步驟";
+            gap.onclick = () => startDraft(index);
+            list.appendChild(gap);
+
+            const li = document.createElement('li');
+            
+            let colorClass = '';
+            if (item.action.operations && item.action.operations.length > 0) {
+                const op = item.action.operations.find(o => o.cardIds && o.cardIds.length > 0);
+                if (op) {
+                    const cardId = op.cardIds[0];
+                    const card = item.state.cards.find(c => c.id === cardId);
+                    if (card) {
+                        if (card.ownerId === 1) colorClass = 'p1-action';
+                        else if (card.ownerId === 2) colorClass = 'p2-action';
+                    }
+                } else if (item.action.operations[0].type === 'RESET_BOARD') {
+                    if (item.action.operations[0].playerId === 1) colorClass = 'p1-action';
+                    else colorClass = 'p2-action';
+                }
+            }
+
+            li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
+            
+            const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="刪除步驟">🗑</button>`;
+            const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" title="編輯此步驟">✏️ 編輯</button>`;
+            
+            const controls = `
+                <div class="action-controls">
+                    <button class="mini-btn play-from" onclick="event.stopPropagation(); playFromStep(${index})">▶ 從此播放</button>
+                    <button class="mini-btn play-step" onclick="event.stopPropagation(); playSingleStep(${index})">👁️ 演示此步</button>
+                    ${editBtn}
+                    ${delBtn}
+                </div>
+            `;
+
+            li.onclick = (e) => {
+                if(e.target.tagName === 'BUTTON') return;
+                currentIndex = index;
+                renderUI();
+                saveToStorage(); 
+            };
+
+            li.innerHTML = `
+                <div class="action-header">
+                    <span class="action-index">${index}</span>
+                    <span class="action-desc">${item.action.description}</span>
+                </div>
+                ${controls}
+            `;
+            list.appendChild(li);
+        });
+        
+        const endGap = document.createElement('div');
+        endGap.className = 'timeline-gap';
+        endGap.onclick = () => startDraftAtEnd();
+        list.appendChild(endGap);
+
+        document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
+    }
+
+    function prevStep() { 
+        if (currentIndex > 0) { 
+            currentIndex--; 
+            renderUI(); 
+            saveToStorage(); 
+        } 
+    }
+    function nextStep() { 
+        if (currentIndex < history.length - 1) { 
+            currentIndex++; 
+            renderUI(); 
+            saveToStorage(); 
+        } 
+    }
+    
+    function playFromStep(idx) { 
+        currentIndex = idx; 
+        renderUI(); 
+        saveToStorage();
+        if (!playInterval) togglePlay(); 
+    }
+
+    function playSingleStep(idx) {
+        if (playInterval) togglePlay(); 
+        
+        if (idx > 0) {
+            currentIndex = idx - 1;
+            renderUI();
+            
+            setTimeout(() => {
+                currentIndex = idx;
+                renderUI();
+                saveToStorage();
+            }, 500);
+        } else {
+            currentIndex = 0;
+            renderUI();
+            saveToStorage();
+        }
+    }
+
+    function togglePlay() {
+        if (playInterval) {
+            clearInterval(playInterval); playInterval = null;
+            document.getElementById('btn-play').innerText = "▶ 播放";
+        } else {
+            document.getElementById('btn-play').innerText = "⏸ 暫停";
+            playInterval = setInterval(() => {
+                if (currentIndex < history.length - 1) { currentIndex++; renderUI(); saveToStorage(); } 
+                else { togglePlay(); }
+            }, 1200);
+        }
+    }
+    
+    function rotateBoard() { addOperation({type: 'ROTATE'}); }
+    
+    function exportData() {
+        const historyToExport = JSON.parse(JSON.stringify(history));
+        
+        historyToExport.forEach((item, index) => {
+            if (index > 0) {
+                delete item.state; 
+            }
+        });
+
+        const data = {
+            history: historyToExport,
+            initialState: initialState,
+            currentIndex: currentIndex,
+            timestamp: Date.now(),
+            imageRegistry: globalImageRegistry,
+            abilityRegistry: globalAbilityStyleRegistry 
+        };
+        const blob = new Blob([JSON.stringify(data,null,2)], {type:"text/plain"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `dm-script-${Date.now()}.txt`;
+        a.click();
+    }
+
+    // 1. 抽取出的共用匯入邏輯 (請新增此函式)
+    function processGameData(data) {
+        globalImageRegistry = data.imageRegistry || {}; 
+        globalAbilityStyleRegistry = data.abilityRegistry || {}; 
+        
+        initialState = data.initialState;
+        let loadedHistory = data.history;
+
+        // 支援壓縮格式：若後續步驟無 state，則進行重建
+        if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
+
+        for (let i = 1; i < loadedHistory.length; i++) {
+            if (!loadedHistory[i].state) {
+                const prevState = loadedHistory[i-1].state;
+                const newState = cloneState(prevState);
+                const ops = loadedHistory[i].action.operations;
+                ops.forEach(op => applyOperation(newState, op));
+                loadedHistory[i].state = newState;
+            }
+        }
+
+        history = loadedHistory;
+        currentIndex = data.currentIndex || 0;
+        
+        storageQuotaExceeded = false;
+        hasAlertedQuota = false;
+        
+        lastRenderedState = null; 
+        renderUI();
+        saveToStorage();
+    }
+
+    // 2. 衝突處理函式 (請新增此函式)
+    function resolveImportConflict(choice) {
+        const modal = document.getElementById('import-conflict-modal');
+        modal.style.display = 'none';
+
+        if (choice === 'cancel') {
+            pendingImportData = null;
+            return;
+        }
+
+        if (choice === 'save') {
+            exportData(); // 先觸發下載
+            // 這裡不 return，繼續執行下方的匯入邏輯
+        }
+
+        if (choice === 'save' || choice === 'overwrite') {
+            if (pendingImportData) {
+                try {
+                    processGameData(pendingImportData);
+                    alert("匯入成功！");
+                } catch(e) {
+                    alert("匯入失敗：" + e.message);
+                }
+            }
+        }
+        pendingImportData = null;
+    }
+
+    // 3. 修改原本的 importData 函式以使用共用邏輯 (選擇性更新，讓程式碼更乾淨)
+    function importData(input) {
+        const file = input.files[0];
+        if(!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if(!data.history || !data.initialState) throw new Error("Invalid format");
+                
+                if(confirm("確定要匯入此檔案嗎？這將會覆蓋當前所有進度。")) {
+                    processGameData(data); // 改用共用函式
+                    alert("匯入成功！");
+                }
+            } catch(err) {
+                alert("匯入失敗：檔案格式錯誤");
+                console.error(err);
+            }
+            input.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    function openSelectorModal(zoneId) {
+        const state = getCurrentDisplayState();
+        const cards = getCardsInZone(state, zoneId);
+        const body = document.getElementById('modal-body');
+        body.innerHTML = '';
+        selectedCardsInModal = [];
+        const title = document.getElementById('modal-title');
+        title.innerText = `${getZoneName(zoneId)} (${cards.length})`;
+        title.setAttribute('data-zone-id', zoneId); 
+        
+        cards.forEach((card, index) => {
+            const el = document.createElement('div');
+            el.className = 'card';
+            el.innerHTML = `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
+                            <div class="card-text">${card.text}</div>`;
+            el.onclick = () => {
+                if (selectedCardsInModal.includes(card.id)) {
+                    selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
+                    el.classList.remove('selected');
+                } else {
+                    selectedCardsInModal.push(card.id);
+                    el.classList.add('selected');
+                }
+            };
+            body.appendChild(el);
+        });
+        document.getElementById('card-selector-modal').style.display = 'flex';
+    }
+    function closeSelectorModal() { document.getElementById('card-selector-modal').style.display = 'none'; }
+    function prepareMove(shuffle) {
+        if(selectedCardsInModal.length===0) return;
+        pendingMove = { cardIds: [...selectedCardsInModal], shuffle };
+        closeSelectorModal();
+        updateSelectionUI();
+    }
+    function actionShuffleZone() {
+        const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
+        if(!zoneId) return;
+        
+        const state = getCurrentDisplayState();
+        const cards = getCardsInZone(state, zoneId);
+        const ids = cards.map(c => c.id);
+        ids.sort(() => Math.random() - 0.5); 
+        
+        addOperation({ type: 'SHUFFLE', zoneId: zoneId, order: ids });
+        closeSelectorModal();
+    }
+
+    // New: Position Selector for Insert or Stacking
+    function openPositionSelector(zoneId, moveData) {
+        const modal = document.getElementById('position-selector-modal');
+        const list = document.getElementById('position-list');
+        const gui = document.getElementById('stack-gui');
+        
+        document.getElementById('pos-modal-title').innerText = "選擇位置";
+        
+        list.style.display = 'flex';
+        gui.style.display = 'none';
+        list.innerHTML = ''; 
+        
+        const state = getCurrentDisplayState();
+        const cards = getCardsInZone(state, zoneId);
+
+        list.appendChild(createSlotElement(0, "最底部 (Bottom)", zoneId));
+        
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            
+            const row = document.createElement('div');
+            row.className = 'position-card-ref';
+            row.innerHTML = `<small style="display:inline-block; width:25px; color:#666;">#${i+1}</small> <span>${card.text || 'Card'}</span>`;
+            list.appendChild(row);
+
+            list.appendChild(createSlotElement(i + 1, (i === cards.length - 1) ? "最上方 (Top)" : "插入此處", zoneId));
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function createSlotElement(index, text, zoneId) {
+        const div = document.createElement('div');
+        div.className = 'position-slot';
+        div.innerText = `⬍ ${text}`;
+        div.onclick = () => finishMove(zoneId, index);
+        return div;
+    }
+
+    function closePositionModal() {
+        document.getElementById('position-selector-modal').style.display = 'none';
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (storageQuotaExceeded) {
+            e.preventDefault();
+            e.returnValue = '儲存空間已滿，您的資料可能尚未儲存。建議先匯出資料。';
+            return e.returnValue;
+        }
+    });
+
+	window.onload = function() {
+        // 先嘗試讀取本地存檔
+        const hasLocalData = loadFromStorage();
+        
+        // 檢查 URL 參數
+        const urlParams = new URLSearchParams(window.location.search);
+        const scriptUrl = urlParams.get('scriptUrl');
+
+        if (scriptUrl) {
+            console.log("Found scriptUrl:", scriptUrl);
+            fetch(scriptUrl)
+                .then(res => {
+                    if(!res.ok) throw new Error("HTTP " + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    // 基本格式檢查
+                    if(!data.history || !data.initialState) throw new Error("Invalid script format");
+
+                    if (hasLocalData) {
+                        // 本地有資料：暫存並詢問使用者
+                        pendingImportData = data;
+                        document.getElementById('import-conflict-modal').style.display = 'flex';
+                    } else {
+                        // 本地無資料：直接匯入
+                        processGameData(data);
+                        console.log("Auto-imported script from URL");
+                    }
+                })
+                .catch(e => {
+                    console.error("Failed to load scriptUrl:", e);
+                    alert("無法載入指定劇本: " + e.message);
+                    // 載入失敗且無本地存檔時，才顯示設定視窗
+                    if(!hasLocalData) openSetupModal();
+                });
+        } else {
+            // 無 URL 參數時的標準流程
+            if (!hasLocalData) {
+                openSetupModal();
+            } else {
+                console.log("Game loaded from storage.");
+            }
+        }
+    };
+	
+</script>
+</body>
+</html>
