@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DM TCG Editor v0.9.44 - Fix Missing Functions</title>
+    <title>DM TCG Editor v1.0 - Logic Updated</title>
     <style>
         :root {
             --card-width: 50px;
@@ -58,7 +58,7 @@
         }
 
         #point-bar {
-            background: #8e44ad; /* Changed color for Pointing mode */
+            background: #8e44ad;
             color: white;
             padding: 5px 10px;
             display: none;
@@ -139,7 +139,7 @@
             stroke-dasharray: 10, 5;
             animation: dash 1s linear infinite;
             marker-end: url(#arrowhead);
-            fill: none; /* Important for curved lines */
+            fill: none;
         }
         @keyframes dash { to { stroke-dashoffset: -15; } }
 
@@ -199,7 +199,6 @@
             flex-direction: column;
             background: white;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            /* Remove rotation transform */
         }
 
         /* Turn Indicators */
@@ -215,14 +214,12 @@
             border-right: 1px solid rgba(0,0,0,0.1);
         }
         
-        /* P1 Active Turn (Blue) */
         #player1-area.active-turn .turn-bar {
             background: #3498db;
             box-shadow: 0 0 15px 2px rgba(52, 152, 219, 0.8);
             animation: pulse-blue 2s infinite;
         }
         
-        /* P2 Active Turn (Red/Pink) */
         #player2-area.active-turn .turn-bar {
             background: #e91e63;
             box-shadow: 0 0 15px 2px rgba(233, 30, 99, 0.8);
@@ -241,7 +238,6 @@
             100% { box-shadow: 0 0 10px 2px rgba(233, 30, 99, 0.5); }
         }
 
-        /* 展示區樣式 */
         #reveal-zone {
             position: absolute;
             top: 50%;
@@ -389,11 +385,9 @@
         #player2-area {
             background-color: var(--p2-color);
             border-bottom: 2px dashed #999;
-            /* Remove Rotate */
         }
         
-        /* Make P2 layout reversed vertically to simulate opponent view without rotating text */
-        #player2-area .bottom-row { order: -1; } /* Hand on top */
+        #player2-area .bottom-row { order: -1; }
         #player2-area .mana-zone { order: 0; }
         #player2-area .shield-zone { order: 1; }
         #player2-area .battle-zone { order: 2; }
@@ -418,9 +412,22 @@
             z-index: 100;
         }
         
-        /* Pointing Highlights */
+        /* Zone Glows (New Feature) */
+        .zone.glow-red { box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.5); border: 2px solid red; }
+        .zone.glow-yellow { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5); border: 2px solid gold; }
+        .zone.glow-green { box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.5); border: 2px solid lime; }
+        .zone.glow-blue { box-shadow: inset 0 0 20px rgba(0, 191, 255, 0.5); border: 2px solid deepskyblue; }
+        .zone.glow-black { box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5); border: 2px solid black; }
+        .zone.glow-white { box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.8); border: 2px solid white; }
+        .zone.glow-rainbow { animation: zone-rainbow 2s linear infinite; }
+        @keyframes zone-rainbow {
+            0% { border-color: red; box-shadow: inset 0 0 20px rgba(255,0,0,0.5); }
+            50% { border-color: blue; box-shadow: inset 0 0 20px rgba(0,255,0,0.5); }
+            100% { border-color: red; box-shadow: inset 0 0 20px rgba(255,0,0,0.5); }
+        }
+
         .zone.point-target-highlight {
-            background-color: rgba(142, 68, 173, 0.2); /* Purple tint */
+            background-color: rgba(142, 68, 173, 0.2);
             border: 2px dashed #9b59b6;
             cursor: crosshair;
             z-index: 100;
@@ -452,9 +459,11 @@
 
         .card-group {
             position: relative;
-            width: var(--card-width);
+            /* Changed from fixed width to auto/min-width to support God Link/Puzzle stacking */
+            width: auto; 
+            min-width: var(--card-width);
             height: var(--card-height);
-            margin: 0 2px;
+            margin: 0 5px; /* Increased margin for better separation */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -467,9 +476,10 @@
         .card-group:hover .card {
             transition: top 0.3s, z-index 0s;
         }
-        /* Hover Fan-out */
+        /* Hover Fan-out - modified to respect Puzzle links */
         .card-group:hover .stack-base { top: 0px !important; z-index: 100; }
-        .card-group:hover .stack-top { top: -40px !important; z-index: 101; }
+        /* Only fan out vertical stacks if not puzzling */
+        .card-group:hover .stack-top:not(.puzzle-link) { top: -40px !important; z-index: 101; }
         .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
         .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
         .card-group:hover .stack-bottom { top: 40px !important; z-index: 102; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
@@ -483,23 +493,14 @@
             transition: box-shadow 0.2s, border-color 0.2s; 
             z-index: 1; flex-shrink: 0; overflow: hidden;
             will-change: transform, top, left;
-            background-size: cover; /* Ensure image covers card */
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
         
-        /* When image is set */
-        .card.has-image {
-            border: none; /* 移除外框 */
-        }
-        /* 如果有發光，需要顯示邊框 */
-        .card.has-image[class*="glow-"] {
-            border: 1px solid transparent; /* 讓 box-shadow 負責發光，border 留給 glow class 覆寫 */
-        }
-        
-        .card.has-image .card-text {
-             display: none;
-        }
+        .card.has-image { border: none; }
+        .card.has-image[class*="glow-"] { border: 1px solid transparent; }
+        .card.has-image .card-text { display: none; }
 
         .card.interactive { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .card:hover { z-index: 200; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
@@ -510,27 +511,15 @@
             background-size: 15px 15px; border: 1px solid white; color: transparent; 
         }
         
-        /* Note Style */
         .card-note {
-            position: absolute;
-            top: 1px;
-            left: 2px;
-            right: 2px;
-            background: #f1c40f;
-            color: black;
-            font-size: 8px;
-            text-align: center;
-            border: 1px solid #d35400;
-            z-index: 5;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            pointer-events: none;
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            position: absolute; top: 1px; left: 2px; right: 2px;
+            background: #f1c40f; color: black; font-size: 8px; text-align: center;
+            border: 1px solid #d35400; z-index: 5;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            pointer-events: none; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
-        /* Stacking classes used in JS */
+        /* Stacking classes */
         .stack-base { z-index: 10; position: absolute; }
         .stack-top { z-index: 20; position: absolute; }
         .stack-bottom { z-index: 5; position: absolute; }
@@ -538,6 +527,13 @@
         .stack-shift-down { z-index: 20; position: absolute; }
         .stack-bottom-exposed { z-index: 5; position: absolute; }
         .stack-top-offset { z-index: 20; position: absolute; }
+        
+        /* New Puzzle/Link Stacking Classes */
+        .puzzle-link { /* Generic marker */ }
+        .stack-puzzle-top { z-index: 20; position: absolute; }
+        .stack-puzzle-bottom { z-index: 20; position: absolute; }
+        .stack-puzzle-left { z-index: 20; position: absolute; }
+        .stack-puzzle-right { z-index: 20; position: absolute; }
 
         .glow-red { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8) !important; border-color: red !important; }
         .glow-yellow { box-shadow: 0 0 8px 4px rgba(255, 215, 0, 0.8) !important; border-color: gold !important; }
@@ -592,55 +588,318 @@
 
         #card-selector-modal .modal-content { width: 85%; max-width: 900px; height: 85%; }
         #modal-body { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 12px; padding: 15px; background: #f8f9fa; border-radius: 4px; align-content: flex-start; }
+        /* Style for cards in selector list that have images */
+        #modal-body .card.has-image-icon { background-size: cover; background-position: center; color: transparent; text-shadow: none; }
 
         #position-selector-modal .modal-content { width: 90%; max-width: 600px; height: auto; max-height: 80vh; display: flex; flex-direction: column; }
+		
+		/* 容器：縮小間距讓縫隙感更明顯 */
         #position-list {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;
-            padding: 10px; background: #eee; border-radius: 4px; min-height: 0;
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 2px;            /* [修改] 間距縮小，讓插槽緊貼卡片 */
+            padding: 10px; 
+            background: #eee; 
+            border-radius: 4px; 
+            min-height: 0;
+            align-content: flex-start;
         }
+
+		/* 插槽：強制設定為極窄的縫隙 (約 14px) */
         .position-slot {
-            padding: 10px; background: white; border: 2px dashed #bbb;
-            text-align: center; cursor: pointer; color: #555;
+            /* 強制固定寬度，不讓 Flex 或內容撐開 */
+            width: 14px !important;
+            min-width: 14px !important; 
+            max-width: 14px !important;
+            height: var(--card-height);
+            
+            /* 隱藏溢出的文字 (Top/Bottom/+) */
+            overflow: hidden; 
+            
+            background: rgba(0, 0, 0, 0.1); 
+            border: 1px dashed #999;
+            border-radius: 2px;
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
             transition: all 0.2s;
+            
+            /* 讓這個元素不會被壓縮或放大 */
+            flex-shrink: 0;
+            flex-grow: 0;
+            
+            /* 隱藏文字顏色 */
+            color: transparent; 
         }
-        .position-slot:hover { background: #dff9fb; border-color: #2980b9; color: #2980b9; font-weight: bold;}
+        
+        /* 滑鼠移上去時：變寬、變色，方便操作 */
+        .position-slot:hover { 
+            /* Hover 時展開到一半卡片寬，方便確認 */
+            width: 25px !important; 
+            min-width: 25px !important;
+            max-width: 25px !important;
+            
+            background: #3498db; 
+            border-color: #2980b9; 
+            z-index: 100;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.8);
+            
+            /* Hover 時顯示一點文字提示 (如果顏色不是透明的話) */
+            /* color: white; */ 
+        }
+
+        /* 為了區分頭尾，我們可以利用 JS 賦予的 title 屬性來做樣式 (選用)
+           或是保持統一的縫隙樣式，讓使用者依賴直覺 (最左=底，最右=頂) */
+        
+        /* 2. 參考卡樣式：尺寸同卡片，作為視覺參考 */
         .position-card-ref {
-            display: flex; align-items: center; gap: 10px; padding: 5px;
-            background: #fff; border: 1px solid #ccc; opacity: 0.8;
+            width: var(--card-width); 
+            height: var(--card-height);
+            border: 1px solid #7f8c8d;
+            border-radius: 3px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.6rem;
+            color: #333;
+            pointer-events: none; /* 禁止點擊卡片本身，強迫點擊插槽 */
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            overflow: hidden;
+            opacity: 0.85;
+        }
+
+        /* [選用] 在卡片右側加一個微小的箭頭指示順序 */
+        .position-card-ref::after {
+            content: "➜";
+            position: absolute;
+            right: -8px; 
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8px;
+            color: #999;
+            z-index: 5;
+            display: none; /* 如果覺得畫面太亂可以保持隱藏 */
         }
         
         #stack-gui {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr); /* Changed to 3 columns to fit more options */
+            gap: 10px;
             margin-top: 10px;
+            overflow-y: auto;
         }
         .stack-option {
             background: #f8f9fa; border: 2px solid #ddd;
-            border-radius: 8px; padding: 15px;
+            border-radius: 8px; padding: 10px;
             text-align: center; cursor: pointer;
             transition: all 0.2s;
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            font-size: 0.8rem;
         }
         .stack-option:hover { border-color: #3498db; background: #ebf5fb; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
         .stack-icon {
-            width: 40px; height: 50px; background: #ccc; border: 1px solid #999;
-            position: relative; display: block;
+            width: 30px; height: 40px; background: #ccc; border: 1px solid #999;
+            position: relative; display: block; margin-bottom: 5px;
         }
+        /* Existing Icons */
         .icon-top .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#3498db; border:1px solid white; z-index:2; opacity:0.8; }
         .icon-bottom .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#2c3e50; border:1px solid white; z-index:-1; }
         .icon-up .child { position: absolute; top:-15px; left:0; width:100%; height:100%; background:#e67e22; border:1px solid white; z-index:2; opacity:0.9; }
         .icon-down .child { position: absolute; top:15px; left:0; width:100%; height:100%; background:#9b59b6; border:1px solid white; z-index:2; opacity:0.9; }
         .icon-bottom-exp .child { position: absolute; top:20px; left:0; width:100%; height:100%; background:#27ae60; border:1px solid white; z-index:-1; opacity: 0.9; }
+        
+        /* New Puzzle Icons */
+        .icon-p-top .child { position: absolute; top:-38px; left:0; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+        .icon-p-bottom .child { position: absolute; top:38px; left:0; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+        .icon-p-left .child { position: absolute; top:0; left:-28px; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+        .icon-p-right .child { position: absolute; top:0; left:28px; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
 
         .rotated-view #main-board { transform: rotate(180deg); }
 
+		/* --- 修改部分：將位置選擇器改為網格佈局 (仿照 UI A) --- */
+        #position-list {
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-wrap: wrap; /* 允許換行 */
+            gap: 8px;        /* 間距 */
+            padding: 15px; 
+            background: #eee; 
+            border-radius: 4px; 
+            min-height: 0;
+            align-content: flex-start;
+            justify-content: flex-start; /* 靠左對齊，符合閱讀順序 */
+        }
+
+        /* 插槽樣式：看起來像一張虛線卡片 */
+        .position-slot {
+            width: var(--card-width); 
+            height: var(--card-height);
+            background: rgba(255, 255, 255, 0.5); 
+            border: 2px dashed #999;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .position-slot:hover { 
+            background: #dff9fb; 
+            border-color: #2980b9; 
+            color: #2980b9; 
+            font-weight: bold;
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        /* 參考卡樣式：顯示在插槽中間，僅供參考，不可點擊 */
+        .position-card-ref {
+            width: var(--card-width); 
+            height: var(--card-height);
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.6rem;
+            color: #aaa;
+            opacity: 0.7; /* 稍微淡化，區分可點擊區域 */
+            pointer-events: none; /* 禁止點擊 */
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            overflow: hidden;
+            text-align: center;
+            padding: 2px;
+        }
+        
+        /* 為了讓視覺動線更清楚，我們可以加一個小箭頭或線條 (選擇性) */
+        .position-card-ref::after {
+            content: "▶";
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+            font-size: 8px;
+            display: none; /* 暫時隱藏，避免太亂 */
+        }
+		
+		/* --- [新增] 爪痕特效樣式 --- */
+		.claw-overlay {
+			position: absolute;
+			top: 0; left: 0; width: 100%; height: 100%;
+			pointer-events: none; /* 讓滑鼠可以穿透點擊卡片 */
+			z-index: 50;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			opacity: 0.9;
+		}
+
+		.claw-svg {
+			width: 80%;
+			height: 80%;
+			overflow: visible;
+		}
+
+		.claw-path {
+			fill: none;
+			stroke: #c0392b; /* 血紅色 */
+			stroke-width: 8;
+			stroke-linecap: round;
+			filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+		}
+
+		/* 播放時的動畫 Class */
+		.claw-anim .claw-path {
+			stroke-dasharray: 100;
+			stroke-dashoffset: 100;
+			animation: scratch-anim 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+		}
+
+		/* 讓三條爪痕有時間差，看起來更像抓擊 */
+		.claw-anim .p1 { animation-delay: 0s; }
+		.claw-anim .p2 { animation-delay: 0.1s; }
+		.claw-anim .p3 { animation-delay: 0.05s; }
+
+		@keyframes scratch-anim {
+			to { stroke-dashoffset: 0; }
+		}
+		
+		/* --- [新增] 勝利慶祝動畫 --- */
+        #win-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* 讓滑鼠可穿透 */
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        .win-text {
+            font-size: 5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #f1c40f;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8), 3px 3px 0 #c0392b;
+            transform: scale(0);
+            animation: win-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .win-sub {
+            font-size: 2rem;
+            color: white;
+            margin-top: 10px;
+            opacity: 0;
+            animation: slideUp 0.5s ease 0.5s forwards;
+            text-shadow: 0 0 5px black;
+        }
+        
+        /* 簡單的彩帶特效 (使用偽元素模擬) */
+        .confetti {
+            position: absolute;
+            width: 10px; height: 10px;
+            background-color: #f00;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes win-pop {
+            0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
+        }
+		
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-<!-- SVG Layer for Arrows -->
 <svg id="svg-layer">
     <defs>
         <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
@@ -656,6 +915,8 @@
     <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
     <button onclick="resetBoard(1)" title="重置 P1 盤面">P1 重置</button>
     <button onclick="resetBoard(2)" title="重置 P2 盤面">P2 重置</button>
+	<button onclick="triggerWin(1)" style="background:#f39c12; border-color:#d35400;">🏆 1P Win</button>
+    <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;">🏆 2P Win</button>
     <div style="flex:1"></div>
     <button onclick="document.getElementById('import-input').click()">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
@@ -693,10 +954,8 @@
     </div>
 
     <div id="game-board-container">
-        <div id="phase-display">PHASE</div>
         <div id="main-board">
             
-            <!-- Reveal Zone -->
             <div id="reveal-zone" class="zone" data-zone="reveal-zone">
                 <span class="zone-label">展示區 (Reveal Zone)</span>
                 <button class="mini-btn danger" style="position:absolute; top:5px; right:5px;" onclick="closeRevealZone()">✕</button>
@@ -753,13 +1012,14 @@
 </div>
 
 <div id="card-action-panel">
-    <button onclick="rotateCard(-90)">↶</button>
-    <button onclick="rotateCard(90)">↷</button>
-    <button onclick="flipCard()">翻面</button>
-    <button onclick="toggleGlow()">💡發光</button>
+    <button id="btn-rotate-l" onclick="rotateCard(-90)">↶</button>
+    <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
+    <button id="btn-flip" onclick="flipCard()">翻面</button>
+	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()">💔 受傷</button>
+    <button id="btn-glow" onclick="toggleGlow()">💡發光</button>
     <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
-    <button onclick="copyToAbility()">⚡能力</button>
-    <button onclick="revealCards()">👁️ 展示</button>
+    <button id="btn-copy-ability" onclick="copyToAbility()">⚡能力</button>
+    <button id="btn-reveal" onclick="revealCards()">👁️ 展示</button>
     <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()">👉 指向</button>
     <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()">🛑 結束指向</button>
     <button onclick="pasteImageMode()">🖼️ 上圖 (Ctrl+V)</button>
@@ -770,7 +1030,6 @@
     <input type="text" id="note-input" placeholder="註記..." onkeydown="if(event.key==='Enter') addCardNote()" style="width: 80px;">
     <button onclick="addCardNote()">📝註記</button>
     
-    <!-- Ability Adjustment Controls (only visible when ability card selected) -->
     <div id="ability-adjust-controls" style="display:none; border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
     <div id="ability-adjust-buttons" style="display:none; gap:5px; align-items:center;">
         <small>位移:</small>
@@ -834,7 +1093,6 @@
     </div>
 </div>
 
-<!-- 新版 GUI 堆疊視窗 (含第5選項) -->
 <div id="position-selector-modal" class="modal">
     <div class="modal-content">
         <div id="pos-modal-title" style="font-weight:bold; font-size:1.2rem; margin-bottom:10px;">堆疊操作</div>
@@ -849,6 +1107,23 @@
                 <div class="stack-icon icon-bottom"><div class="child"></div></div>
                 <span>疊在下方<br>(Underneath)</span>
             </div>
+            <div class="stack-option" onclick="confirmStackMove('puzzle_top')">
+                <div class="stack-icon icon-p-top"><div class="child"></div></div>
+                <span>拼在上方<br>(Puzzle Top)</span>
+            </div>
+            <div class="stack-option" onclick="confirmStackMove('puzzle_bottom')">
+                <div class="stack-icon icon-p-bottom"><div class="child"></div></div>
+                <span>拼在下方<br>(Puzzle Btm)</span>
+            </div>
+             <div class="stack-option" onclick="confirmStackMove('puzzle_left')">
+                <div class="stack-icon icon-p-left"><div class="child"></div></div>
+                <span>拼在左邊<br>(Puzzle Left)</span>
+            </div>
+             <div class="stack-option" onclick="confirmStackMove('puzzle_right')">
+                <div class="stack-icon icon-p-right"><div class="child"></div></div>
+                <span>拼在右邊<br>(Puzzle Right)</span>
+            </div>
+            
             <div class="stack-option" onclick="confirmStackMove('shift_up')">
                 <div class="stack-icon icon-up"><div class="child"></div></div>
                 <span>上方 (露出底)<br>(Shift Up)</span>
@@ -868,7 +1143,7 @@
         </div>
     </div>
 </div>
-<!-- 新增: 劇本匯入衝突 Modal -->
+
 <div id="import-conflict-modal" class="modal">
     <div class="modal-content" style="width: 400px; text-align: center;">
         <h3>發現外部劇本</h3>
@@ -895,13 +1170,11 @@
             this.isHyper = false;
             this.glow = null; 
             this.parentId = null; 
-            this.stackType = null; 
+            this.stackType = null; // top, bottom, shift_up, puzzle_right, etc.
             this.note = "";
             this.imageKey = 'img_' + id;
             this.backImageKey = 'img_back_' + id;
-            this.bgX = 50; 
-            this.bgY = 50; 
-            this.bgScale = 1; 
+            this.sourceId = null; // New: Link to source card (for Ability cards)
         }
     }
 
@@ -909,7 +1182,7 @@
         constructor() {
             this.cards = [];
             this.turnPlayer = 1;
-            this.phase = 'SETUP';
+            // Removed phase per requirement
             this.globalRotation = false; 
             this.cardIdCounter = 1;
         }
@@ -940,18 +1213,30 @@
     let pointerId = null;
     let pointTargets = []; 
     let currentStackTargetId = null;
+	
+	let lastAnimatedStep = -1; // [補上這行] 用於記錄動畫狀態，避免重複播放
+	let winOverlayTimeout = null; // [新增] 用來記錄勝利畫面的自動關閉計時器
     
     let globalImageRegistry = {}; 
     let globalAbilityStyleRegistry = {}; 
     let storageQuotaExceeded = false; 
     let hasAlertedQuota = false;    
-	let pendingImportData = null; // 用於暫存網址匯入的資料
-  
+    let pendingImportData = null;
 
-    const STORAGE_KEY = 'dm_editor_data';
+    const STORAGE_KEY = 'dm_editor_data_v1'; // Updated Key
     const STORAGE_EXPIRY = 7 * 24 * 60 * 60 * 1000; 
 
-    document.addEventListener('keydown', (e) => {
+	document.addEventListener('keydown', (e) => {
+        // 處理 Ctrl+Z (或 Mac 的 Cmd+Z)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            if (isDrafting) {
+                e.preventDefault(); // 阻止瀏覽器原本的復原動作
+                undoLastDraftOp();
+                return;
+            }
+        }
+
+        // 處理 ESC
         if (e.key === 'Escape') {
             const cardModal = document.getElementById('card-selector-modal');
             const posModal = document.getElementById('position-selector-modal');
@@ -966,8 +1251,8 @@
                 cancelSelection();
             }
         }
-    });
-    
+    });  
+  
     // Paste Image Handling
     document.addEventListener('paste', (e) => {
         if (!pendingMove || pendingMove.cardIds.length !== 1) return;
@@ -1119,24 +1404,20 @@
     function deleteAllActions() {
         if(!confirm("確定要刪除所有動作並重新開始新局嗎？")) return;
         
-        // Clear Data
         history = [];
         initialState = null;
         currentIndex = -1;
         draftOperations = [];
         isDrafting = false;
         
-        // Clear Storage
         localStorage.removeItem(STORAGE_KEY);
         storageQuotaExceeded = false;
         hasAlertedQuota = false;
 
-        // Reset UI to blank
         document.getElementById('action-list').innerHTML = '';
         document.getElementById('step-counter').innerText = '0/0';
         updateDraftBar();
         
-        // Open Setup for reconfiguration
         openSetupModal();
     }
 
@@ -1165,7 +1446,7 @@
     function initGame(config) {
         const state = new GameState();
         globalImageRegistry = {}; 
-        globalAbilityStyleRegistry = {}; // Reset global styles
+        globalAbilityStyleRegistry = {};
         
         if(!config) config = {p1d:40, p1h:8, p2d:40, p2h:8};
 
@@ -1206,11 +1487,9 @@
                 initialState: initialState,
                 currentIndex: currentIndex,
                 imageRegistry: globalImageRegistry,
-                abilityRegistry: globalAbilityStyleRegistry // Save global styles
+                abilityRegistry: globalAbilityStyleRegistry 
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            
-            // If successful, reset quota flags
             if (storageQuotaExceeded) {
                 storageQuotaExceeded = false;
                 hasAlertedQuota = false;
@@ -1218,7 +1497,6 @@
         } catch(e) {
             console.warn("Storage save failed (Quota?)", e);
             storageQuotaExceeded = true;
-            // Only alert once per session
             if (!hasAlertedQuota) {
                 alert("⚠️ 自動存檔失敗：儲存空間已滿。\n\n建議您立即「匯出」保存進度，否則關閉視窗後資料將會遺失。");
                 hasAlertedQuota = true;
@@ -1231,50 +1509,14 @@
         if (!raw) return false;
         try {
             const data = JSON.parse(raw);
-            
-            // 1. 基礎檢查：確保關鍵資料存在
-            if (!data || !data.history || !data.initialState) {
-                console.warn("Storage data incomplete.");
-                return false;
-            }
-
-            // 2. 過期檢查 (如果沒有 timestamp 則視為有效，保持相容)
+            if (!data || !data.history || !data.initialState) return false;
             if (data.timestamp && (Date.now() - data.timestamp > STORAGE_EXPIRY)) {
-                console.warn("Storage expired.");
                 localStorage.removeItem(STORAGE_KEY);
                 return false;
             }
             
-            // 3. 資料遷移 (Migration)：包在 try-catch 中，即使失敗也不影響讀取
-            try {
-                const ensureKey = (card) => {
-                    if (card && typeof card === 'object') {
-                        if (!card.imageKey) {
-                            card.imageKey = 'img_' + card.id;
-                            card.backImageKey = 'img_back_' + card.id;
-                        }
-                    }
-                };
-                
-                if (data.initialState.cards && Array.isArray(data.initialState.cards)) {
-                    data.initialState.cards.forEach(ensureKey);
-                }
-                
-                if (Array.isArray(data.history)) {
-                    data.history.forEach(h => {
-                        if (h.state && h.state.cards && Array.isArray(h.state.cards)) {
-                            h.state.cards.forEach(ensureKey);
-                        }
-                    });
-                }
-            } catch (migErr) {
-                console.warn("Data migration warning (non-fatal):", migErr);
-            }
-
-            // 4. 載入資料
             history = data.history;
             initialState = data.initialState;
-            // 確保 currentIndex 合法
             currentIndex = (typeof data.currentIndex === 'number' && data.currentIndex >= -1 && data.currentIndex < history.length) 
                            ? data.currentIndex 
                            : (history.length - 1);
@@ -1282,20 +1524,9 @@
             globalImageRegistry = data.imageRegistry || {}; 
             globalAbilityStyleRegistry = data.abilityRegistry || {}; 
             
-            // 5. 嘗試渲染畫面
-            // 即使渲染失敗 (例如 DOM 問題)，也不要讓讀檔失敗，至少保留資料讓使用者可以再操作
-            try {
-                renderUI();
-            } catch(e) {
-                console.error("UI Render failed during load (recovered):", e);
-                // 嘗試至少更新步數顯示
-                const counter = document.getElementById('step-counter');
-                if(counter) counter.innerText = `${currentIndex}/${Math.max(0, history.length-1)}`;
-            }
-            
+            try { renderUI(); } catch(e) {}
             return true;
         } catch (e) {
-            console.error("Critical Load failed", e);
             return false;
         }
     }
@@ -1308,7 +1539,7 @@
         startDraft(history.length);
     }
 
-    function startDraft(index) {
+	function startDraft(index) {
         if (isDrafting) {
             if(!confirm("目前有未儲存的變更，是否捨棄並開始新步驟？")) return;
         }
@@ -1322,6 +1553,13 @@
         if (baseIndex < 0) baseIndex = 0; 
         
         tempState = cloneState(history[baseIndex].state);
+
+        // --- [新增] 清除上一局的受傷狀態 (不繼承) ---
+        // 這樣新步驟開始時，卡片會恢復乾淨
+        tempState.cards.forEach(c => {
+             if(c.isInjured) c.isInjured = false;
+        });
+        // ------------------------------------------
         
         updateDraftBar();
         renderUI();
@@ -1360,6 +1598,40 @@
         renderUI();
     }
 
+	// --- 新增功能: 還原上一步 (Ctrl+Z) ---
+    function undoLastDraftOp() {
+        if (!isDrafting) return;
+        if (draftOperations.length === 0) return;
+
+        // 1. 移除 Draft 中的最後一個操作
+        draftOperations.pop();
+
+        // 2. 重新計算 tempState
+        // 必須從 Draft 開始前的狀態 (Base State) 重新套用剩餘的操作
+        let baseIndex = insertIndex - 1;
+        let baseState;
+        
+        if (baseIndex < 0) {
+            baseState = cloneState(initialState);
+        } else {
+            // 取出進入編輯模式前的狀態快照
+            baseState = cloneState(history[baseIndex].state);
+        }
+
+        // 重置 tempState 為初始狀態
+        tempState = baseState;
+
+        // 依序重新執行剩餘的所有操作
+        draftOperations.forEach(op => applyOperation(tempState, op));
+
+        // 3. 更新介面
+        updateDraftBar();
+        renderUI();
+        
+        // 若剛好還原了移動操作，取消目前的選取狀態以避免 UI 錯亂
+        cancelSelection(); 
+    }
+	
     function saveDraft(customDesc) {
         if (draftOperations.length === 0) {
             isDrafting = false;
@@ -1464,9 +1736,30 @@
         saveToStorage();
     }
 
-    function applyOperation(state, op) {
+function applyOperation(state, op) {
         if (op.type === 'PASS') return;
-        if (op.type === 'MOVE') {
+        
+        // --- 新增: 用於切斷連結的操作 ---
+        if (op.type === 'BREAK_LINKS') {
+            const { cardIds } = op;
+            state.cards.forEach(c => {
+                if (cardIds.includes(c.id)) {
+                    c.parentId = null;
+                    c.stackType = null;
+                }
+                if (c.parentId && cardIds.includes(c.parentId)) {
+                    c.parentId = null;
+                    c.stackType = null;
+                }
+            });
+        }
+        // --- [新增] 勝利狀態 ---
+        else if (op.type === 'GAME_WIN') {
+            const { winnerId } = op;
+            state.winner = winnerId; // 在狀態中記錄贏家
+        }
+        // ----------------------
+        else if (op.type === 'MOVE') {
             const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
             let movingCards = state.cards.filter(c => cardIds.includes(c.id));
             
@@ -1496,10 +1789,8 @@
 
         } else if (op.type === 'SHUFFLE') {
             const { zoneId, order } = op; 
-            
             let zoneCards = state.cards.filter(c => c.zone === zoneId);
             let otherCards = state.cards.filter(c => c.zone !== zoneId);
-            
             if (order) {
                 zoneCards = order.map(id => state.cards.find(c => c.id === id)).filter(c=>c);
             } else {
@@ -1507,13 +1798,9 @@
             }
             state.cards = [...otherCards, ...zoneCards];
 
-        } else if (op.type === 'ROTATE') {
-            // Replace legacy rotate with switch turn logic if encountered
+        } else if (op.type === 'ROTATE' || op.type === 'SWITCH_TURN') {
             state.turnPlayer = state.turnPlayer === 1 ? 2 : 1;
         } 
-        else if (op.type === 'SWITCH_TURN') {
-            state.turnPlayer = state.turnPlayer === 1 ? 2 : 1;
-        }
         else if (op.type === 'ROTATE_CARD') {
             const { cardIds, deg, finalRotation } = op;
             state.cards.forEach(c => {
@@ -1534,10 +1821,8 @@
         }
         else if (op.type === 'RENAME_CARD') {
             const { cardIds, text } = op;
-            // Legacy rename: keep updating for backward compatibility replay
             const targets = state.cards.filter(c => cardIds.includes(c.id));
             targets.forEach(target => {
-                 // Sync Update
                  state.cards.forEach(c => {
                      if (c.imageKey === target.imageKey) {
                          c.text = text;
@@ -1559,7 +1844,25 @@
         else if (op.type === 'SET_GLOW') {
             const { cardIds, color } = op;
             state.cards.forEach(c => {
-                if (cardIds.includes(c.id)) c.glow = color;
+                if (cardIds.includes(c.id)) {
+                    if (c.zone.includes('ability')) {
+                        c.glow = color;
+                        if (c.sourceId) {
+                            const source = state.cards.find(s => s.id === c.sourceId);
+                            if (source) {
+                                source.glow = color;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        else if (op.type === 'INJURED') {
+            const { cardIds, setInjured } = op;
+            state.cards.forEach(c => {
+                if (cardIds.includes(c.id)) {
+                    c.isInjured = setInjured;
+                }
             });
         }
         else if (op.type === 'CREATE_ABILITY') {
@@ -1574,26 +1877,28 @@
                 newCard.faceUp = true;
                 newCard.rotation = 0;
                 
-                // Copy props
                 newCard.imageKey = source.imageKey; 
                 newCard.backImageKey = source.backImageKey;
-                newCard.image = source.image; // Sync image flag
+                newCard.image = source.image; 
                 newCard.text = source.text;
-                newCard.glow = source.glow; 
+                newCard.sourceId = source.id; 
                 
                 state.cards.push(newCard);
             }
         }
         else if (op.type === 'DELETE_CARD') {
             const { cardIds } = op;
+            cardIds.forEach(id => {
+               const c = state.cards.find(x => x.id === id);
+               if (c && c.zone.includes('ability') && c.sourceId) {
+                   const source = state.cards.find(s => s.id === c.sourceId);
+                   if (source) source.glow = null;
+               }
+            });
             state.cards = state.cards.filter(c => !cardIds.includes(c.id));
         }
-        else if (op.type === 'POINT') { 
-            // Visual operation only, no state change (Cards do not rotate)
-        }
+        else if (op.type === 'POINT') { }
         else if (op.type === 'ATTACK') {
-            // Restore Legacy Behavior: ATTACK rotates the card
-            // This ensures old replays/saves correctly show tapped creatures
             const { attackerId } = op;
             const card = state.cards.find(c => c.id === attackerId);
             if(card) {
@@ -1616,9 +1921,30 @@
             });
         }
     }
-
-    function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
+	
+	
+function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         if (!pendingMove) return;
+
+        // --- START: 移動前先切斷舊連結 ---
+        const state = getCurrentDisplayState();
+        // 檢查被移動的卡片中，是否有任何一張屬於堆疊結構(有父卡 或 有子卡)
+        const needsBreak = pendingMove.cardIds.some(id => {
+            const c = state.cards.find(x => x.id === id);
+            if (!c) return false;
+            // 1. 我是子卡 (連著別人)
+            if (c.parentId) return true;
+            // 2. 我是父卡 (別人連著我)
+            const isParent = state.cards.some(child => child.parentId === c.id);
+            if (isParent) return true;
+            return false;
+        });
+
+        if (needsBreak) {
+            // 在產生 MOVE 動作前，先插入一個 BREAK_LINKS 動作
+            addOperation({ type: 'BREAK_LINKS', cardIds: [...pendingMove.cardIds] });
+        }
+        // --- END: 移動前先切斷舊連結 ---
         
         let finalCardIds = [...pendingMove.cardIds];
         if (pendingMove.shuffle) {
@@ -1677,7 +2003,6 @@
         const text = document.getElementById('rename-input').value;
         const state = getCurrentDisplayState();
         
-        // Find keys to sync names (like Card 20 and Wait 20-1)
         const targetKeys = new Set();
         pendingMove.cardIds.forEach(id => {
             const c = state.cards.find(x => x.id === id);
@@ -1687,7 +2012,6 @@
             }
         });
 
-        // Update function
         const applyRename = (cardList) => {
             cardList.forEach(c => {
                 const isTarget = pendingMove.cardIds.includes(c.id) || 
@@ -1699,7 +2023,6 @@
             });
         };
 
-        // Execute Global Update (No Confirm for speed)
         applyRename(initialState.cards);
         history.forEach(h => { if(h.state) applyRename(h.state.cards); });
         if(tempState) applyRename(tempState.cards);
@@ -1714,19 +2037,16 @@
         addOperation({ type: 'ADD_NOTE', cardIds: pendingMove.cardIds, note: note });
     }
     
-    // Adjusted: Update global registry to sync ability card styles across all history
     function adjustAbilityCard(key, val) {
         if (!pendingMove || pendingMove.cardIds.length === 0) return;
         
         const state = getCurrentDisplayState();
         const targetIds = pendingMove.cardIds;
         
-        // 1. 找出被選取卡片的 imageKey
         const keysToUpdate = new Set();
         targetIds.forEach(id => {
             const c = state.cards.find(card => card.id === id);
             if (c) {
-                // 優先使用 imageKey，如果沒有則嘗試使用 backImageKey
                 if (c.imageKey) keysToUpdate.add(c.imageKey);
                 else if (c.backImageKey) keysToUpdate.add(c.backImageKey);
             }
@@ -1734,12 +2054,8 @@
 
         if (keysToUpdate.size === 0) return;
 
-        // 2. 更新全域註冊表 (Global Registry)
-        // 這樣所有共用此圖片的卡片（無論是過去的還是未來產生的）都會同步
         keysToUpdate.forEach(imgKey => {
             let currentStyle = globalAbilityStyleRegistry[imgKey] || { x: 50, y: 50, scale: 1 };
-            
-            // 複製一份以免直接修改參照
             let newStyle = { ...currentStyle };
 
             if (key === 'panX') newStyle.x += val;
@@ -1749,7 +2065,6 @@
             globalAbilityStyleRegistry[imgKey] = newStyle;
         });
 
-        // 3. 強制重新渲染介面以套用新設定
         renderUI();
         saveToStorage();
     }
@@ -1761,9 +2076,20 @@
 
     function toggleGlow() {
         if (!pendingMove) return;
-        const colors = ['red', 'yellow', 'green', 'blue', 'black', 'white', 'rainbow', null];
-        
         const state = getCurrentDisplayState();
+        
+        // Strict Check: Only Ability Zone cards can trigger Glow
+        const invalid = pendingMove.cardIds.some(id => {
+            const c = state.cards.find(x => x.id === id);
+            return !c || !c.zone.includes('ability');
+        });
+
+        if (invalid) {
+            alert("只有「待處理區」的卡片可以下達發光指令。\n(若有設定來源卡，來源卡會自動同步發光)");
+            return;
+        }
+
+        const colors = ['red', 'yellow', 'green', 'blue', 'black', 'white', 'rainbow', null];
         const firstId = pendingMove.cardIds[0];
         const card = state.cards.find(c => c.id === firstId);
         let currentGlow = card ? card.glow : null;
@@ -1776,6 +2102,18 @@
 
     function removeGlow() {
         if (!pendingMove) return;
+        // Same strict check for removing glow manually via UI
+        const state = getCurrentDisplayState();
+        const invalid = pendingMove.cardIds.some(id => {
+            const c = state.cards.find(x => x.id === id);
+            return !c || !c.zone.includes('ability');
+        });
+        
+        if (invalid) {
+             alert("只有「待處理區」的卡片可以操作發光狀態。");
+             return;
+        }
+
         addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: null });
     }
     
@@ -1831,6 +2169,48 @@
         addOperation({ type: 'PASS' });
         saveDraft("結束指向 (End Pointing)");
     }
+	
+	// --- [新增] 觸發勝利 ---
+    function triggerWin(winnerId) {
+        if (!isDrafting) startDraftAtEnd();
+        
+        addOperation({ 
+            type: 'GAME_WIN', 
+            winnerId: winnerId 
+        });
+        
+        saveDraft(`Player ${winnerId} 獲勝!!`);
+    }
+	
+	// --- [新增] 切換受傷狀態 ---
+    function toggleInjured() {
+        if (!pendingMove) return;
+        
+        // 檢查是否符合區域限制 (僅戰鬥區與護盾區)
+        const state = getCurrentDisplayState();
+        const validZones = ['p1-battle', 'p2-battle', 'p1-shield', 'p2-shield'];
+        const isValid = pendingMove.cardIds.every(id => {
+            const c = state.cards.find(x => x.id === id);
+            return c && validZones.includes(c.zone);
+        });
+
+        if (!isValid) {
+            alert("只有「戰鬥區」與「護盾區」的卡片可以標記為受傷。");
+            return;
+        }
+
+        // 判斷是要全部加受傷，還是全部取消 (若其中一張已受傷，則視為要取消)
+        const hasInjured = pendingMove.cardIds.some(id => {
+            const c = state.cards.find(x => x.id === id);
+            return c.isInjured;
+        });
+
+        addOperation({ 
+            type: 'INJURED', 
+            cardIds: pendingMove.cardIds, 
+            setInjured: !hasInjured // 如果有人受傷就全部取消，否則全部設為受傷
+        });
+    }
 
     function copyToAbility() {
         if (!pendingMove) return;
@@ -1857,20 +2237,14 @@
     // --- Point Mode Logic ---
     function enterPointMode() {
         if (!pendingMove || pendingMove.cardIds.length !== 1) return alert("請選擇一張卡片進行指向");
-        
         pointerId = pendingMove.cardIds[0];
-        
-        // Removed validation to allow pointing from anywhere
         isPointing = true;
         pointTargets = [];
         
         document.getElementById('card-action-panel').style.display = 'none';
         document.getElementById('point-bar').style.display = 'flex';
         updatePointInfo();
-        
-        // Highlight everything as potential target
         document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
-        
         renderUI(); 
     }
 
@@ -1884,22 +2258,23 @@
         cancelSelection(); 
     }
 
-    function handlePointClick(zoneId, cardId) {
+	function handlePointClick(zoneId, cardId) {
         if (!isPointing) return;
         
-        if (!cardId && zoneId.includes('deck')) {
-             // Handle Deck target (Player target)
-             // We use a dummy ID convention or zone name for deck targeting if needed
-             // For now, treat deck click as "Target Player"
-             if (confirm("指向玩家/牌庫?")) {
-                 finishPoint('PLAYER', null); // Generic Player/Deck target
+        // [修改] 允許指向 牌庫(Deck)、超次元(Hyper)、墓地(Grave) 三種區域
+        if (!cardId && (zoneId.includes('deck') || zoneId.includes('hyper') || zoneId.includes('grave'))) {
+             let zoneName = "區域";
+             if(zoneId.includes('deck')) zoneName = "玩家/牌庫";
+             if(zoneId.includes('hyper')) zoneName = "超次元區";
+             if(zoneId.includes('grave')) zoneName = "墓地區";
+
+             if (confirm(`確認指向 ${zoneName}?`)) {
+                 finishPoint('ZONE', null); // 這裡使用 'ZONE' 類型，會傳入 null ids，需在 finishPoint 處理或直接用 DOM
              }
              return;
         }
-
+        
         if (cardId) {
-            // Self-pointing is allowed
-            // Toggle selection
             if (pointTargets.includes(cardId)) {
                 pointTargets = pointTargets.filter(id => id !== cardId);
             } else {
@@ -1913,7 +2288,6 @@
     function updatePointInfo() {
         const btn = document.getElementById('btn-confirm-point');
         const info = document.getElementById('point-target-info');
-        
         if (pointTargets.length > 0) {
             info.innerText = `已選擇 ${pointTargets.length} 個目標`;
             btn.style.display = 'block';
@@ -1931,22 +2305,17 @@
     function finishPoint(type, targetIds) {
         const state = getCurrentDisplayState();
         const pointer = state.cards.find(c => c.id === pointerId);
-        
         let desc = `[指向] ${pointer.text} 指向 `;
         if (type === 'PLAYER') desc += '玩家/牌庫';
-        else if (type === 'CARD') {
-            desc += `${targetIds.length} 個目標`;
-        }
+        else if (type === 'CARD') desc += `${targetIds.length} 個目標`;
 
         addOperation({
             type: 'POINT',
-            attackerId: pointerId, // Keeping legacy prop name for compatibility or rename to pointerId
+            attackerId: pointerId,
             targetType: type,
             targetIds: targetIds,
             desc: desc
         });
-
-        // Exit mode but allow re-entering quickly (user can select another card)
         cancelPointMode();
     }
 
@@ -1958,6 +2327,7 @@
 
         if (pendingMove) {
             const state = getCurrentDisplayState();
+            // FILTER: Prevent moving Ability cards
             const hasAbilityCard = pendingMove.cardIds.some(id => {
                 const c = state.cards.find(card => card.id === id);
                 return c && c.zone.includes('ability');
@@ -1995,15 +2365,16 @@
         return zid.includes('deck') || zid.includes('shield') || zid.includes('hyper');
     }
 
-function handleCardSingleClick(e, cardId) {
+	function handleCardSingleClick(e, cardId) {
         e.stopPropagation(); 
         
         if (isPointing) {
-            handlePointClick(null, cardId); // Pass null zone, valid cardId
+            handlePointClick(null, cardId);
             return;
         }
 
         if (pendingMove) {
+            // 如果點擊已選取的卡片 -> 取消選取該張
             if (pendingMove.cardIds.includes(cardId)) {
                  pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
                  if (pendingMove.cardIds.length === 0) {
@@ -2016,12 +2387,15 @@ function handleCardSingleClick(e, cardId) {
             
             const state = getCurrentDisplayState();
             const targetCard = state.cards.find(c => c.id === cardId);
-            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave')) {
+            
+            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
+            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
                 openStackingModal(targetCard);
                 return;
             }
         }
         
+        // 單純選取，不執行任何動作
         if (!pendingMove) {
             pendingMove = { cardIds: [cardId], shuffle: false };
         } else {
@@ -2036,25 +2410,12 @@ function handleCardSingleClick(e, cardId) {
         list.innerHTML = '';
         
         document.getElementById('pos-modal-title').innerText = `堆疊操作: 目標 [${targetCard.text}]`;
-        
-        // Show grid, hide list
         document.getElementById('position-list').style.display = 'none';
         document.getElementById('stack-gui').style.display = 'grid';
         
-        // Define confirmStackMove globally
         window.confirmStackMove = (type) => {
-            let stackType = type;
-            // Map types
-            if(type === 'top') stackType = 'top'; 
-            else if(type === 'bottom') stackType = 'bottom';
-            else if(type === 'shift_up') stackType = 'shift_up'; 
-            else if(type === 'shift_down') stackType = 'shift_down'; 
-            else if(type === 'bottom_exposed') stackType = 'bottom_exposed'; 
-            
-            // We need currentStackTargetId
-            finishMove(targetCard.zone, undefined, targetCard.id, stackType);
+            finishMove(targetCard.zone, undefined, targetCard.id, type);
         };
-        
         modal.style.display = 'flex';
     }
 
@@ -2065,29 +2426,40 @@ function handleCardSingleClick(e, cardId) {
             const state = getCurrentDisplayState();
             
             let allAbility = true;
-            let anyBattle = false;
             let allRevealed = true;
-            pendingMove.cardIds.forEach(id => {
-                const card = state.cards.find(c => c.id === id);
-                if (!card) return;
-                if (!card.zone.includes('ability')) allAbility = false;
-                // Allow pointing from anywhere, so anyBattle check is not needed for pointing
-                // if (card.zone.includes('battle')) anyBattle = true;
-                if (!card.zone.includes('reveal')) allRevealed = false;
-            });
             
+			// --- [新增] 檢查是否為戰鬥或護盾區 ---
+            let isBattleOrShield = true;
+            pendingMove.cardIds.forEach(id => {
+                const c = state.cards.find(card => card.id === id);
+                if (!c) return;
+                const z = c.zone;
+                if (!z.includes('battle') && !z.includes('shield')) {
+                    isBattleOrShield = false;
+                }
+            });
+            document.getElementById('btn-injured').style.display = isBattleOrShield ? 'block' : 'none';
+            // ------------------------------------
+            
+            // UI Filtering Logic (Req 6)
             document.getElementById('btn-delete-card').style.display = (allAbility || allRevealed) ? 'block' : 'none';
-            // Show Point button if single card selected (or multiple if generic)
-            document.getElementById('btn-point').style.display = (pendingMove.cardIds.length === 1) ? 'block' : 'none';
+            document.getElementById('btn-point').style.display = 'block';
             document.getElementById('btn-end-point').style.display = 'block'; 
 
             const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
-            document.getElementById('btn-unglow').style.display = (firstCard && firstCard.glow) ? 'block' : 'none';
+            
+            // Only show Glow buttons for Ability cards
+            document.getElementById('btn-glow').style.display = allAbility ? 'block' : 'none';
+            document.getElementById('btn-unglow').style.display = (allAbility && firstCard && firstCard.glow) ? 'block' : 'none';
+            
             document.getElementById('btn-remove-image').style.display = (firstCard && firstCard.image) ? 'block' : 'none';
             
-            // Ability Adjust Controls
             document.getElementById('ability-adjust-controls').style.display = allAbility ? 'block' : 'none';
             document.getElementById('ability-adjust-buttons').style.display = allAbility ? 'flex' : 'none';
+
+            // Hide standard move buttons if Ability card (can't move them)
+            // Note: The UI panel buttons are mostly actions, move happens by clicking zones.
+            // We handled zone click prevention in handleZoneClick.
 
             const panel = document.getElementById('card-action-panel');
             panel.style.display = 'flex';
@@ -2133,26 +2505,28 @@ function handleCardSingleClick(e, cardId) {
         return zoneId.toUpperCase(); 
     }
 
-    function renderUI() {
+function renderUI() {
         const firstPositions = getCardPositions();
         const state = getCurrentDisplayState();
         
+        let winOverlay = document.getElementById('win-overlay');
+        if (!winOverlay) {
+            winOverlay = document.createElement('div');
+            winOverlay.id = 'win-overlay';
+            document.body.appendChild(winOverlay);
+        }
+
         const board = document.getElementById('game-board-container');
         const abilityZone = document.getElementById('ability-stack-zone');
         
-        // Turn Indicators Logic
         const p1Area = document.getElementById('player1-area');
         const p2Area = document.getElementById('player2-area');
         
         if (p1Area && p2Area) {
             p1Area.classList.remove('active-turn');
             p2Area.classList.remove('active-turn');
-            
-            if (state.turnPlayer === 1) {
-                p1Area.classList.add('active-turn');
-            } else {
-                p2Area.classList.add('active-turn');
-            }
+            if (state.turnPlayer === 1) p1Area.classList.add('active-turn');
+            else p2Area.classList.add('active-turn');
         }
         
         if (state.globalRotation) {
@@ -2169,6 +2543,7 @@ function handleCardSingleClick(e, cardId) {
             if(label) el.appendChild(label);
             el.classList.remove('target-highlight');
             el.classList.remove('point-target-highlight'); 
+            el.className = el.className.replace(/\bglow-\S+/g, '');
         });
         
         const revealZoneEl = document.getElementById('reveal-zone');
@@ -2185,12 +2560,8 @@ function handleCardSingleClick(e, cardId) {
             revealZoneEl.innerHTML = '';
         }
 
-        if (pendingMove) {
-            document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
-        }
-        if (isPointing) {
-            document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
-        }
+        if (pendingMove) document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+        if (isPointing) document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
 
         const zoneMap = {};
         const childMap = {}; 
@@ -2198,10 +2569,8 @@ function handleCardSingleClick(e, cardId) {
 
         state.cards.forEach(card => {
             if (card.zone === 'reveal-zone') return;
-            
             if(!zoneMap[card.zone]) zoneMap[card.zone] = [];
             zoneMap[card.zone].push(card);
-
             if (card.parentId) {
                 if (!childMap[card.parentId]) childMap[card.parentId] = [];
                 childMap[card.parentId].push(card);
@@ -2210,101 +2579,98 @@ function handleCardSingleClick(e, cardId) {
             }
         });
 
+        ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper'].forEach(zid => {
+            const cards = zoneMap[zid] || [];
+            const glowingCard = cards.find(c => c.glow);
+            if (glowingCard) {
+                const zoneEl = document.querySelector(`.zone[data-zone="${zid}"]`);
+                if (zoneEl) zoneEl.classList.add(`glow-${glowingCard.glow}`);
+            }
+        });
+
         const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
 
-        const renderCardTree = (card, container) => {
+		const renderCardTree = (card, container) => {
             const isSpreadZone = !stackedZones.includes(card.zone) || card.zone.includes('shield');
-            
             if (isSpreadZone) {
+                let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+                const measureTree = (c, x, y) => {
+                    if (x < bounds.minX) bounds.minX = x;
+                    if (x > bounds.maxX) bounds.maxX = x;
+                    if (y < bounds.minY) bounds.minY = y;
+                    if (y > bounds.maxY) bounds.maxY = y;
+                    const children = childMap[c.id] || [];
+                    children.forEach(child => {
+                        let dx = 0, dy = 0;
+                        if (child.stackType === 'puzzle_left') dx = -50;
+                        else if (child.stackType === 'puzzle_right') dx = 50;
+                        else if (child.stackType === 'puzzle_top') dy = -70;
+                        else if (child.stackType === 'puzzle_bottom') dy = 70;
+                        else if (child.stackType === 'shift_up') dy = -25;
+                        else if (child.stackType === 'shift_down') dy = 25;
+                        else if (child.stackType === 'bottom_exposed') dy = 20;
+                        measureTree(child, x + dx, y + dy);
+                    });
+                };
+                measureTree(card, 0, 0);
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'card-group';
-                
-                if (Math.abs(card.rotation % 180) === 90) {
-                    groupDiv.style.width = 'var(--card-height)';
-                    groupDiv.style.margin = '0 4px'; 
-                }
-
+                const totalW = (bounds.maxX - bounds.minX) + 50; 
+                const totalH = (bounds.maxY - bounds.minY) + 70; 
+                groupDiv.style.width = `${totalW}px`;
+                groupDiv.style.height = `${totalH}px`;
+                groupDiv.style.position = 'relative'; 
+                groupDiv.style.margin = '5px'; 
                 container.appendChild(groupDiv);
                 
-                const renderNode = (currentCard, currentTop, currentZ, depth) => {
-                    const cardEl = createCardElement(currentCard);
-                    
-                    let offset = 0;
-                    let zVal = currentZ;
-                    let className = '';
+                const baseOffsetX = -bounds.minX;
+                const baseOffsetY = -bounds.minY;
 
+                const renderNode = (currentCard, offsetX, offsetY, zVal, depth) => {
+                    const cardEl = createCardElement(currentCard);
+                    let newOffsetX = offsetX;
+                    let newOffsetY = offsetY;
+                    let newZ = zVal;
+                    let className = '';
                     if (depth === 0) {
                         className = 'stack-base';
-                        zVal = 10;
+                        newZ = 10;
                     } else {
-                        if (currentCard.stackType === 'top') {
-                            className = 'stack-top';
-                            zVal += 1; 
-                        } else if (currentCard.stackType === 'bottom') {
-                            className = 'stack-bottom';
-                            zVal -= 1; 
-                        } else if (currentCard.stackType === 'shift_up') {
-                            className = 'stack-shift-up';
-                            offset = -25;
-                            zVal += 1;
-                        } else if (currentCard.stackType === 'shift_down') {
-                            className = 'stack-shift-down';
-                            offset = 25;
-                            zVal += 1;
-                        } else if (currentCard.stackType === 'bottom_exposed') {
-                            className = 'stack-bottom-exposed';
-                            offset = 20;
-                            zVal -= 1;
-                        } else if (currentCard.stackType === 'top_offset') {
-                            className = 'stack-top-offset';
-                            offset = -20;
-                            zVal += 1;
-                        } else {
-                            className = 'stack-top';
-                            zVal += 1;
-                        }
+                        if (currentCard.stackType === 'top') { className = 'stack-top'; newZ += 1; }
+                        else if (currentCard.stackType === 'bottom') { className = 'stack-bottom'; newZ -= 1; }
+                        else if (currentCard.stackType === 'shift_up') { className = 'stack-shift-up'; newOffsetY -= 25; newZ += 1; }
+                        else if (currentCard.stackType === 'shift_down') { className = 'stack-shift-down'; newOffsetY += 25; newZ += 1; }
+                        else if (currentCard.stackType === 'bottom_exposed') { className = 'stack-bottom-exposed'; newOffsetY += 20; newZ -= 1; }
+                        else if (currentCard.stackType === 'puzzle_top') { className = 'stack-puzzle-top'; newOffsetY -= 70; }
+                        else if (currentCard.stackType === 'puzzle_bottom') { className = 'stack-puzzle-bottom'; newOffsetY += 70; }
+                        else if (currentCard.stackType === 'puzzle_left') { className = 'stack-puzzle-left'; newOffsetX -= 50; }
+                        else if (currentCard.stackType === 'puzzle_right') { className = 'stack-puzzle-right'; newOffsetX += 50; }
                     }
-
                     if (className) cardEl.classList.add(className);
-                    
-                    if (depth > 0) {
-                        const nextTop = currentTop + offset;
-                        cardEl.style.top = `${nextTop}px`;
-                        cardEl.style.zIndex = zVal;
-                        cardEl.style.position = 'absolute';
-                        groupDiv.appendChild(cardEl);
-                        
-                        const children = childMap[currentCard.id] || [];
-                        children.forEach(child => renderNode(child, nextTop, zVal, depth + 1));
-                    } else {
-                        cardEl.classList.add('stack-base');
-                        cardEl.style.zIndex = 10;
-                        groupDiv.appendChild(cardEl);
-                        
-                        const children = childMap[currentCard.id] || [];
-                        children.forEach(child => renderNode(child, 0, 10, depth + 1));
+                    cardEl.style.position = 'absolute';
+                    cardEl.style.left = `${newOffsetX}px`;
+                    cardEl.style.top = `${newOffsetY}px`;
+                    cardEl.style.zIndex = newZ;
+                    if (currentCard.stackType && currentCard.stackType.includes('puzzle')) {
+                         cardEl.style.transform = `rotate(${currentCard.rotation}deg)`;
                     }
+                    groupDiv.appendChild(cardEl);
+                    const children = childMap[currentCard.id] || [];
+                    children.forEach(child => renderNode(child, newOffsetX, newOffsetY, newZ, depth + 1));
                 };
-
-                renderNode(card, 0, 10, 0);
-
-            } else {
-                // Stacked Zone
+                renderNode(card, baseOffsetX, baseOffsetY, 10, 0);
             }
         };
 
         Object.keys(zoneMap).forEach(zoneId => {
             const cardsInZone = zoneMap[zoneId];
-            
             if (zoneId.includes('ability')) {
                 const zoneEl = document.getElementById(zoneId === 'p1-ability' ? 'ability-zone-p1' : 'ability-zone-p2');
                 cardsInZone.forEach(card => zoneEl.appendChild(createCardElement(card)));
                 return;
             }
-
             const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
             if (!zoneEl) return;
-
             if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
                 if (cardsInZone.length > 0) {
                     const topCard = cardsInZone[cardsInZone.length - 1];
@@ -2325,44 +2691,91 @@ function handleCardSingleClick(e, cardId) {
 
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
-            
             Object.keys(lastPositions).forEach(id => {
                 if (id.startsWith('ZONE_')) return;
-
                 const cardEl = document.querySelector(`.card[data-id="${id}"]`);
                 if (!cardEl) return;
-
                 let start = firstPositions[id];
-                
                 if (!start && lastRenderedState) {
                     const prevCard = lastRenderedState.cards.find(c => c.id == id);
-                    if (prevCard) {
-                        start = firstPositions['ZONE_' + prevCard.zone];
-                    }
+                    if (prevCard) start = firstPositions['ZONE_' + prevCard.zone];
                 }
-
                 if (start) {
                     const last = lastPositions[id];
                     const deltaX = start.left - last.left;
                     const deltaY = start.top - last.top;
-                    
                     if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                         const cardData = state.cards.find(c => c.id == id);
                         const rotation = cardData ? cardData.rotation : 0;
                         const isAbility = cardData && cardData.zone.includes('ability');
-                        
-                        cardEl.style.transition = 'none';
-                        cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
-                        
-                        requestAnimationFrame(() => {
-                            cardEl.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-                            cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
-                        });
+                        if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
+                             // skip
+                        } else {
+                            cardEl.style.transition = 'none';
+                            cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+                            requestAnimationFrame(() => {
+                                cardEl.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                                cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+                            });
+                        }
                     }
                 }
             });
-            
             lastRenderedState = cloneState(state);
+
+            if (currentIndex >= 0 && history[currentIndex]) {
+                if (currentIndex !== lastAnimatedStep) {
+                    const lastAction = history[currentIndex].action;
+                    const winOverlay = document.getElementById('win-overlay');
+
+                    // --- [修正 1] 精準清除勝利動畫，不影響播放器 ---
+                    if (winOverlay) {
+                        winOverlay.style.display = 'none';
+                        if (winOverlayTimeout) {
+                            clearTimeout(winOverlayTimeout);
+                            winOverlayTimeout = null;
+                        }
+                    }
+                    // ------------------------------------------
+
+                    const createOp = lastAction.operations.find(op => op.type === 'CREATE_ABILITY');
+                    if (createOp) {
+                        setTimeout(() => {
+                            animateAbilityFly(createOp.sourceCardId, createOp.newId);
+                        }, 50);
+                    }
+                    
+                    const winOp = lastAction.operations.find(op => op.type === 'GAME_WIN');
+                    if (winOp && winOverlay) {
+                        const winnerId = winOp.winnerId;
+                        winOverlay.style.display = 'flex';
+                        
+                        const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+                        let confettiHtml = '';
+                        for(let i=0; i<30; i++) {
+                            const left = Math.random() * 100;
+                            const delay = Math.random() * 1;
+                            const bg = colors[Math.floor(Math.random()*colors.length)];
+                            confettiHtml += `<div class="confetti" style="left:${left}%; animation-delay:${delay}s; background:${bg};"></div>`;
+                        }
+
+                        winOverlay.innerHTML = `
+                            ${confettiHtml}
+                            <div class="win-text">PLAYER ${winnerId} WIN!!</div>
+                            <div class="win-sub">Congratulations</div>
+                        `;
+                        
+                        // --- [修正 2] 記錄 Timer ID ---
+                        winOverlayTimeout = setTimeout(() => {
+                            winOverlay.style.display = 'none';
+                            winOverlayTimeout = null;
+                        }, 3000);
+                        // ----------------------------
+                    }
+
+                    lastAnimatedStep = currentIndex;
+                }
+            }
         });
     }
 
@@ -2371,6 +2784,28 @@ function handleCardSingleClick(e, cardId) {
         el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
         el.dataset.id = card.id; 
         
+		// --- [新增] 渲染受傷爪痕 ---
+        if (card.isInjured) {
+            const clawDiv = document.createElement('div');
+            // 如果是編輯中(isDrafting) -> 顯示靜態 (不加 anim class)
+            // 如果是播放中 -> 加入 claw-anim class 觸發動畫
+            // 注意：這裡我們簡單判斷，只要不是編輯模式，就視為播放模式，讓它動起來
+            // 若希望每次換步才動，可搭配 lastAnimatedStep 判斷，但全域同步播放比較簡單暴力且爽快
+            
+            const animClass = isDrafting ? '' : 'claw-anim';
+            
+            clawDiv.className = `claw-overlay ${animClass}`;
+            clawDiv.innerHTML = `
+                <svg class="claw-svg" viewBox="0 0 100 100">
+                    <path class="claw-path p1" d="M20,20 Q50,50 80,80" />
+                    <path class="claw-path p2" d="M30,10 Q60,40 90,70" />
+                    <path class="claw-path p3" d="M10,30 Q40,60 70,90" />
+                </svg>
+            `;
+            el.appendChild(clawDiv);
+        }
+		
+        // Visual Glow (only applied if property exists, logic handles source sync)
         if (card.glow) el.classList.add(`glow-${card.glow}`);
         
         if (card.image && (card.faceUp || card.isHyper)) {
@@ -2379,11 +2814,8 @@ function handleCardSingleClick(e, cardId) {
                 el.style.backgroundImage = `url(${imageSrc})`;
                 el.classList.add('has-image');
                 
-                // 待處理區 (Ability Zone) 的特殊樣式處理 (Modified to use Global Registry)
                 if (card.zone.includes('ability')) {
-                    // 從全域註冊表讀取樣式，確保所有相同圖片的卡片位置一致
                     const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[card.imageKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
-                    
                     el.style.backgroundPosition = `${style.x}% ${style.y}%`;
                     el.style.backgroundSize = `${100 * style.scale}%`;
                 } else {
@@ -2398,13 +2830,19 @@ function handleCardSingleClick(e, cardId) {
             el.classList.add('ability-card');
             if (!card.faceUp) el.className = `card ability-card`; 
         } else {
-            el.style.transform = `rotate(${card.rotation}deg)`;
+            // Apply rotation, unless it's a puzzle piece (handled in renderNode)
+            if (!card.stackType || !card.stackType.includes('puzzle')) {
+                el.style.transform = `rotate(${card.rotation}deg)`;
+            }
         }
         
         if (pendingMove && pendingMove.cardIds.includes(card.id)) {
             el.classList.add('selected');
             if (!card.zone.includes('ability') && el.classList.contains('selected')) {
-               el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
+               // Only offset if not puzzle
+               if (!card.stackType || !card.stackType.includes('puzzle')) {
+                   el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
+               }
             }
         }
         
@@ -2440,7 +2878,6 @@ function handleCardSingleClick(e, cardId) {
         }
         
         setTimeout(() => el.classList.add('interactive'), 0);
-        
         return el;
     }
 
@@ -2462,7 +2899,6 @@ function handleCardSingleClick(e, cardId) {
         }
 
         if (ops) {
-            // Filter all pointing operations to support multiple arrows
             const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
             
             pointOps.forEach(op => {
@@ -2471,7 +2907,6 @@ function handleCardSingleClick(e, cardId) {
                 
                 let targetEls = [];
                 if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
-                    // Defensive check for targetIds
                     if (Array.isArray(op.targetIds)) {
                         op.targetIds.forEach(tid => {
                             const el = document.querySelector(`.card[data-id="${tid}"]`);
@@ -2486,8 +2921,6 @@ function handleCardSingleClick(e, cardId) {
                 }
                 
                 const startRect = attacker.getBoundingClientRect();
-                // SVG is fixed to viewport (body), so we use client rects directly without workspace offset
-                
                 const x1 = startRect.left + startRect.width / 2;
                 const y1 = startRect.top + startRect.height / 2;
                 
@@ -2499,18 +2932,14 @@ function handleCardSingleClick(e, cardId) {
                     const isSelf = (target === attacker);
                     
                     if (isSelf) {
-                        // Draw a circular loop for self-pointing
                         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                        // Curve logic: go up-right, loop around, come back to up-left
-                        const r = 40; // loop radius
+                        const r = 40; 
                         const d = `M ${x1},${y1} C ${x1+r*2},${y1-r*2} ${x1-r*2},${y1-r*2} ${x1},${y1}`;
-                        
                         path.setAttribute("d", d);
                         path.setAttribute("class", "arrow-line");
                         path.setAttribute("fill", "none");
                         svg.appendChild(path);
                     } else {
-                        // Draw straight line for normal pointing
                         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                         line.setAttribute("x1", x1);
                         line.setAttribute("y1", y1);
@@ -2547,9 +2976,6 @@ function handleCardSingleClick(e, cardId) {
                         if (card.ownerId === 1) colorClass = 'p1-action';
                         else if (card.ownerId === 2) colorClass = 'p2-action';
                     }
-                } else if (item.action.operations[0].type === 'RESET_BOARD') {
-                    if (item.action.operations[0].playerId === 1) colorClass = 'p1-action';
-                    else colorClass = 'p2-action';
                 }
             }
 
@@ -2592,44 +3018,21 @@ function handleCardSingleClick(e, cardId) {
         document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
     }
 
-    function prevStep() { 
-        if (currentIndex > 0) { 
-            currentIndex--; 
-            renderUI(); 
-            saveToStorage(); 
-        } 
-    }
-    function nextStep() { 
-        if (currentIndex < history.length - 1) { 
-            currentIndex++; 
-            renderUI(); 
-            saveToStorage(); 
-        } 
-    }
+    function prevStep() { if (currentIndex > 0) { currentIndex--; renderUI(); saveToStorage(); } }
+    function nextStep() { if (currentIndex < history.length - 1) { currentIndex++; renderUI(); saveToStorage(); } }
     
     function playFromStep(idx) { 
-        currentIndex = idx; 
-        renderUI(); 
-        saveToStorage();
+        currentIndex = idx; renderUI(); saveToStorage();
         if (!playInterval) togglePlay(); 
     }
 
     function playSingleStep(idx) {
         if (playInterval) togglePlay(); 
-        
         if (idx > 0) {
-            currentIndex = idx - 1;
-            renderUI();
-            
-            setTimeout(() => {
-                currentIndex = idx;
-                renderUI();
-                saveToStorage();
-            }, 500);
+            currentIndex = idx - 1; renderUI();
+            setTimeout(() => { currentIndex = idx; renderUI(); saveToStorage(); }, 500);
         } else {
-            currentIndex = 0;
-            renderUI();
-            saveToStorage();
+            currentIndex = 0; renderUI(); saveToStorage();
         }
     }
 
@@ -2650,13 +3053,7 @@ function handleCardSingleClick(e, cardId) {
     
     function exportData() {
         const historyToExport = JSON.parse(JSON.stringify(history));
-        
-        historyToExport.forEach((item, index) => {
-            if (index > 0) {
-                delete item.state; 
-            }
-        });
-
+        historyToExport.forEach((item, index) => { if (index > 0) delete item.state; });
         const data = {
             history: historyToExport,
             initialState: initialState,
@@ -2672,17 +3069,12 @@ function handleCardSingleClick(e, cardId) {
         a.click();
     }
 
-    // 1. 抽取出的共用匯入邏輯 (請新增此函式)
-   function processGameData(data, resetToStart = false) {
+    function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
         globalAbilityStyleRegistry = data.abilityRegistry || {}; 
-        
         initialState = data.initialState;
         let loadedHistory = data.history;
-
-        // 支援壓縮格式：若後續步驟無 state，則進行重建
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
-
         for (let i = 1; i < loadedHistory.length; i++) {
             if (!loadedHistory[i].state) {
                 const prevState = loadedHistory[i-1].state;
@@ -2692,67 +3084,41 @@ function handleCardSingleClick(e, cardId) {
                 loadedHistory[i].state = newState;
             }
         }
-
         history = loadedHistory;
-        // 修改: 若 resetToStart 為 true，則強制設為 0；否則使用存檔中的位置
         currentIndex = resetToStart ? 0 : (data.currentIndex || 0);
-        
         storageQuotaExceeded = false;
         hasAlertedQuota = false;
-        
         lastRenderedState = null; 
         renderUI();
         saveToStorage();
     }
 
-    // 2. 衝突處理函式 (請新增此函式)
     function resolveImportConflict(choice) {
-        const modal = document.getElementById('import-conflict-modal');
-        modal.style.display = 'none';
-
-        if (choice === 'cancel') {
-            pendingImportData = null;
-            return;
-        }
-
-        if (choice === 'save') {
-            exportData(); // 先觸發下載
-            // 這裡不 return，繼續執行下方的匯入邏輯
-        }
-
+        document.getElementById('import-conflict-modal').style.display = 'none';
+        if (choice === 'cancel') { pendingImportData = null; return; }
+        if (choice === 'save') exportData(); 
         if (choice === 'save' || choice === 'overwrite') {
             if (pendingImportData) {
-                try {
-                    // 修改: 從 URL 匯入衝突解決後，強制從 Action 0 開始
-                    processGameData(pendingImportData, true);
-                    alert("匯入成功！");
-                } catch(e) {
-                    alert("匯入失敗：" + e.message);
-                }
+                try { processGameData(pendingImportData, true); alert("匯入成功！"); } 
+                catch(e) { alert("匯入失敗：" + e.message); }
             }
         }
         pendingImportData = null;
     }
 
-    // 3. 修改原本的 importData 函式以使用共用邏輯 (選擇性更新，讓程式碼更乾淨)
     function importData(input) {
         const file = input.files[0];
         if(!file) return;
-        
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
                 if(!data.history || !data.initialState) throw new Error("Invalid format");
-                
-                if(confirm("確定要匯入此檔案嗎？這將會覆蓋當前所有進度。")) {
-                    processGameData(data); // 改用共用函式
+                if(confirm("確定要匯入此檔案嗎？")) {
+                    processGameData(data);
                     alert("匯入成功！");
                 }
-            } catch(err) {
-                alert("匯入失敗：檔案格式錯誤");
-                console.error(err);
-            }
+            } catch(err) { alert("匯入失敗"); console.error(err); }
             input.value = ''; 
         };
         reader.readAsText(file);
@@ -2771,7 +3137,15 @@ function handleCardSingleClick(e, cardId) {
         cards.forEach((card, index) => {
             const el = document.createElement('div');
             el.className = 'card';
-            el.innerHTML = `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
+            
+            // Req 2: Render Image in List
+            if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
+                const imgKey = card.imageKey || card.backImageKey;
+                el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
+                el.classList.add('has-image-icon');
+            }
+
+            el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
                             <div class="card-text">${card.text}</div>`;
             el.onclick = () => {
                 if (selectedCardsInModal.includes(card.id)) {
@@ -2793,54 +3167,73 @@ function handleCardSingleClick(e, cardId) {
         closeSelectorModal();
         updateSelectionUI();
     }
-    function actionShuffleZone() {
-        const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
-        if(!zoneId) return;
-        
-        const state = getCurrentDisplayState();
-        const cards = getCardsInZone(state, zoneId);
-        const ids = cards.map(c => c.id);
-        ids.sort(() => Math.random() - 0.5); 
-        
-        addOperation({ type: 'SHUFFLE', zoneId: zoneId, order: ids });
-        closeSelectorModal();
-    }
 
-    // New: Position Selector for Insert or Stacking
-    function openPositionSelector(zoneId, moveData) {
+	function openPositionSelector(zoneId, moveData) {
         const modal = document.getElementById('position-selector-modal');
         const list = document.getElementById('position-list');
         const gui = document.getElementById('stack-gui');
         
-        document.getElementById('pos-modal-title').innerText = "選擇位置";
-        
-        list.style.display = 'flex';
+        // 標題與模式切換
+        document.getElementById('pos-modal-title').innerText = "插入位置選擇 (點擊虛線框)";
         gui.style.display = 'none';
+        list.style.display = 'flex'; 
         list.innerHTML = ''; 
         
         const state = getCurrentDisplayState();
         const cards = getCardsInZone(state, zoneId);
 
-        list.appendChild(createSlotElement(0, "最底部 (Bottom)", zoneId));
+        // --- 核心邏輯：交錯生成 [插槽] 與 [參考卡] ---
+        
+        // 1. 先放最頂部的插槽 (Index 0)
+        list.appendChild(createSlotElement(0, "頂", zoneId));
         
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
             
-            const row = document.createElement('div');
-            row.className = 'position-card-ref';
-            row.innerHTML = `<small style="display:inline-block; width:25px; color:#666;">#${i+1}</small> <span>${card.text || 'Card'}</span>`;
-            list.appendChild(row);
+            // 2. 放入參考卡片 (Visual)
+            const refCard = document.createElement('div');
+            refCard.className = 'position-card-ref';
+            
+            // 處理圖片與文字
+            if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
+                const imgKey = card.imageKey || card.backImageKey;
+                refCard.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
+                refCard.classList.add('has-image-icon');
+                refCard.innerHTML = `<span style="display:none;">${card.text}</span>`; // 隱藏文字但保留結構
+            } else {
+                refCard.innerHTML = `<span style="padding:2px; word-break:break-all; line-height:1;">${card.text}</span>`;
+            }
+            
+            // 左上角加入序號，方便對照
+            const idxBadge = document.createElement('div');
+            idxBadge.style.cssText = "position:absolute; top:0; left:0; background:rgba(0,0,0,0.6); color:white; font-size:8px; padding:1px 3px; border-bottom-right-radius:3px;";
+            idxBadge.innerText = i + 1;
+            refCard.appendChild(idxBadge);
+            
+            list.appendChild(refCard);
 
-            list.appendChild(createSlotElement(i + 1, (i === cards.length - 1) ? "最上方 (Top)" : "插入此處", zoneId));
+            // 3. 放入該卡片之後的插槽 (Index i+1)
+            // 如果是最後一張，標示為「底」
+            const isTop = (i === cards.length - 1);
+            list.appendChild(createSlotElement(i + 1, isTop ? "底" : "", zoneId, isTop));
         }
 
         modal.style.display = 'flex';
     }
 
-    function createSlotElement(index, text, zoneId) {
+    // 建立插槽的輔助函式
+    function createSlotElement(index, text, zoneId, isTop) {
         const div = document.createElement('div');
         div.className = 'position-slot';
-        div.innerText = `⬍ ${text}`;
+        
+        // 如果有傳入文字(底/頂)就顯示文字，否則顯示一個 '+'
+        if (text) {
+            div.innerHTML = `<span style="font-weight:bold; ${isTop ? 'color:#e74c3c;' : ''}">${text}</span>`;
+        } else {
+            div.innerHTML = `<span style="opacity:0.3; font-size:1.2rem;">+</span>`;
+        }
+        
+        div.title = `插入至第 ${index} 張牌的位置`;
         div.onclick = () => finishMove(zoneId, index);
         return div;
     }
@@ -2849,11 +3242,8 @@ function handleCardSingleClick(e, cardId) {
         document.getElementById('position-selector-modal').style.display = 'none';
     }
 
-    // Window Unload Warning for Storage Quota
     window.addEventListener('beforeunload', (e) => {
         if (storageQuotaExceeded) {
-            // Standard way to trigger "Leave Site?" dialog in modern browsers.
-            // Custom text is usually ignored by browsers for security, but we set it anyway.
             e.preventDefault();
             e.returnValue = '儲存空間已滿，您的資料可能尚未儲存。建議先匯出資料。';
             return e.returnValue;
@@ -2861,53 +3251,32 @@ function handleCardSingleClick(e, cardId) {
     });
 
     window.onload = function() {
-        // 先嘗試讀取本地存檔
         const hasLocalData = loadFromStorage();
-        
-        // 檢查 URL 參數
         const urlParams = new URLSearchParams(window.location.search);
         const scriptUrl = urlParams.get('scriptUrl');
 
         if (scriptUrl) {
             console.log("Found scriptUrl:", scriptUrl);
             fetch(scriptUrl)
-                .then(res => {
-                    if(!res.ok) throw new Error("HTTP " + res.status);
-                    return res.json();
-                })
+                .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
                 .then(data => {
-                    // 基本格式檢查
-                    if(!data.history || !data.initialState) throw new Error("Invalid script format");
-
+                    if(!data.history || !data.initialState) throw new Error("Invalid script");
                     if (hasLocalData) {
-                        // 本地有資料：暫存並詢問使用者
                         pendingImportData = data;
                         document.getElementById('import-conflict-modal').style.display = 'flex';
                     } else {
-                        // 本地無資料：直接匯入
-                        // 修改: 強制從 Action 0 開始
                         processGameData(data, true);
-                        console.log("Auto-imported script from URL");
                     }
-                    // 清除 URL 參數
                     window.history.replaceState({}, document.title, window.location.pathname);
                 })
                 .catch(e => {
-                    console.error("Failed to load scriptUrl:", e);
                     alert("無法載入指定劇本: " + e.message);
-                    // 載入失敗且無本地存檔時，才顯示設定視窗
                     if(!hasLocalData) openSetupModal();
                 });
         } else {
-            // 無 URL 參數時的標準流程
-            if (!hasLocalData) {
-                openSetupModal();
-            } else {
-                console.log("Game loaded from storage.");
-            }
+            if (!hasLocalData) openSetupModal();
         }
     };
-	
 </script>
 </body>
 </html>
