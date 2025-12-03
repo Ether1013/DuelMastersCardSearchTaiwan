@@ -945,6 +945,9 @@
 			flex-direction: row;
 			background: #95a5a6;
 			box-shadow: 0 0 50px rgba(0,0,0,0.5);
+			
+			/* [新增] 讓整個工作區無法點擊/拖曳 */
+			pointer-events: none !important;
 		}
 
 		/* 2. SVG 設為穿透，避免擋到任何東西 */
@@ -1153,28 +1156,6 @@
 			font-size: 1.5rem; /* 字體加大，方便手機閱讀 */
 			font-weight: 800;
 			text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-		}
-		
-		/* --- 手機版操作阻擋層 --- */
-		#mobile-blocker {
-			display: none;
-		}
-
-		body.mobile-mode #mobile-blocker {
-			display: block;
-			position: fixed;
-			top: 0; 
-			left: 0;
-			width: 100vw;
-			height: 100vh;
-			background: transparent; /* 透明，看不到但擋得到 */
-			/* 層級設定關鍵：
-			   Workspace/Cards z-index 約 100~2000
-			   Blocker z-index = 2500 (蓋住卡片)
-			   Slider/Controls z-index = 3000 (蓋住 Blocker)
-			*/
-			z-index: 2500; 
-			touch-action: none; /* 禁止下層的觸控行為 */
 		}
 
 		/* 確保進度條與手機按鈕永遠在阻擋層之上 */
@@ -4010,6 +3991,5 @@ function handleOrientation() {
     }
 	
 </script>
-<div id="mobile-blocker"></div>
 </body>
 </html>
