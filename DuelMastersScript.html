@@ -975,20 +975,6 @@
 			pointer-events: none !important; 
 		}
 
-		/* 5. 右側時間軸/進度條：強制顯示並允許互動 */
-		body.mobile-mode #timeline-panel {
-			display: flex !important;
-			width: 320px !important; /* 固定桌機版寬度 */
-			flex-shrink: 0;
-			height: 100%;
-			border-left: 1px solid #bdc3c7;
-			background: #ecf0f1;
-			z-index: 1000; /* 確保浮在最上層 */
-			
-			/* 這裡允許互動！ */
-			pointer-events: auto !important; 
-		}
-
 		/* 手機版播放按鈕 (如果你還要保留這個浮動按鈕的話) */
 		body.mobile-mode #mobile-controls {
 			display: flex;
@@ -1106,28 +1092,56 @@
 			transform: scale(1.4);
 		}
 
-		/* --- 新增：手機模式下強制讓 Slider Zone 浮在最上層 --- */
+		/* --- 手機版模式修正 (Mobile Mode Fixes) --- */
+
+		/* 1. 隱藏原本的時間軸 (Action Log) */
+		body.mobile-mode #timeline-panel {
+			display: none !important;
+		}
+
+		/* 2. 顯示並重設 Slider Zone 的排版 */
+		/* 讓它像 Timeline 一樣，乖乖待在 Workspace 裡面的右側 */
 		body.mobile-mode #slider-zone {
-			position: fixed !important;
-			right: 0px;
-			top: 50%;
-			transform: translateY(-50%);
-			z-index: 3001 !important; /* 必須大於 blocker 的 2500 */
-			height: 95vh; /* 確保有足夠高度容納 Slider */
-			background: transparent; /* 避免遮擋背景 */
-			border: none;
-			pointer-events: auto; /* 確保可點擊 */
+			display: flex !important;
+			position: relative !important; /* 關鍵：改回 relative，參與 Flex 排版 */
+			
+			/* 清除原本 fixed 的定位屬性 */
+			top: auto !important;
+			right: auto !important;
+			transform: none !important;
+			
+			/* 設定在虛擬畫布中的尺寸 */
+			width: 60px !important;  /* 給它一個固定的寬度 */
+			height: 100% !important; /* 撐滿畫布高度 */
+			
+			/* 確保層級與外觀 */
+			z-index: 3000 !important;
+			background: rgba(44, 62, 80, 0.8); /*稍微深色背景凸顯 */
+			border-left: 1px solid #95a5a6;
+			flex-shrink: 0; /* 確保不會被擠壓 */
 		}
 
-		/* 確保手機版 Slider 本身樣式正確 */
+		/* 3. 調整滑桿 (Input Range) 的尺寸 */
+		/* 因為畫布高度是 800px，我們設定 700px 讓它夠長 */
 		body.mobile-mode #playback-slider {
-			width: 80vh !important; /* 改用 vh 單位確保適應螢幕高度 */
+			width: 700px !important; 
+			height: 30px !important; /* 增加一點高度讓手指好按 */
 			transform: rotate(90deg);
+			background: rgba(255, 255, 255, 0.3);
 		}
 
+		/* 加大手機版滑塊按鈕 (Thumb) */
 		body.mobile-mode #playback-slider::-webkit-slider-thumb {
-			width: 25px;
-			height: 25px;
+			width: 35px !important;
+			height: 35px !important;
+		}
+
+		/* 修正提示文字的位置 (轉正) */
+		body.mobile-mode #slider-tooltip {
+			transform: rotate(0deg); 
+			top: 20px;
+			right: auto;
+			font-size: 1.2rem; /* 字大一點 */
 		}
 		
 		/* --- 手機版操作阻擋層 --- */
