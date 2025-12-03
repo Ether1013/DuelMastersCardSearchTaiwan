@@ -1190,14 +1190,21 @@
 			top: 75% !important;
 		}
 		
-		/* --- 手機版專用：戰鬥區卡片放大 1.5 倍 --- */
+		/* --- 手機版專用：戰鬥區卡片放大 1.5 倍 (修正版) --- */
 		body.mobile-mode .battle-zone .card-group {
-			/* 使用 zoom: 1.5 代表放大 150% */
-			/* 這會連同卡片內的文字、以及進化/連結的相對位置一起等比例放大 */
-			zoom: 1.5;
+			/* 1. 改用 transform: scale，這是標準屬性，getBoundingClientRect 能完美支援 */
+			transform: scale(1.5);
 			
-			/* 因為變大了，稍微增加左右間距，避免視覺上太擁擠 */
-			margin: 0 6px;
+			/* 2. 設定縮放原點為「中心」，確保放大後位置不會亂跑 */
+			transform-origin: center center;
+			
+			/* 3. 【關鍵】因為 transform 只是視覺放大，不會「撐開」原本的空間 */
+			/* 所以必須手動增加 margin (外距)，否則放大後的卡片會互相重疊 */
+			/* 寬度 50px * 1.5 = 75px (差 25px)，左右各補約 12px */
+			margin: 25px 15px !important; 
+			
+			/* 確保放大後的層級正確 */
+			z-index: 10;
 		}
 		
 		/* --- 修正：強制在手機版顯示回合呼吸燈 --- */
