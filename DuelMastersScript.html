@@ -915,11 +915,7 @@
 		
 		/* --- Mobile Mode Styles (Final Adjusted) --- */
 		body.mobile-mode {
-			overflow: hidden;
-			background-color: #2c3e50;
-			margin: 0; padding: 0;
-			width: 100vw; height: 100vh;
-			position: relative;
+			display: block !important; /* 確保 Body 不是 Flex 佈局，避免干擾絕對定位 */
 		}
 
 		/* 隱藏不需要的編輯工具，但保留 Timeline */
@@ -934,20 +930,19 @@
 
 		/* 1. 虛擬畫布設定 - 加大寬度以容納右側 Sidebar */
 		body.mobile-mode #workspace {
-			width: 1600px !important; /* 加大：1200 -> 1600 */
-			height: 800px !important;
-			
+			/* 強制定位在螢幕正中央 */
 			position: absolute;
-			top: 0; left: 0;
-			transform-origin: 0 0; 
+			top: 50% !important;
+			left: 50% !important;
 			
-			display: flex !important;
-			flex-direction: row;
-			background: #95a5a6;
-			box-shadow: 0 0 50px rgba(0,0,0,0.5);
+			/* 關鍵：將變形原點設為中心，這樣縮放時永遠會保持在中間 */
+			transform-origin: center center !important;
 			
-			/* [新增] 讓整個工作區無法點擊/拖曳 */
-			pointer-events: none !important;
+			/* 清除可能干擾的邊距 */
+			margin: 0 !important;
+			
+			/* 確保初始位置正確 (JS 載入前) */
+			transform: translate(-50%, -50%);
 		}
 
 		/* 2. SVG 設為穿透，避免擋到任何東西 */
@@ -4222,13 +4217,6 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 
                 // 初次檢查方向
                 handleOrientation();
-				
-				// 2. --- [修改] 暴力多重檢查 ---
-				// 分別在 100ms, 500ms, 1秒, 2秒 各執行一次校正
-				// 這樣可以涵蓋大部分手機瀏覽器介面伸縮的時間差，確保最後畫面一定會置中
-				[100, 500, 1000, 2000].forEach(delay => {
-					setTimeout(handleOrientation, delay);
-				});
             })
             .catch(e => {
                 alert("無法載入劇本: " + e.message);
@@ -4258,41 +4246,42 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
 
     function autoScaleBoard() {
-        const workspace = document.getElementById('workspace');
-        if (!workspace) return;
+		const workspace = document.getElementById('workspace');
+		if (!workspace) return;
 
-        // 1. 設定虛擬畫布尺寸 (配合 CSS 修改為 1600)
-        const VIRTUAL_WIDTH = 1600; 
-        const VIRTUAL_HEIGHT = 800;
+		// 1. 設定虛擬畫布尺寸
+		const VIRTUAL_WIDTH = 1600;
+		const VIRTUAL_HEIGHT = 800;
 
-        // 2. 取得螢幕尺寸
-        const screenW = window.innerWidth;
-        const screenH = window.innerHeight;
+		// 2. 取得螢幕尺寸
+		const screenW = window.innerWidth;
+		const screenH = window.innerHeight;
 
-        // 3. 計算縮放比例
-        const scaleW = screenW / VIRTUAL_WIDTH;
-        const scaleH = screenH / VIRTUAL_HEIGHT;
-        let scale = Math.min(scaleW, scaleH);
-        
-        scale = scale * 0.98; // 留一點邊距
+		// 3. 計算縮放比例 (維持不變)
+		const scaleW = screenW / VIRTUAL_WIDTH;
+		const scaleH = screenH / VIRTUAL_HEIGHT;
+		let scale = Math.min(scaleW, scaleH);
+		
+		scale = scale * 0.98; // 留一點邊距
 
-        // 4. 計算置中偏移
-        const offsetX = (screenW - VIRTUAL_WIDTH * scale) / 2;
-        const offsetY = (screenH - VIRTUAL_HEIGHT * scale) / 2;
-
-        // 5. 應用樣式
-        workspace.style.transform = `scale(${scale})`;
-        workspace.style.left = `${offsetX}px`;
-        workspace.style.top = `${offsetY}px`;
-        
-        // 重繪 SVG
-        const svg = document.getElementById('svg-layer');
-        if(svg) {
-            svg.style.display = 'none';
-            svg.offsetHeight; 
-            svg.style.display = 'block';
-        }
-    }
+		// 4. 【關鍵修改】不再計算 offsetX/offsetY
+		// 直接應用 transform:
+		// translate(-50%, -50%) -> 配合 CSS 的 top:50%/left:50% 達成置中
+		// scale(...) -> 進行縮放
+		workspace.style.transform = `translate(-50%, -50%) scale(${scale})`;
+		
+		// 5. 清除舊邏輯可能殘留的 inline style，避免衝突
+		workspace.style.left = '';
+		workspace.style.top = '';
+		
+		// 重繪 SVG (維持不變)
+		const svg = document.getElementById('svg-layer');
+		if(svg) {
+			svg.style.display = 'none';
+			svg.offsetHeight; 
+			svg.style.display = 'block';
+		}
+	}
 
     // 監聽轉向與視窗變化
     window.addEventListener('resize', () => {
