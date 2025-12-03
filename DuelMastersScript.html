@@ -921,13 +921,14 @@
 			position: relative;
 		}
 
-		/* 隱藏不需要的介面 (如果你希望顯示 Timeline，請把 #timeline-panel 從這裡移除) */
+		/* --- 修改後：加入 #timeline-panel 到隱藏清單 --- */
 		body.mobile-mode #toolbar, 
 		body.mobile-mode #draft-bar, 
 		body.mobile-mode #point-bar, 
 		body.mobile-mode #card-action-panel, 
 		body.mobile-mode #setup-modal,
-		body.mobile-mode .turn-bar {
+		body.mobile-mode .turn-bar,
+		body.mobile-mode #timeline-panel { /* [新增] 隱藏 Timeline */
 			display: none !important;
 		}
 
@@ -962,11 +963,13 @@
 			z-index: 1000 !important; /* 確保浮在 SVG (500) 之上 */
 		}
 		
-		body.mobile-mode #timeline-panel {
-			display: flex !important; /* 或 block */
-			width: 200px; /* 視需要調整寬度，太寬會擠壓盤面 */
+		/* --- [刪除或註解掉] 原本下方這段強制顯示的代碼 --- */
+		/* body.mobile-mode #timeline-panel {
+			display: flex !important;
+			width: 200px;
 			flex-shrink: 0;
-		}
+		} 
+		*/
 
 		/* 播放按鈕 */
 		body.mobile-mode #mobile-controls {
@@ -1085,13 +1088,23 @@
 			transform: scale(1.4);
 		}
 
-		/* --- 手機版覆寫 --- */
+		/* --- 新增：手機模式下強制讓 Slider Zone 浮在最上層 --- */
+		body.mobile-mode #slider-zone {
+			position: fixed !important;
+			right: 0px;
+			top: 50%;
+			transform: translateY(-50%);
+			z-index: 3001 !important; /* 必須大於 blocker 的 2500 */
+			height: 95vh; /* 確保有足夠高度容納 Slider */
+			background: transparent; /* 避免遮擋背景 */
+			border: none;
+			pointer-events: auto; /* 確保可點擊 */
+		}
+
+		/* 確保手機版 Slider 本身樣式正確 */
 		body.mobile-mode #playback-slider {
-			/* 手機版同樣改為 90deg，且長度設為貫穿虛擬畫布 */
-			width: 750px; 
-			height: 12px;
-			/* 確保手機版也套用正確的旋轉 */
-			transform: rotate(90deg); 
+			width: 80vh !important; /* 改用 vh 單位確保適應螢幕高度 */
+			transform: rotate(90deg);
 		}
 
 		body.mobile-mode #playback-slider::-webkit-slider-thumb {
