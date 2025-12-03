@@ -4220,8 +4220,19 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 window.addEventListener('resize', handleOrientation);
                 window.addEventListener('orientationchange', handleOrientation);
                 
-                // 初次檢查方向
-                handleOrientation();
+                // --- [修正開始] ---
+                // 改用 setTimeout 延遲初次偵測
+                // 這是為了解決手機直接橫向載入時，因 DOM 渲染或 Scrollbar 造成尺寸計算誤差導致的位移
+                setTimeout(() => {
+                    handleOrientation();
+                    
+                    // 雙重保險：在第一次計算後，稍微延遲再強制校正一次位置
+                    // 確保瀏覽器介面（如網址列）穩定後的置中是正確的
+                    if (window.innerWidth > window.innerHeight) {
+                        setTimeout(autoScaleBoard, 500);
+                    }
+                }, 200);
+                // --- [修正結束] ---
 				
             })
             .catch(e => {
