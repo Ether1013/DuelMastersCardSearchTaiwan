@@ -1225,6 +1225,35 @@
 		body.mobile-mode #player2-area.active-turn .turn-bar {
 			box-shadow: 0 0 25px 5px rgba(233, 30, 99, 0.9);
 		}
+		/* --- [新增] 低調訪客計數器 --- */
+        #visitor-counter {
+            position: fixed;
+            z-index: 100; /* 層級適中，不擋重要元素 */
+            font-family: sans-serif;
+            font-size: 10px; /* 字體極小 */
+            pointer-events: none; /* 滑鼠穿透 */
+            opacity: 0.5; /* 半透明，很不明顯 */
+            
+            /* 預設先隱藏，等腳本載入成功後會自動透過 JS 顯示(由不蒜子控制)，
+               或者我們可以強制 block，但不蒜子會控制內部 span 的 display */
+            display: block !important; 
+        }
+
+        /* 桌機版：左下角，深灰色 */
+        body:not(.mobile-mode) #visitor-counter {
+            bottom: 5px;
+            left: 5px;
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 手機版：左下角，淺白色 (因為手機版背景較深) */
+        body.mobile-mode #visitor-counter {
+            bottom: 5px;
+            left: 5px;
+            color: rgba(255, 255, 255, 0.3);
+            /* 手機版稍微離開邊緣一點，避免被圓角切到 */
+            transform: translate(5px, -5px); 
+        }
     </style>
 </head>
 <body>
@@ -4410,5 +4439,11 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
 	
 </script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div id="visitor-counter" style="display:none">
+    <span id="busuanzi_container_site_uv">
+        Visitors: <span id="busuanzi_value_site_uv">--</span>
+    </span>
+</div>
 </body>
 </html>
