@@ -1103,7 +1103,7 @@
 		/* 讓它像 Timeline 一樣，乖乖待在 Workspace 裡面的右側 */
 		body.mobile-mode #slider-zone {
 			display: flex !important;
-			position: relative !important; /* 關鍵：改回 relative，參與 Flex 排版 */
+			position: relative !important; /* 關鍵：參與 Flex 排版 */
 			
 			/* 清除原本 fixed 的定位屬性 */
 			top: auto !important;
@@ -1111,37 +1111,47 @@
 			transform: none !important;
 			
 			/* 設定在虛擬畫布中的尺寸 */
-			width: 60px !important;  /* 給它一個固定的寬度 */
-			height: 100% !important; /* 撐滿畫布高度 */
+			width: 60px !important;  
+			height: 100% !important; 
 			
-			/* 確保層級與外觀 */
+			/* 確保層級與互動 */
 			z-index: 3000 !important;
-			background: rgba(44, 62, 80, 0.8); /*稍微深色背景凸顯 */
-			border-left: 1px solid #95a5a6;
-			flex-shrink: 0; /* 確保不會被擠壓 */
+			background: rgba(44, 62, 80, 0.6); /* 半透明深色背景，更有質感 */
+			border-left: 1px solid rgba(255,255,255,0.2);
+			flex-shrink: 0; 
+			
+			/* 【關鍵】因為父層 workspace 是 pointer-events: none，這裡必須開啟 auto 才能拖拉 */
+			pointer-events: auto !important;
 		}
 
 		/* 3. 調整滑桿 (Input Range) 的尺寸 */
 		/* 因為畫布高度是 800px，我們設定 700px 讓它夠長 */
 		body.mobile-mode #playback-slider {
-			width: 700px !important; 
-			height: 30px !important; /* 增加一點高度讓手指好按 */
+			width: 700px !important; /* 足夠長度 */
+			height: 40px !important; /* 加高觸控區 */
 			transform: rotate(90deg);
-			background: rgba(255, 255, 255, 0.3);
+			background: rgba(255, 255, 255, 0.2);
+			border-radius: 20px;
+			cursor: pointer;
 		}
 
 		/* 加大手機版滑塊按鈕 (Thumb) */
 		body.mobile-mode #playback-slider::-webkit-slider-thumb {
-			width: 35px !important;
-			height: 35px !important;
+			width: 36px !important;
+			height: 36px !important;
+			background: #f1c40f;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+			border: 3px solid #fff;
 		}
 
 		/* 修正提示文字的位置 (轉正) */
 		body.mobile-mode #slider-tooltip {
 			transform: rotate(0deg); 
-			top: 20px;
+			top: 30px;
 			right: auto;
-			font-size: 1.2rem; /* 字大一點 */
+			font-size: 1.5rem; /* 字體加大，方便手機閱讀 */
+			font-weight: 800;
+			text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 		}
 		
 		/* --- 手機版操作阻擋層 --- */
