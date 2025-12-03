@@ -931,19 +931,45 @@
 			display: none !important;
 		}
 
-		/* 1. 虛擬畫布設定 - 加大寬度以容納右側 Sidebar */
+		/* --- 手機版互動邏輯修正 (Mobile Interaction Fix) --- */
+
+		/* 1. 廢除原本的透明擋板 (因為它會擋死子元素) */
+		body.mobile-mode #mobile-blocker {
+			display: none !important;
+		}
+
+		/* 2. 父層 Workspace：預設「禁止」所有互動 */
+		/* 這樣就不用擔心誤觸卡片或戰場了 */
 		body.mobile-mode #workspace {
-			width: 1600px !important; /* 加大：1200 -> 1600 */
-			height: 800px !important;
+			pointer-events: none !important;
 			
-			position: absolute;
-			top: 0; left: 0;
-			transform-origin: 0 0; 
-			
+			/* 這裡保留您原本的縮放設定，不需要動 */
+		}
+		
+		/* 3. 子層 Slider Zone：例外「允許」互動 */
+		/* 因為它是 Workspace 的子元素，所以它會隨之縮放，但現在可以被摸到了 */
+		body.mobile-mode #slider-zone {
 			display: flex !important;
-			flex-direction: row;
-			background: #95a5a6;
-			box-shadow: 0 0 50px rgba(0,0,0,0.5);
+			position: relative !important;
+			width: 60px !important;
+			height: 100% !important;
+			top: auto !important;
+			right: auto !important;
+			transform: none !important;
+			z-index: 3000 !important;
+			
+			/* [關鍵] 恢復此區域的互動能力 */
+			pointer-events: auto !important;
+			
+			/* 視覺樣式 */
+			background: rgba(44, 62, 80, 0.6);
+			border-left: 1px solid rgba(255,255,255,0.2);
+			flex-shrink: 0;
+		}
+
+		/* 4. (保險起見) 確保 Timeline 真的隱藏且不佔位 */
+		body.mobile-mode #timeline-panel {
+			display: none !important;
 		}
 
 		/* 2. SVG 設為穿透，避免擋到任何東西 */
@@ -1094,36 +1120,6 @@
 
 		/* --- 手機版模式修正 (Mobile Mode Fixes) --- */
 
-		/* 1. 隱藏原本的時間軸 (Action Log) */
-		body.mobile-mode #timeline-panel {
-			display: none !important;
-		}
-
-		/* 2. 顯示並重設 Slider Zone 的排版 */
-		/* 讓它像 Timeline 一樣，乖乖待在 Workspace 裡面的右側 */
-		body.mobile-mode #slider-zone {
-			display: flex !important;
-			position: relative !important; /* 關鍵：參與 Flex 排版 */
-			
-			/* 清除原本 fixed 的定位屬性 */
-			top: auto !important;
-			right: auto !important;
-			transform: none !important;
-			
-			/* 設定在虛擬畫布中的尺寸 */
-			width: 60px !important;  
-			height: 100% !important; 
-			
-			/* 確保層級與互動 */
-			z-index: 3000 !important;
-			background: rgba(44, 62, 80, 0.6); /* 半透明深色背景，更有質感 */
-			border-left: 1px solid rgba(255,255,255,0.2);
-			flex-shrink: 0; 
-			
-			/* 【關鍵】因為父層 workspace 是 pointer-events: none，這裡必須開啟 auto 才能拖拉 */
-			pointer-events: auto !important;
-		}
-
 		/* 3. 調整滑桿 (Input Range) 的尺寸 */
 		/* 因為畫布高度是 800px，我們設定 700px 讓它夠長 */
 		body.mobile-mode #playback-slider {
@@ -1157,23 +1153,6 @@
 		/* --- 手機版操作阻擋層 --- */
 		#mobile-blocker {
 			display: none;
-		}
-
-		body.mobile-mode #mobile-blocker {
-			display: block;
-			position: fixed;
-			top: 0; 
-			left: 0;
-			width: 100vw;
-			height: 100vh;
-			background: transparent; /* 透明，看不到但擋得到 */
-			/* 層級設定關鍵：
-			   Workspace/Cards z-index 約 100~2000
-			   Blocker z-index = 2500 (蓋住卡片)
-			   Slider/Controls z-index = 3000 (蓋住 Blocker)
-			*/
-			z-index: 2500; 
-			touch-action: none; /* 禁止下層的觸控行為 */
 		}
 
 		/* 確保進度條與手機按鈕永遠在阻擋層之上 */
