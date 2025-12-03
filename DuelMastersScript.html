@@ -4222,13 +4222,18 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 
                 // 初次檢查方向
                 handleOrientation();
+				
+				// --- [新增] 延遲二次檢查 ---
+				// 剛載入時，瀏覽器的網址列/工具列可能還在伸縮，導致尺寸誤判。
+				// 延遲 500ms 再執行一次，通常能解決一開始橫向載入跑版的問題。
+				setTimeout(handleOrientation, 500);
             })
             .catch(e => {
                 alert("無法載入劇本: " + e.message);
             });
     }
 
-function handleOrientation() {
+	function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
         const playBtn = document.getElementById('mob-play-btn');
         
