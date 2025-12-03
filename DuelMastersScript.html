@@ -895,11 +895,18 @@
             100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
         }
 		
-		/* --- Mobile Mode Styles (Updated) --- */
+		/* --- Mobile Mode Styles (Final Fix) --- */
 		body.mobile-mode {
-			overflow: hidden; /* 禁止整個頁面捲動，改用內部縮放 */
+			overflow: hidden;
+			background-color: #2c3e50; /* 旁邊留黑邊或深色底 */
+			margin: 0;
+			padding: 0;
+			width: 100vw;
+			height: 100vh;
+			position: relative; /* 作為定位基準 */
 		}
 
+		/* 隱藏不需要的介面 */
 		body.mobile-mode #toolbar, 
 		body.mobile-mode #draft-bar, 
 		body.mobile-mode #point-bar, 
@@ -910,25 +917,36 @@
 			display: none !important;
 		}
 
+		/* 關鍵修改：虛擬畫布設定 */
 		body.mobile-mode #workspace {
-			width: 100vw;
-			height: 100vh;
-			display: flex;
-			flex-direction: row; /* 左邊能力區，右邊盤面 */
-			align-items: center; /* 垂直置中 */
-			justify-content: center; /* 水平置中 */
-			background: #333; /* 背景深色讓邊界清楚 */
-			overflow: hidden;
+			/* 1. 強制設定一個「理想的」桌面解析度 */
+			/* 寬度包含：能力區(100px) + 戰場區域 */
+			width: 1200px !important; 
+			height: 800px !important; /* 這個高度足以容納 P1 + P2 的所有區域 */
+			
+			/* 2. 絕對定位在螢幕正中間 */
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			
+			/* 3. 預設先置中 (縮放邏輯會再覆蓋 transform) */
+			transform: translate(-50%, -50%);
+			transform-origin: center center;
+			
+			/* 4. 排版設定 */
+			display: flex !important;
+			flex-direction: row;
+			background: #95a5a6;
+			box-shadow: 0 0 50px rgba(0,0,0,0.5); /* 讓畫布看起來比較立體 */
 		}
 
-		/* 顯示待處理區，但縮小尺寸 */
+		/* 恢復能力區的正常顯示 (因為我們現在是縮放整個畫布，不需要讓它變窄) */
 		body.mobile-mode #ability-stack-zone {
 			display: flex !important;
-			width: 60px; /* 變窄 */
-			border-right: 1px solid #555;
+			width: 100px !important; /* 維持電腦版寬度 */
 			flex-shrink: 0;
-			height: 100%; /* 高度跟隨視窗 */
-			transform-origin: center left; /* 縮放時靠左對齊 */
+			height: 100%;
+			border-right: 2px solid #7f8c8d;
 		}
 
 		body.mobile-mode #game-board-container {
@@ -937,52 +955,35 @@
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			background: #95a5a6;
-			transform-origin: center center; /* 盤面從中心縮放 */
+			overflow: hidden;
 		}
 
 		body.mobile-mode #main-board {
-			/* 這裡不需要特別樣式，交給 JS 縮放 */
+			width: 100%;
+			height: 100%;
 			box-shadow: none;
 		}
 
-		/* 手機版播放按鈕 (維持不變) */
+		/* 播放按鈕與轉向提示 (維持不變) */
 		#mobile-controls {
 			display: none;
-			position: fixed;
-			bottom: 15px;
-			right: 15px;
-			z-index: 2000;
+			position: fixed; bottom: 20px; right: 20px; z-index: 9999;
 		}
-		body.mobile-mode #mobile-controls { display: flex; gap: 10px; }
+		body.mobile-mode #mobile-controls { display: flex; }
 		.mobile-btn {
-			width: 50px; height: 50px; /* 按鈕稍微縮小以免擋畫面 */
-			border-radius: 50%;
-			background: rgba(255, 255, 255, 0.6);
-			border: 3px solid #3498db;
-			font-size: 20px;
-			display: flex; justify-content: center; align-items: center;
-			cursor: pointer; opacity: 0.8;
+			width: 60px; height: 60px;
+			border-radius: 50%; background: rgba(255,255,255,0.8);
+			border: 4px solid #3498db; font-size: 24px;
+			display: flex; justify-content: center; align-items: center; cursor: pointer;
 		}
 
-		/* 轉向提示遮罩 (維持不變) */
 		#orientation-overlay {
-			display: none;
-			position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-			background: #2c3e50; color: white;
-			z-index: 9999;
+			display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+			background: #2c3e50; color: white; z-index: 10000;
 			flex-direction: column; justify-content: center; align-items: center; text-align: center;
-			padding: 20px;
 		}
-		#orientation-overlay .icon {
-			font-size: 50px; margin-bottom: 20px;
-			animation: rotate-phone 2s infinite;
-		}
-		@keyframes rotate-phone {
-			0% { transform: rotate(0deg); }
-			50% { transform: rotate(-90deg); }
-			100% { transform: rotate(0deg); }
-		}
+		#orientation-overlay .icon { font-size: 50px; margin-bottom: 20px; animation: rotate 2s infinite; }
+		@keyframes rotate { 0% {transform: rotate(0deg);} 50% {transform: rotate(-90deg);} 100% {transform: rotate(0deg);} }
 
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
@@ -3405,59 +3406,34 @@ function handleOrientation() {
 
     function autoScaleBoard() {
         const workspace = document.getElementById('workspace');
-        const boardContainer = document.getElementById('game-board-container');
-        const abilityZone = document.getElementById('ability-stack-zone');
-        const mainBoard = document.getElementById('main-board');
+        if (!workspace) return;
 
-        if (!workspace || !mainBoard) return;
+        // 1. 定義我們在 CSS 中設定的「虛擬畫布」尺寸
+        const VIRTUAL_WIDTH = 1200;
+        const VIRTUAL_HEIGHT = 800;
 
-        // 1. 重置樣式以便重新計算
-        boardContainer.style.transform = '';
-        abilityZone.style.transform = '';
-        mainBoard.style.width = '100%';
-        mainBoard.style.height = '100%';
+        // 2. 取得當前手機螢幕的實際可用尺寸
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
 
-        // 2. 定義標準盤面尺寸 (這是程式原本設計時在桌機上的理想尺寸)
-        // 高度大約是：P2手牌+P2魔力+P2護盾+P2戰鬥 + P1戰鬥+P1護盾+P1魔力+P1手牌
-        // 70px * 8層 + 間距 ≈ 600px - 650px
-        const STANDARD_HEIGHT = 650; 
-        
-        // 3. 取得當前螢幕可用高度
-        const screenHeight = window.innerHeight;
-        
-        // 4. 計算縮放比例 (保留 20px 的邊距緩衝)
-        let scaleRatio = (screenHeight - 20) / STANDARD_HEIGHT;
-        
-        // 限制最大縮放不超過 1 (避免在平板上放太大)
-        if (scaleRatio > 1) scaleRatio = 1;
-        
-        // 5. 應用縮放
-        // 我們直接縮放整個 Container，這樣內部的絕對定位(偏移量)才會跟著一起縮小
-        // 為了讓 Ability Zone 和 Board 一起縮放，我們分別設定
-        
-        // 縮放盤面
-        boardContainer.style.transform = `scale(${scaleRatio})`;
-        
-        // 縮放能力區 (因為它在左邊，我們希望它也跟著變小，不然字會太大)
-        // 注意：能力區原本寬度窄，可以稍微縮少一點就好，或者跟隨盤面比例
-        abilityZone.style.transform = `scale(${scaleRatio})`;
-        
-        // 修正 Flex 排版問題：因為 transform scale 不會改變佔用的空間大小(Flow size)
-        // 所以我們要手動調整外層容器的寬度/邊距，讓它們視覺上靠攏
-        // 這裡簡單做法是讓 Flex 容器允許內容重疊或緊縮，但因為我們已經設定 flex-direction: row
-        // 只要 scale 是以 center 為中心，視覺上可能會分開。
-        
-        // 優化：強制設定 Ability Zone 的 transform-origin 為 "center left" (在 CSS 中已設)
-        // 強制設定 Board 的 transform-origin 為 "center center" (在 CSS 中已設)
-        
-        // 額外調整：如果螢幕真的很寬 (如 iPhone Max)，可以讓比例稍微大一點點，依據寬度限制
-        // 但通常高度是瓶頸，所以上述 height 邏輯是主要依據。
+        // 3. 計算縮放比例：取 寬度比 與 高度比 的最小值
+        // 這樣可以確保畫布完全顯示 (Contain 模式)
+        const scaleW = screenW / VIRTUAL_WIDTH;
+        const scaleH = screenH / VIRTUAL_HEIGHT;
+        let scale = Math.min(scaleW, scaleH);
+
+        // 稍微留一點點邊距 (98%) 避免緊貼邊緣
+        scale = scale * 0.98;
+
+        // 4. 應用縮放
+        // 注意：因為我們用了 absolute + top:50% + left:50%，
+        // 所以 transform 必須保留 translate(-50%, -50%) 才能維持置中
+        workspace.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 
-    // 記得也要監聽 resize (除了轉向外，視窗大小改變也要重算)
+    // 監聽轉向與視窗變化
     window.addEventListener('resize', () => {
         if(document.body.classList.contains('mobile-mode')) {
-             // 用 requestAnimationFrame 避免瘋狂觸發
              requestAnimationFrame(() => {
                  const isLandscape = window.innerWidth > window.innerHeight;
                  if(isLandscape) autoScaleBoard();
