@@ -912,86 +912,66 @@
 			background: #4e6479;
 		}
 		
-		/* --- Mobile Mode Styles (Final Fix) --- */
+		/* --- Mobile Mode Styles (Fixed Layout & Click) --- */
 		body.mobile-mode {
 			overflow: hidden;
-			background-color: #2c3e50; /* 旁邊留黑邊或深色底 */
-			margin: 0;
-			padding: 0;
-			width: 100vw;
-			height: 100vh;
-			position: relative; /* 作為定位基準 */
+			background-color: #2c3e50;
+			margin: 0; padding: 0;
+			width: 100vw; height: 100vh;
+			position: relative;
 		}
 
-		/* 隱藏不需要的介面 */
+		/* 隱藏不需要的介面 (如果你希望顯示 Timeline，請把 #timeline-panel 從這裡移除) */
 		body.mobile-mode #toolbar, 
 		body.mobile-mode #draft-bar, 
 		body.mobile-mode #point-bar, 
 		body.mobile-mode #card-action-panel, 
-		body.mobile-mode #timeline-panel,
 		body.mobile-mode #setup-modal,
 		body.mobile-mode .turn-bar {
 			display: none !important;
 		}
 
-		/* 關鍵修改：虛擬畫布設定 */
+		/* 虛擬畫布設定 - 改為左上角對齊 */
 		body.mobile-mode #workspace {
-			/* 1. 強制設定一個「理想的」桌面解析度 */
-			/* 寬度包含：能力區(100px) + 戰場區域 */
 			width: 1200px !important; 
-			height: 800px !important; /* 這個高度足以容納 P1 + P2 的所有區域 */
+			height: 800px !important;
 			
-			/* 2. 絕對定位在螢幕正中間 */
 			position: absolute;
-			top: 50%;
-			left: 50%;
+			top: 0;  /* 改為 0 */
+			left: 0; /* 改為 0 */
 			
-			/* 3. 預設先置中 (縮放邏輯會再覆蓋 transform) */
-			transform: translate(-50%, -50%);
-			transform-origin: center center;
+			/* 移除 translate，改用 JS 控制 left/top */
+			transform-origin: 0 0; 
 			
-			/* 4. 排版設定 */
 			display: flex !important;
 			flex-direction: row;
 			background: #95a5a6;
-			box-shadow: 0 0 50px rgba(0,0,0,0.5); /* 讓畫布看起來比較立體 */
+			box-shadow: 0 0 50px rgba(0,0,0,0.5);
 		}
 
-		/* 恢復能力區的正常顯示 (因為我們現在是縮放整個畫布，不需要讓它變窄) */
+		/* 確保 SVG 不會擋住點擊，且層級正確 */
+		body.mobile-mode #svg-layer {
+			pointer-events: none !important; /* 強制穿透 */
+			z-index: 500; /* 降低一點，讓 UI 可以蓋過它 */
+		}
+
+		/* 確保時間軸(進度條)或其他 UI 能被點擊 */
+		body.mobile-mode #timeline-panel,
 		body.mobile-mode #ability-stack-zone {
-			display: flex !important;
-			width: 100px !important; /* 維持電腦版寬度 */
+			position: relative;
+			z-index: 1000 !important; /* 確保浮在 SVG (500) 之上 */
+		}
+		
+		body.mobile-mode #timeline-panel {
+			display: flex !important; /* 或 block */
+			width: 200px; /* 視需要調整寬度，太寬會擠壓盤面 */
 			flex-shrink: 0;
-			height: 100%;
-			border-right: 2px solid #7f8c8d;
 		}
 
-		body.mobile-mode #game-board-container {
-			flex: 1;
-			height: 100%;
+		/* 播放按鈕 */
+		body.mobile-mode #mobile-controls {
 			display: flex;
-			justify-content: center;
-			align-items: center;
-			overflow: hidden;
-		}
-
-		body.mobile-mode #main-board {
-			width: 100%;
-			height: 100%;
-			box-shadow: none;
-		}
-
-		/* 播放按鈕與轉向提示 (維持不變) */
-		#mobile-controls {
-			display: none;
-			position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-		}
-		body.mobile-mode #mobile-controls { display: flex; }
-		.mobile-btn {
-			width: 60px; height: 60px;
-			border-radius: 50%; background: rgba(255,255,255,0.8);
-			border: 4px solid #3498db; font-size: 24px;
-			display: flex; justify-content: center; align-items: center; cursor: pointer;
+			z-index: 2000; /* 最高層級 */
 		}
 
 		#orientation-overlay {
@@ -3819,27 +3799,40 @@ function handleOrientation() {
         const workspace = document.getElementById('workspace');
         if (!workspace) return;
 
-        // 1. 定義我們在 CSS 中設定的「虛擬畫布」尺寸
+        // 1. 設定虛擬畫布尺寸
         const VIRTUAL_WIDTH = 1200;
         const VIRTUAL_HEIGHT = 800;
 
-        // 2. 取得當前手機螢幕的實際可用尺寸
+        // 2. 取得螢幕尺寸
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
 
-        // 3. 計算縮放比例：取 寬度比 與 高度比 的最小值
-        // 這樣可以確保畫布完全顯示 (Contain 模式)
+        // 3. 計算縮放比例 (維持長寬比，Contain 模式)
         const scaleW = screenW / VIRTUAL_WIDTH;
         const scaleH = screenH / VIRTUAL_HEIGHT;
         let scale = Math.min(scaleW, scaleH);
-
-        // 稍微留一點點邊距 (98%) 避免緊貼邊緣
+        
+        // 稍微縮小一點點 (98%) 留邊，視覺比較舒適
         scale = scale * 0.98;
 
-        // 4. 應用縮放
-        // 注意：因為我們用了 absolute + top:50% + left:50%，
-        // 所以 transform 必須保留 translate(-50%, -50%) 才能維持置中
-        workspace.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        // 4. 計算置中所需的偏移量 (Letterboxing)
+        // (螢幕寬 - (畫布寬 * 縮放)) / 2 = 左邊留白的寬度
+        const offsetX = (screenW - VIRTUAL_WIDTH * scale) / 2;
+        const offsetY = (screenH - VIRTUAL_HEIGHT * scale) / 2;
+
+        // 5. 應用樣式
+        // 直接設定 transform 和 left/top，不使用 translate
+        workspace.style.transform = `scale(${scale})`;
+        workspace.style.left = `${offsetX}px`;
+        workspace.style.top = `${offsetY}px`;
+        
+        // 強制重繪 SVG (有時候 iOS 縮放後 SVG 線條會錯位，觸發重繪可修正)
+        const svg = document.getElementById('svg-layer');
+        if(svg) {
+            svg.style.display = 'none';
+            svg.offsetHeight; // trigger reflow
+            svg.style.display = 'block';
+        }
     }
 
     // 監聽轉向與視窗變化
