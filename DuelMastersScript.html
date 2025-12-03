@@ -895,74 +895,87 @@
             100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
         }
 		
-		/* --- Mobile Mode Styles --- */
+		/* --- Mobile Mode Styles (Updated) --- */
+		body.mobile-mode {
+			overflow: hidden; /* 禁止整個頁面捲動，改用內部縮放 */
+		}
+
 		body.mobile-mode #toolbar, 
 		body.mobile-mode #draft-bar, 
 		body.mobile-mode #point-bar, 
 		body.mobile-mode #card-action-panel, 
 		body.mobile-mode #timeline-panel,
 		body.mobile-mode #setup-modal,
-		body.mobile-mode .turn-bar /* 手機版可能不需要側邊條，或是保留看個人喜好，這邊先保留 */ {
+		body.mobile-mode .turn-bar {
 			display: none !important;
 		}
 
 		body.mobile-mode #workspace {
 			width: 100vw;
 			height: 100vh;
+			display: flex;
+			flex-direction: row; /* 左邊能力區，右邊盤面 */
+			align-items: center; /* 垂直置中 */
+			justify-content: center; /* 水平置中 */
+			background: #333; /* 背景深色讓邊界清楚 */
+			overflow: hidden;
 		}
 
-		/* 讓 Ability Zone 在手機上不要佔位，或者縮小 */
+		/* 顯示待處理區，但縮小尺寸 */
 		body.mobile-mode #ability-stack-zone {
-			display: none; /* 手機單純觀戰通常不需要看到 Stack 詳細過程，若需要可改為縮小 */
+			display: flex !important;
+			width: 60px; /* 變窄 */
+			border-right: 1px solid #555;
+			flex-shrink: 0;
+			height: 100%; /* 高度跟隨視窗 */
+			transform-origin: center left; /* 縮放時靠左對齊 */
 		}
 
-		/* 手機版播放按鈕 */
+		body.mobile-mode #game-board-container {
+			flex: 1;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background: #95a5a6;
+			transform-origin: center center; /* 盤面從中心縮放 */
+		}
+
+		body.mobile-mode #main-board {
+			/* 這裡不需要特別樣式，交給 JS 縮放 */
+			box-shadow: none;
+		}
+
+		/* 手機版播放按鈕 (維持不變) */
 		#mobile-controls {
 			display: none;
 			position: fixed;
-			bottom: 20px;
-			right: 20px;
+			bottom: 15px;
+			right: 15px;
 			z-index: 2000;
 		}
-
-		body.mobile-mode #mobile-controls {
-			display: flex;
-			gap: 15px;
-		}
-
+		body.mobile-mode #mobile-controls { display: flex; gap: 10px; }
 		.mobile-btn {
-			width: 60px;
-			height: 60px;
+			width: 50px; height: 50px; /* 按鈕稍微縮小以免擋畫面 */
 			border-radius: 50%;
-			background: rgba(255, 255, 255, 0.8);
-			border: 4px solid #3498db;
-			font-size: 24px;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-			cursor: pointer;
-			transition: transform 0.2s;
+			background: rgba(255, 255, 255, 0.6);
+			border: 3px solid #3498db;
+			font-size: 20px;
+			display: flex; justify-content: center; align-items: center;
+			cursor: pointer; opacity: 0.8;
 		}
-		.mobile-btn:active { transform: scale(0.9); }
 
-		/* 轉向提示遮罩 */
+		/* 轉向提示遮罩 (維持不變) */
 		#orientation-overlay {
 			display: none;
-			position: fixed;
-			top: 0; left: 0; width: 100%; height: 100%;
-			background: #2c3e50;
-			color: white;
+			position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+			background: #2c3e50; color: white;
 			z-index: 9999;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			text-align: center;
+			flex-direction: column; justify-content: center; align-items: center; text-align: center;
 			padding: 20px;
 		}
 		#orientation-overlay .icon {
-			font-size: 50px;
-			margin-bottom: 20px;
+			font-size: 50px; margin-bottom: 20px;
 			animation: rotate-phone 2s infinite;
 		}
 		@keyframes rotate-phone {
@@ -3368,37 +3381,89 @@ function renderUI() {
             });
     }
 
-    function handleOrientation() {
+function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
         const playBtn = document.getElementById('mob-play-btn');
         
-        // 判斷是否為橫向 (Landscape)
-        // 寬度 > 高度 視為橫向
+        // 判斷是否為橫向
         const isLandscape = window.innerWidth > window.innerHeight;
 
         if (isLandscape) {
-            // 橫向：隱藏遮罩，自動播放
             overlay.style.display = 'none';
+            if (!playInterval) togglePlay();
             
-            // 如果目前沒有在播放，則開始播放
-            if (!playInterval) {
-                togglePlay();
-            }
+            // --- 關鍵修改：執行自動縮放 ---
+            setTimeout(autoScaleBoard, 100); // 延遲一下等待瀏覽器轉向完成
+            // ---------------------------
         } else {
-            // 直向：顯示遮罩，暫停播放
             overlay.style.display = 'flex';
-            
-            // 如果目前正在播放，則暫停
-            if (playInterval) {
-                togglePlay();
-            }
+            if (playInterval) togglePlay();
         }
         
-        // 更新按鈕圖示狀態 (雖然直向時看不到按鈕，但保持狀態一致是好的)
-        if (playBtn) {
-            playBtn.innerText = playInterval ? "⏸" : "▶";
-        }
+        if (playBtn) playBtn.innerText = playInterval ? "⏸" : "▶";
     }
+
+    function autoScaleBoard() {
+        const workspace = document.getElementById('workspace');
+        const boardContainer = document.getElementById('game-board-container');
+        const abilityZone = document.getElementById('ability-stack-zone');
+        const mainBoard = document.getElementById('main-board');
+
+        if (!workspace || !mainBoard) return;
+
+        // 1. 重置樣式以便重新計算
+        boardContainer.style.transform = '';
+        abilityZone.style.transform = '';
+        mainBoard.style.width = '100%';
+        mainBoard.style.height = '100%';
+
+        // 2. 定義標準盤面尺寸 (這是程式原本設計時在桌機上的理想尺寸)
+        // 高度大約是：P2手牌+P2魔力+P2護盾+P2戰鬥 + P1戰鬥+P1護盾+P1魔力+P1手牌
+        // 70px * 8層 + 間距 ≈ 600px - 650px
+        const STANDARD_HEIGHT = 650; 
+        
+        // 3. 取得當前螢幕可用高度
+        const screenHeight = window.innerHeight;
+        
+        // 4. 計算縮放比例 (保留 20px 的邊距緩衝)
+        let scaleRatio = (screenHeight - 20) / STANDARD_HEIGHT;
+        
+        // 限制最大縮放不超過 1 (避免在平板上放太大)
+        if (scaleRatio > 1) scaleRatio = 1;
+        
+        // 5. 應用縮放
+        // 我們直接縮放整個 Container，這樣內部的絕對定位(偏移量)才會跟著一起縮小
+        // 為了讓 Ability Zone 和 Board 一起縮放，我們分別設定
+        
+        // 縮放盤面
+        boardContainer.style.transform = `scale(${scaleRatio})`;
+        
+        // 縮放能力區 (因為它在左邊，我們希望它也跟著變小，不然字會太大)
+        // 注意：能力區原本寬度窄，可以稍微縮少一點就好，或者跟隨盤面比例
+        abilityZone.style.transform = `scale(${scaleRatio})`;
+        
+        // 修正 Flex 排版問題：因為 transform scale 不會改變佔用的空間大小(Flow size)
+        // 所以我們要手動調整外層容器的寬度/邊距，讓它們視覺上靠攏
+        // 這裡簡單做法是讓 Flex 容器允許內容重疊或緊縮，但因為我們已經設定 flex-direction: row
+        // 只要 scale 是以 center 為中心，視覺上可能會分開。
+        
+        // 優化：強制設定 Ability Zone 的 transform-origin 為 "center left" (在 CSS 中已設)
+        // 強制設定 Board 的 transform-origin 為 "center center" (在 CSS 中已設)
+        
+        // 額外調整：如果螢幕真的很寬 (如 iPhone Max)，可以讓比例稍微大一點點，依據寬度限制
+        // 但通常高度是瓶頸，所以上述 height 邏輯是主要依據。
+    }
+
+    // 記得也要監聽 resize (除了轉向外，視窗大小改變也要重算)
+    window.addEventListener('resize', () => {
+        if(document.body.classList.contains('mobile-mode')) {
+             // 用 requestAnimationFrame 避免瘋狂觸發
+             requestAnimationFrame(() => {
+                 const isLandscape = window.innerWidth > window.innerHeight;
+                 if(isLandscape) autoScaleBoard();
+             });
+        }
+    });
 
     // 改寫 togglePlay 以同步更新手機版按鈕文字
     const originalTogglePlay = togglePlay;
