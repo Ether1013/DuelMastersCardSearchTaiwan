@@ -1003,6 +1003,148 @@
 		@keyframes rotate { 0% {transform: rotate(0deg);} 50% {transform: rotate(-90deg);} 100% {transform: rotate(0deg);} }
 
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+		
+		/* --- 垂直進度條樣式 (修正版) --- */
+		#playback-slider-container {
+			position: fixed;
+			/* [修改點 2] 桌機版位置調整 */
+			/* Timeline 寬度是 320px，我們設定 325px 讓它剛好在列表左側邊緣 */
+			right: 0px; 
+			
+			top: 50%;
+			transform: translateY(-50%);
+			
+			/* [修改點 1] 長度調整：容器高度設為 95% 視窗高度 */
+			height: 95vh; 
+			
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			z-index: 3001; /* 確保在阻擋層之上 */
+			gap: 10px;
+			pointer-events: none; /* 容器本身不擋滑鼠，讓內部元件擋就好 */
+		}
+
+		/* 讓內部元件可以被點擊 */
+		#playback-slider-container > * {
+			pointer-events: auto;
+		}
+
+		/* --- 新版進度條區域樣式 (Slider Zone) --- */
+		#slider-zone {
+			/* 桌機版佈局設定 */
+			width: 30px; /* 固定寬度，形成一個窄條 */
+			background: #2c3e50; /* 深色背景，區隔展示區與列表 */
+			border-left: 1px solid #34495e;
+			border-right: 1px solid #bdc3c7;
+			
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			
+			position: relative;
+			z-index: 20; /* 確保在普通層級之上 */
+			flex-shrink: 0; /* 禁止被壓縮 */
+		}
+
+		#slider-tooltip {
+			position: absolute;
+			/* 讓提示文字轉正，並顯示在滑桿上方或旁邊 */
+			top: 20px;
+			background: rgba(241, 196, 15, 0.9);
+			color: #000;
+			padding: 2px 6px;
+			border-radius: 4px;
+			font-size: 0.7rem;
+			font-weight: bold;
+			pointer-events: none;
+			z-index: 25;
+			white-space: nowrap;
+		}
+
+		#playback-slider {
+			-webkit-appearance: none;
+			appearance: none;
+			
+			/* 長度設定：
+			   因為旋轉了 90度，這裡的 width 控制的是螢幕上的「垂直高度」。
+			*/
+			width: 90vh; 
+			
+			height: 6px; /* 軌道寬度 */
+			background: rgba(255, 255, 255, 0.2);
+			border-radius: 3px;
+			outline: none;
+			
+			/* [關鍵修改] 
+			   改成 90deg (順時針旋轉)。
+			   原本的 range 是「左小右大」。
+			   轉 90 度後變成了「上小下大」，符合你要的 Top=0%, Bottom=100%。
+			*/
+			transform: rotate(90deg); 
+			
+			cursor: pointer;
+		}
+
+		#playback-slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			background: #f1c40f;
+			cursor: pointer;
+			border: 2px solid #fff;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+			transition: transform 0.1s;
+		}
+
+		#playback-slider::-webkit-slider-thumb:hover {
+			transform: scale(1.4);
+		}
+
+		/* --- 手機版覆寫 --- */
+		body.mobile-mode #playback-slider {
+			/* 手機版同樣改為 90deg，且長度設為貫穿虛擬畫布 */
+			width: 750px; 
+			height: 12px;
+			/* 確保手機版也套用正確的旋轉 */
+			transform: rotate(90deg); 
+		}
+
+		body.mobile-mode #playback-slider::-webkit-slider-thumb {
+			width: 25px;
+			height: 25px;
+		}
+		
+		/* --- 手機版操作阻擋層 --- */
+		#mobile-blocker {
+			display: none;
+		}
+
+		body.mobile-mode #mobile-blocker {
+			display: block;
+			position: fixed;
+			top: 0; 
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background: transparent; /* 透明，看不到但擋得到 */
+			/* 層級設定關鍵：
+			   Workspace/Cards z-index 約 100~2000
+			   Blocker z-index = 2500 (蓋住卡片)
+			   Slider/Controls z-index = 3000 (蓋住 Blocker)
+			*/
+			z-index: 2500; 
+			touch-action: none; /* 禁止下層的觸控行為 */
+		}
+
+		/* 確保進度條與手機按鈕永遠在阻擋層之上 */
+		#playback-slider-container, #mobile-controls {
+			z-index: 3001 !important;
+		}
     </style>
 </head>
 <body>
@@ -1109,6 +1251,11 @@
         </div>
     </div>
 
+	<div id="slider-zone">
+        <div id="slider-tooltip">0/0</div>
+        <input type="range" id="playback-slider" min="0" max="0" value="0" step="1" oninput="handleSliderChange(this.value)">
+    </div>
+	
     <div id="timeline-panel">
         <div id="timeline-header">
             <span style="flex:1;">Action Log</span>
@@ -3095,6 +3242,12 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 }
             }
         });
+		
+		updateSliderUI();
+		// [新增] 同步捲動 Actions 列表 (僅在非手機模式或有列表時執行)
+        if (!document.body.classList.contains('mobile-mode')) {
+             scrollToActiveStep();
+        }
     }
 
     function createCardElement(card) {
@@ -3761,6 +3914,56 @@ function handleOrientation() {
         }
     };
 	
+	// --- 進度條控制函式 ---
+
+    function handleSliderChange(val) {
+        const step = parseInt(val);
+        // 如果正在播放，先暫停以免衝突，或者保持播放但跳轉
+        // 這裡選擇直接跳轉並更新畫面
+        currentIndex = step;
+        renderUI();
+        
+        // 只有在非手機模式才存檔，避免覆蓋
+        if(!document.body.classList.contains('mobile-mode')) {
+            saveToStorage();
+        }
+    }
+
+    function updateSliderUI() {
+        const slider = document.getElementById('playback-slider');
+        const tooltip = document.getElementById('slider-tooltip');
+        
+        if (slider && history.length > 0) {
+            // 設定最大值為歷史紀錄長度
+            slider.max = history.length - 1;
+            
+            // 設定當前值
+            slider.value = currentIndex;
+            
+            // 更新文字提示 (例如: 5/120)
+            tooltip.innerText = `${currentIndex}/${history.length - 1}`;
+            
+            // 視覺優化：根據進度改變軌道背景顏色 (已讀部分亮，未讀部分暗)
+            const percent = (currentIndex / (history.length - 1)) * 100;
+            slider.style.background = `linear-gradient(to right, #3498db ${percent}%, rgba(255,255,255,0.3) ${percent}%)`;
+        }
+    }
+	
+	function scrollToActiveStep() {
+        // 1. 找到目前被標記為 active 的步驟項目
+        const activeItem = document.querySelector('.action-item.active');
+        const listContainer = document.getElementById('action-list');
+        
+        if (activeItem && listContainer) {
+            // 2. 計算捲動位置，讓該項目出現在列表視窗的中間
+            // 使用 scrollIntoView 是最簡單的 API
+            // block: 'center' 會盡量將該元素置中
+            // behavior: 'auto' 瞬間跳轉，避免拖曳進度條時畫面晃動太厲害
+            activeItem.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
+    }
+	
 </script>
+<div id="mobile-blocker"></div>
 </body>
 </html>
