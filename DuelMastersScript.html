@@ -4220,19 +4220,14 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 window.addEventListener('resize', handleOrientation);
                 window.addEventListener('orientationchange', handleOrientation);
                 
-                // --- [修正開始] ---
-                // 改用 setTimeout 延遲初次偵測
-                // 這是為了解決手機直接橫向載入時，因 DOM 渲染或 Scrollbar 造成尺寸計算誤差導致的位移
-                setTimeout(() => {
-                    handleOrientation();
-                    
-                    // 雙重保險：在第一次計算後，稍微延遲再強制校正一次位置
-                    // 確保瀏覽器介面（如網址列）穩定後的置中是正確的
-                    if (window.innerWidth > window.innerHeight) {
-                        setTimeout(autoScaleBoard, 500);
-                    }
-                }, 200);
-                // --- [修正結束] ---
+				// [新增] 監聽 visualViewport 的變化 (當鍵盤彈出或工具列縮放時觸發)
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', autoScaleBoard);
+                    window.visualViewport.addEventListener('scroll', autoScaleBoard);
+                }
+				
+                // 初次檢查方向
+                handleOrientation();
 				
             })
             .catch(e => {
@@ -4251,9 +4246,11 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             overlay.style.display = 'none';
             if (!playInterval) togglePlay();
             
-            // --- 關鍵修改：執行自動縮放 ---
-            setTimeout(autoScaleBoard, 100); // 延遲一下等待瀏覽器轉向完成
-            // ---------------------------
+            // [關鍵修正] 連續觸發多次，確保抓到瀏覽器 UI 穩定後的高度
+            autoScaleBoard();
+            setTimeout(autoScaleBoard, 100);
+            setTimeout(autoScaleBoard, 500); 
+            setTimeout(autoScaleBoard, 1000);
         } else {
             overlay.style.display = 'flex';
             if (playInterval) togglePlay();
@@ -4266,35 +4263,50 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         const workspace = document.getElementById('workspace');
         if (!workspace) return;
 
-        // 1. 設定虛擬畫布尺寸 (配合 CSS 修改為 1600)
+        // 1. 設定虛擬畫布尺寸
         const VIRTUAL_WIDTH = 1600; 
         const VIRTUAL_HEIGHT = 800;
 
-        // 2. 取得螢幕尺寸
-        const screenW = window.innerWidth;
-        const screenH = window.innerHeight;
+        // 2. 取得螢幕尺寸 (改用 visualViewport 以對應工具列遮擋問題)
+        let screenW = window.innerWidth;
+        let screenH = window.innerHeight;
+        let offsetTopCorrection = 0;
+        let offsetLeftCorrection = 0;
+
+        // [關鍵修正] 使用 visualViewport API 取得真實可見區域
+        if (window.visualViewport) {
+            screenW = window.visualViewport.width;
+            screenH = window.visualViewport.height;
+            // 取得視口相對於 layout viewport 的偏移 (這就是被上方工具列佔據的高度)
+            offsetTopCorrection = window.visualViewport.offsetTop; 
+            offsetLeftCorrection = window.visualViewport.offsetLeft;
+        }
 
         // 3. 計算縮放比例
         const scaleW = screenW / VIRTUAL_WIDTH;
         const scaleH = screenH / VIRTUAL_HEIGHT;
         let scale = Math.min(scaleW, scaleH);
         
-        scale = scale * 0.98; // 留一點邊距
+        // 稍微縮小一點 (0.98 -> 0.96) 留更多緩衝，避免邊緣被圓角螢幕切到
+        scale = scale * 0.96; 
 
         // 4. 計算置中偏移
-        const offsetX = (screenW - VIRTUAL_WIDTH * scale) / 2;
-        const offsetY = (screenH - VIRTUAL_HEIGHT * scale) / 2;
+        // X 軸: (螢幕寬 - 縮放後寬) / 2 + 瀏覽器左側偏移
+        const offsetX = ((screenW - VIRTUAL_WIDTH * scale) / 2) + offsetLeftCorrection;
+        
+        // Y 軸: (螢幕高 - 縮放後高) / 2 + 瀏覽器上方偏移 (這是解決一開始被擋住的關鍵)
+        const offsetY = ((screenH - VIRTUAL_HEIGHT * scale) / 2) + offsetTopCorrection;
 
         // 5. 應用樣式
         workspace.style.transform = `scale(${scale})`;
         workspace.style.left = `${offsetX}px`;
         workspace.style.top = `${offsetY}px`;
         
-        // 重繪 SVG
+        // 重繪 SVG (確保箭頭位置正確)
         const svg = document.getElementById('svg-layer');
         if(svg) {
             svg.style.display = 'none';
-            svg.offsetHeight; 
+            svg.offsetHeight; // force reflow
             svg.style.display = 'block';
         }
     }
