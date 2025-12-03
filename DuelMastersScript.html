@@ -4223,10 +4223,12 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 // 初次檢查方向
                 handleOrientation();
 				
-				// --- [新增] 延遲二次檢查 ---
-				// 剛載入時，瀏覽器的網址列/工具列可能還在伸縮，導致尺寸誤判。
-				// 延遲 500ms 再執行一次，通常能解決一開始橫向載入跑版的問題。
-				setTimeout(handleOrientation, 500);
+				// 2. --- [修改] 暴力多重檢查 ---
+				// 分別在 100ms, 500ms, 1秒, 2秒 各執行一次校正
+				// 這樣可以涵蓋大部分手機瀏覽器介面伸縮的時間差，確保最後畫面一定會置中
+				[100, 500, 1000, 2000].forEach(delay => {
+					setTimeout(handleOrientation, delay);
+				});
             })
             .catch(e => {
                 alert("無法載入劇本: " + e.message);
