@@ -4207,7 +4207,7 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         // 1. 設定樣式為手機模式
         document.body.classList.add('mobile-mode');
         
-        // 2. 載入資料
+        // 2. 載入資料 (強制覆蓋，不檢查 LocalStorage)
         fetch(scriptUrl)
             .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
             .then(data => {
@@ -4216,15 +4216,9 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 // 強制載入並重置到開頭
                 processGameData(data, true);
                 
-                // 3. 啟動監聽
-                window.addEventListener('resize', autoScaleBoard); // 一般視窗變化
-                window.addEventListener('orientationchange', handleOrientation); // 轉向
-                
-                // [新增] 針對 iOS 工具列伸縮的監聽
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', autoScaleBoard);
-                    window.visualViewport.addEventListener('scroll', autoScaleBoard);
-                }
+                // 3. 啟動方向偵測監聽
+                window.addEventListener('resize', handleOrientation);
+                window.addEventListener('orientationchange', handleOrientation);
                 
                 // 初次檢查方向
                 handleOrientation();
@@ -4246,11 +4240,9 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             overlay.style.display = 'none';
             if (!playInterval) togglePlay();
             
-            // [修改] 轉向後，延遲多次觸發縮放，確保抓到瀏覽器 UI 穩定後的數值
-            autoScaleBoard();
-            setTimeout(autoScaleBoard, 100);
-            setTimeout(autoScaleBoard, 500); 
-            setTimeout(autoScaleBoard, 800);
+            // --- 關鍵修改：執行自動縮放 ---
+            setTimeout(autoScaleBoard, 100); // 延遲一下等待瀏覽器轉向完成
+            // ---------------------------
         } else {
             overlay.style.display = 'flex';
             if (playInterval) togglePlay();
@@ -4260,58 +4252,38 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
 
     function autoScaleBoard() {
-        // [防呆] 如果不是手機模式，直接結束，保護桌機版面不被破壞
-        if (!document.body.classList.contains('mobile-mode')) return;
-
         const workspace = document.getElementById('workspace');
         if (!workspace) return;
 
-        // 重置捲動位置，避免干擾計算
-        window.scrollTo(0, 0);
-
-        // 虛擬畫布的原始設計尺寸
+        // 1. 設定虛擬畫布尺寸 (配合 CSS 修改為 1600)
         const VIRTUAL_WIDTH = 1600; 
         const VIRTUAL_HEIGHT = 800;
 
-        // 1. 取得真正「可視」的區域尺寸與偏移量
-        // visualViewport API 是解決此問題的關鍵
-        let viewW = window.innerWidth;
-        let viewH = window.innerHeight;
-        let offsetTop = 0; // 這是網址列的高度
-        let offsetLeft = 0; // 這是左側瀏海(如果有的話)的寬度
+        // 2. 取得螢幕尺寸
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
 
-        if (window.visualViewport) {
-            viewW = window.visualViewport.width;
-            viewH = window.visualViewport.height;
-            offsetTop = window.visualViewport.offsetTop;
-            offsetLeft = window.visualViewport.offsetLeft;
-        }
-
-        // 2. 計算縮放比例
-        // 0.96 是為了留一點點邊距，避免貼太死
-        const scaleW = viewW / VIRTUAL_WIDTH;
-        const scaleH = viewH / VIRTUAL_HEIGHT;
-        let scale = Math.min(scaleW, scaleH) * 0.96;
-
-        // 3. 計算置中座標
-        // X 軸公式：(可視寬度 - 縮放後寬度) / 2 + 左側偏移
-        const finalX = ((viewW - VIRTUAL_WIDTH * scale) / 2) + offsetLeft;
+        // 3. 計算縮放比例
+        const scaleW = screenW / VIRTUAL_WIDTH;
+        const scaleH = screenH / VIRTUAL_HEIGHT;
+        let scale = Math.min(scaleW, scaleH);
         
-        // Y 軸公式：(可視高度 - 縮放後高度) / 2 + 上方網址列高度
-        // 加上 offsetTop 是解決 "Y=0 被蓋住" 的關鍵
-        const finalY = ((viewH - VIRTUAL_HEIGHT * scale) / 2) + offsetTop;
+        scale = scale * 0.98; // 留一點邊距
 
-        // 4. 應用樣式
-        workspace.style.transformOrigin = '0 0';
+        // 4. 計算置中偏移
+        const offsetX = (screenW - VIRTUAL_WIDTH * scale) / 2;
+        const offsetY = (screenH - VIRTUAL_HEIGHT * scale) / 2;
+
+        // 5. 應用樣式
         workspace.style.transform = `scale(${scale})`;
-        workspace.style.left = `${finalX}px`;
-        workspace.style.top = `${finalY}px`;
+        workspace.style.left = `${offsetX}px`;
+        workspace.style.top = `${offsetY}px`;
         
-        // 強制重繪 SVG (確保箭頭位置正確)
+        // 重繪 SVG
         const svg = document.getElementById('svg-layer');
         if(svg) {
             svg.style.display = 'none';
-            svg.offsetHeight; // force reflow
+            svg.offsetHeight; 
             svg.style.display = 'block';
         }
     }
