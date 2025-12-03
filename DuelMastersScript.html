@@ -895,6 +895,82 @@
             100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
         }
 		
+		/* --- Mobile Mode Styles --- */
+		body.mobile-mode #toolbar, 
+		body.mobile-mode #draft-bar, 
+		body.mobile-mode #point-bar, 
+		body.mobile-mode #card-action-panel, 
+		body.mobile-mode #timeline-panel,
+		body.mobile-mode #setup-modal,
+		body.mobile-mode .turn-bar /* 手機版可能不需要側邊條，或是保留看個人喜好，這邊先保留 */ {
+			display: none !important;
+		}
+
+		body.mobile-mode #workspace {
+			width: 100vw;
+			height: 100vh;
+		}
+
+		/* 讓 Ability Zone 在手機上不要佔位，或者縮小 */
+		body.mobile-mode #ability-stack-zone {
+			display: none; /* 手機單純觀戰通常不需要看到 Stack 詳細過程，若需要可改為縮小 */
+		}
+
+		/* 手機版播放按鈕 */
+		#mobile-controls {
+			display: none;
+			position: fixed;
+			bottom: 20px;
+			right: 20px;
+			z-index: 2000;
+		}
+
+		body.mobile-mode #mobile-controls {
+			display: flex;
+			gap: 15px;
+		}
+
+		.mobile-btn {
+			width: 60px;
+			height: 60px;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.8);
+			border: 4px solid #3498db;
+			font-size: 24px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+			cursor: pointer;
+			transition: transform 0.2s;
+		}
+		.mobile-btn:active { transform: scale(0.9); }
+
+		/* 轉向提示遮罩 */
+		#orientation-overlay {
+			display: none;
+			position: fixed;
+			top: 0; left: 0; width: 100%; height: 100%;
+			background: #2c3e50;
+			color: white;
+			z-index: 9999;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			padding: 20px;
+		}
+		#orientation-overlay .icon {
+			font-size: 50px;
+			margin-bottom: 20px;
+			animation: rotate-phone 2s infinite;
+		}
+		@keyframes rotate-phone {
+			0% { transform: rotate(0deg); }
+			50% { transform: rotate(-90deg); }
+			100% { transform: rotate(0deg); }
+		}
+
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
@@ -1156,6 +1232,17 @@
         </div>
     </div>
 </div>
+
+<div id="mobile-controls">
+    <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
+</div>
+
+<div id="orientation-overlay">
+    <div class="icon">📱</div>
+    <h2>請旋轉螢幕</h2>
+    <p>為了最佳觀看體驗，請將手機轉為橫向。</p>
+</div>
+
 <script>
     class Card {
         constructor(id, ownerId, text, zone) {
@@ -3250,33 +3337,131 @@ function renderUI() {
         }
     });
 
+// --- 新增的手機端邏輯 ---
+
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function initMobileMode(scriptUrl) {
+        // 1. 設定樣式為手機模式
+        document.body.classList.add('mobile-mode');
+        
+        // 2. 載入資料 (強制覆蓋，不檢查 LocalStorage)
+        fetch(scriptUrl)
+            .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
+            .then(data => {
+                if(!data.history || !data.initialState) throw new Error("Invalid script");
+                
+                // 強制載入並重置到開頭
+                processGameData(data, true);
+                
+                // 3. 啟動方向偵測監聽
+                window.addEventListener('resize', handleOrientation);
+                window.addEventListener('orientationchange', handleOrientation);
+                
+                // 初次檢查方向
+                handleOrientation();
+            })
+            .catch(e => {
+                alert("無法載入劇本: " + e.message);
+            });
+    }
+
+    function handleOrientation() {
+        const overlay = document.getElementById('orientation-overlay');
+        const playBtn = document.getElementById('mob-play-btn');
+        
+        // 判斷是否為橫向 (Landscape)
+        // 寬度 > 高度 視為橫向
+        const isLandscape = window.innerWidth > window.innerHeight;
+
+        if (isLandscape) {
+            // 橫向：隱藏遮罩，自動播放
+            overlay.style.display = 'none';
+            
+            // 如果目前沒有在播放，則開始播放
+            if (!playInterval) {
+                togglePlay();
+            }
+        } else {
+            // 直向：顯示遮罩，暫停播放
+            overlay.style.display = 'flex';
+            
+            // 如果目前正在播放，則暫停
+            if (playInterval) {
+                togglePlay();
+            }
+        }
+        
+        // 更新按鈕圖示狀態 (雖然直向時看不到按鈕，但保持狀態一致是好的)
+        if (playBtn) {
+            playBtn.innerText = playInterval ? "⏸" : "▶";
+        }
+    }
+
+    // 改寫 togglePlay 以同步更新手機版按鈕文字
+    const originalTogglePlay = togglePlay;
+    togglePlay = function() {
+        // 呼叫原本的邏輯
+        originalTogglePlay();
+        
+        // 更新手機版按鈕
+        const mobBtn = document.getElementById('mob-play-btn');
+        const deskBtn = document.getElementById('btn-play');
+        
+        const icon = playInterval ? "⏸" : "▶";
+        if(mobBtn) mobBtn.innerText = icon;
+        // 保持電腦版按鈕文字同步 (如果 togglePlay 內部有改文字，這裡只是雙保險)
+        // 注意：原版 togglePlay 已經有改 deskBtn 文字，所以這邊主要是針對 mobBtn
+    };
+
+    // --- Main Entry Point ---
     window.onload = function() {
-        const hasLocalData = loadFromStorage();
         const urlParams = new URLSearchParams(window.location.search);
         const scriptUrl = urlParams.get('scriptUrl');
+        const isMobile = isMobileDevice();
 
-        if (scriptUrl) {
-            console.log("Found scriptUrl:", scriptUrl);
-            fetch(scriptUrl)
-                .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
-                .then(data => {
-                    if(!data.history || !data.initialState) throw new Error("Invalid script");
-                    if (hasLocalData) {
-                        pendingImportData = data;
-                        document.getElementById('import-conflict-modal').style.display = 'flex';
-                    } else {
-                        processGameData(data, true);
-                    }
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                })
-                .catch(e => {
-                    alert("無法載入指定劇本: " + e.message);
-                    if(!hasLocalData) openSetupModal();
-                });
+        if (isMobile) {
+            // --- 手機版邏輯 ---
+            if (!scriptUrl) {
+                // 情境 A: 手機且無參數 -> 清空畫面並提示
+                document.body.innerHTML = '';
+                document.body.style.backgroundColor = 'white';
+                alert("此功能未對行動裝置開放");
+            } else {
+                // 情境 B: 手機且有參數 -> 進入觀戰模式
+                initMobileMode(scriptUrl);
+            }
         } else {
-            if (!hasLocalData) openSetupModal();
+            // --- 電腦版邏輯 (維持原樣) ---
+            const hasLocalData = loadFromStorage();
+            
+            if (scriptUrl) {
+                console.log("Found scriptUrl:", scriptUrl);
+                fetch(scriptUrl)
+                    .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
+                    .then(data => {
+                        if(!data.history || !data.initialState) throw new Error("Invalid script");
+                        if (hasLocalData) {
+                            pendingImportData = data;
+                            document.getElementById('import-conflict-modal').style.display = 'flex';
+                        } else {
+                            processGameData(data, true);
+                        }
+                        // 清除 URL 避免重新整理重複觸發 (電腦版行為)
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    })
+                    .catch(e => {
+                        alert("無法載入指定劇本: " + e.message);
+                        if(!hasLocalData) openSetupModal();
+                    });
+            } else {
+                if (!hasLocalData) openSetupModal();
+            }
         }
     };
+	
 </script>
 </body>
 </html>
