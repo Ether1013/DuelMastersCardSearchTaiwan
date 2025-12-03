@@ -1254,6 +1254,141 @@
             /* 手機版稍微離開邊緣一點，避免被圓角切到 */
             transform: translate(5px, -5px); 
         }
+		
+		/* --- SRW Dialogue System Styles --- */
+        #dialogue-layer {
+            position: absolute; 
+            top: 0; 
+            
+            /* --- 修改開始：避開左右面板 --- */
+            left: 100px;   /* 避開左側 Ability Zone (100px) */
+            right: 355px;  /* 避開右側 Timeline (320px) + Slider (30px) + 5px間距 */
+            width: auto;   /* 刪除原本的 width: 100% */
+            /* --- 修改結束 --- */
+
+            height: 100%;
+            pointer-events: none; 
+            z-index: 2000;
+            display: none; 
+            flex-direction: column; 
+            justify-content: space-between;
+            overflow: hidden; 
+            padding: 20px 0;
+        }
+        #dialogue-layer.active { display: flex; }
+
+		/* 額外修正：確保手機版 (Mobile Mode) 因為右側面板隱藏，對話框要延伸回去 */
+        body.mobile-mode #dialogue-layer {
+            right: 0 !important;
+            /* 左側 Ability Zone 在手機版依然存在，所以 left: 100px 保持不變 */
+        }
+		
+        /* 上下對話區塊容器 */
+        .diag-row {
+            display: flex; width: 100%; height: 180px; align-items: flex-end; position: relative;
+            opacity: 0; transition: opacity 0.2s; pointer-events: none; /* 預設隱藏 */
+        }
+        .diag-row.visible { opacity: 1; pointer-events: auto; }
+
+        /* 頂部 (P2/敵方) - 頭像在右，框在左 */
+        .diag-row.top { flex-direction: row-reverse; align-items: flex-start; }
+        /* 底部 (P1/我方) - 頭像在左，框在右 */
+        .diag-row.bottom { flex-direction: row; }
+
+        /* 立繪容器 */
+        .diag-portrait {
+            width: 160px; height: 160px; flex-shrink: 0;
+            margin: 0 10px; border-radius: 8px;
+            background-size: cover; background-position: center;
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* 對話框本體 */
+        .diag-box {
+            flex: 1; height: 100%; max-width: 70%;
+            background: linear-gradient(180deg, rgba(0,20,40,0.9) 0%, rgba(0,10,20,0.95) 100%);
+            border: 2px solid #3498db; border-radius: 8px;
+            display: flex; flex-direction: column; padding: 15px;
+            position: relative; margin: 0 20px;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.2);
+            backdrop-filter: blur(2px);
+        }
+        
+        /* 顏色變體 */
+        .diag-row.top .diag-box { border-color: #c0392b; box-shadow: 0 0 15px rgba(192, 57, 43, 0.2); }
+        .diag-row.top .diag-portrait { border-color: #c0392b; }
+        .diag-row.bottom .diag-portrait { border-color: #3498db; }
+
+        /* 名字標籤 */
+        .diag-name {
+            background: #3498db; color: white; padding: 2px 10px;
+            font-size: 0.9rem; font-weight: bold; display: inline-block;
+            transform: skewX(-15deg); margin-bottom: 8px; align-self: flex-start;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+        }
+        .diag-row.top .diag-name { background: #c0392b; align-self: flex-end; }
+
+        /* 文字內容 */
+        .diag-text { color: white; line-height: 1.4; white-space: pre-wrap; text-shadow: 1px 1px 2px black; flex: 1; overflow-y: auto;}
+        
+        /* 文字大小 */
+        .text-s { font-size: 1rem; }
+        .text-m { font-size: 1.5rem; }
+        .text-l { font-size: 2.2rem; font-weight: bold; color: #f1c40f; }
+
+        /* 進場特效動畫 */
+        .fx-fade { animation: fadeIn 0.5s ease forwards; }
+        .fx-slide { animation: slideInX 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .fx-direct { /* No animation */ }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* 左側滑入 */
+        .diag-row.bottom .fx-slide { animation-name: slideInLeft; }
+        @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        /* 右側滑入 */
+        .diag-row.top .fx-slide { animation-name: slideInRight; }
+        @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* 編輯器樣式 */
+        .emotion-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 5px; }
+        .emotion-opt { 
+            width: 100%; aspect-ratio: 1; border: 2px solid #555; cursor: pointer; 
+            background-size: cover; border-radius: 4px; opacity: 0.6;
+        }
+        .emotion-opt:hover { opacity: 1; }
+        .emotion-opt.active { border-color: #f1c40f; opacity: 1; box-shadow: 0 0 5px #f1c40f; }
+        
+        .diag-editor-row { display: flex; gap: 10px; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fdfdfd; }
+        .diag-editor-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .diag-section-title { font-weight: bold; margin-bottom: 5px; border-bottom: 2px solid #eee; padding-bottom: 2px; }
+		
+		/* --- 新增：編輯中的佔位符樣式 --- */
+        .action-item.placeholder {
+            border: 2px dashed #f1c40f;
+            background: rgba(241, 196, 15, 0.1);
+            color: #7f8c8d;
+            text-align: center;
+            padding: 15px 10px;
+            font-style: italic;
+            font-weight: bold;
+            animation: pulse-placeholder 1.5s infinite;
+            cursor: default;
+        }
+
+        @keyframes pulse-placeholder {
+            0% { background: rgba(241, 196, 15, 0.05); }
+            50% { background: rgba(241, 196, 15, 0.15); }
+            100% { background: rgba(241, 196, 15, 0.05); }
+        }
+
+        /* --- 新增：鎖定列表滾動 --- */
+        #action-list.locked {
+            overflow-y: hidden !important; /* 強制鎖住滾動 */
+            padding-right: 0; /* 避免滾動條消失造成的輕微跳動(視瀏覽器而定) */
+        }
     </style>
 </head>
 <body>
@@ -1275,6 +1410,7 @@
     <button onclick="triggerWin(1)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p1_win">🏆 1P Win</button>
     <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p2_win">🏆 2P Win</button>
     <div style="flex:1"></div>
+	<button onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;">💬 對話</button>
     <button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
@@ -1321,6 +1457,23 @@
         </div>
         <div id="ability-zone-p1" class="ability-column">
             <div class="ability-label" data-i18n="zone_ability">P1 能力 (待處理)</div>
+        </div>
+    </div>
+	
+	<div id="dialogue-layer">
+        <div id="diag-row-p2" class="diag-row top">
+            <div class="diag-box">
+                <div class="diag-name" id="diag-name-p2">P2</div>
+                <div class="diag-text text-m" id="diag-text-p2">...</div>
+            </div>
+            <div class="diag-portrait" id="diag-img-p2"></div>
+        </div>
+        <div id="diag-row-p1" class="diag-row bottom">
+            <div class="diag-portrait" id="diag-img-p1"></div>
+            <div class="diag-box">
+                <div class="diag-name" id="diag-name-p1">P1</div>
+                <div class="diag-text text-m" id="diag-text-p1">...</div>
+            </div>
         </div>
     </div>
 
@@ -1553,7 +1706,122 @@
     <p style="margin: 0; font-size: 0.85rem; color: #f1c40f; font-weight: bold;">⚠️ モバイルは再生専用です。編集はPCをご利用ください。</p>
 </div>
 
+<div id="dialogue-modal" class="modal">
+    <div class="modal-content" style="width: 700px; max-width:95vw;">
+        <h3 style="margin-top:0; text-align:center;">插入劇情對話 (Action)</h3>
+        <p style="font-size:0.8rem; color:#666; text-align:center;">
+            點擊表情圖示後，按下 <b>Ctrl+V</b> 可替換該表情圖片 (全域生效)。
+        </p>
+
+        <div class="diag-editor-row" style="border-left: 5px solid #c0392b;">
+            <div class="diag-editor-col" style="flex:0 0 100px; align-items:center; justify-content:center;">
+                <label><input type="checkbox" id="edit-p2-active" onchange="toggleDiagEdit('p2')"> 啟用 P2</label>
+                <div style="font-weight:bold; color:#c0392b;">(上方/敵方)</div>
+            </div>
+            <div class="diag-editor-col">
+                <input type="text" id="edit-p2-name" placeholder="名字..." value="Rival">
+                <textarea id="edit-p2-text" rows="2" placeholder="台詞..."></textarea>
+                <div style="display:flex; gap:5px;">
+                    <select id="edit-p2-size"><option value="s">小字</option><option value="m" selected>中字</option><option value="l">大字</option></select>
+                    <select id="edit-p2-effect"><option value="direct">直接顯示</option><option value="fade">淡入</option><option value="slide" selected>滑入</option></select>
+					<span style="font-size:0.8rem; margin:0 3px;">➡</span>
+					<select id="edit-p2-exit">
+						<option value="direct">直接消失</option>
+						<option value="fade">淡出</option>
+						<option value="slide">抽出</option>
+					</select>
+				</div>
+            </div>
+            <div class="diag-editor-col" style="flex:0 0 200px;">
+                <div class="emotion-grid" id="emotion-grid-p2"></div>
+                <input type="hidden" id="edit-p2-emotion" value="normal">
+            </div>
+        </div>
+
+        <div class="diag-editor-row" style="border-left: 5px solid #3498db;">
+            <div class="diag-editor-col" style="flex:0 0 100px; align-items:center; justify-content:center;">
+                <label><input type="checkbox" id="edit-p1-active" checked onchange="toggleDiagEdit('p1')"> 啟用 P1</label>
+                <div style="font-weight:bold; color:#3498db;">(下方/我方)</div>
+            </div>
+            <div class="diag-editor-col">
+                <input type="text" id="edit-p1-name" placeholder="名字..." value="Player">
+                <textarea id="edit-p1-text" rows="2" placeholder="台詞..."></textarea>
+                <div style="display:flex; gap:5px;">
+                    <select id="edit-p1-size"><option value="s">小字</option><option value="m" selected>中字</option><option value="l">大字</option></select>
+                    <select id="edit-p1-effect"><option value="direct">直接顯示</option><option value="fade">淡入</option><option value="slide" selected>滑入</option></select>
+					<span style="font-size:0.8rem; margin:0 3px;">➡</span>
+					<select id="edit-p1-exit">
+						<option value="direct">直接消失</option>
+						<option value="fade">淡出</option>
+						<option value="slide">抽出</option>
+					</select>
+				</div>
+            </div>
+            <div class="diag-editor-col" style="flex:0 0 200px;">
+                <div class="emotion-grid" id="emotion-grid-p1"></div>
+                <input type="hidden" id="edit-p1-emotion" value="normal">
+            </div>
+        </div>
+
+        <div style="text-align:right; margin-top:10px;">
+            <button class="danger" onclick="document.getElementById('dialogue-modal').style.display='none'">取消</button>
+            <button class="primary" onclick="confirmDialogue()">💾 儲存此步</button>
+        </div>
+    </div>
+</div>
+
 <script>
+
+	// --- Dialogue Assets Generation ---
+    const EMOTIONS = ['normal', 'blank', 'serious', 'smug', 'furious', 'terrified'];
+    const EMOTION_LABELS = {normal:'一般', blank:'呆滯', serious:'認真', smug:'得意', furious:'盛怒', terrified:'驚恐'};
+    
+    // 生成簡單的 Canvas 頭像
+    function generateDefaultPortraits() {
+        const drawFace = (color, emotion) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 160; canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            
+            // 背景與框
+            ctx.fillStyle = '#222'; ctx.fillRect(0,0,160,160);
+            ctx.lineWidth = 4; ctx.strokeStyle = color; ctx.strokeRect(5,5,150,150);
+            
+            // 臉型
+            ctx.beginPath(); ctx.arc(80, 80, 50, 0, Math.PI*2); ctx.stroke();
+            
+            // 眼睛
+            ctx.beginPath();
+            if(emotion==='blank') { ctx.arc(65, 70, 3, 0, Math.PI*2); ctx.arc(95, 70, 3, 0, Math.PI*2); }
+            else if(emotion==='serious') { ctx.moveTo(55,65); ctx.lineTo(75,75); ctx.moveTo(105,65); ctx.lineTo(85,75); } // 眉頭深鎖
+            else if(emotion==='furious') { ctx.moveTo(55,60); ctx.lineTo(75,80); ctx.moveTo(105,60); ctx.lineTo(85,80); } // 生氣眉毛
+            else if(emotion==='terrified') { ctx.arc(65, 70, 8, 0, Math.PI*2); ctx.arc(95, 70, 8, 0, Math.PI*2); } // 瞳孔放大
+            else { ctx.arc(65, 70, 5, 0, Math.PI*2); ctx.arc(95, 70, 5, 0, Math.PI*2); }
+            ctx.stroke();
+
+            // 嘴巴
+            ctx.beginPath();
+            if(emotion==='smug') { ctx.arc(80, 90, 10, 0, Math.PI, false); } // 微笑
+            else if(emotion==='furious') { ctx.moveTo(70,105); ctx.lineTo(90,105); ctx.rect(70,100,20,10); } // 怒吼
+            else if(emotion==='terrified') { ctx.ellipse(80, 110, 10, 15, 0, 0, Math.PI*2); } // 張口
+            else if(emotion==='serious') { ctx.moveTo(70,105); ctx.lineTo(90,105); } // 抿嘴
+            else { ctx.arc(80, 90, 15, 0, Math.PI, false); } // 一般笑
+            ctx.stroke();
+
+            return canvas.toDataURL();
+        };
+
+        ['p1', 'p2'].forEach(p => {
+            const color = p === 'p1' ? '#3498db' : '#c0392b';
+            EMOTIONS.forEach(emo => {
+                const key = `avatar_${p}_${emo}`;
+                if (!globalImageRegistry[key]) {
+                    globalImageRegistry[key] = drawFace(color, emo);
+                }
+            });
+        });
+    }
+	
 	// --- 多語言設定 (i18n) ---
     const TRANSLATIONS = {
 		'zh': {
@@ -2011,19 +2279,15 @@
 
     let currentLang = 'zh';
 
-    // 用於取得正確的播放按鈕文字
-    function getPlayButtonText() {
-        return playInterval ? t('btn_pause') : t('btn_play');
-    }
-
-    // 更新播放按鈕 UI 的專用函式
+    // 同時修改 getPlayButtonText 判定
+    function getPlayButtonText() { return playTimeout ? t('btn_pause') : t('btn_play'); }
+    // 修改手機版判斷
     function updatePlayButtonUI() {
         const text = getPlayButtonText();
         const deskBtn = document.getElementById('btn-play');
         const mobBtn = document.getElementById('mob-play-btn');
-        
         if(deskBtn) deskBtn.innerText = text;
-        if(mobBtn) mobBtn.innerText = playInterval ? "⏸" : "▶"; // 手機版維持符號就好，比較簡潔
+        if(mobBtn) mobBtn.innerText = playTimeout ? "⏸" : "▶";
     }
 
     function changeLanguage(lang) {
@@ -2097,6 +2361,7 @@
             // Removed phase per requirement
             this.globalRotation = false; 
             this.cardIdCounter = 1;
+			this.dialogueData = null; // 格式: { p1: {...}, p2: {...} }
         }
     }
 
@@ -2392,21 +2657,29 @@
     }
 
 	function saveToStorage() {
-        // --- [新增] 手機播放模式下，絕對不要存檔 ---
-        // 這樣可以確保觀看 Script 時，不會覆蓋掉使用者原本的編輯進度
         if (document.body.classList.contains('mobile-mode')) return;
-        // ----------------------------------------
 
         try {
+            // [優化] 製作輕量版 History：只保留 Action，移除 State (除了第0步)
+            // 這樣可以將存檔大小縮減 90% 以上
+            const leanHistory = history.map((item, index) => {
+                if (index === 0) return item; // 第0步保留初始狀態
+                return { action: item.action }; // 後續步驟只存動作
+            });
+
             const data = {
                 timestamp: Date.now(),
-                history: history,
+                history: leanHistory,
                 initialState: initialState,
                 currentIndex: currentIndex,
                 imageRegistry: globalImageRegistry,
-                abilityRegistry: globalAbilityStyleRegistry 
+                abilityRegistry: globalAbilityStyleRegistry,
+                // [新增] 保存對話的快取設定，避免重整後對話頭像重置
+                lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
             };
+            
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            
             if (storageQuotaExceeded) {
                 storageQuotaExceeded = false;
                 hasAlertedQuota = false;
@@ -2427,23 +2700,60 @@
         try {
             const data = JSON.parse(raw);
             if (!data || !data.history || !data.initialState) return false;
+            
+            // 檢查過期
             if (data.timestamp && (Date.now() - data.timestamp > STORAGE_EXPIRY)) {
                 localStorage.removeItem(STORAGE_KEY);
                 return false;
             }
             
-            history = data.history;
+            // 載入全域設定
+            globalImageRegistry = data.imageRegistry || {}; 
+            globalAbilityStyleRegistry = data.abilityRegistry || {};
+            // [新增] 載入對話快取
+            if (data.lastDiagSettings && typeof lastDiagSettings !== 'undefined') {
+                lastDiagSettings = data.lastDiagSettings;
+            }
+            
+            // 載入初始狀態
             initialState = data.initialState;
+            
+            // --- [關鍵優化] 重建狀態 (Replay State) ---
+            // 讀取到的 history 中間沒有 state，我們需要依照 action 重新跑一遍 applyOperation
+            let loadedHistory = data.history;
+            
+            // 確保第0步有 state
+            if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
+            
+            // 從第1步開始，依序根據上一步的 state + 當下的 action = 算出當下的 state
+            for (let i = 1; i < loadedHistory.length; i++) {
+                if (!loadedHistory[i].state) {
+                    const prevState = loadedHistory[i-1].state;
+                    const newState = cloneState(prevState);
+                    const ops = loadedHistory[i].action.operations;
+                    
+                    // 重播動作
+                    ops.forEach(op => applyOperation(newState, op));
+                    
+                    loadedHistory[i].state = newState;
+                }
+            }
+            // ----------------------------------------
+            
+            history = loadedHistory;
             currentIndex = (typeof data.currentIndex === 'number' && data.currentIndex >= -1 && data.currentIndex < history.length) 
                            ? data.currentIndex 
                            : (history.length - 1);
-                           
-            globalImageRegistry = data.imageRegistry || {}; 
-            globalAbilityStyleRegistry = data.abilityRegistry || {}; 
             
+            // 確保預設頭像存在 (防止讀取舊檔導致頭像破圖)
+            if (typeof generateDefaultPortraits === 'function') {
+                generateDefaultPortraits();
+            }
+
             try { renderUI(); } catch(e) {}
             return true;
         } catch (e) {
+            console.error("Load failed", e);
             return false;
         }
     }
@@ -2459,6 +2769,7 @@
 	function startDraft(index) {
         if (isDrafting) {
             if(!confirm(t('msg_unsaved_draft'))) return;
+             document.getElementById('action-list').classList.remove('locked');
         }
         
         isDrafting = true;
@@ -2469,22 +2780,38 @@
         let baseIndex = index - 1;
         if (baseIndex < 0) baseIndex = 0; 
         
+        // 複製上一步驟的狀態
         tempState = cloneState(history[baseIndex].state);
 
-        // --- [新增] 清除上一局的受傷狀態 (不繼承) ---
-        // 這樣新步驟開始時，卡片會恢復乾淨
-        tempState.cards.forEach(c => {
-             if(c.isInjured) c.isInjured = false;
-        });
-        // ------------------------------------------
+        // --- [新增] 清除殘留的狀態 ---
+        
+        // 1. 清除受傷狀態 (原本就有的)
+        tempState.cards.forEach(c => { if(c.isInjured) c.isInjured = false; });
+        
+        // 2. [關鍵修正] 清除對話狀態，確保新步驟是乾淨的畫面
+        tempState.dialogueData = null; 
+        
+        // ---------------------------
         
         updateDraftBar();
         renderUI();
+
+        const list = document.getElementById('action-list');
+        const placeholder = document.getElementById('active-placeholder');
+        
+        if (placeholder) {
+            placeholder.scrollIntoView({ block: "center", behavior: "auto" });
+            setTimeout(() => {
+                list.classList.add('locked');
+            }, 50);
+        }
     }
 
     function editAction(index) {
         if (isDrafting) {
             if(!confirm(t('msg_unsaved_edit'))) return;
+            // 如果原本鎖定，先解鎖
+            document.getElementById('action-list').classList.remove('locked');
         }
         
         isDrafting = true;
@@ -2498,17 +2825,59 @@
             tempState = cloneState(history[baseIndex].state);
         }
         
+        // --- [同步修正] 清除殘留狀態 (與 startDraft 保持一致) ---
+        tempState.cards.forEach(c => { if(c.isInjured) c.isInjured = false; });
+        tempState.dialogueData = null; 
+        // ---------------------------------------------------
+
         const actionToEdit = history[index].action;
-        draftOperations = [...actionToEdit.operations];
+        
+        // 使用深拷貝，避免直接修改到歷史紀錄 (直到按下儲存)
+        draftOperations = JSON.parse(JSON.stringify(actionToEdit.operations));
         
         draftOperations.forEach(op => applyOperation(tempState, op));
         
         updateDraftBar();
         renderUI();
+
+        // --- [新增] 自動開啟對話編輯視窗 ---
+        const isDialogue = draftOperations.some(op => op.type === 'DIALOGUE');
+        if (isDialogue) {
+            openDialogueModal();
+        }
+        // --------------------------------
+
+        // --- [同步修正] 鎖定 Scrollbar ---
+        const list = document.getElementById('action-list');
+        const placeholder = document.getElementById('active-placeholder');
+        
+        if (placeholder) {
+            placeholder.scrollIntoView({ block: "center", behavior: "auto" });
+            setTimeout(() => {
+                list.classList.add('locked');
+            }, 50);
+        }
     }
 
     function addOperation(op) {
+        // --- 新增：互斥鎖邏輯 ---
+        const hasDialog = draftOperations.some(o => o.type === 'DIALOGUE');
+        
+        // 1. 如果已存在對話，禁止加入其他動作 (如移動卡片)
+        if (hasDialog && op.type !== 'DIALOGUE') {
+            alert(t('對話動作必須獨立，無法與其他動作混合 (請另開新步驟)。'));
+            return;
+        }
+        
+        // 2. 如果已存在其他動作，禁止加入對話
+        if (!hasDialog && draftOperations.length > 0 && op.type === 'DIALOGUE') {
+            alert(t('對話動作必須獨立，無法與其他動作混合 (請另開新步驟)。'));
+            return;
+        }
+        // --- 結束 ---
+
         if (!isDrafting) startDraftAtEnd();
+        
         applyOperation(tempState, op);
         draftOperations.push(op);
         updateDraftBar();
@@ -2553,6 +2922,10 @@
         if (draftOperations.length === 0) {
             isDrafting = false;
             updateDraftBar();
+            
+            // 解鎖 Scrollbar
+            document.getElementById('action-list').classList.remove('locked');
+            
             renderUI();
             return;
         }
@@ -2564,20 +2937,22 @@
         if (!desc) {
             const opCount = draftOperations.length;
             const firstOp = draftOperations[0];
-            // 改用 t() 動態獲取
-			let typeDesc = t('op_' + firstOp.type);
-			// 如果找不到對應翻譯，回退到預設值
-			if (!typeDesc || typeDesc === ('op_' + firstOp.type)) {
-				typeDesc = t('op_default'); 
-			}
+            let typeDesc = t('op_' + firstOp.type);
+            if (!typeDesc || typeDesc === ('op_' + firstOp.type)) {
+                typeDesc = t('op_default'); 
+            }
             if (firstOp.type === 'POINT') {
                 desc = firstOp.desc || t('op_POINT');
             } else if (firstOp.type === 'ATTACK') {
                 desc = firstOp.desc || t('op_ATTACK');
+            } else if (firstOp.type === 'DIALOGUE') {
+                // 對話動作的預設描述 (如果沒傳入 customDesc)
+                const data = firstOp.data;
+                desc = "[對話] ";
+                if (data.p2 && data.p2.active) desc += `${data.p2.name}... `;
+                if (data.p1 && data.p1.active) desc += `${data.p1.name}...`;
             } else {
-				desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
-				// 註: 你可能需要在 TRANSLATIONS 加上 lbl_draft_ops_prefix (可選) 
-				// 簡單版: desc = `${typeDesc} (${opCount})`;
+                desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
             }
         }
 
@@ -2615,7 +2990,12 @@
         draftOperations = [];
         updateDraftBar();
         renderUI();
-        saveToStorage();
+        
+        // 這裡就是關鍵的存檔機制
+        saveToStorage(); 
+        
+        // 解鎖 Scrollbar
+        document.getElementById('action-list').classList.remove('locked');
     }
 
     function cancelDraft() {
@@ -2624,6 +3004,8 @@
         cancelSelection();
         updateDraftBar();
         if(currentIndex >= history.length) currentIndex = history.length - 1;
+		// --- 新增：解鎖 Scrollbar ---
+        document.getElementById('action-list').classList.remove('locked');
         renderUI();
     }
 
@@ -2662,7 +3044,19 @@
     }
 
 function applyOperation(state, op) {
-        if (op.type === 'PASS') return;
+
+        // [修改] 如果不是對話動作，清除對話資料 (讓畫面消失)
+		if (op.type !== 'DIALOGUE') {
+			state.dialogueData = null;
+		}
+		
+		if (op.type === 'PASS') return;
+
+		// [新增] 對話處理
+		if (op.type === 'DIALOGUE') {
+			state.dialogueData = op.data; // 直接套用資料
+			return; // 對話不涉及其他邏輯
+		}
         
         // --- 新增: 用於切斷連結的操作 ---
         if (op.type === 'BREAK_LINKS') {
@@ -3433,7 +3827,7 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         return zoneId.toUpperCase(); 
     }
 
-	function renderUI() {
+	function renderUI(skipScroll) {
         const firstPositions = getCardPositions();
         const state = getCurrentDisplayState();
         
@@ -3616,7 +4010,41 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         });
 
         renderTimeline();
-        renderArrows(); 
+        renderArrows();
+
+		// --- Dialogue Rendering ---
+		const diagLayer = document.getElementById('dialogue-layer');
+		if (state.dialogueData) {
+			diagLayer.classList.add('active');
+			['p1', 'p2'].forEach(id => {
+				const data = state.dialogueData[id];
+				const row = document.getElementById(`diag-row-${id}`);
+				const img = document.getElementById(`diag-img-${id}`);
+				const name = document.getElementById(`diag-name-${id}`);
+				const text = document.getElementById(`diag-text-${id}`);
+				
+				if (data && data.active) {
+					row.classList.add('visible');
+					// 移除舊動畫 class 並強制重繪以觸發新動畫
+					row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
+					void row.offsetWidth; // Trigger reflow
+					row.classList.add(`fx-${data.effect}`);
+
+					name.innerText = data.name;
+					text.innerText = data.dataText; // text 是變數名衝突，JSON裡存 dataText
+					text.className = `diag-text text-${data.size}`;
+					
+					const imgKey = `avatar_${id}_${data.emotion}`;
+					const src = globalImageRegistry[imgKey];
+					img.style.backgroundImage = src ? `url(${src})` : 'none';
+				} else {
+					row.classList.remove('visible');
+				}
+			});
+		} else {
+			diagLayer.classList.remove('active');
+			document.querySelectorAll('.diag-row').forEach(el => el.classList.remove('visible'));
+		}
 
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
@@ -3708,8 +4136,8 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         });
 		
 		updateSliderUI();
-		// [新增] 同步捲動 Actions 列表 (僅在非手機模式或有列表時執行)
-        if (!document.body.classList.contains('mobile-mode')) {
+		// [修改] 增加 !skipScroll 判斷，手動點擊時不捲動
+        if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
              scrollToActiveStep();
         }
     }
@@ -3923,12 +4351,29 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         const list = document.getElementById('action-list');
         list.innerHTML = '';
         
+        // 輔助函式：建立佔位符 (虛線框)
+        const createPlaceholder = () => {
+            const li = document.createElement('li');
+            li.className = 'action-item placeholder';
+            li.innerText = '... 編輯中 (Editing) ...';
+            li.id = 'active-placeholder'; // 給個 ID 方便定位
+            return li;
+        };
+
         history.forEach((item, index) => {
             const gap = document.createElement('div');
             gap.className = 'timeline-gap';
             gap.title = "插入新步驟";
-            gap.onclick = () => startDraft(index);
-            list.appendChild(gap);
+            
+            // [修改] 如果正在編輯且插入點在這裡，gap 失去點擊功能(或隱藏)，並顯示佔位符
+            if (isDrafting && editModeType === 'INSERT' && insertIndex === index) {
+                gap.style.pointerEvents = 'none'; 
+                list.appendChild(gap);
+                list.appendChild(createPlaceholder());
+            } else {
+                gap.onclick = () => startDraft(index);
+                list.appendChild(gap);
+            }
 
             const li = document.createElement('li');
             
@@ -3945,13 +4390,14 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 }
             }
 
-            li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
-            
-            // 在 renderTimeline 內，修改 generating controls 的部分：
+            // 如果正在編輯這一步 (Edit Mode)，給它一個特殊的樣式
+            if (isDrafting && editModeType === 'EDIT' && insertIndex === index) {
+                li.className = `action-item editing ${colorClass}`;
+            } else {
+                li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
+            }
 
             const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="${t('btn_delete_step')}">🗑</button>`;
-            
-            // 注意：這裡加入了 data-i18n 屬性
             const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" data-i18n="btn_edit_step">${t('btn_edit_step')}</button>`;
             
             const controls = `
@@ -3964,6 +4410,8 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             `;
 
             li.onclick = (e) => {
+                // [修改] 鎖定時禁止點擊切換步驟
+                if (isDrafting) return; 
                 if(e.target.tagName === 'BUTTON') return;
                 currentIndex = index;
                 renderUI();
@@ -3980,12 +4428,31 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             list.appendChild(li);
         });
         
+        // 處理列表最後面的 Gap
         const endGap = document.createElement('div');
         endGap.className = 'timeline-gap';
-        endGap.onclick = () => startDraftAtEnd();
-        list.appendChild(endGap);
+        
+        // [修改] 如果插入點在最後
+        if (isDrafting && editModeType === 'INSERT' && insertIndex === history.length) {
+            endGap.style.pointerEvents = 'none';
+            list.appendChild(endGap);
+            list.appendChild(createPlaceholder());
+        } else {
+            endGap.onclick = () => startDraftAtEnd();
+            list.appendChild(endGap);
+        }
 
         document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
+        
+        // [新增] 如果有佔位符，自動捲動到該位置
+        if (isDrafting) {
+            const placeholder = document.getElementById('active-placeholder');
+            if (placeholder) {
+                // 這裡我們不強制 scrollIntoView，因為 startDraft 會處理「鎖定前」的捲動
+                // 但如果是因為操作(如貼上圖片)導致的重繪，這裡可以確保它在視野內
+                // placeholder.scrollIntoView({ block: 'center', behavior: 'auto' });
+            }
+        }
     }
 
     function prevStep() { if (currentIndex > 0) { currentIndex--; renderUI(); saveToStorage(); } }
@@ -4006,23 +4473,64 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         }
     }
 
+    let playTimeout = null; // 取代 playInterval
+
     function togglePlay() {
-        if (playInterval) {
-            clearInterval(playInterval); 
-            playInterval = null;
+        if (playTimeout) {
+            // --- 暫停 ---
+            clearTimeout(playTimeout);
+            playTimeout = null;
+            updatePlayButtonUI();
         } else {
-            playInterval = setInterval(() => {
-                if (currentIndex < history.length - 1) { 
-                    currentIndex++; 
-                    renderUI(); 
-                    // saveToStorage(); // 手機版已在 saveToStorage 內部擋下，這邊照舊即可
-                    if(!document.body.classList.contains('mobile-mode')) saveToStorage();
-                } 
-                else { togglePlay(); }
-            }, 1200);
+            // --- 播放 ---
+            
+            // [修正] 如果已經在最後一步，點播放時自動重頭開始 (優化體驗)
+            if (currentIndex >= history.length - 1) {
+                currentIndex = -1;
+            }
+
+            // 1. 先執行播放，這會產生 playTimeout ID
+            playNextStep(); 
+            
+            // 2. 再更新 UI，這時 playTimeout 已經有值了，按鈕才會正確變成[暫停]
+            updatePlayButtonUI(); 
         }
-        // 統一呼叫這個更新 UI
-        updatePlayButtonUI();
+    }
+
+    function playNextStep() {
+        if (currentIndex < history.length - 1) {
+            currentIndex++;
+            renderUI();
+            if(!document.body.classList.contains('mobile-mode')) saveToStorage();
+            
+            // 預設非對話動作的時間 (原本就是 1200ms，保持不變)
+            let delay = 1200;
+            
+            const action = history[currentIndex].action;
+            
+            // 如果是對話，根據字數計算時間
+            if (action.operations && action.operations[0].type === 'DIALOGUE') {
+                const data = action.operations[0].data;
+                let charCount = 0;
+                if (data.p1 && data.p1.active) charCount += data.p1.dataText.length;
+                if (data.p2 && data.p2.active) charCount += data.p2.dataText.length;
+                
+                // [修改] 調整時間公式
+                // 舊設定: 基礎 1000ms + 每個字 100ms (最少 1500ms)
+                // 新設定: 基礎 600ms + 每個字 60ms (最少 1000ms)
+                
+                delay = 600 + (charCount * 60); 
+                
+                // 確保至少停留 1 秒，避免短句一閃而過看不清楚
+                if (delay < 1000) delay = 1000;
+            }
+
+            playTimeout = setTimeout(playNextStep, delay);
+        } else {
+            // 播完了
+            playTimeout = null;
+            updatePlayButtonUI();
+        }
     }
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
@@ -4067,6 +4575,10 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         lastRenderedState = null; 
         renderUI();
         saveToStorage();
+		// 確保讀取舊存檔後，缺失的預設頭像會被補回來
+		if (typeof generateDefaultPortraits === 'function') {
+			generateDefaultPortraits();
+		}
     }
 
     function resolveImportConflict(choice) {
@@ -4349,6 +4861,8 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         const scriptUrl = urlParams.get('scriptUrl');
         const isMobile = isMobileDevice();
 
+		generateDefaultPortraits();
+
         if (isMobile) {
             // --- 手機版邏輯 ---
             if (!scriptUrl) {
@@ -4437,6 +4951,201 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             activeItem.scrollIntoView({ block: 'center', behavior: 'auto' });
         }
     }
+	
+	// --- Dialogue Editor Logic ---
+    let lastDiagSettings = { 
+        p1: { name: 'Player', emotion: 'normal' }, 
+        p2: { name: 'Rival', emotion: 'normal' } 
+    };
+	
+	// [新增] 用來記錄最後點擊的是哪一邊 (p1 或 p2)
+    let lastFocusPid = 'p1';
+
+    function openDialogueModal() {
+        // 1. 檢查是否正在編輯非對話的動作
+        if (isDrafting && draftOperations.length > 0 && !draftOperations.some(o => o.type === 'DIALOGUE')) {
+            alert("目前正在編輯其他動作，請先 [儲存] 或 [取消] 後再插入對話。");
+            return;
+        }
+
+        // 2. 智慧插入點：如果沒在編輯，預設插入在「當前步驟之後」
+        if (!isDrafting) {
+            // currentIndex 是當前看到的步驟，+1 代表插在它後面 (即 #12 和 #13 之間，若當前是 #12)
+            // 如果是初始狀態 (-1)，則插在 0
+            const nextIndex = currentIndex + 1;
+            startDraft(nextIndex);
+        }
+
+        generateDefaultPortraits();
+        renderEmotionGrid('p1');
+        renderEmotionGrid('p2');
+        
+        // 3. 讀取資料或預設值
+        let found = false;
+        // 如果是編輯模式且已經有對話資料，載入它
+        if (draftOperations.length > 0 && draftOperations[0].type === 'DIALOGUE') {
+             loadDiagToForm(draftOperations[0].data);
+             found = true;
+        } else {
+            // 否則往回找最近的設定當作預設
+            for(let i=currentIndex; i>=0; i--) {
+                const op = history[i].action.operations.find(o => o.type === 'DIALOGUE');
+                if (op) {
+                    loadDiagToForm(op.data); // 繼承上次的設定 (包含頭像、特效)
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            // 全新預設
+            document.getElementById('edit-p1-emotion').value = lastDiagSettings.p1.emotion;
+            document.getElementById('edit-p2-emotion').value = lastDiagSettings.p2.emotion;
+            selectEmotion('p1', lastDiagSettings.p1.emotion);
+            selectEmotion('p2', lastDiagSettings.p2.emotion);
+        }
+
+        document.getElementById('dialogue-modal').style.display = 'flex';
+    }
+
+    function renderEmotionGrid(pid) {
+        const grid = document.getElementById(`emotion-grid-${pid}`);
+        grid.innerHTML = '';
+        EMOTIONS.forEach(emo => {
+            const div = document.createElement('div');
+            div.className = 'emotion-opt';
+            div.title = EMOTION_LABELS[emo];
+            div.dataset.emo = emo;
+            div.onclick = () => selectEmotion(pid, emo);
+            
+            const key = `avatar_${pid}_${emo}`;
+            div.style.backgroundImage = `url(${globalImageRegistry[key]})`;
+            
+            grid.appendChild(div);
+        });
+    }
+
+    function selectEmotion(pid, emo) {
+        // [新增] 記錄目前焦點
+        lastFocusPid = pid;
+        
+        document.getElementById(`edit-${pid}-emotion`).value = emo;
+        document.querySelectorAll(`#emotion-grid-${pid} .emotion-opt`).forEach(el => {
+            el.classList.toggle('active', el.dataset.emo === emo);
+        });
+    }
+
+    function loadDiagToForm(data) {
+        ['p1', 'p2'].forEach(id => {
+            const d = data[id];
+            document.getElementById(`edit-${id}-active`).checked = d.active;
+            if(d.active) {
+                document.getElementById(`edit-${id}-name`).value = d.name;
+                document.getElementById(`edit-${id}-text`).value = d.dataText;
+                document.getElementById(`edit-${id}-size`).value = d.size;
+                document.getElementById(`edit-${id}-effect`).value = d.effect;
+                // [新增] 載入退場特效，如果舊存檔沒有這個欄位，預設為 direct
+                document.getElementById(`edit-${id}-exit`).value = d.exit || 'direct';
+                
+                selectEmotion(id, d.emotion);
+            }
+            toggleDiagEdit(id);
+        });
+    }
+
+    function toggleDiagEdit(id) {
+        const active = document.getElementById(`edit-${id}-active`).checked;
+        // 簡單的視覺回饋：變灰
+        const els = document.querySelectorAll(`#edit-${id}-name, #edit-${id}-text, #edit-${id}-size, #edit-${id}-effect`);
+        els.forEach(el => el.disabled = !active);
+    }
+
+    function confirmDialogue() {
+        // [修改] 增加讀取 exit 欄位
+        const getData = (id) => ({
+            active: document.getElementById(`edit-${id}-active`).checked,
+            name: document.getElementById(`edit-${id}-name`).value,
+            dataText: document.getElementById(`edit-${id}-text`).value,
+            size: document.getElementById(`edit-${id}-size`).value,
+            effect: document.getElementById(`edit-${id}-effect`).value,
+            exit: document.getElementById(`edit-${id}-exit`).value, // 新增這行
+            emotion: document.getElementById(`edit-${id}-emotion`).value
+        });
+
+        const p1Data = getData('p1');
+        const p2Data = getData('p2');
+        
+        if(p1Data.active) lastDiagSettings.p1 = { name: p1Data.name, emotion: p1Data.emotion };
+        if(p2Data.active) lastDiagSettings.p2 = { name: p2Data.name, emotion: p2Data.emotion };
+
+        // 注意：這裡不需要再呼叫 startDraft，因為 openDialogueModal 已經幫我們做好了
+        
+        // 若 draftOperations 已有對話 (編輯模式)，先清空避免重複 push
+        if (draftOperations.length > 0 && draftOperations[0].type === 'DIALOGUE') {
+            draftOperations = [];
+        }
+
+        addOperation({
+            type: 'DIALOGUE',
+            data: { p1: p1Data, p2: p2Data }
+        });
+
+        let desc = "[對話] ";
+        if (p2Data.active) desc += `${p2Data.name}: ${p2Data.dataText.substr(0,8)}... `;
+        if (p1Data.active) desc += `${p1Data.name}: ${p1Data.dataText.substr(0,8)}...`;
+        
+        saveDraft(desc);
+        document.getElementById('dialogue-modal').style.display = 'none';
+        
+        document.getElementById('edit-p1-text').value = '';
+        document.getElementById('edit-p2-text').value = '';
+    }
+
+    // 全域貼上監聽 (替換圖片)
+    // 全域貼上監聽 (替換圖片)
+    document.addEventListener('paste', (e) => {
+        const modal = document.getElementById('dialogue-modal');
+        if (modal.style.display !== 'flex') return; 
+
+        // [修改] 根據 lastFocusPid 來決定要貼上到哪一區
+        const parentGrid = document.getElementById(`emotion-grid-${lastFocusPid}`);
+        if (!parentGrid) return;
+
+        // 在該區塊內尋找被選中的表情
+        const activeOpt = parentGrid.querySelector('.emotion-opt.active');
+        if (!activeOpt) return;
+
+        const pid = lastFocusPid; // p1 或 p2
+        const emo = activeOpt.dataset.emo;
+        const key = `avatar_${pid}_${emo}`;
+
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let item of items) {
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+                const blob = item.getAsFile();
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const base64 = evt.target.result;
+                    
+                    // 這裡可以加入一個簡單的視覺閃爍回饋，讓使用者知道貼上成功了
+                    activeOpt.style.transition = 'none';
+                    activeOpt.style.boxShadow = '0 0 15px 5px #fff';
+                    setTimeout(() => { activeOpt.style.transition = ''; activeOpt.style.boxShadow = ''; }, 200);
+
+                    if(confirm(`確定要將 [${pid.toUpperCase()} - ${EMOTION_LABELS[emo]}] 的頭像替換成這張圖片嗎？\n(此變更將全域生效)`)) {
+                        globalImageRegistry[key] = base64;
+                        activeOpt.style.backgroundImage = `url(${base64})`;
+                        renderUI(); 
+                        saveToStorage(); 
+                    }
+                };
+                reader.readAsDataURL(blob);
+                e.preventDefault();
+                break;
+            }
+        }
+    });
 	
 </script>
 <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
