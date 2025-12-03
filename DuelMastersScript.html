@@ -1199,6 +1199,25 @@
 			/* 因為變大了，稍微增加左右間距，避免視覺上太擁擠 */
 			margin: 0 6px;
 		}
+		
+		/* --- 修正：強制在手機版顯示回合呼吸燈 --- */
+		body.mobile-mode .turn-bar {
+			display: block !important; /* 原本被設為 none，這裡強制顯示 */
+			
+			/* 手機螢幕較小，建議稍微加寬一點，視覺上會更明顯 */
+			width: 20px !important; 
+			
+			/* 確保它的層級夠高，不會被放大的卡片蓋住 */
+			z-index: 50 !important; 
+		}
+
+		/* 選擇性調整：如果你覺得手機版呼吸燈太亮或太暗，可以調整這裡 */
+		body.mobile-mode #player1-area.active-turn .turn-bar {
+			box-shadow: 0 0 25px 5px rgba(52, 152, 219, 0.9);
+		}
+		body.mobile-mode #player2-area.active-turn .turn-bar {
+			box-shadow: 0 0 25px 5px rgba(233, 30, 99, 0.9);
+		}
     </style>
 </head>
 <body>
