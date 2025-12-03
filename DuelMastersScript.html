@@ -124,14 +124,15 @@
         }
 
         #svg-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; 
-            z-index: 999; 
-        }
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none; 
+			z-index: 999; 
+			/* 確保沒有其他 transform 干擾，它會繼承父層 workspace 的 scale */
+		}
         
         .arrow-line {
             stroke: rgba(231, 76, 60, 0.8);
@@ -815,8 +816,8 @@
 		}
 
 		.claw-svg {
-			width: 80%;
-			height: 80%;
+			width: 130%;  /* 原本是 80%，改成 130% 讓它超出卡片邊界 */
+			height: 130%; /* 原本是 80%，改成 130% */
 			overflow: visible;
 		}
 
@@ -894,6 +895,22 @@
             0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
             100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
         }
+		
+		/* 語言選單樣式 */
+		#lang-select {
+			background: #34495e;
+			color: white;
+			border: 1px solid #566573;
+			padding: 4px 8px;
+			border-radius: 4px;
+			margin-right: 10px;
+			font-size: 0.85rem;
+			cursor: pointer;
+			outline: none;
+		}
+		#lang-select:hover {
+			background: #4e6479;
+		}
 		
 		/* --- Mobile Mode Styles (Final Fix) --- */
 		body.mobile-mode {
@@ -990,27 +1007,26 @@
 </head>
 <body>
 
-<svg id="svg-layer">
-    <defs>
-        <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-            <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
-        </marker>
-    </defs>
-</svg>
-
 <div id="toolbar">
     <div style="font-weight: 800; font-size: 1.1rem; margin-right: 10px; color: #f1c40f;">DM Editor</div>
-    <button onclick="openSetupModal()">Setup / Clear</button>
-    <button onclick="rotateBoard()">🔄 換人 (Switch Turn)</button>
+    
+    <select id="lang-select" onchange="changeLanguage(this.value)">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="jp">日本語</option>
+    </select>
+
+    <button onclick="openSetupModal()" data-i18n="btn_setup">Setup / Clear</button>
+    <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
     <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
-    <button onclick="resetBoard(1)" title="重置 P1 盤面">P1 重置</button>
-    <button onclick="resetBoard(2)" title="重置 P2 盤面">P2 重置</button>
-	<button onclick="triggerWin(1)" style="background:#f39c12; border-color:#d35400;">🏆 1P Win</button>
-    <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;">🏆 2P Win</button>
+    <button onclick="resetBoard(1)" title="重置 P1 盤面" data-i18n="btn_p1_reset">P1 重置</button>
+    <button onclick="resetBoard(2)" title="重置 P2 盤面" data-i18n="btn_p2_reset">P2 重置</button>
+    <button onclick="triggerWin(1)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p1_win">🏆 1P Win</button>
+    <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p2_win">🏆 2P Win</button>
     <div style="flex:1"></div>
-    <button onclick="document.getElementById('import-input').click()">匯入 (Import)</button>
+    <button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
-    <button onclick="exportData()">匯出 (Export)</button>
+    <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
 </div>
 
 <div id="draft-bar">
@@ -1034,12 +1050,21 @@
 </div>
 
 <div id="workspace">
+
+	<svg id="svg-layer">
+        <defs>
+            <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+            </marker>
+        </defs>
+    </svg>
+	
     <div id="ability-stack-zone">
         <div id="ability-zone-p2" class="ability-column">
-            <div class="ability-label">P2 能力 (待處理)</div>
+            <div class="ability-label" data-i18n="zone_ability">P2 能力 (待處理)</div>
         </div>
         <div id="ability-zone-p1" class="ability-column">
-            <div class="ability-label">P1 能力 (待處理)</div>
+            <div class="ability-label" data-i18n="zone_ability">P1 能力 (待處理)</div>
         </div>
     </div>
 
@@ -1053,30 +1078,30 @@
 
             <div id="player2-area" class="player-area">
                 <div class="turn-bar"></div>
-                <div class="battle-zone zone" data-zone="p2-battle" onclick="handleZoneClick('p2-battle')"><span class="zone-label">P2 戰鬥場</span></div>
-                <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label">P2 護盾區</span></div>
-                <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label">P2 魔力區</span></div>
+                <div class="battle-zone zone" data-zone="p2-battle" onclick="handleZoneClick('p2-battle')"><span class="zone-label" data-i18n="zone_battle">P2 戰鬥場</span></div>
+                <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label" data-i18n="zone_shield">P2 護盾區</span></div>
+                <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label" data-i18n="zone_mana">P2 魔力區</span></div>
                 <div class="bottom-row">
-                    <div class="hand-zone zone" data-zone="p2-hand" onclick="handleZoneClick('p2-hand')"><span class="zone-label">P2 手牌</span></div>
+                    <div class="hand-zone zone" data-zone="p2-hand" onclick="handleZoneClick('p2-hand')"><span class="zone-label" data-i18n="zone_hand">P2 手牌</span></div>
                     <div class="side-zone-group">
-                        <div class="hyper-zone zone stacked" data-zone="p2-hyper" onclick="handleZoneClick('p2-hyper')"><span class="zone-label">超次元</span></div>
-                        <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label">墓地</span></div>
-                        <div class="deck-zone zone stacked" data-zone="p2-deck" onclick="handleZoneClick('p2-deck')"><span class="zone-label">牌庫</span></div>
+                        <div class="hyper-zone zone stacked" data-zone="p2-hyper" onclick="handleZoneClick('p2-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
+                        <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
+                        <div class="deck-zone zone stacked" data-zone="p2-deck" onclick="handleZoneClick('p2-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
                     </div>
                 </div>
             </div>
 
             <div id="player1-area" class="player-area">
                 <div class="turn-bar"></div>
-                <div class="battle-zone zone" data-zone="p1-battle" onclick="handleZoneClick('p1-battle')"><span class="zone-label">P1 戰鬥場</span></div>
-                <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label">P1 護盾區</span></div>
-                <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label">P1 魔力區</span></div>
+                <div class="battle-zone zone" data-zone="p1-battle" onclick="handleZoneClick('p1-battle')"><span class="zone-label" data-i18n="zone_battle">P1 戰鬥場</span></div>
+                <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label" data-i18n="zone_shield">P1 護盾區</span></div>
+                <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label" data-i18n="zone_mana">P1 魔力區</span></div>
                 <div class="bottom-row">
-                    <div class="hand-zone zone" data-zone="p1-hand" onclick="handleZoneClick('p1-hand')"><span class="zone-label">P1 手牌</span></div>
+                    <div class="hand-zone zone" data-zone="p1-hand" onclick="handleZoneClick('p1-hand')"><span class="zone-label" data-i18n="zone_hand">P1 手牌</span></div>
                     <div class="side-zone-group">
-                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label">牌庫</span></div>
-                        <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label">墓地</span></div>
-                        <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label">超次元</span></div>
+                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
+                        <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
+                        <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
                     </div>
                 </div>
             </div>
@@ -1104,21 +1129,21 @@
 <div id="card-action-panel">
     <button id="btn-rotate-l" onclick="rotateCard(-90)">↶</button>
     <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
-    <button id="btn-flip" onclick="flipCard()">翻面</button>
-	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()">💔 受傷</button>
-    <button id="btn-glow" onclick="toggleGlow()">💡發光</button>
+    <button id="btn-flip" onclick="flipCard()" data-i18n="act_flip">翻面</button>
+	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
+    <button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
     <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
-    <button id="btn-copy-ability" onclick="copyToAbility()">⚡能力</button>
-    <button id="btn-reveal" onclick="revealCards()">👁️ 展示</button>
-    <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()">👉 指向</button>
-    <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()">🛑 結束指向</button>
-    <button onclick="pasteImageMode()">🖼️ 上圖 (Ctrl+V)</button>
+    <button id="btn-copy-ability" onclick="copyToAbility()" data-i18n="act_ability">⚡能力</button>
+    <button id="btn-reveal" onclick="revealCards()" data-i18n="act_reveal">👁️ 展示</button>
+    <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
+    <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
+    <button onclick="pasteImageMode()" data-i18n="act_paste">🖼️ 上圖 (Ctrl+V)</button>
     <button id="btn-remove-image" style="display:none; background:#e74c3c;" onclick="removeImage()">✕ 圖</button>
     <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
     <input type="text" id="rename-input" placeholder="名稱..." onkeydown="if(event.key==='Enter') renameCard()" style="width: 80px;">
-    <button onclick="renameCard()">更名</button>
+    <button onclick="renameCard()" data-i18n="act_rename">更名</button>
     <input type="text" id="note-input" placeholder="註記..." onkeydown="if(event.key==='Enter') addCardNote()" style="width: 80px;">
-    <button onclick="addCardNote()">📝註記</button>
+    <button onclick="addCardNote()" data-i18n="act_note">📝註記</button>
     
     <div id="ability-adjust-controls" style="display:none; border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
     <div id="ability-adjust-buttons" style="display:none; gap:5px; align-items:center;">
@@ -1133,7 +1158,7 @@
     </div>
 
     <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
-    <button id="btn-delete-card" class="danger" style="display:none;" onclick="deleteSelectedCard()">🗑️ 刪除</button>
+    <button id="btn-delete-card" class="danger" style="display:none;" onclick="deleteSelectedCard()" data-i18n="act_delete">🗑️ 刪除</button>
     <button class="danger" onclick="cancelSelection()">✕ (ESC)</button>
 </div>
 
@@ -1258,6 +1283,185 @@
 </div>
 
 <script>
+	// --- 多語言設定 (i18n) ---
+    const TRANSLATIONS = {
+        'zh': {
+            // ... (原本的內容保留) ...
+            
+            // [新增] Timeline Actions
+            'btn_play_from': '▶ 從此播放',
+            'btn_play_step': '👁️ 演示此步',
+            'btn_edit_step': '✏️ 編輯',
+            'btn_delete_step': '🗑 刪除',
+            
+            // [新增] Play Controls
+            'btn_play': '▶ 播放',
+            'btn_pause': '⏸ 暫停',
+            
+            // [新增] Reveal Zone (HTML內)
+            'lbl_reveal_zone': '展示區 (Reveal Zone)',
+            
+            // [新增] JS Messages (Alerts & Confirms)
+            'msg_confirm_setup': '注意：開始新局會清除當前未匯出的進度。',
+            'msg_confirm_clear_storage': '確定要清除所有自動存檔嗎？',
+            'msg_cleared': '存檔已清除。',
+            'msg_confirm_delete_all': '確定要刪除所有動作並重新開始新局嗎？',
+            'msg_init_fail': '初始化失敗: ',
+            'msg_storage_full': '⚠️ 自動存檔失敗：儲存空間已滿。\n\n建議您立即「匯出」保存進度，否則關閉視窗後資料將會遺失。',
+            'msg_unsaved_draft': '目前有未儲存的變更，是否捨棄並開始新步驟？',
+            'msg_unsaved_edit': '目前有未儲存的變更，是否捨棄並編輯此步驟？',
+            'msg_cannot_del_init': '無法刪除初始狀態',
+            'msg_confirm_del_step': '確定刪除此步驟？',
+            'msg_replace_img': '確定要替換此卡片的圖片嗎？(這將影響所有劇本)',
+            'msg_remove_img': '確定移除圖片？',
+            'msg_confirm_p1_reset': '確定要重置 Player 1 的戰場與魔力區方向嗎？',
+            'msg_confirm_p2_reset': '確定要重置 Player 2 的戰場與魔力區方向嗎？',
+            'msg_glow_ability_only': '只有「待處理區」的卡片可以下達發光指令。\n(若有設定來源卡，來源卡會自動同步發光)',
+            'msg_injured_battle_only': '只有「戰鬥區」與「護盾區」的卡片可以標記為受傷。',
+            'msg_confirm_reveal_close': '將展示區卡片全部送入墓地並關閉？',
+            'msg_select_one_copy': '請一次選擇一張牌進行複製',
+            'msg_confirm_del_card': '確定要刪除選取的卡片嗎？(僅建議用於能力處理區)',
+            'msg_select_one_point': '請選擇一張卡片進行指向',
+            'msg_save_first': '請先儲存當前步驟，再結束指向',
+            'msg_cant_move_ability': '能力待處理區的卡片不能移動',
+            'msg_mobile_blocked': '此功能未對行動裝置開放',
+            'msg_import_success': '匯入成功！',
+            'msg_import_fail': '匯入失敗',
+            'msg_confirm_import': '確定要匯入此檔案嗎？',
+            'msg_load_script_fail': '無法載入指定劇本: '
+        },
+        'en': {
+            // ... (原本的內容保留) ...
+            'btn_play_from': '▶ Play From Here',
+            'btn_play_step': '👁️ Demo Step',
+            'btn_edit_step': '✏️ Edit',
+            'btn_delete_step': '🗑 Delete',
+            'btn_play': '▶ Play',
+            'btn_pause': '⏸ Pause',
+            'lbl_reveal_zone': 'Reveal Zone',
+            'msg_confirm_setup': 'Warning: Starting a new game will clear unsaved progress.',
+            'msg_confirm_clear_storage': 'Clear all auto-saved data?',
+            'msg_cleared': 'Storage cleared.',
+            'msg_confirm_delete_all': 'Delete all actions and restart?',
+            'msg_init_fail': 'Init failed: ',
+            'msg_storage_full': '⚠️ Auto-save failed: Storage full. Please Export your data.',
+            'msg_unsaved_draft': 'Discard unsaved changes and start new step?',
+            'msg_unsaved_edit': 'Discard unsaved changes and edit this step?',
+            'msg_cannot_del_init': 'Cannot delete initial state.',
+            'msg_confirm_del_step': 'Delete this step?',
+            'msg_replace_img': 'Replace image for this card? (Affects entire script)',
+            'msg_remove_img': 'Remove image?',
+            'msg_confirm_p1_reset': 'Reset P1 board orientation?',
+            'msg_confirm_p2_reset': 'Reset P2 board orientation?',
+            'msg_glow_ability_only': 'Glow is only available for cards in Ability Zone.',
+            'msg_injured_battle_only': 'Only cards in Battle or Shield zone can be injured.',
+            'msg_confirm_reveal_close': 'Send revealed cards to grave and close?',
+            'msg_select_one_copy': 'Please select exactly one card to copy.',
+            'msg_confirm_del_card': 'Delete selected card? (Recommended for Ability Zone only)',
+            'msg_select_one_point': 'Please select one card to point.',
+            'msg_save_first': 'Please save current step before ending point mode.',
+            'msg_cant_move_ability': 'Cannot move cards in Ability Zone.',
+            'msg_mobile_blocked': 'Feature not available on mobile.',
+            'msg_import_success': 'Import Successful!',
+            'msg_import_fail': 'Import Failed',
+            'msg_confirm_import': 'Import this file?',
+            'msg_load_script_fail': 'Failed to load script: '
+        },
+        'jp': {
+            // ... (原本的內容保留) ...
+            'btn_play_from': '▶ ここから再生',
+            'btn_play_step': '👁️ この手順を確認',
+            'btn_edit_step': '✏️ 編集',
+            'btn_delete_step': '🗑 削除',
+            'btn_play': '▶ 再生',
+            'btn_pause': '⏸ 一時停止',
+            'lbl_reveal_zone': '公開領域 (Reveal)',
+            'msg_confirm_setup': '注意：新しいゲームを始めると、保存されていない進行状況は消去されます。',
+            'msg_confirm_clear_storage': '自動保存データをすべて消去しますか？',
+            'msg_cleared': '消去しました。',
+            'msg_confirm_delete_all': 'すべてのアクションを削除してリセットしますか？',
+            'msg_init_fail': '初期化失敗: ',
+            'msg_storage_full': '⚠️ 自動保存失敗：容量不足です。データをエクスポートしてください。',
+            'msg_unsaved_draft': '変更を破棄して新しいステップを開始しますか？',
+            'msg_unsaved_edit': '変更を破棄してこのステップを編集しますか？',
+            'msg_cannot_del_init': '初期状態は削除できません。',
+            'msg_confirm_del_step': 'このステップを削除しますか？',
+            'msg_replace_img': '画像の差し替えを行いますか？（すべてのステップに影響します）',
+            'msg_remove_img': '画像を削除しますか？',
+            'msg_confirm_p1_reset': 'Player 1 の盤面の向きをリセットしますか？',
+            'msg_confirm_p2_reset': 'Player 2 の盤面の向きをリセットしますか？',
+            'msg_glow_ability_only': '発光設定は「効果処理」ゾーンのカードのみ可能です。',
+            'msg_injured_battle_only': '負傷マークはバトルゾーンまたはシールドゾーンのみ可能です。',
+            'msg_confirm_reveal_close': '公開カードを墓地に送り、閉じますか？',
+            'msg_select_one_copy': 'コピーするカードを1枚選択してください。',
+            'msg_confirm_del_card': '選択したカードを削除しますか？',
+            'msg_select_one_point': '対象のカードを1枚選択してください。',
+            'msg_save_first': '現在のステップを保存してください。',
+            'msg_cant_move_ability': '効果処理ゾーンのカードは移動できません。',
+            'msg_mobile_blocked': 'モバイル端末では利用できません。',
+            'msg_import_success': 'インポート成功！',
+            'msg_import_fail': 'インポート失敗',
+            'msg_confirm_import': 'このファイルをインポートしますか？',
+            'msg_load_script_fail': 'スクリプトの読み込みに失敗しました: '
+        }
+    };
+
+    let currentLang = 'zh';
+
+    // 用於取得正確的播放按鈕文字
+    function getPlayButtonText() {
+        return playInterval ? t('btn_pause') : t('btn_play');
+    }
+
+    // 更新播放按鈕 UI 的專用函式
+    function updatePlayButtonUI() {
+        const text = getPlayButtonText();
+        const deskBtn = document.getElementById('btn-play');
+        const mobBtn = document.getElementById('mob-play-btn');
+        
+        if(deskBtn) deskBtn.innerText = text;
+        if(mobBtn) mobBtn.innerText = playInterval ? "⏸" : "▶"; // 手機版維持符號就好，比較簡潔
+    }
+
+    function changeLanguage(lang) {
+        currentLang = lang;
+        const dict = TRANSLATIONS[lang];
+        if (!dict) return;
+
+        // 1. 更新靜態標籤
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) {
+                if (el.tagName === 'INPUT' && el.type === 'button') {
+                    el.value = dict[key];
+                } else {
+                    el.innerText = dict[key];
+                }
+            }
+        });
+
+        // 2. 更新 Play 按鈕 (需判斷當前是暫停還是播放)
+        updatePlayButtonUI();
+
+        // 3. 重繪 Timeline (讓動作列表的按鈕變成新語言)
+        renderTimeline();
+        
+        // 4. 更新 Reveal Zone (如果有打開)
+        const revealZone = document.getElementById('reveal-zone');
+        if (revealZone && revealZone.style.display !== 'none') {
+            const label = revealZone.querySelector('.zone-label');
+            if(label) label.innerText = t('lbl_reveal_zone');
+        }
+        
+        if (isDrafting) updateDraftBar();
+        if (isPointing) updatePointInfo();
+    }
+    
+    // 輔助函式：給 JS 內部使用的翻譯
+    function t(key) {
+        return TRANSLATIONS[currentLang][key] || key;
+    }
+
     class Card {
         constructor(id, ownerId, text, zone) {
             this.id = id;
@@ -1398,7 +1602,7 @@
     }
     
     function updateCardImageGlobal(cardId, base64) {
-        if(!confirm("確定要替換此卡片的圖片嗎？(這將影響所有劇本)")) return;
+        if(!confirm(t('msg_replace_img'))) return;
         
         const state = getCurrentDisplayState();
         const targetCard = state.cards.find(c => c.id === cardId);
@@ -1462,7 +1666,7 @@
              keyToUpdate = card.backImageKey;
         }
         
-        if(!confirm("確定移除圖片？")) return;
+        if(!confirm(t('msg_remove_img'))) return;
         
         delete globalImageRegistry[keyToUpdate];
 
@@ -1495,15 +1699,15 @@
     }
 
     function clearStorage() {
-        if(confirm("確定要清除所有自動存檔嗎？")) {
+        if(confirm(t('msg_confirm_clear_storage'))) {
             localStorage.removeItem(STORAGE_KEY);
-            alert("存檔已清除。");
+            alert(t('msg_cleared'));
             location.reload();
         }
     }
     
     function deleteAllActions() {
-        if(!confirm("確定要刪除所有動作並重新開始新局嗎？")) return;
+        if(!confirm(t('msg_confirm_delete_all'))) return;
         
         history = [];
         initialState = null;
@@ -1540,7 +1744,7 @@
             document.getElementById('setup-modal').style.display = 'none';
         } catch (e) {
             console.error(e);
-            alert("初始化失敗: " + e.message);
+            alert(t('msg_init_fail') + e.message)
         }
     }
 
@@ -1580,7 +1784,12 @@
         saveToStorage();
     }
 
-    function saveToStorage() {
+	function saveToStorage() {
+        // --- [新增] 手機播放模式下，絕對不要存檔 ---
+        // 這樣可以確保觀看 Script 時，不會覆蓋掉使用者原本的編輯進度
+        if (document.body.classList.contains('mobile-mode')) return;
+        // ----------------------------------------
+
         try {
             const data = {
                 timestamp: Date.now(),
@@ -1599,7 +1808,7 @@
             console.warn("Storage save failed (Quota?)", e);
             storageQuotaExceeded = true;
             if (!hasAlertedQuota) {
-                alert("⚠️ 自動存檔失敗：儲存空間已滿。\n\n建議您立即「匯出」保存進度，否則關閉視窗後資料將會遺失。");
+                alert(t('msg_storage_full'));
                 hasAlertedQuota = true;
             }
         }
@@ -1642,7 +1851,7 @@
 
 	function startDraft(index) {
         if (isDrafting) {
-            if(!confirm("目前有未儲存的變更，是否捨棄並開始新步驟？")) return;
+            if(!confirm(t('msg_unsaved_draft'))) return;
         }
         
         isDrafting = true;
@@ -1668,7 +1877,7 @@
 
     function editAction(index) {
         if (isDrafting) {
-            if(!confirm("目前有未儲存的變更，是否捨棄並編輯此步驟？")) return;
+            if(!confirm(t('msg_unsaved_edit'))) return;
         }
         
         isDrafting = true;
@@ -1814,6 +2023,13 @@
         const bar = document.getElementById('draft-bar');
         if (isDrafting) {
             bar.style.display = 'flex';
+            // 使用 t() 翻譯按鈕
+            const saveBtn = bar.querySelector('.primary');
+            const cancelBtn = bar.querySelector('.danger');
+            // 注意：這裡假設你的 HTML 按鈕結構沒變，建議給按鈕加上 ID 或 data-i18n 會更穩
+            // 簡單示範：
+            document.querySelector('#draft-bar button.primary').innerText = t('btn_save_step');
+            document.querySelector('#draft-bar button.danger').innerText = t('btn_cancel_draft');
             document.getElementById('draft-count').innerText = draftOperations.length;
         } else {
             bar.style.display = 'none';
@@ -1821,8 +2037,8 @@
     }
 
     function deleteAction(index) {
-        if (index === 0) return alert("無法刪除初始狀態");
-        if (!confirm("確定刪除此步驟？")) return;
+        if (index === 0) return alert(t('msg_cannot_del_init'));
+        if (!confirm(t('msg_confirm_del_step'))) return;
 
         const head = history.slice(0, index);
         let tail = history.slice(index + 1);
@@ -2171,7 +2387,7 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
     
     function resetBoard(playerId) {
-        if(!confirm(`確定要重置 Player ${playerId} 的戰場與魔力區方向嗎？`)) return;
+        if(!confirm(playerId === 1 ? t('msg_confirm_p1_reset') : t('msg_confirm_p2_reset'))) return;
         addOperation({ type: 'RESET_BOARD', playerId: playerId });
     }
 
@@ -2186,7 +2402,7 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         });
 
         if (invalid) {
-            alert("只有「待處理區」的卡片可以下達發光指令。\n(若有設定來源卡，來源卡會自動同步發光)");
+            alert(t('msg_glow_ability_only'));
             return;
         }
 
@@ -2231,7 +2447,7 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
     
     function closeRevealZone() {
-        if(confirm("將展示區卡片全部送入墓地並關閉？")) {
+        if(confirm(t('msg_confirm_reveal_close'))) {
              const state = getCurrentDisplayState();
              const cards = state.cards.filter(c => c.zone === 'reveal-zone');
              const p1Cards = cards.filter(c => c.ownerId === 1).map(c=>c.id);
@@ -2606,7 +2822,7 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         return zoneId.toUpperCase(); 
     }
 
-function renderUI() {
+	function renderUI() {
         const firstPositions = getCardPositions();
         const state = getCurrentDisplayState();
         
@@ -2651,8 +2867,9 @@ function renderUI() {
         const revealCards = state.cards.filter(c => c.zone === 'reveal-zone');
         if (revealCards.length > 0) {
             revealZoneEl.style.display = 'flex';
+            // 修改這裡：使用 t() 和 data-i18n
             revealZoneEl.innerHTML = `
-                <span class="zone-label">展示區 (Reveal Zone)</span>
+                <span class="zone-label" data-i18n="lbl_reveal_zone">${t('lbl_reveal_zone')}</span>
                 <button class="mini-btn danger" style="position:absolute; top:5px; right:5px;" onclick="closeRevealZone()">✕</button>
             `;
             revealCards.forEach(c => revealZoneEl.appendChild(createCardElement(c)));
@@ -2984,6 +3201,14 @@ function renderUI() {
 
     function renderArrows() {
         const svg = document.getElementById('svg-layer');
+        const workspace = document.getElementById('workspace');
+        
+        // 防呆：如果 SVG 還是不在 workspace 裡面，強制把它移進去
+        if (svg && workspace && svg.parentNode !== workspace) {
+            workspace.insertBefore(svg, workspace.firstChild);
+        }
+
+        // 清空並重繪 Marker 定義
         svg.innerHTML = `
             <defs>
                 <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
@@ -2992,6 +3217,7 @@ function renderUI() {
             </defs>
         `;
         
+        // 取得當前的操作步驟
         let ops = [];
         if (isDrafting) {
             ops = draftOperations;
@@ -2999,59 +3225,81 @@ function renderUI() {
             ops = history[currentIndex].action.operations;
         }
 
-        if (ops) {
-            const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+        if (!ops || ops.length === 0) return;
+
+        // --- 核心修改：計算座標轉換比例 ---
+        // 我們需要算出「螢幕像素」轉成「畫布內部像素」的比例
+        // workspace.getBoundingClientRect() 取得的是縮放後(螢幕上)的尺寸
+        // workspace.offsetWidth 取得的是原始排版(內部)的尺寸 (手機版固定為 1200)
+        
+        const wsRect = workspace.getBoundingClientRect();
+        const scaleX = wsRect.width / workspace.offsetWidth;
+        const scaleY = wsRect.height / workspace.offsetHeight;
+        
+        // 畫布在螢幕上的左上角起點
+        const offsetX = wsRect.left;
+        const offsetY = wsRect.top;
+
+        // 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
+        const toLocal = (rect) => {
+            // 1. 算出元素的中心點 (螢幕座標)
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
             
-            pointOps.forEach(op => {
-                const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
-                if (!attacker) return;
-                
-                let targetEls = [];
-                if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
-                    if (Array.isArray(op.targetIds)) {
-                        op.targetIds.forEach(tid => {
-                            const el = document.querySelector(`.card[data-id="${tid}"]`);
-                            if(el) targetEls.push(el);
-                        });
-                    }
-                } else if (op.targetType === 'PLAYER') {
-                    const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
-                    const oppId = attackerOwner === 1 ? 2 : 1;
-                    const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
-                    if(deck) targetEls.push(deck);
+            // 2. 減去畫布起點，並除以縮放比例
+            return {
+                x: (centerX - offsetX) / scaleX,
+                y: (centerY - offsetY) / scaleY
+            };
+        };
+
+        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+        
+        pointOps.forEach(op => {
+            const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
+            if (!attacker) return;
+            
+            let targetEls = [];
+            if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
+                if (Array.isArray(op.targetIds)) {
+                    op.targetIds.forEach(tid => {
+                        const el = document.querySelector(`.card[data-id="${tid}"]`);
+                        if(el) targetEls.push(el);
+                    });
                 }
+            } else if (op.targetType === 'PLAYER') {
+                const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
+                const oppId = attackerOwner === 1 ? 2 : 1;
+                const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
+                if(deck) targetEls.push(deck);
+            }
+            
+            // 使用轉換函式計算起點
+            const startPoint = toLocal(attacker.getBoundingClientRect());
+            
+            targetEls.forEach(target => {
+                const endPoint = toLocal(target.getBoundingClientRect());
+                const isSelf = (target === attacker);
                 
-                const startRect = attacker.getBoundingClientRect();
-                const x1 = startRect.left + startRect.width / 2;
-                const y1 = startRect.top + startRect.height / 2;
-                
-                targetEls.forEach(target => {
-                    const endRect = target.getBoundingClientRect();
-                    const x2 = endRect.left + endRect.width / 2;
-                    const y2 = endRect.top + endRect.height / 2;
-                    
-                    const isSelf = (target === attacker);
-                    
-                    if (isSelf) {
-                        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                        const r = 40; 
-                        const d = `M ${x1},${y1} C ${x1+r*2},${y1-r*2} ${x1-r*2},${y1-r*2} ${x1},${y1}`;
-                        path.setAttribute("d", d);
-                        path.setAttribute("class", "arrow-line");
-                        path.setAttribute("fill", "none");
-                        svg.appendChild(path);
-                    } else {
-                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                        line.setAttribute("x1", x1);
-                        line.setAttribute("y1", y1);
-                        line.setAttribute("x2", x2);
-                        line.setAttribute("y2", y2);
-                        line.setAttribute("class", "arrow-line");
-                        svg.appendChild(line);
-                    }
-                });
+                if (isSelf) {
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    const r = 40; 
+                    const d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x-r*2},${startPoint.y-r*2} ${startPoint.x},${startPoint.y}`;
+                    path.setAttribute("d", d);
+                    path.setAttribute("class", "arrow-line");
+                    path.setAttribute("fill", "none");
+                    svg.appendChild(path);
+                } else {
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", startPoint.x);
+                    line.setAttribute("y1", startPoint.y);
+                    line.setAttribute("x2", endPoint.x);
+                    line.setAttribute("y2", endPoint.y);
+                    line.setAttribute("class", "arrow-line");
+                    svg.appendChild(line);
+                }
             });
-        }
+        });
     }
 
     function renderTimeline() {
@@ -3082,13 +3330,17 @@ function renderUI() {
 
             li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
             
-            const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="刪除步驟">🗑</button>`;
-            const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" title="編輯此步驟">✏️ 編輯</button>`;
+            // 在 renderTimeline 內，修改 generating controls 的部分：
+
+            const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="${t('btn_delete_step')}">🗑</button>`;
+            
+            // 注意：這裡加入了 data-i18n 屬性
+            const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" data-i18n="btn_edit_step">${t('btn_edit_step')}</button>`;
             
             const controls = `
                 <div class="action-controls">
-                    <button class="mini-btn play-from" onclick="event.stopPropagation(); playFromStep(${index})">▶ 從此播放</button>
-                    <button class="mini-btn play-step" onclick="event.stopPropagation(); playSingleStep(${index})">👁️ 演示此步</button>
+                    <button class="mini-btn play-from" onclick="event.stopPropagation(); playFromStep(${index})" data-i18n="btn_play_from">${t('btn_play_from')}</button>
+                    <button class="mini-btn play-step" onclick="event.stopPropagation(); playSingleStep(${index})" data-i18n="btn_play_step">${t('btn_play_step')}</button>
                     ${editBtn}
                     ${delBtn}
                 </div>
@@ -3139,15 +3391,21 @@ function renderUI() {
 
     function togglePlay() {
         if (playInterval) {
-            clearInterval(playInterval); playInterval = null;
-            document.getElementById('btn-play').innerText = "▶ 播放";
+            clearInterval(playInterval); 
+            playInterval = null;
         } else {
-            document.getElementById('btn-play').innerText = "⏸ 暫停";
             playInterval = setInterval(() => {
-                if (currentIndex < history.length - 1) { currentIndex++; renderUI(); saveToStorage(); } 
+                if (currentIndex < history.length - 1) { 
+                    currentIndex++; 
+                    renderUI(); 
+                    // saveToStorage(); // 手機版已在 saveToStorage 內部擋下，這邊照舊即可
+                    if(!document.body.classList.contains('mobile-mode')) saveToStorage();
+                } 
                 else { togglePlay(); }
             }, 1200);
         }
+        // 統一呼叫這個更新 UI
+        updatePlayButtonUI();
     }
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
@@ -3200,8 +3458,8 @@ function renderUI() {
         if (choice === 'save') exportData(); 
         if (choice === 'save' || choice === 'overwrite') {
             if (pendingImportData) {
-                try { processGameData(pendingImportData, true); alert("匯入成功！"); } 
-                catch(e) { alert("匯入失敗：" + e.message); }
+                try { processGameData(pendingImportData, true); alert(t('msg_import_success')); } 
+                catch(e) { alert(t('msg_import_fail')); }
             }
         }
         pendingImportData = null;
@@ -3469,7 +3727,7 @@ function handleOrientation() {
                 // 情境 A: 手機且無參數 -> 清空畫面並提示
                 document.body.innerHTML = '';
                 document.body.style.backgroundColor = 'white';
-                alert("此功能未對行動裝置開放");
+                alert(t('msg_mobile_blocked'));
             } else {
                 // 情境 B: 手機且有參數 -> 進入觀戰模式
                 initMobileMode(scriptUrl);
