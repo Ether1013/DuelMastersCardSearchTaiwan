@@ -1598,7 +1598,8 @@
     <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
     <button id="btn-flip" onclick="flipCard()" data-i18n="act_flip">翻面</button>
 	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
-    <button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
+    <button id="btn-clear-injured" style="display:none; background:#27ae60; border-color:#2ecc71;" onclick="clearInjured()" data-i18n="act_clear_injured">❤️ 治癒</button>
+	<button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
     <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
     <button id="btn-copy-ability" onclick="copyToAbility(false)" data-i18n="act_ability">⚡單次</button>
 	<button id="btn-copy-continuous" onclick="copyToAbility(true)" style="background:#9b59b6; border-color:#8e44ad;" data-i18n="act_continuous">∞ 持續</button>			
@@ -1916,6 +1917,7 @@
 			
 			'act_flip': '翻面',
 			'act_injured': '💔 受傷',
+			'act_clear_injured': '❤️ 治癒', // [新增]
 			'act_glow': '💡發光',
 			'act_ability': '⚡觸發能力',
 			'act_continuous': '∞ 持續能力',
@@ -2051,7 +2053,7 @@
             'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'btn_import': 'Import', 'btn_export': 'Export',
             'zone_battle': 'Battle Zone', 'zone_shield': 'Shields', 'zone_mana': 'Mana', 'zone_hand': 'Hand',
             'zone_hyper': 'Hyper Zone', 'zone_grave': 'Graveyard', 'zone_deck': 'Deck', 'zone_ability': 'Ability (Pending)',
-            'act_flip': 'Flip', 'act_injured': '💔 Injured', 'act_glow': '💡 Glow', 'act_ability': '⚡ One-shot', 'act_continuous': '∞ Continuous',
+            'act_flip': 'Flip', 'act_injured': '💔 Injured', 'act_clear_injured': '❤️ Heal', 'act_glow': '💡 Glow', 'act_ability': '⚡ One-shot', 'act_continuous': '∞ Continuous',
             'act_reveal': '👁️ Reveal', 'act_point': '👉 Point', 'act_end_point': '🛑 End Point', 'act_paste': '🖼️ Paste Img',
             'act_rename': 'Rename', 'act_note': '📝 Note', 'act_delete': '🗑️ Delete', 'btn_cancel': 'Cancel', 'btn_save_step': '💾 Save Step',
             'lbl_point_mode': '👉 Point Mode: Select Target(s)', 'btn_confirm_point': '✅ Confirm', 'btn_reset_all': '🗑️ Reset',
@@ -2098,7 +2100,7 @@
             'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
             'zone_battle': 'バトルゾーン', 'zone_shield': 'シールド', 'zone_mana': 'マナゾーン', 'zone_hand': '手札',
             'zone_hyper': '超次元', 'zone_grave': '墓地', 'zone_deck': '山札', 'zone_ability': '効果処理',
-            'act_flip': '裏返す', 'act_injured': '💔 負傷', 'act_glow': '💡 発光', 'act_ability': '⚡ トリガー能力','act_continuous': '∞ 常在能力',
+            'act_flip': '裏返す', 'act_injured': '💔 負傷', 'act_clear_injured': '❤️ 回復', 'act_glow': '💡 発光', 'act_ability': '⚡ トリガー能力','act_continuous': '∞ 常在能力',
             'act_reveal': '👁️ 公開', 'act_point': '👉 対象選択', 'act_end_point': '🛑 選択終了', 'act_paste': '🖼️ 画像貼付',
             'act_rename': '名前変更', 'act_note': '📝 メモ', 'act_delete': '🗑️ 削除', 'lbl_draft_warning': '⚠️ 編集中... (操作数: ',
             'lbl_draft_ops': ')', 'lbl_draft_ops_prefix': '', 'chk_propagate': '🔗 以降へ反映', 'btn_cancel': 'キャンセル',
@@ -2829,26 +2831,6 @@
 		tempState = cloneState(history[baseIndex].state);
 
 		// --- [修改] 清除殘留狀態邏輯 ---
-		
-		// 1. 自動產生「移除受傷」的操作紀錄
-		// 檢查基礎狀態中是否有受傷的卡片
-		const injuredIds = tempState.cards.filter(c => c.isInjured).map(c => c.id);
-		
-		if (injuredIds.length > 0) {
-			// 建立一個「解除受傷」的操作
-			const cleanupOp = { 
-				type: 'INJURED', 
-				cardIds: injuredIds, 
-				setInjured: false 
-			};
-			
-			// 套用到暫存狀態
-			applyOperation(tempState, cleanupOp);
-			
-			// [關鍵] 將此操作推入 draftOperations，這樣 Action Log 就會自動擁有這筆紀錄
-			draftOperations.push(cleanupOp);
-		}
-		
 		// 2. 清除對話狀態 (維持原樣)
 		tempState.dialogueData = null; 
 		
@@ -2887,8 +2869,6 @@
             tempState = cloneState(history[baseIndex].state);
         }
         
-        // --- [同步修正] 清除殘留狀態 (與 startDraft 保持一致) ---
-        tempState.cards.forEach(c => { if(c.isInjured) c.isInjured = false; });
         tempState.dialogueData = null; 
         // ---------------------------------------------------
 
@@ -3114,7 +3094,7 @@
 
 	function applyOperation(state, op) {
 
-        // [修改] 如果不是對話動作，清除對話資料 (讓畫面消失)
+		// [修改] 如果不是對話動作，清除對話資料 (讓畫面消失)
 		if (op.type !== 'DIALOGUE') {
 			state.dialogueData = null;
 		}
@@ -3126,143 +3106,150 @@
 			state.dialogueData = op.data; // 直接套用資料
 			return; // 對話不涉及其他邏輯
 		}
-        
-        // --- 新增: 用於切斷連結的操作 ---
-        if (op.type === 'BREAK_LINKS') {
-            const { cardIds } = op;
-            state.cards.forEach(c => {
-                if (cardIds.includes(c.id)) {
-                    c.parentId = null;
-                    c.stackType = null;
-                }
-                if (c.parentId && cardIds.includes(c.parentId)) {
-                    c.parentId = null;
-                    c.stackType = null;
-                }
-            });
-        }
-        // --- [新增] 勝利狀態 ---
-        else if (op.type === 'GAME_WIN') {
-            const { winnerId } = op;
-            state.winner = winnerId; // 在狀態中記錄贏家
-        }
-        // ----------------------
-        else if (op.type === 'MOVE') {
-            const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
-            let movingCards = state.cards.filter(c => cardIds.includes(c.id));
-            
-            if(shuffleSelection) movingCards.sort(() => Math.random() - 0.5); 
-            
-            state.cards = state.cards.filter(c => !cardIds.includes(c.id));
-            movingCards.forEach(c => {
-                c.zone = toZone;
-                c.parentId = null;
-                c.stackType = null;
-                if (faceUp !== undefined) c.faceUp = faceUp;
-                if (toZone.includes('hand') || toZone.includes('deck')) c.rotation = 0; 
-                if (stackTargetId) {
-                    c.parentId = stackTargetId;
-                    c.stackType = stackType;
-                }
-            });
+		
+		// --- 新增: 用於切斷連結的操作 ---
+		if (op.type === 'BREAK_LINKS') {
+			const { cardIds } = op;
+			state.cards.forEach(c => {
+				// [修正] 改用 some + == (寬鬆比對)，解決 1 與 "1" 不相等的問題
+				if (cardIds.some(id => id == c.id)) { 
+					c.parentId = null;
+					c.stackType = null;
+				}
+				if (c.parentId && cardIds.some(id => id == c.parentId)) { 
+					c.parentId = null;
+					c.stackType = null;
+				}
+			});
+		}
+		// --- [新增] 勝利狀態 ---
+		else if (op.type === 'GAME_WIN') {
+			const { winnerId } = op;
+			state.winner = winnerId;
+		}
+		// ----------------------
+		else if (op.type === 'MOVE') {
+			const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
+			// [修正] 寬鬆比對
+			let movingCards = state.cards.filter(c => cardIds.some(id => id == c.id));
+			
+			if(shuffleSelection) movingCards.sort(() => Math.random() - 0.5); 
+			
+			// [修正] 寬鬆比對
+			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id)); 
+			movingCards.forEach(c => {
+				c.zone = toZone;
+				c.parentId = null;
+				c.stackType = null;
+				if (faceUp !== undefined) c.faceUp = faceUp;
+				if (toZone.includes('hand') || toZone.includes('deck')) c.rotation = 0; 
+				if (stackTargetId) {
+					c.parentId = stackTargetId;
+					c.stackType = stackType;
+				}
+			});
 
-            if (insertIndex !== undefined && insertIndex !== -1) {
-                let zoneCards = state.cards.filter(c => c.zone === toZone);
-                let otherCards = state.cards.filter(c => c.zone !== toZone);
-                zoneCards.splice(insertIndex, 0, ...movingCards);
-                state.cards = [...otherCards, ...zoneCards];
-            } else {
-                state.cards.push(...movingCards);
-            }
+			if (insertIndex !== undefined && insertIndex !== -1) {
+				let zoneCards = state.cards.filter(c => c.zone === toZone);
+				let otherCards = state.cards.filter(c => c.zone !== toZone);
+				zoneCards.splice(insertIndex, 0, ...movingCards);
+				state.cards = [...otherCards, ...zoneCards];
+			} else {
+				state.cards.push(...movingCards);
+			}
 
-        } else if (op.type === 'SHUFFLE') {
-            const { zoneId, order } = op; 
-            let zoneCards = state.cards.filter(c => c.zone === zoneId);
-            let otherCards = state.cards.filter(c => c.zone !== zoneId);
-            if (order) {
-                zoneCards = order.map(id => state.cards.find(c => c.id === id)).filter(c=>c);
-            } else {
-                zoneCards.sort(() => Math.random() - 0.5);
-            }
-            state.cards = [...otherCards, ...zoneCards];
+		} else if (op.type === 'SHUFFLE') {
+			const { zoneId, order } = op; 
+			let zoneCards = state.cards.filter(c => c.zone === zoneId);
+			let otherCards = state.cards.filter(c => c.zone !== zoneId);
+			if (order) {
+				// [修正] 寬鬆比對
+				zoneCards = order.map(id => state.cards.find(c => c.id == id)).filter(c=>c);
+			} else {
+				zoneCards.sort(() => Math.random() - 0.5);
+			}
+			state.cards = [...otherCards, ...zoneCards];
 
-        } else if (op.type === 'ROTATE' || op.type === 'SWITCH_TURN') {
-            state.turnPlayer = state.turnPlayer === 1 ? 2 : 1;
-        } 
-        else if (op.type === 'ROTATE_CARD') {
-            const { cardIds, deg, finalRotation } = op;
-            state.cards.forEach(c => {
-                if (cardIds.includes(c.id)) {
-                    if (finalRotation !== undefined) c.rotation = finalRotation;
-                    else c.rotation = (c.rotation + deg) % 360;
-                }
-            });
-        }
-        else if (op.type === 'FLIP_CARD') {
-            const { cardIds, finalFaceUp } = op;
-            state.cards.forEach(c => {
-                if (cardIds.includes(c.id)) {
-                    if (finalFaceUp !== undefined) c.faceUp = finalFaceUp;
-                    else c.faceUp = !c.faceUp;
-                }
-            });
-        }
-        else if (op.type === 'RENAME_CARD') {
-            const { cardIds, text } = op;
-            const targets = state.cards.filter(c => cardIds.includes(c.id));
-            targets.forEach(target => {
-                 state.cards.forEach(c => {
-                     if (c.imageKey === target.imageKey) {
-                         c.text = text;
-                     }
-                 });
-            });
-        }
-        else if (op.type === 'RESET_BOARD') {
-            const { playerId } = op;
-            state.cards.forEach(c => {
-                if (c.zone.includes(`p${playerId}-battle`)) {
-                    c.rotation = 0;
-                }
-                else if (c.zone.includes(`p${playerId}-mana`)) {
-                    c.rotation = 180;
-                }
-            });
-        }
-        else if (op.type === 'SET_GLOW') {
-            const { cardIds, color } = op;
-            state.cards.forEach(c => {
-                if (cardIds.includes(c.id)) {
-                    if (c.zone.includes('ability')) {
-                        c.glow = color;
-                        if (c.sourceId) {
-                            const source = state.cards.find(s => s.id === c.sourceId);
-                            if (source) {
-                                source.glow = color;
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        else if (op.type === 'INJURED') {
-            const { cardIds, setInjured } = op;
-            state.cards.forEach(c => {
-                if (cardIds.includes(c.id)) {
-                    c.isInjured = setInjured;
-                }
-            });
-        }
-        // 在 applyOperation 函式內
+		} else if (op.type === 'ROTATE' || op.type === 'SWITCH_TURN') {
+			state.turnPlayer = state.turnPlayer === 1 ? 2 : 1;
+		} 
+		else if (op.type === 'ROTATE_CARD') {
+			const { cardIds, deg, finalRotation } = op;
+			state.cards.forEach(c => {
+				if (cardIds.some(id => id == c.id)) { // [修正]
+					if (finalRotation !== undefined) c.rotation = finalRotation;
+					else c.rotation = (c.rotation + deg) % 360;
+				}
+			});
+		}
+		else if (op.type === 'FLIP_CARD') {
+			const { cardIds, finalFaceUp } = op;
+			state.cards.forEach(c => {
+				if (cardIds.some(id => id == c.id)) { // [修正]
+					if (finalFaceUp !== undefined) c.faceUp = finalFaceUp;
+					else c.faceUp = !c.faceUp;
+				}
+			});
+		}
+		else if (op.type === 'RENAME_CARD') {
+			const { cardIds, text } = op;
+			const targets = state.cards.filter(c => cardIds.some(id => id == c.id)); // [修正]
+			targets.forEach(target => {
+				 state.cards.forEach(c => {
+					 if (c.imageKey === target.imageKey) {
+						 c.text = text;
+					 }
+				 });
+			});
+		}
+		else if (op.type === 'RESET_BOARD') {
+			const { playerId } = op;
+			state.cards.forEach(c => {
+				if (c.zone.includes(`p${playerId}-battle`)) {
+					c.rotation = 0;
+				}
+				else if (c.zone.includes(`p${playerId}-mana`)) {
+					c.rotation = 180;
+				}
+			});
+		}
+		else if (op.type === 'SET_GLOW') {
+			const { cardIds, color } = op;
+			state.cards.forEach(c => {
+				if (cardIds.some(id => id == c.id)) { // [修正]
+					if (c.zone.includes('ability')) {
+						c.glow = color;
+						if (c.sourceId) {
+							const source = state.cards.find(s => s.id == c.sourceId); // [修正]
+							if (source) {
+								source.glow = color;
+							}
+						}
+					}
+				}
+			});
+		}
+		// --- 關鍵修正區塊：INJURED 操作 ---
+		else if (op.type === 'INJURED') {
+			const { cardIds, setInjured } = op;
+			state.cards.forEach(c => {
+				// [修正] 使用 some + == 進行寬鬆比對 (1 == "1" 為 true)
+				// 這是修復匯入後自動清除受傷失效的關鍵
+				if (cardIds.some(id => id == c.id)) {
+					c.isInjured = setInjured;
+				}
+			});
+		}
+		// --------------------------------
 		else if (op.type === 'CREATE_ABILITY') {
 			const { sourceCardId, targetZone, newId, isContinuous } = op;
-			const source = state.cards.find(c => c.id === sourceCardId);
+			// [修正]
+			const source = state.cards.find(c => c.id == sourceCardId);
 			if (source) {
 				let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
 				const suffix = isContinuous ? " (Cont)" : " (Eff)";
 				const newCard = new Card(idToUse, source.ownerId, source.text + suffix, targetZone);
 				
-				// 基礎屬性複製
 				newCard.faceUp = true;
 				newCard.rotation = 0;
 				newCard.imageKey = source.imageKey; 
@@ -3272,63 +3259,56 @@
 				newCard.sourceId = source.id;
 				if (isContinuous) newCard.isContinuous = true;
 
-				// [核心修改] 樣式獨立與繼承邏輯
-				// 1. 為這張新卡產生唯一的 styleKey
 				newCard.styleKey = 'style_' + newCard.id;
 
-				// 2. 決定初始數值：
-				// 順序：查看「最後記憶」 -> 查看「來源圖原始設定」 -> 使用「預設值」
 				let initialStyle = { x: 50, y: 50, scale: 1 };
 				
 				if (globalLastUsedStyles[source.imageKey]) {
-					// A. 繼承：上次這張圖被調整成的樣子 (即使該卡已被刪除)
 					initialStyle = { ...globalLastUsedStyles[source.imageKey] };
 				} else if (globalAbilityStyleRegistry[source.imageKey]) {
-					// B. 相容：如果沒有記憶，但有舊版的全域設定
 					initialStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
 				}
 
-				// 3. 將決定好的樣式寫入註冊表，歸屬給這張新卡的 styleKey
 				globalAbilityStyleRegistry[newCard.styleKey] = initialStyle;
 
 				state.cards.push(newCard);
 			}
 		}
-        else if (op.type === 'DELETE_CARD') {
-            const { cardIds } = op;
-            cardIds.forEach(id => {
-               const c = state.cards.find(x => x.id === id);
-               if (c && c.zone.includes('ability') && c.sourceId) {
-                   const source = state.cards.find(s => s.id === c.sourceId);
-                   if (source) source.glow = null;
-               }
-            });
-            state.cards = state.cards.filter(c => !cardIds.includes(c.id));
-        }
-        else if (op.type === 'POINT') { }
-        else if (op.type === 'ATTACK') {
-            const { attackerId } = op;
-            const card = state.cards.find(c => c.id === attackerId);
-            if(card) {
-                card.rotation = 90; 
-            }
-        }
-        else if (op.type === 'ADD_NOTE') {
-            const { cardIds, note } = op;
-            state.cards.forEach(c => {
-                if(cardIds.includes(c.id)) c.note = note;
-            });
-        }
-        else if (op.type === 'ADJUST_STYLE') {
-            const { cardIds, key, val, isDelta } = op;
-            state.cards.forEach(c => {
-                if(cardIds.includes(c.id)) {
-                    if (isDelta) c[key] += val;
-                    else c[key] = val;
-                }
-            });
-        }
-    }
+		else if (op.type === 'DELETE_CARD') {
+			const { cardIds } = op;
+			cardIds.forEach(id => {
+			   const c = state.cards.find(x => x.id == id); // [修正]
+			   if (c && c.zone.includes('ability') && c.sourceId) {
+				   const source = state.cards.find(s => s.id == c.sourceId); // [修正]
+				   if (source) source.glow = null;
+			   }
+			});
+			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id)); // [修正]
+		}
+		else if (op.type === 'POINT') { }
+		else if (op.type === 'ATTACK') {
+			const { attackerId } = op;
+			const card = state.cards.find(c => c.id == attackerId); // [修正]
+			if(card) {
+				card.rotation = 90; 
+			}
+		}
+		else if (op.type === 'ADD_NOTE') {
+			const { cardIds, note } = op;
+			state.cards.forEach(c => {
+				if(cardIds.some(id => id == c.id)) c.note = note; // [修正]
+			});
+		}
+		else if (op.type === 'ADJUST_STYLE') {
+			const { cardIds, key, val, isDelta } = op;
+			state.cards.forEach(c => {
+				if(cardIds.some(id => id == c.id)) { // [修正]
+					if (isDelta) c[key] += val;
+					else c[key] = val;
+				}
+			});
+		}
+	}
 	
 	
 function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
@@ -3641,7 +3621,37 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         });
     }
 
-    function copyToAbility(isContinuous = false) {
+    // [新增] 清除受傷狀態
+	function clearInjured() {
+		if (!pendingMove) return;
+		
+		
+
+		// 檢查區域限制 (僅戰鬥區與護盾區)
+		const state = getCurrentDisplayState();
+		const validZones = ['p1-battle', 'p2-battle', 'p1-shield', 'p2-shield'];
+		const isValid = pendingMove.cardIds.every(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && validZones.includes(c.zone);
+		});
+
+		if (!isValid) {
+			alert(t('msg_injured_err'));
+			return;
+		}
+
+		// 強制設定為 false (治癒)
+		addOperation({ 
+			type: 'INJURED', 
+			cardIds: pendingMove.cardIds, 
+			setInjured: false 
+		});
+		
+		// 操作後可以選擇是否取消選取，這裡保持選取方便連續操作
+		// cancelSelection(); 
+	}
+	
+	function copyToAbility(isContinuous = false) {
 		if (!pendingMove) return;
 		if (pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_copy'));
 		
@@ -3865,19 +3875,27 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             
             let allAbility = true;
             let allRevealed = true;
-            
-			// --- [新增] 檢查是否為戰鬥或護盾區 ---
-            let isBattleOrShield = true;
-            pendingMove.cardIds.forEach(id => {
-                const c = state.cards.find(card => card.id === id);
-                if (!c) return;
-                const z = c.zone;
-                if (!z.includes('battle') && !z.includes('shield')) {
-                    isBattleOrShield = false;
-                }
-            });
-            document.getElementById('btn-injured').style.display = isBattleOrShield ? 'block' : 'none';
-            // ------------------------------------
+					
+			// --- [修改] 檢查是否為戰鬥或護盾區，以及是否有受傷的卡片 ---
+			let isBattleOrShield = true;
+			let hasInjuredCard = false; // [新增] 檢查是否有卡片處於受傷狀態
+
+			pendingMove.cardIds.forEach(id => {
+				const c = state.cards.find(card => card.id === id);
+				if (!c) return;
+				const z = c.zone;
+				if (!z.includes('battle') && !z.includes('shield')) {
+					isBattleOrShield = false;
+				}
+				if (c.isInjured) {
+					hasInjuredCard = true;
+				}
+			});
+
+			// 顯示「受傷」按鈕 (只要在正確區域就顯示)
+			document.getElementById('btn-injured').style.display = isBattleOrShield ? 'block' : 'none';
+			// [新增] 顯示「治癒」按鈕 (在正確區域 且 選擇的卡片中至少有一張是受傷的)
+			document.getElementById('btn-clear-injured').style.display = (isBattleOrShield && hasInjuredCard) ? 'block' : 'none';            // ------------------------------------
             
             // UI Filtering Logic (Req 6)
             document.getElementById('btn-delete-card').style.display = (allAbility || allRevealed) ? 'block' : 'none';
