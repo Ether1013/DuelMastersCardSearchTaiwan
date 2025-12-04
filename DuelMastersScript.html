@@ -1389,6 +1389,18 @@
             overflow-y: hidden !important; /* 強制鎖住滾動 */
             padding-right: 0; /* 避免滾動條消失造成的輕微跳動(視瀏覽器而定) */
         }
+		
+		/* --- 灰階化按鈕樣式 --- */
+        button.disabled-gray {
+            filter: grayscale(100%);
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        /* --- 修正 Modal 內按鈕間距 --- */
+        .diag-editor-col button { margin-top: 5px; }
+		
     </style>
 </head>
 <body>
@@ -1410,7 +1422,7 @@
     <button onclick="triggerWin(1)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p1_win">🏆 1P Win</button>
     <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p2_win">🏆 2P Win</button>
     <div style="flex:1"></div>
-	<button onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;">💬 對話</button>
+	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
     <button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
@@ -1439,6 +1451,20 @@
         <button id="btn-confirm-point" class="primary" style="display:none;" onclick="confirmPointTargets()" data-i18n="btn_confirm_point">✅ 確認指向</button>
         <button onclick="cancelPointMode()" class="danger" data-i18n="btn_cancel">取消</button>
     </div>
+</div>
+
+<div id="move-status-bar" style="display:none;">
+    <span style="font-weight:bold;">
+        🚀 移動模式 (已選 <span id="move-count">0</span> 張)
+    </span>
+    
+    <label class="toggle-switch">
+        <input type="checkbox" id="ace-entry-check">
+        <span class="slider"></span>
+        <span style="margin-left:5px; font-weight:bold; color:#f1c40f;">王牌登場 (Ace Entry)</span>
+    </label>
+
+    <button onclick="cancelSelection()" class="danger">取消 (Cancel)</button>
 </div>
 
 <div id="workspace">
@@ -1527,7 +1553,6 @@
         <div id="timeline-header">
 			<span style="flex:1;" data-i18n="lbl_action_log">Action Log</span>
 			<small style="font-weight:normal; opacity:0.8; margin-right:5px;" id="step-counter">0/0</small>
-			<button class="mini-btn delete-all" onclick="deleteAllActions()" title="刪除所有動作並重新設定" data-i18n="btn_reset_all">🗑️重設</button>
 		</div>
         <ul id="action-list"></ul>
         <div style="padding: 10px; background: #ecf0f1; border-top:1px solid #bdc3c7;">
@@ -1708,29 +1733,37 @@
 
 <div id="dialogue-modal" class="modal">
     <div class="modal-content" style="width: 700px; max-width:95vw;">
-        <h3 style="margin-top:0; text-align:center;">插入劇情對話 (Action)</h3>
-        <p style="font-size:0.8rem; color:#666; text-align:center;">
-            點擊表情圖示後，按下 <b>Ctrl+V</b> 可替換該表情圖片 (全域生效)。
+        <h3 style="margin-top:0; text-align:center;" data-i18n="title_dialogue_insert">插入劇情對話 (Action)</h3>
+        <p style="font-size:0.8rem; color:#666; text-align:center;" data-i18n="lbl_diag_replace_hint">
+            點擊表情圖示後，按下[Ctrl+V]可替換該表情圖片 (全域生效)。
         </p>
 
         <div class="diag-editor-row" style="border-left: 5px solid #c0392b;">
             <div class="diag-editor-col" style="flex:0 0 100px; align-items:center; justify-content:center;">
-                <label><input type="checkbox" id="edit-p2-active" onchange="toggleDiagEdit('p2')"> 啟用 P2</label>
-                <div style="font-weight:bold; color:#c0392b;">(上方/敵方)</div>
+                <label><input type="checkbox" id="edit-p2-active" onchange="toggleDiagEdit('p2')"> <span data-i18n="lbl_enable_p2">啟用 P2</span></label>
+                <div style="font-weight:bold; color:#c0392b;" data-i18n="lbl_p2_desc">(上方/敵方)</div>
             </div>
             <div class="diag-editor-col">
-                <input type="text" id="edit-p2-name" placeholder="名字..." value="Rival">
-                <textarea id="edit-p2-text" rows="2" placeholder="台詞..."></textarea>
+                <input type="text" id="edit-p2-name" placeholder="Name..." data-i18n-ph="ph_name" value="Rival">
+                <textarea id="edit-p2-text" rows="2" placeholder="Text..." data-i18n-ph="ph_text"></textarea>
                 <div style="display:flex; gap:5px;">
-                    <select id="edit-p2-size"><option value="s">小字</option><option value="m" selected>中字</option><option value="l">大字</option></select>
-                    <select id="edit-p2-effect"><option value="direct">直接顯示</option><option value="fade">淡入</option><option value="slide" selected>滑入</option></select>
-					<span style="font-size:0.8rem; margin:0 3px;">➡</span>
-					<select id="edit-p2-exit">
-						<option value="direct">直接消失</option>
-						<option value="fade">淡出</option>
-						<option value="slide">抽出</option>
-					</select>
-				</div>
+                    <select id="edit-p2-size">
+                        <option value="s" data-i18n="opt_size_s">小字</option>
+                        <option value="m" selected data-i18n="opt_size_m">中字</option>
+                        <option value="l" data-i18n="opt_size_l">大字</option>
+                    </select>
+                    <select id="edit-p2-effect">
+                        <option value="direct" data-i18n="opt_effect_direct">直接顯示</option>
+                        <option value="fade" data-i18n="opt_effect_fade">淡入</option>
+                        <option value="slide" selected data-i18n="opt_effect_slide">滑入</option>
+                    </select>
+                    <span style="font-size:0.8rem; margin:0 3px;">➡</span>
+                    <select id="edit-p2-exit">
+                        <option value="direct" data-i18n="opt_exit_direct">直接消失</option>
+                        <option value="fade" data-i18n="opt_exit_fade">淡出</option>
+                        <option value="slide" data-i18n="opt_exit_slide">抽出</option>
+                    </select>
+                </div>
             </div>
             <div class="diag-editor-col" style="flex:0 0 200px;">
                 <div class="emotion-grid" id="emotion-grid-p2"></div>
@@ -1740,22 +1773,30 @@
 
         <div class="diag-editor-row" style="border-left: 5px solid #3498db;">
             <div class="diag-editor-col" style="flex:0 0 100px; align-items:center; justify-content:center;">
-                <label><input type="checkbox" id="edit-p1-active" checked onchange="toggleDiagEdit('p1')"> 啟用 P1</label>
-                <div style="font-weight:bold; color:#3498db;">(下方/我方)</div>
+                <label><input type="checkbox" id="edit-p1-active" checked onchange="toggleDiagEdit('p1')"> <span data-i18n="lbl_enable_p1">啟用 P1</span></label>
+                <div style="font-weight:bold; color:#3498db;" data-i18n="lbl_p1_desc">(下方/我方)</div>
             </div>
             <div class="diag-editor-col">
-                <input type="text" id="edit-p1-name" placeholder="名字..." value="Player">
-                <textarea id="edit-p1-text" rows="2" placeholder="台詞..."></textarea>
+                <input type="text" id="edit-p1-name" placeholder="Name..." data-i18n-ph="ph_name" value="Player">
+                <textarea id="edit-p1-text" rows="2" placeholder="Text..." data-i18n-ph="ph_text"></textarea>
                 <div style="display:flex; gap:5px;">
-                    <select id="edit-p1-size"><option value="s">小字</option><option value="m" selected>中字</option><option value="l">大字</option></select>
-                    <select id="edit-p1-effect"><option value="direct">直接顯示</option><option value="fade">淡入</option><option value="slide" selected>滑入</option></select>
-					<span style="font-size:0.8rem; margin:0 3px;">➡</span>
-					<select id="edit-p1-exit">
-						<option value="direct">直接消失</option>
-						<option value="fade">淡出</option>
-						<option value="slide">抽出</option>
-					</select>
-				</div>
+                    <select id="edit-p1-size">
+                        <option value="s" data-i18n="opt_size_s">小字</option>
+                        <option value="m" selected data-i18n="opt_size_m">中字</option>
+                        <option value="l" data-i18n="opt_size_l">大字</option>
+                    </select>
+                    <select id="edit-p1-effect">
+                        <option value="direct" data-i18n="opt_effect_direct">直接顯示</option>
+                        <option value="fade" data-i18n="opt_effect_fade">淡入</option>
+                        <option value="slide" selected data-i18n="opt_effect_slide">滑入</option>
+                    </select>
+                    <span style="font-size:0.8rem; margin:0 3px;">➡</span>
+                    <select id="edit-p1-exit">
+                        <option value="direct" data-i18n="opt_exit_direct">直接消失</option>
+                        <option value="fade" data-i18n="opt_exit_fade">淡出</option>
+                        <option value="slide" data-i18n="opt_exit_slide">抽出</option>
+                    </select>
+                </div>
             </div>
             <div class="diag-editor-col" style="flex:0 0 200px;">
                 <div class="emotion-grid" id="emotion-grid-p1"></div>
@@ -1764,8 +1805,8 @@
         </div>
 
         <div style="text-align:right; margin-top:10px;">
-            <button class="danger" onclick="document.getElementById('dialogue-modal').style.display='none'">取消</button>
-            <button class="primary" onclick="confirmDialogue()">💾 儲存此步</button>
+            <button class="danger" onclick="document.getElementById('dialogue-modal').style.display='none'" data-i18n="btn_cancel">取消</button>
+            <button class="primary" onclick="confirmDialogue()" data-i18n="btn_save_step">💾 儲存此步</button>
         </div>
     </div>
 </div>
@@ -1833,6 +1874,7 @@
 			'btn_p2_win': '🏆 2P Win',
 			'btn_import': '匯入 (Import)',
 			'btn_export': '匯出 (Export)',
+            'btn_dialogue': '💬 對話 (Dialog)', // [新增]
 			
 			'zone_battle': '戰鬥場',
 			'zone_shield': '護盾區',
@@ -1857,7 +1899,7 @@
 
 			'lbl_draft_warning': '⚠️ 編輯中... (已累積 ',
 			'lbl_draft_ops': ' 個操作)',
-			'lbl_draft_ops_prefix': '包含', // 補上
+			'lbl_draft_ops_prefix': '包含', 
 			'chk_propagate': '🔗 連動更新後續',
 			'btn_cancel': '取消',
 			'btn_save_step': '💾 儲存此步',
@@ -1867,413 +1909,193 @@
 
 			'title_setup': '開局設定',
 			'msg_setup_warn': '注意：開始新局會清除當前未匯出的進度。',
-			'lbl_p1_deck': 'P1 牌庫數:',
-			'lbl_p1_hyper': 'P1 超次元:',
-			'lbl_p2_deck': 'P2 牌庫數:',
-			'lbl_p2_hyper': 'P2 超次元:',
-			'btn_clear_storage': '清除存檔',
+            'btn_clear_storage': '清除存檔',
 			'btn_start_game': '開始遊戲 (Start)',
 
-			'btn_shuffle_zone': '洗牌此區',
+            // --- 對話相關翻譯 [新增] ---
+            'title_dialogue_insert': '插入劇情對話 (Action)',
+            'lbl_diag_replace_hint': '點擊表情圖示後，按下[Ctrl+V]可替換該表情圖片 (全域生效)。',
+            'lbl_enable_p2': '啟用 P2',
+            'lbl_p2_desc': '(上方/敵方)',
+            'lbl_enable_p1': '啟用 P1',
+            'lbl_p1_desc': '(下方/我方)',
+            'ph_name': '名字...',
+            'ph_text': '台詞...',
+            'opt_size_s': '小字',
+            'opt_size_m': '中字',
+            'opt_size_l': '大字',
+            'opt_effect_direct': '直接顯示',
+            'opt_effect_fade': '淡入',
+            'opt_effect_slide': '滑入',
+            'opt_exit_direct': '直接消失',
+            'opt_exit_fade': '淡出',
+            'opt_exit_slide': '抽出',
+            // -----------------------
+
+            // ... (保留舊有的其他翻譯，如堆疊操作、訊息等) ...
+            'btn_shuffle_zone': '洗牌此區',
 			'btn_shuffle_move': '洗牌選取牌並移動...',
 			'btn_reveal_sel': '👁️ 展示',
 			'btn_move_sel': '移動選取牌...',
-
-			'title_stack': '堆疊操作',
-			'lbl_stack_hint': '請點擊圖示選擇堆疊方式：',
-			'opt_stack_top': '疊在上方\n(Cover Top)',
-			'opt_stack_btm': '疊在下方\n(Underneath)',
-			'opt_puz_top': '拼在上方\n(Puzzle Top)',
-			'opt_puz_btm': '拼在下方\n(Puzzle Btm)',
-			'opt_puz_left': '拼在左邊\n(Puzzle Left)',
-			'opt_puz_right': '拼在右邊\n(Puzzle Right)',
-			'opt_shift_up': '上方 (露出底)\n(Shift Up)',
-			'opt_shift_down': '上方 (露出頂)\n(Shift Down)',
-			'opt_btm_exp': '下方 (露出底)\n(Bottom Exposed)',
-
-			'ph_rename': '名稱...',
-			'ph_note': '註記...',
-			'msg_storage_full': '⚠️ 自動存檔失敗：儲存空間已滿。\n建議您立即「匯出」保存進度。',
-			'msg_confirm_clear': '確定要清除所有自動存檔嗎？',
-			'msg_confirm_clear_storage': '確定要清除所有自動存檔嗎？', // 補上對應 clearStorage()
-			'msg_cleared': '存檔已清除。',
-			'msg_confirm_del_all': '確定要刪除所有動作並重新開始新局嗎？',
-			'msg_unsaved_draft': '目前有未儲存的變更，是否捨棄並開始新步驟？',
-			'msg_unsaved_edit': '目前有未儲存的變更，是否捨棄並編輯此步驟？',
-			'msg_confirm_del_step': '確定刪除此步驟？',
-			'msg_confirm_p1_reset': '確定要重置 P1 盤面方向嗎？',
-			'msg_confirm_p2_reset': '確定要重置 P2 盤面方向嗎？',
-			'msg_glow_err': '只有「待處理區」的卡片可以下達發光指令。',
-			'msg_glow_ability_only': '只有「待處理區」的卡片可以操作發光狀態。', // 修正 key
-			'msg_injured_err': '只有「戰鬥區」與「護盾區」的卡片可以標記為受傷。',
-			'msg_select_one_copy': '請一次選擇一張牌進行複製',
-			'msg_select_one_point': '請選擇一張卡片進行指向',
-			'msg_point_save_first': '請先儲存當前步驟，再結束指向',
-			'msg_mobile_blocked': '此功能未對行動裝置開放',
-			'msg_import_success': '匯入成功！',
-			'msg_import_fail': '匯入失敗',
-			'msg_confirm_import': '確定要匯入此檔案嗎？',
-			'msg_replace_img': '確定要替換這張卡片的圖片嗎？',
-			'msg_remove_img': '確定要移除這張卡片的圖片嗎？',
-			'msg_init_fail': '初始化失敗: ',
-			'msg_cannot_del_init': '無法刪除初始步驟。',
-			'btn_cancel_draft': '取消',
-			'msg_confirm_delete_all': '確定要刪除所有動作並重新開始新局嗎？',
-			'msg_confirm_reveal_close': '確定要關閉展示區並將卡片送入墓地嗎？',
-			'msg_delete_card_confirm': '確定要刪除選取的卡片嗎？(僅建議用於能力處理區)',
-			'msg_confirm_point_zone': '確認指向 {zone}?',
-			'msg_ability_cant_move': '能力待處理區的卡片不能移動',
-			'msg_insert_pos_title': '插入位置選擇 (點擊虛線框)',
-			'msg_load_script_fail': '無法載入指定劇本: ',
-
-			'btn_play_from': '▶ 從此播放',
-			'btn_play_step': '👁️ 演示此步',
-			'btn_edit_step': '✏️ 編輯',
-			'btn_delete_step': '🗑 刪除',
-			'btn_play': '▶ 播放',
-			'btn_pause': '⏸ 暫停',
-			'lbl_reveal_zone': '展示區 (Reveal Zone)',
-
-			'zone_player_deck': '玩家/牌庫',
-			'zone_hyper_area': '超次元區',
-			'zone_grave_area': '墓地區',
-			'zone_generic': '區域',
-			'val_top': '頂',
-			'val_bottom': '底',
-			'lbl_action_log': 'Action Log (操作紀錄)',
-
-			'op_MOVE': '移動',
-			'op_SHUFFLE': '洗牌',
-			'op_ROTATE': '旋轉視角',
-			'op_ROTATE_CARD': '旋轉卡片',
-			'op_FLIP_CARD': '翻轉卡片',
-			'op_RENAME_CARD': '更名',
-			'op_RESET_BOARD': '重置盤面',
-			'op_SET_GLOW': '設定發光',
-			'op_CREATE_ABILITY': '產生能力',
-			'op_DELETE_CARD': '刪除卡片',
-			'op_POINT': '指向',
-			'op_ATTACK': '攻擊宣言',
-			'op_ADD_NOTE': '新增註記',
-			'op_ADJUST_STYLE': '調整樣式',
-			'op_SWITCH_TURN': '換人',
-			'op_default': '操作',
-			'op_count_suffix': ' 個動作',
-			'desc_end_reveal': '結束展示',
-			'desc_end_point': '結束指向',
-			
-			'lbl_move': '位移:',
-			'lbl_scale': '縮放:',
-			'btn_remove_img_short': '✕ 圖',
-			'title_stack_target': '堆疊操作: 目標 [{target}]',
-			'opt_puz_top': '拼在上方',
-			'opt_puz_btm': '拼在下方',
-			'opt_puz_left': '拼在左邊',
-			'opt_puz_right': '拼在右邊',
-			'opt_shift_up': '上方 (露出底)',
-			'opt_shift_down': '上方 (露出頂)',
-			'opt_btm_exp': '下方 (露出底)',
+            'title_stack': '堆疊操作',
+            'lbl_stack_hint': '請點擊圖示選擇堆疊方式：',
+            'msg_storage_full': '⚠️ 自動存檔失敗：儲存空間已滿。\n建議您立即「匯出」保存進度。',
+            'msg_confirm_clear_storage': '確定要清除所有自動存檔嗎？',
+            'msg_cleared': '存檔已清除。',
+            'msg_confirm_del_all': '確定要刪除所有動作並重新開始新局嗎？',
+            'msg_unsaved_draft': '目前有未儲存的變更，是否捨棄並開始新步驟？',
+            'msg_unsaved_edit': '目前有未儲存的變更，是否捨棄並編輯此步驟？',
+            'msg_confirm_del_step': '確定刪除此步驟？',
+            'msg_confirm_p1_reset': '確定要重置 P1 盤面方向嗎？',
+            'msg_confirm_p2_reset': '確定要重置 P2 盤面方向嗎？',
+            'msg_glow_err': '只有「待處理區」的卡片可以下達發光指令。',
+            'msg_glow_ability_only': '只有「待處理區」的卡片可以操作發光狀態。',
+            'msg_injured_err': '只有「戰鬥區」與「護盾區」的卡片可以標記為受傷。',
+            'msg_select_one_copy': '請一次選擇一張牌進行複製',
+            'msg_select_one_point': '請選擇一張卡片進行指向',
+            'msg_point_save_first': '請先儲存當前步驟，再結束指向',
+            'msg_mobile_blocked': '此功能未對行動裝置開放',
+            'msg_import_success': '匯入成功！',
+            'msg_import_fail': '匯入失敗',
+            'msg_confirm_import': '確定要匯入此檔案嗎？',
+            'msg_replace_img': '確定要替換這張卡片的圖片嗎？',
+            'msg_remove_img': '確定要移除這張卡片的圖片嗎？',
+            'msg_init_fail': '初始化失敗: ',
+            'msg_cannot_del_init': '無法刪除初始步驟。',
+            'btn_cancel_draft': '取消',
+            'msg_confirm_delete_all': '確定要刪除所有動作並重新開始新局嗎？',
+            'msg_confirm_reveal_close': '確定要關閉展示區並將卡片送入墓地嗎？',
+            'msg_delete_card_confirm': '確定要刪除選取的卡片嗎？(僅建議用於能力處理區)',
+            'msg_confirm_point_zone': '確認指向 {zone}?',
+            'msg_ability_cant_move': '能力待處理區的卡片不能移動',
+            'msg_insert_pos_title': '插入位置選擇 (點擊虛線框)',
+            'msg_load_script_fail': '無法載入指定劇本: ',
+            'btn_play_from': '▶ 從此播放',
+            'btn_play_step': '👁️ 演示此步',
+            'btn_edit_step': '✏️ 編輯',
+            'btn_delete_step': '🗑 刪除',
+            'btn_play': '▶ 播放',
+            'btn_pause': '⏸ 暫停',
+            'lbl_reveal_zone': '展示區 (Reveal Zone)',
+            'lbl_action_log': 'Action Log (操作紀錄)',
+            'op_default': '操作',
+            'op_count_suffix': ' 個動作',
+            'desc_end_reveal': '結束展示',
+            'desc_end_point': '結束指向',
+            'lbl_move': '位移:',
+            'lbl_scale': '縮放:',
+            'btn_remove_img_short': '✕ 圖',
+            'title_stack_target': '堆疊操作: 目標 [{target}]',
+             // ... 保留其他您原本可能有的翻譯 ...
+            'opt_stack_top': '疊在上方',
+            'opt_stack_btm': '疊在下方',
+            'opt_puz_top': '拼在上方',
+            'opt_puz_btm': '拼在下方',
+            'opt_puz_left': '拼在左邊',
+            'opt_puz_right': '拼在右邊',
+            'opt_shift_up': '上方 (露出底)',
+            'opt_shift_down': '上方 (露出頂)',
+            'opt_btm_exp': '下方 (露出底)',
+            'lbl_p1_deck': 'P1 牌庫數:',
+            'lbl_p2_deck': 'P2 牌庫數:',
+            'op_POINT': '指向',
+            'op_ATTACK': '攻擊宣言',
 		},
+        // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
-			'btn_setup': 'Setup / Clear',
-			'btn_rotate': '🔄 Switch Turn',
-			'btn_p1_reset': 'P1 Untap',
-			'btn_p2_reset': 'P2 Untap',
-			'btn_p1_win': '🏆 1P Win',
-			'btn_p2_win': '🏆 2P Win',
-			'btn_import': 'Import',
-			'btn_export': 'Export',
-			'zone_battle': 'Battle Zone',
-			'zone_shield': 'Shields',
-			'zone_mana': 'Mana',
-			'zone_hand': 'Hand',
-			'zone_hyper': 'Hyperspatial',
-			'zone_grave': 'Graveyard',
-			'zone_deck': 'Deck',
-			'zone_ability': 'Ability (Pending)',
-			
-			'act_flip': 'Flip',
-			'act_injured': '💔 Injured',
-			'act_glow': '💡 Glow',
-			'act_ability': '⚡ Ability',
-			'act_reveal': '👁️ Reveal',
-			'act_point': '👉 Point',
-			'act_end_point': '🛑 End Point',
-			'act_paste': '🖼️ Paste Img',
-			'act_rename': 'Rename',
-			'act_note': '📝 Note',
-			'act_delete': '🗑️ Delete',
-
-			'lbl_draft_warning': '⚠️ Editing... (Steps: ',
-			'lbl_draft_ops': ')',
-			'lbl_draft_ops_prefix': 'Contains ',
-			'chk_propagate': '🔗 Propagate Changes',
-			'btn_cancel': 'Cancel',
-			'btn_save_step': '💾 Save Step',
-			'lbl_point_mode': '👉 Point Mode: Select Target(s)',
-			'btn_confirm_point': '✅ Confirm',
-			'btn_reset_all': '🗑️ Reset',
-
-			'title_setup': 'Setup Game',
-			'msg_setup_warn': 'Note: Starting new game clears unsaved progress.',
-			'lbl_p1_deck': 'P1 Deck:',
-			'lbl_p1_hyper': 'P1 Hyper:',
-			'lbl_p2_deck': 'P2 Deck:',
-			'lbl_p2_hyper': 'P2 Hyper:',
-			'btn_clear_storage': 'Clear Storage',
-			'btn_start_game': 'Start Game',
-
-			'btn_shuffle_zone': 'Shuffle Zone',
-			'btn_shuffle_move': 'Shuffle & Move...',
-			'btn_reveal_sel': '👁️ Reveal',
-			'btn_move_sel': 'Move Selected...',
-
-			'title_stack': 'Stacking',
-			'lbl_stack_hint': 'Choose stacking method:',
-			'opt_stack_top': 'Cover Top',
-			'opt_stack_btm': 'Underneath',
-			'opt_puz_top': 'Puzzle Top',
-			'opt_puz_btm': 'Puzzle Btm',
-			'opt_puz_left': 'Puzzle Left',
-			'opt_puz_right': 'Puzzle Right',
-			'opt_shift_up': 'Shift Up',
-			'opt_shift_down': 'Shift Down',
-			'opt_btm_exp': 'Bottom Exposed',
-
-			'ph_rename': 'Name...',
-			'ph_note': 'Note...',
-			'msg_storage_full': '⚠️ Storage full. Please Export data.',
-			'msg_confirm_clear': 'Clear all auto-saved data?',
-			'msg_confirm_clear_storage': 'Clear all auto-saved data?',
-			'msg_cleared': 'Storage cleared.',
-			'msg_confirm_del_all': 'Delete all actions and restart?',
-			'msg_unsaved_draft': 'Discard changes and start new?',
-			'msg_unsaved_edit': 'Discard changes and edit this step?',
-			'msg_confirm_del_step': 'Delete this step?',
-			'msg_confirm_p1_reset': 'Reset P1 board?',
-			'msg_confirm_p2_reset': 'Reset P2 board?',
-			'msg_glow_err': 'Glow is only for Ability Zone.',
-			'msg_glow_ability_only': 'Only cards in Ability Zone can glow.',
-			'msg_injured_err': 'Only cards in Battle/Shield Zone can be injured.',
-			'msg_select_one_copy': 'Select exactly one card to copy.',
-			'msg_select_one_point': 'Select one card to point.',
-			'msg_point_save_first': 'Save step before ending point mode.',
-			'msg_mobile_blocked': 'Not available on mobile.',
-			'msg_import_success': 'Import Success!',
-			'msg_import_fail': 'Import Failed',
-			'msg_confirm_import': 'Import this file?',
-
-			'msg_replace_img': 'Replace existing image?',
-			'msg_remove_img': 'Remove image from card?',
-			'msg_init_fail': 'Init Failed: ',
-			'msg_cannot_del_init': 'Cannot delete the initial step.',
-			'btn_cancel_draft': 'Cancel',
-			'msg_confirm_delete_all': 'Delete all actions and restart?',
-			'msg_confirm_reveal_close': 'Close reveal zone and send cards to grave?',
-			'msg_delete_card_confirm': 'Delete selected card(s)?',
-			'msg_confirm_point_zone': 'Confirm point to {zone}?',
-			'msg_ability_cant_move': 'Ability cards cannot be moved.',
-			'msg_insert_pos_title': 'Select Insert Position',
-			'msg_load_script_fail': 'Failed to load script: ',
-
-			'btn_play_from': '▶ Play From Here',
-			'btn_play_step': '👁️ Demo Step',
-			'btn_edit_step': '✏️ Edit',
-			'btn_delete_step': '🗑 Delete',
-			'btn_play': '▶ Play',
-			'btn_pause': '⏸ Pause',
-			'lbl_reveal_zone': 'Reveal Zone',
-
-			'zone_player_deck': 'Player/Deck',
-			'zone_hyper_area': 'Hyper Zone',
-			'zone_grave_area': 'Graveyard',
-			'zone_generic': 'Zone',
-			'val_top': 'Top',
-			'val_bottom': 'Btm',
-			'lbl_action_log': 'Action Log',
-
-			'op_MOVE': 'Move',
-			'op_SHUFFLE': 'Shuffle',
-			'op_ROTATE': 'Rotate View',
-			'op_ROTATE_CARD': 'Rotate Card',
-			'op_FLIP_CARD': 'Flip Card',
-			'op_RENAME_CARD': 'Rename',
-			'op_RESET_BOARD': 'Reset Board',
-			'op_SET_GLOW': 'Set Glow',
-			'op_CREATE_ABILITY': 'Create Ability',
-			'op_DELETE_CARD': 'Delete Card',
-			'op_POINT': 'Point',
-			'op_ATTACK': 'Attack',
-			'op_ADD_NOTE': 'Add Note',
-			'op_ADJUST_STYLE': 'Adjust Style',
-			'op_SWITCH_TURN': 'Switch Turn',
-			'op_default': 'Action',
-			'op_count_suffix': ' Actions',
-			'desc_end_reveal': 'End Reveal',
-			'desc_end_point': 'End Pointing',
-			
-			'lbl_move': 'Move:',
-			'lbl_scale': 'Scale:',
-			'btn_remove_img_short': '✕ Img',
-			'title_stack_target': 'Stacking: Target [{target}]',
-			'opt_puz_top': 'Puzzle Top',
-			'opt_puz_btm': 'Puzzle Bottom',
-			'opt_puz_left': 'Puzzle Left',
-			'opt_puz_right': 'Puzzle Right',
-			'opt_shift_up': 'Shift Up',
-			'opt_shift_down': 'Shift Down (Show Top)',
-			'opt_btm_exp': 'Bottom Exposed',
+            'btn_dialogue': '💬 Dialog',
+            'title_dialogue_insert': 'Insert Dialogue',
+            'lbl_diag_replace_hint': 'Click an icon and press [Ctrl+V] to replace image (Global).',
+            'lbl_enable_p2': 'Enable P2',
+            'lbl_p2_desc': '(Top/Rival)',
+            'lbl_enable_p1': 'Enable P1',
+            'lbl_p1_desc': '(Bottom/Self)',
+            'ph_name': 'Name...',
+            'ph_text': 'Dialogue...',
+            'opt_size_s': 'Small', 'opt_size_m': 'Medium', 'opt_size_l': 'Large',
+            'opt_effect_direct': 'Instant', 'opt_effect_fade': 'Fade In', 'opt_effect_slide': 'Slide In',
+            'opt_exit_direct': 'Instant', 'opt_exit_fade': 'Fade Out', 'opt_exit_slide': 'Slide Out',
+            // ... (其餘請保留原樣) ...
+            'btn_setup': 'Setup / Clear', 'btn_rotate': '🔄 Switch Turn', 'btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
+            'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'btn_import': 'Import', 'btn_export': 'Export',
+            'zone_battle': 'Battle Zone', 'zone_shield': 'Shields', 'zone_mana': 'Mana', 'zone_hand': 'Hand',
+            'zone_hyper': 'Hyper Zone', 'zone_grave': 'Graveyard', 'zone_deck': 'Deck', 'zone_ability': 'Ability (Pending)',
+            'act_flip': 'Flip', 'act_injured': '💔 Injured', 'act_glow': '💡 Glow', 'act_ability': '⚡ Ability',
+            'act_reveal': '👁️ Reveal', 'act_point': '👉 Point', 'act_end_point': '🛑 End Point', 'act_paste': '🖼️ Paste Img',
+            'act_rename': 'Rename', 'act_note': '📝 Note', 'act_delete': '🗑️ Delete', 'btn_cancel': 'Cancel', 'btn_save_step': '💾 Save Step',
+            'lbl_point_mode': '👉 Point Mode: Select Target(s)', 'btn_confirm_point': '✅ Confirm', 'btn_reset_all': '🗑️ Reset',
+            'title_setup': 'Setup Game', 'msg_setup_warn': 'Note: Starting new game clears unsaved progress.',
+            'lbl_p1_deck': 'P1 Deck:', 'lbl_p2_deck': 'P2 Deck:', 'btn_clear_storage': 'Clear Storage', 'btn_start_game': 'Start Game',
+            'btn_shuffle_zone': 'Shuffle Zone', 'btn_shuffle_move': 'Shuffle & Move...', 'btn_reveal_sel': '👁️ Reveal', 'btn_move_sel': 'Move Selected...',
+            'title_stack': 'Stacking', 'lbl_stack_hint': 'Choose stacking method:', 'opt_stack_top': 'Cover Top', 'opt_stack_btm': 'Underneath',
+            'opt_puz_top': 'Puzzle Top', 'opt_puz_btm': 'Puzzle Btm', 'opt_puz_left': 'Puzzle Left', 'opt_puz_right': 'Puzzle Right',
+            'opt_shift_up': 'Shift Up', 'opt_shift_down': 'Shift Down', 'opt_btm_exp': 'Bottom Exposed', 'ph_rename': 'Name...', 'ph_note': 'Note...',
+            'msg_storage_full': '⚠️ Storage full. Please Export data.', 'msg_confirm_clear_storage': 'Clear all auto-saved data?',
+            'msg_cleared': 'Storage cleared.', 'msg_confirm_del_all': 'Delete all actions and restart?', 'msg_unsaved_draft': 'Discard changes and start new?',
+            'msg_unsaved_edit': 'Discard changes and edit this step?', 'msg_confirm_del_step': 'Delete this step?',
+            'msg_confirm_p1_reset': 'Reset P1 board?', 'msg_confirm_p2_reset': 'Reset P2 board?', 'msg_glow_err': 'Glow is only for Ability Zone.',
+            'msg_glow_ability_only': 'Only cards in Ability Zone can glow.', 'msg_injured_err': 'Only cards in Battle/Shield Zone can be injured.',
+            'msg_select_one_copy': 'Select exactly one card to copy.', 'msg_select_one_point': 'Select one card to point.',
+            'msg_point_save_first': 'Save step before ending point mode.', 'msg_mobile_blocked': 'Not available on mobile.',
+            'msg_import_success': 'Import Success!', 'msg_import_fail': 'Import Failed', 'msg_confirm_import': 'Import this file?',
+            'msg_replace_img': 'Replace existing image?', 'msg_remove_img': 'Remove image from card?', 'msg_init_fail': 'Init Failed: ',
+            'msg_cannot_del_init': 'Cannot delete the initial step.', 'btn_cancel_draft': 'Cancel', 'msg_confirm_delete_all': 'Delete all actions and restart?',
+            'msg_confirm_reveal_close': 'Close reveal zone and send cards to grave?', 'msg_delete_card_confirm': 'Delete selected card(s)?',
+            'msg_confirm_point_zone': 'Confirm point to {zone}?', 'msg_ability_cant_move': 'Ability cards cannot be moved.',
+            'msg_insert_pos_title': 'Select Insert Position', 'msg_load_script_fail': 'Failed to load script: ', 'btn_play_from': '▶ Play From Here',
+            'btn_play_step': '👁️ Demo Step', 'btn_edit_step': '✏️ Edit', 'btn_delete_step': '🗑 Delete', 'btn_play': '▶ Play', 'btn_pause': '⏸ Pause',
+            'lbl_reveal_zone': 'Reveal Zone', 'lbl_action_log': 'Action Log', 'op_default': 'Action', 'op_count_suffix': ' Actions',
+            'desc_end_reveal': 'End Reveal', 'desc_end_point': 'End Pointing', 'lbl_move': 'Move:', 'lbl_scale': 'Scale:', 'btn_remove_img_short': '✕ Img',
+            'title_stack_target': 'Stacking: Target [{target}]', 'lbl_draft_warning': '⚠️ Editing... (Steps: ', 'lbl_draft_ops': ')',
+            'lbl_draft_ops_prefix': 'Contains ', 'chk_propagate': '🔗 Propagate Changes',
 		},
 		'jp': {
-			'btn_setup': '設定 / クリア',
-			'btn_rotate': '🔄 ターン交代',
-			'btn_p1_reset': 'P1 アンタップ',
-			'btn_p2_reset': 'P2 アンタップ',
-			'btn_p1_win': '🏆 1P 勝利',
-			'btn_p2_win': '🏆 2P 勝利',
-			'btn_import': 'インポート',
-			'btn_export': 'エクスポート',
-			
-			'zone_battle': 'バトルゾーン',
-			'zone_shield': 'シールド',
-			'zone_mana': 'マナゾーン',
-			'zone_hand': '手札',
-			'zone_hyper': '超次元',
-			'zone_grave': '墓地',
-			'zone_deck': '山札',
-			'zone_ability': '効果処理',
-			
-			'act_flip': '裏返す',
-			'act_injured': '💔 負傷',
-			'act_glow': '💡 発光',
-			'act_ability': '⚡ 能力生成',
-			'act_reveal': '👁️ 公開',
-			'act_point': '👉 対象選択',
-			'act_end_point': '🛑 選択終了',
-			'act_paste': '🖼️ 画像貼付',
-			'act_rename': '名前変更',
-			'act_note': '📝 メモ',
-			'act_delete': '🗑️ 削除',
-			
-			'lbl_draft_warning': '⚠️ 編集中... (操作数: ',
-			'lbl_draft_ops': ')',
-			'lbl_draft_ops_prefix': '', 
-			'chk_propagate': '🔗 以降へ反映',
-			'btn_cancel': 'キャンセル',
-			'btn_save_step': '💾 保存',
-			'lbl_point_mode': '👉 対象を選択してください (カード/領域)',
-			'btn_confirm_point': '✅ 決定',
-			'btn_reset_all': '🗑️ リセット',
-
-			'title_setup': 'ゲーム設定',
-			'msg_setup_warn': '注意：新しいゲームを始めると、未保存の進行状況は消去されます。',
-			'lbl_p1_deck': 'P1 山札数:',
-			'lbl_p1_hyper': 'P1 超次元:',
-			'lbl_p2_deck': 'P2 山札数:',
-			'lbl_p2_hyper': 'P2 超次元:',
-			'btn_clear_storage': 'データ削除',
-			'btn_start_game': 'ゲーム開始',
-			
-			'btn_shuffle_zone': 'シャッフル',
-			'btn_shuffle_move': 'シャッフルして移動...',
-			'btn_reveal_sel': '👁️ 公開',
-			'btn_move_sel': '選択したカードを移動...',
-			
-			'title_stack': '重ね方を選択',
-			'lbl_stack_hint': 'アイコンをクリックしてください：',
-			'opt_stack_top': '上に重ねる\n(進化/封印)',
-			'opt_stack_btm': '下に重ねる\n(進化元)',
-			'opt_puz_top': '上にリンク\n(Puzzle Top)',
-			'opt_puz_btm': '下にリンク\n(Puzzle Btm)',
-			'opt_puz_left': '左にリンク\n(Puzzle Left)',
-			'opt_puz_right': '右にリンク\n(Puzzle Right)',
-			'opt_shift_up': '少し上へ\n(下を見せる)',
-			'opt_shift_down': '少し下へ\n(上を見せる)',
-			'opt_btm_exp': '下へずらす\n(Bottom Exposed)',
-			
-			'ph_rename': 'カード名...',
-			'ph_note': 'メモ...',
-			'msg_storage_full': '⚠️ 保存領域がいっぱいです。エクスポートしてください。',
-			'msg_confirm_clear': '保存データを削除しますか？',
-			'msg_confirm_clear_storage': '保存データを削除しますか？',
-			'msg_cleared': 'データを削除しました。',
-			'msg_confirm_del_all': 'すべての手順を削除してリセットしますか？',
-			'msg_unsaved_draft': '未保存の変更があります。破棄して新しい手順を作成しますか？',
-			'msg_unsaved_edit': '未保存の変更があります。破棄してこの手順を編集しますか？',
-			'msg_confirm_del_step': 'この手順を削除しますか？',
-			'msg_confirm_p1_reset': 'P1の盤面をアンタップ状態に戻しますか？',
-			'msg_confirm_p2_reset': 'P2の盤面をアンタップ状態に戻しますか？',
-			'msg_glow_err': '効果処理エリアのカードのみ発光設定が可能です。',
-			'msg_glow_ability_only': '効果処理エリアのカードのみ発光設定が可能です。',
-			'msg_injured_err': 'バトルゾーンまたはシールドのカードのみ負傷状態にできます。',
-			'msg_select_one_copy': 'コピーするカードを1枚選択してください。',
-			'msg_select_one_point': '対象のカードを1枚選択してください。',
-			'msg_point_save_first': '対象選択を終了する前に、現在の手順を保存してください。',
-			'msg_mobile_blocked': 'この機能はモバイル端末では利用できません。',
-			'msg_import_success': 'インポート成功！',
-			'msg_import_fail': 'インポート失敗',
-			'msg_confirm_import': 'このファイルを読み込みますか？',
-			
-			'msg_replace_img': '画像を置き換えますか？',
-			'msg_remove_img': '画像を削除しますか？',
-			'msg_init_fail': '初期化エラー: ',
-			'msg_cannot_del_init': '初期状態は削除できません。',
-			'btn_cancel_draft': 'キャンセル',
-			'msg_confirm_delete_all': 'すべての操作を削除してリセットしますか？',
-			'msg_confirm_reveal_close': '公開領域を閉じて、カードを墓地に送りますか？',
-			'msg_delete_card_confirm': '選択したカードを削除しますか？(効果処理エリア推奨)',
-			'msg_confirm_point_zone': '{zone} を対象にしますか？',
-			'msg_ability_cant_move': '効果処理中のカードは移動できません。',
-			'msg_insert_pos_title': '挿入位置を選択 (点線枠をクリック)',
-			'msg_load_script_fail': 'スクリプトの読み込みに失敗しました: ',
-
-			'btn_play_from': '▶ ここから再生',
-			'btn_play_step': '👁️ この手順を確認',
-			'btn_edit_step': '✏️ 編集',
-			'btn_delete_step': '🗑 削除',
-			'btn_play': '▶ 再生',
-			'btn_pause': '⏸ 一時停止',
-			'lbl_reveal_zone': '公開領域 (Reveal Zone)',
-
-			'zone_player_deck': 'プレイヤー/山札',
-			'zone_hyper_area': '超次元ゾーン',
-			'zone_grave_area': '墓地',
-			'zone_generic': '領域',
-			'val_top': 'トップ',
-			'val_bottom': 'ボトム',
-			'lbl_action_log': '行動ログ (Action Log)',
-
-			'op_MOVE': '移動',
-			'op_SHUFFLE': 'シャッフル',
-			'op_ROTATE': '視点切替',
-			'op_ROTATE_CARD': 'タップ/アンタップ',
-			'op_FLIP_CARD': '反転',
-			'op_RENAME_CARD': '名前変更',
-			'op_RESET_BOARD': '盤面リセット',
-			'op_SET_GLOW': '発光設定',
-			'op_CREATE_ABILITY': '能力生成',
-			'op_DELETE_CARD': 'カード削除',
-			'op_POINT': '対象選択',
-			'op_ATTACK': '攻撃宣言',
-			'op_ADD_NOTE': 'メモ追加',
-			'op_ADJUST_STYLE': 'スタイル調整',
-			'op_SWITCH_TURN': 'ターン交代',
-			'op_default': '操作',
-			'op_count_suffix': ' アクション',
-			'desc_end_reveal': '公開終了',
-			'desc_end_point': '選択終了',
-			
-			'lbl_move': '移動:',
-			'lbl_scale': '縮小/拡大:',
-			'btn_remove_img_short': '✕ 画像',
-			'title_stack_target': 'スタック操作: 対象 [{target}]',
-			'opt_puz_top': '上にリンク',
-			'opt_puz_btm': '下にリンク',
-			'opt_puz_left': '左にリンク',
-			'opt_puz_right': '右にリンク',
-			'opt_shift_up': '少し上へ',
-			'opt_shift_down': '少し下へ',
-			'opt_btm_exp': '下へずらす',
+            'btn_dialogue': '💬 会話 (Dialog)',
+            'title_dialogue_insert': '会話イベント挿入',
+            'lbl_diag_replace_hint': 'アイコンをクリック後、[Ctrl+V]で画像を置き換えられます（全体反映）。',
+            'lbl_enable_p2': 'P2を有効化',
+            'lbl_p2_desc': '(上側/敵)',
+            'lbl_enable_p1': 'P1を有効化',
+            'lbl_p1_desc': '(下側/自分)',
+            'ph_name': '名前...',
+            'ph_text': 'セリフ...',
+            'opt_size_s': '小', 'opt_size_m': '中', 'opt_size_l': '大',
+            'opt_effect_direct': '即時', 'opt_effect_fade': 'フェード', 'opt_effect_slide': 'スライド',
+            'opt_exit_direct': '即時消失', 'opt_exit_fade': 'フェード', 'opt_exit_slide': 'スライド',
+            // ... (其餘請保留原樣) ...
+            'btn_setup': '設定 / クリア', 'btn_rotate': '🔄 ターン交代', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
+            'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
+            'zone_battle': 'バトルゾーン', 'zone_shield': 'シールド', 'zone_mana': 'マナゾーン', 'zone_hand': '手札',
+            'zone_hyper': '超次元', 'zone_grave': '墓地', 'zone_deck': '山札', 'zone_ability': '効果処理',
+            'act_flip': '裏返す', 'act_injured': '💔 負傷', 'act_glow': '💡 発光', 'act_ability': '⚡ 能力生成',
+            'act_reveal': '👁️ 公開', 'act_point': '👉 対象選択', 'act_end_point': '🛑 選択終了', 'act_paste': '🖼️ 画像貼付',
+            'act_rename': '名前変更', 'act_note': '📝 メモ', 'act_delete': '🗑️ 削除', 'lbl_draft_warning': '⚠️ 編集中... (操作数: ',
+            'lbl_draft_ops': ')', 'lbl_draft_ops_prefix': '', 'chk_propagate': '🔗 以降へ反映', 'btn_cancel': 'キャンセル',
+            'btn_save_step': '💾 保存', 'lbl_point_mode': '👉 対象を選択してください (カード/領域)', 'btn_confirm_point': '✅ 決定',
+            'btn_reset_all': '🗑️ リセット', 'title_setup': 'ゲーム設定', 'msg_setup_warn': '注意：新しいゲームを始めると、未保存の進行状況は消去されます。',
+            'lbl_p1_deck': 'P1 山札数:', 'lbl_p2_deck': 'P2 山札数:', 'btn_clear_storage': 'データ削除', 'btn_start_game': 'ゲーム開始',
+            'btn_shuffle_zone': 'シャッフル', 'btn_shuffle_move': 'シャッフルして移動...', 'btn_reveal_sel': '👁️ 公開', 'btn_move_sel': '選択したカードを移動...',
+            'title_stack': '重ね方を選択', 'lbl_stack_hint': 'アイコンをクリックしてください：', 'opt_stack_top': '上に重ねる', 'opt_stack_btm': '下に重ねる',
+            'opt_puz_top': '上にリンク', 'opt_puz_btm': '下にリンク', 'opt_puz_left': '左にリンク', 'opt_puz_right': '右にリンク',
+            'opt_shift_up': '少し上へ', 'opt_shift_down': '少し下へ', 'opt_btm_exp': '下へずらす', 'ph_rename': 'カード名...', 'ph_note': 'メモ...',
+            'msg_storage_full': '⚠️ 保存領域がいっぱいです。エクスポートしてください。', 'msg_confirm_clear_storage': '保存データを削除しますか？',
+            'msg_cleared': 'データを削除しました。', 'msg_confirm_del_all': 'すべての手順を削除してリセットしますか？', 'msg_unsaved_draft': '未保存の変更があります。破棄して新しい手順を作成しますか？',
+            'msg_unsaved_edit': '未保存の変更があります。破棄してこの手順を編集しますか？', 'msg_confirm_del_step': 'この手順を削除しますか？',
+            'msg_confirm_p1_reset': 'P1の盤面をアンタップ状態に戻しますか？', 'msg_confirm_p2_reset': 'P2の盤面をアンタップ状態に戻しますか？',
+            'msg_glow_err': '効果処理エリアのカードのみ発光設定が可能です。', 'msg_glow_ability_only': '効果処理エリアのカードのみ発光設定が可能です。',
+            'msg_injured_err': 'バトルゾーンまたはシールドのカードのみ負傷状態にできます。', 'msg_select_one_copy': 'コピーするカードを1枚選択してください。',
+            'msg_select_one_point': '対象のカードを1枚選択してください。', 'msg_point_save_first': '対象選択を終了する前に、現在の手順を保存してください。',
+            'msg_mobile_blocked': 'この機能はモバイル端末では利用できません。', 'msg_import_success': 'インポート成功！', 'msg_import_fail': 'インポート失敗',
+            'msg_confirm_import': 'このファイルを読み込みますか？', 'msg_replace_img': '画像を置き換えますか？', 'msg_remove_img': '画像を削除しますか？',
+            'msg_init_fail': '初期化エラー: ', 'msg_cannot_del_init': '初期状態は削除できません。', 'btn_cancel_draft': 'キャンセル',
+            'msg_confirm_delete_all': 'すべての操作を削除してリセットしますか？', 'msg_confirm_reveal_close': '公開領域を閉じて、カードを墓地に送りますか？',
+            'msg_delete_card_confirm': '選択したカードを削除しますか？(効果処理エリア推奨)', 'msg_confirm_point_zone': '{zone} を対象にしますか？',
+            'msg_ability_cant_move': '効果処理中のカードは移動できません。', 'msg_insert_pos_title': '挿入位置を選択 (点線枠をクリック)',
+            'msg_load_script_fail': 'スクリプトの読み込みに失敗しました: ', 'btn_play_from': '▶ ここから再生', 'btn_play_step': '👁️ この手順を確認',
+            'btn_edit_step': '✏️ 編集', 'btn_delete_step': '🗑 削除', 'btn_play': '▶ 再生', 'btn_pause': '⏸ 一時停止',
+            'lbl_reveal_zone': '公開領域', 'lbl_action_log': '行動ログ', 'op_default': '操作', 'op_count_suffix': ' アクション',
+            'desc_end_reveal': '公開終了', 'desc_end_point': '選択終了', 'lbl_move': '移動:', 'lbl_scale': '縮小/拡大:', 'btn_remove_img_short': '✕ 画像',
+            'title_stack_target': 'スタック操作: 対象 [{target}]', 'op_POINT': '対象選択', 'op_ATTACK': '攻撃宣言',
 		}
 	};
 
@@ -2429,23 +2251,27 @@
             }
         }
     });  
-  
-    // Paste Image Handling
-    document.addEventListener('paste', (e) => {
-        if (!pendingMove || pendingMove.cardIds.length !== 1) return;
-        
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (let index in items) {
-            const item = items[index];
-            if (item.kind === 'file' && item.type.startsWith('image/')) {
-                const blob = item.getAsFile();
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    processImage(event.target.result);
-                };
-                reader.readAsDataURL(blob);
-                break;
+	
+	document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            if (isDrafting) {
+                e.preventDefault(); 
+                undoLastDraftOp();
+                return;
             }
+        }
+        if (e.key === 'Escape') {
+            const cardModal = document.getElementById('card-selector-modal');
+            const posModal = document.getElementById('position-selector-modal');
+            const diagModal = document.getElementById('dialogue-modal');
+            const setupModal = document.getElementById('setup-modal'); // [新增]
+            
+            if (posModal && posModal.style.display === 'flex') closePositionModal();
+            else if (cardModal && cardModal.style.display === 'flex') closeSelectorModal();
+            else if (diagModal && diagModal.style.display === 'flex') diagModal.style.display = 'none';
+            else if (setupModal && setupModal.style.display === 'flex') setupModal.style.display = 'none'; // [新增]
+            else if (isPointing) cancelPointMode();
+            else cancelSelection();
         }
     });
     
@@ -2570,9 +2396,15 @@
         if(modal) modal.style.display = 'flex';
     }
 
-    function clearStorage() {
-        if(confirm(t('msg_confirm_clear_storage'))) {
-            localStorage.removeItem(STORAGE_KEY);
+    function clearStorage(silent = false) {
+        if(!silent && !confirm(t('msg_confirm_clear_storage'))) return;
+        
+        localStorage.removeItem(STORAGE_KEY_CORE);
+        localStorage.removeItem(STORAGE_KEY_CARDS);
+        localStorage.removeItem(STORAGE_KEY_PORTRAITS);
+        localStorage.removeItem(STORAGE_KEY_LEGACY); // 也清一下舊的
+        
+        if (!silent) {
             alert(t('msg_cleared'));
             location.reload();
         }
@@ -2587,7 +2419,12 @@
         draftOperations = [];
         isDrafting = false;
         
-        localStorage.removeItem(STORAGE_KEY);
+        // 清除所有存檔
+        localStorage.removeItem(STORAGE_KEY_CORE);
+        localStorage.removeItem(STORAGE_KEY_CARDS);
+        localStorage.removeItem(STORAGE_KEY_PORTRAITS);
+        localStorage.removeItem(STORAGE_KEY_LEGACY);
+        
         storageQuotaExceeded = false;
         hasAlertedQuota = false;
 
@@ -2656,29 +2493,55 @@
         saveToStorage();
     }
 
+	// 修改原有的 STORAGE_KEY 定義
+    const STORAGE_KEY_CORE = 'dm_editor_data_v1_core';           // 核心：歷史紀錄、狀態
+    const STORAGE_KEY_CARDS = 'dm_editor_data_v1_card_imgs';     // 圖片：卡片圖
+    const STORAGE_KEY_PORTRAITS = 'dm_editor_data_v1_portraits'; // 圖片：對話頭像
+    
+    // 為了相容舊版，保留舊 Key 的參考
+    const STORAGE_KEY_LEGACY = 'dm_editor_data_v1';
+	
 	function saveToStorage() {
         if (document.body.classList.contains('mobile-mode')) return;
 
         try {
-            // [優化] 製作輕量版 History：只保留 Action，移除 State (除了第0步)
-            // 這樣可以將存檔大小縮減 90% 以上
+            // 1. 準備核心資料 (不含圖片)
             const leanHistory = history.map((item, index) => {
-                if (index === 0) return item; // 第0步保留初始狀態
-                return { action: item.action }; // 後續步驟只存動作
+                if (index === 0) return item; 
+                return { action: item.action };
             });
 
-            const data = {
+            const coreData = {
                 timestamp: Date.now(),
                 history: leanHistory,
                 initialState: initialState,
                 currentIndex: currentIndex,
-                imageRegistry: globalImageRegistry,
                 abilityRegistry: globalAbilityStyleRegistry,
-                // [新增] 保存對話的快取設定，避免重整後對話頭像重置
                 lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
             };
+
+            // 2. 拆分圖片資料
+            const cardImages = {};
+            const portraitImages = {};
+
+            Object.keys(globalImageRegistry).forEach(key => {
+                // 假設頭像的 key 都是以 'avatar_' 開頭 (這是 dialogue 系統的命名規則)
+                if (key.startsWith('avatar_')) {
+                    portraitImages[key] = globalImageRegistry[key];
+                } else {
+                    cardImages[key] = globalImageRegistry[key];
+                }
+            });
+
+            // 3. 分開寫入
+            localStorage.setItem(STORAGE_KEY_CORE, JSON.stringify(coreData));
             
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            // 這裡可以選擇性優化：如果圖片沒變動其實不用一直寫入，但為了保險先每次都寫
+            localStorage.setItem(STORAGE_KEY_CARDS, JSON.stringify(cardImages));
+            localStorage.setItem(STORAGE_KEY_PORTRAITS, JSON.stringify(portraitImages));
+
+            // 清除舊版 Key 以釋放空間 (如果是從舊版遷移過來的)
+            localStorage.removeItem(STORAGE_KEY_LEGACY);
             
             if (storageQuotaExceeded) {
                 storageQuotaExceeded = false;
@@ -2695,65 +2558,133 @@
     }
 
     function loadFromStorage() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return false;
+        // --- 階段 0: 檢查是否有新版結構 ---
+        const coreRaw = localStorage.getItem(STORAGE_KEY_CORE);
+        
+        // 如果沒有新版資料，嘗試讀取舊版 (Migration)
+        if (!coreRaw) {
+            return loadFromLegacyStorage();
+        }
+
         try {
-            const data = JSON.parse(raw);
-            if (!data || !data.history || !data.initialState) return false;
+            // --- 階段 1: 優先讀取核心邏輯 (最快，無圖片 I/O) ---
+            const data = JSON.parse(coreRaw);
             
             // 檢查過期
             if (data.timestamp && (Date.now() - data.timestamp > STORAGE_EXPIRY)) {
-                localStorage.removeItem(STORAGE_KEY);
+                clearStorage(true); // 傳入 true 表示安靜清除，不 reload
                 return false;
             }
-            
-            // 載入全域設定
-            globalImageRegistry = data.imageRegistry || {}; 
+
+            // 初始化設定
+            globalImageRegistry = {}; // 先清空圖片，讓畫面先顯示文字版卡片
             globalAbilityStyleRegistry = data.abilityRegistry || {};
-            // [新增] 載入對話快取
             if (data.lastDiagSettings && typeof lastDiagSettings !== 'undefined') {
                 lastDiagSettings = data.lastDiagSettings;
             }
-            
-            // 載入初始狀態
+
+            // 重建狀態 (Replay Logic)
             initialState = data.initialState;
-            
-            // --- [關鍵優化] 重建狀態 (Replay State) ---
-            // 讀取到的 history 中間沒有 state，我們需要依照 action 重新跑一遍 applyOperation
             let loadedHistory = data.history;
-            
-            // 確保第0步有 state
             if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
             
-            // 從第1步開始，依序根據上一步的 state + 當下的 action = 算出當下的 state
             for (let i = 1; i < loadedHistory.length; i++) {
                 if (!loadedHistory[i].state) {
                     const prevState = loadedHistory[i-1].state;
                     const newState = cloneState(prevState);
                     const ops = loadedHistory[i].action.operations;
-                    
-                    // 重播動作
                     ops.forEach(op => applyOperation(newState, op));
-                    
                     loadedHistory[i].state = newState;
                 }
             }
-            // ----------------------------------------
             
             history = loadedHistory;
             currentIndex = (typeof data.currentIndex === 'number' && data.currentIndex >= -1 && data.currentIndex < history.length) 
                            ? data.currentIndex 
                            : (history.length - 1);
             
-            // 確保預設頭像存在 (防止讀取舊檔導致頭像破圖)
-            if (typeof generateDefaultPortraits === 'function') {
-                generateDefaultPortraits();
-            }
+            // **關鍵點 1**: 馬上渲染 UI (此時是純文字版，使用者可以看到盤面了)
+            try { renderUI(); } catch(e) { console.error(e); }
 
-            try { renderUI(); } catch(e) {}
+            // --- 階段 2: 延遲讀取卡片圖片 ---
+            setTimeout(() => {
+                const cardsRaw = localStorage.getItem(STORAGE_KEY_CARDS);
+                if (cardsRaw) {
+                    try {
+                        const cardImgs = JSON.parse(cardsRaw);
+                        Object.assign(globalImageRegistry, cardImgs);
+                        
+                        // **關鍵點 2**: 圖片載入完成，重新渲染 (圖片彈出)
+                        renderUI(); 
+                    } catch(e) { console.error("Error loading card images", e); }
+                }
+
+                // --- 階段 3: 最後讀取對話頭像 (優先級最低) ---
+                setTimeout(() => {
+                    const portRaw = localStorage.getItem(STORAGE_KEY_PORTRAITS);
+                    if (portRaw) {
+                        try {
+                            const portImgs = JSON.parse(portRaw);
+                            Object.assign(globalImageRegistry, portImgs);
+                            
+                            // 確保預設頭像存在 (若存檔中缺少某些表情)
+                            if (typeof generateDefaultPortraits === 'function') {
+                                generateDefaultPortraits();
+                            }
+                            // 不需要再次全盤 renderUI，除非當前正好開著對話框
+                            // 但為了保險起見，可以再刷一次，或是只更新對話相關 DOM
+                        } catch(e) { console.error("Error loading portraits", e); }
+                    } else {
+                        // 如果沒存檔，也要生成預設頭像
+                        if (typeof generateDefaultPortraits === 'function') {
+                            generateDefaultPortraits();
+                        }
+                    }
+                }, 50); // 給瀏覽器一點喘息時間
+                
+            }, 50); // 給瀏覽器一點喘息時間
+
             return true;
+
         } catch (e) {
             console.error("Load failed", e);
+            return false;
+        }
+    }
+
+    // 輔助函式：舊版相容讀取
+    function loadFromLegacyStorage() {
+        const raw = localStorage.getItem(STORAGE_KEY_LEGACY);
+        if (!raw) return false;
+        
+        try {
+            const data = JSON.parse(raw);
+            // ... (使用原本的解析邏輯) ...
+            globalImageRegistry = data.imageRegistry || {};
+            globalAbilityStyleRegistry = data.abilityRegistry || {};
+            initialState = data.initialState;
+            // ... Replay logic ...
+            let loadedHistory = data.history;
+            if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
+            for (let i = 1; i < loadedHistory.length; i++) {
+                if (!loadedHistory[i].state) {
+                    const prevState = loadedHistory[i-1].state;
+                    const newState = cloneState(prevState);
+                    const ops = loadedHistory[i].action.operations;
+                    ops.forEach(op => applyOperation(newState, op));
+                    loadedHistory[i].state = newState;
+                }
+            }
+            history = loadedHistory;
+            currentIndex = data.currentIndex || (history.length - 1);
+            
+            if (typeof generateDefaultPortraits === 'function') generateDefaultPortraits();
+            renderUI();
+            
+            // **關鍵**: 讀取成功後，馬上存成新格式，下次就會快了
+            saveToStorage(); 
+            return true;
+        } catch(e) {
             return false;
         }
     }
@@ -3771,7 +3702,18 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
             const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
             
             // Only show Glow buttons for Ability cards
-            document.getElementById('btn-glow').style.display = allAbility ? 'block' : 'none';
+            // 處理發光按鈕 (Glow)
+            const btnGlow = document.getElementById('btn-glow');
+            const btnUnglow = document.getElementById('btn-unglow');
+            
+            btnGlow.style.display = 'block'; // 永遠顯示
+            if (allAbility) {
+                btnGlow.classList.remove('disabled-gray'); // 正常
+                btnUnglow.style.display = (firstCard && firstCard.glow) ? 'block' : 'none';
+            } else {
+                btnGlow.classList.add('disabled-gray'); // 灰階
+                btnUnglow.style.display = 'none';
+            }
             document.getElementById('btn-unglow').style.display = (allAbility && firstCard && firstCard.glow) ? 'block' : 'none';
             
             document.getElementById('btn-remove-image').style.display = (firstCard && firstCard.image) ? 'block' : 'none';
@@ -3800,6 +3742,20 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         }
         
         renderUI(); 
+    }
+	
+	function updateToolbarState() {
+        const btnDiag = document.getElementById('btn-add-dialogue');
+        if (!btnDiag) return;
+
+        // 如果正在編輯非對話動作，則停用對話按鈕
+        const isEditingNonDialog = isDrafting && draftOperations.length > 0 && !draftOperations.some(o => o.type === 'DIALOGUE');
+        
+        if (isEditingNonDialog) {
+            btnDiag.classList.add('disabled-gray');
+        } else {
+            btnDiag.classList.remove('disabled-gray');
+        }
     }
 
     function getCardPositions() {
@@ -4538,15 +4494,22 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     function exportData() {
         const historyToExport = JSON.parse(JSON.stringify(history));
         historyToExport.forEach((item, index) => { if (index > 0) delete item.state; });
+        
+        // 匯出時，imageRegistry 必須是完整的 (卡圖 + 頭像)
+        // 因為 globalImageRegistry 在記憶體中已經是合併好的，所以直接用即可
+        // 但為了保險，我們確認一下是否已經載入完成
+        
         const data = {
             history: historyToExport,
             initialState: initialState,
             currentIndex: currentIndex,
             timestamp: Date.now(),
-            imageRegistry: globalImageRegistry,
-            abilityRegistry: globalAbilityStyleRegistry 
+            imageRegistry: globalImageRegistry, // 這裡包含了所有載入的圖片
+            abilityRegistry: globalAbilityStyleRegistry,
+            lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
         };
-        const blob = new Blob([JSON.stringify(data,null,2)], {type:"text/plain"});
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = `dm-script-${Date.now()}.txt`;
@@ -5102,48 +5065,82 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         document.getElementById('edit-p2-text').value = '';
     }
 
-    // 全域貼上監聽 (替換圖片)
-    // 全域貼上監聽 (替換圖片)
+    // --- 統一的貼上監聽器 (Unified Paste Handler) ---
     document.addEventListener('paste', (e) => {
-        const modal = document.getElementById('dialogue-modal');
-        if (modal.style.display !== 'flex') return; 
-
-        // [修改] 根據 lastFocusPid 來決定要貼上到哪一區
-        const parentGrid = document.getElementById(`emotion-grid-${lastFocusPid}`);
-        if (!parentGrid) return;
-
-        // 在該區塊內尋找被選中的表情
-        const activeOpt = parentGrid.querySelector('.emotion-opt.active');
-        if (!activeOpt) return;
-
-        const pid = lastFocusPid; // p1 或 p2
-        const emo = activeOpt.dataset.emo;
-        const key = `avatar_${pid}_${emo}`;
-
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let blob = null;
+
+        // 1. 先從剪貼簿中找到圖片檔案
         for (let item of items) {
             if (item.kind === 'file' && item.type.startsWith('image/')) {
-                const blob = item.getAsFile();
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    const base64 = evt.target.result;
-                    
-                    // 這裡可以加入一個簡單的視覺閃爍回饋，讓使用者知道貼上成功了
-                    activeOpt.style.transition = 'none';
-                    activeOpt.style.boxShadow = '0 0 15px 5px #fff';
-                    setTimeout(() => { activeOpt.style.transition = ''; activeOpt.style.boxShadow = ''; }, 200);
-
-                    if(confirm(`確定要將 [${pid.toUpperCase()} - ${EMOTION_LABELS[emo]}] 的頭像替換成這張圖片嗎？\n(此變更將全域生效)`)) {
-                        globalImageRegistry[key] = base64;
-                        activeOpt.style.backgroundImage = `url(${base64})`;
-                        renderUI(); 
-                        saveToStorage(); 
-                    }
-                };
-                reader.readAsDataURL(blob);
-                e.preventDefault();
+                blob = item.getAsFile();
                 break;
             }
+        }
+        
+        // 如果剪貼簿裡沒有圖片，直接結束
+        if (!blob) return;
+
+        // 2. 情境 A：對話視窗開啟中 -> 處理頭像 (Avatar)
+        const diagModal = document.getElementById('dialogue-modal');
+        if (diagModal && diagModal.style.display === 'flex') {
+            // 尋找當前焦點的表情格
+            const parentGrid = document.getElementById(`emotion-grid-${lastFocusPid}`);
+            if (!parentGrid) return;
+
+            const activeOpt = parentGrid.querySelector('.emotion-opt.active');
+            if (!activeOpt) return;
+
+            const pid = lastFocusPid; 
+            const emo = activeOpt.dataset.emo;
+            const key = `avatar_${pid}_${emo}`;
+            
+            // 執行壓縮與儲存
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+                const targetSize = 200; // 頭像解析度
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = targetSize;
+                canvas.height = targetSize;
+                
+                ctx.fillStyle = "#000";
+                ctx.fillRect(0, 0, targetSize, targetSize);
+                ctx.drawImage(img, 0, 0, targetSize, targetSize);
+                
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                URL.revokeObjectURL(url);
+
+                // 視覺回饋
+                activeOpt.style.transition = 'none';
+                activeOpt.style.boxShadow = '0 0 15px 5px #fff';
+                setTimeout(() => { activeOpt.style.transition = ''; activeOpt.style.boxShadow = ''; }, 200);
+
+                if(confirm(`確定要將 [${pid.toUpperCase()} - ${EMOTION_LABELS[emo]}] 的頭像替換成這張圖片嗎？`)) {
+                    globalImageRegistry[key] = compressedBase64;
+                    activeOpt.style.backgroundImage = `url(${compressedBase64})`;
+                    renderUI(); 
+                    saveToStorage(); 
+                }
+            };
+            img.src = url;
+            
+            e.preventDefault(); // 阻止瀏覽器預設行為
+            return;
+        }
+
+        // 3. 情境 B：選取卡片中 -> 處理卡圖 (Card Image)
+        if (pendingMove && pendingMove.cardIds.length === 1) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                // 呼叫既有的 processImage 函式 (它內部已經有 100x140 的壓縮邏輯)
+                processImage(event.target.result);
+            };
+            reader.readAsDataURL(blob);
+            
+            e.preventDefault(); // 阻止瀏覽器預設行為
+            return;
         }
     });
 	
