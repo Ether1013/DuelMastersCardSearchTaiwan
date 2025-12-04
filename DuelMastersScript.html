@@ -1401,6 +1401,33 @@
         /* --- 修正 Modal 內按鈕間距 --- */
         .diag-editor-col button { margin-top: 5px; }
 		
+		/* --- 持續效果卡片樣式 --- */
+		.card.ability-card.continuous {
+			border: 3px double #8e44ad !important; /* 紫色雙線框 */
+			background: #f4ecf7; /* 淡紫色背景 */
+			box-shadow: 0 0 5px rgba(142, 68, 173, 0.4);
+		}
+
+		/* 在卡片右上角加上 ∞ 符號 */
+		.card.ability-card.continuous::after {
+			content: "∞";
+			position: absolute;
+			top: -8px;
+			right: -4px;
+			color: #fff;
+			background: #8e44ad;
+			width: 18px;
+			height: 18px;
+			border-radius: 50%;
+			font-size: 14px;
+			font-weight: bold;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 10;
+			box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+			line-height: 1;
+		}
     </style>
 </head>
 <body>
@@ -1572,7 +1599,8 @@
 	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
     <button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
     <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
-    <button id="btn-copy-ability" onclick="copyToAbility()" data-i18n="act_ability">⚡能力</button>
+    <button id="btn-copy-ability" onclick="copyToAbility(false)" data-i18n="act_ability">⚡單次</button>
+	<button id="btn-copy-continuous" onclick="copyToAbility(true)" style="background:#9b59b6; border-color:#8e44ad;" data-i18n="act_continuous">∞ 持續</button>			
     <button id="btn-reveal" onclick="revealCards()" data-i18n="act_reveal">👁️ 展示</button>
     <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
     <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
@@ -1888,7 +1916,8 @@
 			'act_flip': '翻面',
 			'act_injured': '💔 受傷',
 			'act_glow': '💡發光',
-			'act_ability': '⚡能力',
+			'act_ability': '⚡觸發能力',
+			'act_continuous': '∞ 持續能力',
 			'act_reveal': '👁️ 展示',
 			'act_point': '👉 指向',
 			'act_end_point': '🛑 結束指向',
@@ -2020,7 +2049,7 @@
             'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'btn_import': 'Import', 'btn_export': 'Export',
             'zone_battle': 'Battle Zone', 'zone_shield': 'Shields', 'zone_mana': 'Mana', 'zone_hand': 'Hand',
             'zone_hyper': 'Hyper Zone', 'zone_grave': 'Graveyard', 'zone_deck': 'Deck', 'zone_ability': 'Ability (Pending)',
-            'act_flip': 'Flip', 'act_injured': '💔 Injured', 'act_glow': '💡 Glow', 'act_ability': '⚡ Ability',
+            'act_flip': 'Flip', 'act_injured': '💔 Injured', 'act_glow': '💡 Glow', 'act_ability': '⚡ One-shot', 'act_continuous': '∞ Continuous',
             'act_reveal': '👁️ Reveal', 'act_point': '👉 Point', 'act_end_point': '🛑 End Point', 'act_paste': '🖼️ Paste Img',
             'act_rename': 'Rename', 'act_note': '📝 Note', 'act_delete': '🗑️ Delete', 'btn_cancel': 'Cancel', 'btn_save_step': '💾 Save Step',
             'lbl_point_mode': '👉 Point Mode: Select Target(s)', 'btn_confirm_point': '✅ Confirm', 'btn_reset_all': '🗑️ Reset',
@@ -2067,7 +2096,7 @@
             'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
             'zone_battle': 'バトルゾーン', 'zone_shield': 'シールド', 'zone_mana': 'マナゾーン', 'zone_hand': '手札',
             'zone_hyper': '超次元', 'zone_grave': '墓地', 'zone_deck': '山札', 'zone_ability': '効果処理',
-            'act_flip': '裏返す', 'act_injured': '💔 負傷', 'act_glow': '💡 発光', 'act_ability': '⚡ 能力生成',
+            'act_flip': '裏返す', 'act_injured': '💔 負傷', 'act_glow': '💡 発光', 'act_ability': '⚡ トリガー能力','act_continuous': '∞ 常在能力',
             'act_reveal': '👁️ 公開', 'act_point': '👉 対象選択', 'act_end_point': '🛑 選択終了', 'act_paste': '🖼️ 画像貼付',
             'act_rename': '名前変更', 'act_note': '📝 メモ', 'act_delete': '🗑️ 削除', 'lbl_draft_warning': '⚠️ 編集中... (操作数: ',
             'lbl_draft_ops': ')', 'lbl_draft_ops_prefix': '', 'chk_propagate': '🔗 以降へ反映', 'btn_cancel': 'キャンセル',
@@ -2958,23 +2987,30 @@
     }
 
     function deleteAction(index) {
-        if (index === 0) return alert(t('msg_cannot_del_init'));
-        if (!confirm(t('msg_confirm_del_step'))) return;
+		if (index === 0) return alert(t('msg_cannot_del_init'));
+		if (!confirm(t('msg_confirm_del_step'))) return;
 
-        const head = history.slice(0, index);
-        let tail = history.slice(index + 1);
-        
-        history = [...head, ...tail];
+		const head = history.slice(0, index);
+		let tail = history.slice(index + 1);
+		
+		history = [...head, ...tail];
 
-        lastRenderedState = null; 
-        if (currentIndex >= history.length) currentIndex = history.length - 1;
-        
-        cancelSelection(); 
-        renderUI();
-        saveToStorage();
-    }
+		lastRenderedState = null; 
+		
+		// [修改] 強制將焦點設為被刪除者的「上一步」
+		// 即使原本焦點在更後面，也要跳回來，方便使用者確認剛刪除完的狀態接續
+		currentIndex = index - 1;
+		if (currentIndex < 0) currentIndex = 0; // 防呆
+		
+		cancelSelection(); 
+		
+		// [修改] 傳入 true，刪除後不要亂跳捲動
+		renderUI(true);
+		
+		saveToStorage();
+	}
 
-function applyOperation(state, op) {
+	function applyOperation(state, op) {
 
         // [修改] 如果不是對話動作，清除對話資料 (讓畫面消失)
 		if (op.type !== 'DIALOGUE') {
@@ -3115,27 +3151,33 @@ function applyOperation(state, op) {
                 }
             });
         }
-        else if (op.type === 'CREATE_ABILITY') {
-            const { sourceCardId, targetZone, newId } = op;
-            const source = state.cards.find(c => c.id === sourceCardId);
-            if (source) {
-                let idToUse = newId;
-                if (!idToUse) {
-                     idToUse = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1;
-                }
-                const newCard = new Card(idToUse, source.ownerId, source.text + " (Eff)", targetZone);
-                newCard.faceUp = true;
-                newCard.rotation = 0;
-                
-                newCard.imageKey = source.imageKey; 
-                newCard.backImageKey = source.backImageKey;
-                newCard.image = source.image; 
-                newCard.text = source.text;
-                newCard.sourceId = source.id; 
-                
-                state.cards.push(newCard);
-            }
-        }
+        // 在 applyOperation 函式內
+		else if (op.type === 'CREATE_ABILITY') {
+			const { sourceCardId, targetZone, newId, isContinuous } = op; // 取出參數
+			const source = state.cards.find(c => c.id === sourceCardId);
+			if (source) {
+				let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
+				
+				// 建立新卡片
+				const newCard = new Card(idToUse, source.ownerId, source.text + (isContinuous ? " (Cont)" : " (Eff)"), targetZone);
+				
+				// 複製屬性
+				newCard.faceUp = true;
+				newCard.rotation = 0;
+				newCard.imageKey = source.imageKey; 
+				newCard.backImageKey = source.backImageKey;
+				newCard.image = source.image; 
+				newCard.text = source.text;
+				newCard.sourceId = source.id;
+				
+				// [關鍵] 如果是持續效果，標記起來
+				if (isContinuous) {
+					newCard.isContinuous = true;
+				}
+				
+				state.cards.push(newCard);
+			}
+		}
         else if (op.type === 'DELETE_CARD') {
             const { cardIds } = op;
             cardIds.forEach(id => {
@@ -3462,19 +3504,25 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         });
     }
 
-    function copyToAbility() {
-        if (!pendingMove) return;
-        if (pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_copy'));
-        
-        const state = getCurrentDisplayState();
-        const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
-        if (!card) return;
-        
-        const targetZone = card.ownerId === 1 ? 'p1-ability' : 'p2-ability';
-        const newId = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1; 
-        
-        addOperation({ type: 'CREATE_ABILITY', sourceCardId: card.id, targetZone: targetZone, newId: newId });
-    }
+    function copyToAbility(isContinuous = false) {
+		if (!pendingMove) return;
+		if (pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_copy'));
+		
+		const state = getCurrentDisplayState();
+		const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+		if (!card) return;
+		
+		const targetZone = card.ownerId === 1 ? 'p1-ability' : 'p2-ability';
+		const newId = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1; 
+		
+		addOperation({ 
+			type: 'CREATE_ABILITY', 
+			sourceCardId: card.id, 
+			targetZone: targetZone, 
+			newId: newId,
+			isContinuous: isContinuous // 記錄這張卡是否為持續效果
+		});
+	}
 
     function deleteSelectedCard() {
         if (!pendingMove) return;
@@ -3944,10 +3992,18 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         Object.keys(zoneMap).forEach(zoneId => {
             const cardsInZone = zoneMap[zoneId];
             if (zoneId.includes('ability')) {
-                const zoneEl = document.getElementById(zoneId === 'p1-ability' ? 'ability-zone-p1' : 'ability-zone-p2');
-                cardsInZone.forEach(card => zoneEl.appendChild(createCardElement(card)));
-                return;
-            }
+				const zoneEl = document.getElementById(zoneId === 'p1-ability' ? 'ability-zone-p1' : 'ability-zone-p2');
+				
+				// [新增] 排序邏輯：持續效果 (isContinuous) 優先排在前面 (視覺上的上方)
+				cardsInZone.sort((a, b) => {
+					const valA = a.isContinuous ? 1 : 0;
+					const valB = b.isContinuous ? 1 : 0;
+					return valB - valA; // 大的排前面 (1 > 0)
+				});
+
+				cardsInZone.forEach(card => zoneEl.appendChild(createCardElement(card)));
+				return;
+			}
             const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
             if (!zoneEl) return;
             if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
@@ -4127,6 +4183,10 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         // Visual Glow (only applied if property exists, logic handles source sync)
         if (card.glow) el.classList.add(`glow-${card.glow}`);
         
+		if (card.isContinuous) {
+			el.classList.add('continuous');
+		}
+
         if (card.image && (card.faceUp || card.isHyper)) {
             const imageSrc = globalImageRegistry[card.imageKey];
             if (imageSrc) {
@@ -4365,14 +4425,19 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 </div>
             `;
 
-            li.onclick = (e) => {
-                // [修改] 鎖定時禁止點擊切換步驟
-                if (isDrafting) return; 
-                if(e.target.tagName === 'BUTTON') return;
-                currentIndex = index;
-                renderUI();
-                saveToStorage(); 
-            };
+            // 在 renderTimeline 函式內，找到 li.onclick 設定的部分
+			li.onclick = (e) => {
+				// 鎖定時禁止點擊切換步驟
+				if (isDrafting) return; 
+				if(e.target.tagName === 'BUTTON') return;
+				
+				currentIndex = index;
+				
+				// [修改] 傳入 true，告訴 renderUI 不要自動捲動
+				renderUI(true); 
+				
+				saveToStorage(); 
+			};
 
             li.innerHTML = `
                 <div class="action-header">
