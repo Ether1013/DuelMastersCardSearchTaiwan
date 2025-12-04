@@ -2341,7 +2341,7 @@
 		img.src = dataUrl;
 	}
     
-    // 修改後的 updateCardImageGlobal
+	// 修改後的 updateCardImageGlobal (包含自動關閉面板邏輯)
 	function updateCardImageGlobal(cardId, base64) {
 		const state = getCurrentDisplayState();
 		const targetCard = state.cards.find(c => c.id === cardId);
@@ -2403,8 +2403,10 @@
 			}
 		}
 
-		// 自動關閉選單邏輯 (維持上一回的設定)
-		if (draftOperations.length === 0) {
+		// 自動關閉選單邏輯 (修正版)
+		// 如果「不在編輯模式」或者「在編輯模式但還沒有任何子動作(draftOperations為空)」
+		// 則視為單純更換圖片，完成後自動取消選取
+		if (!isDrafting || draftOperations.length === 0) {
 			cancelSelection();
 		}
 	}
@@ -5225,69 +5227,102 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
 
     // --- 統一的貼上監聽器 (Unified Paste Handler) ---
-    document.addEventListener('paste', (e) => {
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        let blob = null;
+	document.addEventListener('paste', (e) => {
+		const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+		let blob = null;
 
-        for (let item of items) {
-            if (item.kind === 'file' && item.type.startsWith('image/')) {
-                blob = item.getAsFile();
-                break;
-            }
-        }
-        if (!blob) return;
+		for (let item of items) {
+			if (item.kind === 'file' && item.type.startsWith('image/')) {
+				blob = item.getAsFile();
+				break;
+			}
+		}
+		if (!blob) return;
 
-        // 1. 情境 A：對話視窗開啟中 -> 處理頭像
-        const diagModal = document.getElementById('dialogue-modal');
-        if (diagModal && diagModal.style.display === 'flex') {
-            // ... (維持原本的頭像處理邏輯，包含 200x200 壓縮) ...
-            // 為節省篇幅，這裡省略重複代碼，請保留您上一回修改的這部分
-            // ...
-            
-            // 記得這段裡面有 e.preventDefault(); return;
-            // 如果您需要我完整重貼這整段請告訴我
-            
-            // 這裡簡單示意頭像邏輯結束點
-            const parentGrid = document.getElementById(`emotion-grid-${lastFocusPid}`);
-            if (parentGrid) {
-                 // ... 執行頭像貼上 ...
-                 // 這裡請保留原本的代碼
-                 const url = URL.createObjectURL(blob);
-                 const img = new Image();
-                 img.onload = () => { /*...*/ };
-                 img.src = url;
-                 e.preventDefault();
-                 return;
-            }
-        }
+		// 1. 情境 A：對話視窗開啟中 -> 處理頭像 (修復邏輯已補回)
+		const diagModal = document.getElementById('dialogue-modal');
+		if (diagModal && diagModal.style.display === 'flex') {
+			const url = URL.createObjectURL(blob);
+			const img = new Image();
+			img.onload = () => {
+				const canvas = document.createElement('canvas');
+				const ctx = canvas.getContext('2d');
+				
+				// 設定頭像儲存尺寸 (正方形)
+				const size = 200; 
+				canvas.width = size;
+				canvas.height = size;
 
-        // [新增] 2. 情境 C：卡片清單視窗 (Deck/Grave View) 開啟中 -> 處理指定卡片
-        const selectorModal = document.getElementById('card-selector-modal');
-        if (selectorModal && selectorModal.style.display === 'flex') {
-             // 檢查是否剛好選中了一張牌
-             if (selectedCardsInModal.length === 1) {
-                 const reader = new FileReader();
-                 reader.onload = (event) => {
-                     // 呼叫 processImage 並傳入選中的卡片 ID
-                     processImage(event.target.result, selectedCardsInModal[0]);
-                 };
-                 reader.readAsDataURL(blob);
-                 e.preventDefault();
-                 return;
-             }
-        }
+				// 繪製深色背景
+				ctx.fillStyle = "#222";
+				ctx.fillRect(0, 0, size, size);
 
-        // 3. 情境 B：桌面選取卡片中 -> 處理卡圖
-        if (pendingMove && pendingMove.cardIds.length === 1) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                processImage(event.target.result); // 不傳參數，預設用 pendingMove
-            };
-            reader.readAsDataURL(blob);
-            e.preventDefault();
-            return;
-        }
-    });
+				// 計算縮放比例 (Cover 模式：填滿正方形)
+				let sWidth = img.width;
+				let sHeight = img.height;
+				const ratio = Math.max(size / sWidth, size / sHeight);
+				const newWidth = sWidth * ratio;
+				const newHeight = sHeight * ratio;
+				
+				// 置中裁切
+				const dx = (size - newWidth) / 2;
+				const dy = (size - newHeight) / 2;
+
+				ctx.drawImage(img, dx, dy, newWidth, newHeight);
+
+				const base64 = canvas.toDataURL('image/jpeg', 0.85);
+				
+				// 根據最後點擊的腳色 (p1/p2) 與當前選中的表情 (emotion) 來決定 Key
+				const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
+				const key = `avatar_${lastFocusPid}_${currentEmo}`;
+				
+				// 更新全域圖片註冊表
+				globalImageRegistry[key] = base64;
+				
+				// 立即更新編輯器上的預覽圖示
+				const activeOpt = document.querySelector(`#emotion-grid-${lastFocusPid} .emotion-opt[data-emo="${currentEmo}"]`);
+				if (activeOpt) {
+					activeOpt.style.backgroundImage = `url(${base64})`;
+				}
+				
+				// 釋放記憶體
+				URL.revokeObjectURL(url);
+				
+				// 嘗試存檔 (非強制，僅更新 core data 內的 registry)
+				saveToStorage();
+			};
+			img.src = url;
+			e.preventDefault();
+			return;
+		}
+
+		// [新增] 2. 情境 C：卡片清單視窗 (Deck/Grave View) 開啟中 -> 處理指定卡片
+		const selectorModal = document.getElementById('card-selector-modal');
+		if (selectorModal && selectorModal.style.display === 'flex') {
+				// 檢查是否剛好選中了一張牌
+				if (selectedCardsInModal.length === 1) {
+					const reader = new FileReader();
+					reader.onload = (event) => {
+						// 呼叫 processImage 並傳入選中的卡片 ID
+						processImage(event.target.result, selectedCardsInModal[0]);
+					};
+					reader.readAsDataURL(blob);
+					e.preventDefault();
+					return;
+				}
+		}
+
+		// 3. 情境 B：桌面選取卡片中 -> 處理卡圖
+		if (pendingMove && pendingMove.cardIds.length === 1) {
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				processImage(event.target.result); // 不傳參數，預設用 pendingMove
+			};
+			reader.readAsDataURL(blob);
+			e.preventDefault();
+			return;
+		}
+	});
 	
 </script>
 <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
