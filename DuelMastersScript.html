@@ -2619,10 +2619,21 @@
 
         try {
             // 1. 準備核心資料 (不含圖片)
-            const leanHistory = history.map((item, index) => {
-                if (index === 0) return item; 
-                return { action: item.action };
-            });
+            // 修改為：
+			const leanHistory = history.map((item, index) => {
+				if (index === 0) return item; 
+				
+				// 建立精簡物件
+				const leanItem = { action: item.action };
+				
+				// [關鍵] 如果這個步驟有紀錄「斷層起點 (detachedStartState)」，必須存下來！
+				// 這樣重新整理網頁後，A5 才會記得它要接在舊的 A4 後面
+				if (item.detachedStartState) {
+					leanItem.detachedStartState = item.detachedStartState;
+				}
+				
+				return leanItem;
+			});
 
             // 在 saveToStorage 函式內，準備 coreData 物件時：
 			const coreData = {
@@ -2862,12 +2873,21 @@
         insertIndex = index; 
         editModeType = 'EDIT';
         
-        let baseIndex = index - 1;
-        if (baseIndex < 0) {
-            tempState = cloneState(initialState);
-        } else {
-            tempState = cloneState(history[baseIndex].state);
-        }
+        // 判斷是否要使用「斷層存檔」
+		// 如果當前步驟 (Action 5) 有紀錄 detachedStartState，就用它當作編輯的起點
+		if (history[index].detachedStartState) {
+			console.log("發現斷層存檔，載入舊的時間軸狀態...");
+			tempState = cloneState(history[index].detachedStartState);
+		} 
+		else {
+			// 否則走原本的邏輯 (找上一步的結果)
+			let baseIndex = index - 1;
+			if (baseIndex < 0) {
+				tempState = cloneState(initialState);
+			} else {
+				tempState = cloneState(history[baseIndex].state);
+			}
+		}
         
         tempState.dialogueData = null; 
         // ---------------------------------------------------
@@ -3015,14 +3035,39 @@
         }
 
         if (propagate) {
-            let runningState = cloneState(finalState);
-            tail = tail.map(item => {
-                try {
-                    item.action.operations.forEach(op => applyOperation(runningState, op));
-                } catch(e) { console.error("Propagate Error", e); }
-                return { action: item.action, state: cloneState(runningState) };
-            });
-        }
+			// [情境 A：開啟連動] 
+			// 1. 既然要連動，代表後續步驟應該要「認祖歸宗」，接上新的 A4'
+			// 2. 所以如果 tail[0] (A5) 身上有「斷層存檔」，要把它刪掉
+			if (tail.length > 0 && tail[0].detachedStartState) {
+				delete tail[0].detachedStartState;
+			}
+
+			let runningState = cloneState(finalState);
+			tail = tail.map(item => {
+				// 連動時也要順便把後續步驟身上的斷層存檔都清乾淨，確保整條線重算
+				if (item.detachedStartState) delete item.detachedStartState;
+				
+				try {
+					item.action.operations.forEach(op => applyOperation(runningState, op));
+				} catch(e) { console.error("Propagate Error", e); }
+				return { action: item.action, state: cloneState(runningState) };
+			});
+		} 
+		else {
+			// [情境 B：不連動 (製造斷層)]
+			// 如果還有下一步 (例如修改 A4，後面還有 A5)
+			if (tail.length > 0) {
+				// 我們要把「原本 A4 的結果」存給 A5 當作它的「私房起點」
+				// 只有當 A5 還沒有私房起點時才存 (避免連續修改 A4 時覆蓋掉最早的狀態)
+				
+				// 注意：editModeType === 'EDIT' 時，history[insertIndex] 還是舊的 A4
+				if (editModeType === 'EDIT' && !tail[0].detachedStartState) {
+					// 把舊的 A4 結果狀態複製一份給 A5
+					tail[0].detachedStartState = cloneState(history[insertIndex].state);
+					console.log("已建立時間軸斷層快照，A5 將不受 A4' 影響");
+				}
+			}
+		}
 
         history = [...head, newItem, ...tail];
 
@@ -4749,11 +4794,23 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
         for (let i = 1; i < loadedHistory.length; i++) {
             if (!loadedHistory[i].state) {
-                const prevState = loadedHistory[i-1].state;
-                const newState = cloneState(prevState);
-                const ops = loadedHistory[i].action.operations;
-                ops.forEach(op => applyOperation(newState, op));
-                loadedHistory[i].state = newState;
+                // [關鍵修改] 匯入重建邏輯
+				// 檢查這一步是否有「斷層存檔 (detachedStartState)」
+				if (loadedHistory[i].detachedStartState) {
+					// 情境 A：有斷層存檔
+					// 直接使用存檔中的狀態，忽略「上一步 + 運算」的標準流程
+					// 這能確保「不連動」的效果在匯入後依然存在
+					loadedHistory[i].state = cloneState(loadedHistory[i].detachedStartState);
+				} 
+				else {
+					// 情境 B：正常連動
+					// 抓取上一步的狀態，並執行動作運算
+					const prevState = loadedHistory[i-1].state;
+					const newState = cloneState(prevState);
+					const ops = loadedHistory[i].action.operations;
+					ops.forEach(op => applyOperation(newState, op));
+					loadedHistory[i].state = newState;
+				}
             }
         }
         history = loadedHistory;
@@ -4801,41 +4858,46 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
 
     function openSelectorModal(zoneId) {
-        const state = getCurrentDisplayState();
-        const cards = getCardsInZone(state, zoneId);
-        const body = document.getElementById('modal-body');
-        body.innerHTML = '';
-        selectedCardsInModal = [];
-        const title = document.getElementById('modal-title');
-        title.innerText = `${getZoneName(zoneId)} (${cards.length})`;
-        title.setAttribute('data-zone-id', zoneId); 
-        
-        cards.forEach((card, index) => {
-            const el = document.createElement('div');
-            el.className = 'card';
-            
-            // Req 2: Render Image in List
-            if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
-                const imgKey = card.imageKey || card.backImageKey;
-                el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
-                el.classList.add('has-image-icon');
-            }
+		const state = getCurrentDisplayState();
+		const cards = getCardsInZone(state, zoneId);
+		const body = document.getElementById('modal-body');
+		body.innerHTML = '';
+		selectedCardsInModal = [];
+		const title = document.getElementById('modal-title');
+		title.innerText = `${getZoneName(zoneId)} (${cards.length})`;
+		title.setAttribute('data-zone-id', zoneId); 
+		
+		// [修改] 改為反向迴圈 (i 從 length-1 到 0)
+		// 這樣 index 較大(牌庫頂)的卡片會先被 append 到視窗中 (左上角)
+		for (let i = cards.length - 1; i >= 0; i--) {
+			const card = cards[i];
+			const index = i; // 這是卡片在陣列中的真實索引
+			
+			const el = document.createElement('div');
+			el.className = 'card';
+			
+			if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
+				const imgKey = card.imageKey || card.backImageKey;
+				el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
+				el.classList.add('has-image-icon');
+			}
 
-            el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
-                            <div class="card-text">${card.text}</div>`;
-            el.onclick = () => {
-                if (selectedCardsInModal.includes(card.id)) {
-                    selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
-                    el.classList.remove('selected');
-                } else {
-                    selectedCardsInModal.push(card.id);
-                    el.classList.add('selected');
-                }
-            };
-            body.appendChild(el);
-        });
-        document.getElementById('card-selector-modal').style.display = 'flex';
-    }
+			// 顯示索引 (維持真實索引 #N)
+			el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
+							<div class="card-text">${card.text}</div>`;
+			el.onclick = () => {
+				if (selectedCardsInModal.includes(card.id)) {
+					selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
+					el.classList.remove('selected');
+				} else {
+					selectedCardsInModal.push(card.id);
+					el.classList.add('selected');
+				}
+			};
+			body.appendChild(el);
+		}
+		document.getElementById('card-selector-modal').style.display = 'flex';
+	}
     function closeSelectorModal() { document.getElementById('card-selector-modal').style.display = 'none'; }
     function prepareMove(shuffle) {
         if(selectedCardsInModal.length===0) return;
@@ -4845,57 +4907,56 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
 
 	function openPositionSelector(zoneId, moveData) {
-        const modal = document.getElementById('position-selector-modal');
-        const list = document.getElementById('position-list');
-        const gui = document.getElementById('stack-gui');
-        
-        // 標題與模式切換
-        document.getElementById('pos-modal-title').innerText = t('msg_insert_pos_title');
-        gui.style.display = 'none';
-        list.style.display = 'flex'; 
-        list.innerHTML = ''; 
-        
-        const state = getCurrentDisplayState();
-        const cards = getCardsInZone(state, zoneId);
+		const modal = document.getElementById('position-selector-modal');
+		const list = document.getElementById('position-list');
+		const gui = document.getElementById('stack-gui');
+		
+		document.getElementById('pos-modal-title').innerText = t('msg_insert_pos_title');
+		gui.style.display = 'none';
+		list.style.display = 'flex'; 
+		list.innerHTML = ''; 
+		
+		const state = getCurrentDisplayState();
+		const cards = getCardsInZone(state, zoneId);
 
-        // --- 核心邏輯：交錯生成 [插槽] 與 [參考卡] ---
-        
-        // 1. 先放最頂部的插槽 (Index 0)
-        list.appendChild(createSlotElement(0, t('val_top'), zoneId));
-        
-        for (let i = 0; i < cards.length; i++) {
-            const card = cards[i];
-            
-            // 2. 放入參考卡片 (Visual)
-            const refCard = document.createElement('div');
-            refCard.className = 'position-card-ref';
-            
-            // 處理圖片與文字
-            if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
-                const imgKey = card.imageKey || card.backImageKey;
-                refCard.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
-                refCard.classList.add('has-image-icon');
-                refCard.innerHTML = `<span style="display:none;">${card.text}</span>`; // 隱藏文字但保留結構
-            } else {
-                refCard.innerHTML = `<span style="padding:2px; word-break:break-all; line-height:1;">${card.text}</span>`;
-            }
-            
-            // 左上角加入序號，方便對照
-            const idxBadge = document.createElement('div');
-            idxBadge.style.cssText = "position:absolute; top:0; left:0; background:rgba(0,0,0,0.6); color:white; font-size:8px; padding:1px 3px; border-bottom-right-radius:3px;";
-            idxBadge.innerText = i + 1;
-            refCard.appendChild(idxBadge);
-            
-            list.appendChild(refCard);
+		// [修改] 反向排列邏輯：讓視覺上方 = 牌庫頂 (Array Last)
 
-            // 3. 放入該卡片之後的插槽 (Index i+1)
-            // 如果是最後一張，標示為「底」
-            const isTop = (i === cards.length - 1);
-            list.appendChild(createSlotElement(i + 1, isTop ? t('val_bottom') : "", zoneId, isTop));
-        }
+		// 1. 先放「最頂端」的插槽 (索引 = length)，這代表插在整副牌的最上面
+		// 我們給它標示 "Top" (若您的翻譯檔有 val_top 可改用 t('val_top'))
+		list.appendChild(createSlotElement(cards.length, "Top", zoneId, true));
+		
+		// 2. 倒序放入卡片與其下方的插槽
+		for (let i = cards.length - 1; i >= 0; i--) {
+			const card = cards[i];
+			
+			// 卡片本體 (參考用)
+			const refCard = document.createElement('div');
+			refCard.className = 'position-card-ref';
+			
+			if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
+				const imgKey = card.imageKey || card.backImageKey;
+				refCard.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
+				refCard.classList.add('has-image-icon');
+				refCard.innerHTML = `<span style="display:none;">${card.text}</span>`;
+			} else {
+				refCard.innerHTML = `<span style="padding:2px; word-break:break-all; line-height:1;">${card.text}</span>`;
+			}
+			
+			const idxBadge = document.createElement('div');
+			idxBadge.style.cssText = "position:absolute; top:0; left:0; background:rgba(0,0,0,0.6); color:white; font-size:8px; padding:1px 3px; border-bottom-right-radius:3px;";
+			idxBadge.innerText = i + 1;
+			refCard.appendChild(idxBadge);
+			
+			list.appendChild(refCard);
 
-        modal.style.display = 'flex';
-    }
+			// 3. 放入該卡片下方的插槽 (索引 = i)
+			// 如果 i=0，代表這是最底部的插槽，標示 "Bottom"
+			const isBottom = (i === 0);
+			list.appendChild(createSlotElement(i, isBottom ? "Bottom" : "", zoneId, isBottom));
+		}
+
+		modal.style.display = 'flex';
+	}
 
     // 建立插槽的輔助函式
     function createSlotElement(index, text, zoneId, isTop) {
