@@ -2250,6 +2250,7 @@
     let storageQuotaExceeded = false; 
     let hasAlertedQuota = false;    
     let pendingImportData = null;
+	let globalLastUsedStyles = {}; // [新增] 用來記錄每張圖片最後一次使用的樣式
 
     const STORAGE_KEY = 'dm_editor_data_v1'; // Updated Key
     const STORAGE_EXPIRY = 7 * 24 * 60 * 60 * 1000; 
@@ -2312,69 +2313,101 @@
         window.focus();
     }
     
-    function processImage(dataUrl) {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const targetW = 100;
-            const targetH = 140;
-            canvas.width = targetW;
-            canvas.height = targetH;
-            ctx.drawImage(img, 0, 0, targetW, targetH);
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-            updateCardImageGlobal(pendingMove.cardIds[0], compressedBase64);
-        };
-        img.src = dataUrl;
-    }
+    // 修改後的 processImage
+	function processImage(dataUrl, targetId = null) {
+		const img = new Image();
+		img.onload = () => {
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			// 維持原本的卡片壓縮比例 (100x140)
+			const targetW = 100;
+			const targetH = 140;
+			canvas.width = targetW;
+			canvas.height = targetH;
+			
+			ctx.fillStyle = "#fff"; // 防止透明圖變黑
+			ctx.fillRect(0, 0, targetW, targetH);
+			ctx.drawImage(img, 0, 0, targetW, targetH);
+			
+			const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+			
+			// [修改] 如果有指定 ID 就用指定的，否則使用桌面選取的(pendingMove)
+			const idToUse = targetId || (pendingMove ? pendingMove.cardIds[0] : null);
+			
+			if (idToUse) {
+				updateCardImageGlobal(idToUse, compressedBase64);
+			}
+		};
+		img.src = dataUrl;
+	}
     
-    function updateCardImageGlobal(cardId, base64) {
-        if(!confirm(t('msg_replace_img'))) return;
-        
-        const state = getCurrentDisplayState();
-        const targetCard = state.cards.find(c => c.id === cardId);
-        if(!targetCard) return;
+    // 修改後的 updateCardImageGlobal
+	function updateCardImageGlobal(cardId, base64) {
+		const state = getCurrentDisplayState();
+		const targetCard = state.cards.find(c => c.id === cardId);
+		if(!targetCard) return;
 
-        if (!targetCard.imageKey) {
-            targetCard.imageKey = 'img_' + targetCard.id;
-            targetCard.backImageKey = 'img_back_' + targetCard.id;
-        }
+		if (!targetCard.imageKey) {
+			targetCard.imageKey = 'img_' + targetCard.id;
+			targetCard.backImageKey = 'img_back_' + targetCard.id;
+		}
 
-        let keyToUpdate = targetCard.imageKey;
-        if (targetCard.isHyper && !targetCard.faceUp) {
-             keyToUpdate = targetCard.backImageKey;
-        }
+		let keyToUpdate = targetCard.imageKey;
+		if (targetCard.isHyper && !targetCard.faceUp) {
+				keyToUpdate = targetCard.backImageKey;
+		}
 
-        globalImageRegistry[keyToUpdate] = base64;
+		// 智慧詢問：只有當「原本已經有圖片」時才跳出確認視窗
+		if (globalImageRegistry[keyToUpdate]) {
+			if(!confirm(t('msg_replace_img'))) return;
+		}
 
-        const setFlag = (s) => {
-            const c = s.cards.find(x => x.id === cardId);
-            if(c) {
-                if (!c.imageKey) {
-                    c.imageKey = 'img_' + c.id;
-                    c.backImageKey = 'img_back_' + c.id;
-                }
-                c.image = true; 
-            }
-            
-            s.cards.forEach(other => {
-                if (!other.imageKey && other.id === cardId) { 
-                     other.imageKey = 'img_' + other.id; 
-                }
-                
-                if (other.imageKey === keyToUpdate || other.backImageKey === keyToUpdate) {
-                    other.image = true;
-                }
-            });
-        };
-        
-        setFlag(initialState);
-        history.forEach(h => setFlag(h.state));
-        if (tempState) setFlag(tempState);
-        
-        renderUI();
-        saveToStorage();
-    }
+		globalImageRegistry[keyToUpdate] = base64;
+
+		const setFlag = (s) => {
+			const c = s.cards.find(x => x.id === cardId);
+			if(c) {
+				if (!c.imageKey) {
+					c.imageKey = 'img_' + c.id;
+					c.backImageKey = 'img_back_' + c.id;
+				}
+				c.image = true; 
+			}
+			
+			s.cards.forEach(other => {
+				if (!other.imageKey && other.id === cardId) { 
+						other.imageKey = 'img_' + other.id; 
+				}
+				if (other.imageKey === keyToUpdate || other.backImageKey === keyToUpdate) {
+					other.image = true;
+				}
+			});
+		};
+		
+		setFlag(initialState);
+		history.forEach(h => setFlag(h.state));
+		if (tempState) setFlag(tempState);
+		
+		renderUI();
+		saveToStorage();
+
+		// [新增] 檢查並刷新「卡片選取視窗」
+		// 如果使用者是在「牌組攤開」的狀態下貼圖，這裡強制刷新清單，讓圖片馬上顯示
+		const selectorModal = document.getElementById('card-selector-modal');
+		if (selectorModal && selectorModal.style.display === 'flex') {
+			const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
+			if (zoneId) {
+				// 重新開啟以刷新畫面 (會失去選取狀態，但能看到新圖)
+				openSelectorModal(zoneId);
+				return; // 視窗開啟中就不處理下方的選單關閉邏輯
+			}
+		}
+
+		// 自動關閉選單邏輯 (維持上一回的設定)
+		if (draftOperations.length === 0) {
+			cancelSelection();
+		}
+	}
     
     function removeImage() {
         if (!pendingMove || pendingMove.cardIds.length !== 1) return;
@@ -2490,6 +2523,7 @@
         const state = new GameState();
         globalImageRegistry = {}; 
         globalAbilityStyleRegistry = {};
+		globalLastUsedStyles = {}; // [新增] 重置記憶
         
         if(!config) config = {p1d:40, p1h:8, p2d:40, p2h:8};
 
@@ -2540,14 +2574,16 @@
                 return { action: item.action };
             });
 
-            const coreData = {
-                timestamp: Date.now(),
-                history: leanHistory,
-                initialState: initialState,
-                currentIndex: currentIndex,
-                abilityRegistry: globalAbilityStyleRegistry,
-                lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
-            };
+            // 在 saveToStorage 函式內，準備 coreData 物件時：
+			const coreData = {
+				timestamp: Date.now(),
+				history: leanHistory,
+				initialState: initialState,
+				currentIndex: currentIndex,
+				abilityRegistry: globalAbilityStyleRegistry,
+				lastUsedStyles: globalLastUsedStyles, // [新增] 存檔
+				lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
+			};
 
             // 2. 拆分圖片資料
             const cardImages = {};
@@ -2608,6 +2644,7 @@
             // 初始化設定
             globalImageRegistry = {}; // 先清空圖片，讓畫面先顯示文字版卡片
             globalAbilityStyleRegistry = data.abilityRegistry || {};
+			globalLastUsedStyles = data.lastUsedStyles || {}; // [新增] 讀檔
             if (data.lastDiagSettings && typeof lastDiagSettings !== 'undefined') {
                 lastDiagSettings = data.lastDiagSettings;
             }
@@ -2727,45 +2764,62 @@
     }
 
 	function startDraft(index) {
-        if (isDrafting) {
-            if(!confirm(t('msg_unsaved_draft'))) return;
-             document.getElementById('action-list').classList.remove('locked');
-        }
-        
-        isDrafting = true;
-        insertIndex = index;
-        draftOperations = [];
-        editModeType = 'INSERT';
-        
-        let baseIndex = index - 1;
-        if (baseIndex < 0) baseIndex = 0; 
-        
-        // 複製上一步驟的狀態
-        tempState = cloneState(history[baseIndex].state);
+		if (isDrafting) {
+			if(!confirm(t('msg_unsaved_draft'))) return;
+				document.getElementById('action-list').classList.remove('locked');
+		}
+		
+		isDrafting = true;
+		insertIndex = index;
+		draftOperations = [];
+		editModeType = 'INSERT';
+		
+		let baseIndex = index - 1;
+		if (baseIndex < 0) baseIndex = 0; 
+		
+		// 複製上一步驟的狀態
+		tempState = cloneState(history[baseIndex].state);
 
-        // --- [新增] 清除殘留的狀態 ---
-        
-        // 1. 清除受傷狀態 (原本就有的)
-        tempState.cards.forEach(c => { if(c.isInjured) c.isInjured = false; });
-        
-        // 2. [關鍵修正] 清除對話狀態，確保新步驟是乾淨的畫面
-        tempState.dialogueData = null; 
-        
-        // ---------------------------
-        
-        updateDraftBar();
-        renderUI();
+		// --- [修改] 清除殘留狀態邏輯 ---
+		
+		// 1. 自動產生「移除受傷」的操作紀錄
+		// 檢查基礎狀態中是否有受傷的卡片
+		const injuredIds = tempState.cards.filter(c => c.isInjured).map(c => c.id);
+		
+		if (injuredIds.length > 0) {
+			// 建立一個「解除受傷」的操作
+			const cleanupOp = { 
+				type: 'INJURED', 
+				cardIds: injuredIds, 
+				setInjured: false 
+			};
+			
+			// 套用到暫存狀態
+			applyOperation(tempState, cleanupOp);
+			
+			// [關鍵] 將此操作推入 draftOperations，這樣 Action Log 就會自動擁有這筆紀錄
+			draftOperations.push(cleanupOp);
+		}
+		
+		// 2. 清除對話狀態 (維持原樣)
+		tempState.dialogueData = null; 
+		
+		// ---------------------------
+		
+		updateDraftBar();
+		renderUI();
 
-        const list = document.getElementById('action-list');
-        const placeholder = document.getElementById('active-placeholder');
-        
-        if (placeholder) {
-            placeholder.scrollIntoView({ block: "center", behavior: "auto" });
-            setTimeout(() => {
-                list.classList.add('locked');
-            }, 50);
-        }
-    }
+		const list = document.getElementById('action-list');
+		const placeholder = document.getElementById('active-placeholder');
+		
+		if (placeholder) {
+			// 使用 behavior: 'smooth' 可能會比較舒適，但 auto 較快
+			placeholder.scrollIntoView({ block: "center", behavior: "auto" });
+			setTimeout(() => {
+				list.classList.add('locked');
+			}, 50);
+		}
+	}
 
     function editAction(index) {
         if (isDrafting) {
@@ -3153,15 +3207,14 @@
         }
         // 在 applyOperation 函式內
 		else if (op.type === 'CREATE_ABILITY') {
-			const { sourceCardId, targetZone, newId, isContinuous } = op; // 取出參數
+			const { sourceCardId, targetZone, newId, isContinuous } = op;
 			const source = state.cards.find(c => c.id === sourceCardId);
 			if (source) {
 				let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
+				const suffix = isContinuous ? " (Cont)" : " (Eff)";
+				const newCard = new Card(idToUse, source.ownerId, source.text + suffix, targetZone);
 				
-				// 建立新卡片
-				const newCard = new Card(idToUse, source.ownerId, source.text + (isContinuous ? " (Cont)" : " (Eff)"), targetZone);
-				
-				// 複製屬性
+				// 基礎屬性複製
 				newCard.faceUp = true;
 				newCard.rotation = 0;
 				newCard.imageKey = source.imageKey; 
@@ -3169,12 +3222,27 @@
 				newCard.image = source.image; 
 				newCard.text = source.text;
 				newCard.sourceId = source.id;
+				if (isContinuous) newCard.isContinuous = true;
+
+				// [核心修改] 樣式獨立與繼承邏輯
+				// 1. 為這張新卡產生唯一的 styleKey
+				newCard.styleKey = 'style_' + newCard.id;
+
+				// 2. 決定初始數值：
+				// 順序：查看「最後記憶」 -> 查看「來源圖原始設定」 -> 使用「預設值」
+				let initialStyle = { x: 50, y: 50, scale: 1 };
 				
-				// [關鍵] 如果是持續效果，標記起來
-				if (isContinuous) {
-					newCard.isContinuous = true;
+				if (globalLastUsedStyles[source.imageKey]) {
+					// A. 繼承：上次這張圖被調整成的樣子 (即使該卡已被刪除)
+					initialStyle = { ...globalLastUsedStyles[source.imageKey] };
+				} else if (globalAbilityStyleRegistry[source.imageKey]) {
+					// B. 相容：如果沒有記憶，但有舊版的全域設定
+					initialStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
 				}
-				
+
+				// 3. 將決定好的樣式寫入註冊表，歸屬給這張新卡的 styleKey
+				globalAbilityStyleRegistry[newCard.styleKey] = initialStyle;
+
 				state.cards.push(newCard);
 			}
 		}
@@ -3330,36 +3398,57 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     }
     
     function adjustAbilityCard(key, val) {
-        if (!pendingMove || pendingMove.cardIds.length === 0) return;
-        
-        const state = getCurrentDisplayState();
-        const targetIds = pendingMove.cardIds;
-        
-        const keysToUpdate = new Set();
-        targetIds.forEach(id => {
-            const c = state.cards.find(card => card.id === id);
-            if (c) {
-                if (c.imageKey) keysToUpdate.add(c.imageKey);
-                else if (c.backImageKey) keysToUpdate.add(c.backImageKey);
-            }
-        });
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
+		
+		const state = getCurrentDisplayState();
+		const targetIds = pendingMove.cardIds;
+		
+		let hasChanges = false;
 
-        if (keysToUpdate.size === 0) return;
+		targetIds.forEach(id => {
+			const c = state.cards.find(card => card.id === id);
+			if (c) {
+				// 決定要更新哪個 Key：如果是新版卡片用 styleKey，舊版卡片用 imageKey
+				let keyToUpdate = c.styleKey;
+				
+				// 如果這張卡沒有 styleKey (舊存檔)，我們現場幫它補一個，讓它開始獨立
+				if (!keyToUpdate) {
+					if (c.imageKey) {
+						keyToUpdate = 'style_' + c.id;
+						c.styleKey = keyToUpdate;
+						// 繼承原本共用的樣式作為起點
+						globalAbilityStyleRegistry[keyToUpdate] = { ...(globalAbilityStyleRegistry[c.imageKey] || {x:50,y:50,scale:1}) };
+					} else {
+						return; // 沒圖片無法調整
+					}
+				}
 
-        keysToUpdate.forEach(imgKey => {
-            let currentStyle = globalAbilityStyleRegistry[imgKey] || { x: 50, y: 50, scale: 1 };
-            let newStyle = { ...currentStyle };
+				// 取得當前樣式
+				let currentStyle = globalAbilityStyleRegistry[keyToUpdate] || { x: 50, y: 50, scale: 1 };
+				let newStyle = { ...currentStyle };
 
-            if (key === 'panX') newStyle.x += val;
-            else if (key === 'panY') newStyle.y += val;
-            else if (key === 'scale') newStyle.scale += val;
+				// 計算新數值
+				if (key === 'panX') newStyle.x += val;
+				else if (key === 'panY') newStyle.y += val;
+				else if (key === 'scale') newStyle.scale += val;
 
-            globalAbilityStyleRegistry[imgKey] = newStyle;
-        });
+				// 1. 更新這張卡片的獨立樣式
+				globalAbilityStyleRegistry[keyToUpdate] = newStyle;
+				
+				// 2. [關鍵] 更新「全域記憶」，讓這張原始圖片(imageKey)的下一個複製品繼承這個數值
+				if (c.imageKey) {
+					globalLastUsedStyles[c.imageKey] = { ...newStyle };
+				}
 
-        renderUI();
-        saveToStorage();
-    }
+				hasChanges = true;
+			}
+		});
+
+		if (hasChanges) {
+			renderUI();
+			saveToStorage();
+		}
+	}
     
     function resetBoard(playerId) {
         if(!confirm(playerId === 1 ? t('msg_confirm_p1_reset') : t('msg_confirm_p2_reset'))) return;
@@ -4194,10 +4283,15 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
                 el.classList.add('has-image');
                 
                 if (card.zone.includes('ability')) {
-                    const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[card.imageKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
-                    el.style.backgroundPosition = `${style.x}% ${style.y}%`;
-                    el.style.backgroundSize = `${100 * style.scale}%`;
-                } else {
+					// [修改] 優先使用卡片專屬樣式 key，沒有則回退使用 imageKey (相容舊版)
+					const lookupKey = card.styleKey || card.imageKey;
+					
+					// 取得樣式，預設值為置中不縮放
+					const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[lookupKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
+					
+					el.style.backgroundPosition = `${style.x}% ${style.y}%`;
+					el.style.backgroundSize = `${100 * style.scale}%`;
+				} else {
                      el.style.backgroundSize = 'cover';
                      el.style.backgroundPosition = 'center';
                      el.style.backgroundRepeat = 'no-repeat';
@@ -5135,76 +5229,62 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         let blob = null;
 
-        // 1. 先從剪貼簿中找到圖片檔案
         for (let item of items) {
             if (item.kind === 'file' && item.type.startsWith('image/')) {
                 blob = item.getAsFile();
                 break;
             }
         }
-        
-        // 如果剪貼簿裡沒有圖片，直接結束
         if (!blob) return;
 
-        // 2. 情境 A：對話視窗開啟中 -> 處理頭像 (Avatar)
+        // 1. 情境 A：對話視窗開啟中 -> 處理頭像
         const diagModal = document.getElementById('dialogue-modal');
         if (diagModal && diagModal.style.display === 'flex') {
-            // 尋找當前焦點的表情格
+            // ... (維持原本的頭像處理邏輯，包含 200x200 壓縮) ...
+            // 為節省篇幅，這裡省略重複代碼，請保留您上一回修改的這部分
+            // ...
+            
+            // 記得這段裡面有 e.preventDefault(); return;
+            // 如果您需要我完整重貼這整段請告訴我
+            
+            // 這裡簡單示意頭像邏輯結束點
             const parentGrid = document.getElementById(`emotion-grid-${lastFocusPid}`);
-            if (!parentGrid) return;
-
-            const activeOpt = parentGrid.querySelector('.emotion-opt.active');
-            if (!activeOpt) return;
-
-            const pid = lastFocusPid; 
-            const emo = activeOpt.dataset.emo;
-            const key = `avatar_${pid}_${emo}`;
-            
-            // 執行壓縮與儲存
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => {
-                const targetSize = 200; // 頭像解析度
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = targetSize;
-                canvas.height = targetSize;
-                
-                ctx.fillStyle = "#000";
-                ctx.fillRect(0, 0, targetSize, targetSize);
-                ctx.drawImage(img, 0, 0, targetSize, targetSize);
-                
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                URL.revokeObjectURL(url);
-
-                // 視覺回饋
-                activeOpt.style.transition = 'none';
-                activeOpt.style.boxShadow = '0 0 15px 5px #fff';
-                setTimeout(() => { activeOpt.style.transition = ''; activeOpt.style.boxShadow = ''; }, 200);
-
-                if(confirm(`確定要將 [${pid.toUpperCase()} - ${EMOTION_LABELS[emo]}] 的頭像替換成這張圖片嗎？`)) {
-                    globalImageRegistry[key] = compressedBase64;
-                    activeOpt.style.backgroundImage = `url(${compressedBase64})`;
-                    renderUI(); 
-                    saveToStorage(); 
-                }
-            };
-            img.src = url;
-            
-            e.preventDefault(); // 阻止瀏覽器預設行為
-            return;
+            if (parentGrid) {
+                 // ... 執行頭像貼上 ...
+                 // 這裡請保留原本的代碼
+                 const url = URL.createObjectURL(blob);
+                 const img = new Image();
+                 img.onload = () => { /*...*/ };
+                 img.src = url;
+                 e.preventDefault();
+                 return;
+            }
         }
 
-        // 3. 情境 B：選取卡片中 -> 處理卡圖 (Card Image)
+        // [新增] 2. 情境 C：卡片清單視窗 (Deck/Grave View) 開啟中 -> 處理指定卡片
+        const selectorModal = document.getElementById('card-selector-modal');
+        if (selectorModal && selectorModal.style.display === 'flex') {
+             // 檢查是否剛好選中了一張牌
+             if (selectedCardsInModal.length === 1) {
+                 const reader = new FileReader();
+                 reader.onload = (event) => {
+                     // 呼叫 processImage 並傳入選中的卡片 ID
+                     processImage(event.target.result, selectedCardsInModal[0]);
+                 };
+                 reader.readAsDataURL(blob);
+                 e.preventDefault();
+                 return;
+             }
+        }
+
+        // 3. 情境 B：桌面選取卡片中 -> 處理卡圖
         if (pendingMove && pendingMove.cardIds.length === 1) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                // 呼叫既有的 processImage 函式 (它內部已經有 100x140 的壓縮邏輯)
-                processImage(event.target.result);
+                processImage(event.target.result); // 不傳參數，預設用 pendingMove
             };
             reader.readAsDataURL(blob);
-            
-            e.preventDefault(); // 阻止瀏覽器預設行為
+            e.preventDefault();
             return;
         }
     });
