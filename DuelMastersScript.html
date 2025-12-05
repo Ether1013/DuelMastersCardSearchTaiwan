@@ -1524,6 +1524,12 @@
 			color: #e74c3c; /* Hover 時變紅，提示可點擊 */
 			-webkit-text-stroke: 1px #c0392b;
 		}
+		
+		/* [新增] 播放模式或手機模式時，隱藏王牌星星 */
+		body.is-playing .ace-star-mark,
+		body.mobile-mode .ace-star-mark {
+			display: none !important;
+		}
 
 		/* 2. 長按集氣邊框 (SVG) - [修改] 光束質感版 */
 		.ace-loader-svg {
@@ -5251,29 +5257,31 @@
 
     let playTimeout = null; // 取代 playInterval
 
+    // --- [修改] togglePlay 函式 (加入 class 控制) ---
     function togglePlay() {
         if (playTimeout) {
             // --- 暫停 ---
             clearTimeout(playTimeout);
             playTimeout = null;
             updatePlayButtonUI();
+            
+            // [新增] 移除播放狀態 class (顯示星星)
+            document.body.classList.remove('is-playing');
         } else {
             // --- 播放 ---
-            
-            // [修正] 如果已經在最後一步，點播放時自動重頭開始 (優化體驗)
             if (currentIndex >= history.length - 1) {
                 currentIndex = -1;
             }
-
-            // 1. 先執行播放，這會產生 playTimeout ID
-            playNextStep(); 
             
-            // 2. 再更新 UI，這時 playTimeout 已經有值了，按鈕才會正確變成[暫停]
-            updatePlayButtonUI(); 
+            // [新增] 加入播放狀態 class (隱藏星星)
+            document.body.classList.add('is-playing');
+            
+            playNextStep();
+            updatePlayButtonUI();
         }
     }
 
-    // --- [取代] playNextStep 函式 ---
+    // --- [修改] playNextStep 函式 (結束時移除 class) ---
 	function playNextStep() {
 		if (currentIndex < history.length - 1) {
 			currentIndex++;
@@ -5286,36 +5294,23 @@
 			const currAction = history[currentIndex].action;
 			const currOp = currAction.operations ? currAction.operations[0] : null;
 			
-			// 判斷當前是否為對話
+			// 判斷當前是否為對話 (計算閱讀時間)
 			if (currOp && currOp.type === 'DIALOGUE') {
 				const currData = currOp.data;
 				let newCharCount = 0;
-
-				// 取得上一動作 (注意：currentIndex 已經 +1 了，所以上一動作是 currentIndex - 1)
-				// 如果 currentIndex 為 0，代表這是第一步，沒有前一步
 				const prevAction = (currentIndex > 0) ? history[currentIndex - 1].action : null;
 				const prevOp = (prevAction && prevAction.operations) ? prevAction.operations[0] : null;
-				
 				const isPrevDialogue = (prevOp && prevOp.type === 'DIALOGUE');
-
-				// 定義取得該玩家文字的輔助函式
 				const getText = (d, pid) => (d[pid] && d[pid].active) ? d[pid].dataText : "";
 
 				if (!isPrevDialogue) {
-					// 情境 A：前一篇不是對話 -> 計算總字數
 					newCharCount += getText(currData, 'p1').length;
 					newCharCount += getText(currData, 'p2').length;
 				} else {
-					// 情境 B：前一篇是對話 -> 計算差異字數
 					const prevData = prevOp.data;
-
 					['p1', 'p2'].forEach(pid => {
 						const cText = getText(currData, pid);
 						const pText = getText(prevData, pid);
-
-						// 邏輯：如果現在的文字是包含前一次的文字 (例如 "你好" -> "你好嗎")
-						// 則只計算多出來的部分 (3 - 2 = 1個字)
-						// 否則 (文字完全換了)，就計算全部字數
 						if (cText.startsWith(pText) && pText.length > 0) {
 							const diff = cText.length - pText.length;
 							newCharCount += (diff > 0 ? diff : 0);
@@ -5324,17 +5319,11 @@
 						}
 					});
 				}
-				
-				// 計算時間：基礎 500ms + 每個"新"字 60ms
 				delay = 500 + (newCharCount * 60);
-				
-				// 確保至少停留 1 秒
 				if (delay < 1000) delay = 1000;
 			}
 
-			// [關鍵修改] 在這裡套用速度倍率
-			// 因為 delay 是毫秒數，我們要乘以因子 (因子越小=時間越短=速度越快)
-			// 例如：2.0x 速度 -> 因子是 0.5 -> 1000ms * 0.5 = 500ms
+			// 套用速度倍率
 			let finalDelay = delay * currentSpeedFactor;
 
 			// 設定下一個動作
@@ -5344,6 +5333,9 @@
 			// 播完了
 			playTimeout = null;
 			updatePlayButtonUI();
+            
+            // [新增] 播放結束，移除 class (顯示星星)
+            document.body.classList.remove('is-playing');
 		}
 	}
     
@@ -5749,10 +5741,9 @@
         const mobBtn = document.getElementById('mob-play-btn');
         const deskBtn = document.getElementById('btn-play');
         
-        const icon = playInterval ? "⏸" : "▶";
+        // [Bug 原因] 這裡還在用舊變數 playInterval，導致判斷錯誤
+        const icon = playInterval ? "⏸" : "▶"; 
         if(mobBtn) mobBtn.innerText = icon;
-        // 保持電腦版按鈕文字同步 (如果 togglePlay 內部有改文字，這裡只是雙保險)
-        // 注意：原版 togglePlay 已經有改 deskBtn 文字，所以這邊主要是針對 mobBtn
     };
 
     // --- Main Entry Point ---
