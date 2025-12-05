@@ -4759,41 +4759,72 @@
         }
     }
 
-    function playNextStep() {
-        if (currentIndex < history.length - 1) {
-            currentIndex++;
-            renderUI();
-            if(!document.body.classList.contains('mobile-mode')) saveToStorage();
-            
-            // 預設非對話動作的時間 (原本就是 1200ms，保持不變)
-            let delay = 1200;
-            
-            const action = history[currentIndex].action;
-            
-            // 如果是對話，根據字數計算時間
-            if (action.operations && action.operations[0].type === 'DIALOGUE') {
-                const data = action.operations[0].data;
-                let charCount = 0;
-                if (data.p1 && data.p1.active) charCount += data.p1.dataText.length;
-                if (data.p2 && data.p2.active) charCount += data.p2.dataText.length;
-                
-                // [修改] 調整時間公式
-                // 舊設定: 基礎 1000ms + 每個字 100ms (最少 1500ms)
-                // 新設定: 基礎 600ms + 每個字 60ms (最少 1000ms)
-                
-                delay = 600 + (charCount * 60); 
-                
-                // 確保至少停留 1 秒，避免短句一閃而過看不清楚
-                if (delay < 1000) delay = 1000;
-            }
+    // --- [取代] playNextStep 函式 ---
+	function playNextStep() {
+		if (currentIndex < history.length - 1) {
+			currentIndex++;
+			renderUI();
+			if(!document.body.classList.contains('mobile-mode')) saveToStorage();
+			
+			// 預設非對話動作的時間
+			let delay = 1200;
+			
+			const currAction = history[currentIndex].action;
+			const currOp = currAction.operations ? currAction.operations[0] : null;
+			
+			// 判斷當前是否為對話
+			if (currOp && currOp.type === 'DIALOGUE') {
+				const currData = currOp.data;
+				let newCharCount = 0;
 
-            playTimeout = setTimeout(playNextStep, delay);
-        } else {
-            // 播完了
-            playTimeout = null;
-            updatePlayButtonUI();
-        }
-    }
+				// 取得上一動作 (注意：currentIndex 已經 +1 了，所以上一動作是 currentIndex - 1)
+				// 如果 currentIndex 為 0，代表這是第一步，沒有前一步
+				const prevAction = (currentIndex > 0) ? history[currentIndex - 1].action : null;
+				const prevOp = (prevAction && prevAction.operations) ? prevAction.operations[0] : null;
+				
+				const isPrevDialogue = (prevOp && prevOp.type === 'DIALOGUE');
+
+				// 定義取得該玩家文字的輔助函式
+				const getText = (d, pid) => (d[pid] && d[pid].active) ? d[pid].dataText : "";
+
+				if (!isPrevDialogue) {
+					// 情境 A：前一篇不是對話 -> 計算總字數
+					newCharCount += getText(currData, 'p1').length;
+					newCharCount += getText(currData, 'p2').length;
+				} else {
+					// 情境 B：前一篇是對話 -> 計算差異字數
+					const prevData = prevOp.data;
+
+					['p1', 'p2'].forEach(pid => {
+						const cText = getText(currData, pid);
+						const pText = getText(prevData, pid);
+
+						// 邏輯：如果現在的文字是包含前一次的文字 (例如 "你好" -> "你好嗎")
+						// 則只計算多出來的部分 (3 - 2 = 1個字)
+						// 否則 (文字完全換了)，就計算全部字數
+						if (cText.startsWith(pText) && pText.length > 0) {
+							const diff = cText.length - pText.length;
+							newCharCount += (diff > 0 ? diff : 0);
+						} else {
+							newCharCount += cText.length;
+						}
+					});
+				}
+				
+				// 計算時間：基礎 600ms + 每個"新"字 60ms
+				delay = 600 + (newCharCount * 60);
+				
+				// 確保至少停留 1 秒
+				if (delay < 1000) delay = 1000;
+			}
+
+			playTimeout = setTimeout(playNextStep, delay);
+		} else {
+			// 播完了
+			playTimeout = null;
+			updatePlayButtonUI();
+		}
+	}
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
     
