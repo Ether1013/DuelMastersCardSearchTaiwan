@@ -3356,53 +3356,62 @@
 	}
 	
 	
-function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
-        if (!pendingMove) return;
+	// --- [取代] finishMove 函式 ---
+	function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
+		if (!pendingMove) return;
 
-        // --- START: 移動前先切斷舊連結 ---
-        const state = getCurrentDisplayState();
-        // 檢查被移動的卡片中，是否有任何一張屬於堆疊結構(有父卡 或 有子卡)
-        const needsBreak = pendingMove.cardIds.some(id => {
-            const c = state.cards.find(x => x.id === id);
-            if (!c) return false;
-            // 1. 我是子卡 (連著別人)
-            if (c.parentId) return true;
-            // 2. 我是父卡 (別人連著我)
-            const isParent = state.cards.some(child => child.parentId === c.id);
-            if (isParent) return true;
-            return false;
-        });
+		// 先把要移動的 ID 存下來，因為函式最後會清空 pendingMove
+		const movingIds = [...pendingMove.cardIds];
 
-        if (needsBreak) {
-            // 在產生 MOVE 動作前，先插入一個 BREAK_LINKS 動作
-            addOperation({ type: 'BREAK_LINKS', cardIds: [...pendingMove.cardIds] });
-        }
-        // --- END: 移動前先切斷舊連結 ---
-        
-        let finalCardIds = [...pendingMove.cardIds];
-        if (pendingMove.shuffle) {
-            finalCardIds.sort(() => Math.random() - 0.5);
-        }
+		// --- START: 移動前先切斷舊連結 ---
+		const state = getCurrentDisplayState();
+		const needsBreak = pendingMove.cardIds.some(id => {
+			const c = state.cards.find(x => x.id === id);
+			if (!c) return false;
+			if (c.parentId) return true;
+			const isParent = state.cards.some(child => child.parentId === c.id);
+			if (isParent) return true;
+			return false;
+		});
 
-        let faceUp = true;
-        if (toZone.includes('shield') || toZone.includes('deck')) faceUp = false;
-        if (toZone.includes('hand') && toZone.includes('p2')) faceUp = true;
+		if (needsBreak) {
+			addOperation({ type: 'BREAK_LINKS', cardIds: [...pendingMove.cardIds] });
+		}
+		// --- END: 切斷舊連結 ---
+		
+		let finalCardIds = [...pendingMove.cardIds];
+		if (pendingMove.shuffle) {
+			finalCardIds.sort(() => Math.random() - 0.5);
+		}
 
-        addOperation({
-            type: 'MOVE',
-            cardIds: finalCardIds, 
-            toZone: toZone,
-            faceUp: faceUp,
-            shuffleSelection: false, 
-            insertIndex: insertIdx,
-            stackTargetId: stackTargetId,
-            stackType: stackType
-        });
+		let faceUp = true;
+		if (toZone.includes('shield') || toZone.includes('deck')) faceUp = false;
+		if (toZone.includes('hand') && toZone.includes('p2')) faceUp = true;
 
-        cancelSelection();
-        closeSelectorModal();
-        closePositionModal();
-    }
+		// 1. 執行移動
+		addOperation({
+			type: 'MOVE',
+			cardIds: finalCardIds, 
+			toZone: toZone,
+			faceUp: faceUp,
+			shuffleSelection: false, 
+			insertIndex: insertIdx,
+			stackTargetId: stackTargetId,
+			stackType: stackType
+		});
+
+		// [修改重點] 魔力區自動旋轉
+		// 如果目標區域是魔力區 (p1-mana 或 p2-mana)，自動追加兩個 90 度旋轉
+		// 這樣在 Draft 模式下，使用者可以按兩次 Ctrl+Z 來分別復原旋轉，最後才復原移動
+		if (toZone.includes('mana')) {
+			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 90 });
+			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 90 });
+		}
+
+		cancelSelection();
+		closeSelectorModal();
+		closePositionModal();
+	}
 
     function actionShuffleZone() {
         const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
@@ -3811,33 +3820,44 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
         cancelPointMode();
     }
 
-    function handleZoneClick(zoneId) {
-        if (isPointing) {
-            handlePointClick(zoneId, null); 
-            return;
-        }
+    // --- [取代] handleZoneClick 函式 ---
+	function handleZoneClick(zoneId) {
+		if (isPointing) {
+			handlePointClick(zoneId, null); 
+			return;
+		}
 
-        if (pendingMove) {
-            const state = getCurrentDisplayState();
-            // FILTER: Prevent moving Ability cards
-            const hasAbilityCard = pendingMove.cardIds.some(id => {
-                const c = state.cards.find(card => card.id === id);
-                return c && c.zone.includes('ability');
-            });
-            if(hasAbilityCard) {
-                alert(t('msg_ability_cant_move'));
-                return;
-            }
+		if (pendingMove) {
+			const state = getCurrentDisplayState();
+			// FILTER: Prevent moving Ability cards
+			const hasAbilityCard = pendingMove.cardIds.some(id => {
+				const c = state.cards.find(card => card.id === id);
+				return c && c.zone.includes('ability');
+			});
+			if(hasAbilityCard) {
+				alert(t('msg_ability_cant_move'));
+				return;
+			}
 
-            if (isStackZone(zoneId)) {
-                openPositionSelector(zoneId, pendingMove);
-            } else {
-                finishMove(zoneId, undefined);
-            }
-            return;
-        }
-        openSelectorModal(zoneId);
-    }
+			if (isStackZone(zoneId)) {
+				// [修改重點] 護盾區邏輯優化
+				// 規則：新進去的排左邊(Index 0)，後進去的排右邊(Append)
+				// 實作：如果護盾區是空的，直接執行 finishMove(undefined)，系統預設會 push 到陣列最後(也就是第一個位置)
+				// 這樣就不用問使用者要插在哪裡了
+				const cardsInZone = getCardsInZone(state, zoneId);
+				if (zoneId.includes('shield') && cardsInZone.length === 0) {
+					finishMove(zoneId, undefined);
+					return;
+				}
+
+				openPositionSelector(zoneId, pendingMove);
+			} else {
+				finishMove(zoneId, undefined);
+			}
+			return;
+		}
+		openSelectorModal(zoneId);
+	}
     
     document.addEventListener('click', (e) => {
         if (e.target.closest('.card') || e.target.closest('.zone') || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal')) return;
