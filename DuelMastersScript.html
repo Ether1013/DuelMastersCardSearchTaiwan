@@ -3328,6 +3328,17 @@
 			const source = state.cards.find(c => c.id == sourceCardId);
 			if (source) {
 				let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
+				// [關鍵修正] 檢查 ID 是否衝突，並強制修正
+				// 這段邏輯確保 ID 在當前狀態中是唯一的，即使匯入的檔案有重複 ID 也會修復
+				if (state.cards.some(c => c.id === idToUse)) {
+					// 2. 如果發現 ID 衝突，計算當前最大的 ID
+					const maxExistingId = state.cards.reduce((max, c) => Math.max(max, c.id), 0);
+					idToUse = maxExistingId + 1;
+					
+					// 3. (重要) 更新操作物件中的 newId，這樣在編輯時也會使用這個被修復的新 ID
+					op.newId = idToUse;
+					console.warn(`[ID Conflict Fix] Duplicate ID ${newId || 'auto'} detected. Reassigned to ${idToUse}.`);
+				}
 				const suffix = isContinuous ? " (Cont)" : " (Eff)";
 				const newCard = new Card(idToUse, source.ownerId, source.text + suffix, targetZone);
 				
