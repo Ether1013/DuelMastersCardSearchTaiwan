@@ -4852,7 +4852,7 @@
 			if(!document.body.classList.contains('mobile-mode')) saveToStorage();
 			
 			// 預設非對話動作的時間
-			let delay = 1200;
+			let delay = 1800;
 			
 			const currAction = history[currentIndex].action;
 			const currOp = currAction.operations ? currAction.operations[0] : null;
@@ -4896,8 +4896,8 @@
 					});
 				}
 				
-				// 計算時間：基礎 420ms + 每個"新"字 60ms
-				delay = 420 + (newCharCount * 60);
+				// 計算時間：基礎 500ms + 每個"新"字 60ms
+				delay = 500 + (newCharCount * 60);
 				
 				// 確保至少停留 1 秒
 				if (delay < 1000) delay = 1000;
