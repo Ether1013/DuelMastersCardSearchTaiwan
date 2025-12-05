@@ -3288,13 +3288,13 @@
 		// --------------------------------
 		else if (op.type === 'CREATE_ABILITY') {
 			const { sourceCardId, targetZone, newId, isContinuous } = op;
-			// [修正]
 			const source = state.cards.find(c => c.id == sourceCardId);
 			if (source) {
 				let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
 				const suffix = isContinuous ? " (Cont)" : " (Eff)";
 				const newCard = new Card(idToUse, source.ownerId, source.text + suffix, targetZone);
 				
+				// ... (中間屬性設定保持不變) ...
 				newCard.faceUp = true;
 				newCard.rotation = 0;
 				newCard.imageKey = source.imageKey; 
@@ -3306,15 +3306,31 @@
 
 				newCard.styleKey = 'style_' + newCard.id;
 
-				let initialStyle = { x: 50, y: 50, scale: 1 };
-				
-				if (globalLastUsedStyles[source.imageKey]) {
-					initialStyle = { ...globalLastUsedStyles[source.imageKey] };
-				} else if (globalAbilityStyleRegistry[source.imageKey]) {
-					initialStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
+				// 1. 先嘗試取得新版獨立樣式 (styleKey)
+				let existingStyle = globalAbilityStyleRegistry[newCard.styleKey];
+
+				// 2. 如果沒找到，嘗試尋找舊版/共用樣式 (imageKey) 來繼承 (相容舊存檔)
+				// 注意：這一步很重要，因為匯入的檔案可能只有舊的 Key
+				if (!existingStyle && source.imageKey && globalAbilityStyleRegistry[source.imageKey]) {
+					 existingStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
+					 // 順便把資料搬家到新 Key，以後就獨立了
+					 globalAbilityStyleRegistry[newCard.styleKey] = existingStyle;
 				}
 
-				globalAbilityStyleRegistry[newCard.styleKey] = initialStyle;
+				// 3. 只有當「完全找不到任何紀錄」時，才使用預設值或 LastUsed 初始化
+				// 這樣就不會覆蓋掉匯入的資料了
+				if (!existingStyle) {
+					
+					let initialStyle = { x: 50, y: 50, scale: 1 };
+					
+					if (globalLastUsedStyles[source.imageKey]) {
+						initialStyle = { ...globalLastUsedStyles[source.imageKey] };
+					} else if (globalAbilityStyleRegistry[source.imageKey]) {
+						initialStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
+					}
+
+					globalAbilityStyleRegistry[newCard.styleKey] = initialStyle;
+				}
 
 				state.cards.push(newCard);
 			}
