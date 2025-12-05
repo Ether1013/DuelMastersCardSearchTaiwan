@@ -1835,7 +1835,7 @@
         </div>
 
         <div style="text-align:right; margin-top:10px;">
-            <button class="danger" onclick="document.getElementById('dialogue-modal').style.display='none'" data-i18n="btn_cancel">取消</button>
+            <button class="danger" onclick="document.getElementById('dialogue-modal').style.display='none'; cancelDraft();" data-i18n="btn_cancel">取消</button>
             <button class="primary" onclick="confirmDialogue()" data-i18n="btn_save_step">💾 儲存此步</button>
         </div>
     </div>
@@ -3113,27 +3113,64 @@
         }
     }
 
-    function deleteAction(index) {
+    // --- [取代] deleteAction 函式 (強化版) ---
+	function deleteAction(index) {
+		// 1. 安全檢查：編輯中禁止刪除
+		if (typeof isDrafting !== 'undefined' && isDrafting) {
+			alert("請先完成或取消目前的編輯動作 (Draft)，才能刪除步驟。");
+			return;
+		}
+
 		if (index === 0) return alert(t('msg_cannot_del_init'));
 		if (!confirm(t('msg_confirm_del_step'))) return;
 
+		// 2. 切割陣列
 		const head = history.slice(0, index);
 		let tail = history.slice(index + 1);
-		
+
+		// [關鍵修正 A] 清除斷層快照
+		// 因為 index 被刪除了，index+1 (現在的 tail[0]) 的快照是基於舊歷史的，必須作廢
+		if (tail.length > 0) {
+			if (tail[0].detachedStartState) {
+				console.log("偵測到刪除操作，清除後續動作的斷層快照以避免殘留...");
+				delete tail[0].detachedStartState;
+			}
+		}
+
+		// [關鍵修正 B] 強制重算後續狀態 (Propagate)
+		// 刪除中間一步後，後面的盤面狀態(State)其實都髒掉了，必須重算一遍
+		// 否則記憶體裡的 State 還是舊的，直到下次編輯才會更新
+		if (tail.length > 0) {
+			// 取得新的基礎狀態 (來自 head 的最後一步)
+			let runningState = cloneState(head[head.length - 1].state);
+			
+			tail = tail.map(item => {
+				// 清除所有後續的快照，確保連動正確
+				if (item.detachedStartState) delete item.detachedStartState;
+				
+				try {
+					// 重新運算動作
+					item.action.operations.forEach(op => applyOperation(runningState, op));
+				} catch(e) { console.error("Recalc Error after delete", e); }
+				
+				// 更新狀態
+				return { action: item.action, state: cloneState(runningState) };
+			});
+		}
+
+		// 3. 組合新的歷史紀錄
 		history = [...head, ...tail];
 
+		// 4. UI 更新
 		lastRenderedState = null; 
 		
-		// [修改] 強制將焦點設為被刪除者的「上一步」
-		// 即使原本焦點在更後面，也要跳回來，方便使用者確認剛刪除完的狀態接續
+		// 強制將焦點設為被刪除者的「上一步」
 		currentIndex = index - 1;
-		if (currentIndex < 0) currentIndex = 0; // 防呆
+		if (currentIndex < 0) currentIndex = 0;
 		
-		cancelSelection(); 
+		if (typeof cancelSelection === 'function') cancelSelection(); 
 		
-		// [修改] 傳入 true，刪除後不要亂跳捲動
 		renderUI(true);
-		
 		saveToStorage();
 	}
 
