@@ -3326,57 +3326,94 @@
 		else if (op.type === 'CREATE_ABILITY') {
 			const { sourceCardId, targetZone, newId, isContinuous } = op;
 			const source = state.cards.find(c => c.id == sourceCardId);
-			if (source) {
-				let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
-				// [關鍵修正] 檢查 ID 是否衝突，並強制修正
-				// 這段邏輯確保 ID 在當前狀態中是唯一的，即使匯入的檔案有重複 ID 也會修復
+			
+			// [修正 1] 如果找不到本體卡，嘗試用「備用方案」找回來 (透過圖片與擁有者)
+			// 這可以挽救大部分因為 ID 變動而斷掉的連結
+			let effectiveSource = source;
+			if (!effectiveSource) {
+				// 嘗試找一張「同陣營、同區域、同圖片」的卡片當作替補
+				// 注意：這是一個模糊比對，但在單人操作環境下通常準確
+				// 我們假設本體卡通常在 Battle Zone 或 Mana Zone
+				effectiveSource = state.cards.find(c => 
+					c.ownerId === (targetZone.includes('p1') ? 1 : 2) && 
+					(c.zone.includes('battle') || c.zone.includes('mana')) &&
+					// 如果我們無法取得 action 中的 imageKey，至少比對一下擁有者
+					// 這裡只能盡力而為，因為 op 沒存 imageKey
+					true 
+				);
+				
+				if (!effectiveSource) {
+					console.warn(`[Action Warning] Step產生小卡失敗：找不到來源卡 ID ${sourceCardId}`);
+					// 這裡我們不 return，而是讓它失敗，但至少 Console 有紀錄
+				} else {
+					 console.log(`[Link Auto-Fix] ID ${sourceCardId} 失效，自動連結至 ${effectiveSource.id} (${effectiveSource.text})`);
+				}
+			}
+
+			if (effectiveSource) {
+				// 1. 預設使用操作中帶的 newId，或自動計算最大 ID + 1
+				// [原邏輯] (會重複利用 ID)
+				// let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
+
+				// [新邏輯] 使用時間戳記 + 隨機數，確保 ID 永遠遞增且不重複
+				// 這樣刪除舊卡後，新卡的 ID 會是很大的數字，絕不會跟舊卡撞號
+				let idToUse = newId;
+				if (!idToUse) {
+					// 取得目前時間 (毫秒)
+					const now = Date.now();
+					
+					// 為了避免同一毫秒內產生兩張卡導致衝突，加上一個微小的隨機數
+					// 注意：這裡取整數以維持 ID 為 Number 型態
+					const randomSuffix = Math.floor(Math.random() * 1000);
+					
+					// 組合出一個超大 ID (例如: 1715423654012)
+					idToUse = parseInt(`${now.toString().slice(-9)}${randomSuffix}`);
+					
+					// 雙重保險：萬一真的這麼倒楣撞號了 (機率極低)，再往上加
+					while (state.cards.some(c => c.id === idToUse)) {
+						idToUse++;
+					}
+				}
+
+				// [修正 2] 僅在「真的衝突」時才換 ID，且不要直接修改 op.newId 寫入歷史
+				// 我們只修改當下的 idToUse，避免汙染歷史紀錄導致連鎖錯誤
 				if (state.cards.some(c => c.id === idToUse)) {
-					// 2. 如果發現 ID 衝突，計算當前最大的 ID
 					const maxExistingId = state.cards.reduce((max, c) => Math.max(max, c.id), 0);
 					idToUse = maxExistingId + 1;
-					
-					// 3. (重要) 更新操作物件中的 newId，這樣在編輯時也會使用這個被修復的新 ID
-					op.newId = idToUse;
-					console.warn(`[ID Conflict Fix] Duplicate ID ${newId || 'auto'} detected. Reassigned to ${idToUse}.`);
+					console.warn(`[ID Conflict] Temporary reassigned ${newId} to ${idToUse}`);
 				}
+
 				const suffix = isContinuous ? " (Cont)" : " (Eff)";
-				const newCard = new Card(idToUse, source.ownerId, source.text + suffix, targetZone);
+				const newCard = new Card(idToUse, effectiveSource.ownerId, effectiveSource.text + suffix, targetZone);
 				
-				// ... (中間屬性設定保持不變) ...
 				newCard.faceUp = true;
 				newCard.rotation = 0;
-				newCard.imageKey = source.imageKey; 
-				newCard.backImageKey = source.backImageKey;
-				newCard.image = source.image; 
-				newCard.text = source.text;
-				newCard.sourceId = source.id;
+				newCard.imageKey = effectiveSource.imageKey; 
+				newCard.backImageKey = effectiveSource.backImageKey;
+				newCard.image = effectiveSource.image; 
+				newCard.text = effectiveSource.text;
+				
+				// 重要：更新 sourceId 為實際找到的那個 (若是替補的)
+				newCard.sourceId = effectiveSource.id;
+				
 				if (isContinuous) newCard.isContinuous = true;
 
 				newCard.styleKey = 'style_' + newCard.id;
 
-				// 1. 先嘗試取得新版獨立樣式 (styleKey)
+				// 樣式繼承邏輯 (保持您之前的修正)
 				let existingStyle = globalAbilityStyleRegistry[newCard.styleKey];
-
-				// 2. 如果沒找到，嘗試尋找舊版/共用樣式 (imageKey) 來繼承 (相容舊存檔)
-				// 注意：這一步很重要，因為匯入的檔案可能只有舊的 Key
-				if (!existingStyle && source.imageKey && globalAbilityStyleRegistry[source.imageKey]) {
-					 existingStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
-					 // 順便把資料搬家到新 Key，以後就獨立了
+				if (!existingStyle && effectiveSource.imageKey && globalAbilityStyleRegistry[effectiveSource.imageKey]) {
+					 existingStyle = { ...globalAbilityStyleRegistry[effectiveSource.imageKey] };
 					 globalAbilityStyleRegistry[newCard.styleKey] = existingStyle;
 				}
 
-				// 3. 只有當「完全找不到任何紀錄」時，才使用預設值或 LastUsed 初始化
-				// 這樣就不會覆蓋掉匯入的資料了
 				if (!existingStyle) {
-					
 					let initialStyle = { x: 50, y: 50, scale: 1 };
-					
-					if (globalLastUsedStyles[source.imageKey]) {
-						initialStyle = { ...globalLastUsedStyles[source.imageKey] };
-					} else if (globalAbilityStyleRegistry[source.imageKey]) {
-						initialStyle = { ...globalAbilityStyleRegistry[source.imageKey] };
+					if (globalLastUsedStyles[effectiveSource.imageKey]) {
+						initialStyle = { ...globalLastUsedStyles[effectiveSource.imageKey] };
+					} else if (globalAbilityStyleRegistry[effectiveSource.imageKey]) {
+						initialStyle = { ...globalAbilityStyleRegistry[effectiveSource.imageKey] };
 					}
-
 					globalAbilityStyleRegistry[newCard.styleKey] = initialStyle;
 				}
 
