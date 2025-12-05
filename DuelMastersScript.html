@@ -5107,7 +5107,13 @@ function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
     // --- Main Entry Point ---
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const scriptUrl = urlParams.get('scriptUrl');
+        // [修改開始] 取得 scriptUrl 並強制加上 scripts/ 資料夾路徑
+		let scriptUrl = urlParams.get('scriptUrl');
+		if (scriptUrl) {
+			// 自動補上 scripts 資料夾 (例如: ?scriptUrl=demo.json -> scripts/demo.json)
+			scriptUrl = 'scripts/' + scriptUrl;
+		}
+		// [修改結束]
         const isMobile = isMobileDevice();
 
 		generateDefaultPortraits();
