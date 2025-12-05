@@ -1585,9 +1585,18 @@
         <ul id="action-list"></ul>
         <div style="padding: 10px; background: #ecf0f1; border-top:1px solid #bdc3c7;">
             <div style="display: flex; gap:5px; justify-content: center; margin-bottom: 5px;">
-                <button onclick="prevStep()">◀</button>
+                <button onclick="prevStep()">▲</button>
                 <button onclick="togglePlay()" id="btn-play">▶ 播放</button>
-                <button onclick="nextStep()">▶</button>
+                <button onclick="nextStep()">▼</button>
+				<select id="speed-select" onchange="changePlaybackSpeed(this.value)" style="padding:2px; border-radius:4px; border:1px solid #ccc; background:#fff; font-size:0.85rem; cursor:pointer;">
+					<option value="4.0">🚀 0.25x (極慢)</option>
+					<option value="2.0">🐢 0.5x (慢速)</option>
+					<option value="1.33">🚶 0.75x (稍慢)</option>
+					<option value="1.0" selected>▶ 1.0x (正常)</option>
+					<option value="0.66">🏃 1.5x (稍快)</option>
+					<option value="0.5">🐇 2.0x (快速)</option>
+					<option value="0.25">⚡ 4.0x (極速)</option>
+				</select>
             </div>
         </div>
     </div>
@@ -2144,7 +2153,17 @@
         if(deskBtn) deskBtn.innerText = text;
         if(mobBtn) mobBtn.innerText = playTimeout ? "⏸" : "▶";
     }
+	
+	// [新增] 播放速度因子 (預設 1.0)
+	let currentSpeedFactor = 1.0;
 
+	function changePlaybackSpeed(val) {
+		currentSpeedFactor = parseFloat(val);
+		
+		// 如果正在播放中，為了即時生效，我們可以選擇重啟計時器 (可選，這裡選擇簡單處理：下一個動作生效)
+		// 這樣使用者調整選單時不會覺得卡頓
+	}
+	
     function changeLanguage(lang) {
         currentLang = lang;
         const dict = TRANSLATIONS[lang];
@@ -4903,7 +4922,14 @@
 				if (delay < 1000) delay = 1000;
 			}
 
-			playTimeout = setTimeout(playNextStep, delay);
+			// [關鍵修改] 在這裡套用速度倍率
+			// 因為 delay 是毫秒數，我們要乘以因子 (因子越小=時間越短=速度越快)
+			// 例如：2.0x 速度 -> 因子是 0.5 -> 1000ms * 0.5 = 500ms
+			let finalDelay = delay * currentSpeedFactor;
+
+			// 設定下一個動作
+			playTimeout = setTimeout(playNextStep, finalDelay);
+			
 		} else {
 			// 播完了
 			playTimeout = null;
