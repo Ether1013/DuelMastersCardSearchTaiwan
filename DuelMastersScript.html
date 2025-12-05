@@ -981,12 +981,29 @@
 
 		/* --- 新增這段：預設隱藏手機控制項 (桌機版不顯示) --- */
 		#mobile-controls {
+			/* 確保有 Flex 排版 */
 			display: none;
+			align-items: center;
+			gap: 10px; /* 按鈕跟選單的間距 */
 			
-			/* 建議順便補上定位設定，確保手機版顯示時位置正確 */
+			/* 保持原本的定位 */
 			position: fixed;
 			bottom: 20px;
 			right: 20px;
+			z-index: 3001;
+		}
+
+		/* [新增] 手機版速度選單樣式 */
+		#mob-speed-select {
+			height: 40px; /* 跟手機播放按鈕差不多高 */
+			border-radius: 20px; /* 圓角 */
+			border: 2px solid white;
+			background: rgba(44, 62, 80, 0.9);
+			color: white;
+			font-size: 0.9rem;
+			padding: 0 10px;
+			outline: none;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 		}
 
 		/* 手機版播放按鈕 (如果你還要保留這個浮動按鈕的話) */
@@ -1751,6 +1768,16 @@
 </div>
 
 <div id="mobile-controls">
+    <select id="mob-speed-select" onchange="changePlaybackSpeed(this.value)">
+        <option value="4.0">🚀 0.25x</option>
+        <option value="2.0">🐢 0.5x</option>
+        <option value="1.33">🚶 0.75x</option>
+        <option value="1.0" selected>▶ 1.0x</option>
+        <option value="0.66">🏃 1.5x</option>
+        <option value="0.5">🐇 2.0x</option>
+        <option value="0.25">⚡ 4.0x</option>
+    </select>
+    
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
 </div>
 
@@ -2157,11 +2184,17 @@
 	// [新增] 播放速度因子 (預設 1.0)
 	let currentSpeedFactor = 1.0;
 
+	// --- [修改] changePlaybackSpeed 函式 --
 	function changePlaybackSpeed(val) {
 		currentSpeedFactor = parseFloat(val);
+
+		// [新增] 同步兩個選單的顯示狀態
+		// 這樣無論是用電腦版還是手機版操作，另一邊都會跟著變
+		const deskSelect = document.getElementById('speed-select');
+		const mobSelect = document.getElementById('mob-speed-select');
 		
-		// 如果正在播放中，為了即時生效，我們可以選擇重啟計時器 (可選，這裡選擇簡單處理：下一個動作生效)
-		// 這樣使用者調整選單時不會覺得卡頓
+		if (deskSelect) deskSelect.value = val;
+		if (mobSelect) mobSelect.value = val;
 	}
 	
     function changeLanguage(lang) {
