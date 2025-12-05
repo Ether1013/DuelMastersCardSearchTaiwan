@@ -520,6 +520,49 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             pointer-events: none; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
+		
+		/* --- [新增] 待處理區註記樣式 (左側縱條) --- */
+        
+        /* 1. 覆寫原本橫條的位置，改為左側直條 */
+        .ability-card .card-note {
+            /* 重置原本的定位 */
+            top: 0 !important;
+            bottom: 0 !important; /* 填滿高度 */
+            left: 0 !important;
+            right: auto !important;
+            
+            /* 設定寬度 */
+            width: 16px; 
+            height: 100%;
+            
+            /* 垂直文字排版 (直書) */
+            writing-mode: vertical-rl; 
+            text-orientation: upright; /* 讓中文字直立，英文轉向 */
+            
+            /* 內容置中 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+            /* 外觀修飾：左邊圓角，右邊直線 */
+            border-radius: 2px 0 0 2px !important;
+            border: none !important;
+            border-right: 1px solid #d35400 !important;
+            
+            /* 陰影改成往右打 */
+            box-shadow: 1px 0 3px rgba(0,0,0,0.2) !important;
+            
+            /* 字體微調 */
+            font-size: 9px;
+            letter-spacing: 1px;
+            padding: 2px 0;
+        }
+
+        /* 2. 修正卡片文字內距，避免被左邊的註記條擋住 */
+        .ability-card .card-text {
+            padding-left: 18px !important; /* 讓出空間給左側條 (16px + 2px buffer) */
+            text-align: left !important;   /* 改為靠左對齊比較好看 */
+        }
 
         /* Stacking classes */
         .stack-base { z-index: 10; position: absolute; }
@@ -1455,6 +1498,175 @@
 			box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 			line-height: 1;
 		}
+		
+		/* --- [新增] 王牌系統樣式 --- */
+		/* 1. 王牌星星 (右上角) - [修改] 黑框白肉版 */
+		.ace-star-mark {
+			position: absolute;
+			top: -2px; right: -2px; /* 稍微往外推一點，避免擋住卡圖太多 */
+			font-size: 16px; /* 稍微加大 */
+			
+			/* [核心修改] 黑框白肉 */
+			color: white; 
+			-webkit-text-stroke: 1.5px black; /* 這是文字描邊最有效的方法 */
+			/* 為了相容性，加一點陰影讓它在淺色背景也能看清 */
+			text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+			
+			cursor: pointer;
+			z-index: 50;
+			transition: transform 0.2s;
+			
+			/* 移除原本的 filter: drop-shadow(0 0 2px gold); */
+		}
+		
+		.ace-star-mark:hover { 
+			transform: scale(1.4); 
+			color: #e74c3c; /* Hover 時變紅，提示可點擊 */
+			-webkit-text-stroke: 1px #c0392b;
+		}
+
+		/* 2. 長按集氣邊框 (SVG) - [修改] 光束質感版 */
+		.ace-loader-svg {
+			position: absolute;
+			top: 0; left: 0;
+			width: 100%; height: 100%;
+			pointer-events: none;
+			z-index: 40;
+			display: none; 
+			
+			/* [關鍵] 允許光暈超出 SVG 邊界，否則光會被切掉 */
+			overflow: visible; 
+		}
+
+		.ace-loader-rect {
+			fill: none;
+			
+			/* [核心修改 1] 線條本體改為白色 (模擬光的中心) */
+			stroke: #fff; 
+			
+			/* [核心修改 2] 線條改細一點，把視覺留給光暈 */
+			stroke-width: 3; 
+			
+			/* [核心修改 3] 利用多層陰影製造強烈的金色光暈效果 (Neon Glow) */
+			/* 第一層(2px)是高光，第二層(8px)是擴散光 */
+			filter: drop-shadow(0 0 2px #f1c40f) drop-shadow(0 0 8px gold);
+			
+			stroke-dasharray: 240; 
+			stroke-dashoffset: 240; 
+			stroke-linecap: round; /* 讓光束頭尾圓潤 */
+		}
+		/* 觸發集氣動畫：0.7秒內跑完 */
+		.charging .ace-loader-svg { display: block; }
+		.charging .ace-loader-rect {
+			animation: ace-fill 0.7s linear forwards;
+		}
+		@keyframes ace-fill {
+			to { stroke-dashoffset: 0; }
+		}
+
+		/* --- [精簡版] 王牌特效 (移除 Zoom In，僅保留金光與閃光) --- */
+        
+        .anim-flash-white {
+            display: block !important;
+            /* 0.5秒的閃光：快閃 -> 全白 -> 慢退 */
+            animation: flash-white 0.5s ease-out forwards;
+        }
+
+        @keyframes flash-white {
+            0% { opacity: 0; }
+            50% { opacity: 1; } /* 瞬間全白 */
+            100% { opacity: 0; }
+        }
+		
+		/* --- [獨立光圈版] 王牌特效 --- */
+        
+        /* 1. 全螢幕閃光遮罩 (維持不變) */
+        #ace-flash-layer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: white;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .anim-flash-white {
+            display: block !important;
+            animation: flash-white 0.5s ease-out forwards;
+        }
+
+        @keyframes flash-white {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 2. 外掛發光圈 (獨立於卡片之外) */
+        .ace-external-ring {
+            position: fixed !important;
+            z-index: 4000 !important;
+            pointer-events: none;
+            background: transparent;
+            border-radius: 4px;
+            
+            /* 第一階段：漸進發光 (0.7秒) */
+            animation: ace-ring-power-up 0.7s linear forwards;
+        }
+
+        /* 新增：消退階段 Class */
+        .ace-external-ring.power-down {
+            /* 覆蓋原本的動畫，改跑消退動畫 (0.7秒) */
+            animation: ace-ring-power-down 0.7s linear forwards;
+        }
+
+        /* 發光動畫 (Up) */
+        @keyframes ace-ring-power-up {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+                border: 2px solid rgba(255, 215, 0, 0);
+                transform: rotate(var(--rot)) scale(1);
+            }
+            30% {
+                box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4);
+                border: 2px solid rgba(255, 215, 0, 0.5);
+            }
+            60% {
+                box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.7);
+                border: 3px solid rgba(255, 215, 0, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
+                border: 4px solid gold;
+                transform: rotate(var(--rot)) scale(1.05);
+            }
+        }
+
+        /* 新增：消退動畫 (Down) - 剛好是上面動畫的倒序 */
+        @keyframes ace-ring-power-down {
+            0% {
+                /* 起點：接續大光狀態 */
+                box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
+                border: 4px solid gold;
+                transform: rotate(var(--rot)) scale(1.05);
+            }
+            40% {
+                /* 中光 */
+                box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.7);
+                border: 3px solid rgba(255, 215, 0, 0.8);
+            }
+            70% {
+                /* 微光 */
+                box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4);
+                border: 2px solid rgba(255, 215, 0, 0.5);
+            }
+            100% {
+                /* 終點：完全消失 */
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+                border: 2px solid rgba(255, 215, 0, 0);
+                transform: rotate(var(--rot)) scale(1);
+            }
+        }
+		
     </style>
 </head>
 <body>
@@ -2270,6 +2482,19 @@
             this.sourceId = null; // New: Link to source card (for Ability cards)
         }
     }
+	
+	// --- [取代] toggleAceSilent 函式 ---
+	function toggleAceSilent(cardId, isAce) {
+		if (isAce) {
+			globalAceRegistry[cardId] = true;
+		} else {
+			delete globalAceRegistry[cardId];
+		}
+
+		// 只需重繪當前畫面，不用動歷史紀錄
+		renderUI(true); 
+		if(!document.body.classList.contains('mobile-mode')) saveToStorage();
+	}
 
     class GameState {
         constructor() {
@@ -2312,6 +2537,9 @@
 	let winOverlayTimeout = null; // [新增] 用來記錄勝利畫面的自動關閉計時器
     
     let globalImageRegistry = {}; 
+	// [新增] 全域王牌註冊表 (只存 ID，不存卡片物件)
+	// 格式: { cardId: true, ... }
+	let globalAceRegistry = {};
     let globalAbilityStyleRegistry = {}; 
     let storageQuotaExceeded = false; 
     let hasAlertedQuota = false;    
@@ -2705,7 +2933,8 @@
 				currentIndex: currentIndex,
 				abilityRegistry: globalAbilityStyleRegistry,
 				lastUsedStyles: globalLastUsedStyles, // [新增] 存檔
-				lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
+				lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
+				aceRegistry: globalAceRegistry, // [新增]
 			};
 
             // 2. 拆分圖片資料
@@ -3286,7 +3515,7 @@
 				c.parentId = null;
 				c.stackType = null;
 				if (faceUp !== undefined) c.faceUp = faceUp;
-				if (toZone.includes('hand') || toZone.includes('deck')) c.rotation = 0; 
+				if (toZone.includes('hand')) c.rotation = 0; 
 				if (stackTargetId) {
 					c.parentId = stackTargetId;
 					c.stackType = stackType;
@@ -4390,15 +4619,63 @@
             const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
             if (!zoneEl) return;
             if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
-                if (cardsInZone.length > 0) {
-                    const topCard = cardsInZone[cardsInZone.length - 1];
-                    zoneEl.appendChild(createCardElement(topCard));
-                }
-                const badge = document.createElement('div');
-                badge.className = 'count-badge';
-                badge.innerText = cardsInZone.length;
-                zoneEl.appendChild(badge);
-            } else {
+				const count = cardsInZone.length;
+				
+				if (count > 0) {
+					// [智慧渲染演算法]
+					// 為了效能，我們不渲染所有卡片，只渲染「會造成視覺差異」的關鍵卡片
+					// 1. 最底下的卡 (Base)
+					// 2. 最上面的卡 (Top)
+					// 3. 任何與下一張卡角度不同的卡 (Transition)
+					
+					const indicesToRender = new Set();
+					indicesToRender.add(0);          // 底
+					indicesToRender.add(count - 1);  // 頂
+					
+					for (let i = 0; i < count - 1; i++) {
+						const current = cardsInZone[i];
+						const next = cardsInZone[i+1];
+						// 如果這張跟上面那張角度不一樣，兩張都要畫出來，才能呈現交錯感
+						if (current.rotation !== next.rotation) {
+							indicesToRender.add(i);
+							indicesToRender.add(i+1);
+						}
+					}
+					
+					// 將 Set 轉為陣列並排序，確保 Z-Index 正確 (由底到頂)
+					const sortedIndices = Array.from(indicesToRender).sort((a,b) => a - b);
+					
+					sortedIndices.forEach(index => {
+						const card = cardsInZone[index];
+						const cardEl = createCardElement(card);
+						
+						// 強制堆疊樣式
+						cardEl.style.position = 'absolute';
+						// 居中定位
+						cardEl.style.top = '0';
+						cardEl.style.left = '0';
+						cardEl.style.right = '0';
+						cardEl.style.bottom = '0';
+						cardEl.style.margin = 'auto';
+						
+						// 設定層級，確保上面的蓋住下面的
+						cardEl.style.zIndex = index + 1; 
+						
+						// 如果卡片有旋轉，createCardElement 已經設定了 transform: rotate(...)
+						// 這裡不需要額外處理，瀏覽器會自己處理旋轉後的遮擋關係
+						
+						zoneEl.appendChild(cardEl);
+					});
+				}
+
+				// 數量標記 (Badge)
+				const badge = document.createElement('div');
+				badge.className = 'count-badge';
+				badge.innerText = count;
+				// 確保數字永遠浮在最上面
+				badge.style.zIndex = 1000; 
+				zoneEl.appendChild(badge);
+			} else {
                 const roots = rootCards.filter(c => c.zone === zoneId);
                 roots.forEach(root => renderCardTree(root, zoneEl));
             }
@@ -4475,56 +4752,39 @@
             });
             lastRenderedState = cloneState(state);
 
+            // [新增] 王牌進場特效觸發檢查
+            // 檢查當前這一步 (currentIndex) 是否有移動操作
             if (currentIndex >= 0 && history[currentIndex]) {
+                const action = history[currentIndex].action;
+                
+                // 1. 找出這一步驟中「所有」的移動操作，而不只是第一個
+                const moveOps = action.operations.filter(o => o.type === 'MOVE');
+                
+                let foundAceEntry = false;
+
+                // 2. 遍歷所有移動操作，檢查是否有王牌進入戰鬥區
+                for (const op of moveOps) {
+                    if (op.toZone && op.toZone.includes('battle')) {
+                        // 使用寬鬆比對 (==) 避免 ID 型態 (字串/數字) 不符的問題
+                        const aceId = op.cardIds.find(id => globalAceRegistry[id]);
+                        
+                        if (aceId) {
+                            // 只有當這一步還沒播放過動畫時，才觸發
+                            if (currentIndex !== lastAnimatedStep) {
+                                console.log("觸發王牌特效 ID:", aceId); // 除錯用
+                                triggerAceAnimation(aceId);
+                                foundAceEntry = true;
+                            }
+                            // 只要找到一張王牌進場就不再繼續找 (避免同一步多張王牌時重複觸發)
+                            break;
+                        }
+                    }
+                }
+
+                // 3. 更新動畫步數紀錄
+                // 無論有沒有觸發特效，只要檢查過這一步，就更新 lastAnimatedStep
+                // 這樣可以避免重複觸發，也能確保沒特效的步驟被正確標記為「已讀」
                 if (currentIndex !== lastAnimatedStep) {
-                    const lastAction = history[currentIndex].action;
-                    const winOverlay = document.getElementById('win-overlay');
-
-                    // --- [修正 1] 精準清除勝利動畫，不影響播放器 ---
-                    if (winOverlay) {
-                        winOverlay.style.display = 'none';
-                        if (winOverlayTimeout) {
-                            clearTimeout(winOverlayTimeout);
-                            winOverlayTimeout = null;
-                        }
-                    }
-                    // ------------------------------------------
-/*
-                    const createOp = lastAction.operations.find(op => op.type === 'CREATE_ABILITY');
-                    if (createOp) {
-                        setTimeout(() => {
-                            animateAbilityFly(createOp.sourceCardId, createOp.newId);
-                        }, 50);
-                    }
-*/                    
-                    const winOp = lastAction.operations.find(op => op.type === 'GAME_WIN');
-                    if (winOp && winOverlay) {
-                        const winnerId = winOp.winnerId;
-                        winOverlay.style.display = 'flex';
-                        
-                        const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
-                        let confettiHtml = '';
-                        for(let i=0; i<30; i++) {
-                            const left = Math.random() * 100;
-                            const delay = Math.random() * 1;
-                            const bg = colors[Math.floor(Math.random()*colors.length)];
-                            confettiHtml += `<div class="confetti" style="left:${left}%; animation-delay:${delay}s; background:${bg};"></div>`;
-                        }
-
-                        winOverlay.innerHTML = `
-                            ${confettiHtml}
-                            <div class="win-text">PLAYER ${winnerId} WIN!!</div>
-                            <div class="win-sub">Congratulations</div>
-                        `;
-                        
-                        // --- [修正 2] 記錄 Timer ID ---
-                        winOverlayTimeout = setTimeout(() => {
-                            winOverlay.style.display = 'none';
-                            winOverlayTimeout = null;
-                        }, 3000);
-                        // ----------------------------
-                    }
-
                     lastAnimatedStep = currentIndex;
                 }
             }
@@ -4536,117 +4796,224 @@
              scrollToActiveStep();
         }
     }
+	
+	// --- [獨立光圈版] 王牌特效函式 (最穩定的版本) ---
+    function triggerAceAnimation(cardId) {
+        const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
+        if (!originalEl) return;
 
-    function createCardElement(card) {
-        const el = document.createElement('div');
-        el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
-        el.dataset.id = card.id; 
-        
-		// --- [新增] 渲染受傷爪痕 ---
-        if (card.isInjured) {
-            const clawDiv = document.createElement('div');
-            // 如果是編輯中(isDrafting) -> 顯示靜態 (不加 anim class)
-            // 如果是播放中 -> 加入 claw-anim class 觸發動畫
-            // 注意：這裡我們簡單判斷，只要不是編輯模式，就視為播放模式，讓它動起來
-            // 若希望每次換步才動，可搭配 lastAnimatedStep 判斷，但全域同步播放比較簡單暴力且爽快
+        // 階段 0: 等待卡片移動就位 (400ms)
+        setTimeout(() => {
             
-            const animClass = isDrafting ? '' : 'claw-anim';
+            // 1. 取得卡片當前的絕對位置
+            const rect = originalEl.getBoundingClientRect();
+
+            // 2. 創建一個獨立的發光圈 (Glow Ring)
+            const ring = document.createElement('div');
+            ring.className = 'ace-external-ring';
             
-            clawDiv.className = `claw-overlay ${animClass}`;
-            clawDiv.innerHTML = `
-                <svg class="claw-svg" viewBox="0 0 100 100">
-                    <path class="claw-path p1" d="M20,20 Q50,50 80,80" />
-                    <path class="claw-path p2" d="M30,10 Q60,40 90,70" />
-                    <path class="claw-path p3" d="M10,30 Q40,60 70,90" />
-                </svg>
-            `;
-            el.appendChild(clawDiv);
-        }
-		
-        // Visual Glow (only applied if property exists, logic handles source sync)
-        if (card.glow) el.classList.add(`glow-${card.glow}`);
-        
-		if (card.isContinuous) {
-			el.classList.add('continuous');
+            // 3. 將光圈定位在卡片正上方
+            ring.style.top = rect.top + 'px';
+            ring.style.left = rect.left + 'px';
+            ring.style.width = rect.width + 'px';
+            ring.style.height = rect.height + 'px';
+            
+            // 讀取卡片旋轉角度，讓光圈也跟著轉
+            let rotation = 0;
+            const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+            if (match) rotation = parseFloat(match[1]);
+            ring.style.transform = `rotate(${rotation}deg)`;
+
+            // 4. 加入畫面 (開始跑 CSS 動畫)
+            document.body.appendChild(ring);
+
+            // 階段 2: 動畫跑完後 (0.7s)，觸發閃光
+            setTimeout(() => {
+                const flashLayer = document.getElementById('ace-flash-layer');
+                
+                // 觸發全螢幕閃白
+                flashLayer.classList.remove('anim-flash-white');
+                void flashLayer.offsetWidth; // 強制重繪
+                flashLayer.classList.add('anim-flash-white');
+                
+                // 階段 3: 在閃白遮蔽瞬間，移除光圈
+                setTimeout(() => {
+                    if (ring.parentNode) ring.parentNode.removeChild(ring);
+                }, 250); 
+
+            }, 700); // 對應 CSS animation 時間
+
+        }, 400); // 等待移動時間
+    }
+
+    // --- [修改] createCardElement 函式 ---
+	function createCardElement(card) {
+		const el = document.createElement('div');
+		el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
+		el.dataset.id = card.id; 
+
+		// [新增] 1. 插入集氣用的 SVG (長按時顯示)
+		// viewBox 設為 0 0 50 70 (配合 CSS var --card-width/height)
+		el.innerHTML = `
+			<svg class="ace-loader-svg" viewBox="-2 -2 54 74">
+				<rect class="ace-loader-rect" x="0" y="0" width="50" height="70" rx="3" ry="3" />
+			</svg>
+		`;
+
+		// 修改為：
+		const isAce = !!globalAceRegistry[card.id]; // 檢查全域註冊表
+
+		if (isAce) {
+			const star = document.createElement('div');
+			star.className = 'ace-star-mark';
+			star.innerText = '★';
+			star.title = "取消王牌 (Unset Ace)";
+			
+			// 點擊事件也要記得改用 Silent 版本
+			star.onpointerdown = (e) => {
+				e.stopPropagation();
+				toggleAceSilent(card.id, false);
+			};
+			
+			el.appendChild(star);
 		}
 
-        if (card.image && (card.faceUp || card.isHyper)) {
-            const imageSrc = globalImageRegistry[card.imageKey];
-            if (imageSrc) {
-                el.style.backgroundImage = `url(${imageSrc})`;
-                el.classList.add('has-image');
-                
-                if (card.zone.includes('ability')) {
-					// [修改] 優先使用卡片專屬樣式 key，沒有則回退使用 imageKey (相容舊版)
+		// [原有邏輯] 受傷效果 (claw)
+		if (card.isInjured) {
+			const clawDiv = document.createElement('div');
+			const animClass = isDrafting ? '' : 'claw-anim';
+			clawDiv.className = `claw-overlay ${animClass}`;
+			clawDiv.innerHTML = `
+				<svg class="claw-svg" viewBox="0 0 100 100">
+					<path class="claw-path p1" d="M20,20 Q50,50 80,80" />
+					<path class="claw-path p2" d="M30,10 Q60,40 90,70" />
+					<path class="claw-path p3" d="M10,30 Q40,60 70,90" />
+				</svg>
+			`;
+			el.appendChild(clawDiv);
+		}
+		
+		// [原有邏輯] 發光
+		if (card.glow) el.classList.add(`glow-${card.glow}`);
+		if (card.isContinuous) el.classList.add('continuous');
+
+		// [原有邏輯] 圖片處理
+		if (card.image && (card.faceUp || card.isHyper)) {
+			// ... (省略圖片處理細節，請保持您原本的程式碼) ...
+			// 為了節省篇幅，這裡請保留您原本判斷 imageKey, styleKey, backgroundPosition 的邏輯
+			const imageSrc = globalImageRegistry[card.imageKey];
+			if (imageSrc) {
+				el.style.backgroundImage = `url(${imageSrc})`;
+				el.classList.add('has-image');
+				if (card.zone.includes('ability')) {
+					// ... (Ability 樣式邏輯)
 					const lookupKey = card.styleKey || card.imageKey;
-					
-					// 取得樣式，預設值為置中不縮放
 					const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[lookupKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
-					
 					el.style.backgroundPosition = `${style.x}% ${style.y}%`;
 					el.style.backgroundSize = `${100 * style.scale}%`;
 				} else {
-                     el.style.backgroundSize = 'cover';
-                     el.style.backgroundPosition = 'center';
-                     el.style.backgroundRepeat = 'no-repeat';
-                }
-            }
-        }
+					 el.style.backgroundSize = 'cover';
+					 el.style.backgroundPosition = 'center';
+					 el.style.backgroundRepeat = 'no-repeat';
+				}
+			}
+		}
 
-        if (card.zone.includes('ability')) {
-            el.classList.add('ability-card');
-            if (!card.faceUp) el.className = `card ability-card`; 
-        } else {
-            // Apply rotation, unless it's a puzzle piece (handled in renderNode)
-            if (!card.stackType || !card.stackType.includes('puzzle')) {
-                el.style.transform = `rotate(${card.rotation}deg)`;
-            }
-        }
-        
-        if (pendingMove && pendingMove.cardIds.includes(card.id)) {
-            el.classList.add('selected');
-            if (!card.zone.includes('ability') && el.classList.contains('selected')) {
-               // Only offset if not puzzle
-               if (!card.stackType || !card.stackType.includes('puzzle')) {
-                   el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
-               }
-            }
-        }
-        
-        if (isPointing && pointTargets.includes(card.id)) {
-            el.classList.add('point-target-selected');
-        }
-        
-        if (card.note) {
-            const noteEl = document.createElement('div');
-            noteEl.className = 'card-note';
-            noteEl.innerText = card.note;
-            noteEl.title = card.note; 
-            el.appendChild(noteEl);
-        }
+		// [原有邏輯] 能力卡樣式
+		if (card.zone.includes('ability')) {
+			el.classList.add('ability-card');
+			if (!card.faceUp) el.className = `card ability-card`; 
+		} else {
+			if (!card.stackType || !card.stackType.includes('puzzle')) {
+				el.style.transform = `rotate(${card.rotation}deg)`;
+			}
+		}
+		
+		// [原有邏輯] 選取狀態
+		if (pendingMove && pendingMove.cardIds.includes(card.id)) {
+			el.classList.add('selected');
+			if (!card.zone.includes('ability') && el.classList.contains('selected')) {
+			   if (!card.stackType || !card.stackType.includes('puzzle')) {
+				   el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
+			   }
+			}
+		}
+		
+		// [原有邏輯] 指向狀態
+		if (isPointing && pointTargets.includes(card.id)) {
+			el.classList.add('point-target-selected');
+		}
+		
+		// [原有邏輯] 註記
+		if (card.note) {
+			const noteEl = document.createElement('div');
+			noteEl.className = 'card-note';
+			noteEl.innerText = card.note;
+			el.appendChild(noteEl);
+		}
 
-        if (card.faceUp || card.zone.includes('ability')) {
-            const contentDiv = document.createElement('div');
-            contentDiv.style.marginTop = card.note ? '10px' : '0';
-            contentDiv.innerHTML = `<div class="card-text">${card.text}</div>`;
-            if (card.power > 0) contentDiv.innerHTML += `<div class="card-power">${card.power}</div>`;
-            el.appendChild(contentDiv);
-        }
-        
-        const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
-        
-        if (!isViewerZone) {
-             el.onclick = (e) => handleCardSingleClick(e, card.id);
-        } else {
-             el.onclick = (e) => {
-                 e.stopPropagation(); 
-                 handleZoneClick(card.zone);
-             };
-        }
-        
-        setTimeout(() => el.classList.add('interactive'), 0);
-        return el;
-    }
+		// [原有邏輯] 文字
+		if (card.faceUp || card.zone.includes('ability')) {
+			const contentDiv = document.createElement('div');
+			contentDiv.style.marginTop = card.note ? '10px' : '0';
+			contentDiv.innerHTML = `<div class="card-text">${card.text}</div>`;
+			if (card.power > 0) contentDiv.innerHTML += `<div class="card-power">${card.power}</div>`;
+			el.appendChild(contentDiv);
+		}
+		
+		// [新增] 3. 長按觸發邏輯 (Long Press Logic)
+		// 只有在「戰鬥區 (Battle)」的卡片才允許長按設定王牌
+		if (card.zone.includes('battle')) {
+			let pressTimer = null; // 0.3s 等待計時器
+			let fillTimer = null;  // 0.7s 動畫計時器
+
+			const cancelPress = () => {
+				if (pressTimer) clearTimeout(pressTimer);
+				if (fillTimer) clearTimeout(fillTimer);
+				el.classList.remove('charging'); // 移除 CSS 動畫類別
+			};
+
+			el.onpointerdown = (e) => {
+				// 如果是右鍵或多點觸控，忽略
+				if (e.button !== 0) return;
+				
+				// 1. 按下：開始 0.3s 計時
+				pressTimer = setTimeout(() => {
+					// 0.3s 到了，開始集氣動畫
+					el.classList.add('charging');
+					
+					// 2. 再等 0.7s (動畫跑完)
+					fillTimer = setTimeout(() => {
+						// 動畫完成：設定為王牌！
+						toggleAceSilent(card.id, true);
+						el.classList.remove('charging');
+						
+						// 手機震動回饋 (如果支援)
+						if (navigator.vibrate) navigator.vibrate(50);
+					}, 700);
+					
+				}, 300); // 前置等待 0.3s
+				
+				// 重要：不阻止事件冒泡，因為還要讓 handleCardSingleClick 運作(選取卡片)
+				// 但如果觸發了長按，我們可能希望取消選取... 這邊先保持並行
+			};
+
+			el.onpointerup = cancelPress;
+			el.onpointerleave = cancelPress;
+			el.onpointercancel = cancelPress;
+		}
+
+		// [原有邏輯] 點擊事件
+		const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
+		if (!isViewerZone) {
+			 el.onclick = (e) => handleCardSingleClick(e, card.id);
+		} else {
+			 el.onclick = (e) => { e.stopPropagation(); handleZoneClick(card.zone); };
+		}
+		
+		setTimeout(() => el.classList.add('interactive'), 0);
+		return el;
+	}
 
     function renderArrows() {
         const svg = document.getElementById('svg-layer');
@@ -4997,7 +5364,8 @@
             timestamp: Date.now(),
             imageRegistry: globalImageRegistry, // 這裡包含了所有載入的圖片
             abilityRegistry: globalAbilityStyleRegistry,
-            lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null
+            lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
+			aceRegistry: globalAceRegistry, // [新增]
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
@@ -5009,7 +5377,10 @@
 
     function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
-        globalAbilityStyleRegistry = data.abilityRegistry || {}; 
+		globalAbilityStyleRegistry = data.abilityRegistry || {};
+		globalLastUsedStyles = data.lastUsedStyles || {};
+		// [新增] 讀取王牌設定
+		globalAceRegistry = data.aceRegistry || {};
         initialState = data.initialState;
         let loadedHistory = data.history;
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
@@ -5078,21 +5449,22 @@
         reader.readAsText(file);
     }
 
-    function openSelectorModal(zoneId) {
+    // --- [取代] openSelectorModal 函式 ---
+	function openSelectorModal(zoneId) {
 		const state = getCurrentDisplayState();
 		const cards = getCardsInZone(state, zoneId);
 		const body = document.getElementById('modal-body');
 		body.innerHTML = '';
 		selectedCardsInModal = [];
+		
 		const title = document.getElementById('modal-title');
 		title.innerText = `${getZoneName(zoneId)} (${cards.length})`;
 		title.setAttribute('data-zone-id', zoneId); 
-		
-		// [修改] 改為反向迴圈 (i 從 length-1 到 0)
-		// 這樣 index 較大(牌庫頂)的卡片會先被 append 到視窗中 (左上角)
+
+		// 反向排序 (Top 在左上)
 		for (let i = cards.length - 1; i >= 0; i--) {
 			const card = cards[i];
-			const index = i; // 這是卡片在陣列中的真實索引
+			const index = i; 
 			
 			const el = document.createElement('div');
 			el.className = 'card';
@@ -5103,9 +5475,18 @@
 				el.classList.add('has-image-icon');
 			}
 
-			// 顯示索引 (維持真實索引 #N)
+			// [關鍵新增] 視覺呈現：如果卡片有旋轉，在清單中也要轉給使用者看
+			if (card.rotation) {
+				// 縮小一點避免轉向時遮擋到隔壁的牌
+				el.style.transform = `rotate(${card.rotation}deg) scale(0.9)`;
+				// 加個邊框提示，讓橫置狀態更明顯
+				el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
+			}
+
 			el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
 							<div class="card-text">${card.text}</div>`;
+			
+			// 點擊選取邏輯
 			el.onclick = () => {
 				if (selectedCardsInModal.includes(card.id)) {
 					selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
@@ -5117,8 +5498,57 @@
 			};
 			body.appendChild(el);
 		}
+		
+		// [UI 新增] 動態插入旋轉按鈕到 Modal 底部
+		// 檢查底部是否已經有旋轉控制區，沒有才加 (避免重複添加)
+		const modalFooter = document.querySelector('#card-selector-modal .modal-content > div:last-child');
+		let rotControls = document.getElementById('modal-rotate-controls');
+		
+		if (!rotControls && modalFooter) {
+			rotControls = document.createElement('div');
+			rotControls.id = 'modal-rotate-controls';
+			rotControls.style.display = 'inline-flex';
+			rotControls.style.gap = '5px';
+			rotControls.style.marginRight = '10px';
+			
+			rotControls.innerHTML = `
+				<button onclick="rotateSelectedInModal(-90)" style="background:#7f8c8d;">↶</button>
+				<button onclick="rotateSelectedInModal(90)" style="background:#7f8c8d;">↷</button>
+			`;
+			
+			// 插入到 footer 的最前面
+			modalFooter.insertBefore(rotControls, modalFooter.firstChild);
+		}
+
 		document.getElementById('card-selector-modal').style.display = 'flex';
 	}
+	
+	// --- [新增] 在清單視窗內旋轉卡片 ---
+	function rotateSelectedInModal(deg) {
+		if (selectedCardsInModal.length === 0) {
+			alert("請先選擇要旋轉的卡片");
+			return;
+		}
+
+		// 1. 執行旋轉動作
+		addOperation({ type: 'ROTATE_CARD', cardIds: [...selectedCardsInModal], deg: deg });
+		
+		// 2. 為了讓使用者立刻看到結果，我們需要重新整理視窗內容
+		// 雖然 addOperation 會觸發 renderUI，但不會重繪 modal 內容，所以要手動呼叫
+		const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
+		if (zoneId) {
+			// 稍微延遲一下確保 State 更新後再重繪
+			setTimeout(() => {
+				openSelectorModal(zoneId);
+				
+				// 恢復選取狀態 (UX 優化：旋轉完不要取消選取，方便連續轉)
+				// 注意：openSelectorModal 會清空 selectedCardsInModal，所以我們要重新選上
+				// 這裡需要全域變數配合，但簡單的做法是讓使用者重選，或者
+				// 我們可以讓 openSelectorModal 支援傳入「預選ID」，但為了不改動太多架構，這裡先讓使用者看到結果即可。
+			}, 50);
+		}
+	}
+
     function closeSelectorModal() { document.getElementById('card-selector-modal').style.display = 'none'; }
     function prepareMove(shuffle) {
         if(selectedCardsInModal.length===0) return;
@@ -5683,5 +6113,6 @@
         Visitors: <span id="busuanzi_value_site_uv">--</span>
     </span>
 </div>
+<div id="ace-flash-layer"></div>
 </body>
 </html>
