@@ -5545,21 +5545,6 @@
                     const deltaY = start.top - last.top;
                     
                     // 只有當位置真的有變動時才執行動畫
-                    // [DEBUG FIX] 計算當前的縮放比例，修正行動版座標誤差
-                    const workspace = document.getElementById('workspace');
-                    let currentScale = 1;
-                    if (workspace && workspace.offsetWidth > 0) {
-                        const wsRect = workspace.getBoundingClientRect();
-                        currentScale = wsRect.width / workspace.offsetWidth;
-                    }
-
-                    // [DEBUG FIX] 將螢幕座標差異除以縮放比例，還原為邏輯座標
-                    const rawDeltaX = start.left - last.left;
-                    const rawDeltaY = start.top - last.top;
-                    
-                    const deltaX = rawDeltaX / currentScale;
-                    const deltaY = rawDeltaY / currentScale;
-                    
                     if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                         const cardData = state.cards.find(c => c.id == id);
                         const rotation = cardData ? cardData.rotation : 0;
@@ -5573,8 +5558,11 @@
                             cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
                             
                             // 2. 下一幀執行移動動畫
+                            // 2. 下一幀執行移動動畫
                             requestAnimationFrame(() => {
                                 // [優化] 判斷是否為手機模式
+                                // 手機版稍微加快飛行時間 (0.4s)，避免多張卡片動畫堆積造成卡頓
+                                // 桌機版維持 0.5s
                                 const isMobile = document.body.classList.contains('mobile-mode');
                                 const flyTime = isMobile ? 0.4 : 0.5; 
                                 
@@ -5583,20 +5571,26 @@
                                 let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
 
                                 // --- [核心修改] 通用序列動畫邏輯 ---
-                                // 檢查這張卡片是否在當前的移動清單中
+                                // 檢查這張卡片是否在當前的移動清單中 (movingCardIds 在 renderUI 上方已計算)
+                                // 使用 loose equality (==) 避免字串/數字型別問題
                                 const moveIndex = movingCardIds.findIndex(mid => mid == id);
 
                                 if (moveIndex !== -1) {
                                     const totalCards = movingCardIds.length;
                                     
+                                    // 如果只有一張牌，就不需要延遲，直接飛
                                     if (totalCards > 1) {
+                                        // 演算法：每張牌間隔飛行時間的 20%
                                         let interval = flyTime * 0.2;
                                         
+                                        // 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
+                                        // 這樣會變成機關槍式的快速發牌，而不是慢慢發
                                         const maxTotalLag = 1.5;
                                         if ((interval * totalCards) > maxTotalLag) {
                                             interval = maxTotalLag / totalCards;
                                         }
                                         
+                                        // 設定延遲：第 N 張牌延遲 N * interval 秒
                                         delay = `${moveIndex * interval}s`;
                                     }
                                 }
