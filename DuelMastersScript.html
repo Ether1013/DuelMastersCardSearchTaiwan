@@ -1030,25 +1030,30 @@
 			pointer-events: none !important; 
 		}
 
-		/* --- 移動控制面板位置 (修正版) --- */
+		/* --- 移動控制面板位置 (靠右下角修正版) --- */
 		#mobile-controls {
-			/* 確保有 Flex 排版 */
+			/* 確保有 Flex 排版，讓按鈕橫向排列 */
 			display: none;
 			align-items: center;
-			gap: 15px; /* 按鈕間距 */
+			justify-content: flex-end; /* 靠右對齊 */
+			gap: 10px; /* 按鈕間距 */
 			
 			/* 保持固定定位 */
 			position: fixed;
 			
-			/* [修改重點 1] 使用 env() 避開瀏海與底部橫條，並預留更多緩衝空間 */
-			bottom: calc(40px + env(safe-area-inset-bottom)); 
-			right: calc(40px + env(safe-area-inset-right));
+			/* [修改重點] 大幅減少邊距，讓它緊貼右下角 */
+			/* 僅保留 5px 緩衝 + 手機安全區域 (瀏海/Home Bar) */
+			bottom: calc(5px + env(safe-area-inset-bottom)); 
+			right: calc(5px + env(safe-area-inset-right));
 			
-			/* [修改重點 2] 提高層級，確保浮在最上層 */
+			/* 提高層級，確保浮在最上層 */
 			z-index: 5000;
 			
 			/* 避免按鈕被壓縮 */
 			flex-shrink: 0;
+			
+			/* [選用] 增加一點透明度，減少對畫面的視覺干擾 */
+			opacity: 0.9;
 		}
 
 		/* 確保手機模式下 body 不會產生滾動條，避免 fixed 元素跑位 */
