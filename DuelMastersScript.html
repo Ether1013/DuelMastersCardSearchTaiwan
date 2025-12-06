@@ -2677,6 +2677,7 @@
     
     let isPointing = false;
     let pointerId = null;
+	let forceNewStep = false;
     let pointTargets = []; 
     let currentStackTargetId = null;
 	
@@ -3382,14 +3383,21 @@
 
         // [修改] 自動判斷編輯模式
         if (!isDrafting) {
-            // 如果當前有選中某個步驟 (currentIndex >= 0)
+            // 檢查是否在歷史紀錄範圍內
             if (currentIndex >= 0 && currentIndex < history.length) {
-                // [關鍵修正] 直接進入「編輯當前步驟」模式 (EDIT Mode)
-                // 這會載入該步驟原本的所有動作到 draftOperations 中
-                // 並且設定 editModeType = 'EDIT'
-                editAction(currentIndex);
+                
+                // [關鍵修改] 判斷邏輯分流
+                // 1. 如果是在最後一步，且旗標為 true (剛存檔完) -> 新增步驟
+                if (currentIndex === history.length - 1 && forceNewStep) {
+                    startDraftAtEnd();
+                } 
+                // 2. 否則 (剛點擊過列表，或是還在中間步驟) -> 編輯當前步驟
+                else {
+                    editAction(currentIndex);
+                }
+
             } else {
-                // 如果是奇怪的狀態 (例如 -1)，則視為新增到最後
+                // 例外狀況 -> 新增步驟
                 startDraftAtEnd();
             }
         }
@@ -3537,6 +3545,15 @@
         
         // 解鎖 Scrollbar
         document.getElementById('action-list').classList.remove('locked');
+		
+		// [新增] 存檔後的狀態判斷
+        // 如果剛剛存檔的是「最新的最後一步」，則將旗標設為 true
+        // 這樣使用者的下一個動作就會自動變成「新增步驟」
+        if (currentIndex === history.length - 1) {
+            forceNewStep = true;
+        } else {
+            forceNewStep = false;
+        }
     }
 
     function cancelDraft() {
@@ -5846,10 +5863,12 @@
 				
 				currentIndex = index;
 				
-				// [修改] 傳入 true，告訴 renderUI 不要自動捲動
-				renderUI(true); 
-				
-				saveToStorage(); 
+				// [新增] 使用者主動點擊了歷史紀錄，代表他想聚焦在這一步 (可能是為了修改)
+                // 所以重置旗標，讓下一個動作觸發 editAction 而不是 startDraftAtEnd
+                forceNewStep = false;
+
+                renderUI(true); 
+                saveToStorage();
 			};
 
             li.innerHTML = `
