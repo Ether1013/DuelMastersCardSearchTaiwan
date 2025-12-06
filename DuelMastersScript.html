@@ -5558,47 +5558,45 @@
                             cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
                             
                             // 2. 下一幀執行移動動畫
-                            // 2. 下一幀執行移動動畫
-                            requestAnimationFrame(() => {
-                                // [優化] 判斷是否為手機模式
-                                // 手機版稍微加快飛行時間 (0.4s)，避免多張卡片動畫堆積造成卡頓
-                                // 桌機版維持 0.5s
-                                const isMobile = document.body.classList.contains('mobile-mode');
-                                const flyTime = isMobile ? 0.4 : 0.5; 
-                                
-                                let duration = `${flyTime}s`;
-                                let delay = '0s';
-                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+							requestAnimationFrame(() => {
+								// [修正] 統一手機與桌機的動畫參數
+								// 原本手機版 flyTime 設為 0.4 且 interval 為 20%，導致間隔僅 0.08s (太快看不出)
+								// 現在統一設為 0.5s，並強制間隔為 0.15s，確保視覺上的「依序移動」效果
+								const flyTime = 0.5; 
+								
+								let duration = `${flyTime}s`;
+								let delay = '0s';
+								let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
 
-                                // --- [核心修改] 通用序列動畫邏輯 ---
-                                // 檢查這張卡片是否在當前的移動清單中 (movingCardIds 在 renderUI 上方已計算)
-                                // 使用 loose equality (==) 避免字串/數字型別問題
-                                const moveIndex = movingCardIds.findIndex(mid => mid == id);
+								// --- [核心修改] 通用序列動畫邏輯 ---
+								// 檢查這張卡片是否在當前的移動清單中
+								// 使用 loose equality (==) 避免字串/數字型別問題
+								const moveIndex = movingCardIds.findIndex(mid => mid == id);
 
-                                if (moveIndex !== -1) {
-                                    const totalCards = movingCardIds.length;
-                                    
-                                    // 如果只有一張牌，就不需要延遲，直接飛
-                                    if (totalCards > 1) {
-                                        // 演算法：每張牌間隔飛行時間的 20%
-                                        let interval = flyTime * 0.2;
-                                        
-                                        // 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
-                                        // 這樣會變成機關槍式的快速發牌，而不是慢慢發
-                                        const maxTotalLag = 1.5;
-                                        if ((interval * totalCards) > maxTotalLag) {
-                                            interval = maxTotalLag / totalCards;
-                                        }
-                                        
-                                        // 設定延遲：第 N 張牌延遲 N * interval 秒
-                                        delay = `${moveIndex * interval}s`;
-                                    }
-                                }
-                                // -------------------------------
+								if (moveIndex !== -1) {
+									const totalCards = movingCardIds.length;
+									
+									// 如果只有一張牌，就不需要延遲，直接飛
+									if (totalCards > 1) {
+										// [修正] 改用固定時間間隔 (0.15秒)，而非百分比
+										// 這樣無論卡片多少，都能保證明顯的先後順序
+										let interval = 0.15;
+										
+										// 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 2.0 秒
+										const maxTotalLag = 2.0;
+										if ((interval * totalCards) > maxTotalLag) {
+											interval = maxTotalLag / totalCards;
+										}
+										
+										// 設定延遲：第 N 張牌延遲 N * interval 秒
+										delay = `${moveIndex * interval}s`;
+									}
+								}
+								// -------------------------------
 
-                                cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
-                                cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
-                            });
+								cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
+								cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+							});
                         }
                     }
                 }
