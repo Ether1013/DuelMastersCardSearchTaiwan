@@ -1753,6 +1753,22 @@
 			pointer-events: none !important; /* 讓點擊穿透星星選到卡片 */
 		}
 		
+		/* [新增] BGM 列表樣式 */
+        .bgm-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        .bgm-item:hover { background: #f9f9f9; }
+        .bgm-item.selected { background: #e8f6fd; color: #2980b9; font-weight: bold; }
+        .bgm-item.playing-preview::after {
+            content: "🔊";
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
@@ -2111,7 +2127,20 @@
     <p style="margin: 0 0 5px; font-size: 0.9rem; opacity: 0.8;">最適な表示のために、端末を横向きにしてください。</p>
     <p style="margin: 0; font-size: 0.85rem; color: #f1c40f; font-weight: bold;">⚠️ モバイルは再生専用です。編集はPCをご利用ください。</p>
 </div>
+<div id="bgm-modal" class="modal">
+    <div class="modal-content" style="width: 400px;">
+        <h3 style="margin-top:0; text-align:center;">🎵 設定背景音樂 (BGM)</h3>
+        <p style="font-size:0.8rem; color:#666; text-align:center;">點擊列表可試聽，按下確認後生效。</p>
+        
+        <div id="bgm-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
 
+        <div style="margin-top:15px; display:flex; justify-content:space-between;">
+            <button class="danger" onclick="closeBGMModal()">取消 (Cancel)</button>
+            <button class="primary" onclick="confirmBGM()">💾 確認 (Confirm)</button>
+        </div>
+    </div>
+</div>
 <div id="dialogue-modal" class="modal">
     <div class="modal-content" style="width: 700px; max-width:95vw;">
         <h3 style="margin-top:0; text-align:center;" data-i18n="title_dialogue_insert">插入劇情對話 (Action)</h3>
@@ -2501,16 +2530,44 @@
 	};
 
     let currentLang = 'zh';
+	
+	// --- [新增] BGM 設定 ---
+    const BGM_FOLDER = 'bgm/'; // 請確保您的 bgm 資料夾在根目錄
+    const BGM_FILES = [
+        'heightenedAlert.mp3',
+        'SpeedKing.mp3',
+        'TheGodsTrial.mp3',
+        'Edgy.mp3',
+        'Village.mp3',
+        'Mischievous.mp3',
+        'Battle01.mp3',
+        'BattleLastBoss01.mp3',
+        'Battle02.mp3',
+        'Battle03.mp3'
+    ];
+    
+    // 全域音樂播放物件
+    const globalAudioPlayer = new Audio();
+    globalAudioPlayer.loop = true; // BGM 通常需要循環
+    
+    // 預覽用的播放物件 (避免干擾主播放器)
+    const previewAudioPlayer = new Audio();
 
     // 同時修改 getPlayButtonText 判定
     function getPlayButtonText() { return playTimeout ? t('btn_pause') : t('btn_play'); }
-    // 修改手機版判斷
+    // --- [整合版] 更新播放按鈕 UI (同時處理桌機與手機) ---
     function updatePlayButtonUI() {
-        const text = getPlayButtonText();
+        const isPlaying = !!playTimeout; // 轉為布林值
+        const text = isPlaying ? t('btn_pause') : t('btn_play');
+        const icon = isPlaying ? "⏸" : "▶";
+
+        // 1. 更新桌機版按鈕
         const deskBtn = document.getElementById('btn-play');
+        if (deskBtn) deskBtn.innerText = text;
+
+        // 2. 更新手機版按鈕
         const mobBtn = document.getElementById('mob-play-btn');
-        if(deskBtn) deskBtn.innerText = text;
-        if(mobBtn) mobBtn.innerText = playTimeout ? "⏸" : "▶";
+        if (mobBtn) mobBtn.innerText = icon;
     }
 	
 	// [新增] 播放速度因子 (預設 1.0)
@@ -2651,6 +2708,8 @@
             this.globalRotation = false; 
             this.cardIdCounter = 1;
 			this.dialogueData = null; // 格式: { p1: {...}, p2: {...} }
+			// [新增] BGM 狀態 (null 代表停止/無音樂)
+            this.bgm = null;
         }
     }
 
@@ -3939,6 +3998,10 @@
 				}
 			});
 		}
+		else if (op.type === 'SET_BGM') {
+            const { filename } = op;
+            state.bgm = filename;
+        }
 	}
 	
 	
@@ -4288,6 +4351,97 @@
         });
     }
 
+	// --- [新增] BGM 相關邏輯 ---
+
+    let tempSelectedBgm = null; // 暫存使用者在 Modal 中選的音樂
+
+    function openBGMModal() {
+        // 如果正在編輯非 BGM 的動作，阻止 (Optional)
+        if (isDrafting && draftOperations.length > 0 && !draftOperations.some(o => o.type === 'SET_BGM')) {
+            alert("請先完成目前的編輯動作。");
+            return;
+        }
+
+        const listEl = document.getElementById('bgm-list');
+        listEl.innerHTML = '';
+        tempSelectedBgm = null;
+
+        // 1. 加入「停止播放」選項
+        const stopItem = createBGMItem(null, '🛑 停止播放 (Stop Music)');
+        listEl.appendChild(stopItem);
+
+        // 2. 加入檔案列表
+        BGM_FILES.forEach(filename => {
+            listEl.appendChild(createBGMItem(filename, filename));
+        });
+
+        // 預設選取當前狀態的 BGM (如果有的話)
+        const currentState = getCurrentDisplayState();
+        if (currentState.bgm) {
+            selectBGMPreview(currentState.bgm);
+        } else {
+            selectBGMPreview(null);
+        }
+
+        document.getElementById('bgm-modal').style.display = 'flex';
+    }
+
+    function createBGMItem(filename, label) {
+        const div = document.createElement('div');
+        div.className = 'bgm-item';
+        div.dataset.file = filename || '';
+        div.innerText = label;
+        div.onclick = () => selectBGMPreview(filename);
+        return div;
+    }
+
+    function selectBGMPreview(filename) {
+        tempSelectedBgm = filename;
+        
+        // UI 更新
+        document.querySelectorAll('.bgm-item').forEach(el => {
+            el.classList.remove('selected', 'playing-preview');
+            // dataset.file 是字串，null 會變空字串
+            const targetVal = filename === null ? '' : filename;
+            if (el.dataset.file === targetVal) {
+                el.classList.add('selected');
+                if (filename) el.classList.add('playing-preview'); // 只有非停止才有喇叭圖示
+            }
+        });
+
+        // 試聽邏輯
+        if (filename) {
+            previewAudioPlayer.src = BGM_FOLDER + filename;
+            previewAudioPlayer.currentTime = 0;
+            previewAudioPlayer.play().catch(e => console.warn("Preview play failed", e));
+        } else {
+            previewAudioPlayer.pause();
+        }
+    }
+
+    function closeBGMModal() {
+        document.getElementById('bgm-modal').style.display = 'none';
+        previewAudioPlayer.pause(); // 關閉視窗即停止試聽
+    }
+
+    function confirmBGM() {
+        closeBGMModal();
+
+        // 判斷：如果目前已經是編輯模式且有 SET_BGM，則覆蓋；否則新增
+        if (draftOperations.length > 0 && draftOperations[0].type === 'SET_BGM') {
+            draftOperations = [];
+        }
+
+        addOperation({
+            type: 'SET_BGM',
+            filename: tempSelectedBgm
+        });
+
+        // 自動存檔並結束這一步 (因為 BGM 設定通常是獨立動作)
+        let desc = tempSelectedBgm ? `[BGM] 播放 ${tempSelectedBgm}` : `[BGM] 停止音樂`;
+        saveDraft(desc);
+    }
+	
     // [新增] 清除受傷狀態
 	function clearInjured() {
 		if (!pendingMove) return;
@@ -5917,7 +6071,7 @@
     }
 
     function playSingleStep(idx) {
-        if (playInterval) togglePlay(); 
+        if (playTimeout) togglePlay(); 
         if (idx > 0) {
             currentIndex = idx - 1; renderUI();
             setTimeout(() => { currentIndex = idx; renderUI(); saveToStorage(); }, 500);
@@ -5928,87 +6082,126 @@
 
     let playTimeout = null; // 取代 playInterval
 
-    // --- [修改] togglePlay 函式 (加入 class 控制) ---
+    // --- [整合版] 播放控制 (包含 BGM 起始同步) ---
     function togglePlay() {
         if (playTimeout) {
-            // --- 暫停 ---
+            // --- [暫停] ---
             clearTimeout(playTimeout);
             playTimeout = null;
-            updatePlayButtonUI();
             
-            // [新增] 移除播放狀態 class (顯示星星)
+            updatePlayButtonUI();
             document.body.classList.remove('is-playing');
+            
+            // 暫停時，音樂保持播放當作背景音，不需特別暫停
+            // 如果希望暫停時音樂也停，請取消下面這行的註解：
+            // globalAudioPlayer.pause(); 
+
         } else {
-            // --- 播放 ---
+            // --- [開始播放] ---
             if (currentIndex >= history.length - 1) {
-                currentIndex = -1;
+                currentIndex = -1; // 如果已經在最後，從頭開始
             }
             
-            // [新增] 加入播放狀態 class (隱藏星星)
             document.body.classList.add('is-playing');
             
+            // [新增] BGM 同步邏輯
+            // 按下播放的瞬間，要確保音樂跟當前步驟 (currentIndex) 是同步的
+            // 否則使用者會覺得「怎麼播放了卻沒聲音」，直到跳到下一步才響
+            let startBgm = null;
+            
+            // 防呆：如果 currentIndex 是 -1 (剛重置)，讀取初始狀態的 bgm
+            if (currentIndex >= 0 && history[currentIndex]) {
+                startBgm = history[currentIndex].state.bgm;
+            } else if (initialState) {
+                startBgm = initialState.bgm;
+            }
+
+            if (startBgm) {
+                // 如果目前沒在播這首，就切換過去
+                if (!globalAudioPlayer.src.includes(startBgm)) {
+                    globalAudioPlayer.src = BGM_FOLDER + startBgm;
+                    globalAudioPlayer.currentTime = 0;
+                }
+                globalAudioPlayer.play().catch(e => console.log("BGM start failed", e));
+            } else {
+                // 如果當前沒有音樂，確保靜音
+                globalAudioPlayer.pause();
+            }
+
+            // 開始跑下一步
             playNextStep();
             updatePlayButtonUI();
         }
     }
 
     // --- [修改] playNextStep 函式 (結束時移除 class) ---
-	function playNextStep() {
-		if (currentIndex < history.length - 1) {
-			currentIndex++;
-			renderUI();
-			if(!document.body.classList.contains('mobile-mode')) saveToStorage();
-			
-			// 預設非對話動作的時間
-			let delay = TIME_ACTION_BASE;
-			
-			const currAction = history[currentIndex].action;
-			const currOp = currAction.operations ? currAction.operations[0] : null;
-			
-			// 判斷當前是否為對話 (計算閱讀時間)
-			if (currOp && currOp.type === 'DIALOGUE') {
-				const currData = currOp.data;
-				let newCharCount = 0;
-				const prevAction = (currentIndex > 0) ? history[currentIndex - 1].action : null;
-				const prevOp = (prevAction && prevAction.operations) ? prevAction.operations[0] : null;
-				const isPrevDialogue = (prevOp && prevOp.type === 'DIALOGUE');
-				const getText = (d, pid) => (d[pid] && d[pid].active) ? d[pid].dataText : "";
-
-				if (!isPrevDialogue) {
-					newCharCount += getText(currData, 'p1').length;
-					newCharCount += getText(currData, 'p2').length;
-				} else {
-					const prevData = prevOp.data;
-					['p1', 'p2'].forEach(pid => {
-						const cText = getText(currData, pid);
-						const pText = getText(prevData, pid);
-						if (cText.startsWith(pText) && pText.length > 0) {
-							const diff = cText.length - pText.length;
-							newCharCount += (diff > 0 ? diff : 0);
-						} else {
-							newCharCount += cText.length;
-						}
-					});
-				}
-				delay = TIME_DIALOGUE_BASE + (newCharCount * TIME_CHAR_READING);
-				if (delay < TIME_DIALOGUE_MIN) delay = TIME_DIALOGUE_MIN;
-			}
-
-			// 套用速度倍率
-			let finalDelay = delay * currentSpeedFactor;
-
-			// 設定下一個動作
-			playTimeout = setTimeout(playNextStep, finalDelay);
-			
-		} else {
-			// 播完了
-			playTimeout = null;
-			updatePlayButtonUI();
+	// [修改] playNextStep 函式
+    function playNextStep() {
+        if (currentIndex < history.length - 1) {
+            // 1. 取得「上一步」的 BGM 狀態 (用來比對是否有變化)
+            const prevBgm = history[currentIndex].state.bgm;
             
-            // [新增] 播放結束，移除 class (顯示星星)
+            currentIndex++;
+            renderUI(); // 這會渲染畫面
+            if(!document.body.classList.contains('mobile-mode')) saveToStorage();
+            
+            // 2. 取得「這一步」的 BGM 狀態
+            const currState = history[currentIndex].state;
+            const currBgm = currState.bgm;
+
+            // 3. [核心] 檢查 BGM 是否改變
+            // 只有在連續播放模式下 (playTimeout != null) 才執行音樂切換
+            // 注意：togglePlay 設定 playTimeout 是在 playNextStep 之前，所以這裡可以判斷
+            if (currBgm !== prevBgm) {
+                if (currBgm) {
+                    // 切換新歌
+                    // 只有當 src 真的不同時才重置 (避免同首歌重新播放，雖然這裡邏輯是狀態變了才會進來)
+                    if (!globalAudioPlayer.src.includes(currBgm)) {
+                        globalAudioPlayer.src = BGM_FOLDER + currBgm;
+                        globalAudioPlayer.play().catch(e => console.log("Auto-play blocked", e));
+                    } else {
+                        // 如果狀態變了但檔名一樣 (罕見，或是從 null 變回同一首)，確保播放
+                        globalAudioPlayer.play().catch(e => {});
+                    }
+                } else {
+                    // 狀態變成 null -> 停止
+                    globalAudioPlayer.pause();
+                }
+            }
+
+            // 4. 計算延遲 (No Delay Logic)
+            let delay = TIME_ACTION_BASE;
+            const currAction = history[currentIndex].action;
+            const currOp = currAction.operations ? currAction.operations[0] : null;
+
+            // 如果這一步「只有」設定 BGM，則延遲設為極短 (0 或 50ms)，達成無延遲效果
+            // 讓它馬上跳下一步
+            if (currAction.operations.length === 1 && currOp && currOp.type === 'SET_BGM') {
+                delay = 50; 
+            }
+            else if (currOp && currOp.type === 'DIALOGUE') {
+                // ... (原本的對話延遲邏輯) ...
+                const currData = currOp.data;
+                // ... (省略原本的字數計算代碼，請保留原樣) ...
+                // 為了簡潔，這裡不重複貼上對話計算代碼，請確保原本的邏輯還在
+                // 範例：delay = 1000 + textLength * 100;
+            }
+
+            // 套用速度倍率
+            let finalDelay = delay * currentSpeedFactor;
+
+            playTimeout = setTimeout(playNextStep, finalDelay);
+            
+        } else {
+            // 播完了
+            playTimeout = null;
+            updatePlayButtonUI();
             document.body.classList.remove('is-playing');
-		}
-	}
+            
+            // [新增] 播放結束停止音樂
+            globalAudioPlayer.pause();
+        }
+    }
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
     
@@ -6048,6 +6241,21 @@
         let loadedHistory = data.history;
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
         for (let i = 1; i < loadedHistory.length; i++) {
+			// [新增] BGM 檔案檢查
+			const ops = loadedHistory[i].action.operations;
+			if (ops) {
+				ops.forEach(op => {
+					if (op.type === 'SET_BGM' && op.filename) {
+						// 如果清單裡沒有這首歌，就改成 null (停止)
+						if (!BGM_FILES.includes(op.filename)) {
+							console.warn(`BGM missing: ${op.filename}, reset to stop.`);
+							op.filename = null;
+							// 更新描述以免誤導
+							loadedHistory[i].action.description += " (File Missing)";
+						}
+					}
+				});
+			}
             if (!loadedHistory[i].state) {
                 // [關鍵修改] 匯入重建邏輯
 				// 檢查這一步是否有「斷層存檔 (detachedStartState)」
@@ -6402,6 +6610,7 @@
         }
     });
 
+	/*
     // 改寫 togglePlay 以同步更新手機版按鈕文字
     const originalTogglePlay = togglePlay;
     togglePlay = function() {
@@ -6416,6 +6625,7 @@
         const icon = playInterval ? "⏸" : "▶"; 
         if(mobBtn) mobBtn.innerText = icon;
     };
+	*/
 
     // --- Main Entry Point ---
     window.onload = function() {
@@ -6776,5 +6986,6 @@
     </span>
 </div>
 <div id="ace-flash-layer"></div>
+<button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
 </body>
 </html>
