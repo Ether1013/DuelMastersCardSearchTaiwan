@@ -4821,15 +4821,6 @@
         if (!isPointing) cancelSelection();
     });
 
-    function cancelSelection() {
-        if (pendingMove) {
-            pendingMove = null;
-            document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
-            document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
-            document.getElementById('card-action-panel').style.display = 'none';
-        }
-    }
-
     function isStackZone(zid) {
         return zid.includes('deck') || zid.includes('shield') || zid.includes('hyper');
     }
@@ -4947,77 +4938,6 @@
                 togglePlay();
             }
         }
-    }
-	
-	function handleCardSingleClick(e, cardId) {
-        e.stopPropagation(); 
-        
-        // --- [修正] 手機版判定邏輯 (真機強制攔截) ---
-        // 判斷條件：
-        // 1. body 有 mobile-mode class (標準流程)
-        // 2. 或者 isMobileDevice() 回傳 true (防止 class 尚未載入或被移除)
-        if (document.body.classList.contains('mobile-mode') || isMobileDevice()) {
-            showMobileCardViewer(cardId);
-            return; // 【關鍵】這裡攔截成功，就不會執行下面的組合/選取邏輯
-        }
-        // ----------------------------------------
-
-        // [新增] 多重選取模式邏輯 (保持不變)
-        if (isMultiSelectMode) {
-            const index = multiSelectedIds.indexOf(cardId);
-			const el = document.querySelector(`.card[data-id="${cardId}"]`);
-            if (index > -1) {
-                // 取消勾選
-                multiSelectedIds.splice(index, 1);
-                if (el) el.classList.remove('multi-selected');
-                
-                // [新增] 如果減到 0 張，自動退出模式
-                if (multiSelectedIds.length === 0) {
-                    cancelSelection(); 
-                    return;
-                }
-            } else {
-                // 加入勾選
-                multiSelectedIds.push(cardId);
-                if (el) el.classList.add('multi-selected');
-            }
-            if (el) el.classList.toggle('multi-selected');
-            return;
-        }
-		
-        if (isPointing) {
-            handlePointClick(null, cardId);
-            return;
-        }
-
-        if (pendingMove) {
-            // (省略原本的 pendingMove 邏輯，請保持原樣...)
-            if (pendingMove.cardIds.includes(cardId)) {
-                 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
-                 if (pendingMove.cardIds.length === 0) {
-                     cancelSelection();
-                     return;
-                 }
-                 updateSelectionUI();
-                 return;
-            }
-            
-            const state = getCurrentDisplayState();
-            const targetCard = state.cards.find(c => c.id === cardId);
-            
-            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
-                openStackingModal(targetCard);
-                return;
-            }
-        }
-        
-        if (!pendingMove) {
-            pendingMove = { cardIds: [cardId], shuffle: false };
-        } else {
-            pendingMove.cardIds.push(cardId);
-        }
-        updateSelectionUI();
-		return;
     }
 
     function openStackingModal(targetCard) {
@@ -6028,18 +5948,24 @@
         updateSelectionUI();
     }
 
-    // [修改] 點擊卡片處理 (加入歸零自動退出邏輯)
-    // [修正] 點擊卡片處理
+	// [整合版] 點擊卡片處理 (包含手機版攔截 + 多選邏輯 + 選取修正)
     function handleCardSingleClick(e, cardId) {
         e.stopPropagation(); 
         
-        // 1. 多重選取模式邏輯 (保持不變)
+        // 1. [手機版攔截] 優先級最高
+        // 如果是手機模式，只顯示放大圖，不執行後續選取邏輯
+        if (document.body.classList.contains('mobile-mode') || isMobileDevice()) {
+            showMobileCardViewer(cardId);
+            return; 
+        }
+
+        // 2. [多重選取模式]
         if (isMultiSelectMode) {
             const index = multiSelectedIds.indexOf(cardId);
             const el = document.querySelector(`.card[data-id="${cardId}"]`);
             
             if (index > -1) {
-                // 取消勾選
+                // 已選過 -> 取消勾選
                 multiSelectedIds.splice(index, 1);
                 if (el) el.classList.remove('multi-selected');
                 
@@ -6049,7 +5975,7 @@
                     return;
                 }
             } else {
-                // 加入勾選
+                // 未選過 -> 加入勾選
                 multiSelectedIds.push(cardId);
                 if (el) el.classList.add('multi-selected');
             }
@@ -6060,15 +5986,15 @@
             return;
         }
 
-        // 2. 指向模式邏輯 (保持不變)
+        // 3. [指向模式] (如攻擊、效果指向)
         if (isPointing) {
             handlePointClick(null, cardId);
             return;
         }
 
-        // 3. 已有選取時的邏輯 (取消或堆疊)
+        // 4. [已有選取時的邏輯] (取消選取或進行堆疊)
         if (pendingMove) {
-            // 如果點擊已選取的卡片 -> 取消選取該張
+            // 如果點擊已選取的卡片 -> 取消該張選取
             if (pendingMove.cardIds.includes(cardId)) {
                  pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
                  if (pendingMove.cardIds.length === 0) {
@@ -6089,20 +6015,18 @@
             }
         }
         
-        // 4. [關鍵修正] 單純選取 (Fresh Selection)
+        // 5. [單純選取] (Fresh Selection)
+        // 這是之前修復「無法開啟面板」的關鍵邏輯
         if (!pendingMove) {
-            // 錯誤原因：原本寫成 pendingMove = { cardIds: [...multiSelectedIds] ... }
-            // 因為此時不在多選模式，multiSelectedIds 是空的，導致選到了「空牌組」，面板就不會開。
-            
-            // 修正：直接將當前點擊的這張卡 [cardId] 設為選取對象
             pendingMove = { cardIds: [cardId], shuffle: false };
         } else {
             pendingMove.cardIds.push(cardId);
         }
+        
         updateSelectionUI();
 		return;
     }
-    
+	
     // [修改] 取消選取 (確保也會關閉多選模式)
     function cancelSelection() {
         // 重置多選相關變數
