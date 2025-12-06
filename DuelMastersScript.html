@@ -4884,7 +4884,7 @@
         renderUI();
     }
 	
-	// --- [新增] 手機版檢視器邏輯 ---
+	// --- [修正] 手機版檢視器邏輯 (無圖也要顯示) ---
     function showMobileCardViewer(cardId) {
         const state = getCurrentDisplayState();
         const card = state.cards.find(c => c.id == cardId);
@@ -4900,15 +4900,21 @@
             }
         }
         
-        // 如果沒有圖片，或是背面，這裡可以放一個預設圖，或是顯示文字
-        // 這裡假設只顯示有圖的卡片，若無圖則顯示卡背或空白
-        if (!src) return; // 沒圖就不開視窗 (可依需求調整)
-
+        // [關鍵修正] 這裡不再 return，而是繼續執行顯示視窗的邏輯
+        
         // 2. 設定圖片並顯示
         const imgEl = document.getElementById('mobile-viewer-img');
-        imgEl.src = src;
-        
         const viewer = document.getElementById('mobile-card-viewer');
+        
+        if (src) {
+            imgEl.src = src;
+            imgEl.style.display = 'block'; // 有圖顯示圖
+        } else {
+            // 沒圖時隱藏 img 標籤，只顯示黑底與文字
+            imgEl.style.display = 'none'; 
+        }
+        
+        // 無論有無圖片，視窗都要打開
         viewer.style.display = 'flex';
 
         // 3. 暫停播放 (但不停止音樂)
@@ -4917,9 +4923,6 @@
             playTimeout = null;
             updatePlayButtonUI();
             document.body.classList.remove('is-playing');
-            
-            // 注意：我們故意「不」呼叫 globalAudioPlayer.pause()
-            // 讓音樂繼續播放，維持氛圍
         }
     }
 
@@ -4941,13 +4944,17 @@
 	function handleCardSingleClick(e, cardId) {
         e.stopPropagation(); 
         
-		// --- [新增] 手機版：點擊卡片進入檢視模式 ---
-        if (document.body.classList.contains('mobile-mode')) {
+        // --- [修正] 手機版判定邏輯 (真機強制攔截) ---
+        // 判斷條件：
+        // 1. body 有 mobile-mode class (標準流程)
+        // 2. 或者 isMobileDevice() 回傳 true (防止 class 尚未載入或被移除)
+        if (document.body.classList.contains('mobile-mode') || isMobileDevice()) {
             showMobileCardViewer(cardId);
-            return; // 阻止後續的編輯/選取邏輯
+            return; // 【關鍵】這裡攔截成功，就不會執行下面的組合/選取邏輯
         }
-		
-		// [新增] 多重選取模式邏輯
+        // ----------------------------------------
+
+        // [新增] 多重選取模式邏輯 (保持不變)
         if (isMultiSelectMode) {
             const index = multiSelectedIds.indexOf(cardId);
 			const el = document.querySelector(`.card[data-id="${cardId}"]`);
@@ -4958,7 +4965,7 @@
                 
                 // [新增] 如果減到 0 張，自動退出模式
                 if (multiSelectedIds.length === 0) {
-                    cancelSelection(); // 這會重置 isMultiSelectMode
+                    cancelSelection(); 
                     return;
                 }
             } else {
@@ -4966,10 +4973,7 @@
                 multiSelectedIds.push(cardId);
                 if (el) el.classList.add('multi-selected');
             }
-            // 為了效能，我們只更新這張卡片的 class，不重繪整個 UI
-            if (el) {
-                el.classList.toggle('multi-selected');
-            }
+            if (el) el.classList.toggle('multi-selected');
             return;
         }
 		
@@ -4979,7 +4983,7 @@
         }
 
         if (pendingMove) {
-            // 如果點擊已選取的卡片 -> 取消選取該張
+            // (省略原本的 pendingMove 邏輯，請保持原樣...)
             if (pendingMove.cardIds.includes(cardId)) {
                  pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
                  if (pendingMove.cardIds.length === 0) {
@@ -4993,16 +4997,14 @@
             const state = getCurrentDisplayState();
             const targetCard = state.cards.find(c => c.id === cardId);
             
-            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
             if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
                 openStackingModal(targetCard);
                 return;
             }
         }
         
-        // 單純選取，不執行任何動作
         if (!pendingMove) {
-            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
+            pendingMove = { cardIds: [cardId], shuffle: false };
         } else {
             pendingMove.cardIds.push(cardId);
         }
