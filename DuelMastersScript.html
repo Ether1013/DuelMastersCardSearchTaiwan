@@ -1781,7 +1781,7 @@
         <span data-i18n="lbl_draft_ops"> 個操作)</span>
     </span>
     <label title="開啟此選項後，本次編輯的結果將會影響後續所有步驟的狀態">
-        <input type="checkbox" id="propagate-check"> 
+        <input type="checkbox" id="propagate-check" checked> 
         <span data-i18n="chk_propagate">🔗 連動更新後續</span>
     </label>
     <div style="display:flex; gap:10px;">
@@ -3336,7 +3336,19 @@
         }
         // --- 結束 ---
 
-        if (!isDrafting) startDraftAtEnd();
+        // [修改] 自動判斷編輯模式
+        if (!isDrafting) {
+            // 如果當前有選中某個步驟 (currentIndex >= 0)
+            if (currentIndex >= 0 && currentIndex < history.length) {
+                // [關鍵修正] 直接進入「編輯當前步驟」模式 (EDIT Mode)
+                // 這會載入該步驟原本的所有動作到 draftOperations 中
+                // 並且設定 editModeType = 'EDIT'
+                editAction(currentIndex);
+            } else {
+                // 如果是奇怪的狀態 (例如 -1)，則視為新增到最後
+                startDraftAtEnd();
+            }
+        }
         
         applyOperation(tempState, op);
         draftOperations.push(op);
@@ -4946,15 +4958,37 @@
 				const name = document.getElementById(`diag-name-${id}`);
 				const text = document.getElementById(`diag-text-${id}`);
 				
+				// [新增] 取得對話框本體
+				const box = row.querySelector('.diag-box');
+
 				if (data && data.active) {
 					row.classList.add('visible');
-					// 移除舊動畫 class 並強制重繪以觸發新動畫
+					
+					// [關鍵修改] 讓對話框可以被點擊
+					box.style.pointerEvents = 'auto'; 
+					box.style.cursor = 'pointer';
+					box.title = "點擊編輯對話";
+					
+					// 綁定點擊事件
+					box.onclick = (e) => {
+						e.stopPropagation();
+						// 如果還沒在編輯模式，就觸發編輯當前步驟
+						// editAction 會自動判斷如果是對話動作，就開啟對話視窗
+						if (!isDrafting) {
+							editAction(currentIndex);
+						} else {
+							// 如果已經在編輯模式，直接開窗
+							openDialogueModal();
+						}
+					};
+
+					// 重置動畫 Class 以觸發重播
 					row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
-					void row.offsetWidth; // Trigger reflow
+					void row.offsetWidth; // 強制重繪 (Reflow)
 					row.classList.add(`fx-${data.effect}`);
 
 					name.innerText = data.name;
-					text.innerText = data.dataText; // text 是變數名衝突，JSON裡存 dataText
+					text.innerText = data.dataText; 
 					text.className = `diag-text text-${data.size}`;
 					
 					const imgKey = `avatar_${id}_${data.emotion}`;
@@ -4962,6 +4996,8 @@
 					img.style.backgroundImage = src ? `url(${src})` : 'none';
 				} else {
 					row.classList.remove('visible');
+					// 隱藏時確保不可點擊 (避免擋到下方的卡片)
+					if (box) box.style.pointerEvents = 'none';
 				}
 			});
 		} else {
@@ -5646,13 +5682,12 @@
             }
 
             const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="${t('btn_delete_step')}">🗑</button>`;
-            const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" data-i18n="btn_edit_step">${t('btn_edit_step')}</button>`;
+            //const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" data-i18n="btn_edit_step">${t('btn_edit_step')}</button>`;
             
             const controls = `
                 <div class="action-controls">
                     <button class="mini-btn play-from" onclick="event.stopPropagation(); playFromStep(${index})" data-i18n="btn_play_from">${t('btn_play_from')}</button>
                     <button class="mini-btn play-step" onclick="event.stopPropagation(); playSingleStep(${index})" data-i18n="btn_play_step">${t('btn_play_step')}</button>
-                    ${editBtn}
                     ${delBtn}
                 </div>
             `;
