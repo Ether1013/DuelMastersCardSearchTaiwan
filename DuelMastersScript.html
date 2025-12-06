@@ -1911,6 +1911,11 @@
             opacity: 0.8;
             z-index: 3501;
         }
+		
+		/* [修正] 手機模式下，強制鎖定對話框，不允許點擊編輯 */
+		body.mobile-mode .diag-box {
+			pointer-events: none !important;
+		}
     </style>
 </head>
 <body>
@@ -2245,7 +2250,7 @@
 <div id="mobile-card-viewer" onclick="closeMobileViewer()">
     <div id="mobile-viewer-close">✕</div>
     <img id="mobile-viewer-img" src="" alt="Card Detail">
-    <div style="color:white; margin-top:10px; font-size:0.9rem;">(點擊繼續)</div>
+    <div style="color:white; margin-top:10px; font-size:0.9rem;">(CLOSE)</div>
 </div>
 
 <div id="mobile-controls">
@@ -5553,22 +5558,27 @@
                             cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
                             
                             // 2. 下一幀執行移動動畫
+                            // 2. 下一幀執行移動動畫
                             requestAnimationFrame(() => {
-                                const flyTime = 0.5; // 單張飛行時間 0.5秒
+                                // [優化] 判斷是否為手機模式
+                                // 手機版稍微加快飛行時間 (0.4s)，避免多張卡片動畫堆積造成卡頓
+                                // 桌機版維持 0.5s
+                                const isMobile = document.body.classList.contains('mobile-mode');
+                                const flyTime = isMobile ? 0.4 : 0.5; 
                                 
                                 let duration = `${flyTime}s`;
                                 let delay = '0s';
                                 let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
 
                                 // --- [核心修改] 通用序列動畫邏輯 ---
-                                // 檢查這張卡片是否在當前的移動清單中
+                                // 檢查這張卡片是否在當前的移動清單中 (movingCardIds 在 renderUI 上方已計算)
                                 // 使用 loose equality (==) 避免字串/數字型別問題
                                 const moveIndex = movingCardIds.findIndex(mid => mid == id);
 
                                 if (moveIndex !== -1) {
                                     const totalCards = movingCardIds.length;
                                     
-                                    // 如果只有一張牌，就不需要延遲
+                                    // 如果只有一張牌，就不需要延遲，直接飛
                                     if (totalCards > 1) {
                                         // 演算法：每張牌間隔飛行時間的 20%
                                         let interval = flyTime * 0.2;
@@ -5936,12 +5946,35 @@
     }
 
 	// [整合版] 點擊卡片處理 (包含手機版攔截 + 多選邏輯 + 選取修正)
+    // [整合版] 點擊卡片處理 (包含手機版過濾 + 多選邏輯)
     function handleCardSingleClick(e, cardId) {
         e.stopPropagation(); 
         
         // 1. [手機版攔截] 優先級最高
-        // 如果是手機模式，只顯示放大圖，不執行後續選取邏輯
         if (document.body.classList.contains('mobile-mode') || isMobileDevice()) {
+            
+            // --- [新增] 過濾邏輯：只有「有圖」且「非效果」的卡可以點 ---
+            const state = getCurrentDisplayState();
+            const card = state.cards.find(c => c.id == cardId);
+            
+            if (card) {
+                // 條件 A: 排除效果卡 (Ability Zone)
+                // 凡是區域 ID 包含 'ability' 字眼的都不能點
+                if (card.zone.includes('ability')) return;
+
+                // 條件 B: 排除無圖卡
+                // 必須同時滿足：1.卡片屬性標記為有圖 (card.image) 
+                //             2.全域圖片庫 (globalImageRegistry) 裡真的有這張圖的資料
+                const key = card.imageKey || ('img_' + card.id);
+                const backKey = card.backImageKey || ('img_back_' + card.id);
+                const hasActualImageData = globalImageRegistry[key] || globalImageRegistry[backKey];
+
+                if (!card.image || !hasActualImageData) {
+                    return; // 沒圖就結束，不開啟檢視器
+                }
+            }
+            // -----------------------------------------------------
+
             showMobileCardViewer(cardId);
             return; 
         }
@@ -5973,15 +6006,14 @@
             return;
         }
 
-        // 3. [指向模式] (如攻擊、效果指向)
+        // 3. [指向模式]
         if (isPointing) {
             handlePointClick(null, cardId);
             return;
         }
 
-        // 4. [已有選取時的邏輯] (取消選取或進行堆疊)
+        // 4. [已有選取時的邏輯]
         if (pendingMove) {
-            // 如果點擊已選取的卡片 -> 取消該張選取
             if (pendingMove.cardIds.includes(cardId)) {
                  pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
                  if (pendingMove.cardIds.length === 0) {
@@ -5995,15 +6027,13 @@
             const state = getCurrentDisplayState();
             const targetCard = state.cards.find(c => c.id === cardId);
             
-            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
             if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
                 openStackingModal(targetCard);
                 return;
             }
         }
         
-        // 5. [單純選取] (Fresh Selection)
-        // 這是之前修復「無法開啟面板」的關鍵邏輯
+        // 5. [單純選取]
         if (!pendingMove) {
             pendingMove = { cardIds: [cardId], shuffle: false };
         } else {
