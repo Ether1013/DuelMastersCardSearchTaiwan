@@ -1607,7 +1607,7 @@
             100% { opacity: 0; }
         }
 
-        /* 2. 外掛發光圈 (獨立於卡片之外) */
+		/* 2. 外掛發光圈 (獨立於卡片之外) - 絕對尺寸版 */
         .ace-external-ring {
             position: fixed !important;
             z-index: 4000 !important;
@@ -1615,7 +1615,16 @@
             background: transparent;
             border-radius: 4px;
             
-            /* 第一階段：漸進發光 (0.7秒) */
+            /* 讓邊框算在尺寸內，避免外擴 */
+            box-sizing: border-box; 
+
+            /* 讀取 JS 算好的絕對座標與尺寸 */
+            top: var(--y);
+            left: var(--x);
+            width: var(--w);
+            height: var(--h);
+
+            /* 動畫設定 */
             animation: ace-ring-power-up 0.7s linear forwards;
         }
 
@@ -1625,13 +1634,12 @@
             animation: ace-ring-power-down 0.7s linear forwards;
         }
 
-        /* 發光動畫 (Up) */
-        /* 發光動畫 (Up) - 修正版 */
+		/* 發光動畫 (Up) - 移除複雜 Scale 計算 */
         @keyframes ace-ring-power-up {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
                 border: 2px solid rgba(255, 215, 0, 0);
-                /* 關鍵：先置中 (-50%), 再旋轉 (var), 最後縮放 */
+                /* 基礎：置中 + 旋轉 + 原始大小(1) */
                 transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
             }
             30% {
@@ -1647,7 +1655,7 @@
             100% {
                 box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
                 border: 4px solid gold;
-                /* 最終稍微放大一點 */
+                /* 最終稍微放大 5% 營造爆發感 */
                 transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
             }
         }
@@ -5056,46 +5064,49 @@
         }
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (橫置修正版) ---
+	// --- [獨立光圈版] 王牌特效函式 (精準定位修正版) ---
+// --- [獨立光圈版] 王牌特效函式 (視覺逆推修正版) ---
     function triggerAceAnimation(cardId) {
         const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
         if (!originalEl) return;
 
         // 階段 0: 等待卡片移動就位
         setTimeout(() => {
-            
-            // 1. 取得卡片視覺邊界
+            // 1. 取得卡片當前在螢幕上的「實際視覺範圍」
             const rect = originalEl.getBoundingClientRect();
-
+            
             // 2. 創建光圈
             const ring = document.createElement('div');
             ring.className = 'ace-external-ring';
             
-            // 3. 計算中心點 (Center Alignment)
-            // 這是確保手機版/縮放時位置準確的關鍵
+            // 3. 計算絕對中心點 (Center Alignment)
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
 
-            ring.style.left = centerX + 'px';
-            ring.style.top = centerY + 'px';
-            
             // 4. 取得旋轉角度
             let rotation = 0;
             const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
             if (match) rotation = parseFloat(match[1]);
 
-            // 5. [關鍵修正 1] 寫入 CSS 變數
-            // 讓 CSS 動畫知道現在是幾度
-            ring.style.setProperty('--rot', rotation + 'deg');
-
-            // 6. [關鍵修正 2] 寬高智慧互換
-            // 如果卡片是橫的(轉了90度)，rect 是「寬>高」。
-            // 但光圈元素的原始狀態(未旋轉前)應該是「窄長」的，這樣旋轉後才會變「寬扁」。
-            // 所以當檢測到橫置時，我們要把抓到的寬高對調賦值。
-            const isRotated90 = Math.abs(rotation % 180) > 45; 
+            // 5. [核心修正] 智慧尺寸適配
+            // 我們不再計算縮放比例 (Scale)，而是直接使用 rect 的寬高
+            // 這樣可以確保光框的像素大小跟螢幕上看到的卡片一模一樣
             
-            ring.style.width = (isRotated90 ? rect.height : rect.width) + 'px';
-            ring.style.height = (isRotated90 ? rect.width : rect.height) + 'px';
+            const isRotated90 = Math.abs(rotation % 180) > 45;
+
+            // 如果卡片轉了 90 度：
+            // 螢幕上的 rect.width (寬) 其實對應卡片本體的高度
+            // 螢幕上的 rect.height (高) 其實對應卡片本體的寬度
+            // 所以我們要「反向」設定給光框，這樣光框旋轉 90 度後才會吻合
+            const targetW = isRotated90 ? rect.height : rect.width;
+            const targetH = isRotated90 ? rect.width : rect.height;
+
+            // 6. 設定 CSS 變數 (直接傳入像素值)
+            ring.style.setProperty('--x', centerX + 'px');
+            ring.style.setProperty('--y', centerY + 'px');
+            ring.style.setProperty('--w', targetW + 'px');
+            ring.style.setProperty('--h', targetH + 'px');
+            ring.style.setProperty('--rot', rotation + 'deg');
 
             // 7. 加入畫面
             document.body.appendChild(ring);
@@ -5108,10 +5119,12 @@
                     void flashLayer.offsetWidth; 
                     flashLayer.classList.add('anim-flash-white');
                 }
+                
                 // 階段 3: 移除光圈
                 setTimeout(() => {
                     if (ring.parentNode) ring.parentNode.removeChild(ring);
                 }, 250); 
+
             }, 700); 
 
         }, 400); 
