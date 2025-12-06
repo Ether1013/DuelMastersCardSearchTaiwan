@@ -5525,6 +5525,8 @@
             }
         }
 
+        // ... (在 renderUI 函式尾端，原本的 requestAnimationFrame 區塊) ...
+
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
             
@@ -5544,111 +5546,96 @@
                     const deltaX = start.left - last.left;
                     const deltaY = start.top - last.top;
                     
-                    // ... (這是 renderUI 函式後半段的動畫處理邏輯) ...
+                    // 只有當位置真的有變動時才執行動畫
+                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                        const cardData = state.cards.find(c => c.id == id);
+                        const rotation = cardData ? cardData.rotation : 0;
+                        const isAbility = cardData && cardData.zone.includes('ability');
 
-					// 只有當位置真的有變動時才執行動畫
-					if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-						const cardData = state.cards.find(c => c.id == id);
-						const rotation = cardData ? cardData.rotation : 0;
-						const isAbility = cardData && cardData.zone.includes('ability');
+                        if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
+                             // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
+                        } else {
+                            // 1. 第一步：瞬間移動回起點 (Transition None)
+                            cardEl.style.transition = 'none';
+                            cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+                            
+                            // [關鍵修正 1] 強制瀏覽器立刻計算一次佈局 (Reflow)
+                            // 這行程式碼讀取 offsetWidth 會強迫手機瀏覽器 "現在" 就承認上面的位置
+                            // 這是解決手機版動畫「整坨一起飛」或「沒有延遲」最重要的一步
+                            void cardEl.offsetWidth; 
 
-						if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
-								// puzzle 卡片通常是跟隨移動，暫不處理個別動畫
-						} else {
-							// 1. 第一步：瞬間移動回起點 (Transition None)
-							cardEl.style.transition = 'none';
-							cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
-							
-							// [關鍵修正] 強制瀏覽器立刻計算一次佈局 (Reflow)
-							// 這行程式碼看起來沒做什麼，但讀取 offsetWidth 會強迫瀏覽器 "現在" 就把上面的 style 畫出來
-							// 這是解決手機版動畫失效最重要的一步
-							void cardEl.offsetWidth; 
+                            // 2. 第二步：在下一幀執行移動動畫
+                            // [關鍵修正 2] 使用雙重 rAF，確保動畫指令在「下一幀」才執行，防止被合併
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    const flyTime = 0.5; // 統一飛行 0.5秒
+                                    
+                                    let duration = `${flyTime}s`;
+                                    let delay = '0s';
+                                    // 使用 ease-out 讓結尾減速，看起來較自然
+                                    let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)'; 
 
-							// 2. 第二步：在下一幀執行移動動畫 (使用雙重 rAF 確保手機版穩定)
-							requestAnimationFrame(() => {
-								requestAnimationFrame(() => {
-									// 統一設定：飛行 0.5秒
-									const flyTime = 0.5; 
-									let duration = `${flyTime}s`;
-									let delay = '0s';
-									let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+                                    // --- 修正後的延遲計算邏輯 ---
+                                    // 檢查這張卡片是否在當前的移動清單中
+                                    const moveIndex = movingCardIds.findIndex(mid => mid == id);
 
-									// 檢查這張卡片是否在當前的移動清單中
-									const moveIndex = movingCardIds.findIndex(mid => mid == id);
+                                    if (moveIndex !== -1) {
+                                        const totalCards = movingCardIds.length;
+                                        
+                                        if (totalCards > 1) {
+                                            // [關鍵修正 3] 固定間隔 0.2秒 (200ms)
+                                            // 原本是 flyTime * 0.2 (=0.1s)，手機上太快看不出來
+                                            // 改成 0.2s 讓節奏感更強
+                                            let interval = 0.2;
+                                            
+                                            // 防呆：如果一次移動超多張 (>10張)，稍微縮短間隔以免拖太久
+                                            if (totalCards > 10) {
+                                                interval = 2.0 / totalCards; 
+                                            }
+                                            
+                                            delay = `${moveIndex * interval}s`;
+                                        }
+                                    }
+                                    // -------------------------------
 
-									if (moveIndex !== -1) {
-										const totalCards = movingCardIds.length;
-										
-										if (totalCards > 1) {
-											// [修正] 固定間隔 0.2秒 (200ms)，讓順序感更強烈
-											let interval = 0.2;
-											
-											// 防呆：如果卡片太多(>10張)，稍微縮短間隔以免拖太久
-											if (totalCards > 10) {
-												interval = 2.0 / totalCards; // 最多只花 2秒發完
-											}
-											
-											delay = `${moveIndex * interval}s`;
-										}
-									}
-
-									// 3. 設定終點與轉場效果
-									cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
-									cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
-								});
-							});
-						}
-					}
-	// ...
+                                    cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
+                                    cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+                                });
+                            });
+                        }
+                    }
                 }
             });
-			
+            
             lastRenderedState = cloneState(state);
 
-            // [新增] 王牌進場特效觸發檢查
-            // 檢查當前這一步 (currentIndex) 是否有移動操作
+            // [王牌特效] 保持原本邏輯 ...
             if (currentIndex >= 0 && history[currentIndex]) {
                 const action = history[currentIndex].action;
-                
-                // 1. 找出這一步驟中「所有」的移動操作，而不只是第一個
                 const moveOps = action.operations.filter(o => o.type === 'MOVE');
-                
                 let foundAceEntry = false;
 
-                // 2. 遍歷所有移動操作，檢查是否有王牌進入戰鬥區
                 for (const op of moveOps) {
                     if (op.toZone && op.toZone.includes('battle')) {
-                        // 使用寬鬆比對 (==) 避免 ID 型態 (字串/數字) 不符的問題
                         const aceId = op.cardIds.find(id => globalAceRegistry[id]);
-                        
                         if (aceId) {
-                            // 只有當這一步還沒播放過動畫時，才觸發
                             if (currentIndex !== lastAnimatedStep) {
-                                console.log("觸發王牌特效 ID:", aceId); // 除錯用
                                 triggerAceAnimation(aceId);
                                 foundAceEntry = true;
                             }
-                            // 只要找到一張王牌進場就不再繼續找 (避免同一步多張王牌時重複觸發)
                             break;
                         }
                     }
                 }
-
-                // 3. 更新動畫步數紀錄
-                // 無論有沒有觸發特效，只要檢查過這一步，就更新 lastAnimatedStep
-                // 這樣可以避免重複觸發，也能確保沒特效的步驟被正確標記為「已讀」
                 if (currentIndex !== lastAnimatedStep) {
                     lastAnimatedStep = currentIndex;
                 }
             }
         });
-		
-		updateSliderUI();
-		
-		// [新增] 檢查手機版音樂按鈕可見性
-		checkMobileMusicButtonVisibility(); // <--- 加入這行
+        
+        updateSliderUI();
+        checkMobileMusicButtonVisibility();
 
-		// [修改] 增加 !skipScroll 判斷，手動點擊時不捲動
         if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
              scrollToActiveStep();
         }
