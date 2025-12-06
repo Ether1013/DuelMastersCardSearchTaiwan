@@ -1787,6 +1787,34 @@
             display: flex; justify-content: center; align-items: center;
         }
         .mobile-btn:active { transform: scale(0.95); }
+		
+		/* [新增] Play 按鈕發光引導動畫 (Pulse Effect) */
+        @keyframes play-btn-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7);
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(241, 196, 15, 0);
+                transform: scale(1.1);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(241, 196, 15, 0);
+                transform: scale(1);
+            }
+        }
+
+        /* 套用在按鈕上的 class */
+        .btn-highlight {
+            animation: play-btn-pulse 2s infinite;
+            background: #f39c12 !important; /* 讓底色稍微亮一點 */
+            border-color: #f1c40f !important;
+            font-weight: bold;
+            z-index: 3005 !important; /* 確保在最上層 */
+        }
     </style>
 </head>
 <body>
@@ -2128,6 +2156,7 @@
         <option value="0.5">🐇 2.0x</option>
         <option value="0.25">⚡ 4.0x</option>
     </select>
+	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()" style="margin-left: 5px; margin-right: 5px;">🔊</button>
     <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback()" style="margin-right:5px;">⏹</button>
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
 </div>
@@ -6161,7 +6190,9 @@
                     console.log("Audio unlock attempt", e);
                 });
             }
-
+			
+			removePlayHighlight();
+			
             if (currentIndex >= history.length - 1) {
                 currentIndex = -1; // 從頭開始
             }
@@ -6193,6 +6224,55 @@
             // 開始跑下一步
             playNextStep();
             updatePlayButtonUI();
+        }
+    }
+	
+	// --- [新增] 手機版靜音切換 ---
+    function toggleMute() {
+        // 1. 切換 Audio 物件的靜音狀態
+        globalAudioPlayer.muted = !globalAudioPlayer.muted;
+        
+        // 2. 更新按鈕外觀
+        updateMuteButtonUI();
+    }
+
+    function updateMuteButtonUI() {
+        const btn = document.getElementById('mob-mute-btn');
+        if (!btn) return;
+
+        const isMuted = globalAudioPlayer.muted;
+        
+        if (isMuted) {
+            btn.innerText = "🔇";
+            // 靜音時按鈕變紅，提示比較明顯
+            btn.style.borderColor = "#e74c3c";
+            btn.style.color = "#e74c3c";
+        } else {
+            btn.innerText = "🔊";
+            // 回復原本樣式
+            btn.style.borderColor = "white";
+            btn.style.color = "white";
+        }
+    }
+	
+	// --- [新增] Play 鍵發光引導邏輯 ---
+    function checkFirstTimePlayHighlight() {
+        // 使用 localStorage 記錄使用者是否曾經按過播放
+        // 如果沒有紀錄 (null)，代表是第一次
+        const hasPlayed = localStorage.getItem('dm_has_played_mobile');
+        
+        if (!hasPlayed) {
+            const btn = document.getElementById('mob-play-btn');
+            if (btn) btn.classList.add('btn-highlight');
+        }
+    }
+
+    function removePlayHighlight() {
+        const btn = document.getElementById('mob-play-btn');
+        if (btn && btn.classList.contains('btn-highlight')) {
+            btn.classList.remove('btn-highlight');
+            // 寫入紀錄，下次進來就不會再閃了
+            localStorage.setItem('dm_has_played_mobile', 'true');
         }
     }
 
@@ -6629,24 +6709,41 @@
 
 	function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
+        const controls = document.getElementById('mobile-controls'); // 取得控制面板
         const playBtn = document.getElementById('mob-play-btn');
         
         // 判斷是否為橫向
         const isLandscape = window.innerWidth > window.innerHeight;
 
         if (isLandscape) {
+            // [橫向模式]
             overlay.style.display = 'none';
-            if (!playInterval) togglePlay();
             
-            // --- 關鍵修改：執行自動縮放 ---
-            setTimeout(autoScaleBoard, 100); // 延遲一下等待瀏覽器轉向完成
-            // ---------------------------
+            // [修正 2] 強制顯示控制面板
+            if (controls) controls.style.display = 'flex';
+
+            // [修正 1] 移除這裡的 togglePlay()，不再自動播放
+            // if (!playInterval) togglePlay(); <--- 這一行刪除了
+            
+            // 執行自動縮放
+            setTimeout(autoScaleBoard, 100); 
+            
+            // [新增] 檢查是否為初次進入，如果是，給 Play 鍵加上發光特效
+            checkFirstTimePlayHighlight();
+
         } else {
+            // [直向模式]
             overlay.style.display = 'flex';
-            if (playInterval) togglePlay();
+            
+            // [修正 2] 強制隱藏控制面板 (避免浮在遮罩上面)
+            if (controls) controls.style.display = 'none';
+
+            // 直向時如果正在播，先暫停 (可選，視需求而定)
+            if (playTimeout) togglePlay();
         }
         
-        if (playBtn) playBtn.innerText = playInterval ? "⏸" : "▶";
+        // 更新按鈕圖示
+        if (playBtn) playBtn.innerText = playTimeout ? "⏸" : "▶";
     }
 
     function autoScaleBoard() {
@@ -6743,6 +6840,8 @@
                 // 情境 B: 手機且有參數 -> 進入觀戰模式
                 initMobileMode(scriptUrl);
             }
+			
+			updateMuteButtonUI();
         } else {
             // --- 電腦版邏輯 (維持原樣) ---
             const hasLocalData = loadFromStorage();
