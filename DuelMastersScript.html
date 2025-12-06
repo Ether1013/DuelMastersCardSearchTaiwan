@@ -1726,6 +1726,26 @@
             100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
         }
 		
+		/* [新增] 王牌按鈕啟用狀態 (亮金色) */
+		#btn-ace.active {
+			background: #f1c40f !important;
+			border-color: #f39c12 !important;
+			color: #2c3e50 !important;
+			font-weight: bold;
+			box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+		}
+
+		/* [新增] 移除原本的集氣動畫與 SVG 樣式 (因為長按改成多選了) */
+		.ace-loader-svg, .charging .ace-loader-rect {
+			display: none !important;
+		}
+
+		/* 確保星星還是看得到，但滑鼠游標改回預設 (因為不能點了) */
+		.ace-star-mark {
+			cursor: default !important;
+			pointer-events: none !important; /* 讓點擊穿透星星選到卡片 */
+		}
+		
     </style>
 </head>
 <body>
@@ -1741,7 +1761,6 @@
 
     <button onclick="openSetupModal()" data-i18n="btn_setup">Setup / Clear</button>
 	<button onclick="actionDrawCard()" style="background:#2980b9; border-color:#2471a3;" data-i18n="btn_draw">🎴 抽牌 (Draw)</button>
-	<button id="btn-multi-move" onclick="toggleMultiSelectMode()" style="background:#27ae60; border-color:#2ecc71;" data-i18n="btn_multi_move">📚 移動多張...</button>
     <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
     <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
     <button onclick="resetBoard(1)" title="重置 P1 盤面" data-i18n="btn_p1_reset">P1 重置</button>
@@ -1905,6 +1924,7 @@
     <button id="btn-rotate-l" onclick="rotateCard(-90)">↶</button>
     <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
     <button id="btn-flip" onclick="flipCard()" data-i18n="act_flip">翻面</button>
+	<button id="btn-ace" onclick="toggleAceFromPanel()" data-i18n="act_ace">👑 王牌</button>
 	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
     <button id="btn-clear-injured" style="display:none; background:#27ae60; border-color:#2ecc71;" onclick="clearInjured()" data-i18n="act_clear_injured">❤️ 治癒</button>
 	<button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
@@ -1937,6 +1957,12 @@
     <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
     <button id="btn-delete-card" class="danger" style="display:none;" onclick="deleteSelectedCard()" data-i18n="act_delete">🗑️ 刪除</button>
     <button class="danger" onclick="cancelSelection()">✕ (ESC)</button>
+</div>
+
+<div id="multi-select-bar" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(44, 62, 80, 0.9); padding:10px 20px; border-radius:30px; color:white; font-weight:bold; z-index:2000; box-shadow:0 4px 15px rgba(0,0,0,0.3); align-items:center; gap:10px;">
+    <span>📚 多選模式: <span id="multi-count-val">0</span> 張</span>
+    <span style="font-size:0.8rem; opacity:0.8;">(點擊區域移動 / ESC取消)</span>
+    <button onclick="cancelSelection()" style="background:#c0392b; border:none; padding:2px 8px; border-radius:10px; font-size:0.8rem; cursor:pointer;">✕</button>
 </div>
 
 <div id="setup-modal" class="modal">
@@ -4367,6 +4393,21 @@
     function isStackZone(zid) {
         return zid.includes('deck') || zid.includes('shield') || zid.includes('hyper');
     }
+	
+	// [新增] 從面板切換王牌狀態
+    function toggleAceFromPanel() {
+        if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+        
+        const cardId = pendingMove.cardIds[0];
+        // 檢查目前是否已經是 Ace
+        const isAce = !!globalAceRegistry[cardId];
+        
+        // 切換狀態 (toggle)
+        toggleAceSilent(cardId, !isAce);
+        
+        // 更新按鈕外觀
+        updateSelectionUI();
+    }
 
 	// --- [新增] 多重選取模式切換 ---
     function toggleMultiSelectMode() {
@@ -4417,13 +4458,23 @@
 		// [新增] 多重選取模式邏輯
         if (isMultiSelectMode) {
             const index = multiSelectedIds.indexOf(cardId);
+			const el = document.querySelector(`.card[data-id="${cardId}"]`);
             if (index > -1) {
-                multiSelectedIds.splice(index, 1); // 取消勾選
+                // 取消勾選
+                multiSelectedIds.splice(index, 1);
+                if (el) el.classList.remove('multi-selected');
+                
+                // [新增] 如果減到 0 張，自動退出模式
+                if (multiSelectedIds.length === 0) {
+                    cancelSelection(); // 這會重置 isMultiSelectMode
+                    return;
+                }
             } else {
-                multiSelectedIds.push(cardId); // 加入勾選
+                // 加入勾選
+                multiSelectedIds.push(cardId);
+                if (el) el.classList.add('multi-selected');
             }
             // 為了效能，我們只更新這張卡片的 class，不重繪整個 UI
-            const el = document.querySelector(`.card[data-id="${cardId}"]`);
             if (el) {
                 el.classList.toggle('multi-selected');
             }
@@ -4459,11 +4510,12 @@
         
         // 單純選取，不執行任何動作
         if (!pendingMove) {
-            pendingMove = { cardIds: [cardId], shuffle: false };
+            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
         } else {
             pendingMove.cardIds.push(cardId);
         }
         updateSelectionUI();
+		return;
     }
 
     function openStackingModal(targetCard) {
@@ -4483,7 +4535,20 @@
     }
 
     function updateSelectionUI() {
+	
         document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
+        
+        // [新增] 同步更新多選提示列
+        const multiBar = document.getElementById('multi-select-bar');
+        const multiCount = document.getElementById('multi-count-val');
+        if (isMultiSelectMode) {
+            multiBar.style.display = 'flex';
+            multiCount.innerText = multiSelectedIds.length;
+            // 多選模式下隱藏單卡操作面板
+            document.getElementById('card-action-panel').style.display = 'none';
+        } else {
+            multiBar.style.display = 'none';
+        }
         
         if (pendingMove && pendingMove.cardIds.length > 0) {
             const state = getCurrentDisplayState();
@@ -4494,7 +4559,7 @@
 			// --- [修改] 檢查是否為戰鬥或護盾區，以及是否有受傷的卡片 ---
 			let isBattleOrShield = true;
 			let hasInjuredCard = false; // [新增] 檢查是否有卡片處於受傷狀態
-
+			
 			pendingMove.cardIds.forEach(id => {
 				const c = state.cards.find(card => card.id === id);
 				if (!c) return;
@@ -4512,6 +4577,23 @@
 			// [新增] 顯示「治癒」按鈕 (在正確區域 且 選擇的卡片中至少有一張是受傷的)
 			document.getElementById('btn-clear-injured').style.display = (isBattleOrShield && hasInjuredCard) ? 'block' : 'none';            // ------------------------------------
             
+			
+			// [新增] 王牌按鈕狀態更新
+            const btnAce = document.getElementById('btn-ace');
+			if (pendingMove.cardIds.length === 1) {
+                btnAce.style.display = 'block'; // 顯示按鈕
+                const cid = pendingMove.cardIds[0];
+                if (globalAceRegistry[cid]) {
+                    btnAce.classList.add('active'); // 亮起
+                    btnAce.innerText = "👑 取消王牌";
+                } else {
+                    btnAce.classList.remove('active'); // 熄滅
+                    btnAce.innerText = "👑 設為王牌";
+                }
+            } else {
+                btnAce.style.display = 'none'; // 多選或無選取時隱藏
+            }
+			
             // UI Filtering Logic (Req 6)
             document.getElementById('btn-delete-card').style.display = (allAbility || allRevealed) ? 'block' : 'none';
             document.getElementById('btn-point').style.display = 'block';
@@ -4542,21 +4624,32 @@
             // Hide standard move buttons if Ability card (can't move them)
             // Note: The UI panel buttons are mostly actions, move happens by clicking zones.
             // We handled zone click prevention in handleZoneClick.
-
-            const panel = document.getElementById('card-action-panel');
-            panel.style.display = 'flex';
-            
-            if (pendingMove.cardIds.length === 1 && firstCard) {
-                document.getElementById('rename-input').value = firstCard.text;
-                document.getElementById('note-input').value = firstCard.note || "";
+			// 確保多選模式下不顯示單卡面板 (重複確認)
+            if (!isMultiSelectMode) {
+                document.getElementById('card-action-panel').style.display = 'flex';
+				if (pendingMove.cardIds.length === 1 && firstCard) {
+					document.getElementById('rename-input').value = firstCard.text;
+					document.getElementById('note-input').value = firstCard.note || "";
+				} else {
+					document.getElementById('rename-input').value = '';
+					document.getElementById('note-input').value = '';
+				}
+                document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
             } else {
-                document.getElementById('rename-input').value = '';
-                document.getElementById('note-input').value = '';
+                // 多選模式下，只高亮區域，不顯示面板
+                 document.getElementById('card-action-panel').style.display = 'none';
+                 document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
             }
+            
             
             document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
         } else {
             document.getElementById('card-action-panel').style.display = 'none';
+        }
+		
+		// 確保沒選牌時也要清除樣式
+        if (!pendingMove) {
+             document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
         }
         
         renderUI(); 
@@ -4932,24 +5025,24 @@
         }
         // ------------------------------
 
+		// --- [修改] 取得當前步驟的移動卡片 (通用化) ---
+        // 原本只檢查 reveal-zone，現在改為抓取任何 MOVE 操作
+        let movingCardIds = [];
+
+        // 只有在播放或重繪當下，檢查當前 Action
+        if (currentIndex >= 0 && history[currentIndex]) {
+            const action = history[currentIndex].action;
+            // 找出這一步驟中的移動操作 (MOVE)
+            const moveOp = action.operations.find(o => o.type === 'MOVE');
+            if (moveOp) {
+                // 記錄正在移動的卡片 ID 列表 (已有順序)
+                movingCardIds = moveOp.cardIds;
+            }
+        }
+
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
             
-            // [新增] 檢查是否為「移動到展示區」的操作
-            let isRevealMove = false;
-            let revealCardIds = [];
-
-            // 只有在播放或重繪當下，檢查當前 Action
-            if (currentIndex >= 0 && history[currentIndex]) {
-                const action = history[currentIndex].action;
-                const moveOp = action.operations.find(o => o.type === 'MOVE' && o.toZone === 'reveal-zone');
-                if (moveOp) {
-                    isRevealMove = true;
-                    // 注意：如果是多張移動，cardIds 陣列是有順序的
-                    revealCardIds = moveOp.cardIds;
-                }
-            }
-
             Object.keys(lastPositions).forEach(id => {
                 if (id.startsWith('ZONE_')) return;
                 const cardEl = document.querySelector(`.card[data-id="${id}"]`);
@@ -4966,13 +5059,14 @@
                     const deltaX = start.left - last.left;
                     const deltaY = start.top - last.top;
                     
+                    // 只有當位置真的有變動時才執行動畫
                     if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                         const cardData = state.cards.find(c => c.id == id);
                         const rotation = cardData ? cardData.rotation : 0;
                         const isAbility = cardData && cardData.zone.includes('ability');
 
                         if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
-                             // skip
+                             // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
                         } else {
                             // 1. 先瞬間移動回起點 (保持在原區域的位置)
                             cardEl.style.transition = 'none';
@@ -4980,35 +5074,38 @@
                             
                             // 2. 下一幀執行移動動畫
                             requestAnimationFrame(() => {
-                                // [設定] 單張卡片的飛行時間 (秒)
-                                // 您可以調整這個數值，0.5 = 半秒鐘飛到定位
-                                const flyTime = 0.5; 
+                                const flyTime = 0.5; // 單張飛行時間 0.5秒
                                 
                                 let duration = `${flyTime}s`;
                                 let delay = '0s';
-                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)'; // 舒緩曲線
+                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
 
-                                // [新增] 展示區特殊動畫邏輯 (重疊飛入)
-                                if (isRevealMove && revealCardIds.includes(parseInt(id))) {
-                                    const totalCards = revealCardIds.length;
-                                    const orderIndex = revealCardIds.indexOf(parseInt(id));
+                                // --- [核心修改] 通用序列動畫邏輯 ---
+                                // 檢查這張卡片是否在當前的移動清單中
+                                // 使用 loose equality (==) 避免字串/數字型別問題
+                                const moveIndex = movingCardIds.findIndex(mid => mid == id);
+
+                                if (moveIndex !== -1) {
+                                    const totalCards = movingCardIds.length;
                                     
-                                    // 核心演算法：
-                                    // 1. 基本間隔 = 飛行時間的 20% (0.2)
-                                    //    這樣當第一張飛了 20% 距離時，第二張就會出發
-                                    let interval = flyTime * 0.2;
-                                    
-                                    // 2. [防呆機制] 如果卡片超級多 (例如 40張)，為了不讓總時間拖太長
-                                    //    我們限制「總發牌間隔」最多 2.5 秒
-                                    //    如果 40 張，間隔就會自動被壓縮得更小 (變成機關槍射速)
-                                    const maxTotalLag = 2.5;
-                                    interval = Math.min(interval, maxTotalLag / Math.max(1, totalCards));
-                                    
-                                    // 計算這張卡的延遲出發時間
-                                    delay = `${orderIndex * interval}s`;
+                                    // 如果只有一張牌，就不需要延遲
+                                    if (totalCards > 1) {
+                                        // 演算法：每張牌間隔飛行時間的 20%
+                                        let interval = flyTime * 0.2;
+                                        
+                                        // 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
+                                        // 這樣會變成機關槍式的快速發牌，而不是慢慢發
+                                        const maxTotalLag = 1.5;
+                                        if ((interval * totalCards) > maxTotalLag) {
+                                            interval = maxTotalLag / totalCards;
+                                        }
+                                        
+                                        // 設定延遲：第 N 張牌延遲 N * interval 秒
+                                        delay = `${moveIndex * interval}s`;
+                                    }
                                 }
+                                // -------------------------------
 
-                                // 套用動畫
                                 cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
                                 cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
                             });
@@ -5150,29 +5247,15 @@
 		
 		// [新增] 1. 插入集氣用的 SVG (長按時顯示)
 		// viewBox 設為 0 0 50 70 (配合 CSS var --card-width/height)
-		el.innerHTML = `
-			<svg class="ace-loader-svg" viewBox="-2 -2 54 74">
-				<rect class="ace-loader-rect" x="0" y="0" width="50" height="70" rx="3" ry="3" />
-			</svg>
-		`;
-
-		// 修改為：
-		const isAce = !!globalAceRegistry[card.id]; // 檢查全域註冊表
-
-		if (isAce) {
-			const star = document.createElement('div');
-			star.className = 'ace-star-mark';
-			star.innerText = '★';
-			star.title = "取消王牌 (Unset Ace)";
-			
-			// 點擊事件也要記得改用 Silent 版本
-			star.onpointerdown = (e) => {
-				e.stopPropagation();
-				toggleAceSilent(card.id, false);
-			};
-			
-			el.appendChild(star);
-		}
+		// [修改] 王牌星星 (移除點擊事件，純展示)
+        const isAce = !!globalAceRegistry[card.id];
+        if (isAce) {
+            const star = document.createElement('div');
+            star.className = 'ace-star-mark';
+            star.innerText = '★';
+            // 移除 onclick / onpointerdown，讓事件穿透到卡片本身
+            el.appendChild(star);
+        }
 
 		// [原有邏輯] 受傷效果 (claw)
 		if (card.isInjured) {
@@ -5257,47 +5340,32 @@
 			el.appendChild(contentDiv);
 		}
 		
-		// [新增] 3. 長按觸發邏輯 (Long Press Logic)
-		// 只有在「戰鬥區 (Battle)」的卡片才允許長按設定王牌
-		if (card.zone.includes('battle')) {
-			let pressTimer = null; // 0.3s 等待計時器
-			let fillTimer = null;  // 0.7s 動畫計時器
+		let pressTimer = null;
+		const startPress = (e) => {
+            // 只接受左鍵
+            if (e.button !== 0) return;
+            
+            // 如果已經在多選模式，就不需要長按邏輯了，直接交給 click 處理
+            if (isMultiSelectMode) return;
 
-			const cancelPress = () => {
-				if (pressTimer) clearTimeout(pressTimer);
-				if (fillTimer) clearTimeout(fillTimer);
-				el.classList.remove('charging'); // 移除 CSS 動畫類別
-			};
+            pressTimer = setTimeout(() => {
+                // 1秒後觸發
+                // 強制進入多選模式，並將此卡加入選擇
+                enterMultiSelectModeByCard(card.id);
+                
+                // 手機震動回饋
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 1000); // 1秒
+        };
 
-			el.onpointerdown = (e) => {
-				// 如果是右鍵或多點觸控，忽略
-				if (e.button !== 0) return;
-				
-				// 1. 按下：開始 0.3s 計時
-				pressTimer = setTimeout(() => {
-					// 0.3s 到了，開始集氣動畫
-					el.classList.add('charging');
-					
-					// 2. 再等 0.7s (動畫跑完)
-					fillTimer = setTimeout(() => {
-						// 動畫完成：設定為王牌！
-						toggleAceSilent(card.id, true);
-						el.classList.remove('charging');
-						
-						// 手機震動回饋 (如果支援)
-						if (navigator.vibrate) navigator.vibrate(50);
-					}, 700);
-					
-				}, 300); // 前置等待 0.3s
-				
-				// 重要：不阻止事件冒泡，因為還要讓 handleCardSingleClick 運作(選取卡片)
-				// 但如果觸發了長按，我們可能希望取消選取... 這邊先保持並行
-			};
+        const cancelPress = () => {
+            if (pressTimer) clearTimeout(pressTimer);
+        };
 
-			el.onpointerup = cancelPress;
-			el.onpointerleave = cancelPress;
-			el.onpointercancel = cancelPress;
-		}
+        el.onpointerdown = startPress;
+        el.onpointerup = cancelPress;
+        el.onpointerleave = cancelPress;
+        el.onpointercancel = cancelPress;
 
 		// [原有邏輯] 點擊事件
 		const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
@@ -5310,6 +5378,119 @@
 		setTimeout(() => el.classList.add('interactive'), 0);
 		return el;
 	}
+	
+	// [新增] 透過長按卡片進入多選模式
+    function enterMultiSelectModeByCard(cardId) {
+        if (isMultiSelectMode) return; // 已經是就不重複觸發
+        
+        // 切換模式標記
+        isMultiSelectMode = true;
+        multiSelectedIds = [cardId]; // 初始選中這張
+        
+        // 設定 pendingMove 讓系統知道有牌被選了 (以便點擊區域時觸發移動)
+        pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
+        
+        // 更新 UI (顯示勾勾、隱藏單卡面板、顯示多選提示列)
+        const el = document.querySelector(`.card[data-id="${cardId}"]`);
+        if (el) el.classList.add('multi-selected');
+        
+        updateSelectionUI();
+    }
+
+    // [修改] 點擊卡片處理 (加入歸零自動退出邏輯)
+    // [修正] 點擊卡片處理
+    function handleCardSingleClick(e, cardId) {
+        e.stopPropagation(); 
+        
+        // 1. 多重選取模式邏輯 (保持不變)
+        if (isMultiSelectMode) {
+            const index = multiSelectedIds.indexOf(cardId);
+            const el = document.querySelector(`.card[data-id="${cardId}"]`);
+            
+            if (index > -1) {
+                // 取消勾選
+                multiSelectedIds.splice(index, 1);
+                if (el) el.classList.remove('multi-selected');
+                
+                // 如果減到 0 張，自動退出模式
+                if (multiSelectedIds.length === 0) {
+                    cancelSelection(); 
+                    return;
+                }
+            } else {
+                // 加入勾選
+                multiSelectedIds.push(cardId);
+                if (el) el.classList.add('multi-selected');
+            }
+            
+            // 更新 pendingMove 內容
+            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
+            updateSelectionUI();
+            return;
+        }
+
+        // 2. 指向模式邏輯 (保持不變)
+        if (isPointing) {
+            handlePointClick(null, cardId);
+            return;
+        }
+
+        // 3. 已有選取時的邏輯 (取消或堆疊)
+        if (pendingMove) {
+            // 如果點擊已選取的卡片 -> 取消選取該張
+            if (pendingMove.cardIds.includes(cardId)) {
+                 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
+                 if (pendingMove.cardIds.length === 0) {
+                     cancelSelection();
+                     return;
+                 }
+                 updateSelectionUI();
+                 return;
+            }
+            
+            const state = getCurrentDisplayState();
+            const targetCard = state.cards.find(c => c.id === cardId);
+            
+            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
+            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
+                openStackingModal(targetCard);
+                return;
+            }
+        }
+        
+        // 4. [關鍵修正] 單純選取 (Fresh Selection)
+        if (!pendingMove) {
+            // 錯誤原因：原本寫成 pendingMove = { cardIds: [...multiSelectedIds] ... }
+            // 因為此時不在多選模式，multiSelectedIds 是空的，導致選到了「空牌組」，面板就不會開。
+            
+            // 修正：直接將當前點擊的這張卡 [cardId] 設為選取對象
+            pendingMove = { cardIds: [cardId], shuffle: false };
+        } else {
+            pendingMove.cardIds.push(cardId);
+        }
+        updateSelectionUI();
+		return;
+    }
+    
+    // [修改] 取消選取 (確保也會關閉多選模式)
+    function cancelSelection() {
+        // 重置多選相關變數
+        isMultiSelectMode = false;
+        multiSelectedIds = [];
+        document.querySelectorAll('.multi-selected').forEach(el => el.classList.remove('multi-selected'));
+        
+        if (pendingMove) {
+            // ... (原本的取消邏輯) ...
+            pendingMove = null;
+            document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
+            document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
+            document.getElementById('card-action-panel').style.display = 'none';
+        }
+        
+        // 隱藏多選提示列
+        const multiBar = document.getElementById('multi-select-bar');
+        if(multiBar) multiBar.style.display = 'none';
+    }
 
     function renderArrows() {
         const svg = document.getElementById('svg-layer');
