@@ -1036,7 +1036,7 @@
 			display: none; /* 由 JS 控制顯示 */
 			align-items: center;
 			justify-content: flex-end;
-			gap: 15px; 
+			gap: 8px; /* [修改] 間距稍微縮小 */
 			
 			position: fixed;
 			bottom: calc(15px + env(safe-area-inset-bottom)); 
@@ -1066,17 +1066,18 @@
 			/* ... 其他樣式保持不變 ... */
 		}
 
-		/* [新增] 手機版速度選單樣式 */
+		/* --- 移動版速度選單 (縮小版) --- */
 		#mob-speed-select {
-			height: 40px; /* 跟手機播放按鈕差不多高 */
-			border-radius: 20px; /* 圓角 */
+			height: 36px; /* [修改] 高度縮小以配合按鈕 */
+			border-radius: 18px;
 			border: 2px solid white;
 			background: rgba(44, 62, 80, 0.9);
 			color: white;
-			font-size: 0.9rem;
+			font-size: 0.85rem; /* [修改] 字體縮小 */
 			padding: 0 10px;
 			outline: none;
 			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+			text-align: center;
 		}
 
 		/* 手機版播放按鈕 (如果你還要保留這個浮動按鈕的話) */
@@ -1789,16 +1790,19 @@
 
         /* [新增] 手機版按鈕通用樣式 (確保 Stop 跟 Play 長得像) */
         .mobile-btn {
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            border: 2px solid white;
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            display: flex; justify-content: center; align-items: center;
-        }
+			width: 36px;  /* [修改] 縮小尺寸 */
+			height: 36px; /* [修改] 縮小尺寸 */
+			border-radius: 50%;
+			border: 2px solid white;
+			background: rgba(44, 62, 80, 0.9);
+			color: white;
+			font-size: 0.9rem; /* [修改] 字體縮小 */
+			cursor: pointer;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+			display: flex; justify-content: center; align-items: center;
+			padding: 0;
+			flex-shrink: 0;
+		}
         .mobile-btn:active { transform: scale(0.95); }
 		
 		/* [新增] Play 按鈕發光引導動畫 (Pulse Effect) */
@@ -5578,18 +5582,21 @@
 		const btn = document.getElementById('mob-music-btn');
 		if (!btn) return;
 
-		// 取得當前狀態的 BGM
+		// 取得當前狀態
 		const state = getCurrentDisplayState();
 		const currentBgm = state.bgm;
 
-		// [需求4] 有音樂配置才出現，無音樂則消失
+		// [修改需求 3] 當 ActionLog 設定為無音樂 (null/undefined) 時，隱藏按鈕
 		if (currentBgm) {
-			btn.style.display = 'flex';
-			updateMobileMusicUI(); // 同步目前的靜音狀態圖示
+			btn.style.display = 'flex'; // 有音樂：顯示按鈕
+			updateMobileMusicUI(); // 同步顯示靜音/播放圖示
 		} else {
-			btn.style.display = 'none';
-			// 當音樂消失時，建議將播放器暫停 (選用)
-			// globalAudioPlayer.pause(); 
+			btn.style.display = 'none'; // 無音樂：隱藏按鈕
+			
+			// [補充] 既然沒音樂，確保播放器是安靜的
+			if (!globalAudioPlayer.paused) {
+				globalAudioPlayer.pause();
+			}
 		}
 	}
 	
@@ -6200,15 +6207,17 @@
     // --- [整合版] 播放控制 (修復 iOS Safari 音樂問題) ---
     function togglePlay() {
         if (playTimeout) {
-            // --- [暫停] ---
-            clearTimeout(playTimeout);
-            playTimeout = null;
-            
-            updatePlayButtonUI();
-            document.body.classList.remove('is-playing');
-            
-            // 暫停時，音樂保持背景播放 (符合您的需求)
-            // 如果想暫停音樂可加: globalAudioPlayer.pause(); 
+            // --- [暫停邏輯] ---
+			clearTimeout(playTimeout);
+			playTimeout = null;
+			
+			updatePlayButtonUI();
+			document.body.classList.remove('is-playing');
+			
+			// [修改需求 1] 手機版暫停時，音樂也要暫停
+			if (isMobile) {
+				globalAudioPlayer.pause();
+			}
 
         } else {
             // --- [開始播放] ---
@@ -6238,6 +6247,14 @@
             
             document.body.classList.add('is-playing');
             
+			// [修改需求 1 延伸] 手機版恢復播放時，如果當前有 BGM 且不是靜音狀態，要恢復音樂
+			if (isMobile) {
+				 const state = getCurrentDisplayState();
+				 if (state.bgm && !globalAudioPlayer.muted) {
+					 globalAudioPlayer.play().catch(e => {});
+				 }
+			}
+			
             // 2. BGM 同步邏輯 (確保按下播放的瞬間音樂正確)
             let startBgm = null;
             if (currentIndex >= 0 && history[currentIndex]) {
