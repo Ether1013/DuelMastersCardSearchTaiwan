@@ -1017,7 +1017,7 @@
 			z-index: 600;
 		}
 
-		/* 4. 中間戰場：【關鍵】這裡設為 none，達成「透明擋板」效果 */
+		/* 4. 中間戰場：【解鎖】改為 auto，讓點擊事件能傳給 JS 進行攔截 */
 		body.mobile-mode #game-board-container {
 			flex: 1;
 			height: 100%;
@@ -1026,8 +1026,8 @@
 			align-items: center;
 			overflow: hidden;
 			
-			/* 這裡禁止互動！ */
-			pointer-events: none !important; 
+			/* [修改] 允許互動，這樣 JS 才能捕捉到點擊並顯示大圖 */
+			pointer-events: auto !important; 
 		}
 
 		/* --- 移動控制面板位置 (靠右下角修正版) --- */
@@ -1869,10 +1869,18 @@
         }
         */
 		
-		/* [新增] 手機版：解鎖戰場點擊 (關鍵) */
-        body.mobile-mode #game-board-container {
-            pointer-events: auto !important; 
-        }
+		/* 4. 中間戰場：【關鍵】這裡設為 none，達成「透明擋板」效果 */
+		body.mobile-mode #game-board-container {
+			flex: 1;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			overflow: hidden;
+			
+			/* 這裡禁止互動！ */
+			pointer-events: none !important; 
+		}
 
         /* [新增] 手機版：右側卡片檢視器 */
         #mobile-card-viewer {
