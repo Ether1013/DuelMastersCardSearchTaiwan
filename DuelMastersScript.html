@@ -1673,6 +1673,46 @@
             }
         }
 		
+		/* --- [新增] 多重選取模式樣式 --- */
+        
+        /* 選取時的大紅勾 */
+        .card .check-mark {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: #e74c3c;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
+            z-index: 200; /* 確保蓋在文字和圖片上 */
+            pointer-events: none;
+            display: none;
+        }
+        
+        /* 顯示紅勾 */
+        .card.multi-selected .check-mark {
+            display: block;
+        }
+        
+        /* 選取時的邊框 */
+        .card.multi-selected {
+            border: 3px solid #e74c3c !important;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        /* 按鈕啟動狀態 */
+        #btn-multi-move.active {
+            background: #e74c3c !important;
+            border-color: #c0392b !important;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+		
     </style>
 </head>
 <body>
@@ -1688,6 +1728,7 @@
 
     <button onclick="openSetupModal()" data-i18n="btn_setup">Setup / Clear</button>
 	<button onclick="actionDrawCard()" style="background:#2980b9; border-color:#2471a3;" data-i18n="btn_draw">🎴 抽牌 (Draw)</button>
+	<button id="btn-multi-move" onclick="toggleMultiSelectMode()" style="background:#27ae60; border-color:#2ecc71;" data-i18n="btn_multi_move">📚 移動多張...</button>
     <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
     <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
     <button onclick="resetBoard(1)" title="重置 P1 盤面" data-i18n="btn_p1_reset">P1 重置</button>
@@ -2161,7 +2202,7 @@
     const TRANSLATIONS = {
 		'zh': {
 			'btn_setup': 'Setup / Clear',
-			'btn_rotate': '🔄 換人 (Switch Turn)',
+			'btn_rotate': '🔄 回合結束',
 			'btn_p1_reset': 'P1 重置',
 			'btn_p2_reset': 'P2 重置',
 			'btn_p1_win': '🏆 1P Win',
@@ -2297,6 +2338,9 @@
             'lbl_p2_deck': 'P2 牌庫數:',
             'op_POINT': '指向',
             'op_ATTACK': '攻擊宣言',
+			'btn_multi_move': '📚 移動多張...',
+            'btn_multi_confirm': '❌ 取消 / ✅ 一起移動',
+            'msg_select_dest': '已選取 {n} 張卡片，請點擊「目標區域」進行移動 (若是牌庫/護盾將跳出插入選單)。',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -2345,6 +2389,9 @@
             'desc_end_reveal': 'End Reveal', 'desc_end_point': 'End Pointing', 'lbl_move': 'Move:', 'lbl_scale': 'Scale:', 'btn_remove_img_short': '✕ Img',
             'title_stack_target': 'Stacking: Target [{target}]', 'lbl_draft_warning': '⚠️ Editing... (Steps: ', 'lbl_draft_ops': ')',
             'lbl_draft_ops_prefix': 'Contains ', 'chk_propagate': '🔗 Propagate Changes',
+			'btn_multi_move': '📚 Move Multi...',
+            'btn_multi_confirm': '❌ Cancel / ✅ Move All',
+            'msg_select_dest': '{n} cards selected. Click a Destination Zone to move.',		
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -2393,6 +2440,9 @@
             'lbl_reveal_zone': '公開領域', 'lbl_action_log': '行動ログ', 'op_default': '操作', 'op_count_suffix': ' アクション',
             'desc_end_reveal': '公開終了', 'desc_end_point': '選択終了', 'lbl_move': '移動:', 'lbl_scale': '縮小/拡大:', 'btn_remove_img_short': '✕ 画像',
             'title_stack_target': 'スタック操作: 対象 [{target}]', 'op_POINT': '対象選択', 'op_ATTACK': '攻撃宣言',
+			'btn_multi_move': '📚 複数移動...',
+            'btn_multi_confirm': '❌ 取消 / ✅ 一括移動',
+            'msg_select_dest': '{n} 枚選択中。移動先のエリアをクリックしてください。',		
 		}
 	};
 
@@ -2538,6 +2588,10 @@
     let pointerId = null;
     let pointTargets = []; 
     let currentStackTargetId = null;
+	
+	// [新增] 多重選取模式變數
+    let isMultiSelectMode = false;
+    let multiSelectedIds = [];
 	
 	let lastAnimatedStep = -1; // [補上這行] 用於記錄動畫狀態，避免重複播放
 	let winOverlayTimeout = null; // [新增] 用來記錄勝利畫面的自動關閉計時器
@@ -3509,13 +3563,27 @@
 		// ----------------------
 		else if (op.type === 'MOVE') {
 			const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
-			// [修正] 寬鬆比對
+			
+            // 1. 先從狀態中找出這些卡片 (此時順序是依照原本 state 中的順序，不一定是我們想要的)
 			let movingCards = state.cards.filter(c => cardIds.some(id => id == c.id));
 			
-			if(shuffleSelection) movingCards.sort(() => Math.random() - 0.5); 
+            // [關鍵修正] 2. 依照 cardIds (指令中的順序) 對 movingCards 進行重排
+            // 這樣才能確保「左上(第一張)」就是使用者「選的第一張」(或是牌庫的最上方)
+            if (shuffleSelection) {
+                movingCards.sort(() => Math.random() - 0.5); 
+            } else {
+                movingCards.sort((a, b) => {
+                    // 使用 findIndex 確保能比對字串與數字 ID
+                    const idxA = cardIds.findIndex(id => id == a.id);
+                    const idxB = cardIds.findIndex(id => id == b.id);
+                    return idxA - idxB;
+                });
+            }
 			
-			// [修正] 寬鬆比對
+            // 3. 從原區域移除
 			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id)); 
+			
+            // 4. 設定新屬性
 			movingCards.forEach(c => {
 				c.zone = toZone;
 				c.parentId = null;
@@ -3528,6 +3596,7 @@
 				}
 			});
 
+            // 5. 放入目標區域
 			if (insertIndex !== undefined && insertIndex !== -1) {
 				let zoneCards = state.cards.filter(c => c.zone === toZone);
 				let otherCards = state.cards.filter(c => c.zone !== toZone);
@@ -3536,7 +3605,6 @@
 			} else {
 				state.cards.push(...movingCards);
 			}
-
 		} else if (op.type === 'SHUFFLE') {
 			const { zoneId, order } = op; 
 			let zoneCards = state.cards.filter(c => c.zone === zoneId);
@@ -3821,7 +3889,11 @@
         ids.sort(() => Math.random() - 0.5); 
         
         addOperation({ type: 'SHUFFLE', zoneId: zoneId, order: ids });
-        closeSelectorModal();
+        //closeSelectorModal();
+		// 稍微延遲一點點，確保 addOperation 已經更新了 history/tempState
+        setTimeout(() => {
+            openSelectorModal(zoneId);
+        }, 50);
     }
 
     function rotateCard(deg) {
@@ -4275,9 +4347,68 @@
         return zid.includes('deck') || zid.includes('shield') || zid.includes('hyper');
     }
 
+	// --- [新增] 多重選取模式切換 ---
+    function toggleMultiSelectMode() {
+        // 如果正在一般選取模式(單張)，先取消
+        if (pendingMove) cancelSelection();
+
+        isMultiSelectMode = !isMultiSelectMode;
+        const btn = document.getElementById('btn-multi-move');
+
+        if (isMultiSelectMode) {
+            // 進入模式
+            multiSelectedIds = [];
+            btn.classList.add('active');
+            // 更新按鈕文字為「取消/確認」
+            btn.innerText = t('btn_multi_confirm');
+            
+            // 為了不讓使用者混淆，可以暫時隱藏下方的 Action Panel
+            document.getElementById('card-action-panel').style.display = 'none';
+        } else {
+            // 離開模式 (或是按下確認)
+            btn.classList.remove('active');
+            btn.innerText = t('btn_multi_move'); // 改回原本文字
+
+            if (multiSelectedIds.length === 0) {
+                // 如果沒選半張，就單純取消，什麼都不做
+                renderUI(); // 清除勾勾
+                return;
+            }
+
+            // 如果有選卡片，進入「準備移動」狀態
+            // 設定 pendingMove，讓系統以為這是使用者選好的一組牌
+            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
+            
+            // 提示使用者
+            const msg = t('msg_select_dest').replace('{n}', multiSelectedIds.length);
+            alert(msg);
+            
+            // 此時 isMultiSelectMode 已經 false，但 pendingMove 有值
+            // 所以使用者的下一個點擊動作 (handleZoneClick) 就會觸發 finishMove
+            updateSelectionUI(); // 這會讓畫面上的卡片顯示選取框
+        }
+        renderUI();
+    }
+	
 	function handleCardSingleClick(e, cardId) {
         e.stopPropagation(); 
         
+		// [新增] 多重選取模式邏輯
+        if (isMultiSelectMode) {
+            const index = multiSelectedIds.indexOf(cardId);
+            if (index > -1) {
+                multiSelectedIds.splice(index, 1); // 取消勾選
+            } else {
+                multiSelectedIds.push(cardId); // 加入勾選
+            }
+            // 為了效能，我們只更新這張卡片的 class，不重繪整個 UI
+            const el = document.querySelector(`.card[data-id="${cardId}"]`);
+            if (el) {
+                el.classList.toggle('multi-selected');
+            }
+            return;
+        }
+		
         if (isPointing) {
             handlePointClick(null, cardId);
             return;
@@ -4726,36 +4857,89 @@
 
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
+            
+            // [新增] 檢查是否為「移動到展示區」的操作
+            let isRevealMove = false;
+            let revealCardIds = [];
+
+            // 只有在播放或重繪當下，檢查當前 Action
+            if (currentIndex >= 0 && history[currentIndex]) {
+                const action = history[currentIndex].action;
+                const moveOp = action.operations.find(o => o.type === 'MOVE' && o.toZone === 'reveal-zone');
+                if (moveOp) {
+                    isRevealMove = true;
+                    // 注意：如果是多張移動，cardIds 陣列是有順序的
+                    revealCardIds = moveOp.cardIds;
+                }
+            }
+
             Object.keys(lastPositions).forEach(id => {
                 if (id.startsWith('ZONE_')) return;
                 const cardEl = document.querySelector(`.card[data-id="${id}"]`);
                 if (!cardEl) return;
+                
                 let start = firstPositions[id];
                 if (!start && lastRenderedState) {
                     const prevCard = lastRenderedState.cards.find(c => c.id == id);
                     if (prevCard) start = firstPositions['ZONE_' + prevCard.zone];
                 }
+                
                 if (start) {
                     const last = lastPositions[id];
                     const deltaX = start.left - last.left;
                     const deltaY = start.top - last.top;
+                    
                     if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                         const cardData = state.cards.find(c => c.id == id);
                         const rotation = cardData ? cardData.rotation : 0;
                         const isAbility = cardData && cardData.zone.includes('ability');
+
                         if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
                              // skip
                         } else {
+                            // 1. 先瞬間移動回起點 (保持在原區域的位置)
                             cardEl.style.transition = 'none';
                             cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+                            
+                            // 2. 下一幀執行移動動畫
                             requestAnimationFrame(() => {
-                                cardEl.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
+                                // [設定] 單張卡片的飛行時間 (秒)
+                                // 您可以調整這個數值，0.5 = 半秒鐘飛到定位
+                                const flyTime = 0.5; 
+                                
+                                let duration = `${flyTime}s`;
+                                let delay = '0s';
+                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)'; // 舒緩曲線
+
+                                // [新增] 展示區特殊動畫邏輯 (重疊飛入)
+                                if (isRevealMove && revealCardIds.includes(parseInt(id))) {
+                                    const totalCards = revealCardIds.length;
+                                    const orderIndex = revealCardIds.indexOf(parseInt(id));
+                                    
+                                    // 核心演算法：
+                                    // 1. 基本間隔 = 飛行時間的 20% (0.2)
+                                    //    這樣當第一張飛了 20% 距離時，第二張就會出發
+                                    let interval = flyTime * 0.2;
+                                    
+                                    // 2. [防呆機制] 如果卡片超級多 (例如 40張)，為了不讓總時間拖太長
+                                    //    我們限制「總發牌間隔」最多 2.5 秒
+                                    //    如果 40 張，間隔就會自動被壓縮得更小 (變成機關槍射速)
+                                    const maxTotalLag = 2.5;
+                                    interval = Math.min(interval, maxTotalLag / Math.max(1, totalCards));
+                                    
+                                    // 計算這張卡的延遲出發時間
+                                    delay = `${orderIndex * interval}s`;
+                                }
+
+                                // 套用動畫
+                                cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
                                 cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
                             });
                         }
                     }
                 }
             });
+			
             lastRenderedState = cloneState(state);
 
             // [新增] 王牌進場特效觸發檢查
@@ -4858,6 +5042,18 @@
 		el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
 		el.dataset.id = card.id; 
 
+		// [新增] 大紅勾 HTML
+        // 注意：這不會覆蓋掉後面的 SVG 或圖片，因為這只是 append 進去
+        const checkDiv = document.createElement('div');
+        checkDiv.className = 'check-mark';
+        checkDiv.innerText = '✔';
+        el.appendChild(checkDiv);
+
+        // [新增] 檢查是否在多選清單中
+        if (isMultiSelectMode && multiSelectedIds.includes(card.id)) {
+            el.classList.add('multi-selected');
+        }
+		
 		// [新增] 1. 插入集氣用的 SVG (長按時顯示)
 		// viewBox 設為 0 0 50 70 (配合 CSS var --card-width/height)
 		el.innerHTML = `
