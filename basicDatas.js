@@ -795,7 +795,6 @@
 	const newestSets = [
 		"NET-068",
 		"DM25-BD3",
-		"NET-067",
 		"DM25-EX2",
 	];
 	
