@@ -358,7 +358,7 @@
 			}
 			for ( var tc = 0 ; tc < _cardNames.length ; tc++ ){
 				var _cardName = _cardNames[tc].trim();
-				if ( _cardName != "" && !deckList_names.include( _cardName ) ){
+				if ( _cardName != "" && !deckList_names.includes( _cardName ) ){
 					deckList_names.push( _cardName );
 					deckList_counts.push( _num );
 				}
@@ -381,8 +381,8 @@
 			var parseSetCode = stringDeckSetCodeHeader + parseSetMax;
 			var parseSetName = "匯入牌庫#" + parseSetMax;
 			
-			setDatas.addMap( parseSetCode , parseSetName , true , deckListObj );
-			var setCodeSelector = gobi( "setCode" );
+			setDatas.addSet( parseSetCode , parseSetName , true , deckListObj );
+			var setCodeSelector = document.getElementById( "setCode" );
 			var option = document.createElement('option');
 			option.value = parseSetCode;
 			option.text = parseSetCode.toUpperCase() + " " + parseSetName;

@@ -173,3 +173,27 @@
 		{		name : "忍蛇の聖沌 c0br4",	count : 2,	},
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );	
+	
+	var setCode = "NET-068";
+	var setName = "台灣CS大賽20251206 1st【闇王＠元丰】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "異端流し オニカマス", count : 4, },
+		{ name : "～地獄帰りの騎士～", count : 4, },
+		{ name : "裏斬隠 テンサイ・ハート", count : 2, },
+		{ name : "「大蛇」の鬼 ジャドク丸", count : 2, },
+		{ name : "冥土人形ヴァミリア・バレル", count : 1, },
+		{ name : "魔獣星樹ギガゲドー", count : 1, },
+		{ name : "秩序の意志", count : 1, },
+		{ name : "理想と平和の決断", count : 3, },
+		{ name : "ブレイン・スラッシュ", count : 2, },
+		{ name : "影世界のシクミ", count : 3, },
+		{ name : "飛翔龍 5000VT", count : 2, },
+		{ name : "サイバー・J・イレブン / 「みんなと戦えてよかった♥」", count : 1, },
+		{ name : "DARK MEMORY CONTAINER", count : 4, },
+		{ name : "真気楼と誠偽感の決断", count : 3, },
+		{ name : "闇王ゼーロ", count : 4, },
+		{ name : "不死鳥縫合 ブラック・ビッグバン", count : 2, },
+		{ name : "戦国接続 ギャラクテスト・シデンシーザー", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
