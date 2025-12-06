@@ -1626,24 +1626,29 @@
         }
 
         /* 發光動畫 (Up) */
+        /* 發光動畫 (Up) - 修正版 */
         @keyframes ace-ring-power-up {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
                 border: 2px solid rgba(255, 215, 0, 0);
-                transform: rotate(var(--rot)) scale(1);
+                /* 關鍵：先置中 (-50%), 再旋轉 (var), 最後縮放 */
+                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
             }
             30% {
                 box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4);
                 border: 2px solid rgba(255, 215, 0, 0.5);
+                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
             }
             60% {
                 box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.7);
                 border: 3px solid rgba(255, 215, 0, 0.8);
+                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
             }
             100% {
                 box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
                 border: 4px solid gold;
-                transform: rotate(var(--rot)) scale(1.05);
+                /* 最終稍微放大一點 */
+                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
             }
         }
 
@@ -4863,6 +4868,62 @@
 			document.querySelectorAll('.diag-row').forEach(el => el.classList.remove('visible'));
 		}
 
+		// --- [修復] 勝利畫面渲染邏輯 ---
+        if (state.winner) {
+            // 如果畫面還沒顯示，才進行內容生成 (避免每一幀重複生成 DOM)
+            if (winOverlay.style.display !== 'flex') {
+                winOverlay.style.display = 'flex';
+                
+                const winnerText = state.winner === 1 ? "1P WIN!" : "2P WIN!";
+                const color = state.winner === 1 ? "#3498db" : "#e91e63"; // P1藍 / P2紅
+                
+                // 1. 生成文字結構
+                winOverlay.innerHTML = `
+                    <div class="win-text" style="color: ${color}">${winnerText}</div>
+                    <div class="win-sub">Congratulations!</div>
+                `;
+                
+                // 2. 生成彩帶特效 (Confetti)
+                // 隨機產生 50 個彩帶碎片
+                const colors = ['#f1c40f', '#e74c3c', '#3498db', '#9b59b6', '#2ecc71'];
+                for (let i = 0; i < 50; i++) {
+                    const conf = document.createElement('div');
+                    conf.className = 'confetti';
+                    // 隨機位置與延遲
+                    conf.style.left = Math.random() * 100 + 'vw';
+                    conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    conf.style.animationDelay = (Math.random() * 2) + 's';
+                    conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    winOverlay.appendChild(conf);
+                }
+				
+				// --- [新增] 自動清除計時器 ---
+                // 先清除舊的計時器 (若有的話)，避免重複觸發
+                if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
+                
+                // 設定 4.5 秒後自動消失 (配合彩帶掉落時間)
+                winOverlayTimeout = setTimeout(() => {
+                    winOverlay.style.display = 'none';
+                    // 清空內容以節省效能
+                    winOverlay.innerHTML = '';
+                }, 4500);
+                // --------------------------
+                
+                // 3. 點擊遮罩可關閉勝利畫面 (回到預覽狀態)
+                winOverlay.onclick = () => {
+                    winOverlay.style.display = 'none';
+                    // 如果需要自動重置勝利狀態，可在此呼叫 addOperation 
+                    // 但通常這裡只是暫時關閉顯示，讓玩家看盤面
+                };
+            }
+        } else {
+            // 如果當前狀態沒有勝利者 (例如按了上一步或重置)，隱藏遮罩
+            winOverlay.style.display = 'none';
+            winOverlay.innerHTML = ''; 
+        }
+        // ------------------------------
+
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
             
@@ -4995,53 +5056,65 @@
         }
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (最穩定的版本) ---
+	// --- [獨立光圈版] 王牌特效函式 (橫置修正版) ---
     function triggerAceAnimation(cardId) {
         const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
         if (!originalEl) return;
 
-        // 階段 0: 等待卡片移動就位 (400ms)
+        // 階段 0: 等待卡片移動就位
         setTimeout(() => {
             
-            // 1. 取得卡片當前的絕對位置
+            // 1. 取得卡片視覺邊界
             const rect = originalEl.getBoundingClientRect();
 
-            // 2. 創建一個獨立的發光圈 (Glow Ring)
+            // 2. 創建光圈
             const ring = document.createElement('div');
             ring.className = 'ace-external-ring';
             
-            // 3. 將光圈定位在卡片正上方
-            ring.style.top = rect.top + 'px';
-            ring.style.left = rect.left + 'px';
-            ring.style.width = rect.width + 'px';
-            ring.style.height = rect.height + 'px';
+            // 3. 計算中心點 (Center Alignment)
+            // 這是確保手機版/縮放時位置準確的關鍵
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            ring.style.left = centerX + 'px';
+            ring.style.top = centerY + 'px';
             
-            // 讀取卡片旋轉角度，讓光圈也跟著轉
+            // 4. 取得旋轉角度
             let rotation = 0;
             const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
             if (match) rotation = parseFloat(match[1]);
-            ring.style.transform = `rotate(${rotation}deg)`;
 
-            // 4. 加入畫面 (開始跑 CSS 動畫)
+            // 5. [關鍵修正 1] 寫入 CSS 變數
+            // 讓 CSS 動畫知道現在是幾度
+            ring.style.setProperty('--rot', rotation + 'deg');
+
+            // 6. [關鍵修正 2] 寬高智慧互換
+            // 如果卡片是橫的(轉了90度)，rect 是「寬>高」。
+            // 但光圈元素的原始狀態(未旋轉前)應該是「窄長」的，這樣旋轉後才會變「寬扁」。
+            // 所以當檢測到橫置時，我們要把抓到的寬高對調賦值。
+            const isRotated90 = Math.abs(rotation % 180) > 45; 
+            
+            ring.style.width = (isRotated90 ? rect.height : rect.width) + 'px';
+            ring.style.height = (isRotated90 ? rect.width : rect.height) + 'px';
+
+            // 7. 加入畫面
             document.body.appendChild(ring);
 
-            // 階段 2: 動畫跑完後 (0.7s)，觸發閃光
+            // 階段 2: 觸發閃光
             setTimeout(() => {
                 const flashLayer = document.getElementById('ace-flash-layer');
-                
-                // 觸發全螢幕閃白
-                flashLayer.classList.remove('anim-flash-white');
-                void flashLayer.offsetWidth; // 強制重繪
-                flashLayer.classList.add('anim-flash-white');
-                
-                // 階段 3: 在閃白遮蔽瞬間，移除光圈
+                if (flashLayer) {
+                    flashLayer.classList.remove('anim-flash-white');
+                    void flashLayer.offsetWidth; 
+                    flashLayer.classList.add('anim-flash-white');
+                }
+                // 階段 3: 移除光圈
                 setTimeout(() => {
                     if (ring.parentNode) ring.parentNode.removeChild(ring);
                 }, 250); 
+            }, 700); 
 
-            }, 700); // 對應 CSS animation 時間
-
-        }, 400); // 等待移動時間
+        }, 400); 
     }
 
     // --- [修改] createCardElement 函式 ---
