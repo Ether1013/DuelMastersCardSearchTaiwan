@@ -1031,29 +1031,30 @@
 		}
 
 		/* --- 移動控制面板位置 (靠右下角修正版) --- */
+		/* --- 移動控制面板位置 --- */
 		#mobile-controls {
-			/* 確保有 Flex 排版，讓按鈕橫向排列 */
-			display: none;
+			display: none; /* 由 JS 控制顯示 */
 			align-items: center;
-			justify-content: flex-end; /* 靠右對齊 */
-			gap: 10px; /* 按鈕間距 */
+			justify-content: flex-end;
+			gap: 15px; 
 			
-			/* 保持固定定位 */
 			position: fixed;
+			bottom: calc(15px + env(safe-area-inset-bottom)); 
+			right: calc(15px + env(safe-area-inset-right));
 			
-			/* [修改重點] 大幅減少邊距，讓它緊貼右下角 */
-			/* 僅保留 5px 緩衝 + 手機安全區域 (瀏海/Home Bar) */
-			bottom: calc(5px + env(safe-area-inset-bottom)); 
-			right: calc(5px + env(safe-area-inset-right));
-			
-			/* 提高層級，確保浮在最上層 */
 			z-index: 5000;
-			
-			/* 避免按鈕被壓縮 */
 			flex-shrink: 0;
-			
-			/* [選用] 增加一點透明度，減少對畫面的視覺干擾 */
-			opacity: 0.9;
+			opacity: 0.95;
+		}
+
+		/* 隱藏原本的停止按鈕 (如果 CSS 還有殘留) */
+		#mob-stop-btn { display: none !important; }
+
+		/* 音樂按鈕樣式：靜音時顯示紅色，播放時顯示綠色或白色 */
+		#mob-music-btn.active {
+			border-color: #2ecc71;
+			color: #2ecc71;
+			box-shadow: 0 0 5px #2ecc71;
 		}
 
 		/* 確保手機模式下 body 不會產生滾動條，避免 fixed 元素跑位 */
@@ -2160,12 +2161,12 @@
 
 <div id="mobile-controls">
     <select id="mob-speed-select" onchange="changePlaybackSpeed(this.value)">
-        <option value="4.0">🚀 0.25x</option>
-        <option value="2.0">🐢 0.5x</option>
+        <option value="4.0">🐢 0.25x</option>
+        <option value="2.0">🐇 0.5x</option>
         <option value="1.33">🚶 0.75x</option>
         <option value="1.0" selected>▶ 1.0x</option>
         <option value="0.66">🏃 1.5x</option>
-        <option value="0.5">🐇 2.0x</option>
+        <option value="0.5">🚀 2.0x</option>
         <option value="0.25">⚡ 4.0x</option>
     </select>
 	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()" style="margin-left: 5px; margin-right: 5px;">🔊</button>
@@ -5563,11 +5564,34 @@
         });
 		
 		updateSliderUI();
+		
+		// [新增] 檢查手機版音樂按鈕可見性
+		checkMobileMusicButtonVisibility(); // <--- 加入這行
+
 		// [修改] 增加 !skipScroll 判斷，手動點擊時不捲動
         if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
              scrollToActiveStep();
         }
     }
+	
+	function checkMobileMusicButtonVisibility() {
+		const btn = document.getElementById('mob-music-btn');
+		if (!btn) return;
+
+		// 取得當前狀態的 BGM
+		const state = getCurrentDisplayState();
+		const currentBgm = state.bgm;
+
+		// [需求4] 有音樂配置才出現，無音樂則消失
+		if (currentBgm) {
+			btn.style.display = 'flex';
+			updateMobileMusicUI(); // 同步目前的靜音狀態圖示
+		} else {
+			btn.style.display = 'none';
+			// 當音樂消失時，建議將播放器暫停 (選用)
+			// globalAudioPlayer.pause(); 
+		}
+	}
 	
 	// --- [新增] 堆疊偏移量計算系統 ---
 
@@ -6168,6 +6192,9 @@
     }
 
     let playTimeout = null; // 取代 playInterval
+	// --- 手機版專用狀態變數 ---
+	let wasPlayingBeforePortrait = false; // 記錄轉直前是否正在播放
+	let hasEnteredLandscapeOnce = false;  // 記錄是否已經進入過橫向模式(用於第一次自動播放)
 
     // --- [整合版] 播放控制 (包含 BGM 起始同步) ---
     // --- [整合版] 播放控制 (修復 iOS Safari 音樂問題) ---
@@ -6693,70 +6720,102 @@
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    function initMobileMode(scriptUrl) {
-        // 1. 設定樣式為手機模式
-        document.body.classList.add('mobile-mode');
-        
-        // 2. 載入資料 (強制覆蓋，不檢查 LocalStorage)
-        fetch(scriptUrl)
-            .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
-            .then(data => {
-                if(!data.history || !data.initialState) throw new Error("Invalid script");
-                
-                // 強制載入並重置到開頭
-                processGameData(data, true);
-                
-                // 3. 啟動方向偵測監聽
-                window.addEventListener('resize', handleOrientation);
-                window.addEventListener('orientationchange', handleOrientation);
-                
-                // 初次檢查方向
-                handleOrientation();
+	function initMobileMode(scriptUrl) {
+		document.body.classList.add('mobile-mode');
+		
+		// [需求4] 預設不播音樂 (靜音)
+		globalAudioPlayer.muted = true; 
+
+		fetch(scriptUrl)
+			.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
+			.then(data => {
+				if(!data.history || !data.initialState) throw new Error("Invalid script");
+				processGameData(data, true);
 				
-            })
-            .catch(e => {
-                alert("無法載入劇本: " + e.message);
-            });
-    }
+				window.addEventListener('resize', handleOrientation);
+				window.addEventListener('orientationchange', handleOrientation);
+				
+				// 初始檢查
+				handleOrientation();
+			})
+			.catch(e => {
+				alert("無法載入劇本: " + e.message);
+			});
+	}
 
 	function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
-        const controls = document.getElementById('mobile-controls'); // 取得控制面板
-        const playBtn = document.getElementById('mob-play-btn');
+		const controls = document.getElementById('mobile-controls');
+		const isLandscape = window.innerWidth > window.innerHeight;
         
-        // 判斷是否為橫向
-        const isLandscape = window.innerWidth > window.innerHeight;
-
         if (isLandscape) {
-            // [橫向模式]
-            overlay.style.display = 'none';
-            
-            // [修正 2] 強制顯示控制面板
-            if (controls) controls.style.display = 'flex';
+            // --- 橫向模式 (播放/繼續) ---
+			overlay.style.display = 'none';
+			if (controls) controls.style.display = 'flex';
+			
+			setTimeout(autoScaleBoard, 100);
 
-            // [修正 1] 移除這裡的 togglePlay()，不再自動播放
-            // if (!playInterval) togglePlay(); <--- 這一行刪除了
-            
-            // 執行自動縮放
-            setTimeout(autoScaleBoard, 100); 
-            
-            // [新增] 檢查是否為初次進入，如果是，給 Play 鍵加上發光特效
-            checkFirstTimePlayHighlight();
+			// [需求2] 第一次進入橫向 -> 自動播放
+			if (!hasEnteredLandscapeOnce) {
+				hasEnteredLandscapeOnce = true;
+				if (!playTimeout) togglePlay(); 
+			} 
+			// [需求2] 非第一次，檢查「轉直前」是否為播放狀態
+			else if (wasPlayingBeforePortrait) {
+				if (!playTimeout) togglePlay(); // 恢復播放
+				wasPlayingBeforePortrait = false; // 重置狀態
+			}
+			// 如果轉直前是暫停，這裡什麼都不做，保持暫停
 
         } else {
-            // [直向模式]
-            overlay.style.display = 'flex';
-            
-            // [修正 2] 強制隱藏控制面板 (避免浮在遮罩上面)
-            if (controls) controls.style.display = 'none';
+            // --- 直向模式 (暫停) ---
+			overlay.style.display = 'flex';
+			if (controls) controls.style.display = 'none';
 
-            // 直向時如果正在播，先暫停 (可選，視需求而定)
-            if (playTimeout) togglePlay();
+			// [需求1] 轉直就暫停，並記錄狀態
+			if (playTimeout) {
+				wasPlayingBeforePortrait = true; // 記錄：原本是播的
+				togglePlay(); // 執行暫停
+			} else {
+				wasPlayingBeforePortrait = false; // 記錄：原本就是停的
+			}
         }
         
-        // 更新按鈕圖示
-        if (playBtn) playBtn.innerText = playTimeout ? "⏸" : "▶";
+        // 確保按鈕 UI 同步
+		updatePlayButtonUI();
     }
+	
+	// 控制音樂按鈕的點擊行為
+	function toggleMobileMusic() {
+		const btn = document.getElementById('mob-music-btn');
+		
+		// 切換靜音狀態
+		globalAudioPlayer.muted = !globalAudioPlayer.muted;
+		
+		// 如果解除靜音，嘗試播放
+		if (!globalAudioPlayer.muted) {
+			// iOS 需要使用者互動才能播放，這裡剛好在 click 事件中
+			if (globalAudioPlayer.paused && globalAudioPlayer.src) {
+				globalAudioPlayer.play().catch(e => console.log(e));
+			}
+		}
+
+		updateMobileMusicUI();
+	}
+
+	// 更新音樂按鈕的外觀 (紅/綠/圖示)
+	function updateMobileMusicUI() {
+		const btn = document.getElementById('mob-music-btn');
+		if (!btn) return;
+
+		if (globalAudioPlayer.muted) {
+			btn.innerText = "🔇";
+			btn.classList.remove('active'); // 沒亮燈代表靜音
+		} else {
+			btn.innerText = "🔊";
+			btn.classList.add('active'); // 亮燈代表播放中
+		}
+	}
 
     function autoScaleBoard() {
         const workspace = document.getElementById('workspace');
