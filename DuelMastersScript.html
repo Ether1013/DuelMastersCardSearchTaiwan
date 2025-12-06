@@ -1832,6 +1832,29 @@
             font-weight: bold;
             z-index: 3005 !important; /* 確保在最上層 */
         }
+		
+		/* --- [新增] 手機版：展示區卡片放大 (比照戰鬥區 1.5倍) --- */
+        body.mobile-mode #reveal-zone .card {
+            /* 1. 放大 1.5 倍 */
+            transform: scale(1.5);
+            
+            /* 2. 設定縮放原點為中心 */
+            transform-origin: center center;
+            
+            /* 3. 【關鍵】增加外距 (Margin) */
+            /* 因為 transform 放大不會撐開原本的版面空間， */
+            /* 必須手動增加 margin 來推開旁邊的卡片，避免視覺上重疊 */
+            /* 原始寬 50px -> 放大後 75px (差 25px -> 左右各需補 12.5px) */
+            margin: 25px 15px !important; 
+            
+            z-index: 10;
+        }
+
+        /* 調整展示區容器的間距，讓放大的卡片不會貼太近邊框 */
+        body.mobile-mode #reveal-zone {
+            padding: 40px 30px !important; 
+            gap: 15px !important; /* 增加 Flex 排版的間隙 */
+        }
     </style>
 </head>
 <body>
