@@ -1040,17 +1040,27 @@
 		}
 
 		/* --- 新增這段：預設隱藏手機控制項 (桌機版不顯示) --- */
+		/* --- 移動控制面板位置 (修正版) --- */
 		#mobile-controls {
 			/* 確保有 Flex 排版 */
 			display: none;
 			align-items: center;
-			gap: 10px; /* 按鈕跟選單的間距 */
+			gap: 15px; /* 稍微增加按鈕之間的間距 */
 			
-			/* 保持原本的定位 */
+			/* 保持固定定位 */
 			position: fixed;
-			bottom: 20px;
-			right: 20px;
+			
+			/* [修改重點] 使用 calc 與 env 來避開手機的安全區域 (劉海/Home Bar) */
+			/* 原本是 bottom: 20px; right: 20px; */
+			bottom: calc(30px + env(safe-area-inset-bottom)); 
+			right: calc(30px + env(safe-area-inset-right));
+			
 			z-index: 3001;
+			
+			/* 增加一點背景保護色，讓它在淺色盤面上也看得清楚 (選用) */
+			/* padding: 5px; */
+			/* border-radius: 30px; */
+			/* backdrop-filter: blur(2px); */
 		}
 
 		/* [新增] 手機版速度選單樣式 */
