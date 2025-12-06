@@ -5544,61 +5544,62 @@
                     const deltaX = start.left - last.left;
                     const deltaY = start.top - last.top;
                     
-                    // 只有當位置真的有變動時才執行動畫
-                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-                        const cardData = state.cards.find(c => c.id == id);
-                        const rotation = cardData ? cardData.rotation : 0;
-                        const isAbility = cardData && cardData.zone.includes('ability');
+                    // ... (這是 renderUI 函式後半段的動畫處理邏輯) ...
 
-                        if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
-                             // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
-                        } else {
-                            // 1. 先瞬間移動回起點 (保持在原區域的位置)
-                            cardEl.style.transition = 'none';
-                            cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
-                            
-                            // 2. 下一幀執行移動動畫
+					// 只有當位置真的有變動時才執行動畫
+					if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+						const cardData = state.cards.find(c => c.id == id);
+						const rotation = cardData ? cardData.rotation : 0;
+						const isAbility = cardData && cardData.zone.includes('ability');
+
+						if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
+								// puzzle 卡片通常是跟隨移動，暫不處理個別動畫
+						} else {
+							// 1. 第一步：瞬間移動回起點 (Transition None)
+							cardEl.style.transition = 'none';
+							cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+							
+							// [關鍵修正] 強制瀏覽器立刻計算一次佈局 (Reflow)
+							// 這行程式碼看起來沒做什麼，但讀取 offsetWidth 會強迫瀏覽器 "現在" 就把上面的 style 畫出來
+							// 這是解決手機版動畫失效最重要的一步
+							void cardEl.offsetWidth; 
+
+							// 2. 第二步：在下一幀執行移動動畫 (使用雙重 rAF 確保手機版穩定)
 							requestAnimationFrame(() => {
-								// [修正] 統一手機與桌機的動畫參數
-								// 原本手機版 flyTime 設為 0.4 且 interval 為 20%，導致間隔僅 0.08s (太快看不出)
-								// 現在統一設為 0.5s，並強制間隔為 0.15s，確保視覺上的「依序移動」效果
-								const flyTime = 0.5; 
-								
-								let duration = `${flyTime}s`;
-								let delay = '0s';
-								let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+								requestAnimationFrame(() => {
+									// 統一設定：飛行 0.5秒
+									const flyTime = 0.5; 
+									let duration = `${flyTime}s`;
+									let delay = '0s';
+									let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
 
-								// --- [核心修改] 通用序列動畫邏輯 ---
-								// 檢查這張卡片是否在當前的移動清單中
-								// 使用 loose equality (==) 避免字串/數字型別問題
-								const moveIndex = movingCardIds.findIndex(mid => mid == id);
+									// 檢查這張卡片是否在當前的移動清單中
+									const moveIndex = movingCardIds.findIndex(mid => mid == id);
 
-								if (moveIndex !== -1) {
-									const totalCards = movingCardIds.length;
-									
-									// 如果只有一張牌，就不需要延遲，直接飛
-									if (totalCards > 1) {
-										// [修正] 改用固定時間間隔 (0.15秒)，而非百分比
-										// 這樣無論卡片多少，都能保證明顯的先後順序
-										let interval = 0.15;
+									if (moveIndex !== -1) {
+										const totalCards = movingCardIds.length;
 										
-										// 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 2.0 秒
-										const maxTotalLag = 2.0;
-										if ((interval * totalCards) > maxTotalLag) {
-											interval = maxTotalLag / totalCards;
+										if (totalCards > 1) {
+											// [修正] 固定間隔 0.2秒 (200ms)，讓順序感更強烈
+											let interval = 0.2;
+											
+											// 防呆：如果卡片太多(>10張)，稍微縮短間隔以免拖太久
+											if (totalCards > 10) {
+												interval = 2.0 / totalCards; // 最多只花 2秒發完
+											}
+											
+											delay = `${moveIndex * interval}s`;
 										}
-										
-										// 設定延遲：第 N 張牌延遲 N * interval 秒
-										delay = `${moveIndex * interval}s`;
 									}
-								}
-								// -------------------------------
 
-								cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
-								cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+									// 3. 設定終點與轉場效果
+									cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
+									cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+								});
 							});
-                        }
-                    }
+						}
+					}
+	// ...
                 }
             });
 			
