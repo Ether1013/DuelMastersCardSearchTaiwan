@@ -475,13 +475,20 @@
         .card-group:hover {
             z-index: 500;
         }
-        .card-group:hover .card {
-            transition: top 0.3s, z-index 0s;
+		/* [新增] 強制覆蓋舊的堆疊 CSS，將定位權限完全交給 JS */
+        .card-group .card {
+            /* 確保 JS 寫入的 top/left 不會被 CSS class 影響 */
+            margin: 0 !important; 
         }
+        /* 移除 hover 時的展開效果 (因為旋轉後展開方向會錯亂，暫時先移除，求穩) */
+        .card-group:hover .card {
+            top: auto !important; /* 讓 JS 的 inline-style 生效 */
+        }
+        /* 如果您還是希望有 Hover 展開，那需要更複雜的 JS 計算，建議先取消以確保旋轉正確 */
         /* Hover Fan-out - modified to respect Puzzle links */
         .card-group:hover .stack-base { top: 0px !important; z-index: 100; }
         /* Only fan out vertical stacks if not puzzling */
-        .card-group:hover .stack-top:not(.puzzle-link) { top: -40px !important; z-index: 101; }
+        .card-group:hover .stack-top:not(.puzzle-link) { z-index: 101; }
         .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
         .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
         .card-group:hover .stack-bottom { top: 40px !important; z-index: 102; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
@@ -2522,6 +2529,43 @@
 		if (mobSelect) mobSelect.value = val;
 	}
 	
+	// --- [補回遺失的函式] 取得與選取卡片有連結關係的所有卡片 ID (家族樹搜尋) ---
+    function getAllLinkedCardIds(state, initialIds) {
+        const resultIds = new Set(initialIds);
+        
+        // 輔助：找某張卡的 Parent (往上找)
+        const getParent = (id) => state.cards.find(c => c.id === id);
+        
+        // 輔助：找某張卡的 Children (往下找)
+        const getChildren = (parentId) => state.cards.filter(c => c.parentId === parentId);
+
+        // 對每一個選取的 ID 進行擴散搜尋
+        initialIds.forEach(startId => {
+            let current = state.cards.find(c => c.id === startId);
+            if (!current) return;
+
+            // 1. 向上溯源：找到最頂層/最底層的 Root (沒有 parentId 的那張)
+            let root = current;
+            while (root.parentId) {
+                const p = getParent(root.parentId);
+                if (!p) break; // 防呆
+                root = p;
+            }
+
+            // 2. 向下擴散：從 Root 開始，把所有子孫全部加入
+            const stack = [root];
+            while (stack.length > 0) {
+                const node = stack.pop();
+                resultIds.add(node.id);
+                
+                const children = getChildren(node.id);
+                children.forEach(child => stack.push(child));
+            }
+        });
+
+        return Array.from(resultIds);
+    }
+	
     function changeLanguage(lang) {
         currentLang = lang;
         const dict = TRANSLATIONS[lang];
@@ -3904,6 +3948,22 @@
 		}
 		// --- END: 切斷舊連結 ---
 		
+		// --- [新增] 自動同步旋轉角度 ---
+        // 如果是堆疊操作 (有 stackTargetId)，新來的牌應該繼承目標牌的角度
+        if (stackTargetId) {
+            const state = getCurrentDisplayState();
+            const targetCard = state.cards.find(c => c.id === stackTargetId);
+            if (targetCard) {
+                // 發送一個旋轉指令，將移動的卡片角度「強制設定」為跟目標一樣
+                // 注意：這裡我們用 ROTATE_CARD 的 finalRotation 屬性
+                addOperation({ 
+                    type: 'ROTATE_CARD', 
+                    cardIds: movingIds, 
+                    finalRotation: targetCard.rotation // 強制同步角度
+                });
+            }
+        }
+		
 		let finalCardIds = [...pendingMove.cardIds];
 		if (pendingMove.shuffle) {
 			finalCardIds.sort(() => Math.random() - 0.5);
@@ -3955,9 +4015,16 @@
         }, 50);
     }
 
+    // [修改] 旋轉卡片 (家族樹連動版)
     function rotateCard(deg) {
         if (!pendingMove) return;
-        addOperation({ type: 'ROTATE_CARD', cardIds: pendingMove.cardIds, deg: deg });
+        
+        const state = getCurrentDisplayState();
+        
+        // 使用遞迴搜尋找出整棵樹的所有卡片
+        const allTargets = getAllLinkedCardIds(state, pendingMove.cardIds);
+        
+        addOperation({ type: 'ROTATE_CARD', cardIds: allTargets, deg: deg });
     }
 
     function flipCard() {
@@ -4792,75 +4859,122 @@
 
         const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
 
-		const renderCardTree = (card, container) => {
-            const isSpreadZone = !stackedZones.includes(card.zone) || card.zone.includes('shield');
+		// --- [核心修改] 支援旋轉的樹狀渲染 ---
+        // --- [核心修改] 支援旋轉的樹狀渲染 (True Bounding Box) ---
+        const renderCardTree = (rootCard, container) => {
+            const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
+            
             if (isSpreadZone) {
-                let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-                const measureTree = (c, x, y) => {
-                    if (x < bounds.minX) bounds.minX = x;
-                    if (x > bounds.maxX) bounds.maxX = x;
-                    if (y < bounds.minY) bounds.minY = y;
-                    if (y > bounds.maxY) bounds.maxY = y;
-                    const children = childMap[c.id] || [];
+                // 1. 測量階段：計算所有卡片的「視覺邊界」
+                // 我們必須計算每一張卡片旋轉後的 4 個角落，才能得到正確的容器大小
+                let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+                
+                const nodePositions = new Map(); 
+
+                const measureNode = (card, currentX, currentY) => {
+                    // 1. 記錄卡片「插槽」的左上角座標 (給定位用)
+                    nodePositions.set(card.id, { x: currentX, y: currentY });
+
+                    // 2. 計算卡片「視覺上」佔用的範圍 (給容器大小用)
+                    // 卡片中心點
+                    const cx = currentX + 25; // 寬度的一半
+                    const cy = currentY + 35; // 高度的一半
+                    
+                    // 卡片尚未旋轉時的 4 個角落 (相對於中心)
+                    // 寬50, 高70
+                    const corners = [
+                        {x: -25, y: -35}, // 左上
+                        {x: 25, y: -35},  // 右上
+                        {x: 25, y: 35},   // 右下
+                        {x: -25, y: 35}   // 左下
+                    ];
+
+                    // 將 4 個角落根據卡片角度進行旋轉，並推算絕對座標
+                    corners.forEach(p => {
+                        const r = rotateVector(p.x, p.y, card.rotation);
+                        const finalX = cx + r.x;
+                        const finalY = cy + r.y;
+
+                        if (finalX < bounds.minX) bounds.minX = finalX;
+                        if (finalX > bounds.maxX) bounds.maxX = finalX;
+                        if (finalY < bounds.minY) bounds.minY = finalY;
+                        if (finalY > bounds.maxY) bounds.maxY = finalY;
+                    });
+
+                    // 3. 繼續測量子供
+                    const children = childMap[card.id] || [];
                     children.forEach(child => {
-                        let dx = 0, dy = 0;
-                        if (child.stackType === 'puzzle_left') dx = -50;
-                        else if (child.stackType === 'puzzle_right') dx = 50;
-                        else if (child.stackType === 'puzzle_top') dy = -70;
-                        else if (child.stackType === 'puzzle_bottom') dy = 70;
-                        else if (child.stackType === 'shift_up') dy = -25;
-                        else if (child.stackType === 'shift_down') dy = 25;
-                        else if (child.stackType === 'bottom_exposed') dy = 20;
-                        measureTree(child, x + dx, y + dy);
+                        const baseOffset = getBaseStackOffset(child.stackType);
+                        // 偏移量也要跟著父卡片轉
+                        const rotatedOffset = rotateVector(baseOffset.x, baseOffset.y, card.rotation);
+                        measureNode(child, currentX + rotatedOffset.x, currentY + rotatedOffset.y);
                     });
                 };
-                measureTree(card, 0, 0);
+
+                // 開始測量
+                measureNode(rootCard, 0, 0);
+                
+                // 防呆：如果沒東西 (理論上不可能)，給預設值
+                if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
+
+                // 2. 建立容器
+                // 容器大小 = 視覺上的最大邊界 - 最小邊界
+                // 這樣無論卡片怎麼轉、怎麼接龍，容器都會剛好包住它們
+                const totalW = bounds.maxX - bounds.minX;
+                const totalH = bounds.maxY - bounds.minY;
+                
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'card-group';
-                const totalW = (bounds.maxX - bounds.minX) + 50; 
-                const totalH = (bounds.maxY - bounds.minY) + 70; 
+                // 加上一點緩衝 (margin)，避免卡片邊框緊貼
                 groupDiv.style.width = `${totalW}px`;
                 groupDiv.style.height = `${totalH}px`;
                 groupDiv.style.position = 'relative'; 
-                groupDiv.style.margin = '5px'; 
+                groupDiv.style.margin = '5px 10px'; // 左右多一點間距
+                
                 container.appendChild(groupDiv);
                 
-                const baseOffsetX = -bounds.minX;
-                const baseOffsetY = -bounds.minY;
+                // 3. 渲染階段
+                // 偏移修正：將 visually 最左邊的點對齊到容器的 0
+                const originOffsetX = -bounds.minX;
+                const originOffsetY = -bounds.minY;
 
-                const renderNode = (currentCard, offsetX, offsetY, zVal, depth) => {
-                    const cardEl = createCardElement(currentCard);
-                    let newOffsetX = offsetX;
-                    let newOffsetY = offsetY;
-                    let newZ = zVal;
-                    let className = '';
-                    if (depth === 0) {
-                        className = 'stack-base';
-                        newZ = 10;
-                    } else {
-                        if (currentCard.stackType === 'top') { className = 'stack-top'; newZ += 1; }
-                        else if (currentCard.stackType === 'bottom') { className = 'stack-bottom'; newZ -= 1; }
-                        else if (currentCard.stackType === 'shift_up') { className = 'stack-shift-up'; newOffsetY -= 25; newZ += 1; }
-                        else if (currentCard.stackType === 'shift_down') { className = 'stack-shift-down'; newOffsetY += 25; newZ += 1; }
-                        else if (currentCard.stackType === 'bottom_exposed') { className = 'stack-bottom-exposed'; newOffsetY += 20; newZ -= 1; }
-                        else if (currentCard.stackType === 'puzzle_top') { className = 'stack-puzzle-top'; newOffsetY -= 70; }
-                        else if (currentCard.stackType === 'puzzle_bottom') { className = 'stack-puzzle-bottom'; newOffsetY += 70; }
-                        else if (currentCard.stackType === 'puzzle_left') { className = 'stack-puzzle-left'; newOffsetX -= 50; }
-                        else if (currentCard.stackType === 'puzzle_right') { className = 'stack-puzzle-right'; newOffsetX += 50; }
-                    }
-                    if (className) cardEl.classList.add(className);
+                const renderNodeRecursive = (card, zIndex) => {
+                    const pos = nodePositions.get(card.id);
+                    if (!pos) return;
+
+                    const cardEl = createCardElement(card);
+                    
+                    // 設定位置
                     cardEl.style.position = 'absolute';
-                    cardEl.style.left = `${newOffsetX}px`;
-                    cardEl.style.top = `${newOffsetY}px`;
-                    cardEl.style.zIndex = newZ;
-                    if (currentCard.stackType && currentCard.stackType.includes('puzzle')) {
-                         cardEl.style.transform = `rotate(${currentCard.rotation}deg)`;
+                    cardEl.style.left = `${pos.x + originOffsetX}px`;
+                    cardEl.style.top = `${pos.y + originOffsetY}px`;
+                    cardEl.style.zIndex = zIndex;
+
+                    // 強制套用自轉角度
+                    let transformCSS = `rotate(${card.rotation}deg)`;
+                    if (pendingMove && pendingMove.cardIds.includes(card.id)) {
+                        transformCSS += ` translateY(-5px)`;
                     }
+                    cardEl.style.transform = transformCSS;
+
+                    if (!card.parentId) cardEl.classList.add('stack-base');
+
                     groupDiv.appendChild(cardEl);
-                    const children = childMap[currentCard.id] || [];
-                    children.forEach(child => renderNode(child, newOffsetX, newOffsetY, newZ, depth + 1));
+
+                    const children = childMap[card.id] || [];
+                    children.forEach((child, idx) => {
+                        let nextZ = zIndex;
+                        const type = child.stackType;
+                        if (type === 'top' || type === 'shift_up' || type === 'puzzle_top' || type === 'shift_down') {
+                            nextZ += 1;
+                        } else if (type === 'bottom' || type === 'bottom_exposed' || type === 'puzzle_bottom') {
+                            nextZ -= 1; 
+                        }
+                        renderNodeRecursive(child, nextZ);
+                    });
                 };
-                renderNode(card, baseOffsetX, baseOffsetY, 10, 0);
+
+                renderNodeRecursive(rootCard, 10);
             }
         };
 
@@ -5005,60 +5119,60 @@
 			document.querySelectorAll('.diag-row').forEach(el => el.classList.remove('visible'));
 		}
 
-		// --- [修復] 勝利畫面渲染邏輯 ---
-        if (state.winner) {
-            // 如果畫面還沒顯示，才進行內容生成 (避免每一幀重複生成 DOM)
+		// --- [修改] 勝利畫面渲染邏輯 (限制僅在觸發當下播放) ---
+        
+        // 1. 判斷當前步驟是否為「觸發勝利」的那一步
+        let isWinActionStep = false;
+        if (currentIndex >= 0 && history[currentIndex]) {
+            // 檢查當前的 Action 裡面有沒有包含 GAME_WIN 操作
+            isWinActionStep = history[currentIndex].action.operations.some(o => o.type === 'GAME_WIN');
+        }
+
+        // 2. 只有在「狀態有贏家」且「當前步驟正是勝利時刻」才顯示特效
+        if (state.winner && isWinActionStep) {
+            
+            // 如果畫面還沒顯示，才進行內容生成
             if (winOverlay.style.display !== 'flex') {
                 winOverlay.style.display = 'flex';
                 
                 const winnerText = state.winner === 1 ? "1P WIN!" : "2P WIN!";
-                const color = state.winner === 1 ? "#3498db" : "#e91e63"; // P1藍 / P2紅
+                const color = state.winner === 1 ? "#3498db" : "#e91e63"; 
                 
-                // 1. 生成文字結構
                 winOverlay.innerHTML = `
                     <div class="win-text" style="color: ${color}">${winnerText}</div>
                     <div class="win-sub">Congratulations!</div>
                 `;
                 
-                // 2. 生成彩帶特效 (Confetti)
-                // 隨機產生 50 個彩帶碎片
+                // 生成彩帶特效
                 const colors = ['#f1c40f', '#e74c3c', '#3498db', '#9b59b6', '#2ecc71'];
                 for (let i = 0; i < 50; i++) {
                     const conf = document.createElement('div');
                     conf.className = 'confetti';
-                    // 隨機位置與延遲
                     conf.style.left = Math.random() * 100 + 'vw';
                     conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
                     conf.style.animationDelay = (Math.random() * 2) + 's';
                     conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    
                     winOverlay.appendChild(conf);
                 }
-				
-				// --- [新增] 自動清除計時器 ---
-                // 先清除舊的計時器 (若有的話)，避免重複觸發
-                if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
                 
-                // 設定 4.5 秒後自動消失 (配合彩帶掉落時間)
+                // 自動清除計時器
+                if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
                 winOverlayTimeout = setTimeout(() => {
                     winOverlay.style.display = 'none';
-                    // 清空內容以節省效能
                     winOverlay.innerHTML = '';
                 }, 4500);
-                // --------------------------
-                
-                // 3. 點擊遮罩可關閉勝利畫面 (回到預覽狀態)
+
                 winOverlay.onclick = () => {
                     winOverlay.style.display = 'none';
-                    // 如果需要自動重置勝利狀態，可在此呼叫 addOperation 
-                    // 但通常這裡只是暫時關閉顯示，讓玩家看盤面
+                    if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
                 };
             }
         } else {
-            // 如果當前狀態沒有勝利者 (例如按了上一步或重置)，隱藏遮罩
+            // [關鍵] 如果不是勝利當下的步驟 (例如後續的補述、移動)，強制隱藏遮罩
             winOverlay.style.display = 'none';
             winOverlay.innerHTML = ''; 
         }
+        // ------------------------------
         // ------------------------------
 
 		// --- [修改] 取得當前步驟的移動卡片 (通用化) ---
@@ -5197,8 +5311,40 @@
         }
     }
 	
+	// --- [新增] 堆疊偏移量計算系統 ---
+
+    // 1. 定義各種堆疊類型的「原始偏移量」 (假設卡片是直立 0度時的相對位置)
+    // --- [數學輔助] 向量旋轉與偏移 ---
+
+    // 1. 定義各種堆疊類型的「原始偏移量」
+    function getBaseStackOffset(type) {
+        switch (type) {
+            case 'top':           return { x: 0, y: 0 };
+            case 'bottom':        return { x: 0, y: 0 };
+            case 'shift_up':      return { x: 0, y: -25 };
+            case 'shift_down':    return { x: 0, y: 25 };
+            case 'bottom_exposed':return { x: 0, y: 20 };
+            case 'puzzle_top':    return { x: 0, y: -70 };
+            case 'puzzle_bottom': return { x: 0, y: 70 };
+            case 'puzzle_left':   return { x: -50, y: 0 };
+            case 'puzzle_right':  return { x: 50, y: 0 };
+            default:              return { x: 0, y: 0 };
+        }
+    }
+
+    // 2. 向量旋轉公式
+    function rotateVector(x, y, deg) {
+        const rad = deg * (Math.PI / 180);
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        return {
+            x: x * cos - y * sin,
+            y: x * sin + y * cos
+        };
+    }
+	
 	// --- [獨立光圈版] 王牌特效函式 (精準定位修正版) ---
-// --- [獨立光圈版] 王牌特效函式 (視覺逆推修正版) ---
+	// --- [獨立光圈版] 王牌特效函式 (視覺逆推修正版) ---
     function triggerAceAnimation(cardId) {
         const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
         if (!originalEl) return;
