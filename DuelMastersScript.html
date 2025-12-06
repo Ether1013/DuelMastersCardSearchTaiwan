@@ -1795,6 +1795,7 @@
     <button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
+	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;">ℹ️ About</button>
 </div>
 
 <div id="draft-bar">
@@ -2138,6 +2139,32 @@
         <div style="margin-top:15px; display:flex; justify-content:space-between;">
             <button class="danger" onclick="closeBGMModal()">取消 (Cancel)</button>
             <button class="primary" onclick="confirmBGM()">💾 確認 (Confirm)</button>
+        </div>
+    </div>
+</div>
+<div id="about-modal" class="modal">
+    <div class="modal-content" style="width: 350px; text-align: center;">
+        <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">Credits</h3>
+        
+        <div style="text-align: left; font-size: 0.9rem; line-height: 1.6; padding: 10px;">
+            <div style="margin-bottom: 12px;">
+                <div style="font-weight:bold; color:#2c3e50;">Project Lead & Design</div>
+                <div>Ether (<a href="mailto:tairandodx@msn.com" style="color:#3498db; text-decoration:none;">tairandodx@msn.com</a>)</div>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <div style="font-weight:bold; color:#2c3e50;">Coding & Implementation</div>
+                <div>Google Gemini Pro (v1.5 / v2.0 Flash)</div>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+                <div style="font-weight:bold; color:#2c3e50;">Music / BGM Assets</div>
+                <div>魔王魂 (<a href="https://maou.audio" target="_blank" style="color:#e67e22; text-decoration:none;">maou.audio</a>)</div>
+            </div>
+        </div>
+
+        <div style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+            <button class="primary" onclick="document.getElementById('about-modal').style.display='none'">Close</button>
         </div>
     </div>
 </div>
@@ -6609,6 +6636,11 @@
              });
         }
     });
+	
+	// --- [新增] 開啟關於視窗 ---
+    function openAboutModal() {
+        document.getElementById('about-modal').style.display = 'flex';
+    }
 
 	/*
     // 改寫 togglePlay 以同步更新手機版按鈕文字
