@@ -1017,7 +1017,7 @@
 			z-index: 600;
 		}
 
-		/* 4. 中間戰場：【解鎖】改為 auto，讓點擊事件能傳給 JS 進行攔截 */
+		/* 4. 中間戰場：【關鍵】這裡設為 none，達成「透明擋板」效果 */
 		body.mobile-mode #game-board-container {
 			flex: 1;
 			height: 100%;
@@ -1026,8 +1026,8 @@
 			align-items: center;
 			overflow: hidden;
 			
-			/* [修改] 允許互動，這樣 JS 才能捕捉到點擊並顯示大圖 */
-			pointer-events: auto !important; 
+			/* 這裡禁止互動！ */
+			pointer-events: none !important; 
 		}
 
 		/* --- 移動控制面板位置 (靠右下角修正版) --- */
@@ -1833,89 +1833,28 @@
             z-index: 3005 !important; /* 確保在最上層 */
         }
 		
-		/* --- [修正版] 手機版：展示區卡片放大 (1.5倍) --- */
-        /* --- [修正版 v2] 手機版：展示區卡片放大與緊湊化 --- */
+		/* --- [新增] 手機版：展示區卡片放大 (比照戰鬥區 1.5倍) --- */
         body.mobile-mode #reveal-zone .card {
-            transform: scale(1.5) !important;
+            /* 1. 放大 1.5 倍 */
+            transform: scale(1.5);
+            
+            /* 2. 設定縮放原點為中心 */
             transform-origin: center center;
             
-            /* [修改] 左右外距縮小，讓卡片靠得更近 */
-            /* 上下維持 20px (避免被切掉)，左右縮小到 2px */
-            margin: 20px 2px !important; 
+            /* 3. 【關鍵】增加外距 (Margin) */
+            /* 因為 transform 放大不會撐開原本的版面空間， */
+            /* 必須手動增加 margin 來推開旁邊的卡片，避免視覺上重疊 */
+            /* 原始寬 50px -> 放大後 75px (差 25px -> 左右各需補 12.5px) */
+            margin: 25px 15px !important; 
             
             z-index: 10;
         }
 
+        /* 調整展示區容器的間距，讓放大的卡片不會貼太近邊框 */
         body.mobile-mode #reveal-zone {
-            /* [修改] 容器間隙縮小 */
-            padding: 50px 20px !important;
-            gap: 2px !important; /* 從 20px 改為 2px */
-            
-            max-width: 90vw;
-            max-height: 80vh;
-            overflow-y: auto;
+            padding: 40px 30px !important; 
+            gap: 15px !important; /* 增加 Flex 排版的間隙 */
         }
-		
-		/* --- [新增] 手機版：手牌與魔力區緊湊化 --- */
-        body.mobile-mode .hand-zone .card-group,
-        body.mobile-mode .mana-zone .card-group {
-            /* 原本是 0 5px，現在改為 0 1px，大幅減少間距 */
-            margin: 0 1px !important;
-        }
-        
-        /* [選用] 如果希望手牌能稍微重疊 (像扇形一樣)，可以改用這個：
-        body.mobile-mode .hand-zone .card-group {
-            margin: 0 -5px !important; 
-        }
-        */
-
-        /* [新增] 手機版：右側卡片檢視器 */
-        #mobile-card-viewer {
-            display: none;
-            position: fixed;
-            top: 0; right: 0; bottom: 0;
-            width: 50vw; /* 佔據右半邊 */
-            background: rgba(0, 0, 0, 0.85); /* 深色半透明背景 */
-            z-index: 3500; /* 在 Play 按鈕(3000)之上，但我們會讓 Play 按鈕也能被按到 */
-            
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-            border-left: 2px solid #f1c40f;
-            animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* 檢視器中的卡片圖片 */
-        #mobile-viewer-img {
-            max-width: 90%;
-            max-height: 80%;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            border: 2px solid white;
-        }
-
-        /* 關閉按鈕 [x] */
-        #mobile-viewer-close {
-            position: absolute;
-            top: 15px; right: 15px;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-            cursor: pointer;
-            opacity: 0.8;
-            z-index: 3501;
-        }
-		
-		/* [修正] 手機模式下，強制鎖定對話框，不允許點擊編輯 */
-		body.mobile-mode .diag-box {
-			pointer-events: none !important;
-		}
     </style>
 </head>
 <body>
@@ -2245,12 +2184,6 @@
             <button onclick="resolveImportConflict('overwrite')" style="padding: 10px; background: #e74c3c;">⚠️ 不存檔直接匯入</button>
         </div>
     </div>
-</div>
-
-<div id="mobile-card-viewer" onclick="closeMobileViewer()">
-    <div id="mobile-viewer-close">✕</div>
-    <img id="mobile-viewer-img" src="" alt="Card Detail">
-    <div style="color:white; margin-top:10px; font-size:0.9rem;">(CLOSE)</div>
 </div>
 
 <div id="mobile-controls">
@@ -4813,6 +4746,15 @@
         if (!isPointing) cancelSelection();
     });
 
+    function cancelSelection() {
+        if (pendingMove) {
+            pendingMove = null;
+            document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
+            document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
+            document.getElementById('card-action-panel').style.display = 'none';
+        }
+    }
+
     function isStackZone(zid) {
         return zid.includes('deck') || zid.includes('shield') || zid.includes('hyper');
     }
@@ -4875,61 +4817,70 @@
         renderUI();
     }
 	
-	// --- [修正] 手機版檢視器邏輯 (無圖也要顯示) ---
-    function showMobileCardViewer(cardId) {
-        const state = getCurrentDisplayState();
-        const card = state.cards.find(c => c.id == cardId);
-        if (!card) return;
-
-        // 1. 取得圖片來源
-        let src = "";
-        if (card.image) {
-            // 優先找自定義圖
-            const key = card.imageKey || card.backImageKey;
-            if (key && globalImageRegistry[key]) {
-                src = globalImageRegistry[key];
+	function handleCardSingleClick(e, cardId) {
+        e.stopPropagation(); 
+        
+		// [新增] 多重選取模式邏輯
+        if (isMultiSelectMode) {
+            const index = multiSelectedIds.indexOf(cardId);
+			const el = document.querySelector(`.card[data-id="${cardId}"]`);
+            if (index > -1) {
+                // 取消勾選
+                multiSelectedIds.splice(index, 1);
+                if (el) el.classList.remove('multi-selected');
+                
+                // [新增] 如果減到 0 張，自動退出模式
+                if (multiSelectedIds.length === 0) {
+                    cancelSelection(); // 這會重置 isMultiSelectMode
+                    return;
+                }
+            } else {
+                // 加入勾選
+                multiSelectedIds.push(cardId);
+                if (el) el.classList.add('multi-selected');
             }
+            // 為了效能，我們只更新這張卡片的 class，不重繪整個 UI
+            if (el) {
+                el.classList.toggle('multi-selected');
+            }
+            return;
         }
-        
-        // [關鍵修正] 這裡不再 return，而是繼續執行顯示視窗的邏輯
-        
-        // 2. 設定圖片並顯示
-        const imgEl = document.getElementById('mobile-viewer-img');
-        const viewer = document.getElementById('mobile-card-viewer');
-        
-        if (src) {
-            imgEl.src = src;
-            imgEl.style.display = 'block'; // 有圖顯示圖
-        } else {
-            // 沒圖時隱藏 img 標籤，只顯示黑底與文字
-            imgEl.style.display = 'none'; 
+		
+        if (isPointing) {
+            handlePointClick(null, cardId);
+            return;
         }
-        
-        // 無論有無圖片，視窗都要打開
-        viewer.style.display = 'flex';
 
-        // 3. 暫停播放 (但不停止音樂)
-        if (playTimeout) {
-            clearTimeout(playTimeout);
-            playTimeout = null;
-            updatePlayButtonUI();
-            document.body.classList.remove('is-playing');
-        }
-    }
-
-    function closeMobileViewer() {
-        const viewer = document.getElementById('mobile-card-viewer');
-        
-        // 如果視窗是開著的
-        if (viewer.style.display !== 'none') {
-            viewer.style.display = 'none';
+        if (pendingMove) {
+            // 如果點擊已選取的卡片 -> 取消選取該張
+            if (pendingMove.cardIds.includes(cardId)) {
+                 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
+                 if (pendingMove.cardIds.length === 0) {
+                     cancelSelection();
+                     return;
+                 }
+                 updateSelectionUI();
+                 return;
+            }
             
-            // 4. 關閉後自動繼續播放 (Resume)
-            // 只有在目前是暫停狀態時才恢復播放
-            if (!playTimeout) {
-                togglePlay();
+            const state = getCurrentDisplayState();
+            const targetCard = state.cards.find(c => c.id === cardId);
+            
+            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
+            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
+                openStackingModal(targetCard);
+                return;
             }
         }
+        
+        // 單純選取，不執行任何動作
+        if (!pendingMove) {
+            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
+        } else {
+            pendingMove.cardIds.push(cardId);
+        }
+        updateSelectionUI();
+		return;
     }
 
     function openStackingModal(targetCard) {
@@ -5525,8 +5476,6 @@
             }
         }
 
-        // ... (在 renderUI 函式尾端，原本的 requestAnimationFrame 區塊) ...
-
         requestAnimationFrame(() => {
             const lastPositions = getCardPositions();
             
@@ -5555,87 +5504,98 @@
                         if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
                              // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
                         } else {
-                            // 1. 第一步：瞬間移動回起點 (Transition None)
+                            // 1. 先瞬間移動回起點 (保持在原區域的位置)
                             cardEl.style.transition = 'none';
                             cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
                             
-                            // [關鍵修正 1] 強制瀏覽器立刻計算一次佈局 (Reflow)
-                            // 這行程式碼讀取 offsetWidth 會強迫手機瀏覽器 "現在" 就承認上面的位置
-                            // 這是解決手機版動畫「整坨一起飛」或「沒有延遲」最重要的一步
-                            void cardEl.offsetWidth; 
-
-                            // 2. 第二步：在下一幀執行移動動畫
-                            // [關鍵修正 2] 使用雙重 rAF，確保動畫指令在「下一幀」才執行，防止被合併
+                            // 2. 下一幀執行移動動畫
                             requestAnimationFrame(() => {
-                                requestAnimationFrame(() => {
-                                    const flyTime = 0.5; // 統一飛行 0.5秒
+                                const flyTime = 0.5; // 單張飛行時間 0.5秒
+                                
+                                let duration = `${flyTime}s`;
+                                let delay = '0s';
+                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+
+                                // --- [核心修改] 通用序列動畫邏輯 ---
+                                // 檢查這張卡片是否在當前的移動清單中
+                                // 使用 loose equality (==) 避免字串/數字型別問題
+                                const moveIndex = movingCardIds.findIndex(mid => mid == id);
+
+                                if (moveIndex !== -1) {
+                                    const totalCards = movingCardIds.length;
                                     
-                                    let duration = `${flyTime}s`;
-                                    let delay = '0s';
-                                    // 使用 ease-out 讓結尾減速，看起來較自然
-                                    let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)'; 
-
-                                    // --- 修正後的延遲計算邏輯 ---
-                                    // 檢查這張卡片是否在當前的移動清單中
-                                    const moveIndex = movingCardIds.findIndex(mid => mid == id);
-
-                                    if (moveIndex !== -1) {
-                                        const totalCards = movingCardIds.length;
+                                    // 如果只有一張牌，就不需要延遲
+                                    if (totalCards > 1) {
+                                        // 演算法：每張牌間隔飛行時間的 20%
+                                        let interval = flyTime * 0.2;
                                         
-                                        if (totalCards > 1) {
-                                            // [關鍵修正 3] 固定間隔 0.2秒 (200ms)
-                                            // 原本是 flyTime * 0.2 (=0.1s)，手機上太快看不出來
-                                            // 改成 0.2s 讓節奏感更強
-                                            let interval = 0.2;
-                                            
-                                            // 防呆：如果一次移動超多張 (>10張)，稍微縮短間隔以免拖太久
-                                            if (totalCards > 10) {
-                                                interval = 2.0 / totalCards; 
-                                            }
-                                            
-                                            delay = `${moveIndex * interval}s`;
+                                        // 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
+                                        // 這樣會變成機關槍式的快速發牌，而不是慢慢發
+                                        const maxTotalLag = 1.5;
+                                        if ((interval * totalCards) > maxTotalLag) {
+                                            interval = maxTotalLag / totalCards;
                                         }
+                                        
+                                        // 設定延遲：第 N 張牌延遲 N * interval 秒
+                                        delay = `${moveIndex * interval}s`;
                                     }
-                                    // -------------------------------
+                                }
+                                // -------------------------------
 
-                                    cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
-                                    cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
-                                });
+                                cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
+                                cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
                             });
                         }
                     }
                 }
             });
-            
+			
             lastRenderedState = cloneState(state);
 
-            // [王牌特效] 保持原本邏輯 ...
+            // [新增] 王牌進場特效觸發檢查
+            // 檢查當前這一步 (currentIndex) 是否有移動操作
             if (currentIndex >= 0 && history[currentIndex]) {
                 const action = history[currentIndex].action;
+                
+                // 1. 找出這一步驟中「所有」的移動操作，而不只是第一個
                 const moveOps = action.operations.filter(o => o.type === 'MOVE');
+                
                 let foundAceEntry = false;
 
+                // 2. 遍歷所有移動操作，檢查是否有王牌進入戰鬥區
                 for (const op of moveOps) {
                     if (op.toZone && op.toZone.includes('battle')) {
+                        // 使用寬鬆比對 (==) 避免 ID 型態 (字串/數字) 不符的問題
                         const aceId = op.cardIds.find(id => globalAceRegistry[id]);
+                        
                         if (aceId) {
+                            // 只有當這一步還沒播放過動畫時，才觸發
                             if (currentIndex !== lastAnimatedStep) {
+                                console.log("觸發王牌特效 ID:", aceId); // 除錯用
                                 triggerAceAnimation(aceId);
                                 foundAceEntry = true;
                             }
+                            // 只要找到一張王牌進場就不再繼續找 (避免同一步多張王牌時重複觸發)
                             break;
                         }
                     }
                 }
+
+                // 3. 更新動畫步數紀錄
+                // 無論有沒有觸發特效，只要檢查過這一步，就更新 lastAnimatedStep
+                // 這樣可以避免重複觸發，也能確保沒特效的步驟被正確標記為「已讀」
                 if (currentIndex !== lastAnimatedStep) {
                     lastAnimatedStep = currentIndex;
                 }
             }
         });
-        
-        updateSliderUI();
-        checkMobileMusicButtonVisibility();
+		
+		updateSliderUI();
+		
+		// [新增] 檢查手機版音樂按鈕可見性
+		checkMobileMusicButtonVisibility(); // <--- 加入這行
 
+		// [修改] 增加 !skipScroll 判斷，手動點擊時不捲動
         if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
              scrollToActiveStep();
         }
@@ -5931,47 +5891,18 @@
         updateSelectionUI();
     }
 
-	// [整合版] 點擊卡片處理 (包含手機版攔截 + 多選邏輯 + 選取修正)
-    // [整合版] 點擊卡片處理 (包含手機版過濾 + 多選邏輯)
+    // [修改] 點擊卡片處理 (加入歸零自動退出邏輯)
+    // [修正] 點擊卡片處理
     function handleCardSingleClick(e, cardId) {
         e.stopPropagation(); 
         
-        // 1. [手機版攔截] 優先級最高
-        if (document.body.classList.contains('mobile-mode') || isMobileDevice()) {
-            
-            // --- [新增] 過濾邏輯：只有「有圖」且「非效果」的卡可以點 ---
-            const state = getCurrentDisplayState();
-            const card = state.cards.find(c => c.id == cardId);
-            
-            if (card) {
-                // 條件 A: 排除效果卡 (Ability Zone)
-                // 凡是區域 ID 包含 'ability' 字眼的都不能點
-                if (card.zone.includes('ability')) return;
-
-                // 條件 B: 排除無圖卡
-                // 必須同時滿足：1.卡片屬性標記為有圖 (card.image) 
-                //             2.全域圖片庫 (globalImageRegistry) 裡真的有這張圖的資料
-                const key = card.imageKey || ('img_' + card.id);
-                const backKey = card.backImageKey || ('img_back_' + card.id);
-                const hasActualImageData = globalImageRegistry[key] || globalImageRegistry[backKey];
-
-                if (!card.image || !hasActualImageData) {
-                    return; // 沒圖就結束，不開啟檢視器
-                }
-            }
-            // -----------------------------------------------------
-
-            showMobileCardViewer(cardId);
-            return; 
-        }
-
-        // 2. [多重選取模式]
+        // 1. 多重選取模式邏輯 (保持不變)
         if (isMultiSelectMode) {
             const index = multiSelectedIds.indexOf(cardId);
             const el = document.querySelector(`.card[data-id="${cardId}"]`);
             
             if (index > -1) {
-                // 已選過 -> 取消勾選
+                // 取消勾選
                 multiSelectedIds.splice(index, 1);
                 if (el) el.classList.remove('multi-selected');
                 
@@ -5981,7 +5912,7 @@
                     return;
                 }
             } else {
-                // 未選過 -> 加入勾選
+                // 加入勾選
                 multiSelectedIds.push(cardId);
                 if (el) el.classList.add('multi-selected');
             }
@@ -5992,14 +5923,15 @@
             return;
         }
 
-        // 3. [指向模式]
+        // 2. 指向模式邏輯 (保持不變)
         if (isPointing) {
             handlePointClick(null, cardId);
             return;
         }
 
-        // 4. [已有選取時的邏輯]
+        // 3. 已有選取時的邏輯 (取消或堆疊)
         if (pendingMove) {
+            // 如果點擊已選取的卡片 -> 取消選取該張
             if (pendingMove.cardIds.includes(cardId)) {
                  pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
                  if (pendingMove.cardIds.length === 0) {
@@ -6013,23 +5945,27 @@
             const state = getCurrentDisplayState();
             const targetCard = state.cards.find(c => c.id === cardId);
             
+            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
             if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
                 openStackingModal(targetCard);
                 return;
             }
         }
         
-        // 5. [單純選取]
+        // 4. [關鍵修正] 單純選取 (Fresh Selection)
         if (!pendingMove) {
+            // 錯誤原因：原本寫成 pendingMove = { cardIds: [...multiSelectedIds] ... }
+            // 因為此時不在多選模式，multiSelectedIds 是空的，導致選到了「空牌組」，面板就不會開。
+            
+            // 修正：直接將當前點擊的這張卡 [cardId] 設為選取對象
             pendingMove = { cardIds: [cardId], shuffle: false };
         } else {
             pendingMove.cardIds.push(cardId);
         }
-        
         updateSelectionUI();
 		return;
     }
-	
+    
     // [修改] 取消選取 (確保也會關閉多選模式)
     function cancelSelection() {
         // 重置多選相關變數
@@ -6325,14 +6261,6 @@
                 }).catch(e => {
                     console.log("Audio unlock attempt", e);
                 });
-            }
-			
-			// [新增] 如果檢視器是開著的，先強制關閉 (視覺上)
-            // 注意：closeMobileViewer 裡面會呼叫 togglePlay，為了避免無窮迴圈，
-            // 這裡我們只手動隱藏 DOM，不呼叫 closeMobileViewer()
-            const viewer = document.getElementById('mobile-card-viewer');
-            if (viewer && viewer.style.display !== 'none') {
-                viewer.style.display = 'none';
             }
 			
 			removePlayHighlight();
