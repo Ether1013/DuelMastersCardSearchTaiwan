@@ -1769,6 +1769,24 @@
             content: "🔊";
             margin-left: auto;
         }
+		/* [新增] 手機版隱藏 BGM 按鈕 (強制隱藏) */
+        body.mobile-mode #btn-bgm {
+            display: none !important;
+        }
+
+        /* [新增] 手機版按鈕通用樣式 (確保 Stop 跟 Play 長得像) */
+        .mobile-btn {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid white;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .mobile-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -1928,7 +1946,8 @@
         <div style="padding: 10px; background: #ecf0f1; border-top:1px solid #bdc3c7;">
             <div style="display: flex; gap:5px; justify-content: center; margin-bottom: 5px;">
                 <button onclick="prevStep()">▲</button>
-                <button onclick="togglePlay()" id="btn-play">▶ 播放</button>
+                <button onclick="togglePlay()" id="btn-play">▶</button>
+				<button onclick="stopPlayback()" id="btn-stop">⏹</button>
                 <button onclick="nextStep()">▼</button>
 				<select id="speed-select" onchange="changePlaybackSpeed(this.value)" style="padding:2px; border-radius:4px; border:1px solid #ccc; background:#fff; font-size:0.85rem; cursor:pointer;">
 					<option value="4.0">🚀 0.25x (極慢)</option>
@@ -2109,7 +2128,7 @@
         <option value="0.5">🐇 2.0x</option>
         <option value="0.25">⚡ 4.0x</option>
     </select>
-    
+    <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback()" style="margin-right:5px;">⏹</button>
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
 </div>
 
@@ -2422,8 +2441,8 @@
             'btn_play_step': '👁️ 演示此步',
             'btn_edit_step': '✏️ 編輯',
             'btn_delete_step': '🗑 刪除',
-            'btn_play': '▶ 播放',
-            'btn_pause': '⏸ 暫停',
+            'btn_play': '▶',
+            'btn_pause': '⏸',
             'lbl_reveal_zone': '展示區 (Reveal Zone)',
             'lbl_action_log': 'Action Log (操作紀錄)',
             'op_default': '操作',
@@ -2494,7 +2513,7 @@
             'msg_confirm_reveal_close': 'Close reveal zone and send cards to grave?', 'msg_delete_card_confirm': 'Delete selected card(s)?',
             'msg_confirm_point_zone': 'Confirm point to {zone}?', 'msg_ability_cant_move': 'Ability cards cannot be moved.',
             'msg_insert_pos_title': 'Select Insert Position', 'msg_load_script_fail': 'Failed to load script: ', 'btn_play_from': '▶ Play From Here',
-            'btn_play_step': '👁️ Demo Step', 'btn_edit_step': '✏️ Edit', 'btn_delete_step': '🗑 Delete', 'btn_play': '▶ Play', 'btn_pause': '⏸ Pause',
+            'btn_play_step': '👁️ Demo Step', 'btn_edit_step': '✏️ Edit', 'btn_delete_step': '🗑 Delete', 'btn_play': '▶', 'btn_pause': '⏸',
             'lbl_reveal_zone': 'Reveal Zone', 'lbl_action_log': 'Action Log', 'op_default': 'Action', 'op_count_suffix': ' Actions',
             'desc_end_reveal': 'End Reveal', 'desc_end_point': 'End Pointing', 'lbl_move': 'Move:', 'lbl_scale': 'Scale:', 'btn_remove_img_short': '✕ Img',
             'title_stack_target': 'Stacking: Target [{target}]', 'lbl_draft_warning': '⚠️ Editing... (Steps: ', 'lbl_draft_ops': ')',
@@ -2546,7 +2565,7 @@
             'msg_delete_card_confirm': '選択したカードを削除しますか？(効果処理エリア推奨)', 'msg_confirm_point_zone': '{zone} を対象にしますか？',
             'msg_ability_cant_move': '効果処理中のカードは移動できません。', 'msg_insert_pos_title': '挿入位置を選択 (点線枠をクリック)',
             'msg_load_script_fail': 'スクリプトの読み込みに失敗しました: ', 'btn_play_from': '▶ ここから再生', 'btn_play_step': '👁️ この手順を確認',
-            'btn_edit_step': '✏️ 編集', 'btn_delete_step': '🗑 削除', 'btn_play': '▶ 再生', 'btn_pause': '⏸ 一時停止',
+            'btn_edit_step': '✏️ 編集', 'btn_delete_step': '🗑 削除', 'btn_play': '▶', 'btn_pause': '⏸ 一時停止',
             'lbl_reveal_zone': '公開領域', 'lbl_action_log': '行動ログ', 'op_default': '操作', 'op_count_suffix': ' アクション',
             'desc_end_reveal': '公開終了', 'desc_end_point': '選択終了', 'lbl_move': '移動:', 'lbl_scale': '縮小/拡大:', 'btn_remove_img_short': '✕ 画像',
             'title_stack_target': 'スタック操作: 対象 [{target}]', 'op_POINT': '対象選択', 'op_ATTACK': '攻撃宣言',
@@ -6110,6 +6129,7 @@
     let playTimeout = null; // 取代 playInterval
 
     // --- [整合版] 播放控制 (包含 BGM 起始同步) ---
+    // --- [整合版] 播放控制 (修復 iOS Safari 音樂問題) ---
     function togglePlay() {
         if (playTimeout) {
             // --- [暫停] ---
@@ -6119,24 +6139,37 @@
             updatePlayButtonUI();
             document.body.classList.remove('is-playing');
             
-            // 暫停時，音樂保持播放當作背景音，不需特別暫停
-            // 如果希望暫停時音樂也停，請取消下面這行的註解：
-            // globalAudioPlayer.pause(); 
+            // 暫停時，音樂保持背景播放 (符合您的需求)
+            // 如果想暫停音樂可加: globalAudioPlayer.pause(); 
 
         } else {
             // --- [開始播放] ---
+            
+            // 1. [iOS 關鍵修正] 
+            // 在使用者點擊的當下，強制「解鎖」Audio 物件
+            // 哪怕現在沒有音樂，也要 play 一下再 pause，或是載入空音軌
+            // 這裡我們直接嘗試播放當前應有的音樂，或者讓它處於「準備就緒」狀態
+            if (globalAudioPlayer.paused) {
+                // 嘗試播放一個空的 Promise 來觸發 AudioContext
+                globalAudioPlayer.play().then(() => {
+                    // 如果當前其實不該有音樂 (null)，那就立刻暫停，但此時 Audio 已解鎖
+                    const currState = (currentIndex >= 0 && history[currentIndex]) ? history[currentIndex].state : initialState;
+                    if (!currState.bgm) {
+                        globalAudioPlayer.pause();
+                    }
+                }).catch(e => {
+                    console.log("Audio unlock attempt", e);
+                });
+            }
+
             if (currentIndex >= history.length - 1) {
-                currentIndex = -1; // 如果已經在最後，從頭開始
+                currentIndex = -1; // 從頭開始
             }
             
             document.body.classList.add('is-playing');
             
-            // [新增] BGM 同步邏輯
-            // 按下播放的瞬間，要確保音樂跟當前步驟 (currentIndex) 是同步的
-            // 否則使用者會覺得「怎麼播放了卻沒聲音」，直到跳到下一步才響
+            // 2. BGM 同步邏輯 (確保按下播放的瞬間音樂正確)
             let startBgm = null;
-            
-            // 防呆：如果 currentIndex 是 -1 (剛重置)，讀取初始狀態的 bgm
             if (currentIndex >= 0 && history[currentIndex]) {
                 startBgm = history[currentIndex].state.bgm;
             } else if (initialState) {
@@ -6144,14 +6177,16 @@
             }
 
             if (startBgm) {
-                // 如果目前沒在播這首，就切換過去
-                if (!globalAudioPlayer.src.includes(startBgm)) {
-                    globalAudioPlayer.src = BGM_FOLDER + startBgm;
+                const targetSrc = BGM_FOLDER + startBgm;
+                // 只有當來源不同時才重置，避免中斷連續播放的音樂
+                // 注意：iOS 上 src 若未包含完整路徑可能會有差異，用 includes 判斷較保險
+                if (!globalAudioPlayer.src.includes(encodeURI(startBgm))) {
+                    globalAudioPlayer.src = targetSrc;
                     globalAudioPlayer.currentTime = 0;
                 }
-                globalAudioPlayer.play().catch(e => console.log("BGM start failed", e));
+                // 這裡再呼叫一次 play 確保萬無一失
+                globalAudioPlayer.play().catch(e => {});
             } else {
-                // 如果當前沒有音樂，確保靜音
                 globalAudioPlayer.pause();
             }
 
@@ -6159,6 +6194,30 @@
             playNextStep();
             updatePlayButtonUI();
         }
+    }
+
+	// --- [新增] 停止播放函式 ---
+    function stopPlayback() {
+        // 1. 停止計時器
+        if (playTimeout) {
+            clearTimeout(playTimeout);
+            playTimeout = null;
+        }
+
+        // 2. 重置狀態
+        currentIndex = 0; // 回到第一步 (初始狀態)
+        
+        // 3. UI 重置
+        updatePlayButtonUI();
+        document.body.classList.remove('is-playing'); // 顯示星星/編輯器
+
+        // 4. 音樂重置
+        globalAudioPlayer.pause();
+        globalAudioPlayer.currentTime = 0;
+
+        // 5. 畫面重繪
+        renderUI();
+        if(!document.body.classList.contains('mobile-mode')) saveToStorage();
     }
 
     // --- [修改] playNextStep 函式 (結束時移除 class) ---
