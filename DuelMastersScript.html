@@ -491,28 +491,30 @@
         .card-group:hover .stack-top:not(.puzzle-link) { z-index: 101; }
         .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
         .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
-		/* 針對疊在正下方的卡片 (stack-bottom) */
-		/* 針對疊在正下方的卡片 */
+		/* 2. Hover 時的動作 (針對疊在正下方的卡片) */
 		.card-group:hover .stack-bottom { 
-			/* 使用 calc 自動計算：
-			   第一層 (Depth 1): 65px * 1 = 65px
-			   第二層 (Depth 2): 65px * 2 = 130px
-			   以此類推...
-			*/
-			top: calc(65px * var(--stack-depth, 1)) !important; 
+			/* [關鍵] 改用 margin-top 推移，不會覆蓋 top 定位 */
+			/* 計算公式：每層深度 * 65px (讓卡片幾乎完全露出來) */
+			margin-top: calc(65px * var(--stack-depth, 1)) !important; 
 			
-			/* 層級與特效 */
-			z-index: 105; 
-			box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-			transform: scale(1.05);
-			transition: all 0.2s ease-out;
+			/* 確保層級最高，蓋過底下的卡片 */
+			z-index: 105 !important; 
+			
+			/* 增加陰影，讓它看起來浮起來 */
+			box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
 		}
 		
-		/* 針對 "下方(露出底)" 的卡片，也可以套用類似邏輯 */
+		/* 3. 針對 "下方(露出底)" 的卡片 */
 		.card-group:hover .stack-bottom-exposed {
-			/* 稍微多加 10px 錯開視覺 */
-			top: calc(65px * var(--stack-depth, 1) + 10px) !important; 
-			z-index: 104;
+			/* 稍微多錯開一點 (15px) */
+			margin-top: calc(65px * var(--stack-depth, 1) + 15px) !important; 
+			z-index: 104 !important;
+			box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+		}
+		
+		/* 4. [新增] 修正卡群容器 overflow，避免滑出後被切掉 */
+		.card-group {
+			overflow: visible !important;
 		}
 
         .card {
@@ -596,11 +598,15 @@
         /* Stacking classes */
         .stack-base { z-index: 10; position: absolute; }
         .stack-top { z-index: 20; position: absolute; }
-        .stack-bottom { z-index: 5; position: absolute; }
         .stack-shift-up { z-index: 20; position: absolute; }
         .stack-shift-down { z-index: 20; position: absolute; }
-        .stack-bottom-exposed { z-index: 5; position: absolute; }
         .stack-top-offset { z-index: 20; position: absolute; }
+		/* 1. 基礎堆疊卡設定 */
+		.stack-bottom, .stack-bottom-exposed {
+			transition: margin-top 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s;
+			/* 確保滑出時會在最上層 */
+			z-index: 5; 
+		}
         
         /* New Puzzle/Link Stacking Classes */
         .puzzle-link { /* Generic marker */ }
@@ -5855,6 +5861,7 @@
 			const stackClass = 'stack-' + card.stackType.replace('_', '-');
 			el.classList.add(stackClass);
 		}
+		
 
 		// [新增] 大紅勾 HTML
         // 注意：這不會覆蓋掉後面的 SVG 或圖片，因為這只是 append 進去
