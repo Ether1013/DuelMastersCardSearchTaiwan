@@ -5683,33 +5683,60 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (支援發光顏色連動版) ---
+	// --- [獨立光圈版] 王牌特效函式 (尋找最新有效訊號版) ---
 	function triggerAceAnimation(cardId) {
 		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
 		if (!originalEl) return;
 
-		// [新增 1] 取得當前狀態下的卡片資料
 		const state = getCurrentDisplayState();
 		const cardData = state.cards.find(c => c.id === cardId);
 
-		// [新增 2] 定義顏色映射表 (對應 CSS 裡的 RGB)
+		// 定義顏色映射表
 		const colorMap = {
 			'red': '255, 0, 0',
-			'blue': '0, 191, 255',     // deepskyblue
-			'green': '0, 255, 0',      // lime
-			'yellow': '255, 215, 0',   // gold
+			'blue': '0, 191, 255',
+			'green': '0, 255, 0',
+			'yellow': '255, 215, 0',
 			'white': '255, 255, 255',
-			'black': '100, 100, 100',  // 純黑光暈看不見，改用深灰色
-			'rainbow': '255, 0, 255'   // 彩虹暫時用洋紅色(Magenta)代表，或維持金色 '255, 215, 0'
+			'black': '100, 100, 100',
+			'rainbow': '255, 0, 255'
 		};
 
-		// [新增 3] 決定最終使用的顏色 (預設為金色)
+		// 預設顏色：金色
 		let finalColor = '255, 215, 0'; 
-		if (cardData && cardData.glow && colorMap[cardData.glow]) {
-			finalColor = colorMap[cardData.glow];
+		
+		// 用來標記是否已經找到來自小卡的顏色
+		let colorFoundFromProxy = false;
+
+		// 1. 先抓出所有相關的小卡
+		const proxyCards = state.cards.filter(c => 
+			c.zone.includes('ability') && 
+			c.sourceId == cardId
+		);
+
+		if (proxyCards.length > 0) {
+			// [關鍵步驟 A] 排序：ID 越大代表越新 (Newest First)
+			proxyCards.sort((a, b) => b.id - a.id);
+			
+			// [關鍵步驟 B] 搜尋：找出第一張「有設定顏色」且「顏色合法」的卡
+			// 這樣會自動跳過那些 glow 為 null 的最新卡片，往回找到有顏色的那張
+			const activeProxy = proxyCards.find(c => c.glow && colorMap[c.glow]);
+
+			if (activeProxy) {
+				finalColor = colorMap[activeProxy.glow];
+				colorFoundFromProxy = true;
+				console.log(`[Ace Effect] 忽略無效小卡，採用 ID:${activeProxy.id} 的顏色: ${activeProxy.glow}`);
+			}
 		}
 
-		// 階段 0: 等待卡片移動就位
+		// 2. 如果小卡全都是空的 (null)，才回頭檢查本體有沒有發光
+		if (!colorFoundFromProxy) {
+			if (cardData && cardData.glow && colorMap[cardData.glow]) {
+				finalColor = colorMap[cardData.glow];
+			}
+		}
+
+		// --- 以下為視覺渲染 (保持不變) ---
 		setTimeout(() => {
 			const rect = originalEl.getBoundingClientRect();
 			
@@ -5733,12 +5760,12 @@
 			ring.style.setProperty('--h', targetH + 'px');
 			ring.style.setProperty('--rot', rotation + 'deg');
 			
-			// [新增 4] 將顏色注入 CSS 變數
+			// 注入顏色變數
 			ring.style.setProperty('--ace-color', finalColor);
 
 			document.body.appendChild(ring);
 
-			// 階段 2: 觸發閃光
+			// 觸發閃光
 			setTimeout(() => {
 				const flashLayer = document.getElementById('ace-flash-layer');
 				if (flashLayer) {
@@ -5747,7 +5774,7 @@
 					flashLayer.classList.add('anim-flash-white');
 				}
 				
-				// 階段 3: 移除光圈
+				// 移除光圈
 				setTimeout(() => {
 					if (ring.parentNode) ring.parentNode.removeChild(ring);
 				}, 250); 
