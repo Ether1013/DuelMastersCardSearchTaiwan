@@ -1630,24 +1630,25 @@
 
 		/* 2. 外掛發光圈 (獨立於卡片之外) - 絕對尺寸版 */
         .ace-external-ring {
-            position: fixed !important;
-            z-index: 4000 !important;
-            pointer-events: none;
-            background: transparent;
-            border-radius: 4px;
-            
-            /* 讓邊框算在尺寸內，避免外擴 */
-            box-sizing: border-box; 
+			position: fixed !important;
+			z-index: 4000 !important;
+			pointer-events: none;
+			background: transparent;
+			border-radius: 4px;
+			box-sizing: border-box; 
 
-            /* 讀取 JS 算好的絕對座標與尺寸 */
-            top: var(--y);
-            left: var(--x);
-            width: var(--w);
-            height: var(--h);
+			/* 讀取 JS 算好的絕對座標與尺寸 */
+			top: var(--y);
+			left: var(--x);
+			width: var(--w);
+			height: var(--h);
+			
+			/* [新增] 預設顏色變數 (金色)，若 JS 沒傳入會用這個 */
+			--ace-color: 255, 215, 0;
 
-            /* 動畫設定 */
-            animation: ace-ring-power-up 0.7s linear forwards;
-        }
+			/* 動畫設定 */
+			animation: ace-ring-power-up 0.7s linear forwards;
+		}
 
         /* 新增：消退階段 Class */
         .ace-external-ring.power-down {
@@ -1655,12 +1656,8 @@
             animation: ace-ring-power-down 0.7s linear forwards;
         }
 
-		/* --- 修改原本的動畫 Keyframes --- */
-
-		/* 發光動畫 (Up) */
 		@keyframes ace-ring-power-up {
 			0% {
-				/* 使用變數 --ace-color，預設會由 JS 傳入 */
 				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
 				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
 			}
@@ -1678,7 +1675,7 @@
 			}
 		}
 
-		/* 消退動畫 (Down) */
+		/* 3. 消退動畫 (Down) - 將顏色改為變數 */
 		@keyframes ace-ring-power-down {
 			0% {
 				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 1);
@@ -5688,99 +5685,91 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (精準定位修正版) ---
-	// --- [獨立光圈版] 王牌特效函式 (視覺逆推修正版) ---
-    function triggerAceAnimation(cardId) {
-        const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
-        if (!originalEl) return;
-		
-		// [新增] 1. 取得卡片資料以判斷是否正在發光
+	// --- [獨立光圈版] 王牌特效函式 (優先使用卡片當下的光暈顏色) ---
+	function triggerAceAnimation(cardId) {
+		// 1. 先抓取 DOM 元素，確認卡片在畫面上
+		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
+		if (!originalEl) return;
+
+		// 2. [關鍵] 從當前遊戲狀態 (State) 獲取卡片資料
+		// 這確保了我們讀取的是卡片當下的屬性，包含繼承來的或之前設定的狀態
 		const state = getCurrentDisplayState();
 		const card = state.cards.find(c => c.id === cardId);
 		
-		// 定義顏色映射 (對應 CSS .glow-xxx 的顏色)
-		// 格式為 RGB 三原色數值 (不含 rgba())
+		// 定義顏色映射表 (對應 CSS .glow-xxx 的顏色 RGB 值)
 		const glowColors = {
-			'red': '255, 0, 0',
-			'blue': '0, 191, 255',   // deepskyblue
-			'green': '0, 255, 0',    // lime
-			'yellow': '255, 215, 0', // gold
-			'black': '20, 20, 20',   // 稍微亮一點的黑，否則光暈看不見
-			'white': '255, 255, 255',
-			// 彩虹暫時用金色或洋紅色代替，因為光暈動畫不支援動態變色
-			'rainbow': '255, 215, 0' 
+			'red': '255, 0, 0',          // 紅
+			'blue': '0, 191, 255',       // 藍 (DeepSkyBlue)
+			'green': '0, 255, 0',        // 綠 (Lime)
+			'yellow': '255, 215, 0',     // 黃 (Gold)
+			'black': '50, 50, 50',       // 黑 (稍微調亮以免完全看不見陰影)
+			'white': '255, 255, 255',    // 白
+			'rainbow': '255, 215, 0'     // 彩虹暫時用金色代替 (CSS動畫不支援動態漸層陰影)
 		};
 
-		// 預設為金色 (Gold)
+		// 預設顏色：金色 (王牌預設)
 		let targetRGB = '255, 215, 0'; 
 
-		// 如果卡片有發光狀態，覆蓋預設金色
+		// [核心邏輯] 
+		// 如果卡片目前有 glow 屬性，且該屬性在我們的顏色表內，就使用該顏色覆蓋金色
 		if (card && card.glow && glowColors[card.glow]) {
 			targetRGB = glowColors[card.glow];
 		}
 
-        // 階段 0: 等待卡片移動就位
-        setTimeout(() => {
-            // 1. 取得卡片當前在螢幕上的「實際視覺範圍」
-            const rect = originalEl.getBoundingClientRect();
-            
-            // 2. 創建光圈
-            const ring = document.createElement('div');
-            ring.className = 'ace-external-ring';
-            
-            // 3. 計算絕對中心點 (Center Alignment)
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            // 4. 取得旋轉角度
-            let rotation = 0;
-            const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
-            if (match) rotation = parseFloat(match[1]);
-
-            // 5. [核心修正] 智慧尺寸適配
-            // 我們不再計算縮放比例 (Scale)，而是直接使用 rect 的寬高
-            // 這樣可以確保光框的像素大小跟螢幕上看到的卡片一模一樣
-            
-            const isRotated90 = Math.abs(rotation % 180) > 45;
-
-            // 如果卡片轉了 90 度：
-            // 螢幕上的 rect.width (寬) 其實對應卡片本體的高度
-            // 螢幕上的 rect.height (高) 其實對應卡片本體的寬度
-            // 所以我們要「反向」設定給光框，這樣光框旋轉 90 度後才會吻合
-            const targetW = isRotated90 ? rect.height : rect.width;
-            const targetH = isRotated90 ? rect.width : rect.height;
-
-            // 6. 設定 CSS 變數 (直接傳入像素值)
-            ring.style.setProperty('--x', centerX + 'px');
-            ring.style.setProperty('--y', centerY + 'px');
-            ring.style.setProperty('--w', targetW + 'px');
-            ring.style.setProperty('--h', targetH + 'px');
-            ring.style.setProperty('--rot', rotation + 'deg');
+		// 階段 0: 等待卡片移動就位 (配合 CSS transition)
+		setTimeout(() => {
+			// 再檢查一次元素位置 (因為 400ms 後位置可能微調)
+			const rect = originalEl.getBoundingClientRect();
 			
-			// [關鍵新增] 設定顏色變數
+			// 創建光圈 DOM
+			const ring = document.createElement('div');
+			ring.className = 'ace-external-ring';
+			
+			// 計算絕對中心點
+			const centerX = rect.left + rect.width / 2;
+			const centerY = rect.top + rect.height / 2;
+
+			// 取得旋轉角度 (解析 transform matrix 或 rotate 字串)
+			let rotation = 0;
+			const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+			if (match) rotation = parseFloat(match[1]);
+
+			// 尺寸適配 (處理 90 度旋轉的寬高互換)
+			const isRotated90 = Math.abs(rotation % 180) > 45;
+			const targetW = isRotated90 ? rect.height : rect.width;
+			const targetH = isRotated90 ? rect.width : rect.height;
+
+			// 設定 CSS 變數 (座標、尺寸、角度)
+			ring.style.setProperty('--x', centerX + 'px');
+			ring.style.setProperty('--y', centerY + 'px');
+			ring.style.setProperty('--w', targetW + 'px');
+			ring.style.setProperty('--h', targetH + 'px');
+			ring.style.setProperty('--rot', rotation + 'deg');
+			
+			// [注入顏色] 將決定好的 RGB 寫入 CSS 變數
 			ring.style.setProperty('--ace-color', targetRGB);
 
-            // 7. 加入畫面
-            document.body.appendChild(ring);
+			// 加入畫面，觸發 CSS Animation
+			document.body.appendChild(ring);
 
-            // 階段 2: 觸發閃光
-            setTimeout(() => {
-                const flashLayer = document.getElementById('ace-flash-layer');
-                if (flashLayer) {
-                    flashLayer.classList.remove('anim-flash-white');
-                    void flashLayer.offsetWidth; 
-                    flashLayer.classList.add('anim-flash-white');
-                }
-                
-                // 階段 3: 移除光圈
-                setTimeout(() => {
-                    if (ring.parentNode) ring.parentNode.removeChild(ring);
-                }, 250); 
+			// 階段 2: 觸發全螢幕閃光 (Flash)
+			setTimeout(() => {
+				const flashLayer = document.getElementById('ace-flash-layer');
+				if (flashLayer) {
+					flashLayer.classList.remove('anim-flash-white');
+					void flashLayer.offsetWidth; // 強制重繪 (Reflow) 以重啟動畫
+					flashLayer.classList.add('anim-flash-white');
+				}
+				
+				// 階段 3: 動畫結束後移除光圈 DOM
+				setTimeout(() => {
+					if (ring.parentNode) ring.parentNode.removeChild(ring);
+				}, 250); 
 
-            }, 700); 
+			}, 700); // 0.7s 是 power-up 動畫的時間
 
-        }, 400); 
-    }
+		}, 400); // 等待移動卡片的飛行時間
+	}
 
     // --- [修改] createCardElement 函式 ---
 	function createCardElement(card) {
