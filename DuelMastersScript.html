@@ -491,23 +491,27 @@
         .card-group:hover .stack-top:not(.puzzle-link) { z-index: 101; }
         .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
         .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
-        /* 針對疊在正下方的卡片 (stack-bottom) */
+		/* 針對疊在正下方的卡片 (stack-bottom) */
+		/* 針對疊在正下方的卡片 */
 		.card-group:hover .stack-bottom { 
-			/* 1. 加大滑出距離：原本 40px -> 改為 65px (接近卡片高度 70px) */
-			top: 65px !important; 
+			/* 使用 calc 自動計算：
+			   第一層 (Depth 1): 65px * 1 = 65px
+			   第二層 (Depth 2): 65px * 2 = 130px
+			   以此類推...
+			*/
+			top: calc(65px * var(--stack-depth, 1)) !important; 
 			
-			/* 2. 提高層級：確保滑出來時浮在最上面，不會被其他東西擋住 */
+			/* 層級與特效 */
 			z-index: 105; 
-			
-			/* 3. 增加陰影與微放大：提升視覺辨識度 */
 			box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-			transform: scale(1.05); /* 稍微放大方便點擊 */
+			transform: scale(1.05);
+			transition: all 0.2s ease-out;
 		}
 		
-		/* 針對 "下方(露出底)" 的卡片 (stack-bottom-exposed) 也建議一併補強 */
+		/* 針對 "下方(露出底)" 的卡片，也可以套用類似邏輯 */
 		.card-group:hover .stack-bottom-exposed {
-			/* 稍微錯開一點，避免跟正下方的重疊 */
-			top: 75px !important; 
+			/* 稍微多加 10px 錯開視覺 */
+			top: calc(65px * var(--stack-depth, 1) + 10px) !important; 
 			z-index: 104;
 		}
 
@@ -5240,124 +5244,110 @@
 
         const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
 
-		// --- [核心修改] 支援旋轉的樹狀渲染 ---
-        // --- [核心修改] 支援旋轉的樹狀渲染 (True Bounding Box) ---
-        const renderCardTree = (rootCard, container) => {
-            const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
-            
-            if (isSpreadZone) {
-                // 1. 測量階段：計算所有卡片的「視覺邊界」
-                // 我們必須計算每一張卡片旋轉後的 4 個角落，才能得到正確的容器大小
-                let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
-                
-                const nodePositions = new Map(); 
+		// --- 請替換原本 renderUI 內部的 renderCardTree 函式 ---
+		const renderCardTree = (rootCard, container) => {
+			const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
+			
+			if (isSpreadZone) {
+				// 1. 測量階段 (保持不變)
+				let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+				const nodePositions = new Map(); 
 
-                const measureNode = (card, currentX, currentY) => {
-                    // 1. 記錄卡片「插槽」的左上角座標 (給定位用)
-                    nodePositions.set(card.id, { x: currentX, y: currentY });
+				const measureNode = (card, currentX, currentY) => {
+					nodePositions.set(card.id, { x: currentX, y: currentY });
+					const cx = currentX + 25; 
+					const cy = currentY + 35; 
+					const corners = [{x: -25, y: -35}, {x: 25, y: -35}, {x: 25, y: 35}, {x: -25, y: 35}];
 
-                    // 2. 計算卡片「視覺上」佔用的範圍 (給容器大小用)
-                    // 卡片中心點
-                    const cx = currentX + 25; // 寬度的一半
-                    const cy = currentY + 35; // 高度的一半
-                    
-                    // 卡片尚未旋轉時的 4 個角落 (相對於中心)
-                    // 寬50, 高70
-                    const corners = [
-                        {x: -25, y: -35}, // 左上
-                        {x: 25, y: -35},  // 右上
-                        {x: 25, y: 35},   // 右下
-                        {x: -25, y: 35}   // 左下
-                    ];
+					corners.forEach(p => {
+						const r = rotateVector(p.x, p.y, card.rotation);
+						const finalX = cx + r.x;
+						const finalY = cy + r.y;
+						if (finalX < bounds.minX) bounds.minX = finalX;
+						if (finalX > bounds.maxX) bounds.maxX = finalX;
+						if (finalY < bounds.minY) bounds.minY = finalY;
+						if (finalY > bounds.maxY) bounds.maxY = finalY;
+					});
 
-                    // 將 4 個角落根據卡片角度進行旋轉，並推算絕對座標
-                    corners.forEach(p => {
-                        const r = rotateVector(p.x, p.y, card.rotation);
-                        const finalX = cx + r.x;
-                        const finalY = cy + r.y;
+					const children = childMap[card.id] || [];
+					children.forEach(child => {
+						const baseOffset = getBaseStackOffset(child.stackType);
+						const rotatedOffset = rotateVector(baseOffset.x, baseOffset.y, card.rotation);
+						measureNode(child, currentX + rotatedOffset.x, currentY + rotatedOffset.y);
+					});
+				};
 
-                        if (finalX < bounds.minX) bounds.minX = finalX;
-                        if (finalX > bounds.maxX) bounds.maxX = finalX;
-                        if (finalY < bounds.minY) bounds.minY = finalY;
-                        if (finalY > bounds.maxY) bounds.maxY = finalY;
-                    });
+				measureNode(rootCard, 0, 0);
+				if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
 
-                    // 3. 繼續測量子供
-                    const children = childMap[card.id] || [];
-                    children.forEach(child => {
-                        const baseOffset = getBaseStackOffset(child.stackType);
-                        // 偏移量也要跟著父卡片轉
-                        const rotatedOffset = rotateVector(baseOffset.x, baseOffset.y, card.rotation);
-                        measureNode(child, currentX + rotatedOffset.x, currentY + rotatedOffset.y);
-                    });
-                };
+				// 2. 建立容器 (保持不變)
+				const totalW = bounds.maxX - bounds.minX;
+				const totalH = bounds.maxY - bounds.minY;
+				
+				const groupDiv = document.createElement('div');
+				groupDiv.className = 'card-group';
+				groupDiv.style.width = `${totalW}px`;
+				groupDiv.style.height = `${totalH}px`;
+				groupDiv.style.position = 'relative'; 
+				groupDiv.style.margin = '5px 10px'; 
+				
+				container.appendChild(groupDiv);
+				
+				// 3. 渲染階段 (修改重點：加入 depth 參數)
+				const originOffsetX = -bounds.minX;
+				const originOffsetY = -bounds.minY;
 
-                // 開始測量
-                measureNode(rootCard, 0, 0);
-                
-                // 防呆：如果沒東西 (理論上不可能)，給預設值
-                if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
+				// [關鍵修改] 增加 bottomDepth 參數，預設為 0
+				const renderNodeRecursive = (card, zIndex, bottomDepth = 0) => {
+					const pos = nodePositions.get(card.id);
+					if (!pos) return;
 
-                // 2. 建立容器
-                // 容器大小 = 視覺上的最大邊界 - 最小邊界
-                // 這樣無論卡片怎麼轉、怎麼接龍，容器都會剛好包住它們
-                const totalW = bounds.maxX - bounds.minX;
-                const totalH = bounds.maxY - bounds.minY;
-                
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'card-group';
-                // 加上一點緩衝 (margin)，避免卡片邊框緊貼
-                groupDiv.style.width = `${totalW}px`;
-                groupDiv.style.height = `${totalH}px`;
-                groupDiv.style.position = 'relative'; 
-                groupDiv.style.margin = '5px 10px'; // 左右多一點間距
-                
-                container.appendChild(groupDiv);
-                
-                // 3. 渲染階段
-                // 偏移修正：將 visually 最左邊的點對齊到容器的 0
-                const originOffsetX = -bounds.minX;
-                const originOffsetY = -bounds.minY;
+					const cardEl = createCardElement(card);
+					
+					cardEl.style.position = 'absolute';
+					cardEl.style.left = `${pos.x + originOffsetX}px`;
+					cardEl.style.top = `${pos.y + originOffsetY}px`;
+					cardEl.style.zIndex = zIndex;
 
-                const renderNodeRecursive = (card, zIndex) => {
-                    const pos = nodePositions.get(card.id);
-                    if (!pos) return;
+					// [關鍵修改] 將深度寫入 CSS 變數，讓 CSS calc() 可以讀取
+					// 只有當這張卡是「正下方」類型時，這個變數才有意義
+					if (card.stackType === 'bottom' || card.stackType === 'bottom_exposed') {
+						cardEl.style.setProperty('--stack-depth', bottomDepth);
+					}
 
-                    const cardEl = createCardElement(card);
-                    
-                    // 設定位置
-                    cardEl.style.position = 'absolute';
-                    cardEl.style.left = `${pos.x + originOffsetX}px`;
-                    cardEl.style.top = `${pos.y + originOffsetY}px`;
-                    cardEl.style.zIndex = zIndex;
+					let transformCSS = `rotate(${card.rotation}deg)`;
+					if (pendingMove && pendingMove.cardIds.includes(card.id)) {
+						transformCSS += ` translateY(-5px)`;
+					}
+					cardEl.style.transform = transformCSS;
 
-                    // 強制套用自轉角度
-                    let transformCSS = `rotate(${card.rotation}deg)`;
-                    if (pendingMove && pendingMove.cardIds.includes(card.id)) {
-                        transformCSS += ` translateY(-5px)`;
-                    }
-                    cardEl.style.transform = transformCSS;
+					if (!card.parentId) cardEl.classList.add('stack-base');
 
-                    if (!card.parentId) cardEl.classList.add('stack-base');
+					groupDiv.appendChild(cardEl);
 
-                    groupDiv.appendChild(cardEl);
+					const children = childMap[card.id] || [];
+					children.forEach((child, idx) => {
+						let nextZ = zIndex;
+						
+						// [關鍵修改] 計算下一層的深度
+						let nextDepth = bottomDepth;
+						
+						const type = child.stackType;
+						if (type === 'top' || type === 'shift_up' || type === 'puzzle_top' || type === 'shift_down') {
+							nextZ += 1;
+						} else if (type === 'bottom' || type === 'bottom_exposed' || type === 'puzzle_bottom') {
+							nextZ -= 1; 
+							// 如果是往下疊，深度 +1
+							nextDepth += 1;
+						}
+						
+						renderNodeRecursive(child, nextZ, nextDepth);
+					});
+				};
 
-                    const children = childMap[card.id] || [];
-                    children.forEach((child, idx) => {
-                        let nextZ = zIndex;
-                        const type = child.stackType;
-                        if (type === 'top' || type === 'shift_up' || type === 'puzzle_top' || type === 'shift_down') {
-                            nextZ += 1;
-                        } else if (type === 'bottom' || type === 'bottom_exposed' || type === 'puzzle_bottom') {
-                            nextZ -= 1; 
-                        }
-                        renderNodeRecursive(child, nextZ);
-                    });
-                };
-
-                renderNodeRecursive(rootCard, 10);
-            }
-        };
+				renderNodeRecursive(rootCard, 10, 0);
+			}
+		};
 
         Object.keys(zoneMap).forEach(zoneId => {
             const cardsInZone = zoneMap[zoneId];
@@ -5855,6 +5845,16 @@
 		const el = document.createElement('div');
 		el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
 		el.dataset.id = card.id; 
+
+		// --- 請在此處插入以下這段新的程式碼 ---
+		
+		// [修復堆疊滑出] 如果這張卡有堆疊屬性，將其轉為 CSS class
+		if (card.stackType) {
+			// 將底線轉為連字號 (例如: puzzle_left -> stack-puzzle-left)
+			// 這樣才能對應到我們 CSS 寫的 .stack-bottom, .stack-top 等
+			const stackClass = 'stack-' + card.stackType.replace('_', '-');
+			el.classList.add(stackClass);
+		}
 
 		// [新增] 大紅勾 HTML
         // 注意：這不會覆蓋掉後面的 SVG 或圖片，因為這只是 append 進去
