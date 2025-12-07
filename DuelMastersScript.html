@@ -5683,61 +5683,67 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (尋找最新有效訊號版) ---
+	// --- [獨立光圈版] 王牌特效函式 (延遲判定修正版) ---
 	function triggerAceAnimation(cardId) {
 		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
 		if (!originalEl) return;
 
-		const state = getCurrentDisplayState();
-		const cardData = state.cards.find(c => c.id === cardId);
+		// 我們不再這裡讀取 state，而是等到 setTimeout 裡面再讀
+		// 這樣可以確保讀到的是「飛行結束後」的最終狀態
 
-		// 定義顏色映射表
-		const colorMap = {
-			'red': '255, 0, 0',
-			'blue': '0, 191, 255',
-			'green': '0, 255, 0',
-			'yellow': '255, 215, 0',
-			'white': '255, 255, 255',
-			'black': '100, 100, 100',
-			'rainbow': '255, 0, 255'
-		};
-
-		// 預設顏色：金色
-		let finalColor = '255, 215, 0'; 
-		
-		// 用來標記是否已經找到來自小卡的顏色
-		let colorFoundFromProxy = false;
-
-		// 1. 先抓出所有相關的小卡
-		const proxyCards = state.cards.filter(c => 
-			c.zone.includes('ability') && 
-			c.sourceId == cardId
-		);
-
-		if (proxyCards.length > 0) {
-			// [關鍵步驟 A] 排序：ID 越大代表越新 (Newest First)
-			proxyCards.sort((a, b) => b.id - a.id);
-			
-			// [關鍵步驟 B] 搜尋：找出第一張「有設定顏色」且「顏色合法」的卡
-			// 這樣會自動跳過那些 glow 為 null 的最新卡片，往回找到有顏色的那張
-			const activeProxy = proxyCards.find(c => c.glow && colorMap[c.glow]);
-
-			if (activeProxy) {
-				finalColor = colorMap[activeProxy.glow];
-				colorFoundFromProxy = true;
-				console.log(`[Ace Effect] 忽略無效小卡，採用 ID:${activeProxy.id} 的顏色: ${activeProxy.glow}`);
-			}
-		}
-
-		// 2. 如果小卡全都是空的 (null)，才回頭檢查本體有沒有發光
-		if (!colorFoundFromProxy) {
-			if (cardData && cardData.glow && colorMap[cardData.glow]) {
-				finalColor = colorMap[cardData.glow];
-			}
-		}
-
-		// --- 以下為視覺渲染 (保持不變) ---
+		// 階段 0: 等待卡片移動就位 (0.4秒)
 		setTimeout(() => {
+			// [修正點]：將狀態讀取與顏色判斷移入 setTimeout 內部
+			// -------------------------------------------------------
+			const state = getCurrentDisplayState();
+			const cardData = state.cards.find(c => c.id === cardId);
+
+			// 如果卡片在飛行途中被刪除了，就終止特效
+			if (!cardData) return;
+
+			// 定義顏色映射表
+			const colorMap = {
+				'red': '255, 0, 0',
+				'blue': '0, 191, 255',
+				'green': '0, 255, 0',
+				'yellow': '255, 215, 0',
+				'white': '255, 255, 255',
+				'black': '100, 100, 100',
+				'rainbow': '255, 0, 255'
+			};
+
+			let finalColor = '255, 215, 0'; // 預設金色
+			let colorFoundFromProxy = false;
+
+			// 1. 代理檢查：檢查「所有」連結的能力小卡
+			const proxyCards = state.cards.filter(c => 
+				c.zone.includes('ability') && 
+				c.sourceId == cardId
+			);
+
+			if (proxyCards.length > 0) {
+				// ID 越大代表越新 (Newest First)
+				proxyCards.sort((a, b) => b.id - a.id);
+				
+				// 找出第一張有效顏色的卡
+				const activeProxy = proxyCards.find(c => c.glow && colorMap[c.glow]);
+
+				if (activeProxy) {
+					finalColor = colorMap[activeProxy.glow];
+					colorFoundFromProxy = true;
+					console.log(`[Ace Effect] (延遲判定) 採用小卡 ID:${activeProxy.id} 顏色: ${activeProxy.glow}`);
+				}
+			}
+
+			// 2. 本體檢查
+			if (!colorFoundFromProxy) {
+				if (cardData && cardData.glow && colorMap[cardData.glow]) {
+					finalColor = colorMap[cardData.glow];
+				}
+			}
+			// -------------------------------------------------------
+
+			// 視覺渲染邏輯
 			const rect = originalEl.getBoundingClientRect();
 			
 			const ring = document.createElement('div');
@@ -5760,7 +5766,7 @@
 			ring.style.setProperty('--h', targetH + 'px');
 			ring.style.setProperty('--rot', rotation + 'deg');
 			
-			// 注入顏色變數
+			// 注入剛剛才算出來的最新顏色
 			ring.style.setProperty('--ace-color', finalColor);
 
 			document.body.appendChild(ring);
@@ -5781,7 +5787,7 @@
 
 			}, 700); 
 
-		}, 400); 
+		}, 400); // 這裡的 400ms 延遲是為了配合卡片飛行時間
 	}
 
     // --- [修改] createCardElement 函式 ---
