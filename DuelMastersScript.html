@@ -1833,28 +1833,63 @@
             z-index: 3005 !important; /* 確保在最上層 */
         }
 		
-		/* --- [新增] 手機版：展示區卡片放大 (比照戰鬥區 1.5倍) --- */
-        body.mobile-mode #reveal-zone .card {
-            /* 1. 放大 1.5 倍 */
-            transform: scale(1.5);
-            
-            /* 2. 設定縮放原點為中心 */
-            transform-origin: center center;
-            
-            /* 3. 【關鍵】增加外距 (Margin) */
-            /* 因為 transform 放大不會撐開原本的版面空間， */
-            /* 必須手動增加 margin 來推開旁邊的卡片，避免視覺上重疊 */
-            /* 原始寬 50px -> 放大後 75px (差 25px -> 左右各需補 12.5px) */
-            margin: 25px 15px !important; 
-            
-            z-index: 10;
-        }
+		body.mobile-mode #reveal-zone .card {
+			transform: scale(1.5);
+			transform-origin: center center;
+			margin: 25px 8px !important;   /* 配合放大比例，稍微縮小左右外距 */
+		}
 
-        /* 調整展示區容器的間距，讓放大的卡片不會貼太近邊框 */
-        body.mobile-mode #reveal-zone {
-            padding: 40px 30px !important; 
-            gap: 15px !important; /* 增加 Flex 排版的間隙 */
-        }
+        /* 1. 間距減半 (手牌與魔力區) */
+		body.mobile-mode .mana-zone .card-group,
+		body.mobile-mode .hand-zone .card-group {
+			margin: 0 2px !important; /* 原本是 5px，改為 2px */
+		}
+
+		/* 2. 展示區調整 (放大 1.5倍 + 間距縮小) */
+		body.mobile-mode #reveal-zone {
+			padding: 20px 15px !important; /* 縮小內距 */
+			gap: 8px !important;           /* 縮小卡片間距 */
+		}
+		
+		/* 3. 強制開啟卡片點擊 (原本是 none，為了讓點擊生效改為 auto) */
+		body.mobile-mode .card {
+			pointer-events: auto !important; 
+		}
+		/* 但底下的容器依然保持穿透，避免誤觸拖曳邏輯 */
+		body.mobile-mode #game-board-container,
+		body.mobile-mode .zone {
+			pointer-events: none !important;
+		}
+		
+		/* 4. [新增] 手機版右側卡片放大檢視視窗 */
+		#mobile-card-viewer {
+			display: none;
+			position: fixed;
+			top: 0; 
+			left: 0; 
+			width: 100%; 
+			height: 100%;
+			background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
+			z-index: 6000; /* 確保在最上層 */
+			justify-content: flex-end; /* 靠右對齊 */
+			align-items: center;
+			padding-right: 50px; /* 右側留一點邊距 */
+			backdrop-filter: blur(2px);
+		}
+
+		#mobile-card-viewer img {
+			max-height: 90vh; /* 高度不超過螢幕 90% */
+			max-width: 50vw;  /* 寬度不超過螢幕一半 */
+			box-shadow: 0 0 20px rgba(0,0,0,0.8);
+			border: 3px solid white;
+			border-radius: 10px;
+			animation: zoomIn 0.2s ease-out;
+		}
+
+		@keyframes zoomIn {
+			from { transform: scale(0.8); opacity: 0; }
+			to { transform: scale(1); opacity: 1; }
+		}
     </style>
 </head>
 <body>
@@ -4816,72 +4851,6 @@
         }
         renderUI();
     }
-	
-	function handleCardSingleClick(e, cardId) {
-        e.stopPropagation(); 
-        
-		// [新增] 多重選取模式邏輯
-        if (isMultiSelectMode) {
-            const index = multiSelectedIds.indexOf(cardId);
-			const el = document.querySelector(`.card[data-id="${cardId}"]`);
-            if (index > -1) {
-                // 取消勾選
-                multiSelectedIds.splice(index, 1);
-                if (el) el.classList.remove('multi-selected');
-                
-                // [新增] 如果減到 0 張，自動退出模式
-                if (multiSelectedIds.length === 0) {
-                    cancelSelection(); // 這會重置 isMultiSelectMode
-                    return;
-                }
-            } else {
-                // 加入勾選
-                multiSelectedIds.push(cardId);
-                if (el) el.classList.add('multi-selected');
-            }
-            // 為了效能，我們只更新這張卡片的 class，不重繪整個 UI
-            if (el) {
-                el.classList.toggle('multi-selected');
-            }
-            return;
-        }
-		
-        if (isPointing) {
-            handlePointClick(null, cardId);
-            return;
-        }
-
-        if (pendingMove) {
-            // 如果點擊已選取的卡片 -> 取消選取該張
-            if (pendingMove.cardIds.includes(cardId)) {
-                 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
-                 if (pendingMove.cardIds.length === 0) {
-                     cancelSelection();
-                     return;
-                 }
-                 updateSelectionUI();
-                 return;
-            }
-            
-            const state = getCurrentDisplayState();
-            const targetCard = state.cards.find(c => c.id === cardId);
-            
-            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
-            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
-                openStackingModal(targetCard);
-                return;
-            }
-        }
-        
-        // 單純選取，不執行任何動作
-        if (!pendingMove) {
-            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
-        } else {
-            pendingMove.cardIds.push(cardId);
-        }
-        updateSelectionUI();
-		return;
-    }
 
     function openStackingModal(targetCard) {
         const modal = document.getElementById('position-selector-modal');
@@ -5891,80 +5860,115 @@
         updateSelectionUI();
     }
 
-    // [修改] 點擊卡片處理 (加入歸零自動退出邏輯)
-    // [修正] 點擊卡片處理
-    function handleCardSingleClick(e, cardId) {
-        e.stopPropagation(); 
-        
-        // 1. 多重選取模式邏輯 (保持不變)
-        if (isMultiSelectMode) {
-            const index = multiSelectedIds.indexOf(cardId);
-            const el = document.querySelector(`.card[data-id="${cardId}"]`);
-            
-            if (index > -1) {
-                // 取消勾選
-                multiSelectedIds.splice(index, 1);
-                if (el) el.classList.remove('multi-selected');
-                
-                // 如果減到 0 張，自動退出模式
-                if (multiSelectedIds.length === 0) {
-                    cancelSelection(); 
-                    return;
-                }
-            } else {
-                // 加入勾選
-                multiSelectedIds.push(cardId);
-                if (el) el.classList.add('multi-selected');
-            }
-            
-            // 更新 pendingMove 內容
-            pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
-            updateSelectionUI();
-            return;
-        }
+    // --- [修改] 點擊卡片處理 ---
+	function handleCardSingleClick(e, cardId) {
+		e.stopPropagation(); 
 
-        // 2. 指向模式邏輯 (保持不變)
-        if (isPointing) {
-            handlePointClick(null, cardId);
-            return;
-        }
+		// --- [新增區塊] 手機版點擊檢視邏輯 ---
+		if (document.body.classList.contains('mobile-mode')) {
+			const state = getCurrentDisplayState();
+			const card = state.cards.find(c => c.id === cardId);
+			
+			if (!card) return;
 
-        // 3. 已有選取時的邏輯 (取消或堆疊)
-        if (pendingMove) {
-            // 如果點擊已選取的卡片 -> 取消選取該張
-            if (pendingMove.cardIds.includes(cardId)) {
-                 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
-                 if (pendingMove.cardIds.length === 0) {
-                     cancelSelection();
-                     return;
-                 }
-                 updateSelectionUI();
-                 return;
-            }
-            
-            const state = getCurrentDisplayState();
-            const targetCard = state.cards.find(c => c.id === cardId);
-            
-            // 如果點擊別張卡 -> 視為要在目標卡上進行堆疊 (除了特定區域外)
-            if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
-                openStackingModal(targetCard);
-                return;
-            }
-        }
-        
-        // 4. [關鍵修正] 單純選取 (Fresh Selection)
-        if (!pendingMove) {
-            // 錯誤原因：原本寫成 pendingMove = { cardIds: [...multiSelectedIds] ... }
-            // 因為此時不在多選模式，multiSelectedIds 是空的，導致選到了「空牌組」，面板就不會開。
-            
-            // 修正：直接將當前點擊的這張卡 [cardId] 設為選取對象
-            pendingMove = { cardIds: [cardId], shuffle: false };
-        } else {
-            pendingMove.cardIds.push(cardId);
-        }
-        updateSelectionUI();
-		return;
-    }
+			// 定義禁止點擊的區域 (牌庫、墓地、超次元、對話/能力區)
+			const ignoredZones = ['p1-deck', 'p2-deck', 'p1-grave', 'p2-grave', 'p1-hyper', 'p2-hyper'];
+			const isIgnored = ignoredZones.includes(card.zone) || card.zone.includes('ability');
+
+			// 條件：必須是有圖的、正面的、且不在禁止區域的卡
+			if (card.image && card.faceUp && !isIgnored) {
+				showMobileCardZoom(card.id);
+			}
+			return; // 手機版處理完畢，直接結束
+		}
+		// ------------------------------------
+		
+		// 以下為原本桌機版的邏輯 (保持不變)
+		if (isMultiSelectMode) {
+			const index = multiSelectedIds.indexOf(cardId);
+			const el = document.querySelector(`.card[data-id="${cardId}"]`);
+			
+			if (index > -1) {
+				multiSelectedIds.splice(index, 1);
+				if (el) el.classList.remove('multi-selected');
+				if (multiSelectedIds.length === 0) {
+					cancelSelection(); 
+					return;
+				}
+			} else {
+				multiSelectedIds.push(cardId);
+				if (el) el.classList.add('multi-selected');
+			}
+			pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
+			updateSelectionUI();
+			return;
+		}
+
+		if (isPointing) {
+			handlePointClick(null, cardId);
+			return;
+		}
+
+		if (pendingMove) {
+			if (pendingMove.cardIds.includes(cardId)) {
+				 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
+				 if (pendingMove.cardIds.length === 0) {
+					 cancelSelection();
+					 return;
+				 }
+				 updateSelectionUI();
+				 return;
+			}
+			
+			const state = getCurrentDisplayState();
+			const targetCard = state.cards.find(c => c.id === cardId);
+			
+			if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
+				openStackingModal(targetCard);
+				return;
+			}
+		}
+		
+		if (!pendingMove) {
+			pendingMove = { cardIds: [cardId], shuffle: false };
+		} else {
+			pendingMove.cardIds.push(cardId);
+		}
+		updateSelectionUI();
+	}
+
+	// --- [新增] 手機版放大卡圖函式 ---
+	function showMobileCardZoom(cardId) {
+		const state = getCurrentDisplayState();
+		const card = state.cards.find(c => c.id === cardId);
+		
+		// 取得圖片 (優先找正面圖)
+		const imgKey = card.imageKey;
+		const src = globalImageRegistry[imgKey];
+		
+		if (!src) return; // 沒圖就不動作
+
+		// 1. 執行「視覺暫停」 (但不關音樂)
+		if (playTimeout) {
+			clearTimeout(playTimeout);
+			playTimeout = null;
+			updatePlayButtonUI(); // 更新按鈕為「暫停」圖示
+			// 注意：這裡故意不呼叫 globalAudioPlayer.pause()，以達成背景音樂繼續的需求
+		}
+
+		// 2. 顯示放大視窗
+		const viewer = document.getElementById('mobile-card-viewer');
+		viewer.innerHTML = `<img src="${src}" />`;
+		viewer.style.display = 'flex';
+	}
+
+	function hideMobileCardZoom() {
+		// 1. 關閉視窗
+		document.getElementById('mobile-card-viewer').style.display = 'none';
+		
+		// 2. 恢復播放 (視為按下 Play 鍵)
+		togglePlay();
+	}
     
     // [修改] 取消選取 (確保也會關閉多選模式)
     function cancelSelection() {
@@ -7288,6 +7292,7 @@
     </span>
 </div>
 <div id="ace-flash-layer"></div>
+<div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
 <button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
 </body>
 </html>
