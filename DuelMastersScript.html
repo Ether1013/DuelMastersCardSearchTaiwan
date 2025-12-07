@@ -1658,7 +1658,7 @@
 
 		@keyframes ace-ring-power-up {
 			0% {
-				/* 這裡只保留變數名稱，語法更穩定 */
+				/* 這裡只保留 box-shadow，確保沒有 border */
 				box-shadow: 0 0 0 0 rgba(var(--ace-rgb), 0);
 				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
 			}
@@ -5681,93 +5681,66 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (精準定位修正版) ---
-	// --- [獨立光圈版] 王牌特效函式 (視覺逆推修正版) ---
-    function triggerAceAnimation(cardId) {
-        const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
-        if (!originalEl) return;
+	function triggerAceAnimation(cardId) {
+		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
+		if (!originalEl) return;
 
-        // 階段 0: 等待卡片移動就位
-        setTimeout(() => {
-            // 1. 取得卡片當前在螢幕上的「實際視覺範圍」
-            const rect = originalEl.getBoundingClientRect();
-            
-            // 2. 創建光圈
-            const ring = document.createElement('div');
-            ring.className = 'ace-external-ring';
-            
-			// ========== [新增] 顏色繼承邏輯 ==========
-			let aceRgb = '255, 215, 0'; // 預設金色
-
-			if (originalEl.classList.contains('glow-red'))        aceRgb = '255, 0, 0';       // 紅
-			else if (originalEl.classList.contains('glow-blue'))  aceRgb = '0, 191, 255';     // 藍
-			else if (originalEl.classList.contains('glow-green')) aceRgb = '0, 255, 0';       // 綠
-			else if (originalEl.classList.contains('glow-white')) aceRgb = '255, 255, 255';   // 白
-			else if (originalEl.classList.contains('glow-black')) aceRgb = '0, 0, 0';         // 黑 (暗影)
-			else if (originalEl.classList.contains('glow-yellow')) aceRgb = '255, 215, 0';    // 黃(金)
+		setTimeout(() => {
+			const rect = originalEl.getBoundingClientRect();
+			const ring = document.createElement('div');
+			ring.className = 'ace-external-ring';
 			
+			const centerX = rect.left + rect.width / 2;
+			const centerY = rect.top + rect.height / 2;
+
+			// ========== [修正重點] ==========
+			// 1. 預設直接給定金色 RGB，確保永遠有值
+			let aceRgb = '255, 215, 0'; 
+
+			// 2. 偵測卡片是否正在發光，若有則替換顏色
+			if (originalEl.classList.contains('glow-red'))        aceRgb = '255, 0, 0';
+			else if (originalEl.classList.contains('glow-blue'))  aceRgb = '0, 191, 255';
+			else if (originalEl.classList.contains('glow-green')) aceRgb = '0, 255, 0';
+			else if (originalEl.classList.contains('glow-white')) aceRgb = '255, 255, 255';
+			else if (originalEl.classList.contains('glow-black')) aceRgb = '0, 0, 0';
+			else if (originalEl.classList.contains('glow-yellow')) aceRgb = '255, 215, 0';
+			else if (originalEl.classList.contains('glow-rainbow')) aceRgb = '255, 215, 0';
+
+			// 3. 強制將顏色寫入 CSS 變數 (這一行非常重要)
+			ring.style.setProperty('--ace-rgb', aceRgb);
+			// ==============================
+
+			let rotation = 0;
+			const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+			if (match) rotation = parseFloat(match[1]);
+
+			const isRotated90 = Math.abs(rotation % 180) > 45;
+			const targetW = isRotated90 ? rect.height : rect.width;
+			const targetH = isRotated90 ? rect.width : rect.height;
+
+			ring.style.setProperty('--x', centerX + 'px');
+			ring.style.setProperty('--y', centerY + 'px');
+			ring.style.setProperty('--w', targetW + 'px');
+			ring.style.setProperty('--h', targetH + 'px');
+			ring.style.setProperty('--rot', rotation + 'deg');
+
+			document.body.appendChild(ring);
 			
-			// 虹色比較特殊，若要簡單處理，這裡設為預設金色，或是您想要特定的顏色？
-			// 由於 CSS 動畫不支援動態改變 var() 內的 RGB 漸層，
-			// 對於虹色，維持金色或是給一個紫色基調通常效果較好。
-			else if (originalEl.classList.contains('glow-rainbow')) aceRgb = '255, 215, 0'; 
+			// ... (下方的閃光與移除邏輯保持不變) ...
+			setTimeout(() => {
+				 const flashLayer = document.getElementById('ace-flash-layer');
+				 if (flashLayer) {
+					 flashLayer.classList.remove('anim-flash-white');
+					 void flashLayer.offsetWidth;
+					 flashLayer.classList.add('anim-flash-white');
+				 }
+				 setTimeout(() => {
+					 if (ring.parentNode) ring.parentNode.removeChild(ring);
+				 }, 250);
+			}, 700);
 
-			// 只有當偵測到特殊顏色時，才去覆蓋 CSS 變數
-			if (aceRgb) {
-				ring.style.setProperty('--ace-rgb', aceRgb);
-			}
-			// ===========================================
-			
-            // 3. 計算絕對中心點 (Center Alignment)
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            // 4. 取得旋轉角度
-            let rotation = 0;
-            const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
-            if (match) rotation = parseFloat(match[1]);
-
-            // 5. [核心修正] 智慧尺寸適配
-            // 我們不再計算縮放比例 (Scale)，而是直接使用 rect 的寬高
-            // 這樣可以確保光框的像素大小跟螢幕上看到的卡片一模一樣
-            
-            const isRotated90 = Math.abs(rotation % 180) > 45;
-
-            // 如果卡片轉了 90 度：
-            // 螢幕上的 rect.width (寬) 其實對應卡片本體的高度
-            // 螢幕上的 rect.height (高) 其實對應卡片本體的寬度
-            // 所以我們要「反向」設定給光框，這樣光框旋轉 90 度後才會吻合
-            const targetW = isRotated90 ? rect.height : rect.width;
-            const targetH = isRotated90 ? rect.width : rect.height;
-
-            // 6. 設定 CSS 變數 (直接傳入像素值)
-            ring.style.setProperty('--x', centerX + 'px');
-            ring.style.setProperty('--y', centerY + 'px');
-            ring.style.setProperty('--w', targetW + 'px');
-            ring.style.setProperty('--h', targetH + 'px');
-            ring.style.setProperty('--rot', rotation + 'deg');
-
-            // 7. 加入畫面
-            document.body.appendChild(ring);
-
-            // 階段 2: 觸發閃光
-            setTimeout(() => {
-                const flashLayer = document.getElementById('ace-flash-layer');
-                if (flashLayer) {
-                    flashLayer.classList.remove('anim-flash-white');
-                    void flashLayer.offsetWidth; 
-                    flashLayer.classList.add('anim-flash-white');
-                }
-                
-                // 階段 3: 移除光圈
-                setTimeout(() => {
-                    if (ring.parentNode) ring.parentNode.removeChild(ring);
-                }, 250); 
-
-            }, 700); 
-
-        }, 400); 
-    }
+		}, 400);
+	}
 
     // --- [修改] createCardElement 函式 ---
 	function createCardElement(card) {
