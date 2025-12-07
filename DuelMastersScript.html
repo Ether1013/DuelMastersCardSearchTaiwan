@@ -1851,6 +1851,23 @@
 			gap: 8px !important;           /* 縮小卡片間距 */
 		}
 		
+		
+		/* --- [修正] 手機版區域鎖定補丁 --- */
+		/* 1. 針對「牌庫、墓地、超次元、待處理區」內的卡片：禁止點擊 */
+		/* 注意：上一版我們開啟了全域 .card 的點擊，這裡必須把特定區域關掉 */
+		body.mobile-mode .deck-zone .card,
+		body.mobile-mode .grave-zone .card,
+		body.mobile-mode .hyper-zone .card,
+		body.mobile-mode #ability-stack-zone .card {
+			pointer-events: none !important;
+		}
+
+		/* 2. 針對「對話層」：禁止點擊 */
+		/* 避免點擊對話框觸發編輯視窗 */
+		body.mobile-mode #dialogue-layer {
+			pointer-events: none !important;
+		}
+
 		/* 3. 強制開啟卡片點擊 (原本是 none，為了讓點擊生效改為 auto) */
 		body.mobile-mode .card {
 			pointer-events: auto !important; 
@@ -4738,7 +4755,13 @@
     }
 
     // --- [取代] handleZoneClick 函式 ---
+	// --- [修正] 區域點擊處理 ---
 	function handleZoneClick(zoneId) {
+		// [新增] 手機版強制阻擋所有區域點擊 (包含牌庫、墓地等清單開啟行為)
+		if (document.body.classList.contains('mobile-mode')) {
+			return; 
+		}
+
 		if (isPointing) {
 			handlePointClick(zoneId, null); 
 			return;
@@ -4757,16 +4780,11 @@
 			}
 
 			if (isStackZone(zoneId)) {
-				// [修改重點] 護盾區邏輯優化
-				// 規則：新進去的排左邊(Index 0)，後進去的排右邊(Append)
-				// 實作：如果護盾區是空的，直接執行 finishMove(undefined)，系統預設會 push 到陣列最後(也就是第一個位置)
-				// 這樣就不用問使用者要插在哪裡了
 				const cardsInZone = getCardsInZone(state, zoneId);
 				if (zoneId.includes('shield') && cardsInZone.length === 0) {
 					finishMove(zoneId, undefined);
 					return;
 				}
-
 				openPositionSelector(zoneId, pendingMove);
 			} else {
 				finishMove(zoneId, undefined);
