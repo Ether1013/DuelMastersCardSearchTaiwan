@@ -6160,7 +6160,7 @@
         pointOps.forEach(op => {
             const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
             if (!attacker) return;
-            
+            let targetEls = [];
             // [修正] 增加 || op.targetType === 'ZONE'
             if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
                 if (Array.isArray(op.targetIds)) {
