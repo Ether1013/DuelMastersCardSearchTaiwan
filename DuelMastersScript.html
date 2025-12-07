@@ -4751,21 +4751,21 @@
 	function handlePointClick(zoneId, cardId) {
         if (!isPointing) return;
         
-        // [修正] 允許指向 牌庫(Deck)、超次元(Hyper)、墓地(Grave)
+        // [修正] 判定是指向「區域」(沒有 cardId 且 zoneId 符合特定關鍵字)
 		if (!cardId && (zoneId.includes('deck') || zoneId.includes('hyper') || zoneId.includes('grave'))) {
-			let zoneName = t('zone_generic');
+			
+			let zoneName = t('zone_generic') || '區域';
 			if(zoneId.includes('deck')) zoneName = t('zone_player_deck');
 			if(zoneId.includes('hyper')) zoneName = t('zone_hyper_area');
 			if(zoneId.includes('grave')) zoneName = t('zone_grave_area');
 
-			// 使用 replace 處理參數字串
+			// 顯示確認視窗
 			const msg = t('msg_confirm_point_zone').replace('{zone}', zoneName);
 			if (confirm(msg)) {
-				// [關鍵修正] 這裡原本傳 null，改成傳入陣列 [zoneId]
-				// 這樣畫箭頭的函式才知道目標是誰
+				// [關鍵] 傳入 'ZONE' 類型，並將 zoneId 包成陣列
 				finishPoint('ZONE', [zoneId]);
 			}
-			return;
+			return; // 結束，不繼續執行下方的卡片選取邏輯
 		}
         
         if (cardId) {
@@ -4797,21 +4797,27 @@
     }
 
     function finishPoint(type, targetIds) {
-        const state = getCurrentDisplayState();
-        const pointer = state.cards.find(c => c.id === pointerId);
-        let desc = `[指向] ${pointer.text} 指向 `;
-        if (type === 'PLAYER') desc += '玩家/牌庫';
-        else if (type === 'CARD') desc += `${targetIds.length} 個目標`;
+		const state = getCurrentDisplayState();
+		const pointer = state.cards.find(c => c.id === pointerId);
+		
+		// 基本描述
+		let desc = `[指向] ${pointer ? pointer.text : '未知卡片'} 指向 `;
+		
+		// [修正] 根據類型補上描述
+		if (type === 'PLAYER') desc += '玩家/牌庫';
+		else if (type === 'ZONE') desc += '指定區域'; // [新增這行]
+		else if (type === 'CARD') desc += `${targetIds.length} 個目標`;
 
-        addOperation({
-            type: 'POINT',
-            attackerId: pointerId,
-            targetType: type,
-            targetIds: targetIds,
-            desc: desc
-        });
-        cancelPointMode();
-    }
+		addOperation({
+			type: 'POINT',
+			attackerId: pointerId,
+			targetType: type,
+			targetIds: targetIds,
+			desc: desc
+		});
+		
+		cancelPointMode();
+	}
 
     // --- [取代] handleZoneClick 函式 ---
 	// --- [修正] 區域點擊處理 ---
@@ -6102,119 +6108,113 @@
     }
 
     function renderArrows() {
-        const svg = document.getElementById('svg-layer');
-        const workspace = document.getElementById('workspace');
-        
-        // 防呆：如果 SVG 還是不在 workspace 裡面，強制把它移進去
-        if (svg && workspace && svg.parentNode !== workspace) {
-            workspace.insertBefore(svg, workspace.firstChild);
-        }
+		const svg = document.getElementById('svg-layer');
+		const workspace = document.getElementById('workspace');
+		
+		if (svg && workspace && svg.parentNode !== workspace) {
+			workspace.insertBefore(svg, workspace.firstChild);
+		}
 
-        // 清空並重繪 Marker 定義
-        svg.innerHTML = `
-            <defs>
-                <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-                    <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
-                </marker>
-            </defs>
-        `;
-        
-        // 取得當前的操作步驟
-        let ops = [];
-        if (isDrafting) {
-            ops = draftOperations;
-        } else if (currentIndex >= 0 && history[currentIndex]) {
-            ops = history[currentIndex].action.operations;
-        }
+		svg.innerHTML = `
+			<defs>
+				<marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+					<path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+				</marker>
+			</defs>
+		`;
+		
+		let ops = [];
+		if (isDrafting) {
+			ops = draftOperations;
+		} else if (currentIndex >= 0 && history[currentIndex]) {
+			ops = history[currentIndex].action.operations;
+		}
 
-        if (!ops || ops.length === 0) return;
+		if (!ops || ops.length === 0) return;
 
-        // --- 核心修改：計算座標轉換比例 ---
-        // 我們需要算出「螢幕像素」轉成「畫布內部像素」的比例
-        // workspace.getBoundingClientRect() 取得的是縮放後(螢幕上)的尺寸
-        // workspace.offsetWidth 取得的是原始排版(內部)的尺寸 (手機版固定為 1200)
-        
-        const wsRect = workspace.getBoundingClientRect();
-        const scaleX = wsRect.width / workspace.offsetWidth;
-        const scaleY = wsRect.height / workspace.offsetHeight;
-        
-        // 畫布在螢幕上的左上角起點
-        const offsetX = wsRect.left;
-        const offsetY = wsRect.top;
+		// 座標轉換邏輯
+		const wsRect = workspace.getBoundingClientRect();
+		const scaleX = wsRect.width / workspace.offsetWidth;
+		const scaleY = wsRect.height / workspace.offsetHeight;
+		const offsetX = wsRect.left;
+		const offsetY = wsRect.top;
 
-        // 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
-        const toLocal = (rect) => {
-            // 1. 算出元素的中心點 (螢幕座標)
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // 2. 減去畫布起點，並除以縮放比例
-            return {
-                x: (centerX - offsetX) / scaleX,
-                y: (centerY - offsetY) / scaleY
-            };
-        };
+		const toLocal = (rect) => {
+			const centerX = rect.left + rect.width / 2;
+			const centerY = rect.top + rect.height / 2;
+			return {
+				x: (centerX - offsetX) / scaleX,
+				y: (centerY - offsetY) / scaleY
+			};
+		};
 
-        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
-        
-        pointOps.forEach(op => {
-            const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
-            if (!attacker) return;
-            
-            // [修正] 增加 || op.targetType === 'ZONE'
-            if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
-                if (Array.isArray(op.targetIds)) {
-                    op.targetIds.forEach(tid => {
-                        const el = document.querySelector(`.card[data-id="${tid}"]`);
-                        if(el) targetEls.push(el);
-                    });
-                }
-            } 
-            // [新增] 專門處理區域指向 (Zone) 的邏輯
-            else if (op.targetType === 'ZONE') {
-                if (Array.isArray(op.targetIds)) {
-                    op.targetIds.forEach(zid => {
-                        // 尋找對應的區域元素
-                        const el = document.querySelector(`.zone[data-zone="${zid}"]`);
-                        if(el) targetEls.push(el);
-                    });
-                }
-            }
-            else if (op.targetType === 'PLAYER') {
-                // ... (原本的 PLAYER 邏輯保持不變) ...
-                const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
-                const oppId = attackerOwner === 1 ? 2 : 1;
-                const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
-                if(deck) targetEls.push(deck);
-            }
-            
-            // 使用轉換函式計算起點
-            const startPoint = toLocal(attacker.getBoundingClientRect());
-            
-            targetEls.forEach(target => {
-                const endPoint = toLocal(target.getBoundingClientRect());
-                const isSelf = (target === attacker);
-                
-                if (isSelf) {
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    const r = 40; 
-                    const d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x-r*2},${startPoint.y-r*2} ${startPoint.x},${startPoint.y}`;
-                    path.setAttribute("d", d);
-                    path.setAttribute("class", "arrow-line");
-                    path.setAttribute("fill", "none");
-                    svg.appendChild(path);
-                } else {
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", startPoint.x);
-                    line.setAttribute("y1", startPoint.y);
-                    line.setAttribute("x2", endPoint.x);
-                    line.setAttribute("y2", endPoint.y);
-                    line.setAttribute("class", "arrow-line");
-                    svg.appendChild(line);
-                }
-            });
-        });
-    }
+		const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+		
+		pointOps.forEach(op => {
+			const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
+			if (!attacker) return;
+			
+			let targetEls = [];
+			
+			// 1. 指向卡片 / 生物 / 護盾
+			if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
+				if (Array.isArray(op.targetIds)) {
+					op.targetIds.forEach(tid => {
+						const el = document.querySelector(`.card[data-id="${tid}"]`);
+						if(el) targetEls.push(el);
+					});
+				}
+			} 
+			// 2. [修正] 指向區域 (ZONE)
+			else if (op.targetType === 'ZONE') {
+				if (Array.isArray(op.targetIds)) {
+					op.targetIds.forEach(zid => {
+						// [關鍵修改] 改用屬性選擇器 [data-zone="..."] 
+						// 這樣就算該元素沒有 .zone class (雖然應該要有)，也能找到
+						const el = document.querySelector(`[data-zone="${zid}"]`);
+						
+						if(el) {
+							targetEls.push(el);
+						} else {
+							console.warn(`[RenderArrows] 找不到目標區域: ${zid}`);
+						}
+					});
+				}
+			}
+			// 3. 指向玩家 (PLAYER)
+			else if (op.targetType === 'PLAYER') {
+				const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
+				const oppId = attackerOwner === 1 ? 2 : 1;
+				const deck = document.querySelector(`[data-zone="p${oppId}-deck"]`);
+				if(deck) targetEls.push(deck);
+			}
+			
+			// 開始繪製
+			const startPoint = toLocal(attacker.getBoundingClientRect());
+			
+			targetEls.forEach(target => {
+				const endPoint = toLocal(target.getBoundingClientRect());
+				const isSelf = (target === attacker);
+				
+				if (isSelf) {
+					const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+					const r = 40; 
+					const d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x-r*2},${startPoint.y-r*2} ${startPoint.x},${startPoint.y}`;
+					path.setAttribute("d", d);
+					path.setAttribute("class", "arrow-line");
+					svg.appendChild(path);
+				} else {
+					const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+					line.setAttribute("x1", startPoint.x);
+					line.setAttribute("y1", startPoint.y);
+					line.setAttribute("x2", endPoint.x);
+					line.setAttribute("y2", endPoint.y);
+					line.setAttribute("class", "arrow-line");
+					svg.appendChild(line);
+				}
+			});
+		});
+	}
 
     function renderTimeline() {
         const list = document.getElementById('action-list');
