@@ -5683,112 +5683,71 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (延遲判定修正版) ---
-	function triggerAceAnimation(cardId) {
-		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
-		if (!originalEl) return;
+	// --- [獨立光圈版] 王牌特效函式 (精準定位修正版) ---
+	// --- [獨立光圈版] 王牌特效函式 (視覺逆推修正版) ---
+    function triggerAceAnimation(cardId) {
+        const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
+        if (!originalEl) return;
 
-		// 我們不再這裡讀取 state，而是等到 setTimeout 裡面再讀
-		// 這樣可以確保讀到的是「飛行結束後」的最終狀態
+        // 階段 0: 等待卡片移動就位
+        setTimeout(() => {
+            // 1. 取得卡片當前在螢幕上的「實際視覺範圍」
+            const rect = originalEl.getBoundingClientRect();
+            
+            // 2. 創建光圈
+            const ring = document.createElement('div');
+            ring.className = 'ace-external-ring';
+            
+            // 3. 計算絕對中心點 (Center Alignment)
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
 
-		// 階段 0: 等待卡片移動就位 (0.4秒)
-		setTimeout(() => {
-			// [修正點]：將狀態讀取與顏色判斷移入 setTimeout 內部
-			// -------------------------------------------------------
-			const state = getCurrentDisplayState();
-			const cardData = state.cards.find(c => c.id === cardId);
+            // 4. 取得旋轉角度
+            let rotation = 0;
+            const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+            if (match) rotation = parseFloat(match[1]);
 
-			// 如果卡片在飛行途中被刪除了，就終止特效
-			if (!cardData) return;
+            // 5. [核心修正] 智慧尺寸適配
+            // 我們不再計算縮放比例 (Scale)，而是直接使用 rect 的寬高
+            // 這樣可以確保光框的像素大小跟螢幕上看到的卡片一模一樣
+            
+            const isRotated90 = Math.abs(rotation % 180) > 45;
 
-			// 定義顏色映射表
-			const colorMap = {
-				'red': '255, 0, 0',
-				'blue': '0, 191, 255',
-				'green': '0, 255, 0',
-				'yellow': '255, 215, 0',
-				'white': '255, 255, 255',
-				'black': '100, 100, 100',
-				'rainbow': '255, 0, 255'
-			};
+            // 如果卡片轉了 90 度：
+            // 螢幕上的 rect.width (寬) 其實對應卡片本體的高度
+            // 螢幕上的 rect.height (高) 其實對應卡片本體的寬度
+            // 所以我們要「反向」設定給光框，這樣光框旋轉 90 度後才會吻合
+            const targetW = isRotated90 ? rect.height : rect.width;
+            const targetH = isRotated90 ? rect.width : rect.height;
 
-			let finalColor = '255, 215, 0'; // 預設金色
-			let colorFoundFromProxy = false;
+            // 6. 設定 CSS 變數 (直接傳入像素值)
+            ring.style.setProperty('--x', centerX + 'px');
+            ring.style.setProperty('--y', centerY + 'px');
+            ring.style.setProperty('--w', targetW + 'px');
+            ring.style.setProperty('--h', targetH + 'px');
+            ring.style.setProperty('--rot', rotation + 'deg');
 
-			// 1. 代理檢查：檢查「所有」連結的能力小卡
-			const proxyCards = state.cards.filter(c => 
-				c.zone.includes('ability') && 
-				c.sourceId == cardId
-			);
+            // 7. 加入畫面
+            document.body.appendChild(ring);
 
-			if (proxyCards.length > 0) {
-				// ID 越大代表越新 (Newest First)
-				proxyCards.sort((a, b) => b.id - a.id);
-				
-				// 找出第一張有效顏色的卡
-				const activeProxy = proxyCards.find(c => c.glow && colorMap[c.glow]);
+            // 階段 2: 觸發閃光
+            setTimeout(() => {
+                const flashLayer = document.getElementById('ace-flash-layer');
+                if (flashLayer) {
+                    flashLayer.classList.remove('anim-flash-white');
+                    void flashLayer.offsetWidth; 
+                    flashLayer.classList.add('anim-flash-white');
+                }
+                
+                // 階段 3: 移除光圈
+                setTimeout(() => {
+                    if (ring.parentNode) ring.parentNode.removeChild(ring);
+                }, 250); 
 
-				if (activeProxy) {
-					finalColor = colorMap[activeProxy.glow];
-					colorFoundFromProxy = true;
-					console.log(`[Ace Effect] (延遲判定) 採用小卡 ID:${activeProxy.id} 顏色: ${activeProxy.glow}`);
-				}
-			}
+            }, 700); 
 
-			// 2. 本體檢查
-			if (!colorFoundFromProxy) {
-				if (cardData && cardData.glow && colorMap[cardData.glow]) {
-					finalColor = colorMap[cardData.glow];
-				}
-			}
-			// -------------------------------------------------------
-
-			// 視覺渲染邏輯
-			const rect = originalEl.getBoundingClientRect();
-			
-			const ring = document.createElement('div');
-			ring.className = 'ace-external-ring';
-			
-			const centerX = rect.left + rect.width / 2;
-			const centerY = rect.top + rect.height / 2;
-
-			let rotation = 0;
-			const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
-			if (match) rotation = parseFloat(match[1]);
-
-			const isRotated90 = Math.abs(rotation % 180) > 45;
-			const targetW = isRotated90 ? rect.height : rect.width;
-			const targetH = isRotated90 ? rect.width : rect.height;
-
-			ring.style.setProperty('--x', centerX + 'px');
-			ring.style.setProperty('--y', centerY + 'px');
-			ring.style.setProperty('--w', targetW + 'px');
-			ring.style.setProperty('--h', targetH + 'px');
-			ring.style.setProperty('--rot', rotation + 'deg');
-			
-			// 注入剛剛才算出來的最新顏色
-			ring.style.setProperty('--ace-color', finalColor);
-
-			document.body.appendChild(ring);
-
-			// 觸發閃光
-			setTimeout(() => {
-				const flashLayer = document.getElementById('ace-flash-layer');
-				if (flashLayer) {
-					flashLayer.classList.remove('anim-flash-white');
-					void flashLayer.offsetWidth; 
-					flashLayer.classList.add('anim-flash-white');
-				}
-				
-				// 移除光圈
-				setTimeout(() => {
-					if (ring.parentNode) ring.parentNode.removeChild(ring);
-				}, 250); 
-
-			}, 700); 
-
-		}, 400); // 這裡的 400ms 延遲是為了配合卡片飛行時間
-	}
+        }, 400); 
+    }
 
     // --- [修改] createCardElement 函式 ---
 	function createCardElement(card) {
