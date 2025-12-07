@@ -491,7 +491,25 @@
         .card-group:hover .stack-top:not(.puzzle-link) { z-index: 101; }
         .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
         .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
-        .card-group:hover .stack-bottom { top: 40px !important; z-index: 102; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        /* 針對疊在正下方的卡片 (stack-bottom) */
+		.card-group:hover .stack-bottom { 
+			/* 1. 加大滑出距離：原本 40px -> 改為 65px (接近卡片高度 70px) */
+			top: 65px !important; 
+			
+			/* 2. 提高層級：確保滑出來時浮在最上面，不會被其他東西擋住 */
+			z-index: 105; 
+			
+			/* 3. 增加陰影與微放大：提升視覺辨識度 */
+			box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+			transform: scale(1.05); /* 稍微放大方便點擊 */
+		}
+		
+		/* 針對 "下方(露出底)" 的卡片 (stack-bottom-exposed) 也建議一併補強 */
+		.card-group:hover .stack-bottom-exposed {
+			/* 稍微錯開一點，避免跟正下方的重疊 */
+			top: 75px !important; 
+			z-index: 104;
+		}
 
         .card {
             width: var(--card-width); height: var(--card-height);
