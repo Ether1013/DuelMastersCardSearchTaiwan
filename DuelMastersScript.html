@@ -1630,25 +1630,39 @@
 
 		/* 2. 外掛發光圈 (獨立於卡片之外) - 絕對尺寸版 */
         .ace-external-ring {
-            position: fixed !important;
-            z-index: 4000 !important;
-            pointer-events: none;
-            background: transparent;
-            border-radius: 4px;
-            
-            /* 讓邊框算在尺寸內，避免外擴 */
-            box-sizing: border-box; 
-			--ace-rgb: 255, 215, 0;
+			position: fixed !important;
+			z-index: 4000 !important;
+			pointer-events: none;
+			background: transparent;
+			border-radius: 4px;
+			box-sizing: border-box; 
 
-            /* 讀取 JS 算好的絕對座標與尺寸 */
-            top: var(--y);
-            left: var(--x);
-            width: var(--w);
-            height: var(--h);
+			/* 接收 JS 傳入的座標與尺寸 */
+			top: var(--y);
+			left: var(--x);
+			width: var(--w);
+			height: var(--h);
 
-            /* 動畫設定 */
-            animation: ace-ring-power-up 0.7s linear forwards;
-        }
+			/* 預設顏色 (金色) */
+			--ring-color: 255, 215, 0; 
+
+			/* 動畫設定 */
+			animation: ace-ring-power-up 0.7s linear forwards;
+		}
+		/* --- [新增] 各色變體 (修改 CSS 變數即可) --- */
+		.ace-external-ring.ring-red     { --ring-color: 255, 0, 0; }
+		.ace-external-ring.ring-yellow  { --ring-color: 255, 215, 0; } /* 與預設相同 */
+		.ace-external-ring.ring-green   { --ring-color: 0, 255, 0; }
+		.ace-external-ring.ring-blue    { --ring-color: 0, 191, 255; }
+		.ace-external-ring.ring-black   { --ring-color: 0, 0, 0; }
+		.ace-external-ring.ring-white   { --ring-color: 255, 255, 255; }
+		.ace-external-ring.ring-rainbow { animation: ace-ring-power-up 0.7s linear forwards, ring-rainbow-shift 0.7s linear infinite; }
+
+		/* 針對彩虹的額外顏色變換動畫 */
+		@keyframes ring-rainbow-shift {
+			0% { filter: hue-rotate(0deg); }
+			100% { filter: hue-rotate(360deg); }
+		}
 
         /* 新增：消退階段 Class */
         .ace-external-ring.power-down {
@@ -1656,42 +1670,47 @@
             animation: ace-ring-power-down 0.7s linear forwards;
         }
 
+		/* --- [修改] 動畫關鍵影格：使用 rgba(var(--ring-color), opacity) --- */
 		@keyframes ace-ring-power-up {
 			0% {
-				/* 這裡只保留 box-shadow，確保沒有 border */
-				box-shadow: 0 0 0 0 rgba(var(--ace-rgb), 0);
+				box-shadow: 0 0 0 0 rgba(var(--ring-color), 0);
 				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
 			}
 			30% {
-				box-shadow: 0 0 15px 5px rgba(var(--ace-rgb), 0.4);
+				box-shadow: 0 0 15px 5px rgba(var(--ring-color), 0.4);
 				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
 			}
 			60% {
-				box-shadow: 0 0 35px 15px rgba(var(--ace-rgb), 0.7);
+				box-shadow: 0 0 35px 15px rgba(var(--ring-color), 0.7);
 				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
 			}
 			100% {
-				box-shadow: 0 0 80px 40px rgba(var(--ace-rgb), 1);
+				box-shadow: 0 0 80px 40px rgba(var(--ring-color), 1);
 				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
 			}
 		}
 
-		@keyframes ace-ring-power-down {
-			0% {
-				box-shadow: 0 0 80px 40px rgba(var(--ace-rgb), 1);
-				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
-			}
-			40% {
-				box-shadow: 0 0 35px 15px rgba(var(--ace-rgb), 0.7);
-			}
-			70% {
-				box-shadow: 0 0 15px 5px rgba(var(--ace-rgb), 0.4);
-			}
-			100% {
-				box-shadow: 0 0 0 0 rgba(var(--ace-rgb), 0);
-				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-			}
-		}
+        /* 新增：消退動畫 (Down) - 剛好是上面動畫的倒序 */
+        @keyframes ace-ring-power-down {
+            0% {
+                /* 起點：接續大光狀態 */
+                box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
+                transform: rotate(var(--rot)) scale(1.05);
+            }
+            40% {
+                /* 中光 */
+                box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.7);
+            }
+            70% {
+                /* 微光 */
+                box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4);
+            }
+            100% {
+                /* 終點：完全消失 */
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+                transform: rotate(var(--rot)) scale(1);
+            }
+        }
 		
 		/* --- [新增] 多重選取模式樣式 --- */
         
@@ -5681,34 +5700,37 @@
         };
     }
 	
+	// --- [獨立光圈版] 王牌特效函式 ---
 	function triggerAceAnimation(cardId) {
+		// 1. 先從資料面取得卡片狀態 (為了讀取 glow 屬性)
+		const state = getCurrentDisplayState();
+		const cardData = state.cards.find(c => c.id == cardId);
+		
+		// 2. 取得 DOM 元素
 		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
 		if (!originalEl) return;
 
+		// 階段 0: 等待卡片移動就位
 		setTimeout(() => {
 			const rect = originalEl.getBoundingClientRect();
+			
+			// 建立光圈
 			const ring = document.createElement('div');
 			ring.className = 'ace-external-ring';
+
+			// --- [新增邏輯] 判斷並套用顏色 Class ---
+			if (cardData && cardData.glow) {
+				// 對應 CSS class 名稱: ring-red, ring-blue, ring-rainbow...
+				ring.classList.add(`ring-${cardData.glow}`);
+			} else {
+				// 預設金色 (或是你想預設其他顏色也可以)
+				ring.classList.add('ring-yellow');
+			}
+			// -------------------------------------
 			
+			// ... (以下維持原本的座標計算代碼) ...
 			const centerX = rect.left + rect.width / 2;
 			const centerY = rect.top + rect.height / 2;
-
-			// ========== [修正重點] ==========
-			// 1. 預設直接給定金色 RGB，確保永遠有值
-			let aceRgb = '255, 215, 0'; 
-
-			// 2. 偵測卡片是否正在發光，若有則替換顏色
-			if (originalEl.classList.contains('glow-red'))        aceRgb = '255, 0, 0';
-			else if (originalEl.classList.contains('glow-blue'))  aceRgb = '0, 191, 255';
-			else if (originalEl.classList.contains('glow-green')) aceRgb = '0, 255, 0';
-			else if (originalEl.classList.contains('glow-white')) aceRgb = '255, 255, 255';
-			else if (originalEl.classList.contains('glow-black')) aceRgb = '0, 0, 0';
-			else if (originalEl.classList.contains('glow-yellow')) aceRgb = '255, 215, 0';
-			else if (originalEl.classList.contains('glow-rainbow')) aceRgb = '255, 215, 0';
-
-			// 3. 強制將顏色寫入 CSS 變數 (這一行非常重要)
-			ring.style.setProperty('--ace-rgb', aceRgb);
-			// ==============================
 
 			let rotation = 0;
 			const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
@@ -5725,21 +5747,21 @@
 			ring.style.setProperty('--rot', rotation + 'deg');
 
 			document.body.appendChild(ring);
-			
-			// ... (下方的閃光與移除邏輯保持不變) ...
-			setTimeout(() => {
-				 const flashLayer = document.getElementById('ace-flash-layer');
-				 if (flashLayer) {
-					 flashLayer.classList.remove('anim-flash-white');
-					 void flashLayer.offsetWidth;
-					 flashLayer.classList.add('anim-flash-white');
-				 }
-				 setTimeout(() => {
-					 if (ring.parentNode) ring.parentNode.removeChild(ring);
-				 }, 250);
-			}, 700);
 
-		}, 400);
+			// 階段 2: 觸發閃光與移除 (維持不變)
+			setTimeout(() => {
+				const flashLayer = document.getElementById('ace-flash-layer');
+				if (flashLayer) {
+					flashLayer.classList.remove('anim-flash-white');
+					void flashLayer.offsetWidth; 
+					flashLayer.classList.add('anim-flash-white');
+				}
+				setTimeout(() => {
+					if (ring.parentNode) ring.parentNode.removeChild(ring);
+				}, 250); 
+			}, 700); 
+
+		}, 400); 
 	}
 
     // --- [修改] createCardElement 函式 ---
