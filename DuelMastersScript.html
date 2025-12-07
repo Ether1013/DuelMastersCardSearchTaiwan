@@ -1617,17 +1617,6 @@
             display: none;
         }
         
-        .anim-flash-white {
-            display: block !important;
-            animation: flash-white 0.5s ease-out forwards;
-        }
-
-        @keyframes flash-white {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-
 		/* 2. 外掛發光圈 (獨立於卡片之外) - 絕對尺寸版 */
         .ace-external-ring {
 			position: fixed !important;
@@ -1897,6 +1886,66 @@
 			from { transform: scale(0.8); opacity: 0; }
 			to { transform: scale(1); opacity: 1; }
 		}
+		
+		/* --- [優化版] 王牌特效樣式 --- */
+
+		/* 1. 動畫期間強制解除卡牌的邊界限制，讓光能透出來 */
+		.card.animating-ace {
+			overflow: visible !important;   /* 關鍵！讓光暈不會被切掉 */
+			z-index: 3000 !important;       /* 確保壓在所有卡片之上 */
+			will-change: transform;         /* 優化渲染效能 */
+		}
+
+		/* 2. 內部光暈層 (取代原本的 External Ring) */
+		.ace-internal-glow {
+			position: absolute;
+			top: 0; 
+			left: 0; 
+			width: 100%; 
+			height: 100%;
+			pointer-events: none;
+			border-radius: 4px;
+			
+			/* 預設從中心開始 */
+			transform-origin: center center;
+			
+			/* 動畫設定 */
+			animation: ace-pop-sequence 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+		}
+
+		/* 3. 動畫序列：擴大發光 -> 轉白閃光 -> 消退 */
+		@keyframes ace-pop-sequence {
+			0% {
+				transform: scale(1);
+				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
+				background: rgba(var(--ace-color), 0);
+				opacity: 0.5;
+			}
+			40% {
+				/* 階段一：光暈迅速擴大，顏色飽和 */
+				transform: scale(1.4);
+				box-shadow: 0 0 30px 10px rgba(var(--ace-color), 0.8);
+				background: rgba(var(--ace-color), 0.3);
+				opacity: 1;
+			}
+			60% {
+				/* 階段二：變成強烈白光 (Flash) */
+				transform: scale(1.5);
+				box-shadow: 0 0 60px 20px rgba(255, 255, 255, 1); /* 強制白光 */
+				background: rgba(255, 255, 255, 0.6);
+				opacity: 1;
+				border: 2px solid white;
+			}
+			100% {
+				/* 階段三：消退 */
+				transform: scale(1.6);
+				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 0);
+				background: rgba(var(--ace-color), 0);
+				opacity: 0;
+				border: 0px solid white;
+			}
+		}
+
     </style>
 </head>
 <body>
@@ -5683,25 +5732,30 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (延遲判定修正版) ---
+	// --- [內部注入版] 王牌特效函式 (解決位移與消失問題) ---
+	// --- [內部注入版 + Debug Log] 王牌特效函式 ---
 	function triggerAceAnimation(cardId) {
-		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
-		if (!originalEl) return;
+		console.log(`%c[AceAnim] 收到指令: ID ${cardId} (準備等待 0.4s...)`, "color: orange");
 
-		// 我們不再這裡讀取 state，而是等到 setTimeout 裡面再讀
-		// 這樣可以確保讀到的是「飛行結束後」的最終狀態
-
-		// 階段 0: 等待卡片移動就位 (0.4秒)
+		// 延遲執行，確保卡片已經飛到位
 		setTimeout(() => {
-			// [修正點]：將狀態讀取與顏色判斷移入 setTimeout 內部
-			// -------------------------------------------------------
+			// 1. 抓取目標卡牌的 DOM
+			const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
+			
+			if (!cardEl) {
+				console.error(`[AceAnim] 錯誤: 找不到 DOM 元素 (ID: ${cardId})`);
+				return;
+			}
+
+			// 2. 準備顏色邏輯
 			const state = getCurrentDisplayState();
 			const cardData = state.cards.find(c => c.id === cardId);
+			
+			if (!cardData) {
+				console.warn(`[AceAnim] 警告: 狀態中找不到卡片資料 (ID: ${cardId})`);
+				return;
+			}
 
-			// 如果卡片在飛行途中被刪除了，就終止特效
-			if (!cardData) return;
-
-			// 定義顏色映射表
 			const colorMap = {
 				'red': '255, 0, 0',
 				'blue': '0, 191, 255',
@@ -5713,81 +5767,69 @@
 			};
 
 			let finalColor = '255, 215, 0'; // 預設金色
+			let debugSource = "預設 (金色)"; // 用於 Log 紀錄來源
+
+			// --- 顏色判定邏輯 ---
 			let colorFoundFromProxy = false;
-
-			// 1. 代理檢查：檢查「所有」連結的能力小卡
-			const proxyCards = state.cards.filter(c => 
-				c.zone.includes('ability') && 
-				c.sourceId == cardId
-			);
-
+			
+			// 檢查連結的小卡 (Proxy)
+			const proxyCards = state.cards.filter(c => c.zone.includes('ability') && c.sourceId == cardId);
+			
 			if (proxyCards.length > 0) {
-				// ID 越大代表越新 (Newest First)
-				proxyCards.sort((a, b) => b.id - a.id);
+				console.log(`[AceAnim] 偵測到 ${proxyCards.length} 張連結小卡`);
 				
-				// 找出第一張有效顏色的卡
+				// ID 越大代表越新
+				proxyCards.sort((a, b) => b.id - a.id);
 				const activeProxy = proxyCards.find(c => c.glow && colorMap[c.glow]);
-
+				
 				if (activeProxy) {
 					finalColor = colorMap[activeProxy.glow];
 					colorFoundFromProxy = true;
-					console.log(`[Ace Effect] (延遲判定) 採用小卡 ID:${activeProxy.id} 顏色: ${activeProxy.glow}`);
+					debugSource = `小卡 (ID:${activeProxy.id}, Glow:${activeProxy.glow})`;
 				}
 			}
 
-			// 2. 本體檢查
+			// 檢查本體 (Self)
 			if (!colorFoundFromProxy) {
-				if (cardData && cardData.glow && colorMap[cardData.glow]) {
+				if (cardData.glow && colorMap[cardData.glow]) {
 					finalColor = colorMap[cardData.glow];
+					debugSource = `本體 (Glow:${cardData.glow})`;
 				}
 			}
-			// -------------------------------------------------------
-
-			// 視覺渲染邏輯
-			const rect = originalEl.getBoundingClientRect();
 			
-			const ring = document.createElement('div');
-			ring.className = 'ace-external-ring';
-			
-			const centerX = rect.left + rect.width / 2;
-			const centerY = rect.top + rect.height / 2;
+			console.log(`%c[AceAnim] 判定結果 -> 來源: ${debugSource} | RGB: ${finalColor}`, "color: #2ecc71; font-weight: bold;");
+			// -----------------------------
 
-			let rotation = 0;
-			const match = originalEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
-			if (match) rotation = parseFloat(match[1]);
+			// 3. 內部注入光暈
+			cardEl.classList.add('animating-ace');
 
-			const isRotated90 = Math.abs(rotation % 180) > 45;
-			const targetW = isRotated90 ? rect.height : rect.width;
-			const targetH = isRotated90 ? rect.width : rect.height;
+			const glowDiv = document.createElement('div');
+			glowDiv.className = 'ace-internal-glow';
+			glowDiv.style.setProperty('--ace-color', finalColor);
 
-			ring.style.setProperty('--x', centerX + 'px');
-			ring.style.setProperty('--y', centerY + 'px');
-			ring.style.setProperty('--w', targetW + 'px');
-			ring.style.setProperty('--h', targetH + 'px');
-			ring.style.setProperty('--rot', rotation + 'deg');
-			
-			// 注入剛剛才算出來的最新顏色
-			ring.style.setProperty('--ace-color', finalColor);
+			cardEl.appendChild(glowDiv);
 
-			document.body.appendChild(ring);
-
-			// 觸發閃光
+			// 4. 觸發全螢幕白光
 			setTimeout(() => {
 				const flashLayer = document.getElementById('ace-flash-layer');
 				if (flashLayer) {
 					flashLayer.classList.remove('anim-flash-white');
-					void flashLayer.offsetWidth; 
+					void flashLayer.offsetWidth; // Trigger reflow
 					flashLayer.classList.add('anim-flash-white');
+					// console.log("[AceAnim] 觸發全螢幕白光");
 				}
-				
-				// 移除光圈
-				setTimeout(() => {
-					if (ring.parentNode) ring.parentNode.removeChild(ring);
-				}, 250); 
+			}, 300);
 
-			}, 700); 
+			// 5. 清理工作
+			setTimeout(() => {
+				if (glowDiv.parentNode) {
+					glowDiv.parentNode.removeChild(glowDiv);
+				}
+				cardEl.classList.remove('animating-ace');
+				console.log(`[AceAnim] 動畫結束，清理完成 (ID: ${cardId})`);
+			}, 900); 
 
-		}, 400); // 這裡的 400ms 延遲是為了配合卡片飛行時間
+		}, 400); 
 	}
 
     // --- [修改] createCardElement 函式 ---
