@@ -1627,6 +1627,17 @@
             50% { opacity: 1; }
             100% { opacity: 0; }
         }
+		
+		/* --- [新增] 虹光專用動畫 --- */
+		.ace-external-ring.rainbow-mode {
+			/* 疊加色相旋轉動畫，讓顏色在 0.7秒內跑完一圈色相環 */
+			animation: ace-ring-power-up 0.7s linear forwards, rainbow-shift 0.7s linear infinite;
+		}
+
+		@keyframes rainbow-shift {
+			0% { filter: hue-rotate(0deg); }
+			100% { filter: hue-rotate(360deg); }
+		}
 
 		/* 2. 外掛發光圈 (獨立於卡片之外) - 絕對尺寸版 */
         .ace-external-ring {
@@ -5685,15 +5696,14 @@
         };
     }
 	
-	// --- [獨立光圈版] 王牌特效函式 (優先使用卡片當下的光暈顏色) ---
-	// --- [獨立光圈版] 王牌特效函式 (含 Console Log 除錯) ---
+	// --- [修正版] 王牌特效函式 (支援真・虹光) ---
 	function triggerAceAnimation(cardId) {
 		const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
 		if (!originalEl) return;
 
 		// 1. 取得狀態
 		const state = getCurrentDisplayState();
-		// [修正] 使用 == 寬鬆比對，避免 ID 型別不同 (字串 vs 數字) 導致找不到卡片
+		// 使用寬鬆比對 (==) 避免 ID 型別問題
 		const card = state.cards.find(c => c.id == cardId);
 		
 		// 定義顏色映射表
@@ -5704,47 +5714,31 @@
 			'yellow': '255, 215, 0',
 			'black': '50, 50, 50',
 			'white': '255, 255, 255',
-			'rainbow': '255, 215, 0'
+			'rainbow': '255, 0, 0' // [修改] 虹光模式下，基底色設為紅色，稍後用 CSS 濾鏡轉色
 		};
 
-		// 預設顏色 (金色)
-		let targetRGB = '255, 215, 0'; 
-		let colorSource = "Default (Gold)"; // 用來記錄是誰決定了顏色
+		let targetRGB = '255, 215, 0'; // 預設金色
+		let isRainbow = false; // [新增] 虹光旗標
 
-		// --- [除錯開始] ---
-		console.group(`🔥 Ace Animation Debug [ID: ${cardId}]`);
-		
-		if (!card) {
-			console.error("❌ 找不到卡片資料！請檢查 ID 是否正確。");
-		} else {
-			console.log("🃏 卡片資料 (Card Object):", card);
-			console.log("✨ 當前 Glow 屬性:", card.glow);
-			
-			// 檢查判定邏輯
-			if (card.glow) {
-				if (glowColors[card.glow]) {
-					targetRGB = glowColors[card.glow];
-					colorSource = `Card Property (${card.glow})`;
-					console.log("✅ 成功對應到顏色表！");
-				} else {
-					console.warn(`⚠️ 卡片有 glow: "${card.glow}"，但不在 glowColors 列表中！(大小寫有誤？)`);
-					console.log("📋 可用顏色:", Object.keys(glowColors));
-				}
-			} else {
-				console.log("ℹ️ 此卡片沒有 glow 屬性 (null 或 undefined)，將使用預設金色。");
+		if (card && card.glow) {
+			if (card.glow === 'rainbow') {
+				isRainbow = true;
+				targetRGB = glowColors['rainbow'];
+			} else if (glowColors[card.glow]) {
+				targetRGB = glowColors[card.glow];
 			}
 		}
-		
-		console.log(`🎨 最終決定使用的 RGB: %c${targetRGB}`, `color: rgb(${targetRGB}); font-weight:bold; background:#333; padding:2px;`);
-		console.log(`📌 顏色來源: ${colorSource}`);
-		console.groupEnd();
-		// --- [除錯結束] ---
 
 		// 階段 0: 等待卡片移動就位
 		setTimeout(() => {
 			const rect = originalEl.getBoundingClientRect();
 			const ring = document.createElement('div');
 			ring.className = 'ace-external-ring';
+			
+			// [新增] 如果是虹光，加上專用 Class
+			if (isRainbow) {
+				ring.classList.add('rainbow-mode');
+			}
 			
 			const centerX = rect.left + rect.width / 2;
 			const centerY = rect.top + rect.height / 2;
@@ -5768,6 +5762,7 @@
 
 			document.body.appendChild(ring);
 
+			// 階段 2: 觸發閃光
 			setTimeout(() => {
 				const flashLayer = document.getElementById('ace-flash-layer');
 				if (flashLayer) {
@@ -5776,6 +5771,7 @@
 					flashLayer.classList.add('anim-flash-white');
 				}
 				
+				// 階段 3: 移除光圈
 				setTimeout(() => {
 					if (ring.parentNode) ring.parentNode.removeChild(ring);
 				}, 250); 
