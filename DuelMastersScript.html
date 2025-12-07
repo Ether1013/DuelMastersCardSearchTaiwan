@@ -1852,9 +1852,15 @@
 		}
 		
 		
-		/* --- [修正] 手機版區域鎖定補丁 --- */
-		/* 1. 針對「牌庫、墓地、超次元、待處理區」內的卡片：禁止點擊 */
-		/* 注意：上一版我們開啟了全域 .card 的點擊，這裡必須把特定區域關掉 */
+		/* 1. 對話層修正：針對 #dialogue-layer 及其「所有子元件」強制封鎖 */
+		/* 使用 * 選擇器選取底下所有東西，並用 !important 覆蓋 JS 的行內樣式 */
+		body.mobile-mode #dialogue-layer,
+		body.mobile-mode #dialogue-layer * {
+			pointer-events: none !important;
+		}
+		
+		/* 2. 牌庫、墓地、超次元、待處理區修正 */
+		/* 這些區域的卡片也必須強制封鎖，避免 JS 綁定的 onclick 生效 */
 		body.mobile-mode .deck-zone .card,
 		body.mobile-mode .grave-zone .card,
 		body.mobile-mode .hyper-zone .card,
@@ -1862,10 +1868,10 @@
 			pointer-events: none !important;
 		}
 
-		/* 2. 針對「對話層」：禁止點擊 */
-		/* 避免點擊對話框觸發編輯視窗 */
-		body.mobile-mode #dialogue-layer {
-			pointer-events: none !important;
+		/* 3. 確保展示區(Reveal Zone)的卡片「可以」被點擊 (放大檢視用) */
+		/* 因為上面用了 * 選擇器可能會誤殺，這裡再度確保展示區是活的 */
+		body.mobile-mode #reveal-zone .card {
+			pointer-events: auto !important;
 		}
 
 		/* 3. 強制開啟卡片點擊 (原本是 none，為了讓點擊生效改為 auto) */
