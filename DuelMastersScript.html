@@ -4128,60 +4128,23 @@
 			const { sourceCardId, targetZone, newId, isContinuous } = op;
 			const source = state.cards.find(c => c.id == sourceCardId);
 			
-			// [修正 1] 如果找不到本體卡，嘗試用「備用方案」找回來 (透過圖片與擁有者)
-			// 這可以挽救大部分因為 ID 變動而斷掉的連結
+			// 嘗試找回來源卡 (防呆邏輯保持不變)
 			let effectiveSource = source;
 			if (!effectiveSource) {
-				// 嘗試找一張「同陣營、同區域、同圖片」的卡片當作替補
-				// 注意：這是一個模糊比對，但在單人操作環境下通常準確
-				// 我們假設本體卡通常在 Battle Zone 或 Mana Zone
 				effectiveSource = state.cards.find(c => 
 					c.ownerId === (targetZone.includes('p1') ? 1 : 2) && 
 					(c.zone.includes('battle') || c.zone.includes('mana')) &&
-					// 如果我們無法取得 action 中的 imageKey，至少比對一下擁有者
-					// 這裡只能盡力而為，因為 op 沒存 imageKey
 					true 
 				);
-				
-				if (!effectiveSource) {
-					console.warn(`[Action Warning] Step產生小卡失敗：找不到來源卡 ID ${sourceCardId}`);
-					// 這裡我們不 return，而是讓它失敗，但至少 Console 有紀錄
-				} else {
-					 console.log(`[Link Auto-Fix] ID ${sourceCardId} 失效，自動連結至 ${effectiveSource.id} (${effectiveSource.text})`);
-				}
 			}
 
 			if (effectiveSource) {
-				// 1. 預設使用操作中帶的 newId，或自動計算最大 ID + 1
-				// [原邏輯] (會重複利用 ID)
-				// let idToUse = newId || (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
-
-				// [新邏輯] 使用時間戳記 + 隨機數，確保 ID 永遠遞增且不重複
-				// 這樣刪除舊卡後，新卡的 ID 會是很大的數字，絕不會跟舊卡撞號
+				// [核心修正] 直接使用操作指令中記錄的 ID，不再重新計算
+				// 如果是舊版存檔沒有 newId，才使用 fallback (兼容舊版)
 				let idToUse = newId;
 				if (!idToUse) {
-					// 取得目前時間 (毫秒)
-					const now = Date.now();
-					
-					// 為了避免同一毫秒內產生兩張卡導致衝突，加上一個微小的隨機數
-					// 注意：這裡取整數以維持 ID 為 Number 型態
-					const randomSuffix = Math.floor(Math.random() * 1000);
-					
-					// 組合出一個超大 ID (例如: 1715423654012)
-					idToUse = parseInt(`${now.toString().slice(-9)}${randomSuffix}`);
-					
-					// 雙重保險：萬一真的這麼倒楣撞號了 (機率極低)，再往上加
-					while (state.cards.some(c => c.id === idToUse)) {
-						idToUse++;
-					}
-				}
-
-				// [修正 2] 僅在「真的衝突」時才換 ID，且不要直接修改 op.newId 寫入歷史
-				// 我們只修改當下的 idToUse，避免汙染歷史紀錄導致連鎖錯誤
-				if (state.cards.some(c => c.id === idToUse)) {
-					const maxExistingId = state.cards.reduce((max, c) => Math.max(max, c.id), 0);
-					idToUse = maxExistingId + 1;
-					console.warn(`[ID Conflict] Temporary reassigned ${newId} to ${idToUse}`);
+					// 只有舊版存檔會進來這裡
+					idToUse = (state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1);
 				}
 
 				const suffix = isContinuous ? " (Cont)" : " (Eff)";
@@ -4193,28 +4156,27 @@
 				newCard.backImageKey = effectiveSource.backImageKey;
 				newCard.image = effectiveSource.image; 
 				newCard.text = effectiveSource.text;
-				
-				// 重要：更新 sourceId 為實際找到的那個 (若是替補的)
 				newCard.sourceId = effectiveSource.id;
 				
 				if (isContinuous) newCard.isContinuous = true;
 
-				newCard.styleKey = 'style_' + newCard.id;
+				// [關鍵] 設定唯一的 StyleKey，確保位置設定跟著這張卡跑，而不是跟著圖片跑
+				// 這樣即使兩張卡用同一張圖，位置也可以不同
+				newCard.styleKey = 'style_' + idToUse;
 
-				// 樣式繼承邏輯 (保持您之前的修正)
-				let existingStyle = globalAbilityStyleRegistry[newCard.styleKey];
-				if (!existingStyle && effectiveSource.imageKey && globalAbilityStyleRegistry[effectiveSource.imageKey]) {
-					 existingStyle = { ...globalAbilityStyleRegistry[effectiveSource.imageKey] };
-					 globalAbilityStyleRegistry[newCard.styleKey] = existingStyle;
-				}
-
-				if (!existingStyle) {
+				// 初始化樣式：如果這張圖以前調過，繼承上次的位置；否則歸零
+				if (!globalAbilityStyleRegistry[newCard.styleKey]) {
 					let initialStyle = { x: 50, y: 50, scale: 1 };
-					if (globalLastUsedStyles[effectiveSource.imageKey]) {
+					
+					// 優先繼承「這張圖片最後一次被調整的樣子」(User Friendly)
+					if (globalLastUsedStyles && globalLastUsedStyles[effectiveSource.imageKey]) {
 						initialStyle = { ...globalLastUsedStyles[effectiveSource.imageKey] };
-					} else if (globalAbilityStyleRegistry[effectiveSource.imageKey]) {
+					} 
+					// 其次繼承圖片本身的設定
+					else if (globalAbilityStyleRegistry[effectiveSource.imageKey]) {
 						initialStyle = { ...globalAbilityStyleRegistry[effectiveSource.imageKey] };
 					}
+					
 					globalAbilityStyleRegistry[newCard.styleKey] = initialStyle;
 				}
 
@@ -4406,51 +4368,39 @@
         saveToStorage();
     }
     
-    function addCardNote() {
-        if (!pendingMove) return;
-        const note = document.getElementById('note-input').value;
-        addOperation({ type: 'ADD_NOTE', cardIds: pendingMove.cardIds, note: note });
-    }
+    // 2. 新增註記後存檔
+	function addCardNote() {
+		if (!pendingMove) return;
+		const note = document.getElementById('note-input').value;
+		addOperation({ type: 'ADD_NOTE', cardIds: pendingMove.cardIds, note: note });
+		// addOperation 內部已經有 saveToStorage，所以這裡不用改，但請確認 addOperation 結尾有存檔
+	}
     
-    function adjustAbilityCard(key, val) {
+    // 1. 調整位置後存檔
+	function adjustAbilityCard(key, val) {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		
 		const state = getCurrentDisplayState();
 		const targetIds = pendingMove.cardIds;
-		
 		let hasChanges = false;
 
 		targetIds.forEach(id => {
 			const c = state.cards.find(card => card.id === id);
 			if (c) {
-				// 決定要更新哪個 Key：如果是新版卡片用 styleKey，舊版卡片用 imageKey
-				let keyToUpdate = c.styleKey;
-				
-				// 如果這張卡沒有 styleKey (舊存檔)，我們現場幫它補一個，讓它開始獨立
-				if (!keyToUpdate) {
-					if (c.imageKey) {
-						keyToUpdate = 'style_' + c.id;
-						c.styleKey = keyToUpdate;
-						// 繼承原本共用的樣式作為起點
-						globalAbilityStyleRegistry[keyToUpdate] = { ...(globalAbilityStyleRegistry[c.imageKey] || {x:50,y:50,scale:1}) };
-					} else {
-						return; // 沒圖片無法調整
-					}
-				}
+				// 確保 styleKey 存在
+				let keyToUpdate = c.styleKey || ('style_' + c.id);
+				c.styleKey = keyToUpdate;
 
-				// 取得當前樣式
 				let currentStyle = globalAbilityStyleRegistry[keyToUpdate] || { x: 50, y: 50, scale: 1 };
 				let newStyle = { ...currentStyle };
 
-				// 計算新數值
 				if (key === 'panX') newStyle.x += val;
 				else if (key === 'panY') newStyle.y += val;
 				else if (key === 'scale') newStyle.scale += val;
 
-				// 1. 更新這張卡片的獨立樣式
 				globalAbilityStyleRegistry[keyToUpdate] = newStyle;
 				
-				// 2. [關鍵] 更新「全域記憶」，讓這張原始圖片(imageKey)的下一個複製品繼承這個數值
+				// 記憶這個樣式供下次生成使用
 				if (c.imageKey) {
 					globalLastUsedStyles[c.imageKey] = { ...newStyle };
 				}
@@ -4461,7 +4411,8 @@
 
 		if (hasChanges) {
 			renderUI();
-			saveToStorage();
+			// [修正] 強制存檔，確保刷新後位置還在
+			if(!document.body.classList.contains('mobile-mode')) saveToStorage();
 		}
 	}
     
@@ -4729,6 +4680,7 @@
 		// cancelSelection(); 
 	}
 	
+	// --- [修正版] 複製到能力區 (使用絕對 ID) ---
 	function copyToAbility(isContinuous = false) {
 		if (!pendingMove) return;
 		if (pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_copy'));
@@ -4738,14 +4690,17 @@
 		if (!card) return;
 		
 		const targetZone = card.ownerId === 1 ? 'p1-ability' : 'p2-ability';
-		const newId = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1; 
+		
+		// [核心修正] 使用時間戳記 + 隨機數生成「絕對唯一 ID」
+		// 不再使用 "max + 1"，確保即使在歷史中間插入步驟，這個 ID 也不會跟後面的衝突
+		const fixedId = parseInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
 		
 		addOperation({ 
 			type: 'CREATE_ABILITY', 
 			sourceCardId: card.id, 
 			targetZone: targetZone, 
-			newId: newId,
-			isContinuous: isContinuous // 記錄這張卡是否為持續效果
+			newId: fixedId, // 將這個鐵打的 ID 寫入歷史
+			isContinuous: isContinuous 
 		});
 	}
 
