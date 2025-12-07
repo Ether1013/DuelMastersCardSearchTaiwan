@@ -3035,25 +3035,28 @@
         window.focus();
     }
     
-    // 修改後的 processImage
+    // --- [修改] 圖片處理 (畫質提升至 200x280) ---
 	function processImage(dataUrl, targetId = null) {
 		const img = new Image();
 		img.onload = () => {
 			const canvas = document.createElement('canvas');
 			const ctx = canvas.getContext('2d');
-			// 維持原本的卡片壓縮比例 (100x140)
-			const targetW = 100;
-			const targetH = 140;
+			
+			// [修改 1] 解析度提升 (原本 100x140 -> 200x280)
+			// 這樣在手機版放大時依然清晰
+			const targetW = 200;
+			const targetH = 280;
+			
 			canvas.width = targetW;
 			canvas.height = targetH;
 			
-			ctx.fillStyle = "#fff"; // 防止透明圖變黑
+			ctx.fillStyle = "#fff"; 
 			ctx.fillRect(0, 0, targetW, targetH);
 			ctx.drawImage(img, 0, 0, targetW, targetH);
 			
-			const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+			// 使用 0.85 品質壓縮，取得平衡
+			const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 			
-			// [修改] 如果有指定 ID 就用指定的，否則使用桌面選取的(pendingMove)
 			const idToUse = targetId || (pendingMove ? pendingMove.cardIds[0] : null);
 			
 			if (idToUse) {
@@ -3063,71 +3066,111 @@
 		img.src = dataUrl;
 	}
     
-	// 修改後的 updateCardImageGlobal (包含自動關閉面板邏輯)
+	// --- [新增] 垃圾回收輔助：找出所有正在使用的圖片 Key ---
+	function getUsedImageKeys() {
+		const used = new Set();
+		
+		const scanState = (s) => {
+			if (!s || !s.cards) return;
+			s.cards.forEach(c => {
+				if (c.imageKey) used.add(c.imageKey);
+				if (c.backImageKey) used.add(c.backImageKey);
+				// 也保留舊版樣式 Key (如果有的話)
+				if (c.styleKey) used.add(c.styleKey); 
+			});
+			
+			// 也要掃描對話系統用到的頭像 Key (格式 avatar_xxx)
+			if (s.dialogueData) {
+				['p1', 'p2'].forEach(p => {
+					if (s.dialogueData[p] && s.dialogueData[p].emotion) {
+						used.add(`avatar_${p}_${s.dialogueData[p].emotion}`);
+					}
+				});
+			}
+		};
+
+		scanState(initialState);
+		history.forEach(h => {
+			scanState(h.state);
+			if (h.detachedStartState) scanState(h.detachedStartState);
+		});
+		if (tempState) scanState(tempState);
+
+		// 額外保留所有對話系統的預設頭像 (避免對話編輯器開起來沒圖)
+		Object.keys(globalImageRegistry).forEach(k => {
+			if (k.startsWith('avatar_')) used.add(k);
+		});
+
+		return used;
+	}
+
+	// --- [修改] 全域圖片更新 (含去重複化與引用更新) ---
 	function updateCardImageGlobal(cardId, base64) {
 		const state = getCurrentDisplayState();
 		const targetCard = state.cards.find(c => c.id === cardId);
 		if(!targetCard) return;
 
-		if (!targetCard.imageKey) {
-			targetCard.imageKey = 'img_' + targetCard.id;
-			targetCard.backImageKey = 'img_back_' + targetCard.id;
-		}
-
-		let keyToUpdate = targetCard.imageKey;
-		if (targetCard.isHyper && !targetCard.faceUp) {
-				keyToUpdate = targetCard.backImageKey;
-		}
-
-		// 智慧詢問：只有當「原本已經有圖片」時才跳出確認視窗
-		if (globalImageRegistry[keyToUpdate]) {
-			if(!confirm(t('msg_replace_img'))) return;
-		}
-
-		globalImageRegistry[keyToUpdate] = base64;
-
-		const setFlag = (s) => {
-			const c = s.cards.find(x => x.id === cardId);
-			if(c) {
-				if (!c.imageKey) {
-					c.imageKey = 'img_' + c.id;
-					c.backImageKey = 'img_back_' + c.id;
-				}
-				c.image = true; 
+		// 1. [去重複化] 檢查這張圖片是否已經存在於圖庫中
+		let finalKey = null;
+		
+		// 遍歷目前的圖庫尋找相同內容
+		for (const [key, value] of Object.entries(globalImageRegistry)) {
+			if (value === base64) {
+				finalKey = key; // 找到了一模一樣的圖！直接借用它的 Key
+				break;
 			}
-			
-			s.cards.forEach(other => {
-				if (!other.imageKey && other.id === cardId) { 
-						other.imageKey = 'img_' + other.id; 
+		}
+
+		// 2. 如果沒找到，生成一個全新的 Key (不再綁定卡片 ID，改用時間戳+亂數)
+		if (!finalKey) {
+			// 使用 img_時間戳_亂數，確保唯一性
+			finalKey = `img_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+			// 寫入圖庫
+			globalImageRegistry[finalKey] = base64;
+		}
+
+		// 3. 更新目標卡片的 Reference (指向 finalKey)
+		// 注意：原本的邏輯是綁定 img_CardID，現在我們改變卡片本身的 imageKey 屬性
+		
+		// 判斷是要更新正面還是背面 (超次元背面)
+		const isUpdatingBack = (targetCard.isHyper && !targetCard.faceUp);
+
+		// 定義更新函式：走訪所有歷史紀錄，把這張卡(ID相同)的 key 更新
+		const updateCardRef = (s) => {
+			// 找出所有 ID 相同的卡片實例 (包含分身)
+			s.cards.forEach(c => {
+				if (c.id === cardId) {
+					if (isUpdatingBack) {
+						c.backImageKey = finalKey;
+					} else {
+						c.imageKey = finalKey;
+						c.image = true; // 標記有圖
+					}
 				}
-				if (other.imageKey === keyToUpdate || other.backImageKey === keyToUpdate) {
-					other.image = true;
-				}
+				// 同步更新：如果場上有其他卡片原本就跟這張卡共用舊圖片，
+				// 且我們確定要把所有「長得像這張卡」的都換掉，可以在這裡處理。
+				// 但為了安全起見，我們目前只更新 ID 吻合的卡片。
 			});
 		};
 		
-		setFlag(initialState);
-		history.forEach(h => setFlag(h.state));
-		if (tempState) setFlag(tempState);
+		updateCardRef(initialState);
+		history.forEach(h => updateCardRef(h.state));
+		if (tempState) updateCardRef(tempState);
 		
+		// 4. 觸發存檔與重繪
 		renderUI();
-		saveToStorage();
+		saveToStorage(); // saveToStorage 內會執行垃圾回收 (GC)，自動清理沒人用的舊圖
 
-		// [新增] 檢查並刷新「卡片選取視窗」
-		// 如果使用者是在「牌組攤開」的狀態下貼圖，這裡強制刷新清單，讓圖片馬上顯示
+		// [UI 刷新邏輯維持不變]
 		const selectorModal = document.getElementById('card-selector-modal');
 		if (selectorModal && selectorModal.style.display === 'flex') {
 			const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
 			if (zoneId) {
-				// 重新開啟以刷新畫面 (會失去選取狀態，但能看到新圖)
 				openSelectorModal(zoneId);
-				return; // 視窗開啟中就不處理下方的選單關閉邏輯
+				return;
 			}
 		}
 
-		// 自動關閉選單邏輯 (修正版)
-		// 如果「不在編輯模式」或者「在編輯模式但還沒有任何子動作(draftOperations為空)」
-		// 則視為單純更換圖片，完成後自動取消選取
 		if (!isDrafting || draftOperations.length === 0) {
 			cancelSelection();
 		}
@@ -3321,16 +3364,20 @@
 				aceRegistry: globalAceRegistry, // [新增]
 			};
 
-            // 2. 拆分圖片資料
+			// 2. [修改] 垃圾回收 (GC) 與 拆分圖片資料
+            const usedKeys = getUsedImageKeys(); // 取得所有有在用的 Key
+			
             const cardImages = {};
             const portraitImages = {};
 
             Object.keys(globalImageRegistry).forEach(key => {
-                // 假設頭像的 key 都是以 'avatar_' 開頭 (這是 dialogue 系統的命名規則)
-                if (key.startsWith('avatar_')) {
-                    portraitImages[key] = globalImageRegistry[key];
-                } else {
-                    cardImages[key] = globalImageRegistry[key];
+                // 只儲存有被用到的 Key，或是頭像
+                if (usedKeys.has(key)) {
+                    if (key.startsWith('avatar_')) {
+                        portraitImages[key] = globalImageRegistry[key];
+                    } else {
+                        cardImages[key] = globalImageRegistry[key];
+                    }
                 }
             });
 
@@ -6480,22 +6527,31 @@
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
     
     function exportData() {
+        // [新增] 在匯出前執行一次遷移腳本，確保舊資料都被優化
+        optimizeAndMigrateImages(); 
+
         const historyToExport = JSON.parse(JSON.stringify(history));
         historyToExport.forEach((item, index) => { if (index > 0) delete item.state; });
         
-        // 匯出時，imageRegistry 必須是完整的 (卡圖 + 頭像)
-        // 因為 globalImageRegistry 在記憶體中已經是合併好的，所以直接用即可
-        // 但為了保險，我們確認一下是否已經載入完成
+        // 執行 GC 過濾，只匯出有用的圖片
+        const usedKeys = getUsedImageKeys();
+        const cleanImageRegistry = {};
+        
+        Object.keys(globalImageRegistry).forEach(key => {
+            if (usedKeys.has(key)) {
+                cleanImageRegistry[key] = globalImageRegistry[key];
+            }
+        });
         
         const data = {
             history: historyToExport,
             initialState: initialState,
             currentIndex: currentIndex,
             timestamp: Date.now(),
-            imageRegistry: globalImageRegistry, // 這裡包含了所有載入的圖片
+            imageRegistry: cleanImageRegistry, // 使用乾淨的圖庫
             abilityRegistry: globalAbilityStyleRegistry,
             lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
-			aceRegistry: globalAceRegistry, // [新增]
+            aceRegistry: globalAceRegistry,
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
@@ -6504,6 +6560,69 @@
         a.download = `dm-script-${Date.now()}.txt`;
         a.click();
     }
+	
+	// --- [新增] 圖片最佳化與遷移腳本 ---
+	function optimizeAndMigrateImages() {
+		console.log("開始執行圖片最佳化與遷移...");
+		
+		// 1. 建立內容雜湊表 (Base64 -> FirstKey)
+		const contentMap = new Map();
+		const replacementMap = new Map(); // OldKey -> NewKey
+
+		// 遍歷目前的 Registry，找出重複的圖片
+		for (const [key, base64] of Object.entries(globalImageRegistry)) {
+			// 跳過頭像
+			if (key.startsWith('avatar_')) continue;
+
+			if (contentMap.has(base64)) {
+				// 發現重複！記錄下來：這個 key 應該被換成 contentMap 裡存的那個 key
+				const existingKey = contentMap.get(base64);
+				replacementMap.set(key, existingKey);
+			} else {
+				// 第一次看到這張圖，以此 key 為主
+				contentMap.set(base64, key);
+			}
+		}
+
+		if (replacementMap.size === 0) {
+			console.log("沒有發現重複圖片，無需遷移。");
+			return;
+		}
+
+		console.log(`發現 ${replacementMap.size} 個重複圖片 Key，開始替換 Reference...`);
+
+		// 2. 遍歷所有狀態，替換卡片的 imageKey
+		const replaceInState = (s) => {
+			if (!s || !s.cards) return;
+			s.cards.forEach(c => {
+				// 檢查 imageKey
+				if (c.imageKey && replacementMap.has(c.imageKey)) {
+					c.imageKey = replacementMap.get(c.imageKey);
+				}
+				// 檢查 backImageKey
+				if (c.backImageKey && replacementMap.has(c.backImageKey)) {
+					c.backImageKey = replacementMap.get(c.backImageKey);
+				}
+			});
+		};
+
+		replaceInState(initialState);
+		history.forEach(h => {
+			replaceInState(h.state);
+			if (h.detachedStartState) replaceInState(h.detachedStartState);
+		});
+		if (tempState) replaceInState(tempState);
+
+		// 3. 清理 globalImageRegistry (刪除被替換掉的 Key)
+		// 其實這步可以省略，因為 save/export 時會執行 GC (getUsedImageKeys)，
+		// 但為了記憶體整潔，我們手動清一下
+		replacementMap.forEach((newKey, oldKey) => {
+			delete globalImageRegistry[oldKey];
+		});
+
+		console.log("圖片遷移完成！");
+		renderUI(); // 重繪確保顯示正常
+	}
 
     function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
