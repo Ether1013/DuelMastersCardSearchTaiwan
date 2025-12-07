@@ -3283,6 +3283,7 @@
         globalImageRegistry = {}; 
         globalAbilityStyleRegistry = {};
 		globalLastUsedStyles = {}; // [新增] 重置記憶
+        globalAceRegistry = {}; // [修正] 確保新開局時清空王牌設定
         
         if(!config) config = {p1d:40, p1h:8, p2d:40, p2h:8};
 
@@ -3423,6 +3424,9 @@
             if (data.lastDiagSettings && typeof lastDiagSettings !== 'undefined') {
                 lastDiagSettings = data.lastDiagSettings;
             }
+			
+			// [修正] 補上讀取王牌設定，解決重新整理後遺失的問題
+            globalAceRegistry = data.aceRegistry || {};
 
             // 重建狀態 (Replay Logic)
             initialState = data.initialState;
