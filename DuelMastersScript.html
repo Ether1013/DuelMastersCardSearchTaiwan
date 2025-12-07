@@ -1655,49 +1655,46 @@
             animation: ace-ring-power-down 0.7s linear forwards;
         }
 
-		/* 發光動畫 (Up) - 移除複雜 Scale 計算 */
-        @keyframes ace-ring-power-up {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
-                /* 基礎：置中 + 旋轉 + 原始大小(1) */
-                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-            }
-            30% {
-                box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4);
-                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-            }
-            60% {
-                box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.7);
-                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-            }
-            100% {
-                box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
-                /* 最終稍微放大 5% 營造爆發感 */
-                transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
-            }
-        }
+		/* --- 修改原本的動畫 Keyframes --- */
 
-        /* 新增：消退動畫 (Down) - 剛好是上面動畫的倒序 */
-        @keyframes ace-ring-power-down {
-            0% {
-                /* 起點：接續大光狀態 */
-                box-shadow: 0 0 80px 40px rgba(255, 215, 0, 1);
-                transform: rotate(var(--rot)) scale(1.05);
-            }
-            40% {
-                /* 中光 */
-                box-shadow: 0 0 35px 15px rgba(255, 215, 0, 0.7);
-            }
-            70% {
-                /* 微光 */
-                box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.4);
-            }
-            100% {
-                /* 終點：完全消失 */
-                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
-                transform: rotate(var(--rot)) scale(1);
-            }
-        }
+		/* 發光動畫 (Up) */
+		@keyframes ace-ring-power-up {
+			0% {
+				/* 使用變數 --ace-color，預設會由 JS 傳入 */
+				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
+				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
+			}
+			30% {
+				box-shadow: 0 0 15px 5px rgba(var(--ace-color), 0.4);
+				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
+			}
+			60% {
+				box-shadow: 0 0 35px 15px rgba(var(--ace-color), 0.7);
+				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
+			}
+			100% {
+				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 1);
+				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
+			}
+		}
+
+		/* 消退動畫 (Down) */
+		@keyframes ace-ring-power-down {
+			0% {
+				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 1);
+				transform: rotate(var(--rot)) scale(1.05);
+			}
+			40% {
+				box-shadow: 0 0 35px 15px rgba(var(--ace-color), 0.7);
+			}
+			70% {
+				box-shadow: 0 0 15px 5px rgba(var(--ace-color), 0.4);
+			}
+			100% {
+				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
+				transform: rotate(var(--rot)) scale(1);
+			}
+		}
 		
 		/* --- [新增] 多重選取模式樣式 --- */
         
@@ -5696,6 +5693,31 @@
     function triggerAceAnimation(cardId) {
         const originalEl = document.querySelector(`.card[data-id="${cardId}"]`);
         if (!originalEl) return;
+		
+		// [新增] 1. 取得卡片資料以判斷是否正在發光
+		const state = getCurrentDisplayState();
+		const card = state.cards.find(c => c.id === cardId);
+		
+		// 定義顏色映射 (對應 CSS .glow-xxx 的顏色)
+		// 格式為 RGB 三原色數值 (不含 rgba())
+		const glowColors = {
+			'red': '255, 0, 0',
+			'blue': '0, 191, 255',   // deepskyblue
+			'green': '0, 255, 0',    // lime
+			'yellow': '255, 215, 0', // gold
+			'black': '20, 20, 20',   // 稍微亮一點的黑，否則光暈看不見
+			'white': '255, 255, 255',
+			// 彩虹暫時用金色或洋紅色代替，因為光暈動畫不支援動態變色
+			'rainbow': '255, 215, 0' 
+		};
+
+		// 預設為金色 (Gold)
+		let targetRGB = '255, 215, 0'; 
+
+		// 如果卡片有發光狀態，覆蓋預設金色
+		if (card && card.glow && glowColors[card.glow]) {
+			targetRGB = glowColors[card.glow];
+		}
 
         // 階段 0: 等待卡片移動就位
         setTimeout(() => {
@@ -5734,6 +5756,9 @@
             ring.style.setProperty('--w', targetW + 'px');
             ring.style.setProperty('--h', targetH + 'px');
             ring.style.setProperty('--rot', rotation + 'deg');
+			
+			// [關鍵新增] 設定顏色變數
+			ring.style.setProperty('--ace-color', targetRGB);
 
             // 7. 加入畫面
             document.body.appendChild(ring);
