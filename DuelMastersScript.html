@@ -4518,16 +4518,28 @@
     }
 	
 	// --- [新增] 觸發勝利 ---
-    function triggerWin(winnerId) {
-        if (!isDrafting) startDraftAtEnd();
-        
-        addOperation({ 
-            type: 'GAME_WIN', 
-            winnerId: winnerId 
-        });
-        
-        saveDraft(`Player ${winnerId} 獲勝!!`);
-    }
+    // --- [修正版] triggerWin ---
+	function triggerWin(winnerId) {
+		// 1. 如果不在編輯模式，開啟新步驟 (這會觸發 startDraft 的 50ms 鎖定計時器)
+		if (!isDrafting) startDraftAtEnd();
+		
+		// 2. 加入勝利動作
+		addOperation({ 
+			type: 'GAME_WIN', 
+			winnerId: winnerId 
+		});
+		
+		// 3. 儲存 (這會嘗試解除鎖定)
+		saveDraft(`Player ${winnerId} 獲勝!!`);
+
+		// 4. [關鍵修正] 強制修復 ScrollBar
+		// 設定一個比 startDraft (50ms) 更晚執行的計時器 (例如 100ms)
+		// 確保最後狀態一定是「移除 locked」
+		setTimeout(() => {
+			const list = document.getElementById('action-list');
+			if (list) list.classList.remove('locked');
+		}, 100);
+	}
 	
 	// --- [新增] 切換受傷狀態 ---
     function toggleInjured() {
@@ -4739,20 +4751,22 @@
 	function handlePointClick(zoneId, cardId) {
         if (!isPointing) return;
         
-        // [修改] 允許指向 牌庫(Deck)、超次元(Hyper)、墓地(Grave) 三種區域
-        if (!cardId && (zoneId.includes('deck') || zoneId.includes('hyper') || zoneId.includes('grave'))) {
+        // [修正] 允許指向 牌庫(Deck)、超次元(Hyper)、墓地(Grave)
+		if (!cardId && (zoneId.includes('deck') || zoneId.includes('hyper') || zoneId.includes('grave'))) {
 			let zoneName = t('zone_generic');
 			if(zoneId.includes('deck')) zoneName = t('zone_player_deck');
 			if(zoneId.includes('hyper')) zoneName = t('zone_hyper_area');
 			if(zoneId.includes('grave')) zoneName = t('zone_grave_area');
 
-            // 使用 replace 處理參數字串
+			// 使用 replace 處理參數字串
 			const msg = t('msg_confirm_point_zone').replace('{zone}', zoneName);
 			if (confirm(msg)) {
-				finishPoint('ZONE', null);
+				// [關鍵修正] 這裡原本傳 null，改成傳入陣列 [zoneId]
+				// 這樣畫箭頭的函式才知道目標是誰
+				finishPoint('ZONE', [zoneId]);
 			}
 			return;
-        }
+		}
         
         if (cardId) {
             if (pointTargets.includes(cardId)) {
@@ -6147,7 +6161,7 @@
             const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
             if (!attacker) return;
             
-            let targetEls = [];
+            // [修正] 增加 || op.targetType === 'ZONE'
             if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
                 if (Array.isArray(op.targetIds)) {
                     op.targetIds.forEach(tid => {
@@ -6155,7 +6169,19 @@
                         if(el) targetEls.push(el);
                     });
                 }
-            } else if (op.targetType === 'PLAYER') {
+            } 
+            // [新增] 專門處理區域指向 (Zone) 的邏輯
+            else if (op.targetType === 'ZONE') {
+                if (Array.isArray(op.targetIds)) {
+                    op.targetIds.forEach(zid => {
+                        // 尋找對應的區域元素
+                        const el = document.querySelector(`.zone[data-zone="${zid}"]`);
+                        if(el) targetEls.push(el);
+                    });
+                }
+            }
+            else if (op.targetType === 'PLAYER') {
+                // ... (原本的 PLAYER 邏輯保持不變) ...
                 const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
                 const oppId = attackerOwner === 1 ? 2 : 1;
                 const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
