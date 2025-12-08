@@ -1995,6 +1995,60 @@
 		body.shutdown-mode #card-action-panel,
 		body.shutdown-mode #timeline-panel {
 			animation: crt-shutdown 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+		}
+
+		/* [修正] 手機版關機特效強制置中 */
+		/* 原本手機版是以左上角為原點，這裡強制改成中心點並重新定位 */
+		body.mobile-mode.shutdown-mode #workspace {
+			top: 50% !important;
+			left: 50% !important;
+			transform-origin: center center !important;
+			
+			/* 因為畫布固定為 1600x800，回推一半的寬高來置中 */
+			margin-left: -800px !important;
+			margin-top: -400px !important;
+		}
+		
+		/* --- [新增] Ending Credit 樣式 --- */
+		.end-credits {
+			margin-top: 50px;
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+			text-align: center;
+			
+			/* 讓名單比標題晚一點浮現 */
+			opacity: 0;
+			animation: slideUp 1.5s ease 2s forwards; 
+		}
+
+		.credit-group {
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+		}
+
+		.credit-role {
+			color: #7f8c8d; /* 灰色職稱 */
+			font-size: 0.75rem;
+			text-transform: uppercase;
+			letter-spacing: 2px;
+			font-family: sans-serif;
+		}
+
+		.credit-name {
+			color: #ecf0f1; /* 亮白色名字 */
+			font-size: 1rem;
+			font-weight: bold;
+			font-family: sans-serif;
+			letter-spacing: 1px;
+		}
+
+		/* 手機版稍微縮小間距，避免超出螢幕 */
+		body.mobile-mode .end-credits {
+			margin-top: 30px;
+			gap: 15px;
+		}
     </style>
 </head>
 <body>
@@ -7688,6 +7742,21 @@
 <div id="ending-overlay">
     <div class="end-title">FIN.</div>
     <div class="end-sub">Thanks for Watching</div>
+    
+    <div class="end-credits">
+        <div class="credit-group">
+            <div class="credit-role">Project Lead & Design</div>
+            <div class="credit-name">Ether</div>
+        </div>
+        <div class="credit-group">
+            <div class="credit-role">Coding & Implementation</div>
+            <div class="credit-name">Google Gemini</div>
+        </div>
+        <div class="credit-group">
+            <div class="credit-role">Music / BGM Assets</div>
+            <div class="credit-name">魔王魂 (MaouDamashii)</div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
