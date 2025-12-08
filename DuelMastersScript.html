@@ -5615,13 +5615,33 @@
                         const aceId = op.cardIds.find(id => globalAceRegistry[id]);
                         
                         if (aceId) {
-                            // 只有當這一步還沒播放過動畫時，才觸發
-                            if (currentIndex !== lastAnimatedStep) {
-                                console.log("觸發王牌特效 ID:", aceId); // 除錯用
-                                triggerAceAnimation(aceId);
-                                foundAceEntry = true;
+                            // --- [修正開始] ---
+                            // 3. 檢查「來源區域」：如果它原本就在戰鬥區，就不算「進場」
+                            let wasInBattle = false;
+
+                            // 取得「移動前」的狀態 (上一步的狀態，如果是第0步則取初始狀態)
+                            const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
+                            
+                            if (prevState) {
+                                // 在舊狀態中找到這張卡
+                                const prevCard = prevState.cards.find(c => c.id == aceId);
+                                // 如果它原本的區域包含 'battle'，表示它只是在戰場內移動
+                                if (prevCard && prevCard.zone.includes('battle')) {
+                                    wasInBattle = true;
+                                }
                             }
-                            // 只要找到一張王牌進場就不再繼續找 (避免同一步多張王牌時重複觸發)
+
+                            // 4. 只有當「原本不在戰鬥區」且「還沒播放過」才觸發
+                            if (!wasInBattle) {
+                                if (currentIndex !== lastAnimatedStep) {
+                                    console.log("觸發王牌特效 (進場) ID:", aceId);
+                                    triggerAceAnimation(aceId);
+                                    foundAceEntry = true;
+                                }
+                            }
+                            // --- [修正結束] ---
+
+                            // 只要處理過一張王牌就不再繼續 (避免同一步驟多張王牌時重複判斷)
                             break;
                         }
                     }
