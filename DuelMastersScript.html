@@ -7110,21 +7110,53 @@
 		updatePlayButtonUI();
     }
 	
-	// 控制音樂按鈕的點擊行為
+	// --- [修正版] 手機版音樂開關 (強制同步狀態) ---
 	function toggleMobileMusic() {
 		const btn = document.getElementById('mob-music-btn');
 		
-		// 切換靜音狀態
+		// 1. 切換靜音狀態
 		globalAudioPlayer.muted = !globalAudioPlayer.muted;
 		
-		// 如果解除靜音，嘗試播放
+		// 2. 如果是「解除靜音」(要聽音樂)
 		if (!globalAudioPlayer.muted) {
-			// iOS 需要使用者互動才能播放，這裡剛好在 click 事件中
-			if (globalAudioPlayer.paused && globalAudioPlayer.src) {
-				globalAudioPlayer.play().catch(e => console.log(e));
+			
+			// A. 取得當前盤面狀態
+			const state = getCurrentDisplayState();
+			const currentBgm = state ? state.bgm : null;
+
+			if (currentBgm) {
+				// B. 檢查播放器是否已經載入這首歌
+				// 注意：BGM_FOLDER 變數必須存在 (預設是 'bgm/')
+				const targetSrc = BGM_FOLDER + currentBgm;
+				
+				// 如果還沒設定 src，或者 src 不對，就強制設定
+				// encodeURI 是為了處理檔名可能有空白或特殊字元
+				if (!globalAudioPlayer.src || !globalAudioPlayer.src.includes(encodeURI(currentBgm))) {
+					console.log(`[MobileMusic] 初始化載入音樂: ${currentBgm}`);
+					globalAudioPlayer.src = targetSrc;
+				}
+
+				// C. 強制播放 (因為這是在 click 事件中，瀏覽器會允許)
+				const playPromise = globalAudioPlayer.play();
+				
+				if (playPromise !== undefined) {
+					playPromise.then(() => {
+						console.log("[MobileMusic] 播放成功");
+					})
+					.catch(error => {
+						console.error("[MobileMusic] 播放失敗 (可能是檔案路徑錯誤或瀏覽器阻擋):", error);
+						// 如果失敗，可能是檔案找不到，為避免按鈕狀態顯示為播放但沒聲音，可視情況處理
+					});
+				}
+			} else {
+				console.log("[MobileMusic] 當前劇本步驟沒有設定 BGM");
 			}
+		} else {
+			// 如果是「設為靜音」，就不用暫停，只要 mute 即可，保持進度
+			// 但如果您希望靜音就暫停省電，也可以加上 globalAudioPlayer.pause();
 		}
 
+		// 3. 更新按鈕 UI
 		updateMobileMusicUI();
 	}
 
