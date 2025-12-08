@@ -2044,10 +2044,10 @@
 			letter-spacing: 1px;
 		}
 
-		/* --- [修正] 手機版 Ending 資訊縮小優化 --- */
+		/* --- [修正] 手機版 Ending 資訊：縮小字體 + 改為橫排 --- */
 		body.mobile-mode .end-title {
-			font-size: 3rem !important; /* 原本太大，強制縮小 */
-			margin-bottom: 10px;
+			font-size: 3rem !important;
+			margin-bottom: 5px;
 		}
 		
 		body.mobile-mode .end-sub {
@@ -2056,17 +2056,32 @@
 		}
 
 		body.mobile-mode .end-credits {
-			margin-top: 25px !important; /* 縮小與標題的距離 */
-			gap: 12px !important;        /* 縮小每組名單的間距 */
+			margin-top: 30px !important;
+			
+			/* [核心修改] 改為橫向排列 */
+			flex-direction: row !important; 
+			flex-wrap: wrap !important;      /* 空間不夠時自動換行 */
+			justify-content: center !important; /* 水平置中 */
+			
+			gap: 15px 25px !important;       /* 上下 15px, 左右 25px 間距 */
+		}
+
+		/* 確保每個群組內的文字保持垂直 (職稱在上，名字在下) 並置中 */
+		body.mobile-mode .credit-group {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			min-width: 120px; /* 確保每個區塊有基本寬度，排列比較整齊 */
 		}
 
 		body.mobile-mode .credit-role {
-			font-size: 0.6rem !important; /* 職稱縮小 */
+			font-size: 0.6rem !important;
 			letter-spacing: 1px;
+			margin-bottom: 3px;
 		}
 
 		body.mobile-mode .credit-name {
-			font-size: 0.9rem !important; /* 名字縮小 */
+			font-size: 0.9rem !important;
 		}
     </style>
 </head>
