@@ -2044,10 +2044,29 @@
 			letter-spacing: 1px;
 		}
 
-		/* 手機版稍微縮小間距，避免超出螢幕 */
+		/* --- [修正] 手機版 Ending 資訊縮小優化 --- */
+		body.mobile-mode .end-title {
+			font-size: 3rem !important; /* 原本太大，強制縮小 */
+			margin-bottom: 10px;
+		}
+		
+		body.mobile-mode .end-sub {
+			font-size: 1rem !important;
+			letter-spacing: 1px;
+		}
+
 		body.mobile-mode .end-credits {
-			margin-top: 30px;
-			gap: 15px;
+			margin-top: 25px !important; /* 縮小與標題的距離 */
+			gap: 12px !important;        /* 縮小每組名單的間距 */
+		}
+
+		body.mobile-mode .credit-role {
+			font-size: 0.6rem !important; /* 職稱縮小 */
+			letter-spacing: 1px;
+		}
+
+		body.mobile-mode .credit-name {
+			font-size: 0.9rem !important; /* 名字縮小 */
 		}
     </style>
 </head>
@@ -7655,22 +7674,37 @@
 		}
 	});
 	
-	// --- [新增] Ending 特效函式 ---
+	// --- [修正版] Ending 特效函式 (手機字體優化 + 強制靜音) ---
 	function triggerEnding() {
 		console.log("📺 觸發 CRT 關機特效...");
 
-		// 1. 停止音樂 (如果有的話)
-		if (typeof globalAudioPlayer !== 'undefined') {
-			// 音樂慢慢淡出 (Fade out)
+		// 1. 音樂淡出邏輯 (相容手機版)
+		if (typeof globalAudioPlayer !== 'undefined' && !globalAudioPlayer.paused) {
+			// 設定 2 秒淡出
+			const fadeTime = 2000; 
+			const stepTime = 100; // 每 0.1 秒降一次
+			const steps = fadeTime / stepTime;
+			const volStep = globalAudioPlayer.volume / steps;
+
 			const fadeAudio = setInterval(() => {
-				if (globalAudioPlayer.volume > 0.05) {
-					globalAudioPlayer.volume -= 0.05;
+				// 嘗試降低音量 (Android/Desktop 有效)
+				if (globalAudioPlayer.volume > volStep) {
+					try { globalAudioPlayer.volume -= volStep; } catch(e){}
 				} else {
-					globalAudioPlayer.pause();
-					globalAudioPlayer.volume = 1.0; // 重置音量給下次用
+					// 結束淡出
 					clearInterval(fadeAudio);
+					globalAudioPlayer.pause();
+					// 恢復音量給下次使用 (try-catch 避免 iOS 報錯)
+					try { globalAudioPlayer.volume = 1.0; } catch(e){}
 				}
-			}, 100);
+			}, stepTime);
+
+			// [重要] iOS 強制靜音保險：
+			// 由於 iOS Safari 忽略 volume 修改，上面的淡出可能無效。
+			// 設定一個計時器，時間到直接暫停，確保音樂不會一直播。
+			setTimeout(() => {
+				if (!globalAudioPlayer.paused) globalAudioPlayer.pause();
+			}, fadeTime + 100);
 		}
 
 		// 2. 加上 class 觸發 CSS 動畫 (開始關機)
@@ -7687,16 +7721,16 @@
 				overlay.style.opacity = 1; 
 			}
 
-			// --- [關鍵] 裝置判斷邏輯 ---
+			// 裝置判斷邏輯
 			const isMobile = document.body.classList.contains('mobile-mode');
 
 			if (!isMobile) {
-				// [桌機版]：呈現完畢後 (例如停留 3 秒)，自動關閉並回到編輯器
+				// [桌機版]：3.5秒後自動重置
 				setTimeout(() => {
 					resetEnding();
 				}, 3500);
 			} else {
-				// [手機版]：不做任何事，畫面停留在 FIN.
+				// [手機版]：畫面停留在 FIN，音樂已在上面被處理為靜音
 				console.log("Mobile mode: Ending screen remains.");
 			}
 
