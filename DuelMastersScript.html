@@ -1945,7 +1945,56 @@
 				border: 0px solid white;
 			}
 		}
+		/* --- Ending Effect: CRT Switch Off --- */
 
+		/* --- [新增] Ending 特效：CRT 電視關機 --- */
+
+		/* 1. 黑色遮罩 (FIN 畫面) */
+		#ending-overlay {
+			position: fixed;
+			top: 0; left: 0; width: 100vw; height: 100vh;
+			background: black;
+			z-index: 9999;
+			display: none;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			opacity: 0;
+			transition: opacity 1.5s ease-in; /* 文字慢慢浮現 */
+			pointer-events: none; /* 避免遮擋點擊 (直到完全顯示) */
+		}
+
+		/* 2. 結束文字樣式 */
+		.end-title {
+			color: white;
+			font-size: 3rem;
+			font-weight: 900;
+			letter-spacing: 5px;
+			margin-bottom: 20px;
+			text-shadow: 0 0 10px rgba(255,255,255,0.8);
+			font-family: 'Courier New', Courier, monospace; /* 復古字體感 */
+		}
+		.end-sub {
+			color: #7f8c8d;
+			font-size: 1.2rem;
+			font-family: sans-serif;
+			letter-spacing: 2px;
+		}
+
+		/* 3. 關機動畫 Keyframes */
+		@keyframes crt-shutdown {
+			0% { transform: scale(1, 1); filter: brightness(1); }
+			40% { transform: scale(1, 0.005); filter: brightness(5); } /* 擠壓成亮線 */
+			50% { transform: scale(1, 0.005); }
+			100% { transform: scale(0, 0.005); filter: brightness(0); } /* 縮成點並消失 */
+		}
+
+		/* 4. 觸發動畫的 Class */
+		body.shutdown-mode #workspace,
+		body.shutdown-mode #toolbar, 
+		body.shutdown-mode #card-action-panel,
+		body.shutdown-mode #timeline-panel {
+			animation: crt-shutdown 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
     </style>
 </head>
 <body>
@@ -4220,6 +4269,13 @@
 		else if (op.type === 'SET_BGM') {
             const { filename } = op;
             state.bgm = filename;
+        }
+		else if (op.type === 'GAME_END') {
+            // 只有在自動播放時才觸發特效，避免編輯時一直跳出來煩人
+            // 但如果你想在編輯時預覽，可以移除這個 if 檢查
+            if (document.body.classList.contains('is-playing') || document.body.classList.contains('mobile-mode')) {
+                triggerEnding();
+            }
         }
 	}
 	
@@ -6586,13 +6642,21 @@
             playTimeout = setTimeout(playNextStep, finalDelay);
             
         } else {
-            // 播完了
-            playTimeout = null;
-            updatePlayButtonUI();
-            document.body.classList.remove('is-playing');
-            
-            // [新增] 播放結束停止音樂
-            globalAudioPlayer.pause();
+            // --- [修改這裡] 播放結束的邏輯 ---
+			playTimeout = null;
+			updatePlayButtonUI(); // 按鈕變回 ▶
+			
+			// [修改 1] 保持 'is-playing' 狀態
+			// 不要執行 document.body.classList.remove('is-playing');
+			// 這樣可以隱藏編輯器介面，等待 Ending 特效出現，視覺比較連貫。
+
+			// [修改 2] 也不要立刻暫停音樂，交給 triggerEnding 去做淡出
+			// globalAudioPlayer.pause(); 
+
+			// [修改 3] 設定 2 秒後觸發 Ending
+			setTimeout(() => {
+				triggerEnding();
+			}, 2000);
         }
     }
     
@@ -7500,6 +7564,80 @@
 		}
 	});
 	
+	// --- [新增] Ending 特效函式 ---
+	function triggerEnding() {
+		console.log("📺 觸發 CRT 關機特效...");
+
+		// 1. 停止音樂 (如果有的話)
+		if (typeof globalAudioPlayer !== 'undefined') {
+			// 音樂慢慢淡出 (Fade out)
+			const fadeAudio = setInterval(() => {
+				if (globalAudioPlayer.volume > 0.05) {
+					globalAudioPlayer.volume -= 0.05;
+				} else {
+					globalAudioPlayer.pause();
+					globalAudioPlayer.volume = 1.0; // 重置音量給下次用
+					clearInterval(fadeAudio);
+				}
+			}, 100);
+		}
+
+		// 2. 加上 class 觸發 CSS 動畫 (開始關機)
+		document.body.classList.add('shutdown-mode');
+
+		// 3. 顯示 FIN 字幕
+		setTimeout(() => {
+			const overlay = document.getElementById('ending-overlay');
+			if (overlay) {
+				overlay.style.display = 'flex';
+				overlay.style.pointerEvents = 'auto'; // 開啟阻擋
+				// 強制 Reflow 觸發 transition
+				void overlay.offsetWidth; 
+				overlay.style.opacity = 1; 
+			}
+
+			// --- [關鍵] 裝置判斷邏輯 ---
+			const isMobile = document.body.classList.contains('mobile-mode');
+
+			if (!isMobile) {
+				// [桌機版]：呈現完畢後 (例如停留 3 秒)，自動關閉並回到編輯器
+				setTimeout(() => {
+					resetEnding();
+				}, 3500);
+			} else {
+				// [手機版]：不做任何事，畫面停留在 FIN.
+				console.log("Mobile mode: Ending screen remains.");
+			}
+
+		}, 500); // 等待 CSS animation (0.5s) 跑完
+	}
+
+	// 測試用：雙擊螢幕左上角可重置 (隱藏 Ending 回到編輯器)
+	// 這方便你在編輯時如果不小心觸發了，可以點回來
+	document.addEventListener('dblclick', (e) => {
+		if (e.clientX < 50 && e.clientY < 50) {
+			resetEnding();
+		}
+	});
+
+	function resetEnding() {
+		// 移除動畫 Class
+		document.body.classList.remove('shutdown-mode');
+		
+		// 隱藏遮罩
+		const overlay = document.getElementById('ending-overlay');
+		if (overlay) {
+			overlay.style.opacity = 0;
+			overlay.style.pointerEvents = 'none';
+			setTimeout(() => { overlay.style.display = 'none'; }, 1000);
+		}
+
+		// [桌機版關鍵]：移除 is-playing，這會讓編輯器介面 (Toolbar, Timeline) 重新出現
+		// 使用者此時會停在最後一個步驟，可以直接開始新增 Action Log
+		document.body.classList.remove('is-playing');
+		updatePlayButtonUI();
+	}
+	
 </script>
 <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 <div id="visitor-counter" style="display:none">
@@ -7510,5 +7648,9 @@
 <div id="ace-flash-layer"></div>
 <div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
 <button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
+<div id="ending-overlay">
+    <div class="end-title">FIN.</div>
+    <div class="end-sub">Thanks for Watching</div>
+</div>
 </body>
 </html>
