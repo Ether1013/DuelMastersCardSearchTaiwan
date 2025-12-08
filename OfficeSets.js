@@ -97695,14 +97695,14 @@
 			name : "覇闘将龍剣 ガイオウバーン",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25ex2-001a.jpg", ],
 			rarity : [ "VIC", ],
-			flavor : [ "その剣は、モルトが父から受け継いだ剣だった。勝利、それは世界を守るために必要なこと。グレン一族が勇気と愛を重要にしているのは、それを知っているからだ。", ],
+			flavor : [ "その剣は、モルトが父から受け継いだ剣だった。", ],
 			id : [ "25EX2 1a/105", ],
 		},
 		{
 			name : "勝利の覇闘 ガイラオウ",
 			pic : [ "https://dm.takaratomy.co.jp/wp-content/card/cardimage/dm25ex2-001b.jpg", ],
 			rarity : [ "VIC", ],
-			flavor : [ "", ],
+			flavor : [ "勝利、それは世界を守るために必要なこと。グレン一族が勇気と愛を重要にしているのは、それを知っているからだ。", ],
 			id : [ "25EX2 1b/105", ],
 		},
 		{
