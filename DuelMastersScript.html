@@ -6776,13 +6776,16 @@
 			if (ops) {
 				ops.forEach(op => {
 					if (op.type === 'SET_BGM' && op.filename) {
-						// 如果清單裡沒有這首歌，就改成 null (停止)
 						if (!BGM_FILES.includes(op.filename)) {
-							console.warn(`BGM missing: ${op.filename}, reset to stop.`);
-							op.filename = null;
-							// 更新描述以免誤導
-							loadedHistory[i].action.description += " (File Missing)";
-						}
+						// 僅在 Console 顯示警告，方便除錯，但【不將 filename 設為 null】
+						console.warn(`[BGM Warning] Script uses: "${op.filename}", which is not in BGM_FILES list.`);
+						
+						// 註解掉下面這行，因為它會把您的音樂設定刪除！
+						// op.filename = null; 
+						
+						// 註解掉這行，不要修改描述
+						// loadedHistory[i].action.description += " (File Missing)";
+					}
 					}
 				});
 			}
@@ -7048,8 +7051,10 @@
 	function initMobileMode(scriptUrl) {
 		document.body.classList.add('mobile-mode');
 		
-		// [需求4] 預設不播音樂 (靜音)
-		globalAudioPlayer.muted = true; 
+		// 只有在真的是手機裝置時才預設靜音
+		if (isMobileDevice()) {
+			globalAudioPlayer.muted = true;
+		} 
 
 		fetch(scriptUrl)
 			.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
