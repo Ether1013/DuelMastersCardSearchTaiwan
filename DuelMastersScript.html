@@ -2118,6 +2118,7 @@
         <span id="draft-count">0</span>
         <span data-i18n="lbl_draft_ops"> 個操作)</span>
     </span>
+	<span id="draft-mode-hint" style="margin-left:15px; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; font-weight:normal;"></span>
     <label title="開啟此選項後，本次編輯的結果將會影響後續所有步驟的狀態">
         <input type="checkbox" id="propagate-check" checked> 
         <span data-i18n="chk_propagate">🔗 連動更新後續</span>
@@ -2734,6 +2735,8 @@
             'msg_ability_cant_move': '能力待處理區的卡片不能移動',
             'msg_insert_pos_title': '插入位置選擇 (點擊虛線框)',
             'msg_load_script_fail': '無法載入指定劇本: ',
+			'msg_editing_step': '📝 正在編輯 #{n}',
+			'msg_insert_after': '➕ 將新增於 #{n} 之後',
             'btn_play_from': '▶ 從此播放',
             'btn_play_step': '👁️ 演示此步',
             'btn_edit_step': '✏️ 編輯',
@@ -2810,7 +2813,9 @@
             'msg_confirm_reveal_close': 'Close reveal zone and send cards to grave?', 'msg_delete_card_confirm': 'Delete selected card(s)?',
             'msg_confirm_point_zone': 'Confirm point to {zone}?', 'msg_ability_cant_move': 'Ability cards cannot be moved.',
             'msg_insert_pos_title': 'Select Insert Position', 'msg_load_script_fail': 'Failed to load script: ', 'btn_play_from': '▶ Play From Here',
-            'btn_play_step': '👁️ Demo Step', 'btn_edit_step': '✏️ Edit', 'btn_delete_step': '🗑 Delete', 'btn_play': '▶', 'btn_pause': '⏸',
+            'msg_editing_step': '📝 Editing #{n}',
+			'msg_insert_after': '➕ Will insert after #{n}',
+			'btn_play_step': '👁️ Demo Step', 'btn_edit_step': '✏️ Edit', 'btn_delete_step': '🗑 Delete', 'btn_play': '▶', 'btn_pause': '⏸',
             'lbl_reveal_zone': 'Reveal Zone', 'lbl_action_log': 'Action Log', 'op_default': 'Action', 'op_count_suffix': ' Actions',
             'desc_end_reveal': 'End Reveal', 'desc_end_point': 'End Pointing', 'lbl_move': 'Move:', 'lbl_scale': 'Scale:', 'btn_remove_img_short': '✕ Img',
             'title_stack_target': 'Stacking: Target [{target}]', 'lbl_draft_warning': '⚠️ Editing... (Steps: ', 'lbl_draft_ops': ')',
@@ -2862,7 +2867,9 @@
             'msg_delete_card_confirm': '選択したカードを削除しますか？(効果処理エリア推奨)', 'msg_confirm_point_zone': '{zone} を対象にしますか？',
             'msg_ability_cant_move': '効果処理中のカードは移動できません。', 'msg_insert_pos_title': '挿入位置を選択 (点線枠をクリック)',
             'msg_load_script_fail': 'スクリプトの読み込みに失敗しました: ', 'btn_play_from': '▶ ここから再生', 'btn_play_step': '👁️ この手順を確認',
-            'btn_edit_step': '✏️ 編集', 'btn_delete_step': '🗑 削除', 'btn_play': '▶', 'btn_pause': '⏸ 一時停止',
+            'msg_editing_step': '📝 手順 #{n} を編集中',
+			'msg_insert_after': '➕ 手順 #{n} の後に追加',
+			'btn_edit_step': '✏️ 編集', 'btn_delete_step': '🗑 削除', 'btn_play': '▶', 'btn_pause': '⏸ 一時停止',
             'lbl_reveal_zone': '公開領域', 'lbl_action_log': '行動ログ', 'op_default': '操作', 'op_count_suffix': ' アクション',
             'desc_end_reveal': '公開終了', 'desc_end_point': '選択終了', 'lbl_move': '移動:', 'lbl_scale': '縮小/拡大:', 'btn_remove_img_short': '✕ 画像',
             'title_stack_target': 'スタック操作: 対象 [{target}]', 'op_POINT': '対象選択', 'op_ATTACK': '攻撃宣言',
@@ -4022,15 +4029,31 @@
 
     function updateDraftBar() {
         const bar = document.getElementById('draft-bar');
+        const hintEl = document.getElementById('draft-mode-hint');
+
         if (isDrafting) {
             bar.style.display = 'flex';
-            // 使用 t() 翻譯按鈕
+            
+            // --- [新增] 狀態文字判斷邏輯 ---
+            let hintText = "";
+            if (editModeType === 'EDIT') {
+                // 編輯模式：直接顯示當前 index
+                hintText = t('msg_editing_step').replace('{n}', insertIndex);
+            } else {
+                // 新增模式：顯示插在誰後面 (index - 1)
+                // 如果 insertIndex 為 0 (極少見)，顯示 "Start" 或 0
+                const prevIndex = insertIndex > 0 ? (insertIndex - 1) : 0;
+                hintText = t('msg_insert_after').replace('{n}', prevIndex);
+            }
+            if (hintEl) hintEl.innerText = hintText;
+            // -----------------------------
+
+            // 使用 t() 翻譯按鈕 (維持原有邏輯)
             const saveBtn = bar.querySelector('.primary');
             const cancelBtn = bar.querySelector('.danger');
-            // 注意：這裡假設你的 HTML 按鈕結構沒變，建議給按鈕加上 ID 或 data-i18n 會更穩
-            // 簡單示範：
-            document.querySelector('#draft-bar button.primary').innerText = t('btn_save_step');
-            document.querySelector('#draft-bar button.danger').innerText = t('btn_cancel_draft');
+            
+            if (saveBtn) saveBtn.innerText = t('btn_save_step');
+            if (cancelBtn) cancelBtn.innerText = t('btn_cancel_draft');
             document.getElementById('draft-count').innerText = draftOperations.length;
         } else {
             bar.style.display = 'none';
