@@ -7450,7 +7450,7 @@
         modal.style.display = 'flex';
     }
 
-	// --- [新增] 通用計數器載入函式 (Iframe 隔離版) ---
+	// --- [修改] 通用計數器載入函式 (圖片版) ---
     function updateVisitorCounter(targetUrl) {
         const counterDiv = document.getElementById('visitor-counter');
         
@@ -7475,11 +7475,16 @@
         
         counterDiv.appendChild(iframe);
 
-        // 4. 寫入腳本
+        // 4. [關鍵修改] 改用 img 標籤來載入
         const doc = iframe.contentWindow.document;
         doc.open();
+        // 設定 body 樣式讓圖片垂直置中
         doc.write(`<body style="margin:0; padding:0; background:transparent; display:flex; align-items:center;">`);
-        doc.write(`<script src="${targetUrl}"><\/script>`);
+        
+        // 舊的寫法 (錯誤原因)： doc.write(`<script src="${targetUrl}"><\/script>`);
+        // 新的寫法 (正確)：當作圖片載入
+        doc.write(`<img src="${targetUrl}" alt="counter" border="0" style="display:block;">`);
+        
         doc.write(`</body>`);
         doc.close();
     }
