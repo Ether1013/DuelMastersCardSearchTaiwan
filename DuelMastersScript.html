@@ -70,26 +70,48 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        #card-action-panel {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(44, 62, 80, 0.95);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: none;
-            gap: 10px;
-            align-items: center;
-            z-index: 1000;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-            border: 1px solid #555;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 95vw;
-        }
+        /* --- 修改：操作面板改為絕對定位並支援拖曳 --- */
+		#card-action-panel {
+			position: fixed; /* 改用 fixed 以便相對於視窗定位 */
+			/* 移除原本的 bottom: 20px 與 transform */
+			bottom: auto; 
+			left: 0; 
+			transform: none; 
+			
+			/* 增加拖曳游標 */
+			cursor: move;
+			
+			/* 確保樣式與原本一致 */
+			background: rgba(44, 62, 80, 0.95);
+			color: white;
+			padding: 10px 20px;
+			border-radius: 8px;
+			display: none; /* 由 JS 控制顯示 */
+			gap: 10px;
+			align-items: center;
+			z-index: 1000;
+			box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+			backdrop-filter: blur(5px);
+			border: 1px solid #555;
+			flex-wrap: wrap;
+			justify-content: center;
+			max-width: 66vw;
+		}
+
+		/* 避免拖曳時選取到面板內的文字 */
+		#card-action-panel * {
+			user-select: none;
+		}
+
+		/* 輸入框與按鈕恢復預設游標 */
+		#card-action-panel input,
+		#card-action-panel button {
+			cursor: pointer;
+		}
+		#card-action-panel input {
+			cursor: text;
+			user-select: auto;
+		}
         
         button {
             background: #34495e;
@@ -2083,6 +2105,82 @@
 		body.mobile-mode .credit-name {
 			font-size: 0.9rem !important;
 		}
+		
+		/* --- [新增] 手機版劇本選擇器樣式 --- */
+        #mobile-script-selector {
+            display: none; /* 預設隱藏 */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 20, 30, 0.95); /* 深色背景 */
+            z-index: 9999; /* 最上層 */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .script-list-container {
+            width: 100%;
+            max-width: 500px;
+            max-height: 60vh;
+            overflow-y: auto;
+            margin: 20px 0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .script-item {
+            padding: 15px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #ccc;
+        }
+        
+        .script-item:last-child { border-bottom: none; }
+        .script-item:hover { background: rgba(255,255,255,0.05); }
+        
+        /* 選中狀態 */
+        .script-item.selected {
+            background: rgba(52, 152, 219, 0.2);
+            border-left: 5px solid #3498db;
+            color: white;
+        }
+
+        .script-item-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .script-item-desc {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        #btn-mobile-start {
+            font-size: 1.2rem;
+            padding: 12px 40px;
+            background: #f1c40f;
+            color: #2c3e50;
+            border: none;
+            border-radius: 30px;
+            font-weight: 900;
+            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        #btn-mobile-start:active { transform: scale(0.95); }
+        #btn-mobile-start:disabled { 
+            background: #7f8c8d; 
+            color: #bdc3c7; 
+            cursor: not-allowed; 
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -2106,7 +2204,8 @@
     <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p2_win">🏆 2P Win</button>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
-    <button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
+    <button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
+	<button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
 	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;">ℹ️ About</button>
@@ -2567,6 +2666,26 @@
 
 <script>
 
+	// --- [新增] 劇本清單設定 ---
+    const AVAILABLE_SCRIPTS = [
+        {
+            filename: 'script20251203.txt',
+            title: '天災色控制 VS 巨大鯨',
+            description: '初試'
+        },
+        {
+            filename: 'script20251205.txt',
+            title: '王鬥高麗菜 VS 波夏克龍皇神',
+            description: '升級'
+        },
+        {
+            filename: 'script20251205.txt',
+            title: '甲獸軍隊 VS 烏爾天寶',
+            description: '升級2'
+        },
+        // 您可以在此擴充更多劇本...
+    ];
+
 	// --- Dialogue Assets Generation ---
     const EMOTIONS = ['normal', 'blank', 'serious', 'smug', 'furious', 'terrified'];
     const EMOTION_LABELS = {normal:'一般', blank:'呆滯', serious:'認真', smug:'得意', furious:'盛怒', terrified:'驚恐'};
@@ -2615,6 +2734,14 @@
                 }
             });
         });
+    }
+	
+	// --- [新增] URL 參數讀取工具 ---
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
     }
 	
 	// --- [新增] 播放時間參數設定 (Global Config for Playback) ---
@@ -2880,6 +3007,81 @@
 	};
 
     let currentLang = 'zh';
+	
+	// --- [新增] 操作面板位置記憶變數 ---
+    // 預設值：P1 在上面 (Top: 15%)，P2 在下面 (Top: 80%)，水平大致置中
+    let panelPosSettings = {
+        p1: { x: window.innerWidth / 2 - 200, y: window.innerHeight * 0.8 }, 
+        p2: { x: window.innerWidth / 2 - 200, y: window.innerHeight * 0.15 } 
+    };
+    let currentPanelOwner = 'p1'; // 記錄目前是誰的面板
+
+    // --- [新增] 初始化拖曳功能 ---
+    function initDraggablePanel() {
+        const panel = document.getElementById('card-action-panel');
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        panel.addEventListener('mousedown', (e) => {
+            // 如果點擊的是按鈕或輸入框，不觸發拖曳
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            
+            isDragging = true;
+            // 計算滑鼠點擊點與面板左上角的偏移量
+            const rect = panel.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            
+            // 視覺回饋：稍微變透明
+            panel.style.opacity = '0.8';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // 防止選取文字
+            
+            // 計算新位置
+            let newX = e.clientX - dragOffset.x;
+            let newY = e.clientY - dragOffset.y;
+
+            // 邊界檢查 (防止拖出螢幕)
+            const panelW = panel.offsetWidth;
+            const panelH = panel.offsetHeight;
+            const maxW = window.innerWidth - panelW;
+            const maxH = window.innerHeight - panelH;
+
+            if (newX < 0) newX = 0;
+            if (newY < 0) newY = 0;
+            if (newX > maxW) newX = maxW;
+            if (newY > maxH) newY = maxH;
+
+            // 套用位置
+            panel.style.left = newX + 'px';
+            panel.style.top = newY + 'px';
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                panel.style.opacity = '1'; // 恢復不透明
+                
+                // [關鍵] 拖曳結束後，記憶當前擁有者的位置
+                const rect = panel.getBoundingClientRect();
+                panelPosSettings[currentPanelOwner] = { x: rect.left, y: rect.top };
+            }
+        });
+        
+        // 視窗縮放時重新校正置中 (選用)
+        window.addEventListener('resize', () => {
+             panelPosSettings.p1.x = window.innerWidth / 2 - 300;
+             panelPosSettings.p2.x = window.innerWidth / 2 - 300;
+             // Y 軸保持比例
+             panelPosSettings.p1.y = window.innerHeight * 0.15;
+             panelPosSettings.p2.y = window.innerHeight * 0.8;
+        });
+    }
+
+    // 請務必在 window.onload 裡面呼叫 initDraggablePanel();
 	
 	// --- [新增] BGM 設定 ---
     const BGM_FOLDER = 'bgm/'; // 請確保您的 bgm 資料夾在根目錄
@@ -5021,7 +5223,17 @@
 	}
     
     document.addEventListener('click', (e) => {
-        if (e.target.closest('.card') || e.target.closest('.zone') || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal')) return;
+        // [修改] 增加 e.target.closest('#card-action-panel') 
+        // 這樣點擊或拖曳面板本身時，就不會觸發取消選取
+        if (e.target.closest('.card') || 
+            e.target.closest('.zone') || 
+            e.target.closest('button') || 
+            e.target.closest('input') || 
+            e.target.closest('.modal') || 
+            e.target.closest('#card-action-panel')) { // <--- 加入這行
+            return;
+        }
+
         if (!isPointing) cancelSelection();
     });
 
@@ -5131,6 +5343,21 @@
         if (pendingMove && pendingMove.cardIds.length > 0) {
             const state = getCurrentDisplayState();
             
+			// --- [新增/修改] 判斷是 P1 還是 P2 的卡片，並設定面板位置 ---
+            const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+			if (firstCard) {
+                // 判斷擁有者 (假設 ownerId 1 是 P1, 2 是 P2)
+                currentPanelOwner = (firstCard.ownerId === 1) ? 'p1' : 'p2';
+                
+                // 讀取記憶的位置
+                const savedPos = panelPosSettings[currentPanelOwner];
+                const panel = document.getElementById('card-action-panel');
+                
+                // 套用位置
+                panel.style.left = savedPos.x + 'px';
+                panel.style.top = savedPos.y + 'px';
+            }
+			
             let allAbility = true;
             let allRevealed = true;
 					
@@ -5176,8 +5403,6 @@
             document.getElementById('btn-delete-card').style.display = (allAbility || allRevealed) ? 'block' : 'none';
             document.getElementById('btn-point').style.display = 'block';
             document.getElementById('btn-end-point').style.display = 'block'; 
-
-            const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
             
             // Only show Glow buttons for Ability cards
             // 處理發光按鈕 (Glow)
@@ -5214,6 +5439,7 @@
 				}
                 document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
             } else {
+				document.getElementById('card-action-panel').style.display = 'none';
                 // 多選模式下，只高亮區域，不顯示面板
                  document.getElementById('card-action-panel').style.display = 'none';
                  document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
@@ -7153,6 +7379,82 @@
         }
     });
 
+	// --- [新增] 手機版劇本選擇器邏輯 ---
+    let selectedMobileScript = null;
+
+    function showMobileScriptSelector(defaultFilename) {
+        const modal = document.getElementById('mobile-script-selector');
+        const listBody = document.getElementById('script-list-body');
+        const startBtn = document.getElementById('btn-mobile-start');
+        
+        listBody.innerHTML = '';
+        selectedMobileScript = null;
+        startBtn.disabled = true;
+
+        // 1. 渲染清單
+        AVAILABLE_SCRIPTS.forEach(script => {
+            const el = document.createElement('div');
+            el.className = 'script-item';
+            el.dataset.filename = script.filename;
+            
+            el.innerHTML = `
+                <div class="script-item-title">${script.title}</div>
+                <div class="script-item-desc">${script.description}</div>
+            `;
+            
+            el.onclick = () => {
+                // 清除其他選取
+                document.querySelectorAll('.script-item').forEach(i => i.classList.remove('selected'));
+                // 選取當前
+                el.classList.add('selected');
+                selectedMobileScript = script.filename;
+                // 啟用開始按鈕
+                startBtn.disabled = false;
+            };
+
+            // 2. 判斷預設值 (如果 URL 參數有對應到)
+            // 注意：這裡是比對 filename，不包含 'scripts/' 路徑
+            if (defaultFilename && script.filename === defaultFilename) {
+                el.classList.add('selected');
+                selectedMobileScript = script.filename;
+                startBtn.disabled = false;
+            }
+
+            listBody.appendChild(el);
+        });
+
+        // 顯示介面
+        modal.style.display = 'flex';
+    }
+
+    function confirmMobileScript() {
+        if (!selectedMobileScript) return;
+
+        // 1. 關閉選單
+        document.getElementById('mobile-script-selector').style.display = 'none';
+
+        // 2. 組合成完整路徑
+        const fullPath = 'scripts/' + selectedMobileScript;
+
+        // 3. 執行原有的行動版初始化 (匯入檔案)
+        // 這時候因為是使用者點擊觸發的，AudioContext 會被正確解鎖
+        initMobileMode(fullPath);
+        
+        // 4. 強制進入自動播放狀態
+        // 為了確保載入後馬上開始，我們可以設定一個標記或稍後呼叫 togglePlay
+        // 這裡 initMobileMode 內部會非同步 fetch，我們利用既有的 handleOrientation 邏輯
+        // 或是我們可以在 initMobileMode 成功後強制 play。
+        // 目前架構下，initMobileMode 成功後會呼叫 processGameData，
+        // 我們可以在 processGameData 最後面加上 autoPlay 邏輯 (如果有需要)，
+        // 但原本 handleOrientation 已經有 "第一次進入橫向自動播放" 的邏輯，這應該足夠。
+        
+        // 額外保險：解鎖音訊
+        if (globalAudioPlayer.state === 'suspended') {
+            globalAudioPlayer.resume();
+        }
+        globalAudioPlayer.play().catch(e => {}); // 預先觸發一次 play
+    }
+
 // --- 新增的手機端邏輯 ---
 
     function isMobileDevice() {
@@ -7361,35 +7663,71 @@
 
     // --- Main Entry Point ---
     window.onload = function() {
+        // 1. 基本初始化
         const urlParams = new URLSearchParams(window.location.search);
-        // [修改開始] 取得 scriptUrl 並強制加上 scripts/ 資料夾路徑
-		let scriptUrl = urlParams.get('scriptUrl');
-		if (scriptUrl) {
-			// 自動補上 scripts 資料夾 (例如: ?scriptUrl=demo.json -> scripts/demo.json)
-			scriptUrl = 'scripts/' + scriptUrl;
-		}
-		// [修改結束]
+        let scriptUrl = urlParams.get('scriptUrl');
+        if (scriptUrl) {
+            scriptUrl = 'scripts/' + scriptUrl;
+        }
         const isMobile = isMobileDevice();
 
-		generateDefaultPortraits();
+        // 生成預設頭像
+        generateDefaultPortraits();
 
-        if (isMobile) {
-            // --- 手機版邏輯 ---
-            if (!scriptUrl) {
-                // 情境 A: 手機且無參數 -> 清空畫面並提示
-                document.body.innerHTML = '';
-                document.body.style.backgroundColor = 'white';
-                alert(t('msg_mobile_blocked'));
-            } else {
-                // 情境 B: 手機且有參數 -> 進入觀戰模式
-                initMobileMode(scriptUrl);
-            }
-			
-			updateMuteButtonUI();
-        } else {
-            // --- 電腦版邏輯 (維持原樣) ---
-            const hasLocalData = loadFromStorage();
+        // 啟動面板拖曳功能 (電腦版/手機版皆初始化，雖然手機版主要隱藏面板，但防止報錯)
+        initDraggablePanel();
+
+        // ----------------------------------------------------
+        // [修改] 2. 優先處理 URL 參數 (lang & speed) - 通用邏輯
+        // 這樣無論是手機還是電腦，都會吃到設定
+        // ----------------------------------------------------
+
+        // A. 處理語言 (lang)
+        const pLang = getUrlParameter('lang');
+        if (pLang && ['zh', 'en', 'jp'].includes(pLang)) {
+            // 同步下拉選單 (電腦版有選單，手機版雖隱藏但 DOM 存在)
+            const langSelect = document.getElementById('lang-select');
+            if (langSelect) langSelect.value = pLang;
             
+            // 套用語言設定 (更新全域變數 currentLang 並刷新 UI 文字)
+            changeLanguage(pLang);
+        }
+
+        // B. 處理速度 (speed)
+        const pSpeed = getUrlParameter('speed');
+        if (pSpeed) {
+            // 呼叫 changePlaybackSpeed 會同時更新:
+            // 1. 全域變數 currentSpeedFactor
+            // 2. 電腦版選單 (#speed-select)
+            // 3. 手機版選單 (#mob-speed-select)
+            changePlaybackSpeed(pSpeed);
+        }
+        // ----------------------------------------------------
+
+
+        // 3. 根據裝置載入資料
+        if (isMobile) {
+            // --- [修改] 手機版邏輯 ---
+            
+            // 判斷 URL 是否有帶 scriptUrl
+            // 注意：這裡 urlParams.get('scriptUrl') 抓到的是純檔名 (例如 demo.json)
+            const rawScriptParam = urlParams.get('scriptUrl');
+
+            if (!rawScriptParam) {
+                // 如果沒帶參數，預設顯示選單，並且不選取任何項目 (或您可以指定第一個為預設)
+                showMobileScriptSelector(null);
+            } else {
+                // 如果有帶參數，顯示選單並將該檔案設為預設選取
+                showMobileScriptSelector(rawScriptParam);
+            }
+            
+            // 初始化靜音按鈕狀態
+            updateMuteButtonUI();
+            
+        } else {
+            // --- 電腦版邏輯 ---
+            const hasLocalData = loadFromStorage();
+
             if (scriptUrl) {
                 console.log("Found scriptUrl:", scriptUrl);
                 fetch(scriptUrl)
@@ -7810,7 +8148,12 @@
 </div>
 <div id="ace-flash-layer"></div>
 <div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
-<button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
+<div id="mobile-script-selector">
+    <h2 style="color:white; margin:0 0 10px 0;">選擇劇本 (Select Script)</h2>
+    <div class="script-list-container" id="script-list-body">
+        </div>
+    <button id="btn-mobile-start" onclick="confirmMobileScript()" disabled>▶ START</button>
+</div>
 <div id="ending-overlay">
     <div class="end-title">FIN.</div>
     <div class="end-sub">Thanks for Watching</div>
