@@ -2666,27 +2666,34 @@
 
 <script>
 
+	// --- [新增] 預設/全域 計數器 (桌機版或無劇本時使用) ---
+    // 請填入您申請的「主頁/大廳」專用計數器網址
+    const DEFAULT_COUNTER_URL = 'https://www.f-counter.net/j/66/1765258234/';
 	// --- [新增] 劇本清單設定 ---
     const AVAILABLE_SCRIPTS = [
         {
             filename: 'script20251203.txt',
             title: '天災色控制 VS 巨大鯨',
-            description: '初試劇本功能'
+            description: '初試劇本功能',
+			counter_url: 'https://www.f-counter.net/j/66/1765257662/'
         },
         {
             filename: 'script20251205.txt',
             title: '王鬥高麗菜 VS 波夏克龍皇神',
-            description: '作者常玩的訓練對局'
+            description: '作者常玩的訓練對局',
+			counter_url: 'https://www.f-counter.net/j/66/1765257467/'
         },
         {
             filename: 'script20251208.txt',
             title: '甲獸軍隊 VS 烏爾天寶',
-            description: '進行DM25-RP4新卡的測試'
+            description: '進行DM25-RP4新卡的測試',
+			counter_url: 'https://www.f-counter.net/j/66/1765258081/'
         },
         {
             filename: 'script20251209.txt',
             title: '新惡魔 VS 新武士',
-            description: '進行DM25-RP4新卡的測試'
+            description: '進行DM25-RP4新卡的測試',
+			counter_url: 'https://www.f-counter.net/j/66/1765258098/'
         },
         // 您可以在此擴充更多劇本...
     ];
@@ -7443,30 +7450,77 @@
         modal.style.display = 'flex';
     }
 
+	// --- [新增] 通用計數器載入函式 (Iframe 隔離版) ---
+    function updateVisitorCounter(targetUrl) {
+        const counterDiv = document.getElementById('visitor-counter');
+        
+        // 1. 如果沒有網址，就隱藏計數器並離開
+        if (!targetUrl) {
+            counterDiv.style.display = 'none';
+            counterDiv.innerHTML = '';
+            return;
+        }
+
+        // 2. 清空舊的，顯示容器
+        counterDiv.innerHTML = '';
+        counterDiv.style.display = 'block';
+
+        // 3. 建立 Iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.width = "120px";
+        iframe.style.height = "25px";
+        iframe.style.border = "none";
+        iframe.style.overflow = "hidden";
+        iframe.scrolling = "no";
+        
+        counterDiv.appendChild(iframe);
+
+        // 4. 寫入腳本
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<body style="margin:0; padding:0; background:transparent; display:flex; align-items:center;">`);
+        doc.write(`<script src="${targetUrl}"><\/script>`);
+        doc.write(`</body>`);
+        doc.close();
+    }
+	
     function confirmMobileScript() {
         if (!selectedMobileScript) return;
 
         // 1. 關閉選單
         document.getElementById('mobile-script-selector').style.display = 'none';
 
-        // 2. 組合成完整路徑 + [新增] 時間戳記
-        // Date.now() 會取得當下的毫秒數，保證每次點擊都是不一樣的網址
+        // 2. 處理路徑
         const timestamp = Date.now(); 
         const fullPath = 'scripts/' + selectedMobileScript + '?v=' + timestamp;
 
-        // 3. 執行原有的行動版初始化
+        // 3. 初始化
         initMobileMode(fullPath);
         
-        // --- [關鍵修正] 強制解除靜音 ---
+        // 4. 音訊解鎖
         globalAudioPlayer.muted = false; 
-        
-        // 4. 同步更新靜音按鈕
+        globalAudioPlayer.play().catch(e => {});
         updateMuteButtonUI();
 
-        // 5. 預先解鎖音訊
-        globalAudioPlayer.play().catch(e => {
-            console.log("Audio unlocked (empty src)");
-        });
+        // --- [修改] 使用通用函式切換計數器 ---
+        
+        // A. 找出劇本資料
+        const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
+        
+        // B. 決定要用哪個網址
+        // 如果該劇本有專屬計數器，就用專屬的；否則就用預設的 (或您也可以選擇不顯示)
+        let urlToLoad = null;
+        if (scriptData && scriptData.counter_url) {
+            urlToLoad = scriptData.counter_url;
+        } else {
+            // 如果這個劇本沒設定計數器，您希望：
+            // 選項 1: 顯示預設計數器 -> urlToLoad = DEFAULT_COUNTER_URL;
+            // 選項 2: 隱藏計數器 -> urlToLoad = null;
+            urlToLoad = null; // 這裡目前設定為隱藏，您可以自行改為 DEFAULT_COUNTER_URL
+        }
+
+        // C. 呼叫函式更新
+        updateVisitorCounter(urlToLoad);
     }
 
 // --- 新增的手機端邏輯 ---
@@ -7739,6 +7793,10 @@
             updateMuteButtonUI();
             
         } else {
+		
+			// [新增] 載入預設計數器 (桌機版專用)
+            updateVisitorCounter(DEFAULT_COUNTER_URL);
+			
             // --- 電腦版邏輯 ---
             const hasLocalData = loadFromStorage();
 
@@ -8154,9 +8212,7 @@
 	}
 	
 </script>
-<div id="visitor-counter" style="display:none">
-	<a href="https://www.stylemap.co.jp/"><img src="https://www.f-counter.net/j/66/1765257467/" alt="アクセスカウンター"></a>
-</div>
+<div id="visitor-counter" style="display:none"></div>
 <div id="ace-flash-layer"></div>
 <div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
 <div id="mobile-script-selector">
