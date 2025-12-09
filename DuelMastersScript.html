@@ -2679,7 +2679,7 @@
             description: '升級'
         },
         {
-            filename: 'script20251205.txt',
+            filename: 'script20251208.txt',
             title: '甲獸軍隊 VS 烏爾天寶',
             description: '升級2'
         },
@@ -7380,6 +7380,7 @@
     });
 
 	// --- [新增] 手機版劇本選擇器邏輯 ---
+    // --- [修正] 手機版劇本選擇器邏輯 (含預選修復) ---
     let selectedMobileScript = null;
 
     function showMobileScriptSelector(defaultFilename) {
@@ -7391,33 +7392,43 @@
         selectedMobileScript = null;
         startBtn.disabled = true;
 
-        // 1. 渲染清單
+        // 1. 處理傳入的預設值 (移除路徑前綴，只留檔名，以防參數帶有 scripts/)
+        const cleanDefault = defaultFilename ? defaultFilename.replace(/^scripts\//, '') : '';
+
+        // 2. 渲染清單
         AVAILABLE_SCRIPTS.forEach(script => {
             const el = document.createElement('div');
             el.className = 'script-item';
-            el.dataset.filename = script.filename;
             
+            // 顯示標題與描述
             el.innerHTML = `
                 <div class="script-item-title">${script.title}</div>
                 <div class="script-item-desc">${script.description}</div>
             `;
             
+            // 點擊事件
             el.onclick = () => {
-                // 清除其他選取
                 document.querySelectorAll('.script-item').forEach(i => i.classList.remove('selected'));
-                // 選取當前
                 el.classList.add('selected');
                 selectedMobileScript = script.filename;
-                // 啟用開始按鈕
                 startBtn.disabled = false;
             };
 
-            // 2. 判斷預設值 (如果 URL 參數有對應到)
-            // 注意：這裡是比對 filename，不包含 'scripts/' 路徑
-            if (defaultFilename && script.filename === defaultFilename) {
+            // 3. [修正] 預選邏輯 (比對純檔名)
+            const cleanScript = script.filename.replace(/^scripts\//, '');
+            
+            if (cleanDefault && cleanScript === cleanDefault) {
+                // 加樣式
                 el.classList.add('selected');
+                // 設定值
                 selectedMobileScript = script.filename;
+                // 開按鈕
                 startBtn.disabled = false;
+                
+                // [新增] 自動捲動到該項目 (延遲一下確保 DOM 渲染完畢)
+                setTimeout(() => {
+                    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 100);
             }
 
             listBody.appendChild(el);
