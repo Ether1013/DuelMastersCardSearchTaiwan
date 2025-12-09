@@ -7449,26 +7449,24 @@
         // 1. 關閉選單
         document.getElementById('mobile-script-selector').style.display = 'none';
 
-        // 2. 組合成完整路徑
-        const fullPath = 'scripts/' + selectedMobileScript;
+        // 2. 組合成完整路徑 + [新增] 時間戳記
+        // Date.now() 會取得當下的毫秒數，保證每次點擊都是不一樣的網址
+        const timestamp = Date.now(); 
+        const fullPath = 'scripts/' + selectedMobileScript + '?v=' + timestamp;
 
-        // 3. 執行原有的行動版初始化 (匯入檔案)
-        // 這時候因為是使用者點擊觸發的，AudioContext 會被正確解鎖
+        // 3. 執行原有的行動版初始化
         initMobileMode(fullPath);
         
-        // 4. 強制進入自動播放狀態
-        // 為了確保載入後馬上開始，我們可以設定一個標記或稍後呼叫 togglePlay
-        // 這裡 initMobileMode 內部會非同步 fetch，我們利用既有的 handleOrientation 邏輯
-        // 或是我們可以在 initMobileMode 成功後強制 play。
-        // 目前架構下，initMobileMode 成功後會呼叫 processGameData，
-        // 我們可以在 processGameData 最後面加上 autoPlay 邏輯 (如果有需要)，
-        // 但原本 handleOrientation 已經有 "第一次進入橫向自動播放" 的邏輯，這應該足夠。
+        // --- [關鍵修正] 強制解除靜音 ---
+        globalAudioPlayer.muted = false; 
         
-        // 額外保險：解鎖音訊
-        if (globalAudioPlayer.state === 'suspended') {
-            globalAudioPlayer.resume();
-        }
-        globalAudioPlayer.play().catch(e => {}); // 預先觸發一次 play
+        // 4. 同步更新靜音按鈕
+        updateMuteButtonUI();
+
+        // 5. 預先解鎖音訊
+        globalAudioPlayer.play().catch(e => {
+            console.log("Audio unlocked (empty src)");
+        });
     }
 
 // --- 新增的手機端邏輯 ---
@@ -7485,7 +7483,7 @@
 			globalAudioPlayer.muted = true;
 		} 
 
-		fetch(scriptUrl)
+		fetch(scriptUrl, { cache: "no-store" })
 			.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
 			.then(data => {
 				if(!data.history || !data.initialState) throw new Error("Invalid script");
@@ -8156,11 +8154,8 @@
 	}
 	
 </script>
-<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 <div id="visitor-counter" style="display:none">
-    <span id="busuanzi_container_site_uv">
-        Visitors: <span id="busuanzi_value_site_uv">--</span>
-    </span>
+    <img alt="Visitors" src="https://hits.sh/etherTW.svg?style=flat-square&label=Visitors&color=7f8c8d&labelColor=2c3e50"/>
 </div>
 <div id="ace-flash-layer"></div>
 <div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
