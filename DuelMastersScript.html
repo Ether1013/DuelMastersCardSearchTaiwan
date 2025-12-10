@@ -6712,8 +6712,7 @@
             // 檢查當前這一步 (currentIndex) 是否有移動操作
             if (currentIndex >= 0 && history[currentIndex]) {
                 
-                // 1. 為了效能，只檢查「這一步驟有涉及移動」且「被標記為王牌」的卡片
-                // movingCardIds 已經在上方計算過，包含了所有 MOVE 與 MOONLESS 操作涉及的卡片
+                // 1. 篩選出這一步驟有移動且是王牌的卡片
                 const movedAces = movingCardIds.filter(id => globalAceRegistry[id]);
 
                 if (movedAces.length > 0 && currentIndex !== lastAnimatedStep) {
@@ -6723,7 +6722,6 @@
 
                     for (const aceId of movedAces) {
                         // A. 檢查終點 (Current State): 必須在戰鬥區
-                        // 使用寬鬆比對 (==) 以防 ID 型別差異
                         const currCard = currState.cards.find(c => c.id == aceId);
                         const isInBattleNow = currCard && currCard.zone.includes('battle');
 
@@ -6736,18 +6734,23 @@
                             }
                         }
 
-                        // C. 觸發條件：現在在戰場 AND 以前不在戰場
-                        if (isInBattleNow && !wasInBattleBefore) {
-                            
-                            // 計算精確的落地時間 (保持原本的視覺優化)
-                            const flyTime = 0.5; // CSS動畫時間 0.5s
-                            let arrivalTime = flyTime * 1000; // 基礎時間 ms
+                        // C. 檢查堆疊狀態: 是否為隱藏的進化元?
+                        // 我們只過濾掉 'bottom' 和 'bottom_exposed' (進化元)
+                        // 但保留 'puzzle_bottom' (連結卡)，因為連結卡視為場上的個別生物
+                        const isUnderneath = currCard.parentId && currCard.stackType && 
+                                             (currCard.stackType === 'bottom' || currCard.stackType === 'bottom_exposed');
 
-                            // 計算這張王牌在移動隊列中的位置，加上延遲時間
-                            const mIndex = movingCardIds.findIndex(mid => mid == aceId);
+                        // D. 綜合判斷：(進戰場) AND (原本不在) AND (不是進化元)
+                        if (isInBattleNow && !wasInBattleBefore && !isUnderneath) {
                             
+                            // 計算精確的落地時間
+                            const flyTime = 0.5; // CSS動畫時間 0.5s
+                            let arrivalTime = flyTime * 1000; 
+
+                            // 計算排隊延遲
+                            const mIndex = movingCardIds.findIndex(mid => mid == aceId);
                             if (mIndex !== -1 && movingCardIds.length > 1) {
-                                let interval = flyTime * 0.2; // 0.1s
+                                let interval = flyTime * 0.2; 
                                 const maxTotalLag = 1.5;
                                 if ((interval * movingCardIds.length) > maxTotalLag) {
                                     interval = maxTotalLag / movingCardIds.length;
@@ -6755,18 +6758,16 @@
                                 arrivalTime += (mIndex * interval * 1000);
                             }
 
-                            console.log("觸發王牌特效 (進場 - 淨平移) ID:", aceId);
+                            console.log("觸發王牌特效 (進場 - 允許Puzzle) ID:", aceId);
                             
-                            // 觸發特效
                             triggerAceAnimation(aceId, arrivalTime);
                             
-                            // 只要有一張王牌觸發，就更新狀態並跳出迴圈 (避免同一步驟多張王牌時太亂，可視需求移除 break)
                             lastAnimatedStep = currentIndex;
                             break; 
                         }
                     }
                     
-                    // 即使沒有觸發特效 (例如戰場->戰場)，只要檢查過這一步，就標記為已讀，避免反覆運算
+                    // 標記已檢查過此步驟
                     if (currentIndex !== lastAnimatedStep) {
                         lastAnimatedStep = currentIndex;
                     }
