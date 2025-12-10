@@ -2308,6 +2308,61 @@
             font-weight: bold;
             transform: scale(1.05); /* 稍微放大一點點 */
         }
+		
+		/* 猜拳結果顯示層 */
+    #rps-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 2500; /* 比對話框高，比 Menu 低 */
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 50px;
+        background: rgba(0,0,0,0.3); /* 稍微暗一點突顯結果 */
+        animation: fadeIn 0.3s ease;
+    }
+
+    .rps-hand {
+        font-size: 5rem;
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .rps-hand.winner {
+        transform: scale(1.5);
+        text-shadow: 0 0 20px gold;
+        filter: drop-shadow(0 0 5px gold);
+    }
+
+    .rps-hand.loser {
+        opacity: 0.5;
+        transform: scale(0.8);
+        filter: grayscale(1);
+    }
+
+    .rps-vs {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #f1c40f;
+        font-family: impact, sans-serif;
+        transform: rotate(-10deg);
+    }
+
+    .rps-tag {
+        font-size: 1rem;
+        background: #2c3e50;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    .rps-hand.p1 .rps-tag { background: #3498db; }
+    .rps-hand.p2 .rps-tag { background: #c0392b; }
     </style>
 </head>
 <body>
@@ -2331,6 +2386,7 @@
         <option value="1" data-i18n="btn_p1_win">🏆 1P Win</option>
         <option value="2" data-i18n="btn_p2_win">🏆 2P Win</option>
     </select>
+	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
     <div style="flex:1"></div>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
@@ -3088,6 +3144,14 @@
             'msg_confirm_swap': '確定要交換 P1 與 P2 的所有圖片並進行翻轉嗎？\n(注意：這是全域修改，會影響所有對話步驟)',
             'msg_swap_done': '圖片交換與翻轉完成！',
 			'act_moonless': '🌑 無月之門',
+			'btn_rps': '✊✌️🖐️ 猜拳 (RPS)',
+            'act_rps': '猜拳',
+            'rps_rock': '✊ 石頭',
+            'rps_paper': '🖐️ 布',
+            'rps_scissors': '✌️ 剪刀',
+            'rps_draw': '平手！再來一把！',
+            'rps_p1_win': 'P1 獲勝！',
+            'rps_p2_win': 'P2 獲勝！',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3148,6 +3212,14 @@
             'msg_confirm_swap': 'Are you sure you want to swap and flip all portraits?\n(Note: This is global and affects all dialogue steps.)',
             'msg_swap_done': 'Swap and flip complete!',
 			'act_moonless': '🌑 Moonless',
+			'btn_rps': '✊✌️🖐️ RPS',
+            'act_rps': 'RPS',
+            'rps_rock': '✊ Rock',
+            'rps_paper': '🖐️ Paper',
+            'rps_scissors': '✌️ Scissors',
+            'rps_draw': 'Draw! Again!',
+            'rps_p1_win': 'P1 Wins!',
+            'rps_p2_win': 'P2 Wins!',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3207,7 +3279,15 @@
             'lbl_swap_flip_hint': '* P1とP2の立ち絵を入れ替え、左右反転します（デフォルト画像を除く）。',
             'msg_confirm_swap': 'すべての画像を交換して反転しますか？\n(注意：これは全体に適用され、すべての会話に影響します)',
             'msg_swap_done': '交換と反転が完了しました！',		
-			'act_moonless': '🌑 無月の門',			
+			'act_moonless': '🌑 無月の門',	
+			'btn_rps': '✊✌️🖐️ じゃんけん',
+            'act_rps': 'じゃんけん',
+            'rps_rock': '✊ グー',
+            'rps_paper': '🖐️ パー',
+            'rps_scissors': '✌️ チョキ',
+            'rps_draw': 'あいこでしょ！',
+            'rps_p1_win': 'P1 勝利！',
+            'rps_p2_win': 'P2 勝利！',			
 		}
 	};
 
@@ -3471,6 +3551,8 @@
 			// [新增] 無月之門狀態 (存於 State 內)
 			// 格式: { cardId: true, ... }
 			this.moonless = {};
+			// [新增] 猜拳結果 (用於顯示 UI)
+			this.rpsResult = null; // { p1: 'rock', p2: 'scissors', winner: 1 }
         }
     }
 
@@ -4037,6 +4119,9 @@
             // 防呆：確保 initialState 有 moonless 屬性 (避免舊存檔是 undefined)
             if (!initialState.moonless) initialState.moonless = {};
 
+			// [建議新增] 確保舊存檔也有 rpsResult 欄位 (雖然 undefined 也不會報錯，但這樣比較乾淨)
+            if (initialState.rpsResult === undefined) initialState.rpsResult = null;
+			
             let loadedHistory = data.history;
             if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
             
@@ -4544,6 +4629,12 @@
 	}
 
 	function applyOperation(state, op) {
+	
+		// [新增] 每次操作前，預設清除上一步的猜拳結果 (除非這一步就是猜拳)
+		// 這樣才不會讓猜拳圖示一直留在畫面上
+		if (op.type !== 'RPS') {
+			state.rpsResult = null;
+		}
 
 		// [修改] 如果不是對話動作，清除對話資料 (讓畫面消失)
 		if (op.type !== 'DIALOGUE') {
@@ -4572,7 +4663,10 @@
                 }
             });
         }
-		
+		// [新增] 處理猜拳
+		if (op.type === 'RPS') {
+			state.rpsResult = op.data;
+		}
 		// --- 新增: 用於切斷連結的操作 ---
 		if (op.type === 'BREAK_LINKS') {
 			const { cardIds } = op;
@@ -5422,6 +5516,65 @@
         // 自動存檔並結束這一步 (因為 BGM 設定通常是獨立動作)
         let desc = tempSelectedBgm ? `[BGM] 播放 ${tempSelectedBgm}` : `[BGM] 停止音樂`;
         saveDraft(desc);
+    }
+	
+	// --- [新增] 猜拳動作 ---
+    function actionRPS() {
+        // 1. 定義選項 (0:石頭, 1:布, 2:剪刀)
+        // 為了方便判斷勝負： (A - B + 3) % 3
+        // 結果 0=平手, 1=A贏, 2=B贏
+        const CHOICES = ['rock', 'paper', 'scissors'];
+        
+        // 2. 隨機產生結果
+        const p1ChoiceIdx = Math.floor(Math.random() * 3);
+        const p2ChoiceIdx = Math.floor(Math.random() * 3);
+        
+        const p1Val = CHOICES[p1ChoiceIdx];
+        const p2Val = CHOICES[p2ChoiceIdx];
+        
+        // 3. 判斷勝負
+        // 0: Draw, 1: P1 Win, 2: P2 Win
+        const resultCalc = (p1ChoiceIdx - p2ChoiceIdx + 3) % 3;
+        let winner = null;
+        if (resultCalc === 1) winner = 1;
+        if (resultCalc === 2) winner = 2;
+
+        // 4. 如果不在編輯模式，開啟新步驟
+        if (!isDrafting) startDraftAtEnd();
+
+        // 5. 加入操作指令 (將結果寫死在 data 裡)
+        addOperation({
+            type: 'RPS',
+            data: {
+                p1: p1Val,
+                p2: p2Val,
+                winner: winner
+            }
+        });
+
+        // 6. 產生描述並存檔
+        // 為了讓 Action Log 顯示清楚，我們把結果寫在描述裡
+        const p1Label = t('rps_' + p1Val);
+        const p2Label = t('rps_' + p2Val);
+        let resultLabel = "";
+        
+        if (winner === 1) resultLabel = t('rps_p1_win');
+        else if (winner === 2) resultLabel = t('rps_p2_win');
+        else resultLabel = t('rps_draw');
+
+        saveDraft(`[${t('act_rps')}] P1:${p1Label} vs P2:${p2Label} -> ${resultLabel}`);
+        
+        // 7. 如果平手，自動跳出提示，詢問是否要再來一把
+        if (winner === null) {
+            // 延遲一下讓畫面先畫出來，再跳提示
+            setTimeout(() => {
+                // 如果是在自動播放中，就不跳 confirm，直接繼續 (模擬連續猜拳)
+                // 如果是手動操作，才跳 confirm
+                if (!document.body.classList.contains('is-playing') && confirm(`${t('rps_draw')}\n要繼續猜拳嗎？`)) {
+                    actionRPS(); // 遞迴呼叫，產生下一局
+                }
+            }, 500);
+        }
     }
 	
     // [新增] 清除受傷狀態
@@ -6585,6 +6738,42 @@
             }
         });
 		
+		// --- [新增] 渲染猜拳結果 ---
+		const rpsOverlay = document.getElementById('rps-overlay');
+		if (state.rpsResult) {
+			const { p1, p2, winner } = state.rpsResult;
+
+			// Emoji 對照表
+			const iconMap = { rock: '✊', paper: '🖐️', scissors: '✌️' };
+
+			const p1Class = winner === 1 ? 'winner' : (winner === 2 ? 'loser' : '');
+			const p2Class = winner === 2 ? 'winner' : (winner === 1 ? 'loser' : '');
+
+			// 視覺呈現：P2 在上 (對手)，P1 在下 (自己)，或者是左右對決
+			// 這裡採用左右對決比較直觀 (左P2, 右P1) 或是依照畫面配置
+			// 為了符合戰場邏輯，P2(上) vs P1(下)
+
+			rpsOverlay.innerHTML = `
+				<div class="rps-hand p2 ${p2Class}" style="position:absolute; top:20%;">
+					<div>${iconMap[p2]}</div>
+					<div class="rps-tag">P2</div>
+				</div>
+
+				<div class="rps-vs">VS</div>
+
+				<div class="rps-hand p1 ${p1Class}" style="position:absolute; bottom:20%;">
+					<div>${iconMap[p1]}</div>
+					<div class="rps-tag">P1</div>
+				</div>
+
+				${winner === null ? '<div style="position:absolute; font-size:2rem; color:white; font-weight:bold; text-shadow:0 0 5px black; background:rgba(230,126,34,0.9); padding:5px 20px; border-radius:10px;">DRAW!</div>' : ''}
+			`;
+
+			rpsOverlay.style.display = 'flex';
+		} else {
+			rpsOverlay.style.display = 'none';
+		}
+		
 		updateSliderUI();
 		
 		// [新增] 檢查手機版音樂按鈕可見性
@@ -7682,6 +7871,8 @@
         initialState = data.initialState;
 		// 防呆補強
         if (!initialState.moonless) initialState.moonless = {};
+		// [建議新增] 確保舊存檔也有 rpsResult 欄位 (雖然 undefined 也不會報錯，但這樣比較乾淨)
+		if (initialState.rpsResult === undefined) initialState.rpsResult = null;
         let loadedHistory = data.history;
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
         for (let i = 1; i < loadedHistory.length; i++) {
@@ -8935,5 +9126,6 @@
         </div>
     </div>
 </div>
+<div id="rps-overlay"></div>
 </body>
 </html>
