@@ -2276,11 +2276,14 @@
     <button onclick="openSetupModal()" data-i18n="btn_setup">Setup / Clear</button>
 	<button onclick="actionDrawCard()" style="background:#2980b9; border-color:#2471a3;" data-i18n="btn_draw">🎴 抽牌 (Draw)</button>
     <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
-    <div style="width: 1px; height: 20px; background: #555; margin: 0 5px;"></div>
-    <button onclick="resetBoard(1)" title="重置 P1 盤面" data-i18n="btn_p1_reset">P1 重置</button>
-    <button onclick="resetBoard(2)" title="重置 P2 盤面" data-i18n="btn_p2_reset">P2 重置</button>
-    <button onclick="triggerWin(1)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p1_win">🏆 1P Win</button>
-    <button onclick="triggerWin(2)" style="background:#f39c12; border-color:#d35400;" data-i18n="btn_p2_win">🏆 2P Win</button>
+    →
+    <button onclick="resetCurrentTurnPlayer()" data-i18n="btn_reset_current">重置當前 (Untap)</button>
+    <select onchange="handleWinSelect(this)" style="background:#f39c12; border-color:#d35400; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer; outline:none;">
+        <option value="" data-i18n="opt_win_default">🏆 宣告勝利...</option>
+        <option value="1" data-i18n="btn_p1_win">🏆 1P Win</option>
+        <option value="2" data-i18n="btn_p2_win">🏆 2P Win</option>
+    </select>
+    <div style="flex:1"></div>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
     <button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
@@ -2869,8 +2872,10 @@
 			'btn_rotate': '🔄 回合結束',
 			'btn_p1_reset': 'P1 重置',
 			'btn_p2_reset': 'P2 重置',
+			'btn_reset_current': '重置當前 (Untap)', // [新增]
 			'btn_p1_win': '🏆 1P Win',
 			'btn_p2_win': '🏆 2P Win',
+			'opt_win_default': '🏆 宣告勝利...', // [新增]
 			'btn_import': '匯入 (Import)',
 			'btn_export': '匯出 (Export)',
             'btn_dialogue': '💬 對話 (Dialog)', // [新增]
@@ -3029,8 +3034,8 @@
             'opt_effect_direct': 'Instant', 'opt_effect_fade': 'Fade In', 'opt_effect_slide': 'Slide In',
             'opt_exit_direct': 'Instant', 'opt_exit_fade': 'Fade Out', 'opt_exit_slide': 'Slide Out',
             // ... (其餘請保留原樣) ...
-            'btn_setup': 'Setup / Clear', 'btn_rotate': '🔄 Switch Turn', 'btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
-            'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'btn_import': 'Import', 'btn_export': 'Export',
+            'btn_setup': 'Setup / Clear', 'btn_rotate': '🔄 Switch Turn', 'btn_reset_current': 'Untap Current','btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
+            'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'opt_win_default': '🏆 Declare Win...', 'btn_import': 'Import', 'btn_export': 'Export',
             'zone_battle': 'Battle Zone', 'zone_shield': 'Shields', 'zone_mana': 'Mana', 'zone_hand': 'Hand',
             'zone_hyper': 'Hyper Zone', 'zone_grave': 'Graveyard', 'zone_deck': 'Deck', 'zone_ability': 'Ability (Pending)',
             'act_flip': 'Flip', 'act_injured': '💔 Injured', 'act_clear_injured': '❤️ Heal', 'act_glow': '💡 Glow', 'act_ability': '⚡ One-shot', 'act_continuous': '∞ Continuous',
@@ -3087,8 +3092,8 @@
             'opt_effect_direct': '即時', 'opt_effect_fade': 'フェード', 'opt_effect_slide': 'スライド',
             'opt_exit_direct': '即時消失', 'opt_exit_fade': 'フェード', 'opt_exit_slide': 'スライド',
             // ... (其餘請保留原樣) ...
-            'btn_setup': '設定 / クリア', 'btn_rotate': '🔄 ターン交代', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
-            'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
+            'btn_setup': '設定 / クリア', 'btn_rotate': '🔄 ターン交代', 'btn_reset_current': 'アンタップ (Current)', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
+            'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'opt_win_default': '🏆 勝利宣言...', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
             'zone_battle': 'バトルゾーン', 'zone_shield': 'シールド', 'zone_mana': 'マナゾーン', 'zone_hand': '手札',
             'zone_hyper': '超次元', 'zone_grave': '墓地', 'zone_deck': '山札', 'zone_ability': '効果処理',
             'act_flip': '裏返す', 'act_injured': '💔 負傷', 'act_clear_injured': '❤️ 回復', 'act_glow': '💡 発光', 'act_ability': '⚡ トリガー能力','act_continuous': '∞ 常在能力',
@@ -4965,6 +4970,13 @@
         if(!confirm(playerId === 1 ? t('msg_confirm_p1_reset') : t('msg_confirm_p2_reset'))) return;
         addOperation({ type: 'RESET_BOARD', playerId: playerId });
     }
+	
+	// --- [新增] 重置當前回合玩家的盤面 ---
+    function resetCurrentTurnPlayer() {
+        const state = getCurrentDisplayState();
+        // 讀取當前是誰的回合 (1 或 2)，並呼叫原本的 resetBoard
+        resetBoard(state.turnPlayer);
+    }
 
     function toggleGlow() {
         if (!pendingMove) return;
@@ -5124,6 +5136,19 @@
 			if (list) list.classList.remove('locked');
 		}, 100);
 	}
+	
+	// --- [新增] 勝利選單處理函式 ---
+    function handleWinSelect(el) {
+        const val = el.value;
+        if (!val) return; // 如果選的是預設值，不動作
+        
+        // 1. 執行勝利邏輯
+        triggerWin(parseInt(val));
+        
+        // 2. 執行後自動歸位 (變回預設選項)，方便下次操作
+        el.value = ""; 
+        el.blur(); // 移除焦點，避免誤觸
+    }
 	
 	// --- [新增] 切換受傷狀態 ---
     function toggleInjured() {
