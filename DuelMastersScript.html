@@ -5988,16 +5988,55 @@
     function openStackingModal(targetCard) {
         const modal = document.getElementById('position-selector-modal');
         const list = document.getElementById('position-list');
-        list.innerHTML = '';
+        const gui = document.getElementById('stack-gui');
         
         const titleTemplate = t('title_stack_target') || '堆疊操作: 目標 [{target}]';
 		document.getElementById('pos-modal-title').innerText = titleTemplate.replace('{target}', targetCard.text);
         document.getElementById('position-list').style.display = 'none';
         document.getElementById('stack-gui').style.display = 'grid';
         
+        // --- [核心修改] 智慧堆疊邏輯 ---
         window.confirmStackMove = (type) => {
-            finishMove(targetCard.zone, undefined, targetCard.id, type);
+            let finalTargetId = targetCard.id;
+
+            // 定義哪些類型屬於「下方堆疊」
+            // 包含：疊在下方(bottom)、露出底(bottom_exposed)、拼在下方(puzzle_bottom)
+            const bottomTypes = ['bottom', 'bottom_exposed', 'puzzle_bottom'];
+
+            // 只有當使用者選擇「往下疊」時，才啟動自動追尾功能
+            if (bottomTypes.includes(type)) {
+                const state = getCurrentDisplayState();
+                
+                // 遞迴尋找最底層的卡片 (Chain Traversal)
+                // 邏輯：如果 A 下面有 B，B 下面有 C，則目標自動修正為 C
+                let current = state.cards.find(c => c.id === finalTargetId);
+                
+                // 防止無窮迴圈的簡單計數器 (雖然理論上不會發生)
+                let safetyLoop = 0;
+
+                while (current && safetyLoop < 100) {
+                    safetyLoop++;
+                    
+                    // 找出「以 current 為父對象」且「堆疊類型屬於下方」的子卡片
+                    // 注意：如果一張卡下面同時掛了多張(極少見)，這裡會抓到第一張
+                    const child = state.cards.find(c => 
+                        c.parentId === current.id && bottomTypes.includes(c.stackType)
+                    );
+                    
+                    if (child) {
+                        current = child; // 發現更下面的卡，繼續往下鑽
+                        finalTargetId = child.id;
+                    } else {
+                        break; // 下面沒有東西了，current 就是最底層
+                    }
+                }
+            }
+
+            // 使用修正後的 ID 進行移動
+            finishMove(targetCard.zone, undefined, finalTargetId, type);
         };
+        // -----------------------------
+
         modal.style.display = 'flex';
     }
 
