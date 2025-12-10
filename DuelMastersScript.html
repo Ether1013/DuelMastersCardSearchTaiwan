@@ -5954,8 +5954,9 @@
             const btnInjured = document.getElementById('btn-injured');
             const btnClearInjured = document.getElementById('btn-clear-injured');
             const btnMoonless = document.getElementById('btn-moonless'); 
-            // [修正] 取得刪除按鈕
             const btnDelete = document.getElementById('btn-delete-card');
+            // [修正] 補回遺失的指向按鈕變數
+            const btnPoint = document.getElementById('btn-point');
 
             // B. 預設將所有「功能類」按鈕重置為顯示
             btnRotateL.style.display = 'block';
@@ -5970,18 +5971,20 @@
             btnCopyCont.style.display = 'block';
             adjustControls.style.display = 'block';
             adjustButtons.style.display = 'flex';
+            // [修正] 預設顯示指向按鈕
+            btnPoint.style.display = 'block';
             
             // C. 狀態依賴型按鈕先預設隱藏
             btnRemoveImg.style.display = 'none';
             btnUnglow.style.display = 'none';
             btnInjured.style.display = 'none';
             btnClearInjured.style.display = 'none';
-            // [修正] 刪除按鈕預設隱藏 (保護一般卡片)
             btnDelete.style.display = 'none';
             
             // D. 依據「卡片類型」執行刪去法
             if (allAbility) {
                 // =========== 情境 A：效果小卡 ===========
+                // 效果卡不需要旋轉、翻面、王牌、展示、貼圖、複製(自己)
                 btnRotateL.style.display = 'none';
                 btnRotateR.style.display = 'none';
                 btnFlip.style.display = 'none';
@@ -5996,16 +5999,18 @@
                 btnGlow.classList.remove('disabled-gray');
                 btnGlowBottom.classList.remove('disabled-gray');
 
-                // [修正] 顯示刪除按鈕 (效果卡允許刪除)
+                // 顯示刪除按鈕
                 btnDelete.style.display = 'block';
+                
+                // 注意：效果卡「可以」指向，所以不隱藏 btnPoint
 
             } else {
                 // =========== 情境 B：一般卡片 ===========
+                // 一般卡片不需要發光控制、微調控制
                 btnGlow.style.display = 'none';
                 btnGlowBottom.style.display = 'none';
                 adjustControls.style.display = 'none';
                 adjustButtons.style.display = 'none';
-                // 一般卡片不顯示刪除按鈕 (維持 none)
             }
 
             // E. 依據「卡片狀態/區域」進行細部顯示
@@ -6029,32 +6034,40 @@
                 btnUnglow.style.display = 'block';
             }
 
-            // 4. 王牌按鈕狀態 & 無月之門按鈕狀態 (單選一般卡時)
-            if (!allAbility && pendingMove.cardIds.length === 1) {
+            // 4. 單選限制：指向、王牌、無月
+            // 這些功能只支援單選，如果是多選則隱藏
+            if (pendingMove.cardIds.length === 1) {
                 const cid = pendingMove.cardIds[0];
-                
-                // --- 王牌 ---
-                if (globalAceRegistry[cid]) {
-                    btnAce.classList.add('active');
-                    btnAce.innerText = "👑 取消王牌";
-                } else {
-                    btnAce.classList.remove('active');
-                    btnAce.innerText = "👑 設為王牌";
-                }
 
-                // --- 無月之門 ---
-                if (state.moonless && state.moonless[cid]) {
-                    btnMoonless.classList.add('active');
-                    btnMoonless.style.display = 'block';
-                } else {
-                    btnMoonless.classList.remove('active');
+                // --- 指向 (Point) ---
+                // 單選時保持 block (除非上面被 allAbility 邏輯蓋掉，但這裡我們允許效果卡指向)
+                btnPoint.style.display = 'block'; 
+
+                // --- 王牌與無月 (僅限一般卡) ---
+                if (!allAbility) {
+                    // 王牌
+                    if (globalAceRegistry[cid]) {
+                        btnAce.classList.add('active');
+                        btnAce.innerText = "👑 取消王牌";
+                    } else {
+                        btnAce.classList.remove('active');
+                        btnAce.innerText = "👑 設為王牌";
+                    }
+
+                    // 無月之門
+                    if (state.moonless && state.moonless[cid]) {
+                        btnMoonless.classList.add('active');
+                    } else {
+                        btnMoonless.classList.remove('active');
+                    }
                     btnMoonless.style.display = 'block';
                 }
                 
             } else {
-                // 多選時隱藏這些特殊按鈕
+                // 多選時隱藏單體操作按鈕
                 btnAce.style.display = 'none';
                 btnMoonless.style.display = 'none';
+                btnPoint.style.display = 'none'; // 多選不支援指向
             }
 
             // --- 3. 顯示面板與高亮 ---
