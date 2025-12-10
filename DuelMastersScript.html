@@ -84,10 +84,10 @@
 			/* 確保樣式與原本一致 */
 			background: rgba(44, 62, 80, 0.95);
 			color: white;
-			padding: 10px 20px;
+			padding: 10px 15px;
 			border-radius: 8px;
 			display: none; /* 由 JS 控制顯示 */
-			gap: 10px;
+			gap: 6px;
 			align-items: center;
 			z-index: 1000;
 			box-shadow: 0 5px 15px rgba(0,0,0,0.5);
@@ -95,7 +95,7 @@
 			border: 1px solid #555;
 			flex-wrap: wrap;
 			justify-content: center;
-			max-width: 66vw;
+			max-width: 40vw;
 		}
 
 		/* 避免拖曳時選取到面板內的文字 */
@@ -2449,7 +2449,7 @@
     <button id="btn-reveal" onclick="revealCards()" data-i18n="act_reveal">👁️ 展示</button>
     <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
     <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
-    <button onclick="pasteImageMode()" data-i18n="act_paste">🖼️ 上圖 (Ctrl+V)</button>
+    <button id="btn-paste" onclick="pasteImageMode()" data-i18n="act_paste">🖼️ 上圖 (Ctrl+V)</button>
     <button id="btn-remove-image" style="display:none; background:#e74c3c;" onclick="removeImage()" data-i18n="btn_remove_img_short">✕ 圖</button>
     <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
     <input type="text" id="rename-input" placeholder="名稱..." onkeydown="if(event.key==='Enter') renameCard()" style="width: 80px;" data-i18n-ph="ph_rename">
@@ -5534,139 +5534,200 @@
     }
 
     function updateSelectionUI() {
-	
+        // 清除舊的選取樣式
         document.querySelectorAll('.card.selected').forEach(el => el.classList.remove('selected'));
         
-        // [新增] 同步更新多選提示列
+        // --- 1. 更新多選提示列 ---
         const multiBar = document.getElementById('multi-select-bar');
         const multiCount = document.getElementById('multi-count-val');
         if (isMultiSelectMode) {
             multiBar.style.display = 'flex';
             multiCount.innerText = multiSelectedIds.length;
-            // 多選模式下隱藏單卡操作面板
             document.getElementById('card-action-panel').style.display = 'none';
         } else {
             multiBar.style.display = 'none';
         }
         
+        // --- 2. 處理單選/多選操作面板 ---
         if (pendingMove && pendingMove.cardIds.length > 0) {
             const state = getCurrentDisplayState();
             
-			// --- [新增/修改] 判斷是 P1 還是 P2 的卡片，並設定面板位置 ---
+            // --- [位置設定] 判斷是 P1 還是 P2 的卡片 ---
             const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
-			if (firstCard) {
-                // 判斷擁有者 (假設 ownerId 1 是 P1, 2 是 P2)
+            if (firstCard) {
                 currentPanelOwner = (firstCard.ownerId === 1) ? 'p1' : 'p2';
-                
-                // 讀取記憶的位置
                 const savedPos = panelPosSettings[currentPanelOwner];
                 const panel = document.getElementById('card-action-panel');
-                
-                // 套用位置
                 panel.style.left = savedPos.x + 'px';
                 panel.style.top = savedPos.y + 'px';
             }
-			
-            let allAbility = true;
-            let allRevealed = true;
-					
-			// --- [修改] 檢查是否為戰鬥或護盾區，以及是否有受傷的卡片 ---
-			let isBattleOrShield = true;
-			let hasInjuredCard = false; // [新增] 檢查是否有卡片處於受傷狀態
-			
-			pendingMove.cardIds.forEach(id => {
-				const c = state.cards.find(card => card.id === id);
-				if (!c) return;
-				const z = c.zone;
-				if (!z.includes('battle') && !z.includes('shield')) {
-					isBattleOrShield = false;
-				}
-				if (c.isInjured) {
-					hasInjuredCard = true;
-				}
-			});
-
-			// 顯示「受傷」按鈕 (只要在正確區域就顯示)
-			document.getElementById('btn-injured').style.display = isBattleOrShield ? 'block' : 'none';
-			// [新增] 顯示「治癒」按鈕 (在正確區域 且 選擇的卡片中至少有一張是受傷的)
-			document.getElementById('btn-clear-injured').style.display = (isBattleOrShield && hasInjuredCard) ? 'block' : 'none';            // ------------------------------------
             
-			
-			// [新增] 王牌按鈕狀態更新
+            // --- [狀態判斷] 掃描所有選取卡片 ---
+            let allAbility = true;      // 預設 true，只要有一張不是能力卡就變 false
+            let isBattleOrShield = true; // 預設 true，只要有一張不在戰鬥/護盾區就變 false
+            let hasInjuredCard = false;  // 是否有受傷卡片
+            
+            pendingMove.cardIds.forEach(id => {
+                const c = state.cards.find(card => card.id === id);
+                if (!c) return;
+                
+                // [修復重點] 判斷是否為能力卡
+                if (!c.zone.includes('ability')) {
+                    allAbility = false;
+                }
+
+                // 判斷區域是否允許受傷
+                const z = c.zone;
+                if (!z.includes('battle') && !z.includes('shield')) {
+                    isBattleOrShield = false;
+                }
+                
+                // 判斷是否已受傷
+                if (c.isInjured) {
+                    hasInjuredCard = true;
+                }
+            });
+            
+            // --- [UI 按鈕顯示邏輯] (重構版：先全開，再刪去) ---
+            
+            // A. 取得所有按鈕元素
+            const btnRotateL = document.getElementById('btn-rotate-l');
+            const btnRotateR = document.getElementById('btn-rotate-r');
+            const btnFlip = document.getElementById('btn-flip');
             const btnAce = document.getElementById('btn-ace');
-			if (pendingMove.cardIds.length === 1) {
-                btnAce.style.display = 'block'; // 顯示按鈕
+            const btnReveal = document.getElementById('btn-reveal');
+            const btnPaste = document.getElementById('btn-paste'); 
+            const btnRemoveImg = document.getElementById('btn-remove-image');
+            
+            const btnGlow = document.getElementById('btn-glow');
+            const btnGlowBottom = document.getElementById('btn-glow-bottom');
+            const btnUnglow = document.getElementById('btn-unglow');
+            
+            const btnCopyOne = document.getElementById('btn-copy-ability');     // [觸發]
+            const btnCopyCont = document.getElementById('btn-copy-continuous'); // [永久]
+            
+            const adjustControls = document.getElementById('ability-adjust-controls'); // 文字標籤
+            const adjustButtons = document.getElementById('ability-adjust-buttons');   // 箭頭群組
+            
+            const btnInjured = document.getElementById('btn-injured');
+            const btnClearInjured = document.getElementById('btn-clear-injured');
+
+            // B. 預設將所有「功能類」按鈕重置為顯示 (Reset to Visible)
+            btnRotateL.style.display = 'block';
+            btnRotateR.style.display = 'block';
+            btnFlip.style.display = 'block';
+            btnAce.style.display = 'block';
+            btnReveal.style.display = 'block';
+            btnPaste.style.display = 'block';
+            
+            btnGlow.style.display = 'block';
+            btnGlowBottom.style.display = 'block';
+            
+            btnCopyOne.style.display = 'block';
+            btnCopyCont.style.display = 'block';
+            
+            adjustControls.style.display = 'block';
+            adjustButtons.style.display = 'flex';
+
+            // C. 狀態依賴型按鈕先預設隱藏 (稍後由狀態決定是否開啟)
+            btnRemoveImg.style.display = 'none';
+            btnUnglow.style.display = 'none';
+            btnInjured.style.display = 'none';
+            btnClearInjured.style.display = 'none';
+
+            // 移除可能殘留的 disabled 樣式
+            btnGlow.classList.remove('disabled-gray');
+            btnGlowBottom.classList.remove('disabled-gray');
+
+
+            // D. 依據「卡片類型」執行刪去法
+            if (allAbility) {
+                // =========== 情境 A：效果小卡 ===========
+                // 移除：[左轉][右轉][王牌][翻面][展示][上圖][移除圖]
+                // 追加移除：[單次][持續] (避免遞迴產生)
+                
+                btnRotateL.style.display = 'none';
+                btnRotateR.style.display = 'none';
+                btnFlip.style.display = 'none';
+                btnAce.style.display = 'none';
+                btnReveal.style.display = 'none';
+                btnPaste.style.display = 'none';
+                // btnRemoveImg 已預設隱藏
+                
+                btnCopyOne.style.display = 'none';
+                btnCopyCont.style.display = 'none';
+
+            } else {
+                // =========== 情境 B：一般卡片 ===========
+                // 移除：[發光][底光][X][位移][縮放]
+                
+                btnGlow.style.display = 'none';
+                btnGlowBottom.style.display = 'none';
+                // btnUnglow 已預設隱藏
+                
+                adjustControls.style.display = 'none';
+                adjustButtons.style.display = 'none';
+            }
+
+
+            // E. 依據「卡片狀態/區域」進行細部顯示
+            
+            // 1. 受傷/治癒 (僅限戰鬥/護盾區)
+            if (isBattleOrShield) {
+                if (hasInjuredCard) {
+                    btnClearInjured.style.display = 'block'; // 顯示治癒
+                } else {
+                    btnInjured.style.display = 'block';      // 顯示受傷
+                }
+            }
+
+            // 2. 移除圖片 (一般卡片且有圖時才顯示)
+            if (!allAbility && firstCard && firstCard.image) {
+                btnRemoveImg.style.display = 'block';
+            }
+
+            // 3. 取消發光 (效果小卡且有光時才顯示)
+            if (allAbility && firstCard && firstCard.glow) {
+                btnUnglow.style.display = 'block';
+            }
+
+            // 4. 王牌按鈕狀態更新 (一般卡片且單選時)
+            // 注意：效果小卡在上面已經隱藏了 btnAce，這裡只處理文字變化
+            if (!allAbility && pendingMove.cardIds.length === 1) {
                 const cid = pendingMove.cardIds[0];
                 if (globalAceRegistry[cid]) {
-                    btnAce.classList.add('active'); // 亮起
+                    btnAce.classList.add('active');
                     btnAce.innerText = "👑 取消王牌";
                 } else {
-                    btnAce.classList.remove('active'); // 熄滅
+                    btnAce.classList.remove('active');
                     btnAce.innerText = "👑 設為王牌";
                 }
             } else {
-                btnAce.style.display = 'none'; // 多選或無選取時隱藏
+                // 如果是多選一般卡，也要隱藏王牌按鈕
+                btnAce.style.display = 'none';
             }
-			
-            // UI Filtering Logic (Req 6)
-            document.getElementById('btn-delete-card').style.display = (allAbility || allRevealed) ? 'block' : 'none';
-            document.getElementById('btn-point').style.display = 'block';
-            document.getElementById('btn-end-point').style.display = 'block'; 
-            
-            // Only show Glow buttons for Ability cards
-            // 處理發光按鈕 (Glow)
-            const btnGlow = document.getElementById('btn-glow');
-			const btnGlowBottom = document.getElementById('btn-glow-bottom'); // [新增]
-            const btnUnglow = document.getElementById('btn-unglow');
-            
-            btnGlow.style.display = 'block'; // 永遠顯示
-			btnGlowBottom.style.display = 'block'; // [新增]
-            if (allAbility) {
-                btnGlow.classList.remove('disabled-gray'); // 正常
-				btnGlowBottom.classList.remove('disabled-gray'); // [新增]
-                btnUnglow.style.display = (firstCard && firstCard.glow) ? 'block' : 'none';
-            } else {
-                btnGlow.classList.add('disabled-gray'); // 灰階
-				btnGlowBottom.classList.add('disabled-gray'); // [新增]
-                btnUnglow.style.display = 'none';
-            }
-            document.getElementById('btn-unglow').style.display = (allAbility && firstCard && firstCard.glow) ? 'block' : 'none';
-            
-            document.getElementById('btn-remove-image').style.display = (firstCard && firstCard.image) ? 'block' : 'none';
-            
-            document.getElementById('ability-adjust-controls').style.display = allAbility ? 'block' : 'none';
-            document.getElementById('ability-adjust-buttons').style.display = allAbility ? 'flex' : 'none';
 
-            // Hide standard move buttons if Ability card (can't move them)
-            // Note: The UI panel buttons are mostly actions, move happens by clicking zones.
-            // We handled zone click prevention in handleZoneClick.
-			// 確保多選模式下不顯示單卡面板 (重複確認)
+            // --- 3. 顯示面板與高亮 ---
             if (!isMultiSelectMode) {
                 document.getElementById('card-action-panel').style.display = 'flex';
-				if (pendingMove.cardIds.length === 1 && firstCard) {
-					document.getElementById('rename-input').value = firstCard.text;
-					document.getElementById('note-input').value = firstCard.note || "";
-				} else {
-					document.getElementById('rename-input').value = '';
-					document.getElementById('note-input').value = '';
-				}
-                document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+                
+                // 載入名稱與註記
+                if (pendingMove.cardIds.length === 1 && firstCard) {
+                    document.getElementById('rename-input').value = firstCard.text;
+                    document.getElementById('note-input').value = firstCard.note || "";
+                } else {
+                    document.getElementById('rename-input').value = '';
+                    document.getElementById('note-input').value = '';
+                }
             } else {
-				document.getElementById('card-action-panel').style.display = 'none';
-                // 多選模式下，只高亮區域，不顯示面板
                  document.getElementById('card-action-panel').style.display = 'none';
-                 document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
             }
-            
-            
             document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+            
         } else {
+            // 沒有選取任何卡片 -> 隱藏所有選單與高亮
             document.getElementById('card-action-panel').style.display = 'none';
-        }
-		
-		// 確保沒選牌時也要清除樣式
-        if (!pendingMove) {
-             document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
+            document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
         }
         
         renderUI(); 
