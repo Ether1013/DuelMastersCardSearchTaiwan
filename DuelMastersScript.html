@@ -2677,25 +2677,26 @@
             filename: 'script20251203.txt',
             title: '天災色控制 VS 巨大鯨',
             description: '初試劇本功能',
-			counter_url: 'https://www.f-counter.net/j/66/1765257662/'
+			counter_url: 'https://www.f-counter.net/j/66/1765257662/',
         },
         {
             filename: 'script20251205.txt',
             title: '王鬥高麗菜 VS 波夏克龍皇神',
             description: '作者常玩的訓練對局',
-			counter_url: 'https://www.f-counter.net/j/66/1765257467/'
+			counter_url: 'https://www.f-counter.net/j/66/1765257467/',
         },
         {
             filename: 'script20251208.txt',
             title: '甲獸軍隊 VS 烏爾天寶',
             description: '進行DM25-RP4新卡的測試',
-			counter_url: 'https://www.f-counter.net/j/66/1765258081/'
+			counter_url: 'https://www.f-counter.net/j/66/1765258081/',
         },
         {
             filename: 'script20251209.txt',
             title: '新惡魔 VS 新武士',
             description: '進行DM25-RP4新卡的測試',
-			counter_url: 'https://www.f-counter.net/j/66/1765258098/'
+			counter_url: 'https://www.f-counter.net/j/66/1765258098/',
+			speed: 1.33,
         },
         // 您可以在此擴充更多劇本...
     ];
@@ -7549,27 +7550,36 @@
         const timestamp = Date.now(); 
         const fullPath = 'scripts/' + selectedMobileScript + '?v=' + timestamp;
 
-        // 3. 初始化
+        // 3. 初始化行動版
         initMobileMode(fullPath);
         
-        // --- [修改] 手機版預設靜音邏輯 ---
+        // --- [新增] 套用劇本預設速度 ---
         
-        // A. 設定為「靜音」狀態 (符合您的需求 1)
+        // A. 找出劇本資料
+        const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
+        
+        // B. 決定速度 (若無設定則預設 1.0)
+        // 注意：您的系統中 0.5 = 2.0x (快速), 1.0 = 正常, 2.0 = 0.5x (慢速)
+        let targetSpeed = 1.0;
+        if (scriptData && scriptData.speed !== undefined) {
+            targetSpeed = scriptData.speed;
+        }
+        
+        // C. 套用速度 (這會同步更新全域變數與 UI 選單)
+        changePlaybackSpeed(targetSpeed);
+
+
+        // 4. 音訊解鎖 (保持靜音，等待使用者點擊喇叭)
         globalAudioPlayer.muted = true; 
-        
-        // B. 雖然靜音，但仍要執行一次 play() 來「解鎖」Audio Context
-        // 瀏覽器會允許這次播放 (因為源自使用者點擊)，此後我們隨時解除靜音都能有聲音
         globalAudioPlayer.play().catch(e => {
             console.log("Audio context unlocked (muted)");
         });
-
-        // 4. 更新劇本專屬計數器
-        const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
+        
+        // 更新劇本專屬計數器
         let urlToLoad = (scriptData && scriptData.counter_url) ? scriptData.counter_url : null;
         updateVisitorCounter(urlToLoad);
 
-        // 5. [關鍵] 更新靜音按鈕 UI
-        // 因為現在是 muted=true，按鈕應該顯示「靜音圖示 (🔇)」
+        // 更新靜音按鈕 UI
         updateMuteButtonUI();
     }
 
@@ -7811,15 +7821,6 @@
             changeLanguage(pLang);
         }
 
-        // B. 處理速度 (speed)
-        const pSpeed = getUrlParameter('speed');
-        if (pSpeed) {
-            // 呼叫 changePlaybackSpeed 會同時更新:
-            // 1. 全域變數 currentSpeedFactor
-            // 2. 電腦版選單 (#speed-select)
-            // 3. 手機版選單 (#mob-speed-select)
-            changePlaybackSpeed(pSpeed);
-        }
         // ----------------------------------------------------
 
 
