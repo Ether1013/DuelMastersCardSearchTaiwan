@@ -76,33 +76,56 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* --- 修改：操作面板改為絕對定位並支援拖曳 --- */
+        /* --- 修改：操作面板樣式 (雙層版) --- */
 		#card-action-panel {
-			position: fixed; /* 改用 fixed 以便相對於視窗定位 */
-			/* 移除原本的 bottom: 20px 與 transform */
+			position: fixed;
 			bottom: auto; 
 			left: 0; 
 			transform: none; 
-			
-			/* 增加拖曳游標 */
 			cursor: move;
 			
-			/* 確保樣式與原本一致 */
 			background: rgba(44, 62, 80, 0.95);
 			color: white;
-			padding: 10px 15px;
+			padding: 8px 12px;
 			border-radius: 8px;
+			
+			/* [修改] 改為垂直排列，讓兩行分開 */
 			display: none; /* 由 JS 控制顯示 */
-			gap: 6px;
+			flex-direction: column; 
+			gap: 8px; /* 上下行的間距 */
+			
 			align-items: center;
 			z-index: 1000;
 			box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 			backdrop-filter: blur(5px);
 			border: 1px solid #555;
-			flex-wrap: wrap;
-			justify-content: center;
-			max-width: 40vw;
+			
+			/* 寬度設為 auto，讓內容撐開 */
+			width: auto;
+			max-width: 90vw; /* 防止超出螢幕 */
 		}
+
+        /* [新增] 單行容器樣式 */
+        .panel-row {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap; /* 空間不足時允許換行 */
+        }
+
+        /* [新增] 垂直分隔線樣式 */
+        .panel-sep {
+            border-left: 1px solid #7f8c8d; 
+            height: 20px; 
+            margin: 0 5px;
+            opacity: 0.5;
+        }
+
+		/* 避免拖曳時選取到面板內的文字 */
+		#card-action-panel * { user-select: none; }
+		#card-action-panel input, #card-action-panel button { cursor: pointer; }
+		#card-action-panel input { cursor: text; user-select: auto; }
 
 		/* 避免拖曳時選取到面板內的文字 */
 		#card-action-panel * {
@@ -541,7 +564,11 @@
 
         .card.interactive { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .card:hover { z-index: 200; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .card.selected { box-shadow: 0 0 0 3px #f1c40f, 0 0 8px #f1c40f; z-index: 100; }
+        /* 修改後 (加入 !important) */
+		.card.selected { 
+			box-shadow: 0 0 0 3px #f1c40f, 0 0 8px #f1c40f !important; 
+			z-index: 100; 
+		}
         .card.face-down { 
             background: #2c3e50;
             background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
@@ -2260,6 +2287,27 @@
             cursor: not-allowed; 
             box-shadow: none;
         }
+		
+		/* [修改] 無月之門按鈕 - 未啟動狀態 (OFF) */
+        #btn-moonless {
+            background: #34495e; /* 標準深藍灰 */
+            border-color: #566573;
+            color: #bdc3c7;      /* 文字稍微暗一點 */
+            transition: all 0.2s;
+        }
+
+        /* [修改] 無月之門按鈕 - 啟動狀態 (ON) */
+        #btn-moonless.active {
+            background: #8e44ad !important; /* 鮮豔的紫色 */
+            border-color: #9b59b6 !important; /* 亮紫色邊框 */
+            color: #fff !important;           /* 純白文字 */
+            
+            /* 加入發光陰影，讓它看起來是亮著的 */
+            box-shadow: 0 0 12px rgba(142, 68, 173, 0.8), inset 0 0 5px rgba(255,255,255,0.3);
+            
+            font-weight: bold;
+            transform: scale(1.05); /* 稍微放大一點點 */
+        }
     </style>
 </head>
 <body>
@@ -2444,43 +2492,64 @@
 </div>
 
 <div id="card-action-panel">
-    <button id="btn-rotate-l" onclick="rotateCard(-90)">↶</button>
-    <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
-    <button id="btn-flip" onclick="flipCard()" data-i18n="act_flip">翻面</button>
-	<button id="btn-ace" onclick="toggleAceFromPanel()" data-i18n="act_ace">👑 王牌</button>
-	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
-    <button id="btn-clear-injured" style="display:none; background:#27ae60; border-color:#2ecc71;" onclick="clearInjured()" data-i18n="act_clear_injured">❤️ 治癒</button>
-	<button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
-	<button id="btn-glow-bottom" onclick="toggleBottomGlow()" style="background:#5dade2; border-color:#3498db;" data-i18n="act_glow_bottom">👇底光</button>
-    <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
-    <button id="btn-copy-ability" onclick="copyToAbility(false)" data-i18n="act_ability">⚡單次</button>
-	<button id="btn-copy-continuous" onclick="copyToAbility(true)" style="background:#9b59b6; border-color:#8e44ad;" data-i18n="act_continuous">∞ 持續</button>			
-    <button id="btn-reveal" onclick="revealCards()" data-i18n="act_reveal">👁️ 展示</button>
-    <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
-    <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
-    <button id="btn-paste" onclick="pasteImageMode()" data-i18n="act_paste">🖼️ 上圖 (Ctrl+V)</button>
-    <button id="btn-remove-image" style="display:none; background:#e74c3c;" onclick="removeImage()" data-i18n="btn_remove_img_short">✕ 圖</button>
-    <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
-    <input type="text" id="rename-input" placeholder="名稱..." onkeydown="if(event.key==='Enter') renameCard()" style="width: 80px;" data-i18n-ph="ph_rename">
-    <button onclick="renameCard()" data-i18n="act_rename">更名</button>
-    <input type="text" id="note-input" placeholder="註記..." onkeydown="if(event.key==='Enter') addCardNote()" style="width: 80px;" data-i18n-ph="ph_note">
-    <button onclick="addCardNote()" data-i18n="act_note">📝註記</button>
     
-    <div id="ability-adjust-controls" style="display:none; border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
-    <div id="ability-adjust-buttons" style="display:none; gap:5px; align-items:center;">
-        <small data-i18n="lbl_move">位移:</small>
-        <button onclick="adjustAbilityCard('panX', -10)">⬅</button>
-        <button onclick="adjustAbilityCard('panX', 10)">➡</button>
-        <button onclick="adjustAbilityCard('panY', -10)">⬆</button>
-        <button onclick="adjustAbilityCard('panY', 10)">⬇</button>
-        <small data-i18n="lbl_scale">縮放:</small>
-        <button onclick="adjustAbilityCard('scale', 0.1)">+</button>
-        <button onclick="adjustAbilityCard('scale', -0.1)">-</button>
+    <div class="panel-row">
+        <button id="btn-paste" onclick="pasteImageMode()" data-i18n="act_paste">🖼️ 上圖 (Ctrl+V)</button>
+        <button id="btn-remove-image" style="display:none; background:#e74c3c;" onclick="removeImage()" data-i18n="btn_remove_img_short">✕ 圖</button>
+        
+        <div class="panel-sep"></div>
+        
+        <input type="text" id="rename-input" placeholder="名稱..." onkeydown="if(event.key==='Enter') renameCard()" style="width: 80px;" data-i18n-ph="ph_rename">
+        <button onclick="renameCard()" data-i18n="act_rename">更名</button>
+        <input type="text" id="note-input" placeholder="註記..." onkeydown="if(event.key==='Enter') addCardNote()" style="width: 80px;" data-i18n-ph="ph_note">
+        <button onclick="addCardNote()" data-i18n="act_note">📝註記</button>
+        
+        <div class="panel-sep"></div>
+
+        <button id="btn-ace" onclick="toggleAceFromPanel()" data-i18n="act_ace">👑 王牌</button>
+        
+        <button id="btn-delete-card" class="danger" style="display:none; margin-left:5px;" onclick="deleteSelectedCard()" data-i18n="act_delete">🗑️ 刪除</button>
     </div>
 
-    <div style="border-left:1px solid #7f8c8d; height:20px; margin:0 5px;"></div>
-    <button id="btn-delete-card" class="danger" style="display:none;" onclick="deleteSelectedCard()" data-i18n="act_delete">🗑️ 刪除</button>
-    <button class="danger" onclick="cancelSelection()">✕ (ESC)</button>
+    <div class="panel-row">
+        <button id="btn-rotate-l" onclick="rotateCard(-90)">↶</button>
+        <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
+        <button id="btn-flip" onclick="flipCard()" data-i18n="act_flip">翻面</button>
+        
+        <button id="btn-moonless" onclick="toggleMoonless()" data-i18n="act_moonless">🌑 無月之門</button>
+
+        <div class="panel-sep"></div>
+
+        <button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
+        <button id="btn-clear-injured" style="display:none; background:#27ae60; border-color:#2ecc71;" onclick="clearInjured()" data-i18n="act_clear_injured">❤️ 治癒</button>
+        
+        <button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
+        <button id="btn-glow-bottom" onclick="toggleBottomGlow()" style="background:#5dade2; border-color:#3498db;" data-i18n="act_glow_bottom">👇底光</button>
+        <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
+
+        <div class="panel-sep"></div>
+
+        <button id="btn-copy-ability" onclick="copyToAbility(false)" data-i18n="act_ability">⚡單次</button>
+        <button id="btn-copy-continuous" onclick="copyToAbility(true)" style="background:#9b59b6; border-color:#8e44ad;" data-i18n="act_continuous">∞ 持續</button>
+        
+        <div id="ability-adjust-controls" style="display:none; width:1px;"></div>
+        <div id="ability-adjust-buttons" style="display:none; gap:2px; align-items:center;">
+            <button onclick="adjustAbilityCard('panX', -10)">⬅</button>
+            <button onclick="adjustAbilityCard('panX', 10)">➡</button>
+            <button onclick="adjustAbilityCard('panY', -10)">⬆</button>
+            <button onclick="adjustAbilityCard('panY', 10)">⬇</button>
+            <button onclick="adjustAbilityCard('scale', 0.1)">+</button>
+            <button onclick="adjustAbilityCard('scale', -0.1)">-</button>
+        </div>
+
+        <div class="panel-sep"></div>
+
+        <button id="btn-reveal" onclick="revealCards()" data-i18n="act_reveal">👁️ 展示</button>
+        <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
+        <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
+        
+        <button class="danger" style="margin-left:5px;" onclick="cancelSelection()">✕</button>
+    </div>
 </div>
 
 <div id="multi-select-bar" style="display:none; position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(44, 62, 80, 0.9); padding:10px 20px; border-radius:30px; color:white; font-weight:bold; z-index:2000; box-shadow:0 4px 15px rgba(0,0,0,0.3); align-items:center; gap:10px;">
@@ -2501,7 +2570,7 @@
         </div>
         <div class="input-group">
             <label>P1 超次元:</label>
-            <input type="number" id="setup-p1-hyper" value="8" min="0" max="8">
+            <input type="number" id="setup-p1-hyper" value="0" min="0" max="8">
         </div>
         <hr style="width:100%; border:0; border-top:1px dashed #ccc;">
         <div class="input-group">
@@ -2510,7 +2579,7 @@
         </div>
         <div class="input-group">
             <label>P2 超次元:</label>
-            <input type="number" id="setup-p2-hyper" value="8" min="0" max="8">
+            <input type="number" id="setup-p2-hyper" value="0" min="0" max="8">
         </div>
         <div style="margin-top:20px; display:flex; justify-content:space-between;">
             <button onclick="clearStorage()" style="background:#7f8c8d;" data-i18n="btn_clear_storage">清除存檔</button>
@@ -3018,6 +3087,7 @@
             'lbl_swap_flip_hint': '* 將 P1 與 P2 的所有表情圖片互換，並自動進行水平翻轉 (預設圖除外)',
             'msg_confirm_swap': '確定要交換 P1 與 P2 的所有圖片並進行翻轉嗎？\n(注意：這是全域修改，會影響所有對話步驟)',
             'msg_swap_done': '圖片交換與翻轉完成！',
+			'act_moonless': '🌑 無月之門',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3077,6 +3147,7 @@
             'lbl_swap_flip_hint': '* Swaps all P1/P2 portraits and flips them horizontally (Default avatars excluded).',
             'msg_confirm_swap': 'Are you sure you want to swap and flip all portraits?\n(Note: This is global and affects all dialogue steps.)',
             'msg_swap_done': 'Swap and flip complete!',
+			'act_moonless': '🌑 Moonless',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3135,7 +3206,8 @@
             'btn_swap_flip': '🔁 P1/P2 画像交換 & 反転',
             'lbl_swap_flip_hint': '* P1とP2の立ち絵を入れ替え、左右反転します（デフォルト画像を除く）。',
             'msg_confirm_swap': 'すべての画像を交換して反転しますか？\n(注意：これは全体に適用され、すべての会話に影響します)',
-            'msg_swap_done': '交換と反転が完了しました！',			
+            'msg_swap_done': '交換と反転が完了しました！',		
+			'act_moonless': '🌑 無月の門',			
 		}
 	};
 
@@ -3395,6 +3467,10 @@
 			this.dialogueData = null; // 格式: { p1: {...}, p2: {...} }
 			// [新增] BGM 狀態 (null 代表停止/無音樂)
             this.bgm = null;
+
+			// [新增] 無月之門狀態 (存於 State 內)
+			// 格式: { cardId: true, ... }
+			this.moonless = {};
         }
     }
 
@@ -3415,6 +3491,8 @@
     let tempState = null; 
     let selectedCardsInModal = []; 
     let pendingMove = null; 
+	// [新增] 用於防止長按後自動取消選取的防呆變數
+    let ignoreClickId = null;
     let playInterval = null;
     let lastRenderedState = null;
     let editModeType = 'INSERT';
@@ -3938,18 +4016,27 @@
             }
 
             // 初始化設定
-            globalImageRegistry = {}; // 先清空圖片，讓畫面先顯示文字版卡片
+            globalImageRegistry = {}; 
             globalAbilityStyleRegistry = data.abilityRegistry || {};
-			globalLastUsedStyles = data.lastUsedStyles || {}; // [新增] 讀檔
+            globalLastUsedStyles = data.lastUsedStyles || {};
             if (data.lastDiagSettings && typeof lastDiagSettings !== 'undefined') {
                 lastDiagSettings = data.lastDiagSettings;
             }
-			
-			// [修正] 補上讀取王牌設定，解決重新整理後遺失的問題
+            
             globalAceRegistry = data.aceRegistry || {};
+            
+            // [修改] 移除 globalMoonlessRegistry 賦值，改為遷移邏輯
+            // 如果存檔中有舊版的無月資料，將其移轉至 initialState
+            if (data.moonlessRegistry) {
+                if (!data.initialState.moonless) data.initialState.moonless = {};
+                Object.assign(data.initialState.moonless, data.moonlessRegistry);
+            }
 
             // 重建狀態 (Replay Logic)
             initialState = data.initialState;
+            // 防呆：確保 initialState 有 moonless 屬性 (避免舊存檔是 undefined)
+            if (!initialState.moonless) initialState.moonless = {};
+
             let loadedHistory = data.history;
             if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
             
@@ -4471,6 +4558,21 @@
 			return; // 對話不涉及其他邏輯
 		}
 		
+		// [新增] 處理無月之門切換
+		if (op.type === 'TOGGLE_MOONLESS') {
+            const { cardIds } = op;
+            // 防呆初始化 (避免舊存檔沒有這個屬性)
+            if (!state.moonless) state.moonless = {};
+            
+            cardIds.forEach(id => {
+                if (state.moonless[id]) {
+                    delete state.moonless[id];
+                } else {
+                    state.moonless[id] = true;
+                }
+            });
+        }
+		
 		// --- 新增: 用於切斷連結的操作 ---
 		if (op.type === 'BREAK_LINKS') {
 			const { cardIds } = op;
@@ -4864,14 +4966,62 @@
         }
     }
 
-    // [修改] 旋轉卡片 (家族樹連動版)
+    // --- [修正版] 旋轉卡片 (修復堆疊連動 + 支援無月之門) ---
     function rotateCard(deg) {
         if (!pendingMove) return;
         
         const state = getCurrentDisplayState();
         
-        // 使用遞迴搜尋找出整棵樹的所有卡片
-        const allTargets = getAllLinkedCardIds(state, pendingMove.cardIds);
+        // 步驟 1: 向上溯源 (這是 BK 版原本有的功能)
+        // 找出被選取卡片所屬的「最底層主卡 (Root)」。
+        // 無論你點擊堆疊中的哪一張，我們都視為你是在操作整疊卡片的主卡。
+        const getRoot = (cardId) => {
+            let current = state.cards.find(c => c.id === cardId);
+            // 只要它還有 parentId，就繼續往上找
+            while (current && current.parentId) {
+                const parent = state.cards.find(c => c.id === current.parentId);
+                if (!parent) break;
+                current = parent;
+            }
+            return current;
+        };
+
+        const getRotatableTree = (rootIds) => {
+            const results = new Set();
+            const queue = [...rootIds];
+            rootIds.forEach(id => results.add(id));
+            
+            while(queue.length > 0) {
+                const currentId = queue.shift();
+                const children = state.cards.filter(c => c.parentId === currentId);
+                
+                // [修改點] 讀取 state.moonless
+                const isMoonless = state.moonless && state.moonless[currentId];
+                
+                children.forEach(child => {
+                    if (isMoonless && child.stackType === 'bottom') {
+                        return; 
+                    }
+                    if (!results.has(child.id)) {
+                        results.add(child.id);
+                        queue.push(child.id);
+                    }
+                });
+            }
+            return Array.from(results);
+        };
+
+        // --- 執行邏輯 ---
+        
+        // 1. 先找出所有選取目標的 Roots (解決 A, B, C 只轉一張的問題)
+        const roots = new Set();
+        pendingMove.cardIds.forEach(id => {
+            const r = getRoot(id);
+            if (r) roots.add(r.id);
+        });
+
+        // 2. 再從這些 Roots 往下計算整棵樹 (解決無月之門不該轉的問題)
+        const allTargets = getRotatableTree(Array.from(roots));
         
         addOperation({ type: 'ROTATE_CARD', cardIds: allTargets, deg: deg });
     }
@@ -5178,6 +5328,9 @@
             cardIds: pendingMove.cardIds, 
             setInjured: !hasInjured // 如果有人受傷就全部取消，否則全部設為受傷
         });
+		
+		// 【新增這行】操作完畢後，強制刷新操作面板狀態
+        updateSelectionUI();
     }
 
 	// --- [新增] BGM 相關邏輯 ---
@@ -5297,8 +5450,8 @@
 			setInjured: false 
 		});
 		
-		// 操作後可以選擇是否取消選取，這裡保持選取方便連續操作
-		// cancelSelection(); 
+		// 【新增這行】強制刷新操作面板狀態
+        updateSelectionUI();
 	}
 	
 	// --- [修正版] 複製到能力區 (使用絕對 ID) ---
@@ -5583,7 +5736,7 @@
         if (pendingMove && pendingMove.cardIds.length > 0) {
             const state = getCurrentDisplayState();
             
-            // --- [位置設定] 判斷是 P1 還是 P2 的卡片 ---
+            // --- [位置設定] ---
             const firstCard = state.cards.find(c => c.id === pendingMove.cardIds[0]);
             if (firstCard) {
                 currentPanelOwner = (firstCard.ownerId === 1) ? 'p1' : 'p2';
@@ -5594,32 +5747,27 @@
             }
             
             // --- [狀態判斷] 掃描所有選取卡片 ---
-            let allAbility = true;      // 預設 true，只要有一張不是能力卡就變 false
-            let isBattleOrShield = true; // 預設 true，只要有一張不在戰鬥/護盾區就變 false
-            let hasInjuredCard = false;  // 是否有受傷卡片
+            let allAbility = true;      
+            let isBattleOrShield = true; 
+            let hasInjuredCard = false;  
             
             pendingMove.cardIds.forEach(id => {
                 const c = state.cards.find(card => card.id === id);
                 if (!c) return;
                 
-                // [修復重點] 判斷是否為能力卡
                 if (!c.zone.includes('ability')) {
                     allAbility = false;
                 }
-
-                // 判斷區域是否允許受傷
                 const z = c.zone;
                 if (!z.includes('battle') && !z.includes('shield')) {
                     isBattleOrShield = false;
                 }
-                
-                // 判斷是否已受傷
                 if (c.isInjured) {
                     hasInjuredCard = true;
                 }
             });
             
-            // --- [UI 按鈕顯示邏輯] (重構版：先全開，再刪去) ---
+            // --- [UI 按鈕顯示邏輯] ---
             
             // A. 取得所有按鈕元素
             const btnRotateL = document.getElementById('btn-rotate-l');
@@ -5629,103 +5777,88 @@
             const btnReveal = document.getElementById('btn-reveal');
             const btnPaste = document.getElementById('btn-paste'); 
             const btnRemoveImg = document.getElementById('btn-remove-image');
-            
             const btnGlow = document.getElementById('btn-glow');
             const btnGlowBottom = document.getElementById('btn-glow-bottom');
             const btnUnglow = document.getElementById('btn-unglow');
-            
-            const btnCopyOne = document.getElementById('btn-copy-ability');     // [觸發]
-            const btnCopyCont = document.getElementById('btn-copy-continuous'); // [永久]
-            
-            const adjustControls = document.getElementById('ability-adjust-controls'); // 文字標籤
-            const adjustButtons = document.getElementById('ability-adjust-buttons');   // 箭頭群組
-            
+            const btnCopyOne = document.getElementById('btn-copy-ability');
+            const btnCopyCont = document.getElementById('btn-copy-continuous');
+            const adjustControls = document.getElementById('ability-adjust-controls');
+            const adjustButtons = document.getElementById('ability-adjust-buttons');
             const btnInjured = document.getElementById('btn-injured');
             const btnClearInjured = document.getElementById('btn-clear-injured');
+            const btnMoonless = document.getElementById('btn-moonless'); 
 
-            // B. 預設將所有「功能類」按鈕重置為顯示 (Reset to Visible)
+            // B. 預設將所有「功能類」按鈕重置為顯示
             btnRotateL.style.display = 'block';
             btnRotateR.style.display = 'block';
             btnFlip.style.display = 'block';
             btnAce.style.display = 'block';
             btnReveal.style.display = 'block';
             btnPaste.style.display = 'block';
-            
             btnGlow.style.display = 'block';
             btnGlowBottom.style.display = 'block';
-            
             btnCopyOne.style.display = 'block';
             btnCopyCont.style.display = 'block';
-            
             adjustControls.style.display = 'block';
             adjustButtons.style.display = 'flex';
-
-            // C. 狀態依賴型按鈕先預設隱藏 (稍後由狀態決定是否開啟)
+            
+            // C. 狀態依賴型按鈕先預設隱藏
             btnRemoveImg.style.display = 'none';
             btnUnglow.style.display = 'none';
             btnInjured.style.display = 'none';
             btnClearInjured.style.display = 'none';
-
-            // 移除可能殘留的 disabled 樣式
-            btnGlow.classList.remove('disabled-gray');
-            btnGlowBottom.classList.remove('disabled-gray');
-
-
+            
             // D. 依據「卡片類型」執行刪去法
             if (allAbility) {
                 // =========== 情境 A：效果小卡 ===========
-                // 移除：[左轉][右轉][王牌][翻面][展示][上圖][移除圖]
-                // 追加移除：[單次][持續] (避免遞迴產生)
-                
                 btnRotateL.style.display = 'none';
                 btnRotateR.style.display = 'none';
                 btnFlip.style.display = 'none';
                 btnAce.style.display = 'none';
                 btnReveal.style.display = 'none';
                 btnPaste.style.display = 'none';
-                // btnRemoveImg 已預設隱藏
-                
                 btnCopyOne.style.display = 'none';
                 btnCopyCont.style.display = 'none';
+                btnMoonless.style.display = 'none'; // 效果卡不能開無月
+
+                // 移除 disabled 樣式
+                btnGlow.classList.remove('disabled-gray');
+                btnGlowBottom.classList.remove('disabled-gray');
 
             } else {
                 // =========== 情境 B：一般卡片 ===========
-                // 移除：[發光][底光][X][位移][縮放]
-                
                 btnGlow.style.display = 'none';
                 btnGlowBottom.style.display = 'none';
-                // btnUnglow 已預設隱藏
-                
                 adjustControls.style.display = 'none';
                 adjustButtons.style.display = 'none';
             }
 
-
             // E. 依據「卡片狀態/區域」進行細部顯示
             
-            // 1. 受傷/治癒 (僅限戰鬥/護盾區)
+            // 1. 受傷/治癒
             if (isBattleOrShield) {
                 if (hasInjuredCard) {
-                    btnClearInjured.style.display = 'block'; // 顯示治癒
+                    btnClearInjured.style.display = 'block'; 
                 } else {
-                    btnInjured.style.display = 'block';      // 顯示受傷
+                    btnInjured.style.display = 'block';      
                 }
             }
 
-            // 2. 移除圖片 (一般卡片且有圖時才顯示)
+            // 2. 移除圖片
             if (!allAbility && firstCard && firstCard.image) {
                 btnRemoveImg.style.display = 'block';
             }
 
-            // 3. 取消發光 (效果小卡且有光時才顯示)
+            // 3. 取消發光
             if (allAbility && firstCard && firstCard.glow) {
                 btnUnglow.style.display = 'block';
             }
 
-            // 4. 王牌按鈕狀態更新 (一般卡片且單選時)
-            // 注意：效果小卡在上面已經隱藏了 btnAce，這裡只處理文字變化
+            // 4. 王牌按鈕狀態 & 無月之門按鈕狀態 (單選一般卡時)
             if (!allAbility && pendingMove.cardIds.length === 1) {
                 const cid = pendingMove.cardIds[0];
+                
+                // --- 王牌 ---
                 if (globalAceRegistry[cid]) {
                     btnAce.classList.add('active');
                     btnAce.innerText = "👑 取消王牌";
@@ -5733,9 +5866,20 @@
                     btnAce.classList.remove('active');
                     btnAce.innerText = "👑 設為王牌";
                 }
+
+                // --- 無月之門 (修改點：讀取 state.moonless) ---
+                if (state.moonless && state.moonless[cid]) {
+                    btnMoonless.classList.add('active');
+                    btnMoonless.style.display = 'block';
+                } else {
+                    btnMoonless.classList.remove('active');
+                    btnMoonless.style.display = 'block';
+                }
+                
             } else {
-                // 如果是多選一般卡，也要隱藏王牌按鈕
+                // 多選時隱藏這些特殊按鈕
                 btnAce.style.display = 'none';
+                btnMoonless.style.display = 'none';
             }
 
             // --- 3. 顯示面板與高亮 ---
@@ -5760,8 +5904,6 @@
             document.getElementById('card-action-panel').style.display = 'none';
             document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
         }
-        
-        renderUI(); 
     }
 	
 	function updateToolbarState() {
@@ -5889,121 +6031,184 @@
 
         const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
 
-		// --- [核心修改] 支援旋轉的樹狀渲染 ---
-        // --- [核心修改] 支援旋轉的樹狀渲染 (True Bounding Box) ---
+		// --- [核心修改] 渲染堆疊 (標準模式 vs 無月例外模式) ---
+        // --- [核心修改] 渲染堆疊 (讀取 state.moonless) ---
         const renderCardTree = (rootCard, container) => {
             const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
-            
-            if (isSpreadZone) {
-                // 1. 測量階段：計算所有卡片的「視覺邊界」
-                // 我們必須計算每一張卡片旋轉後的 4 個角落，才能得到正確的容器大小
-                let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+            if (!isSpreadZone) return;
+
+            // 預先掃描家族成員
+            const familyMembers = [];
+            const queue = [rootCard];
+            while(queue.length > 0) {
+                const node = queue.shift();
+                familyMembers.push(node);
+                const children = (childMap[node.id] || []);
+                children.forEach(c => queue.push(c));
+            }
+
+            // --- [修改點] 從 state.moonless 判斷 ---
+            const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
+
+            const createContainer = (bounds) => {
+                const totalW = bounds.maxX - bounds.minX;
+                const totalH = bounds.maxY - bounds.minY;
+                const div = document.createElement('div');
+                div.className = 'card-group';
+                div.style.width = `${totalW}px`;
+                div.style.height = `${totalH}px`;
+                div.style.position = 'relative'; 
+                div.style.margin = '5px 10px';
+                container.appendChild(div);
+                return { div, offsetX: -bounds.minX, offsetY: -bounds.minY };
+            };
+
+            // Mode 1: 無月之門例外渲染
+            if (moonlessAce) {
+                const isPuzzle = (c) => c.stackType && c.stackType.includes('puzzle');
+                const subjects = familyMembers.filter(c => c.id !== moonlessAce.id && !isPuzzle(c));
+                const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
+
+                const count = subjects.length;
+                const radius = 15; 
+                let bounds = { minX: 0, maxX: 50, minY: 0, maxY: 70 };
                 
+                const layoutCache = new Map(); 
+                if (count > 0) {
+                    const step = 360 / count;
+                    const startAngle = -90 + (step / 2); 
+
+                    subjects.forEach((sub, idx) => {
+                        const angleDeg = startAngle + step * idx;
+                        const rad = angleDeg * (Math.PI / 180);
+                        const offX = radius * Math.cos(rad);
+                        const offY = radius * Math.sin(rad);
+                        const visualRot = angleDeg + 270;
+
+                        layoutCache.set(sub.id, { x: offX, y: offY, rot: visualRot });
+
+                        const margin = 40; 
+                        bounds.minX = Math.min(bounds.minX, offX - margin);
+                        bounds.maxX = Math.max(bounds.maxX, offX + margin);
+                        bounds.minY = Math.min(bounds.minY, offY - margin);
+                        bounds.maxY = Math.max(bounds.maxY, offY + margin);
+                    });
+                } else {
+                    bounds = { minX: -5, maxX: 55, minY: -5, maxY: 75 };
+                }
+
+                const puzzleCache = new Map();
+                const measurePuzzleRecursive = (currentCard, parentX, parentY) => {
+                    const baseOffset = getBaseStackOffset(currentCard.stackType);
+                    const r = rotateVector(baseOffset.x, baseOffset.y, moonlessAce.rotation);
+                    const myX = parentX + r.x;
+                    const myY = parentY + r.y;
+                    puzzleCache.set(currentCard.id, { x: myX, y: myY });
+                    bounds.minX = Math.min(bounds.minX, myX);
+                    bounds.maxX = Math.max(bounds.maxX, myX + 50);
+                    bounds.minY = Math.min(bounds.minY, myY);
+                    bounds.maxY = Math.max(bounds.maxY, myY + 70);
+                    const children = puzzlePartners.filter(p => p.parentId === currentCard.id);
+                    children.forEach(child => measurePuzzleRecursive(child, myX, myY));
+                };
+                const directPuzzles = puzzlePartners.filter(p => p.parentId === moonlessAce.id);
+                directPuzzles.forEach(p => measurePuzzleRecursive(p, 0, 0));
+
+                const { div, offsetX, offsetY } = createContainer(bounds);
+
+                subjects.forEach(sub => {
+                    const layout = layoutCache.get(sub.id);
+                    const cardEl = createCardElement(sub);
+                    cardEl.style.position = 'absolute';
+                    cardEl.style.left = `${offsetX + layout.x}px`;
+                    cardEl.style.top = `${offsetY + layout.y}px`;
+                    cardEl.style.zIndex = 5; 
+                    cardEl.dataset.visualRot = layout.rot;
+                    cardEl.style.transform = `rotate(${layout.rot}deg)`;
+                    div.appendChild(cardEl);
+                });
+
+                const aceEl = createCardElement(moonlessAce);
+                aceEl.style.position = 'absolute';
+                aceEl.style.left = `${offsetX}px`;
+                aceEl.style.top = `${offsetY}px`;
+                aceEl.style.zIndex = 50; 
+                aceEl.classList.add('stack-base');
+                let aceTransform = `rotate(${moonlessAce.rotation}deg)`;
+                if (pendingMove && pendingMove.cardIds.includes(moonlessAce.id)) {
+                    aceTransform += ` translateY(-5px)`;
+                }
+                aceEl.style.transform = aceTransform;
+                div.appendChild(aceEl);
+
+                puzzlePartners.forEach(p => {
+                    const pos = puzzleCache.get(p.id);
+                    if (!pos) return; 
+                    const pEl = createCardElement(p);
+                    pEl.style.position = 'absolute';
+                    pEl.style.left = `${offsetX + pos.x}px`;
+                    pEl.style.top = `${offsetY + pos.y}px`;
+                    pEl.style.zIndex = 51;
+                    let pTransform = `rotate(${moonlessAce.rotation}deg)`; 
+                    if (pendingMove && pendingMove.cardIds.includes(p.id)) {
+                        pTransform += ` translateY(-5px)`;
+                    }
+                    pEl.style.transform = pTransform;
+                    div.appendChild(pEl);
+                });
+
+            } else {
+                // Mode 2: Standard (保持不變)
+                let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
                 const nodePositions = new Map(); 
-
                 const measureNode = (card, currentX, currentY) => {
-                    // 1. 記錄卡片「插槽」的左上角座標 (給定位用)
                     nodePositions.set(card.id, { x: currentX, y: currentY });
-
-                    // 2. 計算卡片「視覺上」佔用的範圍 (給容器大小用)
-                    // 卡片中心點
-                    const cx = currentX + 25; // 寬度的一半
-                    const cy = currentY + 35; // 高度的一半
-                    
-                    // 卡片尚未旋轉時的 4 個角落 (相對於中心)
-                    // 寬50, 高70
-                    const corners = [
-                        {x: -25, y: -35}, // 左上
-                        {x: 25, y: -35},  // 右上
-                        {x: 25, y: 35},   // 右下
-                        {x: -25, y: 35}   // 左下
-                    ];
-
-                    // 將 4 個角落根據卡片角度進行旋轉，並推算絕對座標
+                    const cx = currentX + 25; 
+                    const cy = currentY + 35;
+                    const corners = [{x:-25,y:-35}, {x:25,y:-35}, {x:25,y:35}, {x:-25,y:35}];
                     corners.forEach(p => {
                         const r = rotateVector(p.x, p.y, card.rotation);
                         const finalX = cx + r.x;
                         const finalY = cy + r.y;
-
                         if (finalX < bounds.minX) bounds.minX = finalX;
                         if (finalX > bounds.maxX) bounds.maxX = finalX;
                         if (finalY < bounds.minY) bounds.minY = finalY;
                         if (finalY > bounds.maxY) bounds.maxY = finalY;
                     });
-
-                    // 3. 繼續測量子供
                     const children = childMap[card.id] || [];
                     children.forEach(child => {
                         const baseOffset = getBaseStackOffset(child.stackType);
-                        // 偏移量也要跟著父卡片轉
                         const rotatedOffset = rotateVector(baseOffset.x, baseOffset.y, card.rotation);
                         measureNode(child, currentX + rotatedOffset.x, currentY + rotatedOffset.y);
                     });
                 };
-
-                // 開始測量
                 measureNode(rootCard, 0, 0);
-                
-                // 防呆：如果沒東西 (理論上不可能)，給預設值
                 if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
-
-                // 2. 建立容器
-                // 容器大小 = 視覺上的最大邊界 - 最小邊界
-                // 這樣無論卡片怎麼轉、怎麼接龍，容器都會剛好包住它們
-                const totalW = bounds.maxX - bounds.minX;
-                const totalH = bounds.maxY - bounds.minY;
-                
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'card-group';
-                // 加上一點緩衝 (margin)，避免卡片邊框緊貼
-                groupDiv.style.width = `${totalW}px`;
-                groupDiv.style.height = `${totalH}px`;
-                groupDiv.style.position = 'relative'; 
-                groupDiv.style.margin = '5px 10px'; // 左右多一點間距
-                
-                container.appendChild(groupDiv);
-                
-                // 3. 渲染階段
-                // 偏移修正：將 visually 最左邊的點對齊到容器的 0
-                const originOffsetX = -bounds.minX;
-                const originOffsetY = -bounds.minY;
-
+                const { div, offsetX, offsetY } = createContainer(bounds);
                 const renderNodeRecursive = (card, zIndex) => {
                     const pos = nodePositions.get(card.id);
                     if (!pos) return;
-
                     const cardEl = createCardElement(card);
-                    
-                    // 設定位置
                     cardEl.style.position = 'absolute';
-                    cardEl.style.left = `${pos.x + originOffsetX}px`;
-                    cardEl.style.top = `${pos.y + originOffsetY}px`;
+                    cardEl.style.left = `${pos.x + offsetX}px`;
+                    cardEl.style.top = `${pos.y + offsetY}px`;
                     cardEl.style.zIndex = zIndex;
-
-                    // 強制套用自轉角度
                     let transformCSS = `rotate(${card.rotation}deg)`;
                     if (pendingMove && pendingMove.cardIds.includes(card.id)) {
                         transformCSS += ` translateY(-5px)`;
                     }
                     cardEl.style.transform = transformCSS;
-
                     if (!card.parentId) cardEl.classList.add('stack-base');
-
-                    groupDiv.appendChild(cardEl);
-
+                    div.appendChild(cardEl);
                     const children = childMap[card.id] || [];
-                    children.forEach((child, idx) => {
+                    children.forEach(child => {
                         let nextZ = zIndex;
                         const type = child.stackType;
-                        if (type === 'top' || type === 'shift_up' || type === 'puzzle_top' || type === 'shift_down') {
-                            nextZ += 1;
-                        } else if (type === 'bottom' || type === 'bottom_exposed' || type === 'puzzle_bottom') {
-                            nextZ -= 1; 
-                        }
+                        if (['top','shift_up','puzzle_top','shift_down'].includes(type)) nextZ += 1;
+                        else nextZ -= 1;
                         renderNodeRecursive(child, nextZ);
                     });
                 };
-
                 renderNodeRecursive(rootCard, 10);
             }
         };
@@ -6242,8 +6447,13 @@
                     // 只有當位置真的有變動時才執行動畫
                     if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
                         const cardData = state.cards.find(c => c.id == id);
-                        const rotation = cardData ? cardData.rotation : 0;
+                        let rotation = cardData ? cardData.rotation : 0;
                         const isAbility = cardData && cardData.zone.includes('ability');
+
+                        // [修正] 如果 DOM 元素上有標記「視覺角度」(來自無月模式)，優先使用它
+                        if (cardEl.dataset.visualRot) {
+                            rotation = parseFloat(cardEl.dataset.visualRot);
+                        }
 
                         if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
                              // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
@@ -6332,8 +6542,29 @@
                             // 4. 只有當「原本不在戰鬥區」且「還沒播放過」才觸發
                             if (!wasInBattle) {
                                 if (currentIndex !== lastAnimatedStep) {
-                                    console.log("觸發王牌特效 (進場) ID:", aceId);
-                                    triggerAceAnimation(aceId);
+                                    
+                                    // [核心修改] 計算精確的落地時間
+                                    const flyTime = 0.5; // CSS動畫時間 0.5s
+                                    let arrivalTime = flyTime * 1000; // 基礎時間 ms
+
+                                    // 計算這張王牌在移動隊列中的位置，加上延遲時間
+                                    // 注意：這裡必須使用寬鬆比對 (mid == aceId)
+                                    const mIndex = movingCardIds.findIndex(mid => mid == aceId);
+                                    
+                                    if (mIndex !== -1 && movingCardIds.length > 1) {
+                                        let interval = flyTime * 0.2; // 0.1s
+                                        const maxTotalLag = 1.5;
+                                        if ((interval * movingCardIds.length) > maxTotalLag) {
+                                            interval = maxTotalLag / movingCardIds.length;
+                                        }
+                                        // 加上它的排隊延遲
+                                        arrivalTime += (mIndex * interval * 1000);
+                                    }
+
+                                    console.log("觸發王牌特效 (進場) ID:", aceId, "預計落地時間(ms):", arrivalTime);
+                                    
+                                    // 傳入計算好的時間，確保剛好落地才觸發
+                                    triggerAceAnimation(aceId, arrivalTime);
                                     foundAceEntry = true;
                                 }
                             }
@@ -6363,6 +6594,17 @@
         if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
              scrollToActiveStep();
         }
+    }
+	
+	// --- [修正版] 切換無月之門 (Action 版本) ---
+    function toggleMoonless() {
+        if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+        
+        // 發送操作指令 (addOperation 會自動處理 state 更新、存檔與重繪)
+        addOperation({ 
+            type: 'TOGGLE_MOONLESS', 
+            cardIds: [...pendingMove.cardIds] 
+        });
     }
 	
 	function checkMobileMusicButtonVisibility() {
@@ -6419,12 +6661,12 @@
         };
     }
 	
-	// --- [內部注入版] 王牌特效函式 (解決位移與消失問題) ---
 	// --- [內部注入版 + Debug Log] 王牌特效函式 ---
-	function triggerAceAnimation(cardId) {
-		console.log(`%c[AceAnim] 收到指令: ID ${cardId} (準備等待 0.4s...)`, "color: orange");
+	// 修改：增加 startDelay 參數，預設為 400ms (相容舊呼叫)，但我們會傳入計算後的精確時間
+	function triggerAceAnimation(cardId, startDelay = 400) {
+		console.log(`%c[AceAnim] 收到指令: ID ${cardId} (準備等待 ${startDelay/1000}s...)`, "color: orange");
 
-		// 延遲執行，確保卡片已經飛到位
+		// 使用傳入的 startDelay，確保卡片已經飛到位
 		setTimeout(() => {
 			// 1. 抓取目標卡牌的 DOM
 			const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
@@ -6463,8 +6705,6 @@
 			const proxyCards = state.cards.filter(c => c.zone.includes('ability') && c.sourceId == cardId);
 			
 			if (proxyCards.length > 0) {
-				console.log(`[AceAnim] 偵測到 ${proxyCards.length} 張連結小卡`);
-				
 				// ID 越大代表越新
 				proxyCards.sort((a, b) => b.id - a.id);
 				const activeProxy = proxyCards.find(c => c.glow && colorMap[c.glow]);
@@ -6503,7 +6743,6 @@
 					flashLayer.classList.remove('anim-flash-white');
 					void flashLayer.offsetWidth; // Trigger reflow
 					flashLayer.classList.add('anim-flash-white');
-					// console.log("[AceAnim] 觸發全螢幕白光");
 				}
 			}, 300);
 
@@ -6516,7 +6755,7 @@
 				console.log(`[AceAnim] 動畫結束，清理完成 (ID: ${cardId})`);
 			}, 900); 
 
-		}, 400); 
+		}, startDelay); 
 	}
 
     // --- [修改] createCardElement 函式 ---
@@ -6671,28 +6910,43 @@
 		return el;
 	}
 	
-	// [新增] 透過長按卡片進入多選模式
+	// [修正] 透過長按卡片進入多選模式
     function enterMultiSelectModeByCard(cardId) {
-        if (isMultiSelectMode) return; // 已經是就不重複觸發
+        if (isMultiSelectMode) return;
         
         // 切換模式標記
         isMultiSelectMode = true;
-        multiSelectedIds = [cardId]; // 初始選中這張
+        multiSelectedIds = [cardId];
         
-        // 設定 pendingMove 讓系統知道有牌被選了 (以便點擊區域時觸發移動)
+        // 設定 pendingMove
         pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
         
-        // 更新 UI (顯示勾勾、隱藏單卡面板、顯示多選提示列)
+        // 更新 UI
         const el = document.querySelector(`.card[data-id="${cardId}"]`);
         if (el) el.classList.add('multi-selected');
         
         updateSelectionUI();
+
+        // --- [新增] 防呆邏輯 ---
+        // 記錄這張卡片的 ID，告訴 handleCardSingleClick 忽略它接下來的「放開」點擊事件
+        ignoreClickId = cardId;
+        
+        // 設定 2 秒後自動清除 (以防使用者長按後一直不放開，或拖曳到別處沒觸發點擊)
+        setTimeout(() => {
+            if (ignoreClickId === cardId) ignoreClickId = null;
+        }, 2000);
     }
 
     // --- [修改] 點擊卡片處理 ---
 	// --- [修正] 點擊卡片處理 (效果卡強制單選) ---
 	function handleCardSingleClick(e, cardId) {
 		e.stopPropagation(); 
+		
+		// --- [新增] 檢查是否需要忽略此點擊 (來自長按觸發) ---
+        if (ignoreClickId === cardId) {
+            ignoreClickId = null; // 消耗掉這次防呆，下次點擊恢復正常
+            return; // 直接結束，不執行選取/取消邏輯
+        }
 
 		// 1. 手機版點擊檢視邏輯 (維持不變)
 		if (document.body.classList.contains('mobile-mode')) {
@@ -7417,7 +7671,17 @@
 		globalLastUsedStyles = data.lastUsedStyles || {};
 		// [新增] 讀取王牌設定
 		globalAceRegistry = data.aceRegistry || {};
+        
+        // [修改] 移除 globalMoonlessRegistry = ...
+        // 改為：如果是舊版存檔，將無月設定合併進 initialState
+        if (data.moonlessRegistry) {
+            if (!data.initialState.moonless) data.initialState.moonless = {};
+            Object.assign(data.initialState.moonless, data.moonlessRegistry);
+        }
+
         initialState = data.initialState;
+		// 防呆補強
+        if (!initialState.moonless) initialState.moonless = {};
         let loadedHistory = data.history;
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
         for (let i = 1; i < loadedHistory.length; i++) {
