@@ -6592,12 +6592,26 @@
         // 只有在播放或重繪當下，檢查當前 Action
         if (currentIndex >= 0 && history[currentIndex]) {
             const action = history[currentIndex].action;
+			// 使用 Set 來確保 ID 不重複，並保持插入順序
+            const uniqueMovingIds = new Set();
             // 找出這一步驟中的移動操作 (MOVE)
-            const moveOp = action.operations.find(o => o.type === 'MOVE');
-            if (moveOp) {
-                // 記錄正在移動的卡片 ID 列表 (已有順序)
-                movingCardIds = moveOp.cardIds;
-            }
+            const moveOps = action.operations.filter(o => o.type === 'MOVE');
+            moveOps.forEach(op => {
+                op.cardIds.forEach(id => uniqueMovingIds.add(id));
+            });
+			
+			// 2. [新增] 抓取 TOGGLE_MOONLESS 操作
+            // 如果這一步有切換無月之門，受影響的整個家族都應該視為「正在移動」
+            const moonOps = action.operations.filter(o => o.type === 'TOGGLE_MOONLESS');
+            moonOps.forEach(op => {
+                // op.cardIds 通常是點擊的那張主卡
+                // 我們需要找出跟它連動的所有卡片 (主卡 + 素材)
+                const familyIds = getAllLinkedCardIds(state, op.cardIds);
+                familyIds.forEach(id => uniqueMovingIds.add(id));
+            });
+
+            // 轉回陣列，這就是最終要套用 0.2s 延遲的清單
+            movingCardIds = Array.from(uniqueMovingIds);
         }
 
         requestAnimationFrame(() => {
