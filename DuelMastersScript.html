@@ -2442,7 +2442,7 @@
 	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
     <button id="btn-clear-injured" style="display:none; background:#27ae60; border-color:#2ecc71;" onclick="clearInjured()" data-i18n="act_clear_injured">❤️ 治癒</button>
 	<button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
-	<button id="btn-glow-bottom" onclick="toggleBottomGlow()" style="background:#5dade2; border-color:#3498db;">👇底光</button>
+	<button id="btn-glow-bottom" onclick="toggleBottomGlow()" style="background:#5dade2; border-color:#3498db;" data-i18n="act_glow_bottom">👇底光</button>
     <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
     <button id="btn-copy-ability" onclick="copyToAbility(false)" data-i18n="act_ability">⚡單次</button>
 	<button id="btn-copy-continuous" onclick="copyToAbility(true)" style="background:#9b59b6; border-color:#8e44ad;" data-i18n="act_continuous">∞ 持續</button>			
@@ -2666,6 +2666,14 @@
         <p style="font-size:0.8rem; color:#666; text-align:center;" data-i18n="lbl_diag_replace_hint">
             點擊表情圖示後，按下[Ctrl+V]可替換該表情圖片 (全域生效)。
         </p>
+		<div style="text-align:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px dashed #ccc;">
+            <button onclick="swapAndFlipAllPortraits()" style="background:#e67e22; border-color:#d35400; font-weight:bold;" data-i18n="btn_swap_flip">
+                🔁 P1/P2 圖片交換 & 水平翻轉
+            </button>
+            <div style="font-size:0.75rem; color:#888; margin-top:5px;" data-i18n="lbl_swap_flip_hint">
+                * 將 P1 與 P2 的所有表情圖片互換，並自動進行水平翻轉 (預設圖除外)
+            </div>
+        </div>
 
         <div class="diag-editor-row" style="border-left: 5px solid #c0392b;">
             <div class="diag-editor-col" style="flex:0 0 100px; align-items:center; justify-content:center;">
@@ -2753,6 +2761,7 @@
             description: '初試劇本功能',
 			counter_url: 'https://www.f-counter.net/j/66/1765257662/',
 			speed: 1.0,
+            lang: 'zh',
         },
         {
             filename: 'script20251205.txt',
@@ -2760,6 +2769,7 @@
             description: '作者常玩的訓練對局',
 			counter_url: 'https://www.f-counter.net/j/66/1765257467/',
 			speed: 1.0,
+            lang: 'zh',
         },
         {
             filename: 'script20251208.txt',
@@ -2767,6 +2777,7 @@
             description: '進行DM25-RP4新卡的測試',
 			counter_url: 'https://www.f-counter.net/j/66/1765258081/',
 			speed: 1.0,
+            lang: 'zh',
         },
         {
             filename: 'script20251209.txt',
@@ -2774,6 +2785,7 @@
             description: '進行DM25-RP4新卡的測試',
 			counter_url: 'https://www.f-counter.net/j/66/1765258098/',
 			speed: 1.33,
+            lang: 'zh',
         },
         // 您可以在此擴充更多劇本...
     ];
@@ -2989,6 +3001,12 @@
 			'btn_multi_move': '📚 移動多張...',
             'btn_multi_confirm': '❌ 取消 / ✅ 一起移動',
             'msg_select_dest': '已選取 {n} 張卡片，請點擊「目標區域」進行移動 (若是牌庫/護盾將跳出插入選單)。',
+			// ... (原本的內容) ...
+            'act_glow_bottom': '👇底光',
+            'btn_swap_flip': '🔁 P1/P2 圖片交換 & 水平翻轉',
+            'lbl_swap_flip_hint': '* 將 P1 與 P2 的所有表情圖片互換，並自動進行水平翻轉 (預設圖除外)',
+            'msg_confirm_swap': '確定要交換 P1 與 P2 的所有圖片並進行翻轉嗎？\n(注意：這是全域修改，會影響所有對話步驟)',
+            'msg_swap_done': '圖片交換與翻轉完成！',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3042,6 +3060,12 @@
 			'btn_multi_move': '📚 Move Multi...',
             'btn_multi_confirm': '❌ Cancel / ✅ Move All',
             'msg_select_dest': '{n} cards selected. Click a Destination Zone to move.',		
+			// ... (Original content) ...
+            'act_glow_bottom': '👇Btm Glow',
+            'btn_swap_flip': '🔁 Swap P1/P2 & Flip',
+            'lbl_swap_flip_hint': '* Swaps all P1/P2 portraits and flips them horizontally (Default avatars excluded).',
+            'msg_confirm_swap': 'Are you sure you want to swap and flip all portraits?\n(Note: This is global and affects all dialogue steps.)',
+            'msg_swap_done': 'Swap and flip complete!',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3094,7 +3118,13 @@
             'title_stack_target': 'スタック操作: 対象 [{target}]', 'op_POINT': '対象選択', 'op_ATTACK': '攻撃宣言',
 			'btn_multi_move': '📚 複数移動...',
             'btn_multi_confirm': '❌ 取消 / ✅ 一括移動',
-            'msg_select_dest': '{n} 枚選択中。移動先のエリアをクリックしてください。',		
+            'msg_select_dest': '{n} 枚選択中。移動先のエリアをクリックしてください。',	
+			// ... (Original content) ...
+            'act_glow_bottom': '👇下発光',
+            'btn_swap_flip': '🔁 P1/P2 画像交換 & 反転',
+            'lbl_swap_flip_hint': '* P1とP2の立ち絵を入れ替え、左右反転します（デフォルト画像を除く）。',
+            'msg_confirm_swap': 'すべての画像を交換して反転しますか？\n(注意：これは全体に適用され、すべての会話に影響します)',
+            'msg_swap_done': '交換と反転が完了しました！',			
 		}
 	};
 
@@ -7681,33 +7711,52 @@
         // 3. 初始化行動版
         initMobileMode(fullPath);
         
-        // --- [新增] 套用劇本預設速度 ---
-        
-        // A. 找出劇本資料
+        // 4. 找出劇本資料
         const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
+
+        // --- [新增] 語言設定邏輯 (URL優先 > 劇本設定 > 預設zh) ---
         
-        // B. 決定速度 (若無設定則預設 1.0)
-        // 注意：您的系統中 0.5 = 2.0x (快速), 1.0 = 正常, 2.0 = 0.5x (慢速)
+        // A. 嘗試讀取 URL 參數 (doGet)
+        const urlLang = getUrlParameter('lang');
+        
+        // B. 嘗試讀取劇本設定
+        const scriptLang = (scriptData && scriptData.lang) ? scriptData.lang : 'zh';
+        
+        // C. 判定最終語言
+        let targetLang = 'zh'; // 預設值
+        
+        if (urlLang && ['zh', 'en', 'jp'].includes(urlLang)) {
+            targetLang = urlLang; // 如果 URL 有帶有效參數，絕對優先
+        } else {
+            targetLang = scriptLang; // 否則使用劇本設定 (若劇本沒設，上面已預設為 zh)
+        }
+        
+        // D. 套用語言 (更新 UI 文字與下拉選單)
+        changeLanguage(targetLang);
+        // 同步更新下拉選單顯示 (雖然手機版看不到，但保持狀態一致)
+        const langSelect = document.getElementById('lang-select');
+        if (langSelect) langSelect.value = targetLang;
+
+        // -------------------------------------------------------
+
+        // 5. 套用劇本預設速度
         let targetSpeed = 1.0;
         if (scriptData && scriptData.speed !== undefined) {
             targetSpeed = scriptData.speed;
         }
-        
-        // C. 套用速度 (這會同步更新全域變數與 UI 選單)
         changePlaybackSpeed(targetSpeed);
 
-
-        // 4. 音訊解鎖 (保持靜音，等待使用者點擊喇叭)
+        // 6. 音訊解鎖
         globalAudioPlayer.muted = true; 
         globalAudioPlayer.play().catch(e => {
             console.log("Audio context unlocked (muted)");
         });
         
-        // 更新劇本專屬計數器
+        // 7. 更新劇本專屬計數器
         let urlToLoad = (scriptData && scriptData.counter_url) ? scriptData.counter_url : null;
         updateVisitorCounter(urlToLoad);
 
-        // 更新靜音按鈕 UI
+        // 8. 更新靜音按鈕 UI
         updateMuteButtonUI();
     }
 
@@ -8108,6 +8157,117 @@
         }
 
         document.getElementById('dialogue-modal').style.display = 'flex';
+    }
+	
+	// --- [新增] P1/P2 圖片全交換與翻轉邏輯 ---
+
+    // 1. 輔助函式：產生預設頭像的 Base64 (用於比對是否為預設圖)
+    function getFaceData(pid, emotion) {
+        const color = pid === 'p1' ? '#3498db' : '#c0392b';
+        const canvas = document.createElement('canvas');
+        canvas.width = 160; canvas.height = 160;
+        const ctx = canvas.getContext('2d');
+        
+        // 繪製邏輯 (與 generateDefaultPortraits 保持一致)
+        ctx.fillStyle = '#222'; ctx.fillRect(0,0,160,160);
+        ctx.lineWidth = 4; ctx.strokeStyle = color; ctx.strokeRect(5,5,150,150);
+        ctx.beginPath(); ctx.arc(80, 80, 50, 0, Math.PI*2); ctx.stroke();
+        
+        // 眼睛
+        ctx.beginPath();
+        if(emotion==='blank') { ctx.arc(65, 70, 3, 0, Math.PI*2); ctx.arc(95, 70, 3, 0, Math.PI*2); }
+        else if(emotion==='serious') { ctx.moveTo(55,65); ctx.lineTo(75,75); ctx.moveTo(105,65); ctx.lineTo(85,75); }
+        else if(emotion==='furious') { ctx.moveTo(55,60); ctx.lineTo(75,80); ctx.moveTo(105,60); ctx.lineTo(85,80); }
+        else if(emotion==='terrified') { ctx.arc(65, 70, 8, 0, Math.PI*2); ctx.arc(95, 70, 8, 0, Math.PI*2); }
+        else { ctx.arc(65, 70, 5, 0, Math.PI*2); ctx.arc(95, 70, 5, 0, Math.PI*2); }
+        ctx.stroke();
+
+        // 嘴巴
+        ctx.beginPath();
+        if(emotion==='smug') { ctx.arc(80, 90, 10, 0, Math.PI, false); }
+        else if(emotion==='furious') { ctx.moveTo(70,105); ctx.lineTo(90,105); ctx.rect(70,100,20,10); }
+        else if(emotion==='terrified') { ctx.ellipse(80, 110, 10, 15, 0, 0, Math.PI*2); }
+        else if(emotion==='serious') { ctx.moveTo(70,105); ctx.lineTo(90,105); }
+        else { ctx.arc(80, 90, 15, 0, Math.PI, false); }
+        ctx.stroke();
+
+        return canvas.toDataURL();
+    }
+
+    // 2. 輔助函式：水平翻轉圖片
+    function flipImage(base64) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                // 水平翻轉
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            };
+            img.src = base64;
+        });
+    }
+
+    // 3. 主執行函式
+    async function swapAndFlipAllPortraits() {
+        if (!confirm(t('msg_confirm_swap'))) return;
+
+        const emotions = ['normal', 'blank', 'serious', 'smug', 'furious', 'terrified'];
+        
+        // 為了避免讀取到剛寫入的資料，我們先把所有新圖片算好，再一次寫入
+        const newImages = {};
+
+        for (let emo of emotions) {
+            // 取得目前的 Key
+            const p1Key = `avatar_p1_${emo}`;
+            const p2Key = `avatar_p2_${emo}`;
+            
+            const p1Current = globalImageRegistry[p1Key];
+            const p2Current = globalImageRegistry[p2Key];
+            
+            // 產生該表情的「預設圖」字串，用來比對
+            const p1Default = getFaceData('p1', emo);
+            const p2Default = getFaceData('p2', emo);
+
+            // --- 處理 P1 的新圖片 (來源是 P2) ---
+            if (p2Current === p2Default) {
+                // 如果 P2 原本是用預設圖，那 P1 就改用 P1 自己的預設圖 (不翻轉)
+                newImages[p1Key] = p1Default;
+            } else {
+                // 如果 P2 是自訂圖，則翻轉後給 P1
+                newImages[p1Key] = await flipImage(p2Current);
+            }
+
+            // --- 處理 P2 的新圖片 (來源是 P1) ---
+            if (p1Current === p1Default) {
+                // 如果 P1 原本是用預設圖，那 P2 就改用 P2 自己的預設圖 (不翻轉)
+                newImages[p2Key] = p2Default;
+            } else {
+                // 如果 P1 是自訂圖，則翻轉後給 P2
+                newImages[p2Key] = await flipImage(p1Current);
+            }
+        }
+
+        // 全部計算完畢後，寫入全域註冊表
+        Object.assign(globalImageRegistry, newImages);
+
+        // 更新介面
+        renderEmotionGrid('p1');
+        renderEmotionGrid('p2');
+        
+        // 如果目前正在顯示預覽圖，也要更新
+        ['p1', 'p2'].forEach(id => {
+            const currentEmo = document.getElementById(`edit-${id}-emotion`).value;
+            selectEmotion(id, currentEmo);
+        });
+
+        saveToStorage();
+        alert(t('msg_swap_done'));
     }
 
     function renderEmotionGrid(pid) {
