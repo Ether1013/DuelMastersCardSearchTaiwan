@@ -2330,7 +2330,9 @@
 
 	<div id="slider-zone">
         <div id="slider-tooltip">0/0</div>
-        <input type="range" id="playback-slider" min="0" max="0" value="0" step="1" oninput="handleSliderChange(this.value)">
+        <input type="range" id="playback-slider" min="0" max="0" value="0" step="1" 
+               oninput="handleSliderDragging(this.value)" 
+               onchange="handleSliderRelease(this.value)">
     </div>
 	
     <div id="timeline-panel">
@@ -4693,6 +4695,54 @@
         setTimeout(() => {
             openSelectorModal(zoneId);
         }, 50);
+    }
+	
+	// --- [新增] 拖曳中：只更新 UI 文字，不切換畫面/音樂 ---
+    function handleSliderDragging(val) {
+        const step = parseInt(val);
+        const tooltip = document.getElementById('slider-tooltip');
+        
+        // 只更新 tooltip 文字，告訴使用者現在拖到第幾步了
+        if (tooltip) {
+            tooltip.innerText = `${step}/${history.length - 1}`;
+        }
+    }
+
+    // --- [新增] 放開後：正式切換 ActionLog 與 音樂 ---
+    function handleSliderRelease(val) {
+        const step = parseInt(val);
+        
+        // 1. 更新全域步驟索引
+        currentIndex = step;
+        
+        // 2. 重繪畫面 (ActionLog 會在這裡更新)
+        renderUI();
+        
+        // 3. 存檔 (非手機版才存，避免覆蓋)
+        if(!document.body.classList.contains('mobile-mode')) {
+            saveToStorage();
+        }
+
+        // 4. [需求 2] 同步音樂狀態
+        // 當使用者放開進度條，我們檢查該步驟的 BGM 設定
+        const state = getCurrentDisplayState();
+        const targetBgm = state.bgm;
+
+        if (targetBgm) {
+            const targetSrc = BGM_FOLDER + targetBgm;
+            // 如果 BGM 不同，才進行切換
+            // encodeURI 避免檔名空白造成誤判
+            if (!globalAudioPlayer.src.includes(encodeURI(targetBgm))) {
+                globalAudioPlayer.src = targetSrc;
+                
+                // 如果目前「不是靜音」，就自動播放新的 BGM
+                // 如果是靜音 (muted=true)，這裡 play 也只會繼續靜音播放，符合預期
+                globalAudioPlayer.play().catch(e => {});
+            }
+        } else {
+            // 如果該步驟沒有 BGM，就暫停
+            globalAudioPlayer.pause();
+        }
     }
 
     // [修改] 旋轉卡片 (家族樹連動版)
@@ -7502,30 +7552,25 @@
         // 3. 初始化
         initMobileMode(fullPath);
         
-        // 4. 音訊解鎖
-        globalAudioPlayer.muted = false; 
-        globalAudioPlayer.play().catch(e => {});
-        updateMuteButtonUI();
-
-        // --- [修改] 使用通用函式切換計數器 ---
+        // --- [修改] 手機版預設靜音邏輯 ---
         
-        // A. 找出劇本資料
+        // A. 設定為「靜音」狀態 (符合您的需求 1)
+        globalAudioPlayer.muted = true; 
+        
+        // B. 雖然靜音，但仍要執行一次 play() 來「解鎖」Audio Context
+        // 瀏覽器會允許這次播放 (因為源自使用者點擊)，此後我們隨時解除靜音都能有聲音
+        globalAudioPlayer.play().catch(e => {
+            console.log("Audio context unlocked (muted)");
+        });
+
+        // 4. 更新劇本專屬計數器
         const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
-        
-        // B. 決定要用哪個網址
-        // 如果該劇本有專屬計數器，就用專屬的；否則就用預設的 (或您也可以選擇不顯示)
-        let urlToLoad = null;
-        if (scriptData && scriptData.counter_url) {
-            urlToLoad = scriptData.counter_url;
-        } else {
-            // 如果這個劇本沒設定計數器，您希望：
-            // 選項 1: 顯示預設計數器 -> urlToLoad = DEFAULT_COUNTER_URL;
-            // 選項 2: 隱藏計數器 -> urlToLoad = null;
-            urlToLoad = null; // 這裡目前設定為隱藏，您可以自行改為 DEFAULT_COUNTER_URL
-        }
-
-        // C. 呼叫函式更新
+        let urlToLoad = (scriptData && scriptData.counter_url) ? scriptData.counter_url : null;
         updateVisitorCounter(urlToLoad);
+
+        // 5. [關鍵] 更新靜音按鈕 UI
+        // 因為現在是 muted=true，按鈕應該顯示「靜音圖示 (🔇)」
+        updateMuteButtonUI();
     }
 
 // --- 新增的手機端邏輯 ---
