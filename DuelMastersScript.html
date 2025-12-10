@@ -6698,78 +6698,65 @@
             // [新增] 王牌進場特效觸發檢查
             // 檢查當前這一步 (currentIndex) 是否有移動操作
             if (currentIndex >= 0 && history[currentIndex]) {
-                const action = history[currentIndex].action;
                 
-                // 1. 找出這一步驟中「所有」的移動操作，而不只是第一個
-                const moveOps = action.operations.filter(o => o.type === 'MOVE');
-                
-                let foundAceEntry = false;
+                // 1. 為了效能，只檢查「這一步驟有涉及移動」且「被標記為王牌」的卡片
+                // movingCardIds 已經在上方計算過，包含了所有 MOVE 與 MOONLESS 操作涉及的卡片
+                const movedAces = movingCardIds.filter(id => globalAceRegistry[id]);
 
-                // 2. 遍歷所有移動操作，檢查是否有王牌進入戰鬥區
-                for (const op of moveOps) {
-                    if (op.toZone && op.toZone.includes('battle')) {
-                        // 使用寬鬆比對 (==) 避免 ID 型態 (字串/數字) 不符的問題
-                        const aceId = op.cardIds.find(id => globalAceRegistry[id]);
-                        
-                        if (aceId) {
-                            // --- [修正開始] ---
-                            // 3. 檢查「來源區域」：如果它原本就在戰鬥區，就不算「進場」
-                            let wasInBattle = false;
+                if (movedAces.length > 0 && currentIndex !== lastAnimatedStep) {
+                    
+                    const currState = history[currentIndex].state;
+                    const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
 
-                            // 取得「移動前」的狀態 (上一步的狀態，如果是第0步則取初始狀態)
-                            const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
+                    for (const aceId of movedAces) {
+                        // A. 檢查終點 (Current State): 必須在戰鬥區
+                        // 使用寬鬆比對 (==) 以防 ID 型別差異
+                        const currCard = currState.cards.find(c => c.id == aceId);
+                        const isInBattleNow = currCard && currCard.zone.includes('battle');
+
+                        // B. 檢查起點 (Previous State): 必須「不在」戰鬥區
+                        let wasInBattleBefore = false;
+                        if (prevState) {
+                            const prevCard = prevState.cards.find(c => c.id == aceId);
+                            if (prevCard && prevCard.zone.includes('battle')) {
+                                wasInBattleBefore = true;
+                            }
+                        }
+
+                        // C. 觸發條件：現在在戰場 AND 以前不在戰場
+                        if (isInBattleNow && !wasInBattleBefore) {
                             
-                            if (prevState) {
-                                // 在舊狀態中找到這張卡
-                                const prevCard = prevState.cards.find(c => c.id == aceId);
-                                // 如果它原本的區域包含 'battle'，表示它只是在戰場內移動
-                                if (prevCard && prevCard.zone.includes('battle')) {
-                                    wasInBattle = true;
+                            // 計算精確的落地時間 (保持原本的視覺優化)
+                            const flyTime = 0.5; // CSS動畫時間 0.5s
+                            let arrivalTime = flyTime * 1000; // 基礎時間 ms
+
+                            // 計算這張王牌在移動隊列中的位置，加上延遲時間
+                            const mIndex = movingCardIds.findIndex(mid => mid == aceId);
+                            
+                            if (mIndex !== -1 && movingCardIds.length > 1) {
+                                let interval = flyTime * 0.2; // 0.1s
+                                const maxTotalLag = 1.5;
+                                if ((interval * movingCardIds.length) > maxTotalLag) {
+                                    interval = maxTotalLag / movingCardIds.length;
                                 }
+                                arrivalTime += (mIndex * interval * 1000);
                             }
 
-                            // 4. 只有當「原本不在戰鬥區」且「還沒播放過」才觸發
-                            if (!wasInBattle) {
-                                if (currentIndex !== lastAnimatedStep) {
-                                    
-                                    // [核心修改] 計算精確的落地時間
-                                    const flyTime = 0.5; // CSS動畫時間 0.5s
-                                    let arrivalTime = flyTime * 1000; // 基礎時間 ms
-
-                                    // 計算這張王牌在移動隊列中的位置，加上延遲時間
-                                    // 注意：這裡必須使用寬鬆比對 (mid == aceId)
-                                    const mIndex = movingCardIds.findIndex(mid => mid == aceId);
-                                    
-                                    if (mIndex !== -1 && movingCardIds.length > 1) {
-                                        let interval = flyTime * 0.2; // 0.1s
-                                        const maxTotalLag = 1.5;
-                                        if ((interval * movingCardIds.length) > maxTotalLag) {
-                                            interval = maxTotalLag / movingCardIds.length;
-                                        }
-                                        // 加上它的排隊延遲
-                                        arrivalTime += (mIndex * interval * 1000);
-                                    }
-
-                                    console.log("觸發王牌特效 (進場) ID:", aceId, "預計落地時間(ms):", arrivalTime);
-                                    
-                                    // 傳入計算好的時間，確保剛好落地才觸發
-                                    triggerAceAnimation(aceId, arrivalTime);
-                                    foundAceEntry = true;
-                                }
-                            }
-                            // --- [修正結束] ---
-
-                            // 只要處理過一張王牌就不再繼續 (避免同一步驟多張王牌時重複判斷)
-                            break;
+                            console.log("觸發王牌特效 (進場 - 淨平移) ID:", aceId);
+                            
+                            // 觸發特效
+                            triggerAceAnimation(aceId, arrivalTime);
+                            
+                            // 只要有一張王牌觸發，就更新狀態並跳出迴圈 (避免同一步驟多張王牌時太亂，可視需求移除 break)
+                            lastAnimatedStep = currentIndex;
+                            break; 
                         }
                     }
-                }
-
-                // 3. 更新動畫步數紀錄
-                // 無論有沒有觸發特效，只要檢查過這一步，就更新 lastAnimatedStep
-                // 這樣可以避免重複觸發，也能確保沒特效的步驟被正確標記為「已讀」
-                if (currentIndex !== lastAnimatedStep) {
-                    lastAnimatedStep = currentIndex;
+                    
+                    // 即使沒有觸發特效 (例如戰場->戰場)，只要檢查過這一步，就標記為已讀，避免反覆運算
+                    if (currentIndex !== lastAnimatedStep) {
+                        lastAnimatedStep = currentIndex;
+                    }
                 }
             }
         });
