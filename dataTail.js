@@ -7,10 +7,7 @@
 		option.text = translateText( "全種族", isTC2C );
 		raceSelector.appendChild( option );
 		
-		const races = Array.from(raceMapping.map.keys()).filter(key => {
-			const data = raceMapping.map.get(key);
-			return data && !data.isCategory; // 過濾掉分類種族，只保留實際種族
-		}).sort();
+		const races = Array.from(raceMapping.map.keys()).sort();
 
 		for (const raceJap of races) {
 			const raceObj = raceMapping.getDataByJap( raceJap );
