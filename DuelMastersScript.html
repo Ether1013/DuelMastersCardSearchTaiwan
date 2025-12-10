@@ -502,7 +502,20 @@
         }
 
         .bottom-row { display: flex; height: var(--card-height); margin-top: auto; }
-        .hand-zone { flex: 1; overflow-x: auto; padding: 2px; scrollbar-width: thin;}
+        .hand-zone { 
+            flex: 1; 
+            overflow-x: auto; 
+            padding: 2px; 
+            
+            /* [新增] 隱藏捲軸但保留滾動功能 */
+            scrollbar-width: none;       /* Firefox */
+            -ms-overflow-style: none;    /* IE/Edge */
+        }
+
+        /* [新增] 針對 Chrome/Safari 隱藏捲軸 */
+        .hand-zone::-webkit-scrollbar {
+            display: none;
+        }
         .side-zone-group { width: 170px; display: flex; gap: 3px; padding-left: 3px; flex-shrink: 0; }
         
         .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
@@ -1563,8 +1576,24 @@
         .diag-row.top .diag-name { background: #c0392b; align-self: flex-end; }
 
         /* 文字內容 */
-        .diag-text { color: white; line-height: 1.4; white-space: pre-wrap; text-shadow: 1px 1px 2px black; flex: 1; overflow-y: auto;}
+        .diag-text { 
+            color: white; 
+            line-height: 1.4; 
+            white-space: pre-wrap; 
+            text-shadow: 1px 1px 2px black; 
+            flex: 1; 
+            overflow-y: auto;
+            
+            /* [新增] 隱藏捲軸但保留滾動功能 */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
         
+        /* [新增] 針對 Chrome/Safari/Webkit 隱藏捲軸 */
+        .diag-text::-webkit-scrollbar {
+            display: none;
+        }
+		
         /* 文字大小 */
         .text-s { font-size: 1rem; }
         .text-m { font-size: 1.5rem; }
@@ -1964,6 +1993,16 @@
 			gap: 8px !important;           /* 縮小卡片間距 */
 		}
 		
+		/* 讓手牌區的卡片間距變小，甚至稍微重疊 */
+        .hand-zone .card-group {
+            margin: 0 -5px; /* 原本是 0 5px，改成負值可以重疊 */
+        }
+        
+        /* 滑鼠移上去時，該張牌要浮上來，避免被擋住 */
+        .hand-zone .card-group:hover {
+            z-index: 1000;
+            margin: 0 5px; /* Hover 時暫時撐開空間 (選用) */
+        }
 		
 		/* 1. 對話層修正：針對 #dialogue-layer 及其「所有子元件」強制封鎖 */
 		/* 使用 * 選擇器選取底下所有東西，並用 !important 覆蓋 JS 的行內樣式 */
@@ -6336,7 +6375,7 @@
                 const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
 
                 const count = subjects.length;
-                const radius = 15; 
+                const radius = 12; 
                 let bounds = { minX: 0, maxX: 50, minY: 0, maxY: 70 };
                 
                 const layoutCache = new Map(); 
@@ -6605,6 +6644,32 @@
 					name.innerText = data.name;
 					text.innerText = data.dataText; 
 					text.className = `diag-text text-${data.size}`;
+					
+					if (data && data.active) {
+						row.classList.add('visible');
+						
+						// ... (略: 綁定點擊事件的程式碼) ...
+
+						// 重置動畫 Class 以觸發重播
+						row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
+						void row.offsetWidth; // 強制重繪 (Reflow)
+						row.classList.add(`fx-${data.effect}`);
+
+						name.innerText = data.name;
+						text.innerText = data.dataText; 
+						text.className = `diag-text text-${data.size}`;
+						
+						// --- [新增] 強制捲動到最底部 (Auto Scroll to Bottom) ---
+						// 使用 setTimeout 確保文字渲染完畢後才計算高度
+						setTimeout(() => {
+							text.scrollTop = text.scrollHeight;
+						}, 0);
+						// ----------------------------------------------------
+
+						const imgKey = `avatar_${id}_${data.emotion}`;
+						const src = globalImageRegistry[imgKey];
+						img.style.backgroundImage = src ? `url(${src})` : 'none';
+					}
 					
 					const imgKey = `avatar_${id}_${data.emotion}`;
 					const src = globalImageRegistry[imgKey];
