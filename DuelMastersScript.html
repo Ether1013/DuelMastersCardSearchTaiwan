@@ -5954,6 +5954,8 @@
             const btnInjured = document.getElementById('btn-injured');
             const btnClearInjured = document.getElementById('btn-clear-injured');
             const btnMoonless = document.getElementById('btn-moonless'); 
+            // [修正] 取得刪除按鈕
+            const btnDelete = document.getElementById('btn-delete-card');
 
             // B. 預設將所有「功能類」按鈕重置為顯示
             btnRotateL.style.display = 'block';
@@ -5974,6 +5976,8 @@
             btnUnglow.style.display = 'none';
             btnInjured.style.display = 'none';
             btnClearInjured.style.display = 'none';
+            // [修正] 刪除按鈕預設隱藏 (保護一般卡片)
+            btnDelete.style.display = 'none';
             
             // D. 依據「卡片類型」執行刪去法
             if (allAbility) {
@@ -5986,11 +5990,14 @@
                 btnPaste.style.display = 'none';
                 btnCopyOne.style.display = 'none';
                 btnCopyCont.style.display = 'none';
-                btnMoonless.style.display = 'none'; // 效果卡不能開無月
+                btnMoonless.style.display = 'none'; 
 
                 // 移除 disabled 樣式
                 btnGlow.classList.remove('disabled-gray');
                 btnGlowBottom.classList.remove('disabled-gray');
+
+                // [修正] 顯示刪除按鈕 (效果卡允許刪除)
+                btnDelete.style.display = 'block';
 
             } else {
                 // =========== 情境 B：一般卡片 ===========
@@ -5998,6 +6005,7 @@
                 btnGlowBottom.style.display = 'none';
                 adjustControls.style.display = 'none';
                 adjustButtons.style.display = 'none';
+                // 一般卡片不顯示刪除按鈕 (維持 none)
             }
 
             // E. 依據「卡片狀態/區域」進行細部顯示
@@ -6034,7 +6042,7 @@
                     btnAce.innerText = "👑 設為王牌";
                 }
 
-                // --- 無月之門 (修改點：讀取 state.moonless) ---
+                // --- 無月之門 ---
                 if (state.moonless && state.moonless[cid]) {
                     btnMoonless.classList.add('active');
                     btnMoonless.style.display = 'block';
