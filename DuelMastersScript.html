@@ -2375,7 +2375,37 @@
     }
     .rps-hand.p1 .rps-tag { background: #3498db; }
     .rps-hand.p2 .rps-tag { background: #c0392b; }
-    </style>
+    
+	/* --- [新增] 猜拳介面定位設定 (從 JS 移出) --- */
+    .rps-hand.p2 { position: absolute; top: 20%; }
+    .rps-hand.p1 { position: absolute; bottom: 20%; }
+
+    /* --- [新增] 手機版猜拳介面優化 (解決擠壓問題) --- */
+    body.mobile-mode #rps-overlay .rps-hand {
+        font-size: 3rem; /* 縮小拳頭圖示 (原本 5rem) */
+    }
+    body.mobile-mode #rps-overlay .rps-vs {
+        font-size: 1.5rem; /* 縮小 VS 字樣 */
+    }
+    body.mobile-mode #rps-overlay .rps-tag {
+        font-size: 0.8rem; /* 縮小標籤 */
+        padding: 1px 6px;
+    }
+    
+    /* 將上下兩方往邊緣推，讓中間留白 */
+    body.mobile-mode #rps-overlay .rps-hand.p2 {
+        top: 8% !important; 
+    }
+    body.mobile-mode #rps-overlay .rps-hand.p1 {
+        bottom: 8% !important; 
+    }
+    
+    /* 勝利/平手文字調整 */
+    body.mobile-mode #rps-overlay .rps-result-text {
+        font-size: 1.5rem !important;
+        padding: 5px 15px !important;
+    }
+	</style>
 </head>
 <body>
 
@@ -6783,32 +6813,32 @@
             }
         });
 		
-		// --- [修改] 渲染猜拳結果 (加入 !isDrafting 判斷) ---
+		// --- [修改] 渲染猜拳結果 ---
         const rpsOverlay = document.getElementById('rps-overlay');
         
         // 只有在「有結果」且「不在編輯模式」時才顯示
         if (state.rpsResult && !isDrafting) { 
             const { p1, p2, winner } = state.rpsResult;
             
-            // ... (原本的 emoji 與 HTML 生成邏輯保持不變) ...
             const iconMap = { rock: '✊', paper: '🖐️', scissors: '✌️' };
             const p1Class = winner === 1 ? 'winner' : (winner === 2 ? 'loser' : '');
             const p2Class = winner === 2 ? 'winner' : (winner === 1 ? 'loser' : '');
 
+            // [修正] 移除 style="position:absolute...", 改由 CSS 控制
             rpsOverlay.innerHTML = `
-                <div class="rps-hand p2 ${p2Class}" style="position:absolute; top:20%;">
+                <div class="rps-hand p2 ${p2Class}">
                     <div>${iconMap[p2]}</div>
                     <div class="rps-tag">P2</div>
                 </div>
                 
                 <div class="rps-vs">VS</div>
                 
-                <div class="rps-hand p1 ${p1Class}" style="position:absolute; bottom:20%;">
+                <div class="rps-hand p1 ${p1Class}">
                     <div>${iconMap[p1]}</div>
                     <div class="rps-tag">P1</div>
                 </div>
                 
-                ${winner === null ? '<div style="position:absolute; font-size:2rem; color:white; font-weight:bold; text-shadow:0 0 5px black; background:rgba(230,126,34,0.9); padding:5px 20px; border-radius:10px;">DRAW!</div>' : ''}
+                ${winner === null ? '<div class="rps-result-text" style="position:absolute; font-size:2rem; color:white; font-weight:bold; text-shadow:0 0 5px black; background:rgba(230,126,34,0.9); padding:5px 20px; border-radius:10px;">DRAW!</div>' : ''}
             `;
             
             rpsOverlay.style.display = 'flex';
