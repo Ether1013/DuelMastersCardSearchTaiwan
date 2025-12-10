@@ -2444,6 +2444,23 @@
         font-size: 1.5rem !important;
         padding: 5px 15px !important;
     }
+	/* --- [新增] 表情大圖預覽視窗 --- */
+    #emotion-preview-tooltip {
+        position: fixed;
+        width: 200px;  /* 預設顯示大小 (可容納原寸) */
+        height: 200px;
+        background-color: #222; /* 深色背景 */
+        border: 2px solid #f1c40f; /* 金色邊框 */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        z-index: 10000; /* 確保在 Modal 之上 */
+        display: none;
+        background-size: contain; /* 完整顯示圖片 */
+        background-repeat: no-repeat;
+        background-position: center;
+        pointer-events: none; /* 關鍵：讓滑鼠穿透，避免閃爍 */
+        border-radius: 8px;
+        backdrop-filter: blur(5px);
+    }
 	</style>
 </head>
 <body>
@@ -9156,10 +9173,45 @@
             div.onclick = () => selectEmotion(pid, emo);
             
             const key = `avatar_${pid}_${emo}`;
-            div.style.backgroundImage = `url(${globalImageRegistry[key]})`;
+            const imgSrc = globalImageRegistry[key]; // 取得圖片來源
+            div.style.backgroundImage = `url(${imgSrc})`;
             
+            // --- [新增] 滑鼠懸停預覽功能 ---
+            // 使用 onmousemove 讓預覽框跟著滑鼠移動
+            div.onmousemove = (e) => showEmotionPreview(e, imgSrc);
+            // 滑鼠離開時隱藏
+            div.onmouseleave = () => hideEmotionPreview();
+            // -----------------------------
+
             grid.appendChild(div);
         });
+    }
+
+    // --- [新增] 預覽視窗控制函式 ---
+    function showEmotionPreview(e, src) {
+        const tooltip = document.getElementById('emotion-preview-tooltip');
+        if (!tooltip || !src) return;
+        
+        tooltip.style.backgroundImage = `url(${src})`;
+        tooltip.style.display = 'block';
+        
+        // 設定偏移量，避免擋住滑鼠
+        const offset = 15;
+        let x = e.clientX + offset;
+        let y = e.clientY + offset;
+        
+        // 簡單的邊界檢查：如果太靠右/下，就往左/上顯示
+        const tipSize = 205; // 寬度 + border
+        if (x + tipSize > window.innerWidth) x = e.clientX - tipSize;
+        if (y + tipSize > window.innerHeight) y = e.clientY - tipSize;
+
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+    }
+
+    function hideEmotionPreview() {
+        const tooltip = document.getElementById('emotion-preview-tooltip');
+        if (tooltip) tooltip.style.display = 'none';
     }
 
     function selectEmotion(pid, emo) {
@@ -9455,5 +9507,6 @@
     </div>
 </div>
 <div id="rps-overlay"></div>
+<div id="emotion-preview-tooltip"></div>
 </body>
 </html>
