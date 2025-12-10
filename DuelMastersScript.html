@@ -2436,6 +2436,7 @@
 	<button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
     <input type="file" id="import-input" style="display:none" onchange="importData(this)">
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
+	<button onclick="document.getElementById('trans-modal').style.display='flex'" style="background:#8e44ad; border-color:#8e44ad;">🌐 翻譯 (Trans)</button>
 	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;">ℹ️ About</button>
 </div>
 
@@ -2795,6 +2796,45 @@
     <h2 style="margin: 10px 0 5px; font-size: 1.3rem;">画面を回転してください</h2>
     <p style="margin: 0 0 5px; font-size: 0.9rem; opacity: 0.8;">最適な表示のために、端末を横向きにしてください。</p>
     <p style="margin: 0; font-size: 0.85rem; color: #f1c40f; font-weight: bold;">⚠️ モバイルは再生専用です。編集はPCをご利用ください。</p>
+</div>
+<!--
+「這是一個遊戲劇本的對話檔 (JSON)。請幫我將其中的 text (台詞) 和 name (名字) 翻譯成 [目標語言，例如：英文]。
+
+重要規則：
+
+嚴格保持 JSON 格式，不要更改 id。
+
+只翻譯 name 和 text 的值，不要動 null。
+
+直接給我修改後的 JSON 程式碼，不需要其他解釋。」
+-->
+<div id="trans-modal" class="modal">
+    <div class="modal-content" style="width: 400px; text-align: center;">
+        <h3 style="margin-top:0;">🌐 翻譯小幫手 (Translation Tool)</h3>
+        <p style="color:#666; font-size:0.9rem; text-align:left;">
+            此功能可將劇本中的對話提取為輕量級 JSON 檔，方便交給 AI 翻譯，完成後再匯入覆蓋。
+        </p>
+        
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="exportDialogueJson()" style="background:#2980b9; padding: 10px;">
+                📤 1. 匯出對白檔 (.json)
+            </button>
+            <div style="font-size:0.8rem; color:#888;">
+                (請將此檔案內容貼給 AI，並要求它只翻譯值，保持格式不變)
+            </div>
+        </div>
+
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed #ccc; padding-top: 20px;">
+            <button onclick="document.getElementById('trans-input').click()" style="background:#27ae60; padding: 10px;">
+                📥 2. 匯入翻譯檔 (.json)
+            </button>
+            <input type="file" id="trans-input" style="display:none" accept=".json" onchange="importDialogueJson(this)">
+        </div>
+
+        <div style="text-align: right; margin-top: 10px;">
+            <button class="danger" onclick="document.getElementById('trans-modal').style.display='none'">關閉 (Close)</button>
+        </div>
+    </div>
 </div>
 <div id="bgm-modal" class="modal">
     <div class="modal-content" style="width: 400px;">
@@ -8584,6 +8624,118 @@
         if(mobBtn) mobBtn.innerText = icon;
     };
 	*/
+	
+	// --- [新增] 對白匯出/匯入系統 ---
+
+    // 1. 匯出對白為 JSON
+    function exportDialogueJson() {
+        const exports = [];
+        
+        history.forEach((step, index) => {
+            if (!step.action || !step.action.operations) return;
+            
+            // 找出該步驟是否包含 DIALOGUE 操作
+            const op = step.action.operations.find(o => o.type === 'DIALOGUE');
+            if (op && op.data) {
+                const item = {
+                    id: index, // 記住原本的步驟索引
+                    // 只提取需要的欄位
+                    p1: op.data.p1.active ? { name: op.data.p1.name, text: op.data.p1.dataText } : null,
+                    p2: op.data.p2.active ? { name: op.data.p2.name, text: op.data.p2.dataText } : null
+                };
+                exports.push(item);
+            }
+        });
+
+        if (exports.length === 0) {
+            alert("目前劇本中沒有任何對話！");
+            return;
+        }
+
+        const jsonStr = JSON.stringify(exports, null, 2);
+        const blob = new Blob([jsonStr], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `dialogue_export_${Date.now()}.json`;
+        a.click();
+    }
+
+    // 2. 匯入並替換對白
+    function importDialogueJson(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imports = JSON.parse(e.target.result);
+                if (!Array.isArray(imports)) throw new Error("格式錯誤：根目錄必須是陣列");
+
+                let updateCount = 0;
+
+                imports.forEach(item => {
+                    // 1. 檢查索引是否有效
+                    if (item.id === undefined || item.id >= history.length) return;
+
+                    const step = history[item.id];
+                    const op = step.action.operations.find(o => o.type === 'DIALOGUE');
+
+                    // 2. 確保目標步驟真的是對話 (防呆)
+                    if (!op || !op.data) return;
+
+                    let hasChange = false;
+
+                    // 3. 更新 P1
+                    if (item.p1 && op.data.p1 && op.data.p1.active) {
+                        op.data.p1.name = item.p1.name;
+                        op.data.p1.dataText = item.p1.text;
+                        // 同步更新當前狀態快照 (讓畫面立刻變更，不用重跑)
+                        if (step.state.dialogueData && step.state.dialogueData.p1) {
+                            step.state.dialogueData.p1.name = item.p1.name;
+                            step.state.dialogueData.p1.dataText = item.p1.text;
+                        }
+                        hasChange = true;
+                    }
+
+                    // 4. 更新 P2
+                    if (item.p2 && op.data.p2 && op.data.p2.active) {
+                        op.data.p2.name = item.p2.name;
+                        op.data.p2.dataText = item.p2.text;
+                        if (step.state.dialogueData && step.state.dialogueData.p2) {
+                            step.state.dialogueData.p2.name = item.p2.name;
+                            step.state.dialogueData.p2.dataText = item.p2.text;
+                        }
+                        hasChange = true;
+                    }
+
+                    // 5. 更新 Action Log 的描述文字 (Description)
+                    if (hasChange) {
+                        let newDesc = "[對話] "; // 這裡可以根據當前語言變數調整，或保持固定
+                        // 為了讓 log 簡潔，我們只抓前8個字
+                        if (op.data.p2.active) newDesc += `${op.data.p2.name}: ${op.data.p2.dataText.substr(0,8)}... `;
+                        if (op.data.p1.active) newDesc += `${op.data.p1.name}: ${op.data.p1.dataText.substr(0,8)}...`;
+                        
+                        step.action.description = newDesc;
+                        updateCount++;
+                    }
+                });
+
+                // 6. 完成後刷新介面
+                renderTimeline(); // 更新左側列表文字
+                renderUI();       // 更新中央畫面文字
+                saveToStorage();  // 存檔
+                
+                alert(`匯入成功！共更新了 ${updateCount} 處對話。`);
+                document.getElementById('trans-modal').style.display = 'none';
+
+            } catch (err) {
+                console.error(err);
+                alert("匯入失敗：檔案格式錯誤或內容無效。");
+            }
+            input.value = ''; // 清空 input 方便下次選同一檔
+        };
+        reader.readAsText(file);
+    }
 
     // --- Main Entry Point ---
     window.onload = function() {
