@@ -616,12 +616,85 @@
         .glow-black { box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.8) !important; border-color: black !important; }
         .glow-white { box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.9) !important; border-color: white !important; }
         .glow-rainbow { animation: rainbow 2s linear infinite !important; }
-        
-        @keyframes rainbow {
-            0% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
-            50% { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8); border-color: blue; }
-            100% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
-        }
+		
+		/* --- [新增] 下半部發光特效 (Bottom Glow) --- */
+
+		/* 1. 基礎設定 */
+		.card[class*="glow-bottom-"]::after {
+			content: "";
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 50%; /* 覆蓋下半部 50% */
+			z-index: 10;
+			pointer-events: none;
+			border-bottom-left-radius: 3px;
+			border-bottom-right-radius: 3px;
+			opacity: 0.85;
+			transition: opacity 0.2s;
+		}
+
+		/* --- [新增] 下半部發光特效 (Bottom Glow) --- */
+
+		/* 1. 基礎設定 */
+		.card[class*="glow-bottom-"]::after {
+			content: "";
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 50%; /* 覆蓋下半部 50% */
+			z-index: 10;
+			pointer-events: none;
+			border-bottom-left-radius: 3px;
+			border-bottom-right-radius: 3px;
+			opacity: 0.85;
+			transition: opacity 0.2s;
+		}
+
+		/* 2. 各顏色定義 */
+		.card.glow-bottom-red::after {
+			background: linear-gradient(to top, rgba(255, 0, 0, 0.8) 0%, rgba(255, 0, 0, 0) 100%);
+			border-bottom: 3px solid red;
+			box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5);
+		}
+		.card.glow-bottom-yellow::after {
+			background: linear-gradient(to top, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0) 100%);
+			border-bottom: 3px solid gold;
+			box-shadow: 0 4px 10px rgba(255, 215, 0, 0.5);
+		}
+		.card.glow-bottom-green::after {
+			background: linear-gradient(to top, rgba(0, 255, 0, 0.8) 0%, rgba(0, 255, 0, 0) 100%);
+			border-bottom: 3px solid lime;
+			box-shadow: 0 4px 10px rgba(0, 255, 0, 0.5);
+		}
+		.card.glow-bottom-blue::after {
+			background: linear-gradient(to top, rgba(0, 191, 255, 0.8) 0%, rgba(0, 191, 255, 0) 100%);
+			border-bottom: 3px solid deepskyblue;
+			box-shadow: 0 4px 10px rgba(0, 191, 255, 0.5);
+		}
+		.card.glow-bottom-black::after {
+			background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
+			border-bottom: 3px solid black;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+		}
+		.card.glow-bottom-white::after {
+			background: linear-gradient(to top, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
+			border-bottom: 3px solid white;
+			box-shadow: 0 4px 10px rgba(255, 255, 255, 0.5);
+		}
+		.card.glow-bottom-rainbow::after {
+			background: linear-gradient(to top, rgba(255, 0, 255, 0.6) 0%, rgba(0, 255, 255, 0) 100%);
+			border-bottom: 3px solid white;
+			animation: bottom-rainbow-anim 2s linear infinite;
+		}
+
+		@keyframes bottom-rainbow-anim {
+			0% { border-bottom-color: red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
+			50% { border-bottom-color: blue; box-shadow: 0 4px 10px rgba(0,0,255,0.5); }
+			100% { border-bottom-color: red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
+		}
 
         .ability-card { width: 80px; height: 35px; flex-direction: row; font-size: 8px; transform: none !important; cursor: pointer; overflow: hidden; }
         .ability-card .card-text { font-size: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 90%; }
@@ -2369,6 +2442,7 @@
 	<button id="btn-injured" style="display:none; background:#e74c3c; border-color:#c0392b;" onclick="toggleInjured()" data-i18n="act_injured">💔 受傷</button>
     <button id="btn-clear-injured" style="display:none; background:#27ae60; border-color:#2ecc71;" onclick="clearInjured()" data-i18n="act_clear_injured">❤️ 治癒</button>
 	<button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
+	<button id="btn-glow-bottom" onclick="toggleBottomGlow()" style="background:#5dade2; border-color:#3498db;">👇底光</button>
     <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
     <button id="btn-copy-ability" onclick="copyToAbility(false)" data-i18n="act_ability">⚡單次</button>
 	<button id="btn-copy-continuous" onclick="copyToAbility(true)" style="background:#9b59b6; border-color:#8e44ad;" data-i18n="act_continuous">∞ 持續</button>			
@@ -2678,18 +2752,21 @@
             title: '天災色控制 VS 巨大鯨',
             description: '初試劇本功能',
 			counter_url: 'https://www.f-counter.net/j/66/1765257662/',
+			speed: 1.0,
         },
         {
             filename: 'script20251205.txt',
             title: '王鬥高麗菜 VS 波夏克龍皇神',
             description: '作者常玩的訓練對局',
 			counter_url: 'https://www.f-counter.net/j/66/1765257467/',
+			speed: 1.0,
         },
         {
             filename: 'script20251208.txt',
             title: '甲獸軍隊 VS 烏爾天寶',
             description: '進行DM25-RP4新卡的測試',
 			counter_url: 'https://www.f-counter.net/j/66/1765258081/',
+			speed: 1.0,
         },
         {
             filename: 'script20251209.txt',
@@ -4543,7 +4620,7 @@
 
 				// 初始化樣式：如果這張圖以前調過，繼承上次的位置；否則歸零
 				if (!globalAbilityStyleRegistry[newCard.styleKey]) {
-					let initialStyle = { x: 50, y: 50, scale: 1 };
+					let initialStyle = { x: 50, y: 50, scale: 1.2 };
 					
 					// 優先繼承「這張圖片最後一次被調整的樣子」(User Friendly)
 					if (globalLastUsedStyles && globalLastUsedStyles[effectiveSource.imageKey]) {
@@ -4875,6 +4952,45 @@
         let idx = colors.indexOf(currentGlow);
         if (idx === -1) idx = 7; 
         let nextColor = colors[(idx + 1) % colors.length];
+        
+        addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: nextColor });
+    }
+	
+	// [新增] 獨立控制下半部發光
+    function toggleBottomGlow() {
+        if (!pendingMove) return;
+        const state = getCurrentDisplayState();
+        
+        // 檢查是否為 Ability 區
+        const invalid = pendingMove.cardIds.some(id => {
+            const c = state.cards.find(x => x.id === id);
+            return !c || !c.zone.includes('ability');
+        });
+
+        if (invalid) {
+            alert(t('msg_glow_ability_only'));
+            return;
+        }
+
+        // 僅包含底光的清單
+        const bottomColors = [
+            'bottom-red', 'bottom-yellow', 'bottom-green', 'bottom-blue', 
+            'bottom-black', 'bottom-white', 'bottom-rainbow'
+        ];
+        
+        const firstId = pendingMove.cardIds[0];
+        const card = state.cards.find(c => c.id === firstId);
+        let currentGlow = card ? card.glow : null;
+        
+        // 循環邏輯：如果現在不是底光(是全光或無)，就從第一個開始
+        let idx = bottomColors.indexOf(currentGlow);
+        let nextColor;
+        
+        if (idx === -1) {
+            nextColor = bottomColors[0];
+        } else {
+            nextColor = bottomColors[(idx + 1) % bottomColors.length];
+        }
         
         addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: nextColor });
     }
@@ -5470,14 +5586,18 @@
             // Only show Glow buttons for Ability cards
             // 處理發光按鈕 (Glow)
             const btnGlow = document.getElementById('btn-glow');
+			const btnGlowBottom = document.getElementById('btn-glow-bottom'); // [新增]
             const btnUnglow = document.getElementById('btn-unglow');
             
             btnGlow.style.display = 'block'; // 永遠顯示
+			btnGlowBottom.style.display = 'block'; // [新增]
             if (allAbility) {
                 btnGlow.classList.remove('disabled-gray'); // 正常
+				btnGlowBottom.classList.remove('disabled-gray'); // [新增]
                 btnUnglow.style.display = (firstCard && firstCard.glow) ? 'block' : 'none';
             } else {
                 btnGlow.classList.add('disabled-gray'); // 灰階
+				btnGlowBottom.classList.add('disabled-gray'); // [新增]
                 btnUnglow.style.display = 'none';
             }
             document.getElementById('btn-unglow').style.display = (allAbility && firstCard && firstCard.glow) ? 'block' : 'none';
@@ -6448,29 +6568,24 @@
     }
 
     // --- [修改] 點擊卡片處理 ---
+	// --- [修正] 點擊卡片處理 (效果卡強制單選) ---
 	function handleCardSingleClick(e, cardId) {
 		e.stopPropagation(); 
 
-		// --- [新增區塊] 手機版點擊檢視邏輯 ---
+		// 1. 手機版點擊檢視邏輯 (維持不變)
 		if (document.body.classList.contains('mobile-mode')) {
 			const state = getCurrentDisplayState();
 			const card = state.cards.find(c => c.id === cardId);
-			
 			if (!card) return;
-
-			// 定義禁止點擊的區域 (牌庫、墓地、超次元、對話/能力區)
 			const ignoredZones = ['p1-deck', 'p2-deck', 'p1-grave', 'p2-grave', 'p1-hyper', 'p2-hyper'];
 			const isIgnored = ignoredZones.includes(card.zone) || card.zone.includes('ability');
-
-			// 條件：必須是有圖的、正面的、且不在禁止區域的卡
 			if (card.image && card.faceUp && !isIgnored) {
 				showMobileCardZoom(card.id);
 			}
-			return; // 手機版處理完畢，直接結束
+			return; 
 		}
-		// ------------------------------------
 		
-		// 以下為原本桌機版的邏輯 (保持不變)
+		// 2. 多選模式 (維持不變 - 在此模式下依然允許選多張效果卡，方便批次刪除)
 		if (isMultiSelectMode) {
 			const index = multiSelectedIds.indexOf(cardId);
 			const el = document.querySelector(`.card[data-id="${cardId}"]`);
@@ -6491,12 +6606,15 @@
 			return;
 		}
 
+		// 3. 指向模式 (維持不變)
 		if (isPointing) {
 			handlePointClick(null, cardId);
 			return;
 		}
 
+		// 4. 一般點擊邏輯
 		if (pendingMove) {
+            // 如果點擊的是「已經被選取」的卡片 -> 取消選取該張
 			if (pendingMove.cardIds.includes(cardId)) {
 				 pendingMove.cardIds = pendingMove.cardIds.filter(id => id !== cardId);
 				 if (pendingMove.cardIds.length === 0) {
@@ -6510,17 +6628,27 @@
 			const state = getCurrentDisplayState();
 			const targetCard = state.cards.find(c => c.id === cardId);
 			
+            // 堆疊操作邏輯 (維持不變 - 排除能力卡、牌庫等)
 			if (targetCard && !targetCard.zone.includes('deck') && !targetCard.zone.includes('grave') && !targetCard.zone.includes('ability')) {
 				openStackingModal(targetCard);
 				return;
 			}
-		}
-		
-		if (!pendingMove) {
-			pendingMove = { cardIds: [cardId], shuffle: false };
+
+            // --- [關鍵修改] 判斷是否為效果小卡 ---
+            if (targetCard && targetCard.zone.includes('ability')) {
+                // 如果點擊的是效果小卡，強制變成「單選新卡片」
+                // (捨棄原本已經選取的卡片，直接切換焦點到這張新卡)
+                pendingMove = { cardIds: [cardId], shuffle: false };
+            } else {
+                // 如果是普通卡片，維持原本的「加選」行為
+                pendingMove.cardIds.push(cardId);
+            }
+            // ------------------------------------
 		} else {
-			pendingMove.cardIds.push(cardId);
+            // 如果沒有選取任何卡片，建立新選取
+			pendingMove = { cardIds: [cardId], shuffle: false };
 		}
+        
 		updateSelectionUI();
 	}
 
