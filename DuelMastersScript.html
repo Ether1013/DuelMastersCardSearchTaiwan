@@ -8235,8 +8235,8 @@
         // 1. 處理傳入的預設值 (移除路徑前綴，只留檔名，以防參數帶有 scripts/)
         const cleanDefault = defaultFilename ? defaultFilename.replace(/^scripts\//, '') : '';
 
-        // 2. 渲染清單
-        AVAILABLE_SCRIPTS.forEach(script => {
+        // 2. 渲染清單 (修改：使用 [...].reverse() 倒序呈現，讓最新的在最上面)
+        [...AVAILABLE_SCRIPTS].reverse().forEach(script => {
             const el = document.createElement('div');
             el.className = 'script-item';
             
