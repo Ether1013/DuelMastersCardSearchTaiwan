@@ -536,27 +536,6 @@
             transition: all 0.3s;
         }
 
-        .card-group:hover {
-            z-index: 500;
-        }
-		/* [新增] 強制覆蓋舊的堆疊 CSS，將定位權限完全交給 JS */
-        .card-group .card {
-            /* 確保 JS 寫入的 top/left 不會被 CSS class 影響 */
-            margin: 0 !important; 
-        }
-        /* 移除 hover 時的展開效果 (因為旋轉後展開方向會錯亂，暫時先移除，求穩) */
-        .card-group:hover .card {
-            top: auto !important; /* 讓 JS 的 inline-style 生效 */
-        }
-        /* 如果您還是希望有 Hover 展開，那需要更複雜的 JS 計算，建議先取消以確保旋轉正確 */
-        /* Hover Fan-out - modified to respect Puzzle links */
-        .card-group:hover .stack-base { top: 0px !important; z-index: 100; }
-        /* Only fan out vertical stacks if not puzzling */
-        .card-group:hover .stack-top:not(.puzzle-link) { z-index: 101; }
-        .card-group:hover .stack-shift-up { top: -50px !important; z-index: 101; }
-        .card-group:hover .stack-shift-down { top: -30px !important; z-index: 101; }
-        .card-group:hover .stack-bottom { top: 40px !important; z-index: 102; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-
         .card {
             width: var(--card-width); height: var(--card-height);
             background-color: white; border: 1px solid #333; border-radius: 3px;
@@ -1999,9 +1978,37 @@
         }
         
         /* 滑鼠移上去時，該張牌要浮上來，避免被擋住 */
-        .hand-zone .card-group:hover {
+        .hand-zone {
             z-index: 1000;
             margin: 0 5px; /* Hover 時暫時撐開空間 (選用) */
+        }
+		
+		/* --- [修改] 堆疊展開優化：移除舊的 CSS Hover，改由 JS 接管 --- */
+        
+        /* 1. 停用 CSS 自動展開 (加入 !important 確保覆蓋) */
+        .card-group:hover .stack-base,
+        .card-group:hover .stack-top,
+        .card-group:hover .stack-shift-up,
+        .card-group:hover .stack-shift-down,
+        .card-group:hover .stack-bottom { 
+            /* 讓 JS 的 inline-style 能夠生效，不受 CSS 干擾 */
+            top: auto; 
+            z-index: auto;
+        }
+
+        /* 2. 讓卡片移動時有滑順動畫 */
+        .card-group .card {
+            /* 確保 JS 寫入 top/left 時有過渡效果 */
+            transition: top 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        left 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        transform 0.2s;
+            /* 讓 JS 能夠覆蓋定位 */
+            margin: 0 !important; 
+        }
+
+        /* 3. Hover 時提高層級，避免展開後被隔壁的牌擋住 */
+        .card-group:hover {
+            z-index: 1000 !important;
         }
 		
 		/* 1. 對話層修正：針對 #dialogue-layer 及其「所有子元件」強制封鎖 */
@@ -6067,12 +6074,45 @@
         if (isMultiSelectMode) {
             multiBar.style.display = 'flex';
             multiCount.innerText = multiSelectedIds.length;
+            // 預設先隱藏面板，稍後在下方判斷是否要開啟
             document.getElementById('card-action-panel').style.display = 'none';
         } else {
             multiBar.style.display = 'none';
         }
         
+        // 取得面板與按鈕 DOM
+        const panel = document.getElementById('card-action-panel');
+        // A. 取得所有按鈕元素
+        const btnRotateL = document.getElementById('btn-rotate-l');
+        const btnRotateL_Clone = btnRotateL; // 方便下方參照
+        const btnRotateR = document.getElementById('btn-rotate-r');
+        const btnFlip = document.getElementById('btn-flip');
+        const btnAce = document.getElementById('btn-ace');
+        const btnReveal = document.getElementById('btn-reveal');
+        const btnPaste = document.getElementById('btn-paste'); 
+        const btnRemoveImg = document.getElementById('btn-remove-image');
+        const btnGlow = document.getElementById('btn-glow');
+        const btnGlowBottom = document.getElementById('btn-glow-bottom');
+        const btnUnglow = document.getElementById('btn-unglow');
+        const btnCopyOne = document.getElementById('btn-copy-ability');
+        const btnCopyCont = document.getElementById('btn-copy-continuous');
+        const adjustControls = document.getElementById('ability-adjust-controls');
+        const adjustButtons = document.getElementById('ability-adjust-buttons');
+        const btnInjured = document.getElementById('btn-injured');
+        const btnClearInjured = document.getElementById('btn-clear-injured');
+        const btnMoonless = document.getElementById('btn-moonless'); 
+        const btnDelete = document.getElementById('btn-delete-card');
+        const btnPoint = document.getElementById('btn-point');
+        const btnEndPoint = document.getElementById('btn-end-point'); // 修正可能漏掉的按鈕
+        
+        // 取得輸入框
+        const inputRename = document.getElementById('rename-input');
+        const inputNote = document.getElementById('note-input');
+        const btnRename = document.querySelector('button[onclick="renameCard()"]');
+        const btnNote = document.querySelector('button[onclick="addCardNote()"]');
+
         // --- 2. 處理單選/多選操作面板 ---
+        // 注意：pendingMove 在單選時有值，在多選時(若已選)也有值
         if (pendingMove && pendingMove.cardIds.length > 0) {
             const state = getCurrentDisplayState();
             
@@ -6081,189 +6121,195 @@
             if (firstCard) {
                 currentPanelOwner = (firstCard.ownerId === 1) ? 'p1' : 'p2';
                 const savedPos = panelPosSettings[currentPanelOwner];
-                const panel = document.getElementById('card-action-panel');
                 panel.style.left = savedPos.x + 'px';
                 panel.style.top = savedPos.y + 'px';
             }
-            
-            // --- [狀態判斷] 掃描所有選取卡片 ---
-            let allAbility = true;      
-            let isBattleOrShield = true; 
-            let hasInjuredCard = false;  
-            
-            pendingMove.cardIds.forEach(id => {
-                const c = state.cards.find(card => card.id === id);
-                if (!c) return;
-                
-                if (!c.zone.includes('ability')) {
-                    allAbility = false;
-                }
-                const z = c.zone;
-                if (!z.includes('battle') && !z.includes('shield')) {
-                    isBattleOrShield = false;
-                }
-                if (c.isInjured) {
-                    hasInjuredCard = true;
-                }
-            });
-            
-            // --- [UI 按鈕顯示邏輯] ---
-            
-            // A. 取得所有按鈕元素
-            const btnRotateL = document.getElementById('btn-rotate-l');
-            const btnRotateR = document.getElementById('btn-rotate-r');
-            const btnFlip = document.getElementById('btn-flip');
-            const btnAce = document.getElementById('btn-ace');
-            const btnReveal = document.getElementById('btn-reveal');
-            const btnPaste = document.getElementById('btn-paste'); 
-            const btnRemoveImg = document.getElementById('btn-remove-image');
-            const btnGlow = document.getElementById('btn-glow');
-            const btnGlowBottom = document.getElementById('btn-glow-bottom');
-            const btnUnglow = document.getElementById('btn-unglow');
-            const btnCopyOne = document.getElementById('btn-copy-ability');
-            const btnCopyCont = document.getElementById('btn-copy-continuous');
-            const adjustControls = document.getElementById('ability-adjust-controls');
-            const adjustButtons = document.getElementById('ability-adjust-buttons');
-            const btnInjured = document.getElementById('btn-injured');
-            const btnClearInjured = document.getElementById('btn-clear-injured');
-            const btnMoonless = document.getElementById('btn-moonless'); 
-            const btnDelete = document.getElementById('btn-delete-card');
-            // [修正] 補回遺失的指向按鈕變數
-            const btnPoint = document.getElementById('btn-point');
 
-            // B. 預設將所有「功能類」按鈕重置為顯示
-            btnRotateL.style.display = 'block';
-            btnRotateR.style.display = 'block';
-            btnFlip.style.display = 'block';
-            btnAce.style.display = 'block';
-            btnReveal.style.display = 'block';
-            btnPaste.style.display = 'block';
-            btnGlow.style.display = 'block';
-            btnGlowBottom.style.display = 'block';
-            btnCopyOne.style.display = 'block';
-            btnCopyCont.style.display = 'block';
-            adjustControls.style.display = 'block';
-            adjustButtons.style.display = 'flex';
-            // [修正] 預設顯示指向按鈕
-            btnPoint.style.display = 'block';
-            
-            // C. 狀態依賴型按鈕先預設隱藏
-            btnRemoveImg.style.display = 'none';
-            btnUnglow.style.display = 'none';
-            btnInjured.style.display = 'none';
-            btnClearInjured.style.display = 'none';
-            btnDelete.style.display = 'none';
-            
-            // D. 依據「卡片類型」執行刪去法
-            if (allAbility) {
-                // =========== 情境 A：效果小卡 ===========
-                // 效果卡不需要旋轉、翻面、王牌、展示、貼圖、複製(自己)
-                btnRotateL.style.display = 'none';
-                btnRotateR.style.display = 'none';
-                btnFlip.style.display = 'none';
-                btnAce.style.display = 'none';
-                btnReveal.style.display = 'none';
-                btnPaste.style.display = 'none';
-                btnCopyOne.style.display = 'none';
-                btnCopyCont.style.display = 'none';
-                btnMoonless.style.display = 'none'; 
-
-                // 移除 disabled 樣式
-                btnGlow.classList.remove('disabled-gray');
-                btnGlowBottom.classList.remove('disabled-gray');
-
-                // 顯示刪除按鈕
-                btnDelete.style.display = 'block';
-                
-                // 注意：效果卡「可以」指向，所以不隱藏 btnPoint
-
-            } else {
-                // =========== 情境 B：一般卡片 ===========
-                // 一般卡片不需要發光控制、微調控制
-                btnGlow.style.display = 'none';
-                btnGlowBottom.style.display = 'none';
-                adjustControls.style.display = 'none';
-                adjustButtons.style.display = 'none';
-            }
-
-            // E. 依據「卡片狀態/區域」進行細部顯示
-            
-            // 1. 受傷/治癒
-            if (isBattleOrShield) {
-                if (hasInjuredCard) {
-                    btnClearInjured.style.display = 'block'; 
-                } else {
-                    btnInjured.style.display = 'block';      
-                }
-            }
-
-            // 2. 移除圖片
-            if (!allAbility && firstCard && firstCard.image) {
-                btnRemoveImg.style.display = 'block';
-            }
-
-            // 3. 取消發光
-            if (allAbility && firstCard && firstCard.glow) {
-                btnUnglow.style.display = 'block';
-            }
-
-            // 4. 單選限制：指向、王牌、無月
-            // 這些功能只支援單選，如果是多選則隱藏
-            if (pendingMove.cardIds.length === 1) {
-                const cid = pendingMove.cardIds[0];
-
-                // --- 指向 (Point) ---
-                // 單選時保持 block (除非上面被 allAbility 邏輯蓋掉，但這裡我們允許效果卡指向)
-                btnPoint.style.display = 'block'; 
-
-                // --- 王牌與無月 (僅限一般卡) ---
-                if (!allAbility) {
-                    // 王牌
-                    if (globalAceRegistry[cid]) {
-                        btnAce.classList.add('active');
-                        btnAce.innerText = "👑 取消王牌";
-                    } else {
-                        btnAce.classList.remove('active');
-                        btnAce.innerText = "👑 設為王牌";
-                    }
-
-                    // 無月之門
-                    if (state.moonless && state.moonless[cid]) {
-                        btnMoonless.classList.add('active');
-                    } else {
-                        btnMoonless.classList.remove('active');
-                    }
-                    btnMoonless.style.display = 'block';
-                }
-                
-            } else {
-                // 多選時隱藏單體操作按鈕
-                btnAce.style.display = 'none';
-                btnMoonless.style.display = 'none';
-                btnPoint.style.display = 'none'; // 多選不支援指向
-            }
-
-            // --- 3. 顯示面板與高亮 ---
+            // ==========================================
+            // [分支 A] 一般模式 (單選)
+            // ==========================================
             if (!isMultiSelectMode) {
-                document.getElementById('card-action-panel').style.display = 'flex';
+                panel.style.display = 'flex';
+
+                // --- [狀態判斷] 掃描所有選取卡片 ---
+                let allAbility = true;      
+                let isBattleOrShield = true; 
+                let hasInjuredCard = false;  
                 
-                // 載入名稱與註記
-                if (pendingMove.cardIds.length === 1 && firstCard) {
-                    document.getElementById('rename-input').value = firstCard.text;
-                    document.getElementById('note-input').value = firstCard.note || "";
+                pendingMove.cardIds.forEach(id => {
+                    const c = state.cards.find(card => card.id === id);
+                    if (!c) return;
+                    
+                    if (!c.zone.includes('ability')) {
+                        allAbility = false;
+                    }
+                    const z = c.zone;
+                    if (!z.includes('battle') && !z.includes('shield')) {
+                        isBattleOrShield = false;
+                    }
+                    if (c.isInjured) {
+                        hasInjuredCard = true;
+                    }
+                });
+                
+                // B. 預設將所有「功能類」按鈕重置為顯示
+                const allElements = [
+                    btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, 
+                    btnGlow, btnGlowBottom, btnCopyOne, btnCopyCont, adjustControls, adjustButtons, 
+                    btnPoint, inputRename, inputNote, btnRename, btnNote, btnMoonless
+                ];
+                allElements.forEach(el => { if(el) el.style.display = ''; }); // 清空 inline style 回復預設 (block/flex/inline)
+                
+                // 修正 flex 排版元件
+                adjustButtons.style.display = 'flex';
+                
+                // C. 狀態依賴型按鈕先預設隱藏
+                if(btnRemoveImg) btnRemoveImg.style.display = 'none';
+                if(btnUnglow) btnUnglow.style.display = 'none';
+                if(btnInjured) btnInjured.style.display = 'none';
+                if(btnClearInjured) btnClearInjured.style.display = 'none';
+                if(btnDelete) btnDelete.style.display = 'none';
+                if(btnEndPoint) btnEndPoint.style.display = 'none';
+
+                // D. 依據「卡片類型」執行刪去法
+                if (allAbility) {
+                    // 效果小卡：隱藏不必要功能
+                    [btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, btnCopyOne, btnCopyCont, btnMoonless].forEach(el => el.style.display = 'none');
+                    btnGlow.classList.remove('disabled-gray');
+                    btnGlowBottom.classList.remove('disabled-gray');
+                    btnDelete.style.display = 'block';
                 } else {
-                    document.getElementById('rename-input').value = '';
-                    document.getElementById('note-input').value = '';
+                    // 一般卡片：隱藏發光/微調
+                    [btnGlow, btnGlowBottom, adjustControls, adjustButtons].forEach(el => el.style.display = 'none');
                 }
-            } else {
-                 document.getElementById('card-action-panel').style.display = 'none';
+
+                // E. 細部顯示
+                if (isBattleOrShield) {
+                    if (hasInjuredCard) btnClearInjured.style.display = 'block'; 
+                    else btnInjured.style.display = 'block';      
+                }
+                if (!allAbility && firstCard && firstCard.image) btnRemoveImg.style.display = 'block';
+                if (allAbility && firstCard && firstCard.glow) btnUnglow.style.display = 'block';
+
+                // F. 單選限制
+                if (pendingMove.cardIds.length === 1) {
+                    const cid = pendingMove.cardIds[0];
+                    if (!allAbility) {
+                        // Ace & Moonless 狀態顯示
+                        if (globalAceRegistry[cid]) {
+                            btnAce.classList.add('active');
+                            btnAce.innerText = "👑 取消王牌";
+                        } else {
+                            btnAce.classList.remove('active');
+                            btnAce.innerText = "👑 設為王牌";
+                        }
+                        if (state.moonless && state.moonless[cid]) btnMoonless.classList.add('active');
+                        else btnMoonless.classList.remove('active');
+                    }
+                    
+                    // 載入名稱與註記
+                    if (firstCard) {
+                        inputRename.value = firstCard.text;
+                        inputNote.value = firstCard.note || "";
+                    }
+                } else {
+                    // 雖然單選模式不太會進來這(因為這UI只支援單張點擊)，但防呆
+                    [btnAce, btnMoonless, btnPoint].forEach(el => el.style.display = 'none');
+                    inputRename.value = '';
+                    inputNote.value = '';
+                }
+
+            } 
+            // ==========================================
+            // [分支 B] 多選模式 (Multi-Select) - [您的需求在這裡]
+            // ==========================================
+            else {
+                // 檢查條件：所有選取的卡片是否都在 戰場 或 魔力區
+                const validZones = ['p1-battle', 'p2-battle', 'p1-mana', 'p2-mana'];
+                
+                const allValid = pendingMove.cardIds.every(id => {
+                    const c = state.cards.find(x => x.id === id);
+                    // 檢查區域，且必須是「可見」的 (非牌庫/護盾/墓地/超次元)
+                    // 這裡直接用 validZones 白名單最準確
+                    return c && validZones.includes(c.zone);
+                });
+
+                if (allValid) {
+                    panel.style.display = 'flex';
+                    
+                    // 1. 先隱藏面板內「所有」控制項
+                    const allControls = panel.querySelectorAll('button, input, .panel-sep, div');
+                    allControls.forEach(el => {
+                        // 這裡要注意不要隱藏到 panel-row (div)，否則排版會亂掉
+                        if (el.tagName !== 'DIV') {
+                            el.style.display = 'none';
+                        }
+                    });
+
+                    // 2. 顯示必要的 Row (確保 div 容器是開的)
+                    panel.querySelectorAll('.panel-row').forEach(row => row.style.display = 'flex');
+
+                    // 3. 唯獨開啟兩個旋轉按鈕
+                    if(btnRotateL) btnRotateL.style.display = 'block';
+                    if(btnRotateR) btnRotateR.style.display = 'block';
+                    
+                } else {
+                    // 如果包含了其他區域 (如手牌、牌庫)，就不顯示面板
+                    panel.style.display = 'none';
+                }
             }
-            document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
             
+            // 最後加上高亮
+            document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+
         } else {
-            // 沒有選取任何卡片 -> 隱藏所有選單與高亮
-            document.getElementById('card-action-panel').style.display = 'none';
+            // 沒有選取任何卡片
+            panel.style.display = 'none';
             document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
+        }
+		
+		// [新增] 檢查重疊 (延遲一幀以確保 CSS display 切換已生效且 DOM 佈局完成)
+        setTimeout(checkAndFixPanelOverlap, 0);
+    }
+	
+	// [新增] 自動檢測並修復面板重疊
+    function checkAndFixPanelOverlap() {
+        const panel = document.getElementById('card-action-panel');
+        const bar = document.getElementById('multi-select-bar');
+        
+        if (!panel || !bar) return;
+        // 只有當兩者都顯示時才計算 (注意: display 為 '' 時也視為顯示，視 CSS 而定，這裡檢查 none 即可)
+        if (panel.style.display === 'none' || bar.style.display === 'none') return;
+
+        const pRect = panel.getBoundingClientRect();
+        const bRect = bar.getBoundingClientRect();
+
+        // 碰撞檢測 (AABB Intersection Check)
+        // 判斷是否「沒有重疊」，然後取反
+        const overlap = !(pRect.right < bRect.left || 
+                          pRect.left > bRect.right || 
+                          pRect.bottom < bRect.top || 
+                          pRect.top > bRect.bottom);
+
+        if (overlap) {
+            // console.log("偵測到 UI 重疊，自動調整面板位置...");
+            
+            // 策略：將面板往上移，使其位於提示列上方 (留 15px 間距)
+            // 目標 Top = 提示列 Top - 面板高度 - 間距
+            const newTop = bRect.top - pRect.height - 15;
+            
+            // 只有當新位置不會跑出頂部時才套用
+            if (newTop >= 0) {
+                panel.style.top = newTop + 'px';
+                
+                // 順便更新記憶位置，避免下次切換焦點時又跳回舊位置
+                if (currentPanelOwner && panelPosSettings[currentPanelOwner]) {
+                    panelPosSettings[currentPanelOwner].y = newTop;
+                    // 更新 X 以防萬一，確保記憶與當前位置同步
+                    // panel.style.left 帶有 'px'，需轉數字
+                    panelPosSettings[currentPanelOwner].x = parseFloat(panel.style.left) || pRect.left;
+                }
+            }
         }
     }
 	
@@ -6392,9 +6438,7 @@
 
         const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
 
-		// --- [核心修改] 渲染堆疊 (標準模式 vs 無月例外模式) ---
-        // --- [核心修改] 渲染堆疊 (讀取 state.moonless) ---
-        const renderCardTree = (rootCard, container) => {
+		const renderCardTree = (rootCard, container) => {
             const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
             if (!isSpreadZone) return;
 
@@ -6411,6 +6455,7 @@
             // --- [修改點] 從 state.moonless 判斷 ---
             const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
 
+            // [修改] 綁定 Hover 事件
             const createContainer = (bounds) => {
                 const totalW = bounds.maxX - bounds.minX;
                 const totalH = bounds.maxY - bounds.minY;
@@ -6420,12 +6465,21 @@
                 div.style.height = `${totalH}px`;
                 div.style.position = 'relative'; 
                 div.style.margin = '5px 10px';
+                
+                // --- 新增：綁定 JS Hover 邏輯 ---
+                // 傳入 rootCard.id 讓我們知道這整疊牌的根源是誰，方便反查
+                div.onmouseenter = () => expandStack(div, familyMembers);
+                div.onmouseleave = () => collapseStack(div);
+                // -----------------------------
+
                 container.appendChild(div);
                 return { div, offsetX: -bounds.minX, offsetY: -bounds.minY };
             };
 
-            // Mode 1: 無月之門例外渲染
+            // Mode 1: 無月之門例外渲染 (保持不變)
             if (moonlessAce) {
+                // ... (這裡原本的無月之門邏輯保持不變，略) ...
+                // 為了節省篇幅，請保留您原本的 Mode 1 程式碼
                 const isPuzzle = (c) => c.stackType && c.stackType.includes('puzzle');
                 const subjects = familyMembers.filter(c => c.id !== moonlessAce.id && !isPuzzle(c));
                 const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
@@ -6433,21 +6487,18 @@
                 const count = subjects.length;
                 const radius = 12; 
                 let bounds = { minX: 0, maxX: 50, minY: 0, maxY: 70 };
-                
                 const layoutCache = new Map(); 
+
                 if (count > 0) {
                     const step = 360 / count;
                     const startAngle = -90 + (step / 2); 
-
                     subjects.forEach((sub, idx) => {
                         const angleDeg = startAngle + step * idx;
                         const rad = angleDeg * (Math.PI / 180);
                         const offX = radius * Math.cos(rad);
                         const offY = radius * Math.sin(rad);
                         const visualRot = angleDeg + 270;
-
                         layoutCache.set(sub.id, { x: offX, y: offY, rot: visualRot });
-
                         const margin = 40; 
                         bounds.minX = Math.min(bounds.minX, offX - margin);
                         bounds.maxX = Math.max(bounds.maxX, offX + margin);
@@ -6519,7 +6570,7 @@
                 });
 
             } else {
-                // Mode 2: Standard (保持不變)
+                // Mode 2: Standard (一般堆疊)
                 let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
                 const nodePositions = new Map(); 
                 const measureNode = (card, currentX, currentY) => {
@@ -6546,13 +6597,25 @@
                 measureNode(rootCard, 0, 0);
                 if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
                 const { div, offsetX, offsetY } = createContainer(bounds);
+                
                 const renderNodeRecursive = (card, zIndex) => {
                     const pos = nodePositions.get(card.id);
                     if (!pos) return;
                     const cardEl = createCardElement(card);
+                    
+                    // [修改] 記錄原始位置到 dataset，方便 JS 讀取進行動畫運算
+                    const orgLeft = pos.x + offsetX;
+                    const orgTop = pos.y + offsetY;
+                    
                     cardEl.style.position = 'absolute';
-                    cardEl.style.left = `${pos.x + offsetX}px`;
-                    cardEl.style.top = `${pos.y + offsetY}px`;
+                    cardEl.style.left = `${orgLeft}px`;
+                    cardEl.style.top = `${orgTop}px`;
+                    
+                    // 寫入 dataset 供 expandStack 使用
+                    cardEl.dataset.orgLeft = orgLeft;
+                    cardEl.dataset.orgTop = orgTop;
+                    cardEl.dataset.zIndex = zIndex; // 原始層級
+
                     cardEl.style.zIndex = zIndex;
                     let transformCSS = `rotate(${card.rotation}deg)`;
                     if (pendingMove && pendingMove.cardIds.includes(card.id)) {
@@ -7018,6 +7081,131 @@
         }
     }
 	
+	function expandStack(groupDiv, familyMembers) {
+        // 1. 檢查無月之門狀態 (若有無月卡則不展開)
+        const state = getCurrentDisplayState();
+        if (state.moonless && familyMembers.some(c => state.moonless[c.id])) {
+            return; 
+        }
+
+        // 2. 取得該群組內所有卡片 DOM
+        const cardEls = Array.from(groupDiv.querySelectorAll('.card'));
+        if (cardEls.length <= 1) return;
+
+        // 3. 找出「視覺頂層」卡片
+        let topCardEl = null;
+        let maxZ = -1;
+
+        cardEls.forEach(el => {
+            const z = parseInt(el.style.zIndex || el.dataset.zIndex || 0);
+            if (z > maxZ) {
+                maxZ = z;
+                topCardEl = el;
+            }
+        });
+
+        if (!topCardEl) return;
+
+        // 4. 取得頂層卡片的資料與位置 (作為絕對基準點)
+        const topCardId = parseInt(topCardEl.dataset.id);
+        const topCardData = familyMembers.find(c => c.id === topCardId);
+        const rotation = topCardData ? topCardData.rotation : 0;
+        
+        // [關鍵新增] 讀取頂卡的原始座標，作為所有子卡的「歸零起點」
+        const baseTop = parseFloat(topCardEl.dataset.orgTop);
+        const baseLeft = parseFloat(topCardEl.dataset.orgLeft);
+
+        // 5. 計算展開向量 (間距 35px)
+        const gap = 35; 
+        const vector = rotateVector(0, gap, rotation);
+
+        // [關鍵新增] 判斷展開的主軸方向
+        // 如果 Y 軸變動量大於 X 軸，代表是垂直展開 (0度/180度)
+        const isVerticalExpand = Math.abs(vector.y) > Math.abs(vector.x);
+
+        // 6. 分層處理 (Depth Calculation)
+        const sortedEls = cardEls.sort((a, b) => {
+            return parseInt(b.style.zIndex) - parseInt(a.style.zIndex);
+        });
+
+        const depthMap = {};
+        let currentDepth = 0;
+
+        sortedEls.forEach((el, index) => {
+            const cardId = parseInt(el.dataset.id);
+            const cardData = familyMembers.find(c => c.id === cardId);
+            
+            if (index === 0) {
+                depthMap[cardId] = 0;
+                return;
+            }
+
+            // 判斷是否為 Puzzle Link (兄弟卡) - 保持 Depth 0
+            let isTopSibling = false;
+            if (cardData.parentId === topCardId && cardData.stackType && cardData.stackType.includes('puzzle')) {
+                isTopSibling = true;
+            }
+            if (cardData.id === topCardId) isTopSibling = true;
+
+            if (isTopSibling) {
+                depthMap[cardId] = 0; 
+            } else {
+                currentDepth++;
+                depthMap[cardId] = currentDepth; 
+            }
+        });
+        
+        // 7. 套用「強制對齊」位移
+        sortedEls.forEach(el => {
+            const id = parseInt(el.dataset.id);
+            const depth = depthMap[id] || 0; 
+            
+            if (depth > 0) {
+                // [核心邏輯修改]
+                // 不使用 el.dataset.orgTop (卡片自己的原始位置)
+                // 而是使用 baseTop (頂卡的原始位置) + 向量偏移
+                
+                // 計算「理想」的絕對位置
+                const idealTop = baseTop + (vector.y * depth);
+                const idealLeft = baseLeft + (vector.x * depth);
+
+                // [軸向分離] 
+                // 為了避免把左右拼圖 (Puzzle Link) 強制拉回中間，我們只覆寫「展開軸向」的座標
+                if (isVerticalExpand) {
+                    // 垂直展開模式：
+                    // Top (Y軸): 強制對齊到理想網格 (baseTop + gap*depth)
+                    // Left (X軸): 保持卡片原本的 X 座標 (保留左右拼圖的偏移)
+                    el.style.top = `${idealTop}px`;
+                    el.style.left = `${el.dataset.orgLeft}px`; 
+                } else {
+                    // 橫向展開模式 (90度/270度)：
+                    // Left (X軸): 強制對齊到理想網格
+                    // Top (Y軸): 保持卡片原本的 Y 座標
+                    el.style.left = `${idealLeft}px`;
+                    el.style.top = `${el.dataset.orgTop}px`;
+                }
+                
+                // 保持原有的 Z-Index (不覆蓋)
+            }
+        });
+    }
+
+    function collapseStack(groupDiv) {
+        // 還原所有卡片位置
+        const cardEls = groupDiv.querySelectorAll('.card');
+        cardEls.forEach(el => {
+            const orgTop = el.dataset.orgTop;
+            const orgLeft = el.dataset.orgLeft;
+            const orgZ = el.dataset.zIndex;
+            
+            if (orgTop && orgLeft) {
+                el.style.top = `${orgTop}px`;
+                el.style.left = `${orgLeft}px`;
+                el.style.zIndex = orgZ;
+            }
+        });
+    }
+	
 	// --- [修正版] 切換無月之門 (Action 版本) ---
     function toggleMoonless() {
         if (!pendingMove || pendingMove.cardIds.length !== 1) return;
@@ -7308,7 +7496,7 @@
                 
                 // 手機震動回饋
                 if (navigator.vibrate) navigator.vibrate(50);
-            }, 1000); // 1秒
+            }, 500); // 0.5秒
         };
 
         const cancelPress = () => {
@@ -8191,79 +8379,163 @@
         reader.readAsText(file);
     }
 
-    // --- [取代] openSelectorModal 函式 ---
-	function openSelectorModal(zoneId) {
-		const state = getCurrentDisplayState();
-		const cards = getCardsInZone(state, zoneId);
-		const body = document.getElementById('modal-body');
-		body.innerHTML = '';
-		selectedCardsInModal = [];
-		
-		const title = document.getElementById('modal-title');
-		title.innerText = `${getZoneName(zoneId)} (${cards.length})`;
-		title.setAttribute('data-zone-id', zoneId); 
+    // --- [修正版] 開啟卡片選單 (視覺化階層排序) ---
+    function openSelectorModal(zoneId) {
+        const state = getCurrentDisplayState();
+        // 取得該區域所有卡片
+        const rawCards = getCardsInZone(state, zoneId);
+        
+        const body = document.getElementById('modal-body');
+        body.innerHTML = '';
+        selectedCardsInModal = [];
+        
+        const title = document.getElementById('modal-title');
+        title.innerText = `${getZoneName(zoneId)} (${rawCards.length})`;
+        title.setAttribute('data-zone-id', zoneId); 
 
-		// 反向排序 (Top 在左上)
-		for (let i = cards.length - 1; i >= 0; i--) {
-			const card = cards[i];
-			const index = i; 
-			
-			const el = document.createElement('div');
-			el.className = 'card';
-			
-			if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
-				const imgKey = card.imageKey || card.backImageKey;
-				el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
-				el.classList.add('has-image-icon');
-			}
+        // --------------------------------------------------------
+        // [核心演算法] 視覺化排序：左群優先 -> 頂層優先 -> 淺層優先
+        // --------------------------------------------------------
+        
+        let sortedCards = [];
 
-			// [關鍵新增] 視覺呈現：如果卡片有旋轉，在清單中也要轉給使用者看
-			if (card.rotation) {
-				// 縮小一點避免轉向時遮擋到隔壁的牌
-				el.style.transform = `rotate(${card.rotation}deg) scale(0.9)`;
-				// 加個邊框提示，讓橫置狀態更明顯
-				el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
-			}
+        // 1. 找出所有的「根卡 (Roots)」
+        // 這些卡片沒有 parentId，且在 rawCards 陣列中的順序通常對應畫面上的由左至右
+        const roots = rawCards.filter(c => !c.parentId);
 
-			el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:#888; font-weight:bold; z-index:10;">#${index+1}</div>
-							<div class="card-text">${card.text}</div>`;
-			
-			// 點擊選取邏輯
-			el.onclick = () => {
-				if (selectedCardsInModal.includes(card.id)) {
-					selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
-					el.classList.remove('selected');
-				} else {
-					selectedCardsInModal.push(card.id);
-					el.classList.add('selected');
-				}
-			};
-			body.appendChild(el);
-		}
-		
-		// [UI 新增] 動態插入旋轉按鈕到 Modal 底部
-		// 檢查底部是否已經有旋轉控制區，沒有才加 (避免重複添加)
-		const modalFooter = document.querySelector('#card-selector-modal .modal-content > div:last-child');
-		let rotControls = document.getElementById('modal-rotate-controls');
-		
-		if (!rotControls && modalFooter) {
-			rotControls = document.createElement('div');
-			rotControls.id = 'modal-rotate-controls';
-			rotControls.style.display = 'inline-flex';
-			rotControls.style.gap = '5px';
-			rotControls.style.marginRight = '10px';
-			
-			rotControls.innerHTML = `
-				<button onclick="rotateSelectedInModal(-90)" style="background:#7f8c8d;">↶</button>
-				<button onclick="rotateSelectedInModal(90)" style="background:#7f8c8d;">↷</button>
-			`;
-			
-			// 插入到 footer 的最前面
-			modalFooter.insertBefore(rotControls, modalFooter.firstChild);
-		}
+        // [修改] 針對「堆疊型區域」(牌庫/墓地/超次元)，進行反向排序
+        // 讓最上面的牌 (Top/Latest) 顯示在列表的最前面 (左上角)
+        if (zoneId.includes('deck') || zoneId.includes('grave') || zoneId.includes('hyper')) {
+            roots.reverse();
+        }
 
-		document.getElementById('card-selector-modal').style.display = 'flex';
-	}
+        // 2. 針對每一個卡群 (Cluster) 進行內部排序
+        roots.forEach(root => {
+            // A. 找出該家族的所有成員
+            // 使用既有的 getAllLinkedCardIds (若無此函式，這裡使用簡易遞迴查找)
+            const clusterIds = getAllLinkedCardIds(state, [root.id]);
+            const clusterMembers = clusterIds
+                .map(id => rawCards.find(c => c.id === id))
+                .filter(c => c); // 過濾掉找不到的(防呆)
+
+            // B. 將家族成員分為「表層 (Surface)」與「深層 (Buried)」
+            // 表層：根卡、拼圖連結 (Puzzle)
+            // 深層：疊在下方 (Bottom)、位移 (Shift)
+            const surface = [];
+            const buried = [];
+
+            clusterMembers.forEach(c => {
+                const isUnder = c.stackType && (c.stackType.includes('bottom') || c.stackType.includes('shift'));
+                if (isUnder) {
+                    buried.push(c);
+                } else {
+                    surface.push(c);
+                }
+            });
+
+            // C. 排序「表層卡」
+            // 邏輯：根卡 (Root) 永遠放第一個，其他的 (Puzzle) 依 ID 或加入順序排列
+            // 這裡簡單將 Root 置頂，其他維持原樣
+            surface.sort((a, b) => {
+                if (a.id === root.id) return -1;
+                if (b.id === root.id) return 1;
+                return 0; 
+            });
+
+            // D. 排序「深層卡」
+            // 邏輯：越接近表層的越前面 (c 在 d 前面)
+            // 實作：計算每個深層卡與根卡的「代數距離 (Generation Distance)」
+            const getDepth = (card) => {
+                let depth = 0;
+                let curr = card;
+                while (curr && curr.parentId) {
+                    depth++;
+                    curr = rawCards.find(x => x.id === curr.parentId);
+                }
+                return depth;
+            };
+
+            buried.sort((a, b) => {
+                // 深度淺的優先 (數字小的在前)
+                const depthA = getDepth(a);
+                const depthB = getDepth(b);
+                if (depthA !== depthB) return depthA - depthB;
+                // 若深度相同，則依 ParentID 分組
+                return a.parentId - b.parentId;
+            });
+
+            // E. 合併並推入最終清單： [表層] + [深層]
+            // 結果範例： A, B, c, d
+            sortedCards.push(...surface, ...buried);
+        });
+
+        // F. 防呆：如果有卡片沒被歸類到任何 Root (孤兒卡)，補在最後面
+        const processedIds = new Set(sortedCards.map(c => c.id));
+        const orphans = rawCards.filter(c => !processedIds.has(c.id));
+        sortedCards.push(...orphans);
+
+        // --------------------------------------------------------
+        // [渲染] 依照排序後的 sortedCards 產生 DOM
+        // --------------------------------------------------------
+
+        sortedCards.forEach((card, i) => {
+            const index = i; 
+            const el = document.createElement('div');
+            el.className = 'card';
+            
+            if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
+                const imgKey = card.imageKey || card.backImageKey;
+                el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
+                el.classList.add('has-image-icon');
+            }
+
+            if (card.rotation) {
+                el.style.transform = `rotate(${card.rotation}deg) scale(0.9)`;
+                el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
+            }
+
+            // 為了區分群組，若是 Root 卡，可以加個明顯的標記 (選用)
+            // 這裡維持原本樣式，僅透過排列順序表達
+            const isRoot = !card.parentId;
+            const isBuried = card.stackType && (card.stackType.includes('bottom') || card.stackType.includes('shift'));
+            
+            // 視覺優化：深層卡片顯示稍微小一點的編號顏色，表層卡片顯示亮一點
+            const numColor = isRoot ? '#e74c3c' : (isBuried ? '#888' : '#3498db');
+            
+            el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:${numColor}; font-weight:bold; z-index:10;">#${index+1}</div>
+                            <div class="card-text">${card.text}</div>`;
+            
+            // 點擊選取邏輯
+            el.onclick = () => {
+                if (selectedCardsInModal.includes(card.id)) {
+                    selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
+                    el.classList.remove('selected');
+                } else {
+                    selectedCardsInModal.push(card.id);
+                    el.classList.add('selected');
+                }
+            };
+            body.appendChild(el);
+        });
+        
+        // Modal 底部控制項 (維持不變)
+        const modalFooter = document.querySelector('#card-selector-modal .modal-content > div:last-child');
+        let rotControls = document.getElementById('modal-rotate-controls');
+        if (!rotControls && modalFooter) {
+            rotControls = document.createElement('div');
+            rotControls.id = 'modal-rotate-controls';
+            rotControls.style.display = 'inline-flex';
+            rotControls.style.gap = '5px';
+            rotControls.style.marginRight = '10px';
+            rotControls.innerHTML = `
+                <button onclick="rotateSelectedInModal(-90)" style="background:#7f8c8d;">↶</button>
+                <button onclick="rotateSelectedInModal(90)" style="background:#7f8c8d;">↷</button>
+            `;
+            modalFooter.insertBefore(rotControls, modalFooter.firstChild);
+        }
+
+        document.getElementById('card-selector-modal').style.display = 'flex';
+    }
 	
 	// --- [新增] 在清單視窗內旋轉卡片 ---
 	function rotateSelectedInModal(deg) {
