@@ -2587,29 +2587,47 @@
 		pointer-events: none; /* 播放時不擋滑鼠，但編輯時會開啟 */
 	}
 
-	/* 2. 內層桌布 (被露出的異次元) */
 	#rb-inner-layer {
 		position: absolute;
 		top: 0; left: 0; width: 100%; height: 100%;
-		background-color: #000; /* 預設黑底 */
+		background-color: #000;
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: cover;
 		
-		/* 初始狀態：被「現實」蓋住 (透過 clip-path 實現撕裂效果) */
-		/* 這裡我們反向思考：這個圖層是「破裂處」，預設破裂大小為 0 */
-		clip-path: polygon(50% 50%, 50% 50%, 50% 50%); 
-		transition: clip-path 0.1s linear; /* 動畫由 JS 驅動 */
+		z-index: 10; /* [關鍵] 壓在紙張層上面 */
 		
+		/* 移除原本簡單的 polygon，改為動態生成 */
+		clip-path: polygon(50% 50%, 50% 50%, 50% 50%); 
+		transition: clip-path 2.5s cubic-bezier(0.2, 1, 0.3, 1); /* 配合 JS 設定時間 */
+		will-change: clip-path;
+	}
+
+	/* [新增] 紙張邊緣層 (原紙層) */
+	#rb-paper-layer {
+		position: absolute;
+		top: 0; left: 0; width: 100%; height: 100%;
+		background-color: #fdfdfd; /* 純白或微黃的紙張色 */
+		background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E"); /* 加一點噪點紋理 */
+		
+		z-index: 5; /* [關鍵] 在內層圖片下面 */
+		
+		clip-path: polygon(50% 50%, 50% 50%, 50% 50%);
+		transition: clip-path 2.5s cubic-bezier(0.2, 1, 0.3, 1);
 		will-change: clip-path;
 	}
 
 	/* 編輯模式下的內層：顯示完整，且可互動 */
+	/* 編輯模式下，隱藏紙張層 (只看圖片)，並讓圖片全顯 */
 	#rb-overlay.editing #rb-inner-layer {
-		clip-path: none !important; /* 完整顯示 */
+		clip-path: none !important; 
 		cursor: move;
 		pointer-events: auto;
-		border: 5px dashed #f1c40f; /* 編輯框提示 */
+		border: 2px dashed #f1c40f; 
+		z-index: 20;
+	}
+	#rb-overlay.editing #rb-paper-layer {
+		display: none; /* 編輯時不需要看到白邊 */
 	}
 
 	/* 編輯模式的提示文字 */
@@ -2655,9 +2673,10 @@
 	}
 
 	/* [修改] 套用到 body 的 class (加入 #rb-inner-layer) */
-	body.shaking #workspace, 
+	body.shaking #workspa	ce, 
 	body.shaking #toolbar,
-	body.shaking #rb-inner-layer {
+	body.shaking #rb-inner-layer,
+	body.shaking #rb-paper-layer	{
 		animation: violent-shake 0.5s linear infinite;
 	}
 
@@ -6755,6 +6774,129 @@
     function getZoneName(zoneId) {
         return zoneId.toUpperCase(); 
     }
+	
+	// --- [新增] 鋸齒路徑生成器 ---
+    // progress: 0 (閉合) ~ 1 (全開)
+    // pattern: 'center', 'corner-tl', 'corner-br'
+    // seedArr: 預先生成的亂數陣列 (確保紙張層和圖片層的鋸齒形狀一致)
+    // layerType: 'image' 或 'paper' (紙張層會比圖片層稍微寬一點)
+    // --- [修正版] 鋸齒路徑生成器 (動態白邊寬度) ---
+    function generateJaggedPoly(progress, pattern, seedArr, layerType) {
+        const points = [];
+        const segments = 40; // 鋸齒密度
+        
+        // [參數設定]
+        // 1. 基礎雜訊強度 (數字越大，鋸齒越深)
+        const noiseIntensity = 0.5; 
+        // 2. 隨機變化幅度 (數字越大，形狀越亂)
+        const randomFactor = 6.0; 
+
+        if (pattern === 'center') {
+            // 中間垂直撕裂
+            const centerX = 50;
+            const maxOpenWidth = 60; 
+            
+            // 左邊界
+            for (let i = 0; i <= segments; i++) {
+                const y = (i / segments) * 100;
+                const baseOpen = (progress * maxOpenWidth);
+                
+                // [核心修改 1] 只有打開時才計算雜訊，避免閉合時有縫
+                let noise = 0;
+                let dynamicGap = 0;
+
+                if (progress > 0.01) {
+                    // 圖片層與紙張層使用各自的 seed，產生不同的抖動
+                    noise = seedArr[i] * randomFactor;
+                    
+                    // [核心修改 2] 如果是紙張層，額外加上隨機寬度 (1% ~ 5%)
+                    // 使用 Math.abs 確保紙張永遠比圖片寬 (或相等)，不會縮進去
+                    if (layerType === 'paper') {
+                        // 利用 seed 產生變動寬度：基礎 1.5% + 隨機 0~3.5%
+                        dynamicGap = 1.5 + Math.abs(seedArr[i] * 3.5);
+                    }
+                }
+                
+                const x = centerX - baseOpen - noise - dynamicGap;
+                points.push(`${x}% ${y}%`);
+            }
+            
+            // 右邊界
+            for (let i = segments; i >= 0; i--) {
+                const y = (i / segments) * 100;
+                const baseOpen = (progress * maxOpenWidth);
+                
+                let noise = 0;
+                let dynamicGap = 0;
+
+                if (progress > 0.01) {
+                    // 使用後半段 seed
+                    noise = seedArr[i + segments] * randomFactor;
+                    
+                    if (layerType === 'paper') {
+                        // 右邊也要獨立的隨機寬度
+                        dynamicGap = 1.5 + Math.abs(seedArr[i + segments] * 3.5);
+                    }
+                }
+                
+                const x = centerX + baseOpen + noise + dynamicGap;
+                points.push(`${x}% ${y}%`);
+            }
+
+        } else if (pattern === 'corner-tl') {
+            // 左上角撕裂
+            points.push('0% 0%'); // 頂點
+
+            for (let i = 0; i <= segments; i++) {
+                const ratio = i / segments; 
+                const angle = (Math.PI / 2) * ratio; 
+                
+                // 基礎半徑
+                let radius = progress * 180;
+                
+                if (progress > 0.01) {
+                    // 加入雜訊
+                    radius += (seedArr[i] * randomFactor);
+                    
+                    // 加入紙張層隨機厚度
+                    if (layerType === 'paper') {
+                        radius += (1.5 + Math.abs(seedArr[i] * 4.0));
+                    }
+                }
+
+                const finalX = radius * Math.sin(angle);
+                const finalY = radius * Math.cos(angle);
+                
+                points.push(`${finalX}% ${finalY}%`);
+            }
+            points.push('0% 0%'); 
+
+        } else {
+            // 右下角撕裂
+            points.push('100% 100%'); 
+            
+            for (let i = 0; i <= segments; i++) {
+                const ratio = i / segments; 
+                const angle = (Math.PI / 2) * ratio; 
+                
+                let radius = progress * 180;
+                
+                if (progress > 0.01) {
+                    radius += (seedArr[i] * randomFactor);
+                    if (layerType === 'paper') {
+                        radius += (1.5 + Math.abs(seedArr[i] * 4.0));
+                    }
+                }
+                
+                const offX = radius * Math.sin(angle);
+                const offY = radius * Math.cos(angle);
+                
+                points.push(`${100 - offX}% ${100 - offY}%`);
+            }
+        }
+
+        return `polygon(${points.join(',')})`;
+    }
 
 	function renderUI(skipScroll) {
         const firstPositions = getCardPositions();
@@ -10236,6 +10378,10 @@
             if(hint) hint.style.display = 'block';
         }
         
+		// [新增] UI 初始化時，確保隱藏紙張層 (編輯時只看圖)
+        const paperLayer = document.getElementById('rb-paper-layer');
+        if (paperLayer) paperLayer.style.display = 'none';
+		
         overlay.style.display = 'block';
         overlay.classList.add('editing');
         initRbInteraction(layer);
@@ -10384,6 +10530,10 @@
         const hint = document.getElementById('rb-edit-hint');
         if(hint) hint.style.display = 'block';
 
+		// [新增] 隱藏紙張層
+        const paperLayer = document.getElementById('rb-paper-layer');
+        if(paperLayer) paperLayer.style.display = 'none';
+		
         // --- [新增] 3. 恢復 Action Log 介面狀態 ---
         const list = document.getElementById('action-list');
         if (list) {
@@ -10401,89 +10551,96 @@
     // 6. 播放特效 (核心動畫邏輯)
     function playRealityBreak(data, onComplete) {
         const overlay = document.getElementById('rb-overlay');
-        const layer = document.getElementById('rb-inner-layer');
+        const imgLayer = document.getElementById('rb-inner-layer');
+        const paperLayer = document.getElementById('rb-paper-layer');
         const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
 
         // A. 初始化
         overlay.style.display = 'block';
-        overlay.classList.remove('editing'); // 確保不是編輯模式
+        overlay.classList.remove('editing');
         
-        // 設定圖片
-        if (data.imgData) {
-            layer.style.backgroundImage = `url(${data.imgData})`;
-        } else {
-            layer.style.backgroundImage = 'none';
-            layer.style.backgroundColor = 'white'; // 預設白底
-        }
+        // 設定圖片與樣式
+        const setLayerStyle = (el, isPaper) => {
+            if (!isPaper && data.imgData) {
+                el.style.backgroundImage = `url(${data.imgData})`;
+                el.style.backgroundColor = 'transparent';
+            } else if (isPaper) {
+                // 紙張層維持 CSS 定義的紋理
+                el.style.backgroundImage = ''; 
+                el.style.backgroundColor = ''; 
+            } else {
+                el.style.backgroundImage = 'none';
+                el.style.backgroundColor = 'white';
+            }
+            
+            // 位置同步
+            const st = data.style || {x:50, y:50, scale:1};
+            el.style.backgroundPosition = `${st.x}% ${st.y}%`;
+            el.style.backgroundSize = `${st.scale * 100}%`;
+            el.style.opacity = '1';
+            el.style.transition = 'none'; // 先歸零
+        };
 
-        // 設定位置
-        const st = data.style || {x:50, y:50, scale:1};
-        layer.style.backgroundPosition = `${st.x}% ${st.y}%`;
-        layer.style.backgroundSize = `${st.scale * 100}%`;
-        layer.style.opacity = '1';
+        setLayerStyle(imgLayer, false);
+        setLayerStyle(paperLayer, true);
+        
+        // 顯示紙張層
+        paperLayer.style.display = 'block';
 
-        // B. 決定撕裂路徑
+        // B. 準備隨機鋸齒種子
+        // [修改] 產生兩組「獨立」的亂數種子，讓表層跟紙張層的鋸齒形狀不一樣
+        const seedImg = Array.from({length: 100}, () => (Math.random() - 0.5));
+        const seedPaper = Array.from({length: 100}, () => (Math.random() - 0.5));
+        
         let pattern = data.pattern;
         if (!pattern || pattern === 'random') {
             const opts = ['center', 'corner-tl', 'corner-br'];
             pattern = opts[Math.floor(Math.random() * opts.length)];
         }
 
-        let startClip, midClip, endClip;
-
-        // 定義 Clip-path 關鍵格
-        // 概念：外層覆蓋物 (Overlay) 其實是透明的，我們看到的是 inner-layer
-        // 所以 inner-layer 的 clip-path 從「無 (0%)」變「有 (100%)」
-        // 這樣看起來就像是原本的畫面被撕開，露出了 inner-layer
+        // C. 設定初始狀態 (閉合)
+        // [修改] 分別傳入 seedImg 與 seedPaper
+        const startPolyImg = generateJaggedPoly(0, pattern, seedImg, 'image');
+        const startPolyPaper = generateJaggedPoly(0, pattern, seedPaper, 'paper');
         
-        if (pattern === 'center') {
-            // 中間撕裂：一條細線變寬
-            startClip = 'polygon(50% 0, 50% 0, 50% 100%, 50% 100%)';
-            // 隨機產生鋸齒狀
-            midClip = 'polygon(45% 0, 55% 0, 52% 20%, 48% 40%, 55% 60%, 45% 80%, 55% 100%, 45% 100%)'; 
-            endClip = 'polygon(0% 0, 100% 0, 100% 100%, 0% 100%)'; // 全開
-        } else if (pattern === 'corner-tl') {
-            // 左上角撕開
-            startClip = 'polygon(0 0, 0 0, 0 0)';
-            midClip = 'polygon(0 0, 40% 0, 0 40%)';
-            endClip = 'polygon(0 0, 150% 0, 0 150%)'; // 超出邊界以全開
-        } else {
-            // 右下角撕開
-            startClip = 'polygon(100% 100%, 100% 100%, 100% 100%)';
-            midClip = 'polygon(100% 100%, 60% 100%, 100% 60%)';
-            endClip = 'polygon(100% 100%, -50% 100%, 100% -50%)';
-        }
+        imgLayer.style.clipPath = startPolyImg;
+        paperLayer.style.clipPath = startPolyPaper;
 
-        // C. 動畫序列
+        // D. 開始動畫序列
         
         // 1. 開始震動
         body.classList.add('shaking');
         
-        // 2. 設定初始 Clip
-        layer.style.transition = 'none';
-        layer.style.clipPath = startClip;
+        // 強制 Reflow
+        void imgLayer.offsetWidth;
 
-        // 3. 強制 Reflow
-        void layer.offsetWidth;
-
-        // 4. 第一階段：撕裂開始 (0.1s ~ 0.5s)
+        // 2. 撕裂過程 (0.1s -> 2.0s)
         setTimeout(() => {
-            layer.style.transition = 'clip-path 1.5s cubic-bezier(0.2, 1, 0.3, 1)';
-            layer.style.clipPath = endClip; // 直接撕到底
+            // 設定 CSS transition
+            const transitionCSS = 'clip-path 2.0s cubic-bezier(0.2, 1, 0.3, 1)';
+            imgLayer.style.transition = transitionCSS;
+            paperLayer.style.transition = transitionCSS;
+            
+            // 計算終點狀態 (全開)
+            // [修改] 分別使用不同的種子計算路徑
+            const endPolyImg = generateJaggedPoly(1.5, pattern, seedImg, 'image');
+            const endPolyPaper = generateJaggedPoly(1.5, pattern, seedPaper, 'paper');
+            
+            imgLayer.style.clipPath = endPolyImg;
+            paperLayer.style.clipPath = endPolyPaper;
         }, 100);
 
-        // 5. 結束震動 & 白光閃爍 (在 1.5s 處)
+        // 3. 結束震動 & 白光閃爍 (在 1.8s 處)
         setTimeout(() => {
             body.classList.remove('shaking');
-            flash.style.opacity = '1'; // 亮白
-        }, 1500);
+            flash.style.opacity = '1';
+        }, 1800);
 
-        // 6. 退場 (在 2.0s 處)
+        // 4. 退場 (在 2.5s 處)
         setTimeout(() => {
-            // 讓 inner layer 消失，露出原本的盤面
             overlay.style.display = 'none';
-            flash.style.opacity = '0'; // 白光淡出
+            flash.style.opacity = '0';
             
             if (onComplete) onComplete();
         }, 2500);
@@ -10785,7 +10942,10 @@
 <div id="rps-overlay"></div>
 <div id="emotion-preview-tooltip"></div>
 <div id="rb-overlay">
+    <div id="rb-paper-layer"></div>
+    
     <div id="rb-inner-layer"></div>
+    
     <div id="rb-edit-hint">
         點擊此處並按下 Ctrl+V 貼上圖片<br>
         (拖曳可移動，滾輪可縮放)
