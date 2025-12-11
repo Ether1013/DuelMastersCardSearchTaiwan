@@ -8880,7 +8880,15 @@
 			globalAudioPlayer.muted = true;
 		} 
 
-		fetch(scriptUrl, { cache: "no-store" })
+		// [修改] 確保 scriptUrl 已經包含時間戳 (如果 confirmMobileScript 沒加到的話這裡補強)
+        // 但你的 confirmMobileScript 已經有加 '?v=' + timestamp，所以這裡主要依賴 fetch 設定
+        // 為了雙重保險，我們可以檢查一下
+        let finalUrl = scriptUrl;
+        if (!finalUrl.includes('?')) {
+             finalUrl += '?v=' + Date.now();
+        }
+
+		fetch(finalUrl, { cache: "no-store", headers: { 'Cache-Control': 'no-cache' } })
 			.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
 			.then(data => {
 				if(!data.history || !data.initialState) throw new Error("Invalid script");
@@ -9248,7 +9256,9 @@
 
             if (scriptUrl) {
                 console.log("Found scriptUrl:", scriptUrl);
-                fetch(scriptUrl)
+				// [修改] 加上時間戳記參數，強制瀏覽器抓取最新版
+                const noCacheUrl = scriptUrl + '?v=' + Date.now();
+                fetch(noCacheUrl, { cache: 'no-cache' })
                     .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
                     .then(data => {
                         if(!data.history || !data.initialState) throw new Error("Invalid script");
