@@ -16,8 +16,13 @@
             --card-width: 50px;
             --card-height: 70px;
             --bg-color: #dcdcdc;
-            --p1-color: #e3f2fd;
-            --p2-color: #fce4ec;
+            
+            /* [修改] 定義動態主題變數 (預設: P1藍, P2紅) */
+            --p1-main: #3498db;
+            --p1-bg: #e3f2fd;
+            --p2-main: #e74c3c;
+            --p2-bg: #fce4ec;
+
             --timeline-width: 320px;
             --highlight-color: #f1c40f;
         }
@@ -221,8 +226,14 @@
             gap: 5px;
         }
 
-        #ability-zone-p2 { background: rgba(252, 228, 236, 0.5); }
-        #ability-zone-p1 { background: rgba(227, 242, 253, 0.5); }
+        /* [修改] 待處理區背景色改用變數，與主戰場連動 */
+        #ability-zone-p2 { 
+            background: var(--p2-bg); 
+            /* 保留原本的透明度質感也可以，但直接用變數會更一致 */
+        }
+        #ability-zone-p1 { 
+            background: var(--p1-bg); 
+        }
 
         #ability-stack-zone:not(.rotated-view) #ability-zone-p2 { border-bottom: 2px dashed #7f8c8d; }
         #ability-stack-zone.rotated-view #ability-zone-p1 { border-bottom: 2px dashed #7f8c8d; }
@@ -265,30 +276,38 @@
             z-index: 50;
             transition: all 0.5s ease;
             border-right: 1px solid rgba(0,0,0,0.1);
+			cursor: pointer; /* [新增] 提示可點擊 */
         }
         
+        /* [修改] P1 呼吸燈動畫 (使用變數) */
         #player1-area.active-turn .turn-bar {
-            background: #3498db;
-            box-shadow: 0 0 15px 2px rgba(52, 152, 219, 0.8);
-            animation: pulse-blue 2s infinite;
+            background: var(--p1-main);
+            box-shadow: 0 0 15px 2px var(--p1-main); /* 用 JS 動態調整或設為變數太複雜，這裡簡化處理 */
+            animation: pulse-p1 2s infinite;
         }
         
+        /* [修改] P2 呼吸燈動畫 (使用變數) */
         #player2-area.active-turn .turn-bar {
-            background: #e91e63;
-            box-shadow: 0 0 15px 2px rgba(233, 30, 99, 0.8);
-            animation: pulse-red 2s infinite;
+            background: var(--p2-main);
+            box-shadow: 0 0 15px 2px var(--p2-main);
+            animation: pulse-p2 2s infinite;
         }
         
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 10px 2px rgba(52, 152, 219, 0.5); }
-            50% { box-shadow: 0 0 20px 5px rgba(52, 152, 219, 0.9); }
-            100% { box-shadow: 0 0 10px 2px rgba(52, 152, 219, 0.5); }
+		/* [修改] 定義通用的呼吸燈 Keyframes (利用 CSS 變數) */
+        /* 注意：CSS Keyframes 對變數支援度有時有坑，
+           這裡我們改用 opacity 變化，或者直接在 JS 注入 keyframes。
+           為了簡單穩健，我們維持原本的 pulse-blue/red 但顏色改為接近的變數效果，
+           或是最簡單的方式：直接修改 pulse-blue/red 的內容如下：
+        */
+        @keyframes pulse-p1 {
+            0% { box-shadow: 0 0 10px 2px var(--p1-main); opacity: 0.8; }
+            50% { box-shadow: 0 0 25px 8px var(--p1-main); opacity: 1; }
+            100% { box-shadow: 0 0 10px 2px var(--p1-main); opacity: 0.8; }
         }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 10px 2px rgba(233, 30, 99, 0.5); }
-            50% { box-shadow: 0 0 20px 5px rgba(233, 30, 99, 0.9); }
-            100% { box-shadow: 0 0 10px 2px rgba(233, 30, 99, 0.5); }
+        @keyframes pulse-p2 {
+            0% { box-shadow: 0 0 10px 2px var(--p2-main); opacity: 0.8; }
+            50% { box-shadow: 0 0 25px 8px var(--p2-main); opacity: 1; }
+            100% { box-shadow: 0 0 10px 2px var(--p2-main); opacity: 0.8; }
         }
 
         #reveal-zone {
@@ -436,7 +455,7 @@
         }
 
         #player2-area {
-            background-color: var(--p2-color);
+            background-color: var(--p2-bg); /* [修改] */
             border-bottom: 2px dashed #999;
         }
         
@@ -445,7 +464,9 @@
         #player2-area .shield-zone { order: 1; }
         #player2-area .battle-zone { order: 2; }
         
-        #player1-area { background-color: var(--p1-color); }
+        #player1-area { 
+            background-color: var(--p1-bg); /* [修改] */
+        }
 
         .zone {
             border: 1px solid rgba(0,0,0,0.15);
@@ -1533,17 +1554,55 @@
         .diag-box {
             flex: 1; height: 100%; max-width: 70%;
             background: linear-gradient(180deg, rgba(0,20,40,0.9) 0%, rgba(0,10,20,0.95) 100%);
-            border: 2px solid #3498db; border-radius: 8px;
+            border: 2px solid var(--p1-main); /* 預設 P1 顏色 */
             display: flex; flex-direction: column; padding: 15px;
             position: relative; margin: 0 20px;
-            box-shadow: 0 0 15px rgba(52, 152, 219, 0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2); /* 簡化陰影，避免顏色運算 */
             backdrop-filter: blur(2px);
         }
-        
-        /* 顏色變體 */
-        .diag-row.top .diag-box { border-color: #c0392b; box-shadow: 0 0 15px rgba(192, 57, 43, 0.2); }
-        .diag-row.top .diag-portrait { border-color: #c0392b; }
-        .diag-row.bottom .diag-portrait { border-color: #3498db; }
+        		
+		/* P1 對話樣式 */
+        .diag-row.bottom .diag-box { border-color: var(--p1-main); }
+        .diag-row.bottom .diag-portrait { border-color: var(--p1-main); }
+        .diag-row.bottom .diag-name { background: var(--p1-main); }
+
+        /* P2 對話樣式 */
+        .diag-row.top .diag-box { border-color: var(--p2-main); }
+        .diag-row.top .diag-portrait { border-color: var(--p2-main); }
+        .diag-row.top .diag-name { background: var(--p2-main); }
+		
+		#theme-picker-modal .modal-content {
+            width: 340px;
+        }
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .color-swatch {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .color-swatch:hover { transform: scale(1.1); }
+        .color-swatch.active { border-color: #333; transform: scale(0.95); }
+        .color-swatch.disabled { 
+            opacity: 0.2; 
+            cursor: not-allowed; 
+            filter: grayscale(1);
+        }
+        .color-swatch.disabled::after {
+            content: "✖";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #333; font-weight: bold;
+        }
 
         /* 名字標籤 */
         .diag-name {
@@ -2611,7 +2670,7 @@
             </div>
 
             <div id="player2-area" class="player-area">
-                <div class="turn-bar"></div>
+                <div class="turn-bar" onclick="openThemePicker(2)" title="點擊更換 P2 代表色"></div>
                 <div class="battle-zone zone" data-zone="p2-battle" onclick="handleZoneClick('p2-battle')"><span class="zone-label" data-i18n="zone_battle">P2 戰鬥場</span></div>
                 <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label" data-i18n="zone_shield">P2 護盾區</span></div>
                 <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label" data-i18n="zone_mana">P2 魔力區</span></div>
@@ -2626,7 +2685,7 @@
             </div>
 
             <div id="player1-area" class="player-area">
-                <div class="turn-bar"></div>
+                <div class="turn-bar" onclick="openThemePicker(1)" title="點擊更換 P1 代表色"></div>
                 <div class="battle-zone zone" data-zone="p1-battle" onclick="handleZoneClick('p1-battle')"><span class="zone-label" data-i18n="zone_battle">P1 戰鬥場</span></div>
                 <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label" data-i18n="zone_shield">P1 護盾區</span></div>
                 <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label" data-i18n="zone_mana">P1 魔力區</span></div>
@@ -2742,7 +2801,19 @@
     <span style="font-size:0.8rem; opacity:0.8;">(點擊區域移動 / ESC取消)</span>
     <button onclick="cancelSelection()" style="background:#c0392b; border:none; padding:2px 8px; border-radius:10px; font-size:0.8rem; cursor:pointer;">✕</button>
 </div>
+<div id="theme-picker-modal" class="modal">
+    <div class="modal-content">
+        <h3 id="theme-picker-title" style="margin-top:0; text-align:center;">選擇主題色</h3>
+        <p style="font-size:0.85rem; color:#666; text-align:center;">對手已使用的顏色無法選擇。</p>
+        
+        <div class="color-grid" id="theme-color-grid">
+            </div>
 
+        <div style="text-align:right;">
+            <button class="danger" onclick="closeThemePicker()">取消</button>
+        </div>
+    </div>
+</div>
 <div id="setup-modal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; text-align:center;" data-i18n="title_setup">開局設定</h3>
@@ -3721,6 +3792,98 @@
 		if(!document.body.classList.contains('mobile-mode')) saveToStorage();
 	}
 
+	// --- [新增] 主題顏色定義 ---
+    const THEME_PALETTE = {
+        red:    { main: '#e74c3c', bg: '#f9ebe7', name: '熱血紅' },
+        orange: { main: '#e67e22', bg: '#fdf2e9', name: '活力橙' },
+        yellow: { main: '#f1c40f', bg: '#fef9e7', name: '閃耀黃' },
+        teal:   { main: '#1abc9c', bg: '#e8f8f5', name: '青綠色' },
+        olive:  { main: '#6b8e23', bg: '#f4f6f0', name: '軍綠色' }, // Olive Drab
+        blue:   { main: '#3498db', bg: '#e3f2fd', name: '冷靜藍' },
+		purple: { main: '#9b59b6', bg: '#f4ecf7', name: '神秘紫' },
+        black:  { main: '#2c3e50', bg: '#eaeded', name: '深沉黑' },
+        white:  { main: '#95a5a6', bg: '#f7f9f9', name: '純潔白' } // 使用灰銀色代替純白以顯示邊框
+    };
+
+    // 全域設定 (預設值)
+    let globalThemeSettings = { p1: 'blue', p2: 'red' };
+
+    // 1. 套用顏色變數到 CSS
+    function applyThemeVariables() {
+        const root = document.documentElement;
+        
+        const p1 = THEME_PALETTE[globalThemeSettings.p1] || THEME_PALETTE.blue;
+        const p2 = THEME_PALETTE[globalThemeSettings.p2] || THEME_PALETTE.red;
+
+        root.style.setProperty('--p1-main', p1.main);
+        root.style.setProperty('--p1-bg', p1.bg);
+        
+        root.style.setProperty('--p2-main', p2.main);
+        root.style.setProperty('--p2-bg', p2.bg);
+    }
+
+    // 2. 開啟選擇器
+    let currentPickingPlayer = 0; // 1 or 2
+
+    function openThemePicker(playerId) {
+        // 如果是手機版，不允許點擊 (因為手指容易誤觸)
+        if (document.body.classList.contains('mobile-mode')) return;
+
+        currentPickingPlayer = playerId;
+        const modal = document.getElementById('theme-picker-modal');
+        const grid = document.getElementById('theme-color-grid');
+        const title = document.getElementById('theme-picker-title');
+        
+        title.innerText = `選擇 P${playerId} 代表色`;
+        grid.innerHTML = '';
+
+        // 取得對手用的顏色 (需要被停用)
+        const opponentColor = playerId === 1 ? globalThemeSettings.p2 : globalThemeSettings.p1;
+        const myColor = playerId === 1 ? globalThemeSettings.p1 : globalThemeSettings.p2;
+
+        Object.keys(THEME_PALETTE).forEach(key => {
+            const colorData = THEME_PALETTE[key];
+            const div = document.createElement('div');
+            div.className = 'color-swatch';
+            div.style.backgroundColor = colorData.main;
+            div.title = colorData.name;
+
+            // 狀態判斷
+            if (key === opponentColor) {
+                div.classList.add('disabled');
+                div.title += " (對手已佔用)";
+            } else {
+                div.onclick = () => selectThemeColor(key);
+            }
+
+            if (key === myColor) {
+                div.classList.add('active');
+            }
+
+            grid.appendChild(div);
+        });
+
+        modal.style.display = 'flex';
+    }
+
+    function closeThemePicker() {
+        document.getElementById('theme-picker-modal').style.display = 'none';
+    }
+
+    function selectThemeColor(colorKey) {
+        if (currentPickingPlayer === 1) {
+            globalThemeSettings.p1 = colorKey;
+        } else {
+            globalThemeSettings.p2 = colorKey;
+        }
+
+        applyThemeVariables();
+        closeThemePicker();
+        
+        // 變更設定後，自動存檔 (更新 core data)
+        saveToStorage();
+    }
+	
     class GameState {
         constructor() {
             this.cards = [];
@@ -4219,6 +4382,7 @@
 				lastUsedStyles: globalLastUsedStyles, // [新增] 存檔
 				lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
 				aceRegistry: globalAceRegistry, // [新增]
+				themeSettings: globalThemeSettings, // [新增]
 			};
 
 			// 2. [修改] 垃圾回收 (GC) 與 拆分圖片資料
@@ -4291,6 +4455,15 @@
             
             globalAceRegistry = data.aceRegistry || {};
             
+			// [新增] 載入主題
+            if (data.themeSettings) {
+                globalThemeSettings = data.themeSettings;
+            } else {
+                globalThemeSettings = { p1: 'blue', p2: 'red' };
+            }
+            applyThemeVariables(); // 套用
+			
+			
             // [修改] 移除 globalMoonlessRegistry 賦值，改為遷移邏輯
             // 如果存檔中有舊版的無月資料，將其移轉至 initialState
             if (data.moonlessRegistry) {
@@ -8253,6 +8426,7 @@
 			lastUsedStyles: globalLastUsedStyles,
             lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
             aceRegistry: globalAceRegistry,
+			themeSettings: globalThemeSettings, // [新增]
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
@@ -8331,6 +8505,16 @@
 		globalLastUsedStyles = data.lastUsedStyles || {};
 		// [新增] 讀取王牌設定
 		globalAceRegistry = data.aceRegistry || {};
+		
+		// [新增] 讀取主題設定
+        if (data.themeSettings) {
+            globalThemeSettings = data.themeSettings;
+        } else {
+            // 如果匯入舊檔沒有設定，恢復預設
+            globalThemeSettings = { p1: 'blue', p2: 'red' };
+        }
+        // 立即套用顏色
+        applyThemeVariables();
         
         // [修改] 移除 globalMoonlessRegistry = ...
         // 改為：如果是舊版存檔，將無月設定合併進 initialState
@@ -9194,6 +9378,10 @@
 
     // --- Main Entry Point ---
     window.onload = function() {
+	
+		// [新增] 預設套用一次顏色 (避免畫面閃爍)
+        applyThemeVariables();
+		
         // 1. 基本初始化
         const urlParams = new URLSearchParams(window.location.search);
         let scriptUrl = urlParams.get('scriptUrl');
