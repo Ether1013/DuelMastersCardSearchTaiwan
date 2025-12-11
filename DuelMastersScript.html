@@ -2672,11 +2672,33 @@
 		100% { transform: translate(0, 0) rotate(0deg); }
 	}
 
-	/* [修改] 套用到 body 的 class (加入 #rb-inner-layer) */
-	body.shaking #workspa	ce, 
-	body.shaking #toolbar,
-	body.shaking #rb-inner-layer,
-	body.shaking #rb-paper-layer	{
+	/* --- 修改：分離震動控制 --- */
+
+	/* 4. 畫面震動動畫 (Earthquake) - Keyframes 維持不變 */
+	@keyframes violent-shake {
+		0% { transform: translate(0, 0) rotate(0deg); }
+		10% { transform: translate(-10px, -10px) rotate(-1deg); }
+		20% { transform: translate(10px, 10px) rotate(1deg); }
+		30% { transform: translate(-15px, 5px) rotate(0deg); }
+		40% { transform: translate(15px, -15px) rotate(1deg); }
+		50% { transform: translate(-5px, 15px) rotate(-1deg); }
+		60% { transform: translate(10px, 5px) rotate(0deg); }
+		70% { transform: translate(-15px, -15px) rotate(1deg); }
+		80% { transform: translate(10px, 10px) rotate(-1deg); }
+		90% { transform: translate(-5px, -5px) rotate(0deg); }
+		100% { transform: translate(0, 0) rotate(0deg); }
+	}
+
+	/* [A] 表層震動：包含 遊戲盤面(workspace)、工具列(toolbar)、以及撕裂的白邊(paper-layer) */
+	/* 因為白邊是屬於表層紙張的一部分，物理上它必須跟著盤面一起晃 */
+	body.shaking-outer #workspace, 
+	body.shaking-outer #toolbar,
+	body.shaking-outer #rb-paper-layer { 
+		animation: violent-shake 0.5s linear infinite;
+	}
+
+	/* [B] 底層震動：只包含 露出的內層圖片(inner-layer) */
+	body.shaking-inner #rb-inner-layer { 
 		animation: violent-shake 0.5s linear infinite;
 	}
 
@@ -2692,6 +2714,38 @@
 		pointer-events: auto;
 	}
 	#rb-overlay.editing #rb-controls { display: flex; }
+	
+	/* --- [修改] UI 狀態優化 --- */
+
+	/* 1. 編輯中的 Action Log：明顯的虛線框 */
+	.action-item.editing {
+		border: 2px dashed #f39c12 !important; /* 橘色虛線 */
+		background-color: #fffbe6 !important;   /* 淡黃底色 */
+		
+		/* 稍微放大並加陰影，讓它浮起來的感覺 */
+		transform: scale(1.02); 
+		box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+		z-index: 5;
+		border-left: 2px dashed #f39c12 !important; /* 覆蓋原本的左側實線 */
+	}
+
+	/* 2. 特效按鈕亮起狀態 (Highlight) */
+	#btn-rb-effect.highlight {
+		background-color: #f1c40f !important; /* 亮黃色 */
+		color: #2c3e50 !important;            /* 深色文字 */
+		font-weight: bold;
+		border-color: #d35400 !important;     /* 深橘邊框 */
+		
+		/* 發光呼吸燈動畫 */
+		box-shadow: 0 0 15px rgba(241, 196, 15, 0.8);
+		animation: rb-btn-pulse 1.5s infinite ease-in-out;
+	}
+
+	@keyframes rb-btn-pulse {
+		0% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+		50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(241, 196, 15, 1); }
+		100% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+	}
 	</style>
 </head>
 <body>
@@ -2716,7 +2770,7 @@
         <option value="2" data-i18n="btn_p2_win">🏆 2P Win</option>
     </select>
 	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
-	<button onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;">⚡ 特效</button>
+	<button id="btn-rb-effect" onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;">⚡ 特效</button>
     <div style="flex:1"></div>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
@@ -4966,14 +5020,22 @@
     }
 	
     function saveDraft(customDesc) {
+        // [關鍵修正] 如果沒有任何操作 (未變更)
         if (draftOperations.length === 0) {
             isDrafting = false;
+            
+            // 1. 隱藏 Draft Bar
             updateDraftBar();
             
-            // 解鎖 Scrollbar
-            document.getElementById('action-list').classList.remove('locked');
+            // 2. 解鎖捲軸
+            const list = document.getElementById('action-list');
+            if (list) list.classList.remove('locked');
             
+            // 3. 重繪並返回
             renderUI();
+            
+            // 確保捲動回定位
+            setTimeout(() => scrollToActiveStep(), 50);
             return;
         }
 
@@ -4993,11 +5055,12 @@
             } else if (firstOp.type === 'ATTACK') {
                 desc = firstOp.desc || t('op_ATTACK');
             } else if (firstOp.type === 'DIALOGUE') {
-                // 對話動作的預設描述 (如果沒傳入 customDesc)
                 const data = firstOp.data;
                 desc = "[對話] ";
                 if (data.p2 && data.p2.active) desc += `${data.p2.name}... `;
                 if (data.p1 && data.p1.active) desc += `${data.p1.name}...`;
+            } else if (firstOp.type === 'REALITY_BREAK') {
+                desc = "[特效] 次元破裂 (Reality Break)";
             } else {
                 desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
             }
@@ -5020,39 +5083,26 @@
         }
 
         if (propagate) {
-			// [情境 A：開啟連動] 
-			// 1. 既然要連動，代表後續步驟應該要「認祖歸宗」，接上新的 A4'
-			// 2. 所以如果 tail[0] (A5) 身上有「斷層存檔」，要把它刪掉
-			if (tail.length > 0 && tail[0].detachedStartState) {
-				delete tail[0].detachedStartState;
-			}
+            if (tail.length > 0 && tail[0].detachedStartState) {
+                delete tail[0].detachedStartState;
+            }
 
-			let runningState = cloneState(finalState);
-			tail = tail.map(item => {
-				// 連動時也要順便把後續步驟身上的斷層存檔都清乾淨，確保整條線重算
-				if (item.detachedStartState) delete item.detachedStartState;
-				
-				try {
-					item.action.operations.forEach(op => applyOperation(runningState, op));
-				} catch(e) { console.error("Propagate Error", e); }
-				return { action: item.action, state: cloneState(runningState) };
-			});
-		} 
-		else {
-			// [情境 B：不連動 (製造斷層)]
-			// 如果還有下一步 (例如修改 A4，後面還有 A5)
-			if (tail.length > 0) {
-				// 我們要把「原本 A4 的結果」存給 A5 當作它的「私房起點」
-				// 只有當 A5 還沒有私房起點時才存 (避免連續修改 A4 時覆蓋掉最早的狀態)
-				
-				// 注意：editModeType === 'EDIT' 時，history[insertIndex] 還是舊的 A4
-				if (editModeType === 'EDIT' && !tail[0].detachedStartState) {
-					// 把舊的 A4 結果狀態複製一份給 A5
-					tail[0].detachedStartState = cloneState(history[insertIndex].state);
-					console.log("已建立時間軸斷層快照，A5 將不受 A4' 影響");
-				}
-			}
-		}
+            let runningState = cloneState(finalState);
+            tail = tail.map(item => {
+                if (item.detachedStartState) delete item.detachedStartState;
+                try {
+                    item.action.operations.forEach(op => applyOperation(runningState, op));
+                } catch(e) { console.error("Propagate Error", e); }
+                return { action: item.action, state: cloneState(runningState) };
+            });
+        } 
+        else {
+            if (tail.length > 0) {
+                if (editModeType === 'EDIT' && !tail[0].detachedStartState) {
+                    tail[0].detachedStartState = cloneState(history[insertIndex].state);
+                }
+            }
+        }
 
         history = [...head, newItem, ...tail];
 
@@ -5062,32 +5112,49 @@
         draftOperations = [];
         updateDraftBar();
         renderUI();
-        
-        // 這裡就是關鍵的存檔機制
         saveToStorage(); 
         
-        // 解鎖 Scrollbar
-        document.getElementById('action-list').classList.remove('locked');
-		
-		// [新增] 存檔後的狀態判斷
-        // 如果剛剛存檔的是「最新的最後一步」，則將旗標設為 true
-        // 這樣使用者的下一個動作就會自動變成「新增步驟」
+        // [關鍵修正] 存檔成功後，務必解鎖捲軸
+        const list = document.getElementById('action-list');
+        if (list) list.classList.remove('locked');
+        
         if (currentIndex === history.length - 1) {
             forceNewStep = true;
         } else {
             forceNewStep = false;
         }
+        
+        // 捲動回定位
+        setTimeout(() => scrollToActiveStep(), 50);
     }
 
     function cancelDraft() {
         isDrafting = false;
         draftOperations = [];
+        editModeType = 'INSERT'; // 重置模式
+        
+        // 清除選取狀態
         cancelSelection();
+        
+        // 1. 更新 Draft Bar (因為 isDrafting=false，這會隱藏它)
         updateDraftBar();
+        
+        // 2. [關鍵修正] 解鎖 Action Log 的捲軸
+        const list = document.getElementById('action-list');
+        if (list) {
+            list.classList.remove('locked');
+        }
+
+        // 校正索引
         if(currentIndex >= history.length) currentIndex = history.length - 1;
-		// --- 新增：解鎖 Scrollbar ---
-        document.getElementById('action-list').classList.remove('locked');
+        
+        // 重繪畫面
         renderUI();
+
+        // 3. 自動捲動回原本的位置 (提升體驗)
+        setTimeout(() => {
+            scrollToActiveStep();
+        }, 50);
     }
 
     function updateDraftBar() {
@@ -5125,64 +5192,65 @@
 
     // --- [取代] deleteAction 函式 (強化版) ---
 	function deleteAction(index) {
-		// 1. 安全檢查：編輯中禁止刪除
-		if (typeof isDrafting !== 'undefined' && isDrafting) {
-			alert("請先完成或取消目前的編輯動作 (Draft)，才能刪除步驟。");
-			return;
-		}
+        // 1. 安全檢查
+        if (typeof isDrafting !== 'undefined' && isDrafting) {
+            alert("請先完成或取消目前的編輯動作 (Draft)，才能刪除步驟。");
+            return;
+        }
 
-		if (index === 0) return alert(t('msg_cannot_del_init'));
-		if (!confirm(t('msg_confirm_del_step'))) return;
+        if (index === 0) return alert(t('msg_cannot_del_init'));
+        if (!confirm(t('msg_confirm_del_step'))) return;
 
-		// 2. 切割陣列
-		const head = history.slice(0, index);
-		let tail = history.slice(index + 1);
+        // 2. 切割陣列
+        const head = history.slice(0, index);
+        let tail = history.slice(index + 1);
 
-		// [關鍵修正 A] 清除斷層快照
-		// 因為 index 被刪除了，index+1 (現在的 tail[0]) 的快照是基於舊歷史的，必須作廢
-		if (tail.length > 0) {
-			if (tail[0].detachedStartState) {
-				console.log("偵測到刪除操作，清除後續動作的斷層快照以避免殘留...");
-				delete tail[0].detachedStartState;
-			}
-		}
+        // 清除斷層快照
+        if (tail.length > 0) {
+            if (tail[0].detachedStartState) {
+                delete tail[0].detachedStartState;
+            }
+        }
 
-		// [關鍵修正 B] 強制重算後續狀態 (Propagate)
-		// 刪除中間一步後，後面的盤面狀態(State)其實都髒掉了，必須重算一遍
-		// 否則記憶體裡的 State 還是舊的，直到下次編輯才會更新
-		if (tail.length > 0) {
-			// 取得新的基礎狀態 (來自 head 的最後一步)
-			let runningState = cloneState(head[head.length - 1].state);
-			
-			tail = tail.map(item => {
-				// 清除所有後續的快照，確保連動正確
-				if (item.detachedStartState) delete item.detachedStartState;
-				
-				try {
-					// 重新運算動作
-					item.action.operations.forEach(op => applyOperation(runningState, op));
-				} catch(e) { console.error("Recalc Error after delete", e); }
-				
-				// 更新狀態
-				return { action: item.action, state: cloneState(runningState) };
-			});
-		}
+        // 強制重算後續狀態
+        if (tail.length > 0) {
+            let runningState = cloneState(head[head.length - 1].state);
+            tail = tail.map(item => {
+                if (item.detachedStartState) delete item.detachedStartState;
+                try {
+                    item.action.operations.forEach(op => applyOperation(runningState, op));
+                } catch(e) { console.error("Recalc Error after delete", e); }
+                return { action: item.action, state: cloneState(runningState) };
+            });
+        }
 
-		// 3. 組合新的歷史紀錄
-		history = [...head, ...tail];
+        // 3. 組合新的歷史紀錄
+        history = [...head, ...tail];
 
-		// 4. UI 更新
-		lastRenderedState = null; 
-		
-		// 強制將焦點設為被刪除者的「上一步」
-		currentIndex = index - 1;
-		if (currentIndex < 0) currentIndex = 0;
-		
-		if (typeof cancelSelection === 'function') cancelSelection(); 
-		
-		renderUI(true);
-		saveToStorage();
-	}
+        // 4. UI 更新
+        lastRenderedState = null; 
+        
+        // 強制將焦點設為被刪除者的「上一步」
+        currentIndex = index - 1;
+        if (currentIndex < 0) currentIndex = 0;
+        
+        if (typeof cancelSelection === 'function') cancelSelection(); 
+        
+        renderUI(true);
+        saveToStorage();
+
+        // --- [關鍵修正] 刪除後強制解鎖 Scrollbar ---
+        // 這是解決刪除後無法捲動的關鍵
+        const list = document.getElementById('action-list');
+        if (list) {
+            list.classList.remove('locked');
+        }
+        
+        // 重新定位到當前步驟
+        setTimeout(() => {
+            scrollToActiveStep();
+        }, 100);
+    }
 
 	function applyOperation(state, op) {
 	
@@ -7663,6 +7731,36 @@
 		// [新增] 檢查手機版音樂按鈕可見性
 		checkMobileMusicButtonVisibility(); // <--- 加入這行
 
+		// --- [新增] 檢查並更新「特效按鈕」狀態 ---
+        const btnRb = document.getElementById('btn-rb-effect');
+        if (btnRb) {
+            let hasRb = false;
+
+            // 1. 優先檢查 Draft (編輯模式)
+            if (isDrafting && draftOperations.length > 0) {
+                if (draftOperations.some(o => o.type === 'REALITY_BREAK')) {
+                    hasRb = true;
+                }
+            } 
+            // 2. 其次檢查 Current Step (檢視模式)
+            else if (currentIndex >= 0 && history[currentIndex]) {
+                const ops = history[currentIndex].action.operations;
+                if (ops && ops.some(o => o.type === 'REALITY_BREAK')) {
+                    hasRb = true;
+                }
+            }
+
+            // 切換樣式
+            if (hasRb) {
+                btnRb.classList.add('highlight');
+                btnRb.title = "點擊編輯此特效"; // 加入提示文字
+            } else {
+                btnRb.classList.remove('highlight');
+                btnRb.title = "插入新特效";
+            }
+        }
+        // ----------------------------------------
+		
 		// [修改] 增加 !skipScroll 判斷，手動點擊時不捲動
         if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
              scrollToActiveStep();
@@ -10550,6 +10648,18 @@
 
     // 6. 播放特效 (核心動畫邏輯)
     function playRealityBreak(data, onComplete) {
+        // ==========================================
+        // [參數設定區]
+        // ==========================================
+        const ENABLE_OUTER_SHAKE = false;  // 表層 (盤面+白邊) 是否要晃？
+        const ENABLE_INNER_SHAKE = true; // 底層 (露出的圖) 是否要晃？
+        
+        // [關鍵修改] 撕裂程度 (0.0 ~ 1.0)
+        // 1.5 = 撕破天際 (全黑)
+        // 0.7 = 保留約 30% 的表層 (裂口佔 70%)
+        const TEAR_INTENSITY = 0.7; 
+        // ==========================================
+
         const overlay = document.getElementById('rb-overlay');
         const imgLayer = document.getElementById('rb-inner-layer');
         const paperLayer = document.getElementById('rb-paper-layer');
@@ -10560,13 +10670,11 @@
         overlay.style.display = 'block';
         overlay.classList.remove('editing');
         
-        // 設定圖片與樣式
         const setLayerStyle = (el, isPaper) => {
             if (!isPaper && data.imgData) {
                 el.style.backgroundImage = `url(${data.imgData})`;
                 el.style.backgroundColor = 'transparent';
             } else if (isPaper) {
-                // 紙張層維持 CSS 定義的紋理
                 el.style.backgroundImage = ''; 
                 el.style.backgroundColor = ''; 
             } else {
@@ -10574,22 +10682,19 @@
                 el.style.backgroundColor = 'white';
             }
             
-            // 位置同步
             const st = data.style || {x:50, y:50, scale:1};
             el.style.backgroundPosition = `${st.x}% ${st.y}%`;
             el.style.backgroundSize = `${st.scale * 100}%`;
             el.style.opacity = '1';
-            el.style.transition = 'none'; // 先歸零
+            el.style.transition = 'none'; 
         };
 
         setLayerStyle(imgLayer, false);
         setLayerStyle(paperLayer, true);
         
-        // 顯示紙張層
         paperLayer.style.display = 'block';
 
         // B. 準備隨機鋸齒種子
-        // [修改] 產生兩組「獨立」的亂數種子，讓表層跟紙張層的鋸齒形狀不一樣
         const seedImg = Array.from({length: 100}, () => (Math.random() - 0.5));
         const seedPaper = Array.from({length: 100}, () => (Math.random() - 0.5));
         
@@ -10600,7 +10705,6 @@
         }
 
         // C. 設定初始狀態 (閉合)
-        // [修改] 分別傳入 seedImg 與 seedPaper
         const startPolyImg = generateJaggedPoly(0, pattern, seedImg, 'image');
         const startPolyPaper = generateJaggedPoly(0, pattern, seedPaper, 'paper');
         
@@ -10609,35 +10713,35 @@
 
         // D. 開始動畫序列
         
-        // 1. 開始震動
-        body.classList.add('shaking');
+        // 1. 套用震動
+        if (ENABLE_OUTER_SHAKE) body.classList.add('shaking-outer');
+        if (ENABLE_INNER_SHAKE) body.classList.add('shaking-inner');
         
-        // 強制 Reflow
         void imgLayer.offsetWidth;
 
-        // 2. 撕裂過程 (0.1s -> 2.0s)
+        // 2. 撕裂過程
         setTimeout(() => {
-            // 設定 CSS transition
             const transitionCSS = 'clip-path 2.0s cubic-bezier(0.2, 1, 0.3, 1)';
             imgLayer.style.transition = transitionCSS;
             paperLayer.style.transition = transitionCSS;
             
-            // 計算終點狀態 (全開)
-            // [修改] 分別使用不同的種子計算路徑
-            const endPolyImg = generateJaggedPoly(1.5, pattern, seedImg, 'image');
-            const endPolyPaper = generateJaggedPoly(1.5, pattern, seedPaper, 'paper');
+            // [核心修改] 使用 TEAR_INTENSITY (0.7) 取代原本的 1.5
+            const endPolyImg = generateJaggedPoly(TEAR_INTENSITY, pattern, seedImg, 'image');
+            const endPolyPaper = generateJaggedPoly(TEAR_INTENSITY, pattern, seedPaper, 'paper');
             
             imgLayer.style.clipPath = endPolyImg;
             paperLayer.style.clipPath = endPolyPaper;
         }, 100);
 
-        // 3. 結束震動 & 白光閃爍 (在 1.8s 處)
+        // 3. 結束震動 & 白光閃爍
         setTimeout(() => {
-            body.classList.remove('shaking');
+            body.classList.remove('shaking-outer');
+            body.classList.remove('shaking-inner');
+            
             flash.style.opacity = '1';
         }, 1800);
 
-        // 4. 退場 (在 2.5s 處)
+        // 4. 退場
         setTimeout(() => {
             overlay.style.display = 'none';
             flash.style.opacity = '0';
