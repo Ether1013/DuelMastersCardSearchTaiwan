@@ -40,18 +40,42 @@
         }
 
         #toolbar {
-            height: 45px;
+            height: 40px; /* 原本 45px -> 縮小為 40px */
             background: #2c3e50;
             color: white;
             display: flex;
             align-items: center;
-            padding: 0 10px;
-            gap: 10px;
+            padding: 0 5px; /* 縮小左右邊距 */
+            gap: 5px;       /* 縮小按鈕間距 (原本 10px -> 5px) */
             flex-shrink: 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             z-index: 50;
+            
+            /* [新增] 讓 toolbar 內容過多時可以水平捲動，避免破版 */
+            overflow-x: auto; 
+            white-space: nowrap;
+            /* 隱藏捲軸但保留功能 */
+            scrollbar-width: none; 
+        }
+        #toolbar::-webkit-scrollbar { display: none; }
+		
+		/* [新增] 針對 Toolbar 內的按鈕進行特別縮小 */
+        #toolbar button, 
+        #toolbar select {
+            font-size: 0.75rem !important; /* 原本約 0.85rem -> 縮小 */
+            padding: 3px 6px !important;   /* 縮小內距 */
+            height: 28px;                  /* 固定高度，讓排列整齊 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
+        /* 標題文字也稍微縮小 */
+        #toolbar div[style*="font-weight: 800"] {
+            font-size: 1rem !important; /* 原本 1.1rem */
+            margin-right: 5px !important;
+        }
+		
         #draft-bar {
             background: #e67e22;
             color: white;
