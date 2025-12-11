@@ -5348,6 +5348,16 @@
 			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 90 });
 			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 90 });
 		}
+		
+		// --- [新增邏輯] 區域自動轉正 ---
+        // 當卡片進入 牌庫(deck)、墓地(grave)、超次元(hyper) 時，視為子動作自動轉正 (0度)
+        if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper')) {
+            addOperation({ 
+                type: 'ROTATE_CARD', 
+                cardIds: movingIds, 
+                finalRotation: 0 // 強制設定為 0 度 (直立)
+            });
+        }
 
 		cancelSelection();
 		closeSelectorModal();
@@ -10000,6 +10010,180 @@
 		document.body.classList.remove('is-playing');
 		updatePlayButtonUI();
 	}
+	
+	async function exportReversedWithMirror() {
+		console.log("🚀 開始生成【完全翻轉+頭像鏡射】劇本...");
+
+		// 1. 基礎工具：反轉 ID 與 區域字串
+		const flipId = (id) => (id === 1 ? 2 : (id === 2 ? 1 : id));
+		const flipZone = (zone) => {
+			if (!zone || typeof zone !== 'string') return zone;
+			if (zone.includes('p1')) return zone.replace('p1', 'p2');
+			if (zone.includes('p2')) return zone.replace('p2', 'p1');
+			return zone;
+		};
+
+		// 2. 圖片處理工具：水平翻轉
+		const flipImageBitmap = (base64) => {
+			return new Promise((resolve) => {
+				const img = new Image();
+				img.onload = () => {
+					const canvas = document.createElement('canvas');
+					canvas.width = img.width;
+					canvas.height = img.height;
+					const ctx = canvas.getContext('2d');
+					// 水平翻轉矩陣
+					ctx.translate(canvas.width, 0);
+					ctx.scale(-1, 1);
+					ctx.drawImage(img, 0, 0);
+					resolve(canvas.toDataURL('image/jpeg', 0.85));
+				};
+				img.onerror = () => resolve(base64); // 失敗則回傳原圖
+				img.src = base64;
+			});
+		};
+
+		// 3. 翻轉 State (卡片歸屬、區域)
+		const flipState = (state) => {
+			if (!state) return null;
+			const newState = JSON.parse(JSON.stringify(state));
+
+			if (newState.turnPlayer) newState.turnPlayer = flipId(newState.turnPlayer);
+			if (newState.winner) newState.winner = flipId(newState.winner);
+
+			if (newState.cards) {
+				newState.cards.forEach(c => {
+					c.ownerId = flipId(c.ownerId);
+					c.zone = flipZone(c.zone);
+				});
+			}
+
+			// 對話與猜拳資料反轉
+			if (newState.dialogueData) {
+				const temp = newState.dialogueData.p1;
+				newState.dialogueData.p1 = newState.dialogueData.p2;
+				newState.dialogueData.p2 = temp;
+			}
+			if (newState.rpsResult) {
+				const temp = newState.rpsResult.p1;
+				newState.rpsResult.p1 = newState.rpsResult.p2;
+				newState.rpsResult.p2 = temp;
+				if (newState.rpsResult.winner) newState.rpsResult.winner = flipId(newState.rpsResult.winner);
+			}
+			return newState;
+		};
+
+		// 4. 翻轉 History (含指向修正)
+		const reversedHistory = history.map((step, index) => {
+			const newStep = { action: JSON.parse(JSON.stringify(step.action)) };
+
+			if (newStep.action.operations) {
+				newStep.action.operations.forEach(op => {
+					// 基本區域反轉
+					if (op.toZone) op.toZone = flipZone(op.toZone);
+					if (op.zoneId) op.zoneId = flipZone(op.zoneId);
+					if (op.targetZone) op.targetZone = flipZone(op.targetZone);
+					if (op.playerId) op.playerId = flipId(op.playerId);
+					if (op.winnerId) op.winnerId = flipId(op.winnerId);
+
+					// 對話/猜拳
+					if (op.type === 'DIALOGUE' && op.data) {
+						const temp = op.data.p1;
+						op.data.p1 = op.data.p2;
+						op.data.p2 = temp;
+					}
+					if (op.type === 'RPS' && op.data) {
+						const temp = op.data.p1;
+						op.data.p1 = op.data.p2;
+						op.data.p2 = temp;
+						if (op.data.winner) op.data.winner = flipId(op.data.winner);
+					}
+
+					// [重點 1] 指向操作修正 (POINT)
+					if (op.type === 'POINT' || op.type === 'ATTACK') {
+						// 如果是指向「區域」(ZONE) 或「玩家」(PLAYER - 通常指牌庫)，字串也要翻轉
+						// 例如: p1 指向 'p2-deck'，翻轉後變 p2 指向 'p1-deck'
+						if (op.targetType === 'ZONE' && Array.isArray(op.targetIds)) {
+							op.targetIds = op.targetIds.map(zid => flipZone(zid));
+						}
+						
+						// 如果是指向 Card ID (數字)，不需要改 ID
+						// 因為卡片本身已經透過 flipState 換了主人，ID 沒變但屬性變了，指向關係自然成立
+					}
+				});
+			}
+
+			if (index === 0) newStep.state = flipState(initialState);
+			if (step.detachedStartState) newStep.detachedStartState = flipState(step.detachedStartState);
+
+			return newStep;
+		});
+
+		// 5. [重點 2] 圖片處理：Key 交換 + 圖像鏡射
+		const newImageRegistry = {};
+		
+		// 先複製一般卡片圖 (不需變動)
+		Object.keys(globalImageRegistry).forEach(key => {
+			if (!key.startsWith('avatar_')) {
+				newImageRegistry[key] = globalImageRegistry[key];
+			}
+		});
+
+		// 處理頭像 (Avatar)
+		const avatarKeys = Object.keys(globalImageRegistry).filter(k => k.startsWith('avatar_'));
+		
+		for (let key of avatarKeys) {
+			let newKey = key;
+			// Key 交換：P1 -> P2, P2 -> P1
+			if (key.includes('_p1_')) newKey = key.replace('_p1_', '_p2_');
+			else if (key.includes('_p2_')) newKey = key.replace('_p2_', '_p1_');
+
+			// 圖像鏡射 (Mirroring)
+			const originalBase64 = globalImageRegistry[key];
+			if (originalBase64) {
+				// 等待圖片處理完成
+				const flippedBase64 = await flipImageBitmap(originalBase64);
+				newImageRegistry[newKey] = flippedBase64;
+				console.log(`[Img] Swapped & Mirrored: ${key} -> ${newKey}`);
+			}
+		}
+
+		// 6. 主題顏色交換
+		let newThemeSettings = { p1: 'blue', p2: 'red' };
+		if (typeof globalThemeSettings !== 'undefined') {
+			newThemeSettings = JSON.parse(JSON.stringify(globalThemeSettings));
+			const tempColor = newThemeSettings.p1;
+			newThemeSettings.p1 = newThemeSettings.p2;
+			newThemeSettings.p2 = tempColor;
+		}
+
+		// 7. 打包與下載
+		const exportData = {
+			history: reversedHistory,
+			initialState: flipState(initialState),
+			currentIndex: currentIndex,
+			timestamp: Date.now(),
+			imageRegistry: newImageRegistry,
+			abilityRegistry: globalAbilityStyleRegistry,
+			lastUsedStyles: globalLastUsedStyles,
+			lastDiagSettings: null, 
+			aceRegistry: globalAceRegistry, 
+			themeSettings: newThemeSettings
+		};
+
+		const blob = new Blob([JSON.stringify(exportData, null, 2)], {type:"text/plain"});
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = `dm-script-reversed-mirror-${Date.now()}.txt`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+
+		console.log("✅ 匯出完成！");
+	}
+
+	// 執行
+	exportReversedWithMirror();
 	
 </script>
 <div id="visitor-counter" style="display:none"></div>
