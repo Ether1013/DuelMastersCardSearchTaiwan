@@ -6558,13 +6558,28 @@
                 directPuzzles.forEach(p => measurePuzzleRecursive(p, 0, 0));
 
                 const { div, offsetX, offsetY } = createContainer(bounds);
+				
+				// --- [新增修正] 強制垂直置中校正 (Fix Vertical Alignment) ---
+                // 1. 計算容器總高度
+                const containerHeight = bounds.maxY - bounds.minY;
+                // 2. 卡片標準高度 (70px)
+                const cardHeight = 70; 
+                // 3. 計算 Ace 應該位於的 Top 座標 (容器正中間)
+                const idealAceTop = (containerHeight - cardHeight) / 2;
+                // 4. 計算位移量 (目標位置 - 原本計算出的 offsetY)
+                // 原本 offsetY 是 -bounds.minY，即 Ace 的 Top 座標
+                const shiftY = idealAceTop - offsetY;
+                // -------------------------------------------------------
 
                 subjects.forEach(sub => {
                     const layout = layoutCache.get(sub.id);
                     const cardEl = createCardElement(sub);
                     cardEl.style.position = 'absolute';
                     cardEl.style.left = `${offsetX + layout.x}px`;
-                    cardEl.style.top = `${offsetY + layout.y}px`;
+                    
+                    // [修改] 加上 shiftY
+                    cardEl.style.top = `${offsetY + layout.y + shiftY}px`;
+                    
                     cardEl.style.zIndex = 5; 
                     cardEl.dataset.visualRot = layout.rot;
                     cardEl.style.transform = `rotate(${layout.rot}deg)`;
@@ -6575,6 +6590,8 @@
                 aceEl.style.position = 'absolute';
                 aceEl.style.left = `${offsetX}px`;
                 aceEl.style.top = `${offsetY}px`;
+				// [修改] 加上 shiftY
+                aceEl.style.top = `${offsetY + shiftY}px`;
                 aceEl.style.zIndex = 50; 
                 aceEl.classList.add('stack-base');
                 let aceTransform = `rotate(${moonlessAce.rotation}deg)`;
@@ -6590,6 +6607,8 @@
                     const pEl = createCardElement(p);
                     pEl.style.position = 'absolute';
                     pEl.style.left = `${offsetX + pos.x}px`;
+					// [修改] 加上 shiftY
+                    pEl.style.top = `${offsetY + pos.y + shiftY}px`;
                     pEl.style.top = `${offsetY + pos.y}px`;
                     pEl.style.zIndex = 51;
                     let pTransform = `rotate(${moonlessAce.rotation}deg)`; 
