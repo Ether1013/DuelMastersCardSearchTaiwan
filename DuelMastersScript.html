@@ -4031,6 +4031,54 @@
                 return;
             }
         }
+		// [新增] Ctrl + 上下鍵：快速跳轉至 上一個/下一個 對話 (Dialogue)
+		if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+			e.preventDefault();
+
+			// 安全檢查：如果正在編輯且有未儲存內容，先詢問
+			if (isDrafting && draftOperations.length > 0) {
+				if (!confirm(t('msg_unsaved_draft'))) return;
+			}
+
+			const direction = e.key === 'ArrowUp' ? -1 : 1;
+			let targetIndex = -1;
+
+			if (direction === -1) {
+				// 往上找 (Previous)
+				for (let i = currentIndex - 1; i >= 0; i--) {
+					const ops = history[i].action.operations;
+					if (ops && ops.some(o => o.type === 'DIALOGUE')) {
+						targetIndex = i;
+						break;
+					}
+				}
+			} else {
+				// 往下找 (Next)
+				for (let i = currentIndex + 1; i < history.length; i++) {
+					const ops = history[i].action.operations;
+					if (ops && ops.some(o => o.type === 'DIALOGUE')) {
+						targetIndex = i;
+						break;
+					}
+				}
+			}
+
+			// 如果找到了目標
+			if (targetIndex !== -1) {
+				// 強制退出編輯模式 (如果有的話)
+				if (isDrafting) cancelDraft();
+
+				currentIndex = targetIndex;
+				
+				// 執行跳轉
+				renderUI();
+				if (!document.body.classList.contains('mobile-mode')) saveToStorage();
+				
+				// UX 優化：自動捲動列表到該位置
+				scrollToActiveStep();
+			}
+			return;
+		}
         if (e.key === 'Escape') {
             const cardModal = document.getElementById('card-selector-modal');
             const posModal = document.getElementById('position-selector-modal');
