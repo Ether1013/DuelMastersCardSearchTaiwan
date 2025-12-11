@@ -2301,6 +2301,29 @@
             cursor: pointer;
             transition: all 0.2s;
             color: #ccc;
+			position: relative; /* [新增] 設為定位基準點 */
+        }
+		
+		/* [新增] 語言標籤樣式 */
+        .script-item-lang {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase; /* 自動轉大寫 (zh -> ZH) */
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            color: #888;
+        }
+
+        /* [新增] 選中時讓標籤也變亮 */
+        .script-item.selected .script-item-lang {
+            background: #2980b9;
+            border-color: #5dade2;
+            color: white;
         }
         
         .script-item:last-child { border-bottom: none; }
@@ -3071,7 +3094,7 @@
             title: '愛爆發內戰',
             description: '進行無月之門的特效測試',
 			counter_url: 'https://www.f-counter.net/j/66/1765355583/',
-			speed: 1.0,
+			speed: 1.33,
             lang: 'zh',
         },
         {
@@ -3079,7 +3102,7 @@
             title: '愛爆發のミラーマッチ',
             description: '「無月の門」のエフェクトテストを行う',
 			counter_url: 'https://www.f-counter.net/j/66/1765421671/',
-			speed: 1.0,
+			speed: 1.33,
             lang: 'jp',
         },
         // 您可以在此擴充更多劇本...
@@ -8680,11 +8703,15 @@
         [...AVAILABLE_SCRIPTS].reverse().forEach(script => {
             const el = document.createElement('div');
             el.className = 'script-item';
+			
+			// [新增] 取得語言代碼，預設為 ZH
+            const langCode = script.lang || 'zh';
             
-            // 顯示標題與描述
+            // [修改] 插入 .script-item-lang
             el.innerHTML = `
                 <div class="script-item-title">${script.title}</div>
                 <div class="script-item-desc">${script.description}</div>
+                <div class="script-item-lang">${langCode}</div>
             `;
             
             // 點擊事件
