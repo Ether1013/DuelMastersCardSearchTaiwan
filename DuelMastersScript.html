@@ -2550,6 +2550,105 @@
         border-radius: 8px;
         backdrop-filter: blur(5px);
     }
+	
+	/* --- [新增] 次元破裂 (Reality Break) 特效樣式 --- */
+
+	/* 1. 全螢幕容器 */
+	#rb-overlay {
+		position: fixed;
+		top: 0; left: 0; width: 100vw; height: 100vh;
+		z-index: 9500; /* 比對話框高，但在選單之下 */
+		display: none; /* 預設隱藏 */
+		overflow: hidden;
+		pointer-events: none; /* 播放時不擋滑鼠，但編輯時會開啟 */
+	}
+
+	/* 2. 內層桌布 (被露出的異次元) */
+	#rb-inner-layer {
+		position: absolute;
+		top: 0; left: 0; width: 100%; height: 100%;
+		background-color: #000; /* 預設黑底 */
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: cover;
+		
+		/* 初始狀態：被「現實」蓋住 (透過 clip-path 實現撕裂效果) */
+		/* 這裡我們反向思考：這個圖層是「破裂處」，預設破裂大小為 0 */
+		clip-path: polygon(50% 50%, 50% 50%, 50% 50%); 
+		transition: clip-path 0.1s linear; /* 動畫由 JS 驅動 */
+		
+		will-change: clip-path;
+	}
+
+	/* 編輯模式下的內層：顯示完整，且可互動 */
+	#rb-overlay.editing #rb-inner-layer {
+		clip-path: none !important; /* 完整顯示 */
+		cursor: move;
+		pointer-events: auto;
+		border: 5px dashed #f1c40f; /* 編輯框提示 */
+	}
+
+	/* 編輯模式的提示文字 */
+	#rb-edit-hint {
+		position: absolute;
+		top: 50%; left: 50%;
+		transform: translate(-50%, -50%);
+		color: rgba(255,255,255,0.5);
+		font-size: 2rem;
+		font-weight: bold;
+		text-align: center;
+		pointer-events: none;
+		text-shadow: 0 0 5px black;
+		display: none;
+	}
+	#rb-overlay.editing #rb-edit-hint { display: block; }
+
+	/* 3. 白光閃爍層 (Flash) */
+	#rb-flash-layer {
+		position: absolute;
+		top: 0; left: 0; width: 100%; height: 100%;
+		background: white;
+		opacity: 0;
+		pointer-events: none;
+		z-index: 9600;
+		transition: opacity 0.5s ease-out;
+	}
+
+	/* 4. 畫面震動動畫 (Earthquake) */
+	/* 4. 畫面震動動畫 (Earthquake) */
+	@keyframes violent-shake {
+		0% { transform: translate(0, 0) rotate(0deg); }
+		10% { transform: translate(-10px, -10px) rotate(-1deg); }
+		20% { transform: translate(10px, 10px) rotate(1deg); }
+		30% { transform: translate(-15px, 5px) rotate(0deg); }
+		40% { transform: translate(15px, -15px) rotate(1deg); }
+		50% { transform: translate(-5px, 15px) rotate(-1deg); }
+		60% { transform: translate(10px, 5px) rotate(0deg); }
+		70% { transform: translate(-15px, -15px) rotate(1deg); }
+		80% { transform: translate(10px, 10px) rotate(-1deg); }
+		90% { transform: translate(-5px, -5px) rotate(0deg); }
+		100% { transform: translate(0, 0) rotate(0deg); }
+	}
+
+	/* [修改] 套用到 body 的 class (加入 #rb-inner-layer) */
+	body.shaking #workspace, 
+	body.shaking #toolbar,
+	body.shaking #rb-inner-layer {
+		animation: violent-shake 0.5s linear infinite;
+	}
+
+	/* 5. 編輯器控制列 */
+	#rb-controls {
+		position: absolute;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: none;
+		gap: 10px;
+		z-index: 9700;
+		pointer-events: auto;
+	}
+	#rb-overlay.editing #rb-controls { display: flex; }
 	</style>
 </head>
 <body>
@@ -2574,6 +2673,7 @@
         <option value="2" data-i18n="btn_p2_win">🏆 2P Win</option>
     </select>
 	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
+	<button onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;">⚡ 特效</button>
     <div style="flex:1"></div>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
@@ -3942,7 +4042,9 @@
 	
 	let lastAnimatedStep = -1; // [補上這行] 用於記錄動畫狀態，避免重複播放
 	let winOverlayTimeout = null; // [新增] 用來記錄勝利畫面的自動關閉計時器
-    
+    // 在 let lastAnimatedStep = -1; 下方加入：
+	let lastRbStep = -1; // 用於記錄「次元破裂」特效是否已在該步驟播放過
+	
     let globalImageRegistry = {}; 
 	// [新增] 全域王牌註冊表 (只存 ID，不存卡片物件)
 	// 格式: { cardId: true, ... }
@@ -5323,6 +5425,18 @@
             const { filename } = op;
             state.bgm = filename;
         }
+		// 在 applyOperation 函式內部的 if-else 鏈中加入：
+		else if (op.type === 'REALITY_BREAK') {
+			// 只有在自動播放、預覽或非 Draft 狀態下才執行特效
+			// 避免編輯器剛讀取時就觸發
+			const isPlaying = document.body.classList.contains('is-playing');
+			const isMobile = document.body.classList.contains('mobile-mode');
+			
+			// 簡單判斷：如果是「播放下一步」觸發的，就播放特效
+			if (playTimeout || isPlaying || isMobile) {
+				playRealityBreak(op.data);
+			}
+		}
 		else if (op.type === 'GAME_END') {
             // 只有在自動播放時才觸發特效，避免編輯時一直跳出來煩人
             // 但如果你想在編輯時預覽，可以移除這個 if 檢查
@@ -7254,6 +7368,29 @@
             });
 			
             lastRenderedState = cloneState(state);
+			
+			// --- [新增] 修正：在播放時觸發次元破裂 (Reality Break) ---
+            if (currentIndex >= 0 && history[currentIndex]) {
+                const action = history[currentIndex].action;
+                const rbOp = action.operations.find(o => o.type === 'REALITY_BREAK');
+                
+                // 檢查是否處於播放模式
+                const isPlaying = document.body.classList.contains('is-playing');
+                const isMobile = document.body.classList.contains('mobile-mode');
+
+                // 條件：(有特效指令) AND (正在播放) AND (這一步還沒播過)
+                if (rbOp && (isPlaying || isMobile) && currentIndex !== lastRbStep) {
+                    console.log("偵測到次元破裂特效，開始播放...");
+                    lastRbStep = currentIndex; // 標記此步驟已處理
+                    playRealityBreak(rbOp.data);
+                }
+				// 情況 B：這一步沒有特效 -> 解鎖 (關鍵修改！)
+                else {
+                    // 只要離開了有特效的那一步，就重置變數
+                    // 這樣下次再回來時，currentIndex(5) != lastRbStep(-1) 就會成立，特效就會重播
+                    lastRbStep = -1; 
+                }
+            }
 
             // [新增] 王牌進場特效觸發檢查
             // 檢查當前這一步 (currentIndex) 是否有移動操作
@@ -8426,6 +8563,10 @@
             // 讓它馬上跳下一步
             if (currAction.operations.length === 1 && currOp && currOp.type === 'SET_BGM') {
                 delay = 50; 
+            }
+            // [新增] 如果是次元破裂特效，強制等待 2.8 秒 (特效約 2.5 秒)
+            else if (currOp && currOp.type === 'REALITY_BREAK') {
+                delay = 2800; 
             }
             else if (currOp && currOp.type === 'DIALOGUE') {
                 // ... (原本的對話延遲邏輯) ...
@@ -9889,6 +10030,13 @@
 		}
 		if (!blob) return;
 
+		// [新增] 情境 D：次元破裂編輯器開啟中
+        if (rbEditorState && rbEditorState.active) {
+            handleRbPaste(blob);
+            e.preventDefault();
+            return;
+        }
+		
 		// 1. 情境 A：對話視窗開啟中 -> 處理頭像 (修復邏輯已補回)
 		const diagModal = document.getElementById('dialogue-modal');
 		if (diagModal && diagModal.style.display === 'flex') {
@@ -9973,6 +10121,349 @@
 			return;
 		}
 	});
+	
+	// --- [新增] 次元破裂 (Reality Break) 系統 ---
+
+    let rbEditorState = {
+        active: false,
+        imgData: null, // Base64
+        x: 50, // %
+        y: 50, // %
+        scale: 1.0,
+        pattern: 'random'
+    };
+
+    // 1. 開啟特效編輯器
+    function openRealityBreakEditor() {
+        // 如果正在編輯其他動作，先阻擋
+        if (isDrafting && draftOperations.length > 0 && !draftOperations.some(o => o.type === 'REALITY_BREAK')) {
+            alert("請先完成目前的編輯動作。");
+            return;
+        }
+
+        const overlay = document.getElementById('rb-overlay');
+        const layer = document.getElementById('rb-inner-layer');
+        const patternSel = document.getElementById('rb-pattern-select');
+        const hint = document.getElementById('rb-edit-hint');
+
+        let existingData = null;
+        let targetIdx = -1; // [關鍵變數] -1 代表新增，其他數字代表編輯該步驟
+
+        // A. 如果正在 Draft 模式，優先檢查 Draft 內容
+        if (isDrafting) {
+            const op = draftOperations.find(o => o.type === 'REALITY_BREAK');
+            if (op) {
+                existingData = op.data;
+                targetIdx = insertIndex; // 鎖定當前的插入點索引
+            }
+        } 
+        // B. 如果不在 Draft，檢查當前所在的歷史步驟
+        else if (currentIndex >= 0 && history[currentIndex]) {
+            const op = history[currentIndex].action.operations.find(o => o.type === 'REALITY_BREAK');
+            if (op) {
+                existingData = op.data;
+                targetIdx = currentIndex; // 鎖定當前步驟索引
+            }
+        }
+
+        if (existingData) {
+            // [載入舊資料模式]
+            console.log(`編輯現有特效 (Index: ${targetIdx})`);
+            
+            // 將索引存入編輯器狀態中，供存檔時使用
+            rbEditorState = {
+                active: true,
+                imgData: existingData.imgData,
+                x: existingData.style.x,
+                y: existingData.style.y,
+                scale: existingData.style.scale,
+                pattern: existingData.pattern,
+                editingIndex: targetIdx // <--- 記錄起來！
+            };
+            
+            // UI 設定 (有圖顯示圖，沒圖顯示黑底)
+            if (existingData.imgData) {
+                layer.style.backgroundImage = `url(${existingData.imgData})`;
+                layer.style.backgroundColor = 'transparent';
+                if(hint) hint.style.display = 'none';
+            } else {
+                layer.style.backgroundImage = 'none';
+                layer.style.backgroundColor = '#222';
+                if(hint) hint.style.display = 'block';
+            }
+            
+            layer.style.backgroundPosition = `${rbEditorState.x}% ${rbEditorState.y}%`;
+            layer.style.backgroundSize = `${rbEditorState.scale * 100}%`;
+            patternSel.value = existingData.pattern || 'random';
+
+        } else {
+            // [全新新增模式]
+            console.log("新增特效");
+            rbEditorState = { 
+                active: true, imgData: null, x: 50, y: 50, scale: 1.0, pattern: 'random',
+                editingIndex: -1 // -1 代表這是一筆新資料
+            };
+            
+            layer.style.backgroundImage = 'none';
+            layer.style.backgroundColor = '#222';
+            layer.style.backgroundPosition = '50% 50%';
+            layer.style.backgroundSize = 'cover';
+            patternSel.value = 'random';
+            if(hint) hint.style.display = 'block';
+        }
+        
+        overlay.style.display = 'block';
+        overlay.classList.add('editing');
+        initRbInteraction(layer);
+    }
+
+    // 2. 編輯器互動邏輯 (拖曳與滾輪)
+    function initRbInteraction(el) {
+        let isDragging = false;
+        let startX, startY;
+
+        el.onmousedown = (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            el.style.cursor = 'grabbing';
+        };
+
+        window.onmousemove = (e) => {
+            if (!isDragging || !rbEditorState.active) return;
+            e.preventDefault();
+            
+            // 計算位移 (簡單的百分比移動)
+            const dx = (e.clientX - startX) / window.innerWidth * 100;
+            const dy = (e.clientY - startY) / window.innerHeight * 100;
+            
+            rbEditorState.x += dx;
+            rbEditorState.y += dy;
+            
+            el.style.backgroundPosition = `${rbEditorState.x}% ${rbEditorState.y}%`;
+            
+            startX = e.clientX;
+            startY = e.clientY;
+        };
+
+        window.onmouseup = () => {
+            isDragging = false;
+            el.style.cursor = 'move';
+        };
+
+        el.onwheel = (e) => {
+            if (!rbEditorState.active) return;
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            rbEditorState.scale = Math.max(0.1, rbEditorState.scale + delta);
+            
+            // cover 模式下，scale 1 = 100%
+            // 如果要放大，就設大於 100%
+            // 這裡簡單處理：如果是 cover，scale 屬性其實較難直接對應 background-size
+            // 我們改用百分比顯示
+            el.style.backgroundSize = `${rbEditorState.scale * 100}%`;
+        };
+    }
+
+    // 3. 處理貼上圖片 (Paste)
+    // 注意：需修改全域的 paste event listener 來呼叫此函式
+    function handleRbPaste(blob) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64 = e.target.result;
+            rbEditorState.imgData = base64;
+            
+            const layer = document.getElementById('rb-inner-layer');
+            layer.style.backgroundImage = `url(${base64})`;
+            layer.style.backgroundColor = 'transparent'; // 有圖了就透明底
+            
+            // 隱藏提示文字
+            document.getElementById('rb-edit-hint').style.display = 'none';
+        };
+        reader.readAsDataURL(blob);
+    }
+
+    // 4. 預覽特效
+    function previewRbEffect() {
+        const pattern = document.getElementById('rb-pattern-select').value;
+        const config = {
+            imgData: rbEditorState.imgData,
+            style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
+            pattern: pattern
+        };
+        
+        // 暫時隱藏 UI
+        document.getElementById('rb-overlay').classList.remove('editing');
+        
+        playRealityBreak(config, () => {
+            // Callback: 動畫結束後恢復編輯狀態
+            document.getElementById('rb-overlay').classList.add('editing');
+            // 恢復原本的 style (因為播放時會亂改 clip-path)
+            const layer = document.getElementById('rb-inner-layer');
+            layer.style.clipPath = 'none'; 
+            layer.style.opacity = '1';
+        });
+    }
+
+    // 5. 確認儲存
+    function confirmRbEffect() {
+        // 讀取剛剛存下來的索引
+        const targetIdx = rbEditorState.editingIndex;
+        const isEditingExisting = (targetIdx !== -1);
+
+        // 如果目前不在 Draft 模式，我們需要手動啟動正確的模式
+        if (!isDrafting) {
+            if (isEditingExisting) {
+                // 明確告訴系統：我要編輯 targetIdx 這一步
+                // 這會設定 editModeType = 'EDIT'，saveDraft 就會執行「取代」
+                editAction(targetIdx); 
+            } else {
+                // 這是新資料 -> 開啟新步驟
+                startDraftAtEnd();
+            }
+        } 
+        
+        // 強制清空 draftOperations (確保這一步只有這一個特效動作)
+        draftOperations = [];
+
+        const pattern = document.getElementById('rb-pattern-select').value;
+        
+        // 加入操作指令
+        addOperation({
+            type: 'REALITY_BREAK',
+            data: {
+                imgData: rbEditorState.imgData,
+                style: { 
+                    x: rbEditorState.x, 
+                    y: rbEditorState.y, 
+                    scale: rbEditorState.scale 
+                },
+                pattern: pattern
+            }
+        });
+
+        // 存檔
+        saveDraft("[特效] 次元破裂 (Reality Break)");
+        closeRbEditor();
+    }
+
+    function closeRbEditor() {
+        rbEditorState.active = false;
+        
+        // 1. 關閉特效層
+        const overlay = document.getElementById('rb-overlay');
+        overlay.style.display = 'none';
+        overlay.classList.remove('editing');
+        
+        // 2. 清理內容
+        document.getElementById('rb-inner-layer').style.backgroundImage = 'none';
+        const hint = document.getElementById('rb-edit-hint');
+        if(hint) hint.style.display = 'block';
+
+        // --- [新增] 3. 恢復 Action Log 介面狀態 ---
+        const list = document.getElementById('action-list');
+        if (list) {
+            // 解鎖捲軸 (移除 overflow: hidden)
+            list.classList.remove('locked'); 
+        }
+
+        // --- [新增] 4. 自動捲動回當前步驟 ---
+        // 使用 setTimeout 確保 DOM 狀態 (如 display:none) 更新完畢後才捲動
+        setTimeout(() => {
+            scrollToActiveStep();
+        }, 100);
+    }
+
+    // 6. 播放特效 (核心動畫邏輯)
+    function playRealityBreak(data, onComplete) {
+        const overlay = document.getElementById('rb-overlay');
+        const layer = document.getElementById('rb-inner-layer');
+        const flash = document.getElementById('rb-flash-layer');
+        const body = document.body;
+
+        // A. 初始化
+        overlay.style.display = 'block';
+        overlay.classList.remove('editing'); // 確保不是編輯模式
+        
+        // 設定圖片
+        if (data.imgData) {
+            layer.style.backgroundImage = `url(${data.imgData})`;
+        } else {
+            layer.style.backgroundImage = 'none';
+            layer.style.backgroundColor = 'white'; // 預設白底
+        }
+
+        // 設定位置
+        const st = data.style || {x:50, y:50, scale:1};
+        layer.style.backgroundPosition = `${st.x}% ${st.y}%`;
+        layer.style.backgroundSize = `${st.scale * 100}%`;
+        layer.style.opacity = '1';
+
+        // B. 決定撕裂路徑
+        let pattern = data.pattern;
+        if (!pattern || pattern === 'random') {
+            const opts = ['center', 'corner-tl', 'corner-br'];
+            pattern = opts[Math.floor(Math.random() * opts.length)];
+        }
+
+        let startClip, midClip, endClip;
+
+        // 定義 Clip-path 關鍵格
+        // 概念：外層覆蓋物 (Overlay) 其實是透明的，我們看到的是 inner-layer
+        // 所以 inner-layer 的 clip-path 從「無 (0%)」變「有 (100%)」
+        // 這樣看起來就像是原本的畫面被撕開，露出了 inner-layer
+        
+        if (pattern === 'center') {
+            // 中間撕裂：一條細線變寬
+            startClip = 'polygon(50% 0, 50% 0, 50% 100%, 50% 100%)';
+            // 隨機產生鋸齒狀
+            midClip = 'polygon(45% 0, 55% 0, 52% 20%, 48% 40%, 55% 60%, 45% 80%, 55% 100%, 45% 100%)'; 
+            endClip = 'polygon(0% 0, 100% 0, 100% 100%, 0% 100%)'; // 全開
+        } else if (pattern === 'corner-tl') {
+            // 左上角撕開
+            startClip = 'polygon(0 0, 0 0, 0 0)';
+            midClip = 'polygon(0 0, 40% 0, 0 40%)';
+            endClip = 'polygon(0 0, 150% 0, 0 150%)'; // 超出邊界以全開
+        } else {
+            // 右下角撕開
+            startClip = 'polygon(100% 100%, 100% 100%, 100% 100%)';
+            midClip = 'polygon(100% 100%, 60% 100%, 100% 60%)';
+            endClip = 'polygon(100% 100%, -50% 100%, 100% -50%)';
+        }
+
+        // C. 動畫序列
+        
+        // 1. 開始震動
+        body.classList.add('shaking');
+        
+        // 2. 設定初始 Clip
+        layer.style.transition = 'none';
+        layer.style.clipPath = startClip;
+
+        // 3. 強制 Reflow
+        void layer.offsetWidth;
+
+        // 4. 第一階段：撕裂開始 (0.1s ~ 0.5s)
+        setTimeout(() => {
+            layer.style.transition = 'clip-path 1.5s cubic-bezier(0.2, 1, 0.3, 1)';
+            layer.style.clipPath = endClip; // 直接撕到底
+        }, 100);
+
+        // 5. 結束震動 & 白光閃爍 (在 1.5s 處)
+        setTimeout(() => {
+            body.classList.remove('shaking');
+            flash.style.opacity = '1'; // 亮白
+        }, 1500);
+
+        // 6. 退場 (在 2.0s 處)
+        setTimeout(() => {
+            // 讓 inner layer 消失，露出原本的盤面
+            overlay.style.display = 'none';
+            flash.style.opacity = '0'; // 白光淡出
+            
+            if (onComplete) onComplete();
+        }, 2500);
+    }
 	
 	// --- [修正版] Ending 特效函式 (手機字體優化 + 強制靜音) ---
 	function triggerEnding() {
@@ -10269,5 +10760,29 @@
 </div>
 <div id="rps-overlay"></div>
 <div id="emotion-preview-tooltip"></div>
+<div id="rb-overlay">
+    <div id="rb-inner-layer"></div>
+    <div id="rb-edit-hint">
+        點擊此處並按下 Ctrl+V 貼上圖片<br>
+        (拖曳可移動，滾輪可縮放)
+    </div>
+    <div id="rb-flash-layer"></div>
+    
+    <div id="rb-controls">
+        <div style="background:rgba(0,0,0,0.7); padding:5px 15px; border-radius:30px; color:white; display:flex; gap:10px; align-items:center;">
+            <span>特效樣式:</span>
+            <select id="rb-pattern-select" style="background:#333; color:white; border:1px solid #555; padding:2px;">
+                <option value="random">🎲 隨機 (Random)</option>
+                <option value="center">⚡ 中間撕裂 (Center)</option>
+                <option value="corner-tl">📐 左上撕裂 (Top-Left)</option>
+                <option value="corner-br">📐 右下撕裂 (Btm-Right)</option>
+            </select>
+            <div style="width:1px; height:20px; background:#555; margin:0 5px;"></div>
+            <button onclick="previewRbEffect()" style="background:#3498db; border:none; border-radius:4px; color:white; cursor:pointer;">▶ 預覽</button>
+            <button onclick="confirmRbEffect()" style="background:#2ecc71; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold;">💾 儲存 (Save)</button>
+            <button onclick="closeRbEditor()" style="background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;">✕ 取消</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
