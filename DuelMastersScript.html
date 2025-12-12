@@ -4540,6 +4540,23 @@
             else cancelSelection();
         }
     });
+	
+	// --- [新增] 將圖片註冊到全域圖庫並回傳 Key ---
+	function registerImageToGlobal(base64) {
+		if (!base64) return null;
+
+		// 1. 檢查是否已存在 (去重複化)
+		for (const [key, value] of Object.entries(globalImageRegistry)) {
+			if (value === base64) {
+				return key; // 找到重複的，直接回傳舊 Key
+			}
+		}
+
+		// 2. 不存在，產生新 Key
+		const newKey = `img_cutin_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+		globalImageRegistry[newKey] = base64;
+		return newKey;
+	}
     
     function pasteImageMode() {
         if (!pendingMove || pendingMove.cardIds.length !== 1) {
@@ -4581,19 +4598,19 @@
 	}
     
 	// --- [新增] 垃圾回收輔助：找出所有正在使用的圖片 Key ---
+	// --- [修正版] 垃圾回收輔助：找出所有正在使用的圖片 Key ---
 	function getUsedImageKeys() {
 		const used = new Set();
 		
+		// 1. 掃描狀態 (State) 中的卡片與對話
 		const scanState = (s) => {
 			if (!s || !s.cards) return;
 			s.cards.forEach(c => {
 				if (c.imageKey) used.add(c.imageKey);
 				if (c.backImageKey) used.add(c.backImageKey);
-				// 也保留舊版樣式 Key (如果有的話)
 				if (c.styleKey) used.add(c.styleKey); 
 			});
 			
-			// 也要掃描對話系統用到的頭像 Key (格式 avatar_xxx)
 			if (s.dialogueData) {
 				['p1', 'p2'].forEach(p => {
 					if (s.dialogueData[p] && s.dialogueData[p].emotion) {
@@ -4604,13 +4621,38 @@
 		};
 
 		scanState(initialState);
+		
+		// 2. 掃描歷史紀錄 (History)
 		history.forEach(h => {
 			scanState(h.state);
 			if (h.detachedStartState) scanState(h.detachedStartState);
+
+			// [新增] 掃描 Action 中的 Cut In (Reality Break) 引用
+			// 這是您貼上的舊版程式碼所缺少的關鍵部分
+			if (h.action && h.action.operations) {
+				h.action.operations.forEach(op => {
+					// 如果操作中有 imgKey，標記為「使用中」
+					if (op.type === 'REALITY_BREAK' && op.data && op.data.imgKey) {
+						used.add(op.data.imgKey);
+					}
+				});
+			}
 		});
+		
+		// 3. 掃描暫存狀態
 		if (tempState) scanState(tempState);
 
-		// 額外保留所有對話系統的預設頭像 (避免對話編輯器開起來沒圖)
+		// 4. [新增] 掃描編輯中的操作 (Draft)
+		// 這是為了防止您正在編輯特效還沒儲存步驟時，觸發存檔導致圖片被清掉
+		if (isDrafting && draftOperations.length > 0) {
+			draftOperations.forEach(op => {
+				if (op.type === 'REALITY_BREAK' && op.data && op.data.imgKey) {
+					used.add(op.data.imgKey);
+				}
+			});
+		}
+
+		// 5. 保留預設頭像
 		Object.keys(globalImageRegistry).forEach(k => {
 			if (k.startsWith('avatar_')) used.add(k);
 		});
@@ -4850,78 +4892,61 @@
         if (document.body.classList.contains('mobile-mode')) return;
 
         try {
-            // 1. 準備核心資料 (不含圖片)
-            // 修改為：
+            // 1. 準備核心資料 (Lean History)
 			const leanHistory = history.map((item, index) => {
-			
-				// [關鍵步驟] 深拷貝 Action 物件，以免移除圖片時影響到當前畫面
-                const safeAction = JSON.parse(JSON.stringify(item.action));
-
-                // 檢查並移除 REALITY_BREAK 的 imgData (只針對存檔移除)
-                if (safeAction.operations) {
-                    safeAction.operations.forEach(op => {
-                        if (op.type === 'REALITY_BREAK' && op.data) {
-                            delete op.data.imgData; // 刪除圖片 Base64 字串
-                        }
-                    });
-                }
-
-                // 如果是第 0 步 (通常包含初始 State)
-                if (index === 0) {
-                    // 回傳複製後的物件，並替換為乾淨的 action
-                    return { ...item, action: safeAction }; 
-                }
-                
-                // 建立精簡物件 (一般步驟)
-                const leanItem = { action: safeAction };
-                
-                // 如果這個步驟有紀錄「斷層起點」，必須存下來
-                if (item.detachedStartState) {
-                    leanItem.detachedStartState = item.detachedStartState;
-                }
-                
-                return leanItem;
+				// [原本您問的那段 delete op.data.imgData 已經可以拿掉了]
+				// 因為現在 data 裡面存的是 imgKey (字串)，不佔空間，留著沒關係
+				
+				// 直接複製 action 即可
+				const safeAction = JSON.parse(JSON.stringify(item.action));
+				
+				if (index === 0) return { ...item, action: safeAction };
+				
+				const leanItem = { action: safeAction };
+				if (item.detachedStartState) leanItem.detachedStartState = item.detachedStartState;
+				return leanItem;
 			});
 
-            // 在 saveToStorage 函式內，準備 coreData 物件時：
 			const coreData = {
 				timestamp: Date.now(),
 				history: leanHistory,
 				initialState: initialState,
 				currentIndex: currentIndex,
 				abilityRegistry: globalAbilityStyleRegistry,
-				lastUsedStyles: globalLastUsedStyles, // [新增] 存檔
+				lastUsedStyles: globalLastUsedStyles,
 				lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
-				aceRegistry: globalAceRegistry, // [新增]
-				themeSettings: globalThemeSettings, // [新增]
+				aceRegistry: globalAceRegistry,
+				themeSettings: globalThemeSettings,
 			};
 
-			// 2. [修改] 垃圾回收 (GC) 與 拆分圖片資料
-            const usedKeys = getUsedImageKeys(); // 取得所有有在用的 Key
+			// 2. [關鍵修改] 垃圾回收與圖片分流
+			const usedKeys = getUsedImageKeys(); // 取得所有用到的 Key (含 Cut In)
 			
-            const cardImages = {};
-            const portraitImages = {};
+			const cardImages = {};
+			const portraitImages = {};
 
-            Object.keys(globalImageRegistry).forEach(key => {
-                // 只儲存有被用到的 Key，或是頭像
-                if (usedKeys.has(key)) {
-                    if (key.startsWith('avatar_')) {
-                        portraitImages[key] = globalImageRegistry[key];
-                    } else {
-                        cardImages[key] = globalImageRegistry[key];
-                    }
-                }
-            });
+			Object.keys(globalImageRegistry).forEach(key => {
+				if (usedKeys.has(key)) {
+					// -------------------------------------------------------------
+					// [重點] 這裡加入過濾：如果是 Cut In 的大圖，就不存入 LocalStorage
+					// -------------------------------------------------------------
+					if (key.startsWith('img_cutin_')) {
+						// 跳過，不存！
+						return; 
+					}
+					
+					if (key.startsWith('avatar_')) {
+						portraitImages[key] = globalImageRegistry[key];
+					} else {
+						cardImages[key] = globalImageRegistry[key];
+					}
+				}
+			});
 
-            // 3. 分開寫入
-            localStorage.setItem(STORAGE_KEY_CORE, JSON.stringify(coreData));
-            
-            // 這裡可以選擇性優化：如果圖片沒變動其實不用一直寫入，但為了保險先每次都寫
-            localStorage.setItem(STORAGE_KEY_CARDS, JSON.stringify(cardImages));
-            localStorage.setItem(STORAGE_KEY_PORTRAITS, JSON.stringify(portraitImages));
-
-            // 清除舊版 Key 以釋放空間 (如果是從舊版遷移過來的)
-            localStorage.removeItem(STORAGE_KEY_LEGACY);
+			// 3. 寫入 (此時 Cut In 的 Key 還在 history 裡，但圖片本體沒存進去)
+			localStorage.setItem(STORAGE_KEY_CORE, JSON.stringify(coreData));
+			localStorage.setItem(STORAGE_KEY_CARDS, JSON.stringify(cardImages));
+			localStorage.setItem(STORAGE_KEY_PORTRAITS, JSON.stringify(portraitImages));
             
             if (storageQuotaExceeded) {
                 storageQuotaExceeded = false;
@@ -9285,7 +9310,7 @@
         });
     }
 	
-	// --- [新增] 圖片最佳化與遷移腳本 ---
+	// --- [修正版] 圖片最佳化與遷移腳本 ---
 	function optimizeAndMigrateImages() {
 		console.log("開始執行圖片最佳化與遷移...");
 		
@@ -9295,7 +9320,7 @@
 
 		// 遍歷目前的 Registry，找出重複的圖片
 		for (const [key, base64] of Object.entries(globalImageRegistry)) {
-			// 跳過頭像
+			// 跳過頭像 (頭像通常很小且固定，不需處理)
 			if (key.startsWith('avatar_')) continue;
 
 			if (contentMap.has(base64)) {
@@ -9315,31 +9340,58 @@
 
 		console.log(`發現 ${replacementMap.size} 個重複圖片 Key，開始替換 Reference...`);
 
-		// 2. 遍歷所有狀態，替換卡片的 imageKey
+		// 2. 定義替換邏輯
+		
+		// A. 替換卡片狀態中的引用
 		const replaceInState = (s) => {
 			if (!s || !s.cards) return;
 			s.cards.forEach(c => {
-				// 檢查 imageKey
 				if (c.imageKey && replacementMap.has(c.imageKey)) {
 					c.imageKey = replacementMap.get(c.imageKey);
 				}
-				// 檢查 backImageKey
 				if (c.backImageKey && replacementMap.has(c.backImageKey)) {
 					c.backImageKey = replacementMap.get(c.backImageKey);
 				}
 			});
 		};
 
+		// B. [關鍵新增] 替換 Action 操作中的引用 (修復 Cut In 遺失問題)
+		const replaceInOps = (ops) => {
+			if (!ops) return;
+			ops.forEach(op => {
+				// 檢查是否為 Cut In 特效且含有 imgKey
+				if (op.type === 'REALITY_BREAK' && op.data && op.data.imgKey) {
+					// 如果這個 Key 在替換名單中
+					if (replacementMap.has(op.data.imgKey)) {
+						// console.log(`[Migrate] CutIn Ref: ${op.data.imgKey} -> ${replacementMap.get(op.data.imgKey)}`);
+						op.data.imgKey = replacementMap.get(op.data.imgKey);
+					}
+				}
+			});
+		};
+
+		// 3. 執行全面替換
 		replaceInState(initialState);
+		
 		history.forEach(h => {
+			// 更新狀態快照
 			replaceInState(h.state);
 			if (h.detachedStartState) replaceInState(h.detachedStartState);
+			
+			// [新增] 更新歷史操作 (History Action Operations)
+			if (h.action && h.action.operations) {
+				replaceInOps(h.action.operations);
+			}
 		});
+		
 		if (tempState) replaceInState(tempState);
 
-		// 3. 清理 globalImageRegistry (刪除被替換掉的 Key)
-		// 其實這步可以省略，因為 save/export 時會執行 GC (getUsedImageKeys)，
-		// 但為了記憶體整潔，我們手動清一下
+		// [新增] 更新正在編輯中的操作 (Draft)
+		if (isDrafting && draftOperations.length > 0) {
+			replaceInOps(draftOperations);
+		}
+
+		// 4. 清理 globalImageRegistry (刪除被替換掉的 Key)
 		replacementMap.forEach((newKey, oldKey) => {
 			delete globalImageRegistry[oldKey];
 		});
@@ -10888,10 +10940,17 @@
             // [載入舊資料模式]
 			console.log(`編輯現有特效 (Index: ${targetIdx})`);
 			
+			
+			// [修改] 支援讀取 Key 或 舊版 imgData
+			let finalImgData = existingData.imgData;
+			if (!finalImgData && existingData.imgKey) {
+				finalImgData = globalImageRegistry[existingData.imgKey];
+			}
+			
 			// 將索引存入編輯器狀態中
 			rbEditorState = {
 				active: true,
-				imgData: existingData.imgData,
+				imgData: finalImgData, // 載入還原後的圖片
 				x: existingData.style.x,
 				y: existingData.style.y,
 				scale: existingData.style.scale,
@@ -10912,8 +10971,10 @@
 			document.getElementById('rb-intensity-val').innerText = intensity;
             
             // UI 設定 (有圖顯示圖，沒圖顯示黑底)
-            if (existingData.imgData) {
-                layer.style.backgroundImage = `url(${existingData.imgData})`;
+            // UI 設定 (有圖顯示圖，沒圖顯示黑底)
+            if (finalImgData) {
+                // [修正] 這裡必須使用已經還原回來的 finalImgData (Base64)，而不是 existingData 裡的空值
+                layer.style.backgroundImage = `url(${finalImgData})`; 
                 layer.style.backgroundColor = 'transparent';
                 if(hint) hint.style.display = 'none';
             } else {
@@ -11085,17 +11146,19 @@
 		const sOut = document.getElementById('rb-shake-outer').checked;
 		const intensity = parseFloat(document.getElementById('rb-intensity').value);
 
+		const imgKey = registerImageToGlobal(rbEditorState.imgData);
+
 		addOperation({
 			type: 'REALITY_BREAK',
 			data: {
-				imgData: rbEditorState.imgData,
+				imgKey: imgKey, // 改存 Key
+				// imgData: rbEditorState.imgData, // 移除這行 (不要存原始大圖)
 				style: { 
 					x: rbEditorState.x, 
 					y: rbEditorState.y, 
 					scale: rbEditorState.scale 
 				},
 				pattern: pattern,
-				// 新增欄位
 				shakeInner: sIn,
 				shakeOuter: sOut,
 				tearScale: intensity
@@ -11154,6 +11217,12 @@
         const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
 		
+		// [新增] 解析圖片來源
+		let srcImage = data.imgData; // 向下相容舊檔
+		if (!srcImage && data.imgKey) {
+			srcImage = globalImageRegistry[data.imgKey];
+		}
+		
 		// [新增] 取得提示文字元素
         const hint = document.getElementById('rb-edit-hint');
 
@@ -11165,10 +11234,10 @@
         if (hint) hint.style.display = 'none';
         
         const setLayerStyle = (el, isPaper) => {
-            if (!isPaper && data.imgData) {
-                el.style.backgroundImage = `url(${data.imgData})`;
-                el.style.backgroundColor = 'transparent';
-            } else if (isPaper) {
+            if (!isPaper && srcImage) {
+				el.style.backgroundImage = `url(${srcImage})`;
+				el.style.backgroundColor = 'transparent';
+			} else if (isPaper) {
                 el.style.backgroundImage = ''; 
                 el.style.backgroundColor = ''; 
             } else {
