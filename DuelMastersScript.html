@@ -11202,42 +11202,43 @@
     }
 
     // 6. 播放特效 (核心動畫邏輯)
+    // 6. 播放特效 (核心動畫邏輯)
     function playRealityBreak(data, onComplete) {
-		// 優先讀取 data 中的設定，若無則使用預設值 (向下相容)
-		// 預設值：Outer=false, Inner=true, Intensity=0.7 (與原本寫死的一致)
-		const ENABLE_OUTER_SHAKE = (data.shakeOuter !== undefined) ? data.shakeOuter : false;
-		const ENABLE_INNER_SHAKE = (data.shakeInner !== undefined) ? data.shakeInner : true;
-		const TEAR_INTENSITY = (data.tearScale !== undefined) ? data.tearScale : 0.7;
-		
-		// ==========================================
+        // [新增] 鎖定捲軸，防止震動時出現 Scrollbar
+        document.body.style.overflow = 'hidden';
 
-		const overlay = document.getElementById('rb-overlay');
-		const imgLayer = document.getElementById('rb-inner-layer');
+        // 優先讀取 data 中的設定，若無則使用預設值 (向下相容)
+        const ENABLE_OUTER_SHAKE = (data.shakeOuter !== undefined) ? data.shakeOuter : false;
+        const ENABLE_INNER_SHAKE = (data.shakeInner !== undefined) ? data.shakeInner : true;
+        const TEAR_INTENSITY = (data.tearScale !== undefined) ? data.tearScale : 0.7;
+        
+        // ==========================================
+
+        const overlay = document.getElementById('rb-overlay');
+        const imgLayer = document.getElementById('rb-inner-layer');
         const paperLayer = document.getElementById('rb-paper-layer');
         const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
-		
-		// [新增] 解析圖片來源
-		let srcImage = data.imgData; // 向下相容舊檔
-		if (!srcImage && data.imgKey) {
-			srcImage = globalImageRegistry[data.imgKey];
-		}
-		
-		// [新增] 取得提示文字元素
+        
+        // 解析圖片來源
+        let srcImage = data.imgData; // 向下相容舊檔
+        if (!srcImage && data.imgKey) {
+            srcImage = globalImageRegistry[data.imgKey];
+        }
+        
         const hint = document.getElementById('rb-edit-hint');
 
         // A. 初始化
         overlay.style.display = 'block';
         overlay.classList.remove('editing');
-		
-		// [修正] 強制隱藏操作提示文字 (因為它可能有殘留的 inline style)
+        
         if (hint) hint.style.display = 'none';
         
         const setLayerStyle = (el, isPaper) => {
             if (!isPaper && srcImage) {
-				el.style.backgroundImage = `url(${srcImage})`;
-				el.style.backgroundColor = 'transparent';
-			} else if (isPaper) {
+                el.style.backgroundImage = `url(${srcImage})`;
+                el.style.backgroundColor = 'transparent';
+            } else if (isPaper) {
                 el.style.backgroundImage = ''; 
                 el.style.backgroundColor = ''; 
             } else {
@@ -11288,7 +11289,6 @@
             imgLayer.style.transition = transitionCSS;
             paperLayer.style.transition = transitionCSS;
             
-            // [核心修改] 使用 TEAR_INTENSITY (0.7) 取代原本的 1.5
             const endPolyImg = generateJaggedPoly(TEAR_INTENSITY, pattern, seedImg, 'image');
             const endPolyPaper = generateJaggedPoly(TEAR_INTENSITY, pattern, seedPaper, 'paper');
             
@@ -11308,6 +11308,9 @@
         setTimeout(() => {
             overlay.style.display = 'none';
             flash.style.opacity = '0';
+            
+            // [新增] 恢復捲軸
+            document.body.style.overflow = '';
             
             if (onComplete) onComplete();
         }, 2500);
