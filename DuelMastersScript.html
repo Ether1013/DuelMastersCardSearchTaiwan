@@ -2818,17 +2818,18 @@
     </select>
 
     <button onclick="openSetupModal()" data-i18n="btn_setup">Setup / Clear</button>
-	<button onclick="actionDrawCard()" style="background:#2980b9; border-color:#2471a3;" data-i18n="btn_draw">🎴 抽牌 (Draw)</button>
+	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
     <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
     →
     <button onclick="resetCurrentTurnPlayer()" data-i18n="btn_reset_current">重置當前 (Untap)</button>
+    →
+	<button onclick="actionDrawCard()" style="background:#2980b9; border-color:#2471a3;" data-i18n="btn_draw">🎴 抽牌 (Draw)</button>
+	<button id="btn-rb-effect" onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;" data-i18n="btn_effect">⚡ Cut In</button>
     <select onchange="handleWinSelect(this)" style="background:#f39c12; border-color:#d35400; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer; outline:none;">
         <option value="" data-i18n="opt_win_default">🏆 宣告勝利...</option>
         <option value="1" data-i18n="btn_p1_win">🏆 1P Win</option>
         <option value="2" data-i18n="btn_p2_win">🏆 2P Win</option>
     </select>
-	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
-	<button id="btn-rb-effect" onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;" data-i18n="btn_effect">⚡ 特效</button>
     <div style="flex:1"></div>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
@@ -3677,7 +3678,7 @@
             'rps_draw': '平手！再來一把！',
             'rps_p1_win': 'P1 獲勝！',
             'rps_p2_win': 'P2 獲勝！',
-			'btn_effect': '⚡ 特效',
+			'btn_effect': '⚡ Cut In',
 			'btn_bgm': '🎵 BGM',
 			'btn_trans': '🌐 翻譯 (Trans)',
 			'btn_about': 'ℹ️ About',
@@ -3730,6 +3731,9 @@
 			'desc_bgm_stop': '[BGM] 停止音樂',
 			'desc_dialogue': '[對話]',
 			'msg_editing_placeholder': '... 編輯中 (Editing) ...',
+			'lbl_rb_shake_in': '🫨 內震 (Inner)',
+			'lbl_rb_shake_out': '🫨 外震 (Outer)',
+			'lbl_rb_intensity': '裂度 (Scale):',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3798,7 +3802,7 @@
             'rps_draw': 'Draw! Again!',
             'rps_p1_win': 'P1 Wins!',
             'rps_p2_win': 'P2 Wins!',
-			'btn_effect': '⚡ Effect',
+			'btn_effect': '⚡ Cut In',
 			'btn_bgm': '🎵 BGM',
 			'btn_trans': '🌐 Trans',
 			'btn_about': 'ℹ️ About',
@@ -3851,6 +3855,9 @@
 			'desc_bgm_stop': '[BGM] Stop',
 			'desc_dialogue': '[Dialog]',
 			'msg_editing_placeholder': '... Editing ...',
+			'lbl_rb_shake_in': '🫨 Inner Shake',
+			'lbl_rb_shake_out': '🫨 Outer Shake',
+			'lbl_rb_intensity': 'Scale:',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3919,7 +3926,7 @@
             'rps_draw': 'あいこでしょ！',
             'rps_p1_win': 'P1 勝利！',
             'rps_p2_win': 'P2 勝利！',	
-			'btn_effect': '⚡ エフェクト',
+			'btn_effect': '⚡ カットイン',
 			'btn_bgm': '🎵 BGM',
 			'btn_trans': '🌐 翻訳 (Trans)',
 			'btn_about': 'ℹ️ About',
@@ -3971,7 +3978,10 @@
 			'desc_bgm_play': '[BGM] 再生 {name}',
 			'desc_bgm_stop': '[BGM] 停止',
 			'desc_dialogue': '[会話]',		
-			'msg_editing_placeholder': '... 編集中 (Editing) ...',			
+			'msg_editing_placeholder': '... 編集中 (Editing) ...',	
+			'lbl_rb_shake_in': '🫨 內揺れ (In)',
+			'lbl_rb_shake_out': '🫨 外揺れ (Out)',
+			'lbl_rb_intensity': '裂け目:',
 		}
 	};
 
@@ -10876,18 +10886,30 @@
 
         if (existingData) {
             // [載入舊資料模式]
-            console.log(`編輯現有特效 (Index: ${targetIdx})`);
-            
-            // 將索引存入編輯器狀態中，供存檔時使用
-            rbEditorState = {
-                active: true,
-                imgData: existingData.imgData,
-                x: existingData.style.x,
-                y: existingData.style.y,
-                scale: existingData.style.scale,
-                pattern: existingData.pattern,
-                editingIndex: targetIdx // <--- 記錄起來！
-            };
+			console.log(`編輯現有特效 (Index: ${targetIdx})`);
+			
+			// 將索引存入編輯器狀態中
+			rbEditorState = {
+				active: true,
+				imgData: existingData.imgData,
+				x: existingData.style.x,
+				y: existingData.style.y,
+				scale: existingData.style.scale,
+				pattern: existingData.pattern,
+				editingIndex: targetIdx
+			};
+
+			// --- [新增] 讀取擴充參數 (含向下相容) ---
+			// 如果是舊檔案 (undefined)，使用預設值：內震=true, 外震=false, 裂度=0.7
+			const sIn = (existingData.shakeInner !== undefined) ? existingData.shakeInner : true;
+			const sOut = (existingData.shakeOuter !== undefined) ? existingData.shakeOuter : false;
+			const intensity = (existingData.tearScale !== undefined) ? existingData.tearScale : 0.7;
+
+			// 更新 UI 元件狀態
+			document.getElementById('rb-shake-inner').checked = sIn;
+			document.getElementById('rb-shake-outer').checked = sOut;
+			document.getElementById('rb-intensity').value = intensity;
+			document.getElementById('rb-intensity-val').innerText = intensity;
             
             // UI 設定 (有圖顯示圖，沒圖顯示黑底)
             if (existingData.imgData) {
@@ -10911,6 +10933,13 @@
                 active: true, imgData: null, x: 50, y: 50, scale: 1.0, pattern: 'random',
                 editingIndex: -1 // -1 代表這是一筆新資料
             };
+			
+			// --- [新增] UI 重置為預設值 ---
+			document.getElementById('rb-shake-inner').checked = true;  // 預設內震開啟
+			document.getElementById('rb-shake-outer').checked = false; // 預設外震關閉
+			document.getElementById('rb-intensity').value = 0.7;
+			document.getElementById('rb-intensity-val').innerText = '0.7';
+			// ----------------------------
             
             layer.style.backgroundImage = 'none';
             layer.style.backgroundColor = '#222';
@@ -10997,12 +11026,23 @@
 
     // 4. 預覽特效
     function previewRbEffect() {
-        const pattern = document.getElementById('rb-pattern-select').value;
-        const config = {
-            imgData: rbEditorState.imgData,
-            style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
-            pattern: pattern
-        };
+	
+		const pattern = document.getElementById('rb-pattern-select').value;
+			
+		// --- [新增] 從 UI 讀取參數 ---
+		const sIn = document.getElementById('rb-shake-inner').checked;
+		const sOut = document.getElementById('rb-shake-outer').checked;
+		const intensity = parseFloat(document.getElementById('rb-intensity').value);
+		
+		const config = {
+			imgData: rbEditorState.imgData,
+			style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
+			pattern: pattern,
+			// 傳入預覽參數
+			shakeInner: sIn,
+			shakeOuter: sOut,
+			tearScale: intensity
+		};
         
         // 暫時隱藏 UI
         document.getElementById('rb-overlay').classList.remove('editing');
@@ -11040,19 +11080,27 @@
 
         const pattern = document.getElementById('rb-pattern-select').value;
         
-        // 加入操作指令
-        addOperation({
-            type: 'REALITY_BREAK',
-            data: {
-                imgData: rbEditorState.imgData,
-                style: { 
-                    x: rbEditorState.x, 
-                    y: rbEditorState.y, 
-                    scale: rbEditorState.scale 
-                },
-                pattern: pattern
-            }
-        });
+        // --- [新增] 從 UI 讀取參數並寫入 data ---
+		const sIn = document.getElementById('rb-shake-inner').checked;
+		const sOut = document.getElementById('rb-shake-outer').checked;
+		const intensity = parseFloat(document.getElementById('rb-intensity').value);
+
+		addOperation({
+			type: 'REALITY_BREAK',
+			data: {
+				imgData: rbEditorState.imgData,
+				style: { 
+					x: rbEditorState.x, 
+					y: rbEditorState.y, 
+					scale: rbEditorState.scale 
+				},
+				pattern: pattern,
+				// 新增欄位
+				shakeInner: sIn,
+				shakeOuter: sOut,
+				tearScale: intensity
+			}
+		});
 
         // 存檔
         saveDraft(t('desc_rb'));
@@ -11092,20 +11140,16 @@
 
     // 6. 播放特效 (核心動畫邏輯)
     function playRealityBreak(data, onComplete) {
-        // ==========================================
-        // [參數設定區]
-        // ==========================================
-        const ENABLE_OUTER_SHAKE = false;  // 表層 (盤面+白邊) 是否要晃？
-        const ENABLE_INNER_SHAKE = true; // 底層 (露出的圖) 是否要晃？
-        
-        // [關鍵修改] 撕裂程度 (0.0 ~ 1.0)
-        // 1.5 = 撕破天際 (全黑)
-        // 0.7 = 保留約 30% 的表層 (裂口佔 70%)
-        const TEAR_INTENSITY = 0.7; 
-        // ==========================================
+		// 優先讀取 data 中的設定，若無則使用預設值 (向下相容)
+		// 預設值：Outer=false, Inner=true, Intensity=0.7 (與原本寫死的一致)
+		const ENABLE_OUTER_SHAKE = (data.shakeOuter !== undefined) ? data.shakeOuter : false;
+		const ENABLE_INNER_SHAKE = (data.shakeInner !== undefined) ? data.shakeInner : true;
+		const TEAR_INTENSITY = (data.tearScale !== undefined) ? data.tearScale : 0.7;
+		
+		// ==========================================
 
-        const overlay = document.getElementById('rb-overlay');
-        const imgLayer = document.getElementById('rb-inner-layer');
+		const overlay = document.getElementById('rb-overlay');
+		const imgLayer = document.getElementById('rb-inner-layer');
         const paperLayer = document.getElementById('rb-paper-layer');
         const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
@@ -11597,20 +11641,39 @@
     <div id="rb-flash-layer"></div>
     
     <div id="rb-controls">
-        <div style="background:rgba(0,0,0,0.7); padding:5px 15px; border-radius:30px; color:white; display:flex; gap:10px; align-items:center;">
-            <span data-i18n="lbl_rb_style">特效樣式:</span>
-            <select id="rb-pattern-select" style="background:#333; color:white; border:1px solid #555; padding:2px;">
-                <option value="random" data-i18n="opt_rb_random">🎲 隨機 (Random)</option>
-                <option value="center" data-i18n="opt_rb_center">⚡ 中間撕裂 (Center)</option>
-                <option value="corner-tl" data-i18n="opt_rb_tl">📐 左上撕裂 (Top-Left)</option>
-                <option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
-            </select>
-            <div style="width:1px; height:20px; background:#555; margin:0 5px;"></div>
-            <button onclick="previewRbEffect()" style="background:#3498db; border:none; border-radius:4px; color:white; cursor:pointer;" data-i18n="btn_preview">▶ 預覽</button>
-            <button onclick="confirmRbEffect()" style="background:#2ecc71; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold;" data-i18n="btn_save">💾 儲存 (Save)</button>
-            <button onclick="closeRbEditor()" style="background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;" data-i18n="btn_cancel">✕ 取消</button>
-        </div>
-    </div>
+		<div style="background:rgba(0,0,0,0.85); padding:8px 20px; border-radius:40px; color:white; display:flex; gap:12px; align-items:center;">
+			<div style="display:flex; flex-direction:column; gap:2px;">
+				<span data-i18n="lbl_rb_style" style="font-size:0.75rem; color:#aaa;">特效樣式:</span>
+				<select id="rb-pattern-select" style="background:#333; color:white; border:1px solid #555; padding:2px; width:100px;">
+					<option value="random" data-i18n="opt_rb_random">🎲 隨機 (Random)</option>
+					<option value="center" data-i18n="opt_rb_center">⚡ 中間撕裂 (Center)</option>
+					<option value="corner-tl" data-i18n="opt_rb_tl">📐 左上撕裂 (Top-Left)</option>
+					<option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
+				</select>
+			</div>
+
+			<div style="width:1px; height:30px; background:#555;"></div>
+
+			<div style="display:flex; flex-direction:column; gap:4px; font-size:0.8rem;">
+				<label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="rb-shake-inner" checked> <span data-i18n="lbl_rb_shake_in" style="margin-left:4px;">內震</span></label>
+				<label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="rb-shake-outer"> <span data-i18n="lbl_rb_shake_out" style="margin-left:4px;">外震</span></label>
+			</div>
+
+			<div style="display:flex; flex-direction:column; align-items:center; width:80px;">
+				<div style="display:flex; justify-content:space-between; width:100%; font-size:0.7rem; color:#aaa;">
+					<span data-i18n="lbl_rb_intensity">裂度:</span>
+					<span id="rb-intensity-val">0.7</span>
+				</div>
+				<input type="range" id="rb-intensity" min="0.1" max="1.5" step="0.1" value="0.7" style="width:100%; cursor:pointer;" oninput="document.getElementById('rb-intensity-val').innerText=this.value">
+			</div>
+
+			<div style="width:1px; height:30px; background:#555;"></div>
+
+			<button onclick="previewRbEffect()" style="background:#3498db; border:none; border-radius:4px; color:white; cursor:pointer; padding:5px 10px;" data-i18n="btn_preview">▶ 預覽</button>
+			<button onclick="confirmRbEffect()" style="background:#2ecc71; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold; padding:5px 15px;" data-i18n="btn_save">💾 儲存</button>
+			<button onclick="closeRbEditor()" style="background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer; padding:5px 10px;" data-i18n="btn_cancel">✕</button>
+		</div>
+	</div>
 </div>
 <div id="import-selector-modal" class="modal">
     <div class="modal-content" style="width: 500px; max-height: 80vh; display:flex; flex-direction:column;">
