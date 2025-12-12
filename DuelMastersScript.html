@@ -6475,22 +6475,6 @@
 			newId: fixedId, 
 			isContinuous: isContinuous 
 		});
-
-        // -----------------------------------------------------------------
-        // [修正] 同步選取邏輯 (移除 setTimeout)
-        // -----------------------------------------------------------------
-        
-        // 2. 立即設定選取目標為新卡片
-        pendingMove = { cardIds: [fixedId], shuffle: false };
-        
-        // 3. 強制再次重繪 UI
-        // 這會讓 renderUI 在繪製時就讀到 pendingMove，
-        // 確保新卡片生成時直接帶有 .selected class，且所有座標計算正確
-        renderUI();
-
-        // 4. 更新操作面板
-        // 因為 state 與 pendingMove 都已就緒，面板會正確判斷這是「效果卡」，進而顯示調整按鈕
-        updateSelectionUI();
 	}
 
     function deleteSelectedCard() {
@@ -8411,9 +8395,20 @@
         el.onpointercancel = cancelPress;
 
 		// [原有邏輯] 點擊事件
+		// [修正後] 點擊事件
 		const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
-		if (!isViewerZone) {
+
+		// 強制判斷：如果是能力區 (ability) 或是 非檢視區 (一般卡)，都綁定單擊事件
+		if (card.zone.includes('ability') || !isViewerZone) {
 			 el.onclick = (e) => handleCardSingleClick(e, card.id);
+			 
+			 // [額外防呆] 針對能力卡，確保右鍵也能觸發選取 (或是停用預設選單)
+			 if (card.zone.includes('ability')) {
+				 el.oncontextmenu = (e) => { 
+					 e.preventDefault(); 
+					 handleCardSingleClick(e, card.id); 
+				 };
+			 }
 		} else {
 			 el.onclick = (e) => { e.stopPropagation(); handleZoneClick(card.zone); };
 		}
