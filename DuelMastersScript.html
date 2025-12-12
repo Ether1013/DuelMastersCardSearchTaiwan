@@ -2746,6 +2746,43 @@
 		50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(241, 196, 15, 1); }
 		100% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
 	}
+	/* --- [新增] 匯入清單樣式 --- */
+	.import-script-item {
+		padding: 12px;
+		border-bottom: 1px solid #eee;
+		cursor: pointer;
+		transition: background 0.2s;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.import-script-item:hover {
+		background: #e8f6fd;
+	}
+	.import-script-item:last-child {
+		border-bottom: none;
+	}
+	.import-script-title {
+		font-weight: bold;
+		font-size: 1rem;
+		color: #2c3e50;
+	}
+	.import-script-desc {
+		font-size: 0.85rem;
+		color: #7f8c8d;
+	}
+	.import-script-lang {
+		position: absolute;
+		top: 10px; right: 10px;
+		font-size: 0.7rem;
+		background: #eee;
+		color: #555;
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-weight: bold;
+		text-transform: uppercase;
+	}
 	</style>
 </head>
 <body>
@@ -2770,16 +2807,16 @@
         <option value="2" data-i18n="btn_p2_win">🏆 2P Win</option>
     </select>
 	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
-	<button id="btn-rb-effect" onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;">⚡ 特效</button>
+	<button id="btn-rb-effect" onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;" data-i18n="btn_effect">⚡ 特效</button>
     <div style="flex:1"></div>
     <div style="flex:1"></div>
 	<button id="btn-add-dialogue" onclick="openDialogueModal()" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_dialogue">💬 對話 (Dialog)</button>
-    <button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;">🎵 BGM</button>
-	<button onclick="document.getElementById('import-input').click()" data-i18n="btn_import">匯入 (Import)</button>
-    <input type="file" id="import-input" style="display:none" onchange="importData(this)">
+    <button id="btn-bgm" onclick="openBGMModal()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_bgm">🎵 BGM</button>
+	<button onclick="openImportModal()" data-i18n="btn_import">匯入 (Import)</button>
+	<input type="file" id="import-input" style="display:none" onchange="importData(this)">	
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
-	<button onclick="document.getElementById('trans-modal').style.display='flex'" style="background:#8e44ad; border-color:#8e44ad;">🌐 翻譯 (Trans)</button>
-	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;">ℹ️ About</button>
+	<button onclick="document.getElementById('trans-modal').style.display='flex'" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_trans">🌐 翻譯 (Trans)</button>
+	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;" data-i18n="btn_about">ℹ️ About</button>
 </div>
 
 <div id="draft-bar">
@@ -3001,13 +3038,13 @@
 <div id="theme-picker-modal" class="modal">
     <div class="modal-content">
         <h3 id="theme-picker-title" style="margin-top:0; text-align:center;">選擇主題色</h3>
-        <p style="font-size:0.85rem; color:#666; text-align:center;">對手已使用的顏色無法選擇。</p>
+        <p style="font-size:0.85rem; color:#666; text-align:center;" data-i18n="msg_theme_opponent">對手已使用的顏色無法選擇。</p>
         
         <div class="color-grid" id="theme-color-grid">
             </div>
 
         <div style="text-align:right;">
-            <button class="danger" onclick="closeThemePicker()">取消</button>
+            <button class="danger" onclick="closeThemePicker()" data-i18n="btn_cancel">取消</button>
         </div>
     </div>
 </div>
@@ -3110,13 +3147,13 @@
 
 <div id="import-conflict-modal" class="modal">
     <div class="modal-content" style="width: 400px; text-align: center;">
-        <h3>發現外部劇本</h3>
-        <p>網址參數包含劇本檔，但偵測到您有未儲存的本地進度。</p>
+        <h3 data-i18n="title_import_conflict">發現外部劇本</h3>
+        <p data-i18n="msg_import_conflict">網址參數包含劇本檔，但偵測到您有未儲存的本地進度。</p>
         <p>請問要如何處理？</p>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-            <button onclick="resolveImportConflict('cancel')" style="padding: 10px;">❌ 不匯入 (使用本地存檔)</button>
-            <button onclick="resolveImportConflict('save')" style="padding: 10px; background: #2ecc71;">💾 存檔然後匯入</button>
-            <button onclick="resolveImportConflict('overwrite')" style="padding: 10px; background: #e74c3c;">⚠️ 不存檔直接匯入</button>
+            <button onclick="resolveImportConflict('cancel')" style="padding: 10px;" data-i18n="btn_conflict_cancel">❌ 不匯入 (使用本地存檔)</button>
+            <button onclick="resolveImportConflict('save')" style="padding: 10px; background: #2ecc71;" data-i18n="btn_conflict_save">💾 存檔然後匯入</button>
+            <button onclick="resolveImportConflict('overwrite')" style="padding: 10px; background: #e74c3c;" data-i18n="btn_conflict_overwrite">⚠️ 不存檔直接匯入</button>
         </div>
     </div>
 </div>
@@ -3164,49 +3201,49 @@
 -->
 <div id="trans-modal" class="modal">
     <div class="modal-content" style="width: 400px; text-align: center;">
-        <h3 style="margin-top:0;">🌐 翻譯小幫手 (Translation Tool)</h3>
-        <p style="color:#666; font-size:0.9rem; text-align:left;">
+        <h3 style="margin-top:0;"data-i18n="title_trans">🌐 翻譯小幫手 (Translation Tool)</h3>
+        <p style="color:#666; font-size:0.9rem; text-align:left;" data-i18n="msg_trans_desc">
             此功能可將劇本中的對話提取為輕量級 JSON 檔，方便交給 AI 翻譯，完成後再匯入覆蓋。
         </p>
         
         <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="exportDialogueJson()" style="background:#2980b9; padding: 10px;">
+            <button onclick="exportDialogueJson()" style="background:#2980b9; padding: 10px;" data-i18n="btn_trans_export">
                 📤 1. 匯出對白檔 (.json)
             </button>
-            <div style="font-size:0.8rem; color:#888;">
+            <div style="font-size:0.8rem; color:#888;" data-i18n="msg_trans_hint">
                 (請將此檔案內容貼給 AI，並要求它只翻譯值，保持格式不變)
             </div>
         </div>
 
         <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed #ccc; padding-top: 20px;">
-            <button onclick="document.getElementById('trans-input').click()" style="background:#27ae60; padding: 10px;">
+            <button onclick="document.getElementById('trans-input').click()" style="background:#27ae60; padding: 10px;" data-i18n="btn_trans_import">
                 📥 2. 匯入翻譯檔 (.json)
             </button>
             <input type="file" id="trans-input" style="display:none" accept=".json" onchange="importDialogueJson(this)">
         </div>
 
         <div style="text-align: right; margin-top: 10px;">
-            <button class="danger" onclick="document.getElementById('trans-modal').style.display='none'">關閉 (Close)</button>
+            <button class="danger" onclick="document.getElementById('trans-modal').style.display='none'"data-i18n="btn_close">關閉 (Close)</button>
         </div>
     </div>
 </div>
 <div id="bgm-modal" class="modal">
     <div class="modal-content" style="width: 400px;">
-        <h3 style="margin-top:0; text-align:center;">🎵 設定背景音樂 (BGM)</h3>
-        <p style="font-size:0.8rem; color:#666; text-align:center;">點擊列表可試聽，按下確認後生效。</p>
+        <h3 style="margin-top:0; text-align:center;"data-i18n="title_bgm">🎵 設定背景音樂 (BGM)</h3>
+        <p style="font-size:0.8rem; color:#666; text-align:center;" data-i18n="msg_bgm_hint">點擊列表可試聽，按下確認後生效。</p>
         
         <div id="bgm-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
             </div>
 
         <div style="margin-top:15px; display:flex; justify-content:space-between;">
-            <button class="danger" onclick="closeBGMModal()">取消 (Cancel)</button>
-            <button class="primary" onclick="confirmBGM()">💾 確認 (Confirm)</button>
+            <button class="danger" onclick="closeBGMModal()"data-i18n="btn_cancel">取消 (Cancel)</button>
+            <button class="primary" onclick="confirmBGM()" data-i18n="btn_confirm">💾 確認 (Confirm)</button>
         </div>
     </div>
 </div>
 <div id="about-modal" class="modal">
     <div class="modal-content" style="width: 350px; text-align: center;">
-        <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">Credits</h3>
+        <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;" data-i18n="title_credits">Credits</h3>
         
         <div style="text-align: left; font-size: 0.9rem; line-height: 1.6; padding: 10px;">
             <div style="margin-bottom: 12px;">
@@ -3230,7 +3267,7 @@
         </div>
 
         <div style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
-            <button class="primary" onclick="document.getElementById('about-modal').style.display='none'">Close</button>
+            <button class="primary" onclick="document.getElementById('about-modal').style.display='none'" data-i18n="btn_close">Close</button>
         </div>
     </div>
 </div>
@@ -3608,6 +3645,58 @@
             'rps_draw': '平手！再來一把！',
             'rps_p1_win': 'P1 獲勝！',
             'rps_p2_win': 'P2 獲勝！',
+			'btn_effect': '⚡ 特效',
+			'btn_bgm': '🎵 BGM',
+			'btn_trans': '🌐 翻譯 (Trans)',
+			'btn_about': 'ℹ️ About',
+			'title_theme_picker': '選擇 P{n} 代表色',
+			'msg_theme_opponent': '對手已使用的顏色無法選擇。',
+			'title_bgm': '🎵 設定背景音樂 (BGM)',
+			'msg_bgm_hint': '點擊列表可試聽，按下確認後生效。',
+			'opt_bgm_stop': '🛑 停止播放 (Stop Music)',
+			'btn_confirm': '💾 確認',
+			'title_trans': '🌐 翻譯小幫手 (Translation Tool)',
+			'msg_trans_desc': '此功能可將劇本中的對話提取為輕量級 JSON 檔，方便交給 AI 翻譯，完成後再匯入覆蓋。',
+			'btn_trans_export': '📤 1. 匯出對白檔 (.json)',
+			'msg_trans_hint': '(請將此檔案內容貼給 AI，並要求它只翻譯值，保持格式不變)',
+			'btn_trans_import': '📥 2. 匯入翻譯檔 (.json)',
+			'btn_close': '關閉 (Close)',
+			'title_credits': 'Credits',
+			'title_import_conflict': '發現外部劇本',
+			'msg_import_conflict': '網址參數包含劇本檔，但偵測到您有未儲存的本地進度。\n請問要如何處理？',
+			'btn_conflict_cancel': '❌ 不匯入 (使用本地存檔)',
+			'btn_conflict_save': '💾 存檔然後匯入',
+			'btn_conflict_overwrite': '⚠️ 不存檔直接匯入',
+			'title_select_script': '選擇劇本 (Select Script)',
+			'title_import_source': '選擇匯入來源 (Import Source)',
+			'btn_local_file': '📂 選擇本地檔案 (.txt/.json)',
+			'lbl_or_examples': '▼ 或選擇範例劇本 (Built-in Scripts) ▼',
+			'lbl_no_script': '無可用劇本',
+			'lbl_rb_style': '特效樣式:',
+			'opt_rb_random': '🎲 隨機 (Random)',
+			'opt_rb_center': '⚡ 中間撕裂 (Center)',
+			'opt_rb_tl': '📐 左上撕裂 (Top-Left)',
+			'opt_rb_br': '📐 右下撕裂 (Btm-Right)',
+			'btn_preview': '▶ 預覽',
+			'btn_save': '💾 儲存 (Save)',
+			'msg_rb_hint': '點擊此處並按下 Ctrl+V 貼上圖片\n(拖曳可移動，滾輪可縮放)',
+			'msg_paste_img_hint': '請先選擇一張卡片，然後按下 Ctrl+V 貼上圖片',
+			'msg_deck_empty': 'P{n} 牌庫已空 (Empty Deck)！',
+			'msg_dialog_exclusive': '對話動作必須獨立，無法與其他動作混合 (請另開新步驟)。',
+			'msg_finish_edit_first': '請先完成目前的編輯動作。',
+			'msg_no_dialog': '目前劇本中沒有任何對話！',
+			'msg_trans_result': '匯入成功！共更新了 {n} 處對話。',
+			'msg_trans_fail_fmt': '匯入失敗：檔案格式錯誤或內容無效。',
+			'msg_select_rotate': '請先選擇要旋轉的卡片',
+			'msg_rps_again': '要繼續猜拳嗎？',
+			'msg_confirm_load_script': '確定要載入劇本：\n「{title}」嗎？\n(未儲存的進度將會遺失)',
+			'msg_p1_win': 'P1 WIN!',
+			'msg_p2_win': 'P2 WIN!',
+			'msg_congrats': 'Congratulations!',
+			'desc_rb': '[特效] 次元破裂 (Reality Break)',
+			'desc_bgm_play': '[BGM] 播放 {name}',
+			'desc_bgm_stop': '[BGM] 停止音樂',
+			'desc_dialogue': '[對話]',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3676,6 +3765,58 @@
             'rps_draw': 'Draw! Again!',
             'rps_p1_win': 'P1 Wins!',
             'rps_p2_win': 'P2 Wins!',
+			'btn_effect': '⚡ Effect',
+			'btn_bgm': '🎵 BGM',
+			'btn_trans': '🌐 Trans',
+			'btn_about': 'ℹ️ About',
+			'title_theme_picker': 'Select Color for P{n}',
+			'msg_theme_opponent': 'Colors used by opponent are disabled.',
+			'title_bgm': '🎵 BGM Settings',
+			'msg_bgm_hint': 'Click to preview. Confirm to apply.',
+			'opt_bgm_stop': '🛑 Stop Music',
+			'btn_confirm': '💾 Confirm',
+			'title_trans': '🌐 Translation Tool',
+			'msg_trans_desc': 'Extract dialogue to JSON for AI translation, then import back.',
+			'btn_trans_export': '📤 1. Export JSON',
+			'msg_trans_hint': '(Ask AI to translate values only, keeping keys unchanged)',
+			'btn_trans_import': '📥 2. Import JSON',
+			'btn_close': 'Close',
+			'title_credits': 'Credits',
+			'title_import_conflict': 'External Script Found',
+			'msg_import_conflict': 'URL contains a script, but you have unsaved local progress.\nWhat would you like to do?',
+			'btn_conflict_cancel': '❌ Cancel (Use Local)',
+			'btn_conflict_save': '💾 Save & Import',
+			'btn_conflict_overwrite': '⚠️ Overwrite (No Save)',
+			'title_select_script': 'Select Script',
+			'title_import_source': 'Import Source',
+			'btn_local_file': '📂 Local File (.txt/.json)',
+			'lbl_or_examples': '▼ Built-in Scripts ▼',
+			'lbl_no_script': 'No scripts available',
+			'lbl_rb_style': 'Style:',
+			'opt_rb_random': '🎲 Random',
+			'opt_rb_center': '⚡ Center Tear',
+			'opt_rb_tl': '📐 Top-Left',
+			'opt_rb_br': '📐 Btm-Right',
+			'btn_preview': '▶ Preview',
+			'btn_save': '💾 Save',
+			'msg_rb_hint': 'Click here & Ctrl+V to paste image\n(Drag to move, Scroll to scale)',
+			'msg_paste_img_hint': 'Select a card first, then Ctrl+V to paste image.',
+			'msg_deck_empty': 'P{n} Deck is Empty!',
+			'msg_dialog_exclusive': 'Dialogue must be a standalone step.',
+			'msg_finish_edit_first': 'Please finish current editing first.',
+			'msg_no_dialog': 'No dialogue found in script!',
+			'msg_trans_result': 'Success! Updated {n} dialogues.',
+			'msg_trans_fail_fmt': 'Import failed: Invalid format.',
+			'msg_select_rotate': 'Select cards to rotate first.',
+			'msg_rps_again': 'Play RPS again?',
+			'msg_confirm_load_script': 'Load script:\n"{title}"?\n(Unsaved progress will be lost)',
+			'msg_p1_win': 'P1 WIN!',
+			'msg_p2_win': 'P2 WIN!',
+			'msg_congrats': 'Congratulations!',
+			'desc_rb': '[Effect] Reality Break',
+			'desc_bgm_play': '[BGM] Play {name}',
+			'desc_bgm_stop': '[BGM] Stop',
+			'desc_dialogue': '[Dialog]',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3743,7 +3884,59 @@
             'rps_scissors': '✌️ チョキ',
             'rps_draw': 'あいこでしょ！',
             'rps_p1_win': 'P1 勝利！',
-            'rps_p2_win': 'P2 勝利！',			
+            'rps_p2_win': 'P2 勝利！',	
+			'btn_effect': '⚡ エフェクト',
+			'btn_bgm': '🎵 BGM',
+			'btn_trans': '🌐 翻訳 (Trans)',
+			'btn_about': 'ℹ️ About',
+			'title_theme_picker': 'P{n}のテーマ色を選択',
+			'msg_theme_opponent': '相手が使用中の色は選択できません。',
+			'title_bgm': '🎵 BGM設定',
+			'msg_bgm_hint': 'リストをクリックして試聴、確認ボタンで適用。',
+			'opt_bgm_stop': '🛑 停止 (Stop Music)',
+			'btn_confirm': '💾 決定',
+			'title_trans': '🌐 翻訳ツール',
+			'msg_trans_desc': '台詞をJSONで抽出し、AI翻訳後に再インポートできます。',
+			'btn_trans_export': '📤 1. 台詞出力 (.json)',
+			'msg_trans_hint': '(AIに値のみ翻訳させ、フォーマットは維持してください)',
+			'btn_trans_import': '📥 2. 翻訳読込 (.json)',
+			'btn_close': '閉じる',
+			'title_credits': 'クレジット',
+			'title_import_conflict': '外部スクリプト検出',
+			'msg_import_conflict': 'URLパラメータにスクリプトがありますが、未保存のデータがあります。\nどうしますか？',
+			'btn_conflict_cancel': '❌ キャンセル (ローカル優先)',
+			'btn_conflict_save': '💾 保存して読込',
+			'btn_conflict_overwrite': '⚠️ 保存せず読込',
+			'title_select_script': 'シナリオ選択',
+			'title_import_source': 'インポート元を選択',
+			'btn_local_file': '📂 ローカルファイル (.txt/.json)',
+			'lbl_or_examples': '▼ サンプルシナリオ ▼',
+			'lbl_no_script': '利用可能なシナリオがありません',
+			'lbl_rb_style': 'スタイル:',
+			'opt_rb_random': '🎲 ランダム',
+			'opt_rb_center': '⚡ 中央引き裂き',
+			'opt_rb_tl': '📐 左上から',
+			'opt_rb_br': '📐 右下から',
+			'btn_preview': '▶ プレビュー',
+			'btn_save': '💾 保存',
+			'msg_rb_hint': 'ここをクリックして Ctrl+V で画像貼り付け\n(ドラッグで移動、ホイールで拡大)',
+			'msg_paste_img_hint': 'カードを選択してから Ctrl+V を押してください。',
+			'msg_deck_empty': 'P{n} 山札切れ (Empty Deck)!',
+			'msg_dialog_exclusive': '会話イベントは他の操作と混合できません。',
+			'msg_finish_edit_first': '現在の編集を完了してください。',
+			'msg_no_dialog': '会話データが見つかりません！',
+			'msg_trans_result': 'インポート成功！ {n} 箇所の会話を更新しました。',
+			'msg_trans_fail_fmt': 'インポート失敗：フォーマットが無効です。',
+			'msg_select_rotate': '回転させるカードを選択してください。',
+			'msg_rps_again': 'じゃんけんを続けますか？',
+			'msg_confirm_load_script': 'シナリオを読み込みますか？：\n「{title}」\n(未保存の進行状況は失われます)',
+			'msg_p1_win': 'P1 WIN!',
+			'msg_p2_win': 'P2 WIN!',
+			'msg_congrats': 'Congratulations!',
+			'desc_rb': '[演出] 次元断裂 (Reality Break)',
+			'desc_bgm_play': '[BGM] 再生 {name}',
+			'desc_bgm_stop': '[BGM] 停止',
+			'desc_dialogue': '[会話]',			
 		}
 	};
 
@@ -4035,7 +4228,7 @@
         const grid = document.getElementById('theme-color-grid');
         const title = document.getElementById('theme-picker-title');
         
-        title.innerText = `選擇 P${playerId} 代表色`;
+        title.innerText = t('title_theme_picker').replace('{n}', playerId);
         grid.innerHTML = '';
 
         // 取得對手用的顏色 (需要被停用)
@@ -4206,7 +4399,7 @@
 		const deckCards = state.cards.filter(c => c.zone === deckId);
 		
 		if (deckCards.length === 0) {
-			alert(pid === 1 ? "P1 牌庫已空 (Empty Deck)！" : "P2 牌庫已空 (Empty Deck)！");
+			alert(t('msg_deck_empty').replace('{n}', pid));
 			return;
 		}
 
@@ -4299,7 +4492,7 @@
     
     function pasteImageMode() {
         if (!pendingMove || pendingMove.cardIds.length !== 1) {
-            alert("請先選擇一張卡片，然後按下 Ctrl+V 貼上圖片");
+            alert(t('msg_paste_img_hint'));
             return;
         }
         window.focus();
@@ -4706,30 +4899,25 @@
             
             globalAceRegistry = data.aceRegistry || {};
             
-			// [新增] 載入主題
+            // 載入主題
             if (data.themeSettings) {
                 globalThemeSettings = data.themeSettings;
             } else {
                 globalThemeSettings = { p1: 'blue', p2: 'red' };
             }
             applyThemeVariables(); // 套用
-			
-			
-            // [修改] 移除 globalMoonlessRegistry 賦值，改為遷移邏輯
-            // 如果存檔中有舊版的無月資料，將其移轉至 initialState
+            
+            // 處理無月之門遷移
             if (data.moonlessRegistry) {
                 if (!data.initialState.moonless) data.initialState.moonless = {};
                 Object.assign(data.initialState.moonless, data.moonlessRegistry);
             }
 
-            // 重建狀態 (Replay Logic)
+            // 重建狀態
             initialState = data.initialState;
-            // 防呆：確保 initialState 有 moonless 屬性 (避免舊存檔是 undefined)
             if (!initialState.moonless) initialState.moonless = {};
-
-			// [建議新增] 確保舊存檔也有 rpsResult 欄位 (雖然 undefined 也不會報錯，但這樣比較乾淨)
             if (initialState.rpsResult === undefined) initialState.rpsResult = null;
-			
+            
             let loadedHistory = data.history;
             if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
             
@@ -4748,7 +4936,7 @@
                            ? data.currentIndex 
                            : (history.length - 1);
             
-            // **關鍵點 1**: 馬上渲染 UI (此時是純文字版，使用者可以看到盤面了)
+            // **關鍵點 1**: 馬上渲染 UI (純文字版)
             try { renderUI(); } catch(e) { console.error(e); }
 
             // --- 階段 2: 延遲讀取卡片圖片 ---
@@ -4759,7 +4947,7 @@
                         const cardImgs = JSON.parse(cardsRaw);
                         Object.assign(globalImageRegistry, cardImgs);
                         
-                        // **關鍵點 2**: 圖片載入完成，重新渲染 (圖片彈出)
+                        // **關鍵點 2**: 卡片圖片載入完成，重繪
                         renderUI(); 
                     } catch(e) { console.error("Error loading card images", e); }
                 }
@@ -4772,22 +4960,26 @@
                             const portImgs = JSON.parse(portRaw);
                             Object.assign(globalImageRegistry, portImgs);
                             
-                            // 確保預設頭像存在 (若存檔中缺少某些表情)
+                            // 確保預設頭像存在
                             if (typeof generateDefaultPortraits === 'function') {
                                 generateDefaultPortraits();
                             }
-                            // 不需要再次全盤 renderUI，除非當前正好開著對話框
-                            // 但為了保險起見，可以再刷一次，或是只更新對話相關 DOM
+                            
+                            // [修復重點] 圖片載入後，必須再呼叫一次 renderUI
+                            // 這樣如果當前畫面是對話，大頭貼才會顯示出來
+                            renderUI(); 
+
                         } catch(e) { console.error("Error loading portraits", e); }
                     } else {
-                        // 如果沒存檔，也要生成預設頭像
+                        // 如果沒存檔，也要生成預設頭像並重繪
                         if (typeof generateDefaultPortraits === 'function') {
                             generateDefaultPortraits();
+                            renderUI();
                         }
                     }
-                }, 50); // 給瀏覽器一點喘息時間
+                }, 50); 
                 
-            }, 50); // 給瀏覽器一點喘息時間
+            }, 50); 
 
             return true;
 
@@ -4947,7 +5139,7 @@
         
         // 1. 如果已存在對話，禁止加入其他動作 (如移動卡片)
         if (hasDialog && op.type !== 'DIALOGUE') {
-            alert(t('對話動作必須獨立，無法與其他動作混合 (請另開新步驟)。'));
+            alert(t('msg_dialog_exclusive'));
             return;
         }
         
@@ -5060,7 +5252,7 @@
                 if (data.p2 && data.p2.active) desc += `${data.p2.name}... `;
                 if (data.p1 && data.p1.active) desc += `${data.p1.name}...`;
             } else if (firstOp.type === 'REALITY_BREAK') {
-                desc = "[特效] 次元破裂 (Reality Break)";
+                desc = t('desc_rb');
             } else {
                 desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
             }
@@ -5194,7 +5386,7 @@
 	function deleteAction(index) {
         // 1. 安全檢查
         if (typeof isDrafting !== 'undefined' && isDrafting) {
-            alert("請先完成或取消目前的編輯動作 (Draft)，才能刪除步驟。");
+            alert(t('msg_finish_edit_first'));
             return;
         }
 
@@ -6089,7 +6281,7 @@
         tempSelectedBgm = null;
 
         // 1. 加入「停止播放」選項
-        const stopItem = createBGMItem(null, '🛑 停止播放 (Stop Music)');
+        const stopItem = createBGMItem(null, t('opt_bgm_stop'));
         listEl.appendChild(stopItem);
 
         // 2. 加入檔案列表
@@ -6160,7 +6352,9 @@
         });
 
         // 自動存檔並結束這一步 (因為 BGM 設定通常是獨立動作)
-        let desc = tempSelectedBgm ? `[BGM] 播放 ${tempSelectedBgm}` : `[BGM] 停止音樂`;
+        let desc = tempSelectedBgm ? 
+			t('desc_bgm_play').replace('{name}', tempSelectedBgm) : 
+			t('desc_bgm_stop');
         saveDraft(desc);
     }
 	
@@ -6216,7 +6410,7 @@
             setTimeout(() => {
                 // 如果是在自動播放中，就不跳 confirm，直接繼續 (模擬連續猜拳)
                 // 如果是手動操作，才跳 confirm
-                if (!document.body.classList.contains('is-playing') && confirm(`${t('rps_draw')}\n要繼續猜拳嗎？`)) {
+                if (!document.body.classList.contains('is-playing') && confirm(`${t('rps_draw')}\n${t('msg_rps_again')}`)) {
                     actionRPS(); // 遞迴呼叫，產生下一局
                 }
             }, 500);
@@ -7453,7 +7647,7 @@
             if (winOverlay.style.display !== 'flex') {
                 winOverlay.style.display = 'flex';
                 
-                const winnerText = state.winner === 1 ? "1P WIN!" : "2P WIN!";
+                const winnerText = state.winner === 1 ? t('msg_p1_win') : t('msg_p2_win');
                 const color = state.winner === 1 ? "#3498db" : "#e91e63"; 
                 
                 winOverlay.innerHTML = `
@@ -9241,7 +9435,7 @@
 	// --- [新增] 在清單視窗內旋轉卡片 ---
 	function rotateSelectedInModal(deg) {
 		if (selectedCardsInModal.length === 0) {
-			alert("請先選擇要旋轉的卡片");
+			alert(t('msg_select_rotate'));
 			return;
 		}
 
@@ -9516,6 +9710,87 @@
         // 8. 更新靜音按鈕 UI
         updateMuteButtonUI();
     }
+	
+	// --- [新增] 匯入選擇器邏輯 ---
+
+    // 1. 開啟視窗並渲染清單
+    function openImportModal() {
+        const modal = document.getElementById('import-selector-modal');
+        const listEl = document.getElementById('import-script-list');
+        
+        listEl.innerHTML = ''; // 清空舊內容
+
+        // 使用 [...].reverse() 複製並倒序，讓最新的劇本在最上面
+        const reversedScripts = [...AVAILABLE_SCRIPTS].reverse();
+
+        if (reversedScripts.length === 0) {
+            listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#999;">${t('lbl_no_script')}</div>`;
+        } else {
+            reversedScripts.forEach(script => {
+                const item = document.createElement('div');
+                item.className = 'import-script-item';
+                
+                // 語言標籤
+                const lang = script.lang || 'zh';
+                
+                item.innerHTML = `
+                    <div class="import-script-title">${script.title}</div>
+                    <div class="import-script-desc">${script.description}</div>
+                    <div class="import-script-lang">${lang}</div>
+                `;
+                
+                // 點擊載入
+                item.onclick = () => loadInternalScript(script);
+                
+                listEl.appendChild(item);
+            });
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    // 2. 觸發本地檔案選擇 (模擬點擊原本的 input)
+    function triggerLocalImport() {
+        document.getElementById('import-selector-modal').style.display = 'none';
+        document.getElementById('import-input').click();
+    }
+
+    // 3. 載入內建劇本 (Fetch & Load)
+    function loadInternalScript(scriptData) {
+        if (!confirm(t('msg_confirm_load_script').replace('{title}', scriptData.title))) return;
+
+        // 關閉視窗
+        document.getElementById('import-selector-modal').style.display = 'none';
+
+        // 處理路徑 (加上時間戳避免快取)
+        const path = 'scripts/' + scriptData.filename + '?v=' + Date.now();
+
+        // 顯示 Loading (可選)
+        console.log("Loading script:", path);
+
+        fetch(path, { cache: "no-store" })
+            .then(res => {
+                if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                if(!data.history || !data.initialState) throw new Error("Invalid script format");
+                
+                // 執行載入流程 (利用既有的 processGameData)
+                processGameData(data, true); // true = 重置到第一步
+                
+                // 套用額外設定 (語言、速度、計數器)
+                if (scriptData.lang) changeLanguage(scriptData.lang);
+                if (scriptData.speed) changePlaybackSpeed(scriptData.speed);
+                if (scriptData.counter_url) updateVisitorCounter(scriptData.counter_url);
+                
+                alert(t('msg_import_success'));
+            })
+            .catch(err => {
+                console.error(err);
+                alert(t('msg_import_fail') + ": " + err.message);
+            });
+    }
 
 // --- 新增的手機端邏輯 ---
 
@@ -9754,7 +10029,7 @@
         });
 
         if (exports.length === 0) {
-            alert("目前劇本中沒有任何對話！");
+            alert(t('msg_no_dialog'));
             return;
         }
 
@@ -9831,12 +10106,12 @@
                 renderUI();       // 更新中央畫面文字
                 saveToStorage();  // 存檔
                 
-                alert(`匯入成功！共更新了 ${updateCount} 處對話。`);
+                alert(t('msg_trans_result').replace('{n}', updateCount));
                 document.getElementById('trans-modal').style.display = 'none';
 
             } catch (err) {
                 console.error(err);
-                alert("匯入失敗：檔案格式錯誤或內容無效。");
+                alert(t('msg_trans_fail_fmt'));
             }
             input.value = ''; // 清空 input 方便下次選同一檔
         };
@@ -10270,7 +10545,7 @@
             data: { p1: p1Data, p2: p2Data }
         });
 
-        let desc = "[對話] ";
+        let desc = t('desc_dialogue') + " ";
         if (p2Data.active) desc += `${p2Data.name}: ${p2Data.dataText.substr(0,8)}... `;
         if (p1Data.active) desc += `${p1Data.name}: ${p1Data.dataText.substr(0,8)}...`;
         
@@ -10401,7 +10676,7 @@
     function openRealityBreakEditor() {
         // 如果正在編輯其他動作，先阻擋
         if (isDrafting && draftOperations.length > 0 && !draftOperations.some(o => o.type === 'REALITY_BREAK')) {
-            alert("請先完成目前的編輯動作。");
+            alert(t('msg_finish_edit_first'));
             return;
         }
 
@@ -10611,7 +10886,7 @@
         });
 
         // 存檔
-        saveDraft("[特效] 次元破裂 (Reality Break)");
+        saveDraft(t('desc_rb'));
         closeRbEditor();
     }
 
@@ -10665,10 +10940,16 @@
         const paperLayer = document.getElementById('rb-paper-layer');
         const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
+		
+		// [新增] 取得提示文字元素
+        const hint = document.getElementById('rb-edit-hint');
 
         // A. 初始化
         overlay.style.display = 'block';
         overlay.classList.remove('editing');
+		
+		// [修正] 強制隱藏操作提示文字 (因為它可能有殘留的 inline style)
+        if (hint) hint.style.display = 'none';
         
         const setLayerStyle = (el, isPaper) => {
             if (!isPaper && data.imgData) {
@@ -11015,7 +11296,7 @@
 <div id="ace-flash-layer"></div>
 <div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
 <div id="mobile-script-selector">
-    <h2 style="color:white; margin:0 0 10px 0;">選擇劇本 (Select Script)</h2>
+    <h2 style="color:white; margin:0 0 10px 0;" data-i18n="title_select_script">選擇劇本 (Select Script)</h2>
     <div class="script-list-container" id="script-list-body">
         </div>
     <button id="btn-mobile-start" onclick="confirmMobileScript()" disabled>▶ START</button>
@@ -11050,7 +11331,7 @@
     
     <div id="rb-inner-layer"></div>
     
-    <div id="rb-edit-hint">
+    <div id="rb-edit-hint" data-i18n="msg_rb_hint">
         點擊此處並按下 Ctrl+V 貼上圖片<br>
         (拖曳可移動，滾輪可縮放)
     </div>
@@ -11058,17 +11339,39 @@
     
     <div id="rb-controls">
         <div style="background:rgba(0,0,0,0.7); padding:5px 15px; border-radius:30px; color:white; display:flex; gap:10px; align-items:center;">
-            <span>特效樣式:</span>
+            <span data-i18n="lbl_rb_style">特效樣式:</span>
             <select id="rb-pattern-select" style="background:#333; color:white; border:1px solid #555; padding:2px;">
-                <option value="random">🎲 隨機 (Random)</option>
-                <option value="center">⚡ 中間撕裂 (Center)</option>
-                <option value="corner-tl">📐 左上撕裂 (Top-Left)</option>
-                <option value="corner-br">📐 右下撕裂 (Btm-Right)</option>
+                <option value="random" data-i18n="opt_rb_random">🎲 隨機 (Random)</option>
+                <option value="center" data-i18n="opt_rb_center">⚡ 中間撕裂 (Center)</option>
+                <option value="corner-tl" data-i18n="opt_rb_tl">📐 左上撕裂 (Top-Left)</option>
+                <option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
             </select>
             <div style="width:1px; height:20px; background:#555; margin:0 5px;"></div>
-            <button onclick="previewRbEffect()" style="background:#3498db; border:none; border-radius:4px; color:white; cursor:pointer;">▶ 預覽</button>
-            <button onclick="confirmRbEffect()" style="background:#2ecc71; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold;">💾 儲存 (Save)</button>
-            <button onclick="closeRbEditor()" style="background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;">✕ 取消</button>
+            <button onclick="previewRbEffect()" style="background:#3498db; border:none; border-radius:4px; color:white; cursor:pointer;" data-i18n="btn_preview">▶ 預覽</button>
+            <button onclick="confirmRbEffect()" style="background:#2ecc71; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold;" data-i18n="btn_save">💾 儲存 (Save)</button>
+            <button onclick="closeRbEditor()" style="background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;" data-i18n="btn_cancel">✕ 取消</button>
+        </div>
+    </div>
+</div>
+<div id="import-selector-modal" class="modal">
+    <div class="modal-content" style="width: 500px; max-height: 80vh; display:flex; flex-direction:column;">
+        <h3 style="margin-top:0; text-align:center;" data-i18n="title_import_source">選擇匯入來源 (Import Source)</h3>
+        
+        <div style="padding: 15px; background: #f0f4f7; border-radius: 8px; text-align: center; margin-bottom: 15px;">
+            <button onclick="triggerLocalImport()" style="font-size:1rem; padding:10px 20px; width:100%; background:#3498db; border-color:#2980b9;" data-i18n="btn_local_file">
+                📂 選擇本地檔案 (.txt/.json)
+            </button>
+        </div>
+
+        <div style="text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px;" data-i18n="lbl_or_examples">
+            ▼ 或選擇範例劇本 (Built-in Scripts) ▼
+        </div>
+
+        <div id="import-script-list" style="flex:1; overflow-y:auto; border:1px solid #ddd; border-radius:4px; background:#fff;">
+            </div>
+
+        <div style="text-align:right; margin-top:15px;">
+            <button class="danger" onclick="document.getElementById('import-selector-modal').style.display='none'" data-i18n="btn_cancel">取消 (Cancel)</button>
         </div>
     </div>
 </div>
