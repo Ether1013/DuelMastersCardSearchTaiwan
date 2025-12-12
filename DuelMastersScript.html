@@ -7905,16 +7905,26 @@
 					
 					lastShuffleStep = currentIndex; // [關鍵] 鎖定此步驟，避免重複播放
 					
-					// 為了決定動畫要在哪裡播放，我們抓取第一個相關操作的目標區域
-					const targetOp = action.operations.find(o => 
-						o.type === 'SHUFFLE' || (o.type === 'MOVE' && o.withShuffleAnim)
-					);
-					
-					// 如果是原地洗牌，目標是 zoneId；如果是移動，目標是 toZone
-					const targetZone = targetOp.toZone || targetOp.zoneId;
-					
-					// 執行新版特效 (數量固定 12 張以求視覺平衡)
-					triggerShuffleAnimation(12, targetZone);
+					// [修正版] 找出所有需要播放特效的區域 (使用 Set 去除重複)
+					const targetZones = new Set();
+
+					action.operations.forEach(o => {
+						if (o.type === 'SHUFFLE') {
+							// 原地洗牌：目標是 zoneId
+							targetZones.add(o.zoneId);
+						} else if (o.type === 'MOVE' && o.withShuffleAnim) {
+							// 移動並洗牌：目標是 toZone
+							targetZones.add(o.toZone);
+						}
+					});
+
+					// 針對每一個獨立區域觸發動畫
+					targetZones.forEach(zoneId => {
+						// 稍微錯開一點點時間 (非必要，但視覺上比較自然)
+						setTimeout(() => {
+							triggerShuffleAnimation(12, zoneId);
+						}, Math.random() * 200);
+					});
 				} 
 				else if (!hasShuffle) {
 					// 離開了有洗牌的那一步，重置鎖定變數，這樣下次跳回來時可以再播
@@ -11316,7 +11326,7 @@
         }, 2500);
     }
 	
-	// --- [修正版] 洗牌動畫特效 (噴發 -> 亂舞 -> 收斂) ---
+	// --- [修正版] 洗牌動畫特效 (隱藏原卡版) ---
     function triggerShuffleAnimation(count, targetZoneId, onComplete) {
         // 1. 取得目標區域的座標 (集合點)
         const zoneEl = document.querySelector(`.zone[data-zone="${targetZoneId}"]`);
@@ -11327,83 +11337,76 @@
         
         const rect = zoneEl.getBoundingClientRect();
         // 計算目標中心點
-        const destX = rect.left + rect.width / 2 - 25; // 減去卡片一半寬度(25)
-        const destY = rect.top + rect.height / 2 - 35; // 減去卡片一半高度(35)
+        const destX = rect.left + rect.width / 2 - 25; 
+        const destY = rect.top + rect.height / 2 - 35; 
 
-        // 2. 限制動畫卡片數量 (視覺上 10-15 張效果最好)
+        // --- [新增 1] 隱藏該區域原本的卡片 ---
+        // 選取該區域內所有的 .card 元素，將透明度設為 0
+        const originalCards = zoneEl.querySelectorAll('.card');
+        originalCards.forEach(c => c.style.opacity = '0');
+        // ------------------------------------
+
+        // 2. 限制動畫卡片數量
         const visualCount = Math.min(count || 10, 15);
         const flyingCards = [];
 
-        // 3. 生成假卡片 (初始位置設定在目標區域中心)
+        // 3. 生成假卡片
         for (let i = 0; i < visualCount; i++) {
             const el = document.createElement('div');
             el.className = 'flying-card';
             
-            // 設定初始位置 (尚未顯示)
             el.style.left = `${destX}px`;
             el.style.top = `${destY}px`;
-            el.style.transform = `scale(0.5) rotate(0deg)`; // 縮小
-            el.style.opacity = '1'; // 準備顯示
+            el.style.transform = `scale(0.5) rotate(0deg)`; 
+            el.style.opacity = '1'; 
             
             document.body.appendChild(el);
             flyingCards.push(el);
         }
 
-        // 4. 動畫階段一：噴發 (Explode) - 0ms ~ 400ms
-        // 將卡片從中心點炸開到螢幕隨機位置
+        // 4. 動畫階段一：噴發
         requestAnimationFrame(() => {
             flyingCards.forEach((el) => {
-                // 設定第一段過渡 (快速噴出)
                 el.style.transition = `all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)`;
-                
-                // 隨機噴發範圍 (螢幕寬高的 40%)
                 const scatterX = (Math.random() - 0.5) * window.innerWidth * 0.4;
                 const scatterY = (Math.random() - 0.5) * window.innerHeight * 0.4;
-                // 劇烈旋轉
                 const randRot = (Math.random() - 0.5) * 360; 
-
-                // 執行變形 (使用 translate 移動，不改變 left/top 基準點)
                 el.style.transform = `translate(${scatterX}px, ${scatterY}px) rotate(${randRot}deg) scale(1.1)`;
             });
         });
 
-        // 5. 動畫階段二：亂舞 (Chaos) - 400ms ~ 900ms
-        // 在噴發後的位置進行二次不規則移動，模擬洗牌的混亂感
+        // 5. 動畫階段二：亂舞
         setTimeout(() => {
             flyingCards.forEach((el) => {
-                // 設定第二段過渡 (稍微慢一點，線性移動)
                 el.style.transition = `all 0.5s ease-in-out`;
-                
-                // 在目前基礎上再微調位置
-                // 注意：由於我們是用 JS 修改 transform，這裡需要重新計算新的偏移量
-                // 為了簡化，我們產生一個新的隨機位置
                 const chaosX = (Math.random() - 0.5) * window.innerWidth * 0.5;
                 const chaosY = (Math.random() - 0.5) * window.innerHeight * 0.5;
-                const chaosRot = (Math.random() - 0.5) * 720; // 更瘋狂的旋轉
-
+                const chaosRot = (Math.random() - 0.5) * 720; 
                 el.style.transform = `translate(${chaosX}px, ${chaosY}px) rotate(${chaosRot}deg) scale(1.1)`;
             });
         }, 400);
 
-        // 6. 動畫階段三：收斂 (Converge) - 900ms ~ 1400ms
-        // 所有卡片飛回目標區域中心並消失
+        // 6. 動畫階段三：收斂
         setTimeout(() => {
             flyingCards.forEach((el, i) => {
-                // 設定第三段過渡 (帶有層次感的飛回)
-                // 每個卡片稍微錯開 0.03秒，形成「咻咻咻」收牌的感覺
                 el.style.transition = `all 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) ${i * 0.03}s`;
-                
-                // 回歸原點 (translate 0,0 即回到 left/top 設定的 destX/destY)
                 el.style.transform = `translate(0px, 0px) rotate(0deg) scale(0.5)`;
-                el.style.opacity = '0'; // 飛到的同時淡出
+                el.style.opacity = '0'; 
             });
         }, 900);
 
-        // 7. 清理 DOM
+        // 7. 清理 DOM 並恢復原卡
         setTimeout(() => {
             flyingCards.forEach(el => el.remove());
+            
+            // --- [新增 2] 動畫結束，讓原本的卡片現身 ---
+            // 如果此時頁面已經跳轉(DOM已變)，這些變數雖然會失效，但因為新頁面是新生成的DOM，預設就是opacity 1，所以不會有問題。
+            // 這裡主要是處理「留在同一頁」的情況。
+            originalCards.forEach(c => c.style.opacity = '1');
+            // ---------------------------------------
+
             if (onComplete) onComplete();
-        }, 1600); // 確保動畫完全結束後才移除
+        }, 1600); 
     }
 	
 	// --- [修正版] Ending 特效函式 (手機字體優化 + 強制靜音) ---
