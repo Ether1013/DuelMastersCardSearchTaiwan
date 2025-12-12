@@ -9346,85 +9346,76 @@
 
     function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
-		globalAbilityStyleRegistry = data.abilityRegistry || {};
-		globalLastUsedStyles = data.lastUsedStyles || {};
-		// [新增] 讀取王牌設定
-		globalAceRegistry = data.aceRegistry || {};
-		
-		// [新增] 讀取主題設定
+        globalAbilityStyleRegistry = data.abilityRegistry || {};
+        globalLastUsedStyles = data.lastUsedStyles || {};
+        globalAceRegistry = data.aceRegistry || {};
+        
         if (data.themeSettings) {
             globalThemeSettings = data.themeSettings;
         } else {
-            // 如果匯入舊檔沒有設定，恢復預設
             globalThemeSettings = { p1: 'blue', p2: 'red' };
         }
-        // 立即套用顏色
         applyThemeVariables();
         
-        // [修改] 移除 globalMoonlessRegistry = ...
-        // 改為：如果是舊版存檔，將無月設定合併進 initialState
         if (data.moonlessRegistry) {
             if (!data.initialState.moonless) data.initialState.moonless = {};
             Object.assign(data.initialState.moonless, data.moonlessRegistry);
         }
 
         initialState = data.initialState;
-		// 防呆補強
         if (!initialState.moonless) initialState.moonless = {};
-		// [建議新增] 確保舊存檔也有 rpsResult 欄位 (雖然 undefined 也不會報錯，但這樣比較乾淨)
-		if (initialState.rpsResult === undefined) initialState.rpsResult = null;
+        if (initialState.rpsResult === undefined) initialState.rpsResult = null;
+        
         let loadedHistory = data.history;
         if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
+        
         for (let i = 1; i < loadedHistory.length; i++) {
-			// [新增] BGM 檔案檢查
-			const ops = loadedHistory[i].action.operations;
-			if (ops) {
-				ops.forEach(op => {
-					if (op.type === 'SET_BGM' && op.filename) {
-						if (!BGM_FILES.includes(op.filename)) {
-						// 僅在 Console 顯示警告，方便除錯，但【不將 filename 設為 null】
-						console.warn(`[BGM Warning] Script uses: "${op.filename}", which is not in BGM_FILES list.`);
-						
-						// 註解掉下面這行，因為它會把您的音樂設定刪除！
-						// op.filename = null; 
-						
-						// 註解掉這行，不要修改描述
-						// loadedHistory[i].action.description += " (File Missing)";
-					}
-					}
-				});
-			}
+            const ops = loadedHistory[i].action.operations;
+            if (ops) {
+                ops.forEach(op => {
+                    if (op.type === 'SET_BGM' && op.filename) {
+                        if (!BGM_FILES.includes(op.filename)) {
+                            console.warn(`[BGM Warning] Script uses: "${op.filename}", which is not in BGM_FILES list.`);
+                        }
+                    }
+                });
+            }
             if (!loadedHistory[i].state) {
-                // [關鍵修改] 匯入重建邏輯
-				// 檢查這一步是否有「斷層存檔 (detachedStartState)」
-				if (loadedHistory[i].detachedStartState) {
-					// 情境 A：有斷層存檔
-					// 直接使用存檔中的狀態，忽略「上一步 + 運算」的標準流程
-					// 這能確保「不連動」的效果在匯入後依然存在
-					loadedHistory[i].state = cloneState(loadedHistory[i].detachedStartState);
-				} 
-				else {
-					// 情境 B：正常連動
-					// 抓取上一步的狀態，並執行動作運算
-					const prevState = loadedHistory[i-1].state;
-					const newState = cloneState(prevState);
-					const ops = loadedHistory[i].action.operations;
-					ops.forEach(op => applyOperation(newState, op));
-					loadedHistory[i].state = newState;
-				}
+                if (loadedHistory[i].detachedStartState) {
+                    loadedHistory[i].state = cloneState(loadedHistory[i].detachedStartState);
+                } 
+                else {
+                    const prevState = loadedHistory[i-1].state;
+                    const newState = cloneState(prevState);
+                    const ops = loadedHistory[i].action.operations;
+                    ops.forEach(op => applyOperation(newState, op));
+                    loadedHistory[i].state = newState;
+                }
             }
         }
         history = loadedHistory;
         currentIndex = resetToStart ? 0 : (data.currentIndex || 0);
+
+        // ==========================================
+        // [BUG FIX] 防止載入時自動觸發特效
+        // ==========================================
+        // 將「上一次播放的步驟」強制同步為「當前載入的步驟」
+        // 這樣 renderUI 在第一次執行時，會發現 index 相同而跳過特效播放
+        lastRbStep = currentIndex;       // 修正：次元破裂
+        lastShuffleStep = currentIndex;  // 修正：洗牌特效
+        lastAnimatedStep = currentIndex; // 修正：王牌進場特效
+        // ==========================================
+
         storageQuotaExceeded = false;
         hasAlertedQuota = false;
         lastRenderedState = null; 
+        
         renderUI();
         saveToStorage();
-		// 確保讀取舊存檔後，缺失的預設頭像會被補回來
-		if (typeof generateDefaultPortraits === 'function') {
-			generateDefaultPortraits();
-		}
+        
+        if (typeof generateDefaultPortraits === 'function') {
+            generateDefaultPortraits();
+        }
     }
 
     function resolveImportConflict(choice) {
