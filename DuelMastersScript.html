@@ -6453,7 +6453,7 @@
         updateSelectionUI();
 	}
 	
-	// --- [修正版] 複製到能力區 (使用絕對 ID) ---
+	// --- [修正版] 複製到能力區 (同步選取版) ---
 	function copyToAbility(isContinuous = false) {
 		if (!pendingMove) return;
 		if (pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_copy'));
@@ -6464,35 +6464,33 @@
 		
 		const targetZone = card.ownerId === 1 ? 'p1-ability' : 'p2-ability';
 		
-		// [核心修正] 使用時間戳記 + 隨機數生成「絕對唯一 ID」
-		// 不再使用 "max + 1"，確保即使在歷史中間插入步驟，這個 ID 也不會跟後面的衝突
+		// 使用時間戳記 + 隨機數生成「絕對唯一 ID」
 		const fixedId = parseInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
 		
+		// 1. 執行新增動作 (這會觸發第一次 renderUI，產生卡片 DOM)
 		addOperation({ 
 			type: 'CREATE_ABILITY', 
 			sourceCardId: card.id, 
 			targetZone: targetZone, 
-			newId: fixedId, // 將這個鐵打的 ID 寫入歷史
+			newId: fixedId, 
 			isContinuous: isContinuous 
 		});
-		
-		// 1. 強制延遲執行，等待 addOperation -> renderUI 完成 DOM 更新
-        setTimeout(() => {
-            // 2. 設定 pendingMove 指向新卡片 (ID 為 fixedId)
-            pendingMove = { cardIds: [fixedId], shuffle: false };
-            
-            // 3. 觸發 UI 更新 (這會呼叫 updateSelectionUI，進而顯示調整按鈕)
-            updateSelectionUI();
-            
-            // 4. (選用) 視覺反饋：幫新卡片加上 selected 樣式
-            const newCardEl = document.querySelector(`.card[data-id="${fixedId}"]`);
-            if (newCardEl) {
-                newCardEl.classList.add('selected');
-                
-                // 為了保險起見，手動觸發一次點擊事件邏輯 (模擬使用者點了它)
-                // 但因為 pendingMove 已經設定好了，直接 updateSelectionUI 應該就夠了
-            }
-        }, 100); // 100ms 延遲確保 DOM 已生成
+
+        // -----------------------------------------------------------------
+        // [修正] 同步選取邏輯 (移除 setTimeout)
+        // -----------------------------------------------------------------
+        
+        // 2. 立即設定選取目標為新卡片
+        pendingMove = { cardIds: [fixedId], shuffle: false };
+        
+        // 3. 強制再次重繪 UI
+        // 這會讓 renderUI 在繪製時就讀到 pendingMove，
+        // 確保新卡片生成時直接帶有 .selected class，且所有座標計算正確
+        renderUI();
+
+        // 4. 更新操作面板
+        // 因為 state 與 pendingMove 都已就緒，面板會正確判斷這是「效果卡」，進而顯示調整按鈕
+        updateSelectionUI();
 	}
 
     function deleteSelectedCard() {
