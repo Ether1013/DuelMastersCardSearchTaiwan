@@ -6853,6 +6853,15 @@
                 
                 // 修正 flex 排版元件
                 adjustButtons.style.display = 'flex';
+				
+				// -----------------------------------------------------------
+				// 【✅ BUG 修復：強制重置調整按鈕內部的子按鈕】
+				// 原因：多選模式會隱藏面板內「所有」按鈕，包含這些沒有 ID 的箭頭按鈕。
+				// 當切換回單選時，必須手動把這些子按鈕救回來。
+				// -----------------------------------------------------------
+				if (adjustButtons) {
+					adjustButtons.querySelectorAll('button').forEach(b => b.style.display = '');
+				}
                 
                 // C. 狀態依賴型按鈕先預設隱藏
                 if(btnRemoveImg) btnRemoveImg.style.display = 'none';
