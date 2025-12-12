@@ -5786,16 +5786,10 @@
             state.bgm = filename;
         }
 		// 在 applyOperation 函式內部的 if-else 鏈中加入：
+		// 修改為 (直接刪除或註解掉)：
 		else if (op.type === 'REALITY_BREAK') {
-			// 只有在自動播放、預覽或非 Draft 狀態下才執行特效
-			// 避免編輯器剛讀取時就觸發
-			const isPlaying = document.body.classList.contains('is-playing');
-			const isMobile = document.body.classList.contains('mobile-mode');
-			
-			// 簡單判斷：如果是「播放下一步」觸發的，就播放特效
-			if (playTimeout || isPlaying || isMobile) {
-				playRealityBreak(op.data);
-			}
+			// 什麼都不做。
+			// 特效播放邏輯已移交給 renderUI 處理，避免在 Loading 計算時誤觸。
 		}
 		else if (op.type === 'GAME_END') {
             // 只有在自動播放時才觸發特效，避免編輯時一直跳出來煩人
