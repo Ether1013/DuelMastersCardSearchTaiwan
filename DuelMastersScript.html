@@ -6475,6 +6475,24 @@
 			newId: fixedId, // 將這個鐵打的 ID 寫入歷史
 			isContinuous: isContinuous 
 		});
+		
+		// 1. 強制延遲執行，等待 addOperation -> renderUI 完成 DOM 更新
+        setTimeout(() => {
+            // 2. 設定 pendingMove 指向新卡片 (ID 為 fixedId)
+            pendingMove = { cardIds: [fixedId], shuffle: false };
+            
+            // 3. 觸發 UI 更新 (這會呼叫 updateSelectionUI，進而顯示調整按鈕)
+            updateSelectionUI();
+            
+            // 4. (選用) 視覺反饋：幫新卡片加上 selected 樣式
+            const newCardEl = document.querySelector(`.card[data-id="${fixedId}"]`);
+            if (newCardEl) {
+                newCardEl.classList.add('selected');
+                
+                // 為了保險起見，手動觸發一次點擊事件邏輯 (模擬使用者點了它)
+                // 但因為 pendingMove 已經設定好了，直接 updateSelectionUI 應該就夠了
+            }
+        }, 100); // 100ms 延遲確保 DOM 已生成
 	}
 
     function deleteSelectedCard() {
@@ -6765,6 +6783,7 @@
         if (isMultiSelectMode) {
             multiBar.style.display = 'flex';
             multiCount.innerText = multiSelectedIds.length;
+            // 預設先隱藏面板，稍後在下方判斷是否要開啟
             document.getElementById('card-action-panel').style.display = 'none';
         } else {
             multiBar.style.display = 'none';
@@ -6772,8 +6791,9 @@
         
         // 取得面板與按鈕 DOM
         const panel = document.getElementById('card-action-panel');
-        
+        // A. 取得所有按鈕元素
         const btnRotateL = document.getElementById('btn-rotate-l');
+        const btnRotateL_Clone = btnRotateL; // 方便下方參照
         const btnRotateR = document.getElementById('btn-rotate-r');
         const btnFlip = document.getElementById('btn-flip');
         const btnAce = document.getElementById('btn-ace');
@@ -6792,14 +6812,16 @@
         const btnMoonless = document.getElementById('btn-moonless'); 
         const btnDelete = document.getElementById('btn-delete-card');
         const btnPoint = document.getElementById('btn-point');
-        const btnEndPoint = document.getElementById('btn-end-point');
+        const btnEndPoint = document.getElementById('btn-end-point'); // 修正可能漏掉的按鈕
         
+        // 取得輸入框
         const inputRename = document.getElementById('rename-input');
         const inputNote = document.getElementById('note-input');
         const btnRename = document.querySelector('button[onclick="renameCard()"]');
         const btnNote = document.querySelector('button[onclick="addCardNote()"]');
 
         // --- 2. 處理單選/多選操作面板 ---
+        // 注意：pendingMove 在單選時有值，在多選時(若已選)也有值
         if (pendingMove && pendingMove.cardIds.length > 0) {
             const state = getCurrentDisplayState();
             
@@ -6818,6 +6840,7 @@
             if (!isMultiSelectMode) {
                 panel.style.display = 'flex';
 
+                // --- [狀態判斷] 掃描所有選取卡片 ---
                 let allAbility = true;      
                 let isBattleOrShield = true; 
                 let hasInjuredCard = false;  
@@ -6844,7 +6867,10 @@
                     btnGlow, btnGlowBottom, btnCopyOne, btnCopyCont, adjustControls, adjustButtons, 
                     btnPoint, inputRename, inputNote, btnRename, btnNote, btnMoonless
                 ];
-                allElements.forEach(el => { if(el) el.style.display = ''; }); 
+                allElements.forEach(el => { if(el) el.style.display = ''; }); // 清空 inline style 回復預設 (block/flex/inline)
+                
+                // 修正 flex 排版元件
+                adjustButtons.style.display = 'flex';
                 
                 // C. 狀態依賴型按鈕先預設隱藏
                 if(btnRemoveImg) btnRemoveImg.style.display = 'none';
@@ -6856,16 +6882,8 @@
 
                 // D. 依據「卡片類型」執行刪去法
                 if (allAbility) {
-                    // [修正] 效果小卡：
-                    // 1. 隱藏不相關功能 (旋轉、翻面、王牌、展示、複製、無月)
-                    [btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnCopyOne, btnCopyCont, btnMoonless].forEach(el => el.style.display = 'none');
-                    
-                    // 2. [關鍵修正] 顯示圖片調整與發光功能
-                    // 強制顯示微調按鈕群組 (flex)
-                    if (adjustButtons) adjustButtons.style.display = 'flex';
-                    // 保持貼上圖片功能 (以便更換圖片)
-                    if (btnPaste) btnPaste.style.display = 'inline-block';
-
+                    // 效果小卡：隱藏不必要功能
+                    [btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, btnCopyOne, btnCopyCont, btnMoonless].forEach(el => el.style.display = 'none');
                     btnGlow.classList.remove('disabled-gray');
                     btnGlowBottom.classList.remove('disabled-gray');
                     btnDelete.style.display = 'block';
@@ -6886,6 +6904,7 @@
                 if (pendingMove.cardIds.length === 1) {
                     const cid = pendingMove.cardIds[0];
                     if (!allAbility) {
+                        // Ace & Moonless 狀態顯示
                         if (globalAceRegistry[cid]) {
                             btnAce.classList.add('active');
                             btnAce.innerText = "👑 取消王牌";
@@ -6897,11 +6916,13 @@
                         else btnMoonless.classList.remove('active');
                     }
                     
+                    // 載入名稱與註記
                     if (firstCard) {
                         inputRename.value = firstCard.text;
                         inputNote.value = firstCard.note || "";
                     }
                 } else {
+                    // 雖然單選模式不太會進來這(因為這UI只支援單張點擊)，但防呆
                     [btnAce, btnMoonless, btnPoint].forEach(el => el.style.display = 'none');
                     inputRename.value = '';
                     inputNote.value = '';
@@ -6909,37 +6930,54 @@
 
             } 
             // ==========================================
-            // [分支 B] 多選模式 (Multi-Select)
+            // [分支 B] 多選模式 (Multi-Select) - [您的需求在這裡]
             // ==========================================
             else {
+                // 檢查條件：所有選取的卡片是否都在 戰場 或 魔力區
                 const validZones = ['p1-battle', 'p2-battle', 'p1-mana', 'p2-mana'];
+                
                 const allValid = pendingMove.cardIds.every(id => {
                     const c = state.cards.find(x => x.id === id);
+                    // 檢查區域，且必須是「可見」的 (非牌庫/護盾/墓地/超次元)
+                    // 這裡直接用 validZones 白名單最準確
                     return c && validZones.includes(c.zone);
                 });
 
                 if (allValid) {
                     panel.style.display = 'flex';
+                    
+                    // 1. 先隱藏面板內「所有」控制項
                     const allControls = panel.querySelectorAll('button, input, .panel-sep, div');
                     allControls.forEach(el => {
+                        // 這裡要注意不要隱藏到 panel-row (div)，否則排版會亂掉
                         if (el.tagName !== 'DIV') {
                             el.style.display = 'none';
                         }
                     });
+
+                    // 2. 顯示必要的 Row (確保 div 容器是開的)
                     panel.querySelectorAll('.panel-row').forEach(row => row.style.display = 'flex');
+
+                    // 3. 唯獨開啟兩個旋轉按鈕
                     if(btnRotateL) btnRotateL.style.display = 'block';
                     if(btnRotateR) btnRotateR.style.display = 'block';
+                    
                 } else {
+                    // 如果包含了其他區域 (如手牌、牌庫)，就不顯示面板
                     panel.style.display = 'none';
                 }
             }
+            
+            // 最後加上高亮
             document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
 
         } else {
+            // 沒有選取任何卡片
             panel.style.display = 'none';
             document.querySelectorAll('.zone').forEach(el => el.classList.remove('target-highlight'));
         }
-        
+		
+		// [新增] 檢查重疊 (延遲一幀以確保 CSS display 切換已生效且 DOM 佈局完成)
         setTimeout(checkAndFixPanelOverlap, 0);
     }
 	
