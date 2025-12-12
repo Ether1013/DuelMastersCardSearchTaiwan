@@ -2783,6 +2783,24 @@
 		font-weight: bold;
 		text-transform: uppercase;
 	}
+	
+	/* --- 洗牌特效樣式 --- */
+	.flying-card {
+		position: fixed;
+		width: var(--card-width);
+		height: var(--card-height);
+		/* 複製原本 .card.face-down 的樣式 */
+		background: #2c3e50;
+		background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
+		background-size: 15px 15px;
+		border: 1px solid white;
+		border-radius: 3px;
+		box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+		z-index: 9999;
+		pointer-events: none;
+		transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* 有彈性的貝茲曲線 */
+		transform-origin: center center;
+	}
 	</style>
 </head>
 <body>
@@ -3482,6 +3500,9 @@
     const TIME_DIALOGUE_BASE = 500;      // 對話動作的「起跳」時間
     const TIME_CHAR_READING = 120;       // 對話中「每個字」增加的閱讀時間
     const TIME_DIALOGUE_MIN = 1500;      // 對話動作的「最短」停留時間 (避免字太少一閃而過)
+	
+	let lastRbStep = -1; 
+	let lastShuffleStep = -1; // [新增] 用於記錄洗牌動畫是否已在該步驟播放過
 	
 	// --- 多語言設定 (i18n) ---
     const TRANSLATIONS = {
@@ -4338,8 +4359,6 @@
 	
 	let lastAnimatedStep = -1; // [補上這行] 用於記錄動畫狀態，避免重複播放
 	let winOverlayTimeout = null; // [新增] 用來記錄勝利畫面的自動關閉計時器
-    // 在 let lastAnimatedStep = -1; 下方加入：
-	let lastRbStep = -1; // 用於記錄「次元破裂」特效是否已在該步驟播放過
 	
     let globalImageRegistry = {}; 
 	// [新增] 全域王牌註冊表 (只存 ID，不存卡片物件)
@@ -5772,16 +5791,22 @@
 	}
 	
 	
-	// --- [取代] finishMove 函式 ---
+	// --- [修改] finishMove (編輯時不播動畫，僅記錄標記) ---
 	function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
 		if (!pendingMove) return;
 
-		// 先把要移動的 ID 存下來，因為函式最後會清空 pendingMove
 		const movingIds = [...pendingMove.cardIds];
+		const isShuffling = pendingMove.shuffle; // 檢查是否為洗牌移動
 
-		// --- START: 移動前先切斷舊連結 ---
+		// 1. 如果需要洗牌，先在本地端計算好隨機順序 (確保資料的決定性，避免每次讀檔順序都不一樣)
+		let finalCardIds = [...movingIds];
+		if (isShuffling) {
+			finalCardIds.sort(() => Math.random() - 0.5);
+		}
+
+		// --- 移動前先切斷舊連結 ---
 		const state = getCurrentDisplayState();
-		const needsBreak = pendingMove.cardIds.some(id => {
+		const needsBreak = movingIds.some(id => {
 			const c = state.cards.find(x => x.id === id);
 			if (!c) return false;
 			if (c.parentId) return true;
@@ -5791,65 +5816,52 @@
 		});
 
 		if (needsBreak) {
-			addOperation({ type: 'BREAK_LINKS', cardIds: [...pendingMove.cardIds] });
+			addOperation({ type: 'BREAK_LINKS', cardIds: [...movingIds] });
 		}
-		// --- END: 切斷舊連結 ---
-		
-		// --- [新增] 自動同步旋轉角度 ---
-        // 如果是堆疊操作 (有 stackTargetId)，新來的牌應該繼承目標牌的角度
-        if (stackTargetId) {
-            const state = getCurrentDisplayState();
-            const targetCard = state.cards.find(c => c.id === stackTargetId);
-            if (targetCard) {
-                // 發送一個旋轉指令，將移動的卡片角度「強制設定」為跟目標一樣
-                // 注意：這裡我們用 ROTATE_CARD 的 finalRotation 屬性
-                addOperation({ 
-                    type: 'ROTATE_CARD', 
-                    cardIds: movingIds, 
-                    finalRotation: targetCard.rotation // 強制同步角度
-                });
-            }
-        }
-		
-		let finalCardIds = [...pendingMove.cardIds];
-		if (pendingMove.shuffle) {
-			finalCardIds.sort(() => Math.random() - 0.5);
+
+		// --- 自動同步旋轉角度 ---
+		if (stackTargetId) {
+			const targetCard = state.cards.find(c => c.id === stackTargetId);
+			if (targetCard) {
+				addOperation({ 
+					type: 'ROTATE_CARD', 
+					cardIds: movingIds, 
+					finalRotation: targetCard.rotation 
+				});
+			}
 		}
 
 		let faceUp = true;
 		if (toZone.includes('shield') || toZone.includes('deck')) faceUp = false;
 		if (toZone.includes('hand') && toZone.includes('p2')) faceUp = true;
 
-		// 1. 執行移動
+		// 2. 執行移動指令
 		addOperation({
 			type: 'MOVE',
-			cardIds: finalCardIds, 
+			cardIds: finalCardIds, // 使用已經洗好的順序
 			toZone: toZone,
 			faceUp: faceUp,
-			shuffleSelection: false, 
+			shuffleSelection: false, // 設定為 false，因為我們已經在上面手動 sort 過了 (確保重播時順序一致)
+			withShuffleAnim: isShuffling, // [關鍵新增] 標記這個動作需要洗牌特效 (供播放時讀取)
 			insertIndex: insertIdx,
 			stackTargetId: stackTargetId,
 			stackType: stackType
 		});
 
-		// [修改重點] 魔力區自動旋轉
-		// 如果目標區域是魔力區 (p1-mana 或 p2-mana)，自動追加兩個 90 度旋轉
-		// 這樣在 Draft 模式下，使用者可以按兩次 Ctrl+Z 來分別復原旋轉，最後才復原移動
 		if (toZone.includes('mana')) {
 			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 90 });
 			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 90 });
 		}
 		
-		// --- [新增邏輯] 區域自動轉正 ---
-        // 當卡片進入 牌庫(deck)、墓地(grave)、超次元(hyper) 時，視為子動作自動轉正 (0度)
-        if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper')) {
-            addOperation({ 
-                type: 'ROTATE_CARD', 
-                cardIds: movingIds, 
-                finalRotation: 0 // 強制設定為 0 度 (直立)
-            });
-        }
+		if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper')) {
+			addOperation({ 
+				type: 'ROTATE_CARD', 
+				cardIds: movingIds, 
+				finalRotation: 0 
+			});
+		}
 
+		// 編輯模式下，直接完成，不播放動畫
 		cancelSelection();
 		closeSelectorModal();
 		closePositionModal();
@@ -7849,6 +7861,28 @@
                     // 這樣下次再回來時，currentIndex(5) != lastRbStep(-1) 就會成立，特效就會重播
                     lastRbStep = -1; 
                 }
+				
+				// ---------------------------------------------------------
+				// [新增] 檢查洗牌動畫標記
+				// ---------------------------------------------------------
+				// 注意：action 變數通常在上方已經宣告過了，這裡直接用即可
+				// 如果上方沒宣告，請用 const action = history[currentIndex].action;
+				const shuffleOp = action.operations.find(o => o.type === 'MOVE' && o.withShuffleAnim);
+
+				// 條件：(有洗牌標記) AND (正在播放) AND (這一步還沒播過)
+				// 【關鍵】這裡必須使用 lastShuffleStep
+				if (shuffleOp && (isPlaying || isMobile) && currentIndex !== lastShuffleStep) {
+					console.log("偵測到洗牌標記，播放特效...");
+					
+					lastShuffleStep = currentIndex; // 【關鍵】更新洗牌的紀錄變數
+					
+					// 呼叫特效函式
+					triggerShuffleAnimation(shuffleOp.cardIds.length, shuffleOp.toZone);
+				} 
+				else if (!shuffleOp) {
+					// 離開了有洗牌的那一步，重置變數
+					lastShuffleStep = -1; // 【關鍵】重置洗牌的紀錄變數
+				}
             }
 
             // [新增] 王牌進場特效觸發檢查
@@ -9074,6 +9108,9 @@
                 // ... (省略原本的字數計算代碼，請保留原樣) ...
                 // 為了簡潔，這裡不重複貼上對話計算代碼，請確保原本的邏輯還在
                 // 範例：delay = 1000 + textLength * 100;
+            }
+			else if (currOp && currOp.type === 'MOVE' && currOp.withShuffleAnim) {
+                delay = 1500; 
             }
 
             // 套用速度倍率
@@ -11155,6 +11192,79 @@
             if (onComplete) onComplete();
         }, 2500);
     }
+	
+	// --- [新增] 洗牌動畫特效 ---
+	function triggerShuffleAnimation(count, targetZoneId, onComplete) {
+		// 1. 取得目標區域的座標
+		const zoneEl = document.querySelector(`.zone[data-zone="${targetZoneId}"]`);
+		if (!zoneEl) {
+			if (onComplete) onComplete();
+			return;
+		}
+		const destRect = zoneEl.getBoundingClientRect();
+		const destX = destRect.left + destRect.width / 2 - 25; // 減去卡片一半寬度(25)
+		const destY = destRect.top + destRect.height / 2 - 35; // 減去卡片一半高度(35)
+
+		// 2. 限制動畫卡片數量 (避免一次洗40張卡導致瀏覽器卡頓，視覺上10張就很有感了)
+		const visualCount = Math.min(count, 12);
+		const flyingCards = [];
+
+		// 播放音效 (如果有洗牌音效可加在這裡)
+		// if (globalAudioPlayer) { ... }
+
+		// 3. 生成假卡片
+		for (let i = 0; i < visualCount; i++) {
+			const el = document.createElement('div');
+			el.className = 'flying-card';
+			
+			// 初始位置：螢幕正中央
+			const startX = window.innerWidth / 2 - 25;
+			const startY = window.innerHeight / 2 - 35;
+			
+			el.style.left = `${startX}px`;
+			el.style.top = `${startY}px`;
+			el.style.transform = `scale(0)`; // 一開始是隱形的
+			
+			document.body.appendChild(el);
+			flyingCards.push(el);
+		}
+
+		// 4. 第一階段：炸開 (Scatter)
+		// 使用 setTimeout 讓瀏覽器有時間渲染初始狀態
+		setTimeout(() => {
+			flyingCards.forEach((el, i) => {
+				// 隨機散開的範圍 (螢幕寬高的 30% ~ 70%)
+				const randX = (Math.random() - 0.5) * window.innerWidth * 0.6;
+				const randY = (Math.random() - 0.5) * window.innerHeight * 0.6;
+				const randRot = (Math.random() - 0.5) * 720; // 隨機旋轉 -360 ~ 360度
+
+				el.style.transform = `translate(${randX}px, ${randY}px) rotate(${randRot}deg) scale(1.2)`;
+			});
+		}, 10);
+
+		// 5. 第二階段：收斂 (Gather) - 飛向目的地
+		// 0.5秒後開始收斂
+		setTimeout(() => {
+			flyingCards.forEach((el, i) => {
+				// 計算從「當前散開位置」到「目標位置」的位移
+				// 由於 transform 是相對的，這裡我們重置 left/top 並直接設定絕對位置會比較簡單，
+				// 但為了動畫平滑，我們直接修改 style 讓它飛過去
+				
+				el.style.transition = `all 0.5s ease-in ${i * 0.05}s`; // 稍微錯開每張卡飛入的時間
+				el.style.left = `${destX}px`;
+				el.style.top = `${destY}px`;
+				el.style.transform = `translate(0, 0) rotate(0deg) scale(1)`;
+				el.style.opacity = 0; // 飛到的瞬間淡出
+			});
+		}, 600);
+
+		// 6. 結束與清理
+		// 等待所有卡片都飛完 (0.6s + 0.5s + 錯開的時間)
+		setTimeout(() => {
+			flyingCards.forEach(el => el.remove());
+			if (onComplete) onComplete();
+		}, 1300);
+	}
 	
 	// --- [修正版] Ending 特效函式 (手機字體優化 + 強制靜音) ---
 	function triggerEnding() {
