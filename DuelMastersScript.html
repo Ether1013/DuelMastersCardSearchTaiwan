@@ -2804,6 +2804,50 @@
 		/* 初始狀態：隱藏 */
 		opacity: 0; 
 	}
+	
+	/* --- [新增] EX-Life 覆蓋層樣式 --- */
+	.ex-life-overlay {
+		position: absolute;
+		top: 20%;        /* 起始位置 20% */
+		left: 0;
+		width: 100%;
+		height: 40%;     /* 高度佔 40% (20%~60%) */
+		z-index: 15;     /* 位於文字之下，但在底圖之上 */
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
+		border-top: 1px dashed rgba(255,255,255,0.5);
+		border-bottom: 1px dashed rgba(255,255,255,0.5);
+		pointer-events: none; /* 讓點擊穿透到卡片本身 */
+		opacity: 0.9;
+	}
+
+	/* 右上角刪除按鈕 [X] */
+	.ex-life-close {
+		position: absolute;
+		top: -6px;
+		right: -6px;
+		width: 14px;
+		height: 14px;
+		font-size: 9px;
+		font-weight: bold;
+		background: #c0392b;
+		color: white;
+		border: 1px solid white;
+		border-radius: 50%;
+		cursor: pointer;
+		display: none; /* 預設隱藏，Hover 時顯示 */
+		justify-content: center;
+		align-items: center;
+		pointer-events: auto; /* 開啟點擊 */
+		z-index: 20;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+	}
+
+	/* 當滑鼠移過卡片時，顯示刪除按鈕 */
+	.card:hover .ex-life-close {
+		display: flex;
+	}
 	</style>
 </head>
 <body>
@@ -3025,6 +3069,7 @@
         
         <button id="btn-glow" onclick="toggleGlow()" data-i18n="act_glow">💡發光</button>
         <button id="btn-glow-bottom" onclick="toggleBottomGlow()" style="background:#5dade2; border-color:#3498db;" data-i18n="act_glow_bottom">👇底光</button>
+		<button id="btn-ex-life" style="display:none; background:#34495e; border-color:#fff;" onclick="enterExLifeMode()">🛡️ EX-Life</button>
         <button id="btn-unglow" style="display:none;" onclick="removeGlow()">✕</button>
 
         <div class="panel-sep"></div>
@@ -5832,7 +5877,21 @@
             if (document.body.classList.contains('is-playing') || document.body.classList.contains('mobile-mode')) {
                 triggerEnding();
             }
-        }
+        }// --- [新增] EX-Life 操作 ---
+		else if (op.type === 'SET_EX_LIFE') {
+			const { targetId, imgKey } = op;
+			const card = state.cards.find(c => c.id === targetId);
+			if (card) {
+				card.exLifeKey = imgKey; // 在卡片物件上新增此屬性
+			}
+		}
+		else if (op.type === 'REMOVE_EX_LIFE') {
+			const { targetId } = op;
+			const card = state.cards.find(c => c.id === targetId);
+			if (card) {
+				card.exLifeKey = null; // 清除屬性
+			}
+		}
 	}
 	
 	
@@ -6574,6 +6633,13 @@
 
     function cancelPointMode() {
         isPointing = false;
+		// --- [新增] ---
+		if (isExLifeSelecting) {
+			isExLifeSelecting = false;
+			exLifeTargetId = null;
+			document.getElementById('point-bar').querySelector('span').innerText = t('lbl_point_mode'); // 恢復原本文字
+		}
+		// -------------
         pointerId = null;
         pointTargets = [];
         document.getElementById('point-bar').style.display = 'none';
@@ -6874,7 +6940,7 @@
         const inputNote = document.getElementById('note-input');
         const btnRename = document.querySelector('button[onclick="renameCard()"]');
         const btnNote = document.querySelector('button[onclick="addCardNote()"]');
-
+		const btnExLife = document.getElementById('btn-ex-life'); // 取得按鈕 DOM
         // --- 2. 處理單選/多選操作面板 ---
         // 注意：pendingMove 在單選時有值，在多選時(若已選)也有值
         if (pendingMove && pendingMove.cardIds.length > 0) {
@@ -6888,6 +6954,19 @@
                 panel.style.left = savedPos.x + 'px';
                 panel.style.top = savedPos.y + 'px';
             }
+			
+			// --- [新增] 判斷是否顯示 EX-Life 按鈕 ---
+			// 條件：單選 + 目標在護盾區
+			if (!isMultiSelectMode && pendingMove.cardIds.length === 1) {
+				const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+				if (card && card.zone.includes('shield')) {
+					if (btnExLife) btnExLife.style.display = 'block';
+				} else {
+					if (btnExLife) btnExLife.style.display = 'none';
+				}
+			} else {
+				if (btnExLife) btnExLife.style.display = 'none';
+			}
 
             // ==========================================
             // [分支 A] 一般模式 (單選)
@@ -8223,6 +8302,48 @@
         });
     }
 	
+	// --- [新增] EX-Life 相關變數 ---
+	let isExLifeSelecting = false;
+	let exLifeTargetId = null; // 護盾區的那張目標卡 (S)
+
+	// 1. 進入 EX-Life 選擇模式
+	function enterExLifeMode() {
+		if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+		
+		exLifeTargetId = pendingMove.cardIds[0];
+		const state = getCurrentDisplayState();
+		const card = state.cards.find(c => c.id === exLifeTargetId);
+		
+		// 防呆：確認目標是在護盾區
+		if (!card || !card.zone.includes('shield')) {
+			alert("只有「護盾區」的卡片可以使用 EX-Life。");
+			return;
+		}
+
+		// 切換狀態
+		isExLifeSelecting = true;
+		
+		// 隱藏操作面板，顯示提示列
+		document.getElementById('card-action-panel').style.display = 'none';
+		
+		// 借用 Draft Bar 或 Point Bar 來顯示提示 (這裡借用 Point Bar 的樣式)
+		const pointBar = document.getElementById('point-bar');
+		const info = document.getElementById('point-target-info');
+		const btnConfirm = document.getElementById('btn-confirm-point');
+		
+		pointBar.style.display = 'flex';
+		pointBar.querySelector('span').innerText = "🛡️ EX-Life 模式：請選擇一張「戰鬥區」的卡片作為素材 (C)";
+		info.innerText = "等待選擇...";
+		btnConfirm.style.display = 'none'; // 不需要確認按鈕，點擊即觸發
+		
+		// 高亮戰鬥區
+		document.querySelectorAll('.battle-zone').forEach(el => el.classList.add('point-target-highlight'));
+	}
+
+	// 2. 取消 EX-Life 模式 (綁定到原本的 cancelPointMode 或 cancelSelection)
+	// 修改原本的 cancelPointMode，加入 isExLifeSelecting = false;
+	// 或者新增一個專用取消函式 (這裡為了方便整合，我們在原本的 cancel 邏輯中插入判斷)
+	
 	function checkMobileMusicButtonVisibility() {
 		const btn = document.getElementById('mob-music-btn');
 		if (!btn) return;
@@ -8533,6 +8654,32 @@
 			 el.onclick = (e) => { e.stopPropagation(); handleZoneClick(card.zone); };
 		}
 		
+		// --- [新增] 渲染 EX-Life 覆蓋層 ---
+		if (card.exLifeKey) {
+			const imgSrc = globalImageRegistry[card.exLifeKey];
+			if (imgSrc) {
+				const overlay = document.createElement('div');
+				overlay.className = 'ex-life-overlay';
+				overlay.style.backgroundImage = `url(${imgSrc})`;
+				
+				// 建立右上角的 [X] 按鈕
+				const closeBtn = document.createElement('div');
+				closeBtn.className = 'ex-life-close';
+				closeBtn.innerText = '✕';
+				closeBtn.title = '移除 EX-Life';
+				
+				// 綁定移除事件 (阻止冒泡以免觸發選取卡片)
+				closeBtn.onclick = (e) => {
+					e.stopPropagation();
+					removeExLife(card.id);
+				};
+				
+				overlay.appendChild(closeBtn);
+				el.appendChild(overlay);
+			}
+		}
+		// --------------------------------
+		
 		setTimeout(() => el.classList.add('interactive'), 0);
 		return el;
 	}
@@ -8568,6 +8715,13 @@
 	// --- [修正] 點擊卡片處理 (效果卡強制單選) ---
 	function handleCardSingleClick(e, cardId) {
 		e.stopPropagation(); 
+		
+		// --- [新增] EX-Life 選擇攔截 ---
+		if (isExLifeSelecting) {
+			processExLifeSelection(cardId);
+			return;
+		}
+		// ----------------------------
 		
 		// --- [新增] 檢查是否需要忽略此點擊 (來自長按觸發) ---
         if (ignoreClickId === cardId) {
@@ -8653,6 +8807,77 @@
 		}
         
 		updateSelectionUI();
+	}
+	
+	// 3. 處理選擇並生成圖片
+	function processExLifeSelection(sourceCardId) {
+		const state = getCurrentDisplayState();
+		const sourceCard = state.cards.find(c => c.id === sourceCardId);
+		
+		// 驗證：必須是戰鬥區
+		if (!sourceCard || !sourceCard.zone.includes('battle')) {
+			alert("請選擇戰鬥區的卡片！");
+			return;
+		}
+
+		// 取得來源圖片 Key
+		const imgKey = sourceCard.imageKey;
+		const srcBase64 = globalImageRegistry[imgKey];
+
+		if (!srcBase64) {
+			alert("這張卡片沒有圖片，無法製作 EX-Life。");
+			return;
+		}
+
+		// 開始裁切處理
+		const img = new Image();
+		img.onload = () => {
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+
+			// 設定 Canvas 尺寸 (寬度不變，高度取 40%)
+			const w = img.width;
+			const h = img.height;
+			const cropY = h * 0.2; // 上緣起 20%
+			const cropH = h * 0.4; // 取 40% 高度 (20%~60%)
+
+			canvas.width = w;
+			canvas.height = cropH;
+
+			// 1. 設定灰階濾鏡
+			ctx.filter = 'grayscale(100%)';
+			
+			// 2. 繪製裁切區域
+			// drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+			ctx.drawImage(img, 0, cropY, w, cropH, 0, 0, w, cropH);
+
+			// 3. 輸出 Base64
+			const resultBase64 = canvas.toDataURL('image/jpeg', 0.85);
+			
+			// 4. 註冊新圖片到全域 (使用特殊前綴避免衝突)
+			const newImgKey = `exlife_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+			globalImageRegistry[newImgKey] = resultBase64;
+
+			addOperation({
+				type: 'SET_EX_LIFE',
+				targetId: exLifeTargetId,
+				imgKey: newImgKey
+			});
+
+			// 6. 結束模式
+			cancelPointMode();
+		};
+		img.src = srcBase64;
+	}
+
+	// 4. 移除 EX-Life
+	function removeExLife(cardId) {
+		if (confirm("移除 EX-Life 護盾效果？")) {
+			addOperation({
+				type: 'REMOVE_EX_LIFE',
+				targetId: cardId
+			});
+		}
 	}
 
 	// --- [新增] 手機版放大卡圖函式 ---
@@ -9362,6 +9587,11 @@
 				if (c.backImageKey && replacementMap.has(c.backImageKey)) {
 					c.backImageKey = replacementMap.get(c.backImageKey);
 				}
+				// --- [新增] 檢查 EX-Life 圖片引用 ---
+				if (c.exLifeKey && replacementMap.has(c.exLifeKey)) {
+					c.exLifeKey = replacementMap.get(c.exLifeKey);
+				}
+				// ----------------------------------
 			});
 		};
 
@@ -9369,14 +9599,19 @@
 		const replaceInOps = (ops) => {
 			if (!ops) return;
 			ops.forEach(op => {
-				// 檢查是否為 Cut In 特效且含有 imgKey
+				// 檢查 Reality Break
 				if (op.type === 'REALITY_BREAK' && op.data && op.data.imgKey) {
-					// 如果這個 Key 在替換名單中
 					if (replacementMap.has(op.data.imgKey)) {
-						// console.log(`[Migrate] CutIn Ref: ${op.data.imgKey} -> ${replacementMap.get(op.data.imgKey)}`);
 						op.data.imgKey = replacementMap.get(op.data.imgKey);
 					}
 				}
+				// --- [新增] 檢查 SET_EX_LIFE ---
+				if (op.type === 'SET_EX_LIFE' && op.imgKey) {
+					if (replacementMap.has(op.imgKey)) {
+						op.imgKey = replacementMap.get(op.imgKey);
+					}
+				}
+				// -----------------------------
 			});
 		};
 
