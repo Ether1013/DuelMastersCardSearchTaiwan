@@ -4808,18 +4808,34 @@
             // 1. 準備核心資料 (不含圖片)
             // 修改為：
 			const leanHistory = history.map((item, index) => {
-				if (index === 0) return item; 
-				
-				// 建立精簡物件
-				const leanItem = { action: item.action };
-				
-				// [關鍵] 如果這個步驟有紀錄「斷層起點 (detachedStartState)」，必須存下來！
-				// 這樣重新整理網頁後，A5 才會記得它要接在舊的 A4 後面
-				if (item.detachedStartState) {
-					leanItem.detachedStartState = item.detachedStartState;
-				}
-				
-				return leanItem;
+			
+				// [關鍵步驟] 深拷貝 Action 物件，以免移除圖片時影響到當前畫面
+                const safeAction = JSON.parse(JSON.stringify(item.action));
+
+                // 檢查並移除 REALITY_BREAK 的 imgData (只針對存檔移除)
+                if (safeAction.operations) {
+                    safeAction.operations.forEach(op => {
+                        if (op.type === 'REALITY_BREAK' && op.data) {
+                            delete op.data.imgData; // 刪除圖片 Base64 字串
+                        }
+                    });
+                }
+
+                // 如果是第 0 步 (通常包含初始 State)
+                if (index === 0) {
+                    // 回傳複製後的物件，並替換為乾淨的 action
+                    return { ...item, action: safeAction }; 
+                }
+                
+                // 建立精簡物件 (一般步驟)
+                const leanItem = { action: safeAction };
+                
+                // 如果這個步驟有紀錄「斷層起點」，必須存下來
+                if (item.detachedStartState) {
+                    leanItem.detachedStartState = item.detachedStartState;
+                }
+                
+                return leanItem;
 			});
 
             // 在 saveToStorage 函式內，準備 coreData 物件時：
