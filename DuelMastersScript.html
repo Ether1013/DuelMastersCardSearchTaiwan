@@ -397,14 +397,22 @@
             padding-bottom: 20px;
         }
 
-        .timeline-gap {
-            height: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            position: relative;
-        }
+        /* [修改] 確保 Gap 容器設定正確 */
+		.timeline-gap {
+			height: 20px; /* 加高感應區，比較好點 */
+			display: flex !important; /* 強制 Flex 佈局 */
+			justify-content: center;
+			align-items: center;
+			cursor: default;
+			position: relative;
+			
+			/* 移除 gap，改用按鈕的 margin 來推開 */
+			gap: 0 !important; 
+			
+			transition: background 0.2s;
+		}
+
+		
         .timeline-gap:hover::after {
             content: "+";
             background: #3498db;
@@ -2848,6 +2856,97 @@
 	.card:hover .ex-life-close {
 		display: flex;
 	}
+	
+	/* --- [新增] CutIn URL 輸入框樣式 --- */
+	#rb-url-input {
+		background: #333;
+		color: white;
+		border: 1px solid #555;
+		padding: 4px 8px;
+		border-radius: 4px;
+		width: 150px;
+		font-size: 0.8rem;
+		outline: none;
+		transition: width 0.2s;
+	}
+	#rb-url-input:focus {
+		width: 250px; /* 聚焦時變長方便編輯 */
+		border-color: #3498db;
+		background: #444;
+	}
+	
+	/* [修改] Timeline Gap 容器 */
+	.timeline-gap {
+		height: 14px; /* 稍微加高一點 */
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: default; /* 改為預設，因為點擊是針對內部的按鈕 */
+		position: relative;
+		gap: 15px; /* 兩個按鈕的間距 */
+		transition: background 0.2s;
+	}
+
+	/* [新增] 移除原本的 ::after 偽元素效果，改由內部按鈕呈現 */
+	.timeline-gap:hover::after {
+		display: none !important;
+	}
+
+	/* 線條背景 (維持視覺連貫) */
+	.timeline-gap::before {
+		content: "";
+		height: 2px;
+		background: #ccc;
+		width: 90%;
+		position: absolute;
+		z-index: 0;
+	}
+
+	/* [修改] 按鈕樣式：加入 margin 強制推開 */
+	.gap-btn {
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		
+		display: none; /* 預設隱藏 */
+		
+		justify-content: center;
+		align-items: center;
+		font-weight: bold;
+		font-size: 16px;
+		z-index: 10; /* 提高層級，確保浮在線條之上 */
+		cursor: pointer;
+		border: 2px solid white;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+		transition: transform 0.1s;
+		line-height: 1;
+		padding-bottom: 2px;
+		
+		/* --- [關鍵修改] 使用 margin 撐開距離 --- */
+		/* 左右各 40px，代表兩個按鈕中間會有 80px 的距離 */
+		margin: 0 40px !important; 
+	}
+
+	/* Hover 時顯示按鈕 */
+	.timeline-gap:hover .gap-btn {
+		display: flex;
+	}
+
+	.gap-btn:hover {
+		transform: scale(1.2);
+	}
+
+	/* [+] 按鈕樣式 */
+	.gap-btn-plus {
+		background: #3498db;
+		color: white;
+	}
+
+	/* [-] 按鈕樣式 (紅色) */
+	.gap-btn-minus {
+		background: #c0392b;
+		color: white;
+	}
 	</style>
 </head>
 <body>
@@ -3022,13 +3121,13 @@
 				<button onclick="stopPlayback()" id="btn-stop">⏹</button>
                 <button onclick="nextStep()">▼</button>
 				<select id="speed-select" onchange="changePlaybackSpeed(this.value)" style="padding:2px; border-radius:4px; border:1px solid #ccc; background:#fff; font-size:0.85rem; cursor:pointer;">
-					<option value="4.0">🚀 0.25x (極慢)</option>
-					<option value="2.0">🐢 0.5x (慢速)</option>
-					<option value="1.33">🚶 0.75x (稍慢)</option>
-					<option value="1.0" selected>▶ 1.0x (正常)</option>
-					<option value="0.66">🏃 1.5x (稍快)</option>
-					<option value="0.5">🐇 2.0x (快速)</option>
-					<option value="0.25">⚡ 4.0x (極速)</option>
+					<option value="4.0">🚀 0.25x</option>
+					<option value="2.0">🐢 0.5x</option>
+					<option value="1.33">🚶 0.75x</option>
+					<option value="1.0" selected>▶ 1.0x</option>
+					<option value="0.66">🏃 1.5x</option>
+					<option value="0.5">🐇 2.0x</option>
+					<option value="0.25">⚡ 4.0x</option>
 				</select>
             </div>
         </div>
@@ -3779,6 +3878,8 @@
 			'lbl_rb_shake_in': '🫨 內震 (Inner)',
 			'lbl_rb_shake_out': '🫨 外震 (Outer)',
 			'lbl_rb_intensity': '裂度 (Scale):',
+			'msg_truncate_confirm': '⚠️ 危險操作 ⚠️\n\n確定要刪除此處 (Step #{n}) 之後的所有 ActionLog 嗎？',
+			'msg_truncate_backup': '這個動作會刪除大量資料，是否要先匯出備份？\n\n(按「確定」= 匯出並刪除，按「取消」= 直接刪除)',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3903,6 +4004,8 @@
 			'lbl_rb_shake_in': '🫨 Inner Shake',
 			'lbl_rb_shake_out': '🫨 Outer Shake',
 			'lbl_rb_intensity': 'Scale:',
+			'msg_truncate_confirm': '⚠️ DANGER ⚠️\n\nAre you sure you want to delete all steps after Step #{n}?',
+			'msg_truncate_backup': 'This action will delete a large amount of data. Do you want to export a backup first?\n\n(OK = Export & Delete, Cancel = Delete immediately)',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -4027,6 +4130,8 @@
 			'lbl_rb_shake_in': '🫨 內揺れ (In)',
 			'lbl_rb_shake_out': '🫨 外揺れ (Out)',
 			'lbl_rb_intensity': '裂け目:',
+			'msg_truncate_confirm': '⚠️ 危険な操作 ⚠️\n\nここ (Step #{n}) から後のすべてのアクションを削除しますか？',
+			'msg_truncate_backup': 'この操作は大量のデータを削除します。先にバックアップをエクスポートしますか？\n\n(OK = エクスポートして削除, キャンセル = そのまま削除)',
 		}
 	};
 
@@ -4447,11 +4552,16 @@
 	document.addEventListener('keydown', (e) => {
 		// 1. 處理 Ctrl+Z (復原)
 		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+			e.preventDefault(); // 阻止瀏覽器預設行為
+
 			if (isDrafting) {
-				e.preventDefault();
+				// 情境 A: 正在編輯中 -> 還原編輯的動作 (例如移動卡片、貼圖)
 				undoLastDraftOp();
-				return;
+			} else {
+				// 情境 B: 非編輯模式 -> 執行全域復原 (還原刪除步驟、新增步驟)
+				performGlobalUndo();
 			}
+			return;
 		}
 
 		// [新增] 2. 處理 Ctrl+S (儲存此步)
@@ -4515,6 +4625,60 @@
 		});
 	}
 	
+	// --- [新增] 全域復原系統 (Global Undo) ---
+	const MAX_GLOBAL_UNDO = 8; // 最大復原步數限制
+	let globalUndoStack = [];  // 存放歷史快照
+
+	// 建立快照 (在執行破壞性操作前呼叫)
+	function takeGlobalSnapshot() {
+		// 1. 深拷貝目前的 history 與 currentIndex
+		// 注意：這裡只備份邏輯結構，不備份圖片庫 (圖片庫是全域的，不需要還原)
+		const snapshot = {
+			history: JSON.parse(JSON.stringify(history)),
+			currentIndex: currentIndex,
+			// 如果有其他關鍵狀態(如 BGM 狀態)也可以存，但 history 裡面已經包含了 state
+		};
+
+		// 2. 推入堆疊
+		globalUndoStack.push(snapshot);
+
+		// 3. 維持最大數量限制 (超過 8 步就移除最舊的)
+		if (globalUndoStack.length > MAX_GLOBAL_UNDO) {
+			globalUndoStack.shift(); // 移除陣列第一個元素 (最舊的)
+		}
+	}
+
+	// 執行全域復原
+	function performGlobalUndo() {
+		if (globalUndoStack.length === 0) {
+			console.log("沒有可復原的動作");
+			return;
+		}
+
+		// 1. 取出最新的快照
+		const snapshot = globalUndoStack.pop();
+
+		// 2. 還原資料
+		history = snapshot.history;
+		currentIndex = snapshot.currentIndex;
+
+		// 3. 重繪介面
+		renderUI(true); // true = 跳過捲動 (稍後手動捲)
+		saveToStorage(); // 存檔以確保狀態同步
+
+		// 4. UX 優化：捲動到當前步驟
+		setTimeout(() => scrollToActiveStep(), 50);
+		
+		// 提示
+		const hint = document.getElementById('draft-mode-hint'); // 借用一下提示欄
+		if(hint) {
+			const originalText = hint.innerText;
+			hint.innerText = "↩️ 已復原上一步";
+			hint.style.opacity = 1;
+			setTimeout(() => hint.innerText = originalText, 1500);
+		}
+	}
+
 	document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             if (isDrafting) {
@@ -5394,6 +5558,11 @@
                 desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
             }
         }
+		
+		// --- [新增] 在寫入 history 之前，先備份 ---
+		// 這樣按下 Ctrl+Z 就能撤銷這次的「儲存/新增」
+		takeGlobalSnapshot();
+		// ---------------------------------------
 
         const newAction = new Action(desc);
         newAction.operations = [...draftOperations];
@@ -5529,6 +5698,10 @@
 
         if (index === 0) return alert(t('msg_cannot_del_init'));
         if (!confirm(t('msg_confirm_del_step'))) return;
+		
+		// --- [新增] 在刪除前，先備份當前狀態 ---
+		takeGlobalSnapshot();
+		// ------------------------------------
 
         // 2. 切割陣列
         const head = history.slice(0, index);
@@ -6187,7 +6360,7 @@
 	}
     
     function resetBoard(playerId) {
-        if(!confirm(playerId === 1 ? t('msg_confirm_p1_reset') : t('msg_confirm_p2_reset'))) return;
+//        if(!confirm(playerId === 1 ? t('msg_confirm_p1_reset') : t('msg_confirm_p2_reset'))) return;
         addOperation({ type: 'RESET_BOARD', playerId: playerId });
     }
 	
@@ -8809,6 +8982,58 @@
 		updateSelectionUI();
 	}
 	
+	// --- [新增] 截斷時間軸 (刪除後續所有動作) ---
+	function truncateTimeline(index) {
+		// 1. 第一道防線：確認是否真的要刪除
+		const confirmMsg = t('msg_truncate_confirm').replace('{n}', index);
+		if (!confirm(confirmMsg)) return;
+
+		// 2. 第二道防線：詢問是否備份
+		// 根據需求："這個動作會刪除大量資料，是否要先匯出備份"
+		const wantBackup = confirm(t('msg_truncate_backup'));
+		
+		if (wantBackup) {
+			exportData();
+		}
+
+		// 3. 執行刪除前的準備
+		takeGlobalSnapshot(); // [關鍵] 存入 Undo Stack，讓 Ctrl+Z 可以救回
+
+		// 4. 執行截斷邏輯
+		// index 代表 Gap 的位置。
+		// Gap 0 在 Step 0 之前。 Gap 5 在 Step 4 與 5 之間。
+		// 如果按了 index=5 的 Gap 減號，代表要保留 0~4 (前5步)，刪除 5 之後的。
+		// Array.slice(0, index) 正好符合這個邏輯。
+		
+		const head = history.slice(0, index);
+		
+		// 如果全部刪光光 (index=0)，需要重新初始化
+		if (head.length === 0) {
+			alert(t('msg_cannot_del_init')); // 借用原本的訊息，禁止刪除初始狀態
+			return;
+		}
+
+		// 更新歷史紀錄
+		history = head;
+
+		// 修正目前的指標
+		currentIndex = history.length - 1;
+		
+		// 清除選取狀態
+		cancelSelection();
+		
+		// 5. 更新介面與存檔
+		renderUI(true);
+		saveToStorage();
+		
+		// 提示訊息
+		const hint = document.getElementById('draft-mode-hint');
+		if(hint) {
+			hint.innerText = "✂️ 已截斷時間軸 (Ctrl+Z 可復原)";
+			hint.style.opacity = 1;
+		}
+	}
+	
 	// 3. 處理選擇並生成圖片
 	function processExLifeSelection(sourceCardId) {
 		const state = getCurrentDisplayState();
@@ -9072,8 +9297,39 @@
                 list.appendChild(gap);
                 list.appendChild(createPlaceholder());
             } else {
-                gap.onclick = () => startDraft(index);
-                list.appendChild(gap);
+                // --- [核心修改] 插入 [+] 與 [-] 按鈕 ---
+            
+				// 1. 建立 [+] 按鈕
+				const btnPlus = document.createElement('div');
+				btnPlus.className = 'gap-btn gap-btn-plus';
+				btnPlus.innerText = '+';
+				btnPlus.title = t('msg_insert_pos_title') || "在此處插入步驟";
+				btnPlus.onclick = (e) => {
+					e.stopPropagation(); // 阻止冒泡
+					startDraft(index);
+				};
+
+				// 2. 建立 [-] 按鈕
+				const btnMinus = document.createElement('div');
+				btnMinus.className = 'gap-btn gap-btn-minus';
+				btnMinus.innerText = '-';
+				btnMinus.title = "刪除此處以下的所有步驟";
+				btnMinus.onclick = (e) => {
+					e.stopPropagation(); // 阻止冒泡
+					truncateTimeline(index);
+				};
+
+				// 將按鈕加入 Gap
+				gap.appendChild(btnPlus);
+				
+				// 第一個 Gap (index=0) 通常不建議讓使用者把整個遊戲刪光，所以可以隱藏 [-]
+				// 或者如果允許刪光重來也可以顯示。這裡建議 index > 0 才顯示 [-]
+				if (index > 0) {
+					gap.appendChild(btnMinus);
+				}
+				// ------------------------------------
+				
+				list.appendChild(gap);
             }
 
             const li = document.createElement('li');
@@ -9145,8 +9401,16 @@
             list.appendChild(endGap);
             list.appendChild(createPlaceholder());
         } else {
-            endGap.onclick = () => startDraftAtEnd();
-            list.appendChild(endGap);
+            // 最後一個 Gap 只需要 [+] (因為已經在最後了，[-] 沒有意義)
+			const btnPlusEnd = document.createElement('div');
+			btnPlusEnd.className = 'gap-btn gap-btn-plus';
+			btnPlusEnd.innerText = '+';
+			btnPlusEnd.onclick = (e) => {
+				e.stopPropagation();
+				startDraftAtEnd();
+			};
+			endGap.appendChild(btnPlusEnd);
+			list.appendChild(endGap);
         }
 
         document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
@@ -11160,6 +11424,7 @@
         const layer = document.getElementById('rb-inner-layer');
         const patternSel = document.getElementById('rb-pattern-select');
         const hint = document.getElementById('rb-edit-hint');
+		const urlInput = document.getElementById('rb-url-input'); // 取得輸入框
 
         let existingData = null;
         let targetIdx = -1; // [關鍵變數] -1 代表新增，其他數字代表編輯該步驟
@@ -11180,89 +11445,94 @@
                 targetIdx = currentIndex; // 鎖定當前步驟索引
             }
         }
+		
+		// 初始化狀態
+		rbEditorState = {
+			active: true,
+			imgData: null,
+			imgUrl: null,
+			sourceType: 'base64', // 預設
+			x: 50, y: 50, scale: 1.0, pattern: 'random',
+			editingIndex: targetIdx
+		};
 
-        if (existingData) {
-            // [載入舊資料模式]
-			console.log(`編輯現有特效 (Index: ${targetIdx})`);
-			
-			
-			// [修改] 支援讀取 Key 或 舊版 imgData
-			let finalImgData = existingData.imgData;
-			if (!finalImgData && existingData.imgKey) {
-				finalImgData = globalImageRegistry[existingData.imgKey];
+		if (existingData) {
+			// [載入舊資料]
+			rbEditorState.x = existingData.style.x;
+			rbEditorState.y = existingData.style.y;
+			rbEditorState.scale = existingData.style.scale;
+			rbEditorState.pattern = existingData.pattern;
+
+			// --- [新增] 判斷來源類型 ---
+			if (existingData.imgUrl) {
+				// 情況 A: 是 URL
+				rbEditorState.sourceType = 'url';
+				rbEditorState.imgUrl = existingData.imgUrl;
+				urlInput.value = existingData.imgUrl; // 填入輸入框
+				
+				layer.style.backgroundImage = `url(${existingData.imgUrl})`;
+				layer.style.backgroundColor = 'transparent';
+				if(hint) hint.style.display = 'none';
+
+			} else {
+				// 情況 B: 是 Base64 (Key or Data)
+				rbEditorState.sourceType = 'base64';
+				urlInput.value = ''; // 清空輸入框
+
+				let finalImgData = existingData.imgData;
+				if (!finalImgData && existingData.imgKey) {
+					finalImgData = globalImageRegistry[existingData.imgKey];
+				}
+				rbEditorState.imgData = finalImgData;
+
+				if (finalImgData) {
+					layer.style.backgroundImage = `url(${finalImgData})`;
+					layer.style.backgroundColor = 'transparent';
+					if(hint) hint.style.display = 'none';
+				} else {
+					// 有資料但圖不見了
+					layer.style.backgroundImage = 'none';
+					layer.style.backgroundColor = '#222';
+					if(hint) hint.style.display = 'block';
+				}
 			}
 			
-			// 將索引存入編輯器狀態中
-			rbEditorState = {
-				active: true,
-				imgData: finalImgData, // 載入還原後的圖片
-				x: existingData.style.x,
-				y: existingData.style.y,
-				scale: existingData.style.scale,
-				pattern: existingData.pattern,
-				editingIndex: targetIdx
-			};
-
-			// --- [新增] 讀取擴充參數 (含向下相容) ---
-			// 如果是舊檔案 (undefined)，使用預設值：內震=true, 外震=false, 裂度=0.7
+			// 載入其他參數 (震動、裂度)
 			const sIn = (existingData.shakeInner !== undefined) ? existingData.shakeInner : true;
 			const sOut = (existingData.shakeOuter !== undefined) ? existingData.shakeOuter : false;
 			const intensity = (existingData.tearScale !== undefined) ? existingData.tearScale : 0.7;
-
-			// 更新 UI 元件狀態
+			
 			document.getElementById('rb-shake-inner').checked = sIn;
 			document.getElementById('rb-shake-outer').checked = sOut;
 			document.getElementById('rb-intensity').value = intensity;
 			document.getElementById('rb-intensity-val').innerText = intensity;
-            
-            // UI 設定 (有圖顯示圖，沒圖顯示黑底)
-            // UI 設定 (有圖顯示圖，沒圖顯示黑底)
-            if (finalImgData) {
-                // [修正] 這裡必須使用已經還原回來的 finalImgData (Base64)，而不是 existingData 裡的空值
-                layer.style.backgroundImage = `url(${finalImgData})`; 
-                layer.style.backgroundColor = 'transparent';
-                if(hint) hint.style.display = 'none';
-            } else {
-                layer.style.backgroundImage = 'none';
-                layer.style.backgroundColor = '#222';
-                if(hint) hint.style.display = 'block';
-            }
-            
-            layer.style.backgroundPosition = `${rbEditorState.x}% ${rbEditorState.y}%`;
-            layer.style.backgroundSize = `${rbEditorState.scale * 100}%`;
-            patternSel.value = existingData.pattern || 'random';
-
-        } else {
-            // [全新新增模式]
-            console.log("新增特效");
-            rbEditorState = { 
-                active: true, imgData: null, x: 50, y: 50, scale: 1.0, pattern: 'random',
-                editingIndex: -1 // -1 代表這是一筆新資料
-            };
 			
-			// --- [新增] UI 重置為預設值 ---
-			document.getElementById('rb-shake-inner').checked = true;  // 預設內震開啟
-			document.getElementById('rb-shake-outer').checked = false; // 預設外震關閉
+		} else {
+			// [新增模式]
+			urlInput.value = ''; // 清空
+			layer.style.backgroundImage = 'none';
+			layer.style.backgroundColor = '#222';
+			if(hint) hint.style.display = 'block';
+			
+			// 重置參數
+			document.getElementById('rb-shake-inner').checked = true;
+			document.getElementById('rb-shake-outer').checked = false;
 			document.getElementById('rb-intensity').value = 0.7;
 			document.getElementById('rb-intensity-val').innerText = '0.7';
-			// ----------------------------
-            
-            layer.style.backgroundImage = 'none';
-            layer.style.backgroundColor = '#222';
-            layer.style.backgroundPosition = '50% 50%';
-            layer.style.backgroundSize = 'cover';
-            patternSel.value = 'random';
-            if(hint) hint.style.display = 'block';
-        }
-        
-		// [新增] UI 初始化時，確保隱藏紙張層 (編輯時只看圖)
-        const paperLayer = document.getElementById('rb-paper-layer');
-        if (paperLayer) paperLayer.style.display = 'none';
-		
-        overlay.style.display = 'block';
-        overlay.classList.add('editing');
-        initRbInteraction(layer);
-    }
+		}
+
+		layer.style.backgroundPosition = `${rbEditorState.x}% ${rbEditorState.y}%`;
+		layer.style.backgroundSize = `${rbEditorState.scale * 100}%`;
+		patternSel.value = rbEditorState.pattern || 'random';
+
+		// 隱藏紙張層
+		const paperLayer = document.getElementById('rb-paper-layer');
+		if (paperLayer) paperLayer.style.display = 'none';
+
+		overlay.style.display = 'block';
+		overlay.classList.add('editing');
+		initRbInteraction(layer);
+	}
 
     // 2. 編輯器互動邏輯 (拖曳與滾輪)
     function initRbInteraction(el) {
@@ -11315,20 +11585,28 @@
     // 3. 處理貼上圖片 (Paste)
     // 注意：需修改全域的 paste event listener 來呼叫此函式
     function handleRbPaste(blob) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const base64 = e.target.result;
-            rbEditorState.imgData = base64;
-            
-            const layer = document.getElementById('rb-inner-layer');
-            layer.style.backgroundImage = `url(${base64})`;
-            layer.style.backgroundColor = 'transparent'; // 有圖了就透明底
-            
-            // 隱藏提示文字
-            document.getElementById('rb-edit-hint').style.display = 'none';
-        };
-        reader.readAsDataURL(blob);
-    }
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const base64 = e.target.result;
+			
+			// 更新狀態
+			rbEditorState.imgData = base64;
+			rbEditorState.imgUrl = null;     // 清空 URL
+			rbEditorState.sourceType = 'base64'; // 標記來源為 Base64
+			
+			// 清空輸入框 (避免混淆)
+			document.getElementById('rb-url-input').value = '';
+
+			// 更新預覽
+			const layer = document.getElementById('rb-inner-layer');
+			layer.style.backgroundImage = `url(${base64})`;
+			layer.style.backgroundColor = 'transparent';
+			
+			const hint = document.getElementById('rb-edit-hint');
+			if(hint) hint.style.display = 'none';
+		};
+		reader.readAsDataURL(blob);
+	}
 
     // 4. 預覽特效
     function previewRbEffect() {
@@ -11341,7 +11619,8 @@
 		const intensity = parseFloat(document.getElementById('rb-intensity').value);
 		
 		const config = {
-			imgData: rbEditorState.imgData,
+			imgUrl: (rbEditorState.sourceType === 'url') ? rbEditorState.imgUrl : null,
+			imgData: (rbEditorState.sourceType === 'base64') ? rbEditorState.imgData : null,
 			style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
 			pattern: pattern,
 			// 傳入預覽參數
@@ -11379,8 +11658,7 @@
                 // 這是新資料 -> 開啟新步驟
                 startDraftAtEnd();
             }
-        } 
-        
+        }
         // 強制清空 draftOperations (確保這一步只有這一個特效動作)
         draftOperations = [];
 
@@ -11391,28 +11669,38 @@
 		const sOut = document.getElementById('rb-shake-outer').checked;
 		const intensity = parseFloat(document.getElementById('rb-intensity').value);
 
-		const imgKey = registerImageToGlobal(rbEditorState.imgData);
+		// 準備資料物件
+		const dataObj = {
+			style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
+			pattern: pattern,
+			shakeInner: sIn,
+			shakeOuter: sOut,
+			tearScale: intensity
+		};
+
+		// --- [新增] 判斷並儲存對應的圖片來源 ---
+		if (rbEditorState.sourceType === 'url') {
+			// 模式 A: 儲存 URL
+			dataObj.imgUrl = rbEditorState.imgUrl;
+			dataObj.imgKey = null; // 清除 Key 引用
+		} else {
+			// 模式 B: 儲存 Base64 Key
+			// 只有當真的有資料時才註冊
+			if (rbEditorState.imgData) {
+				const imgKey = registerImageToGlobal(rbEditorState.imgData);
+				dataObj.imgKey = imgKey;
+			}
+			dataObj.imgUrl = null; // 清除 URL
+		}
+		// ------------------------------------
 
 		addOperation({
 			type: 'REALITY_BREAK',
-			data: {
-				imgKey: imgKey, // 改存 Key
-				// imgData: rbEditorState.imgData, // 移除這行 (不要存原始大圖)
-				style: { 
-					x: rbEditorState.x, 
-					y: rbEditorState.y, 
-					scale: rbEditorState.scale 
-				},
-				pattern: pattern,
-				shakeInner: sIn,
-				shakeOuter: sOut,
-				tearScale: intensity
-			}
+			data: dataObj
 		});
 
-        // 存檔
-        saveDraft(t('desc_rb'));
-        closeRbEditor();
+		saveDraft(t('desc_rb'));
+		closeRbEditor();
     }
 
     function closeRbEditor() {
@@ -11465,11 +11753,19 @@
         const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
         
-        // 解析圖片來源
-        let srcImage = data.imgData; // 向下相容舊檔
-        if (!srcImage && data.imgKey) {
-            srcImage = globalImageRegistry[data.imgKey];
-        }
+        // --- [新增] 解析圖片來源優先順序 ---
+		let srcImage = null;
+		
+		if (data.imgUrl) {
+			// 優先使用網址
+			srcImage = data.imgUrl;
+		} else if (data.imgKey) {
+			// 其次使用全域緩存
+			srcImage = globalImageRegistry[data.imgKey];
+		} else if (data.imgData) {
+			// 相容舊資料
+			srcImage = data.imgData;
+		}
         
         const hint = document.getElementById('rb-edit-hint');
 
@@ -11916,6 +12212,45 @@
 		console.log("✅ 匯出完成！");
 	}
 	
+	// --- [新增] 載入外部圖片 URL ---
+	function loadRbUrl(url) {
+		if (!url) return;
+		
+		// 顯示載入中提示 (可選)
+		const layer = document.getElementById('rb-inner-layer');
+		layer.style.opacity = 0.5;
+
+		const img = new Image();
+		img.crossOrigin = "Anonymous"; // 嘗試跨域，雖然對 CSS background 影響不大，但好習慣
+		
+		img.onload = () => {
+			// 載入成功
+			rbEditorState.imgData = null; // 清空 Base64
+			rbEditorState.imgUrl = url;   // 記錄 URL
+			rbEditorState.sourceType = 'url'; // 標記來源為 URL
+			
+			// 更新 UI
+			layer.style.backgroundImage = `url(${url})`;
+			layer.style.backgroundColor = 'transparent';
+			layer.style.opacity = 1;
+			
+			// 隱藏提示文字
+			const hint = document.getElementById('rb-edit-hint');
+			if(hint) hint.style.display = 'none';
+			
+			console.log("外部圖片載入成功");
+		};
+		
+		img.onerror = () => {
+			alert("無法讀取圖片網址 (可能連結無效或存取被拒)。");
+			layer.style.opacity = 1;
+			// 清空輸入框以示失敗
+			document.getElementById('rb-url-input').value = '';
+		};
+		
+		img.src = url;
+	}
+	
 </script>
 <div id="visitor-counter" style="display:none"></div>
 <div id="ace-flash-layer"></div>
@@ -11973,7 +12308,10 @@
 					<option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
 				</select>
 			</div>
-
+			<div style="display:flex; flex-direction:column; gap:2px;">
+				<span style="font-size:0.75rem; color:#aaa;">Image URL / Paste:</span>
+				<input type="text" id="rb-url-input" placeholder="https://..." onchange="loadRbUrl(this.value)" onkeydown="if(event.key==='Enter') loadRbUrl(this.value)">
+			</div>
 			<div style="width:1px; height:30px; background:#555;"></div>
 
 			<div style="display:flex; flex-direction:column; gap:4px; font-size:0.8rem;">
