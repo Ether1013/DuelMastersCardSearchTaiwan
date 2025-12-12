@@ -9070,10 +9070,15 @@
         // [新增] 在匯出前執行一次遷移腳本，確保舊資料都被優化
         optimizeAndMigrateImages(); 
 
-        const historyToExport = JSON.parse(JSON.stringify(history));
+        // 1. 深拷貝歷史紀錄 (移除 state 快照以節省空間)
+        let historyToExport = JSON.parse(JSON.stringify(history));
         historyToExport.forEach((item, index) => { if (index > 0) delete item.state; });
+
+        // --- [新增] 2. 執行旋轉動作優化 (Rotation Optimization) ---
+        historyToExport = optimizeHistoryForExport(historyToExport);
+        // -------------------------------------------------------
         
-        // 執行 GC 過濾，只匯出有用的圖片
+        // 3. 執行 GC 過濾，只匯出有用的圖片
         const usedKeys = getUsedImageKeys();
         const cleanImageRegistry = {};
         
@@ -9088,12 +9093,12 @@
             initialState: initialState,
             currentIndex: currentIndex,
             timestamp: Date.now(),
-            imageRegistry: cleanImageRegistry, // 使用乾淨的圖庫
+            imageRegistry: cleanImageRegistry, 
             abilityRegistry: globalAbilityStyleRegistry,
-			lastUsedStyles: globalLastUsedStyles,
+            lastUsedStyles: globalLastUsedStyles,
             lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
             aceRegistry: globalAceRegistry,
-			themeSettings: globalThemeSettings, // [新增]
+            themeSettings: globalThemeSettings,
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
@@ -9101,6 +9106,84 @@
         a.href = URL.createObjectURL(blob);
         a.download = `dm-script-${Date.now()}.txt`;
         a.click();
+    }
+
+    // --- [新增] 旋轉優化輔助函式 ---
+    function optimizeHistoryForExport(hist) {
+        console.log("正在優化旋轉指令...");
+        
+        return hist.map(step => {
+            // 如果這一步沒有操作，直接回傳
+            if (!step.action || !step.action.operations) return step;
+
+            const ops = step.action.operations;
+            const cardRotationMap = {}; // 記錄每張卡片的累計角度 { cardId: totalDeg }
+            const unsafeCardIds = new Set(); // 記錄這一步中有執行「非旋轉」操作的卡片 (不該被優化)
+
+            // 1. 第一輪掃描：分析卡片操作狀態
+            ops.forEach(op => {
+                if (op.cardIds) {
+                    if (op.type === 'ROTATE_CARD' && typeof op.deg === 'number') {
+                        // 這是可優化的旋轉操作，暫時不做標記
+                    } else {
+                        // 這是其他操作 (Move, Flip, Injured...)
+                        // 這些卡片被視為「不安全」，不能合併旋轉，以免破壞順序邏輯
+                        op.cardIds.forEach(id => unsafeCardIds.add(id));
+                    }
+                }
+            });
+
+            // 2. 第二輪掃描：計算累計角度 & 過濾操作
+            const newOps = [];
+            
+            ops.forEach(op => {
+                let isOptimizableRotation = false;
+
+                if (op.type === 'ROTATE_CARD' && typeof op.deg === 'number') {
+                    // 檢查這張指令涉及的卡片，是否全部都是「安全」的
+                    // (即：在這一步驟中，這些卡片除了旋轉外，沒有做其他移動或翻面)
+                    const isSafe = op.cardIds.every(id => !unsafeCardIds.has(id));
+
+                    if (isSafe) {
+                        isOptimizableRotation = true;
+                        // 累計角度
+                        op.cardIds.forEach(id => {
+                            cardRotationMap[id] = (cardRotationMap[id] || 0) + op.deg;
+                        });
+                    }
+                }
+
+                // 如果不是可優化的旋轉 (是移動、對話、或是涉及移動的旋轉)，則保留原指令
+                if (!isOptimizableRotation) {
+                    newOps.push(op);
+                }
+            });
+
+            // 3. 第三輪：將累計後的角度生成新的旋轉指令
+            // 為了節省指令數，我們將「相同旋轉角度」的卡片合併成一個指令
+            const degToCards = {}; // { 90: [id1, id2], 180: [id3] }
+
+            Object.keys(cardRotationMap).forEach(cardId => {
+                const totalDeg = cardRotationMap[cardId] % 360; // 取餘數 (例如轉 450度 = 90度)
+                if (totalDeg !== 0) { // 如果轉了一圈回到 0 度，就直接省略
+                    if (!degToCards[totalDeg]) degToCards[totalDeg] = [];
+                    degToCards[totalDeg].push(parseInt(cardId));
+                }
+            });
+
+            // 產生合併後的指令
+            Object.keys(degToCards).forEach(deg => {
+                newOps.push({
+                    type: 'ROTATE_CARD',
+                    cardIds: degToCards[deg],
+                    deg: parseFloat(deg)
+                });
+            });
+
+            // 更新步驟的操作清單
+            step.action.operations = newOps;
+            return step;
+        });
     }
 	
 	// --- [新增] 圖片最佳化與遷移腳本 ---
