@@ -3327,7 +3327,7 @@
         <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
         <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
         
-        <button class="danger" style="margin-left:5px;" onclick="cancelSelection()">✕</button>
+        <button id="btn-panel-close" class="danger" style="margin-left:5px;" onclick="cancelSelection()">✕</button>
     </div>
 </div>
 
@@ -7306,6 +7306,8 @@
         const btnDelete = document.getElementById('btn-delete-card');
         const btnPoint = document.getElementById('btn-point');
         const btnEndPoint = document.getElementById('btn-end-point'); // 修正可能漏掉的按鈕
+		// 【新增這行】取得關閉按鈕
+        const btnPanelClose = document.getElementById('btn-panel-close');
         
         // 取得輸入框
         const inputRename = document.getElementById('rename-input');
@@ -7371,7 +7373,8 @@
                 const allElements = [
                     btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, 
                     btnGlow, btnGlowBottom, btnCopyOne, btnCopyCont, adjustControls, adjustButtons, 
-                    btnPoint, inputRename, inputNote, btnRename, btnNote, btnMoonless
+                    btnPoint, inputRename, inputNote, btnRename, btnNote, btnMoonless,
+					btnPanelClose
                 ];
                 allElements.forEach(el => { if(el) el.style.display = ''; }); // 清空 inline style 回復預設 (block/flex/inline)
                 
