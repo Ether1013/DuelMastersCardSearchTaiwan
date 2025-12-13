@@ -8884,202 +8884,179 @@
 		}, startDelay); 
 	}
 
-    // --- [修改] createCardElement 函式 ---
-	function createCardElement(card) {
-		const el = document.createElement('div');
-		el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
-		
-		// --- [新增] 未見卡高亮邏輯 ---
-        // 只有當「高亮模式開啟」且「該卡不在已見清單中」才發光
+    // --- [修正版] 建立卡片 DOM 元素 ---
+    function createCardElement(card) {
+        // 1. 基礎 Class 設定
+        // 如果 faceUp 為 false，強制加上 face-down class (顯示卡背樣式)
+        const el = document.createElement('div');
+        el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
+        el.dataset.id = card.id; 
+
+        // [新增] 未見卡高亮邏輯
         if (isUnseenHighlightOn && !globalSeenCardIds.has(card.id)) {
             el.classList.add('glow-unseen');
         }
-        // --------------------------
-		
-		el.dataset.id = card.id; 
 
-		// [新增] 大紅勾 HTML
-        // 注意：這不會覆蓋掉後面的 SVG 或圖片，因為這只是 append 進去
+        // [新增] 多選模式檢查
+        if (isMultiSelectMode && multiSelectedIds.includes(card.id)) {
+            el.classList.add('multi-selected');
+        }
+
+        // 2. 插入輔助標記 (勾勾、星星、受傷、EX-Life)
+        
+        // 選取勾勾
         const checkDiv = document.createElement('div');
         checkDiv.className = 'check-mark';
         checkDiv.innerText = '✔';
         el.appendChild(checkDiv);
 
-        // [新增] 檢查是否在多選清單中
-        if (isMultiSelectMode && multiSelectedIds.includes(card.id)) {
-            el.classList.add('multi-selected');
-        }
-		
-		// [新增] 1. 插入集氣用的 SVG (長按時顯示)
-		// viewBox 設為 0 0 50 70 (配合 CSS var --card-width/height)
-		// [修改] 王牌星星 (移除點擊事件，純展示)
-        const isAce = !!globalAceRegistry[card.id];
-        if (isAce) {
+        // 王牌星星
+        if (globalAceRegistry[card.id]) {
             const star = document.createElement('div');
             star.className = 'ace-star-mark';
             star.innerText = '★';
-            // 移除 onclick / onpointerdown，讓事件穿透到卡片本身
             el.appendChild(star);
         }
 
-		// [原有邏輯] 受傷效果 (claw)
-		if (card.isInjured) {
-			const clawDiv = document.createElement('div');
-			const animClass = isDrafting ? '' : 'claw-anim';
-			clawDiv.className = `claw-overlay ${animClass}`;
-			clawDiv.innerHTML = `
-				<svg class="claw-svg" viewBox="0 0 100 100">
-					<path class="claw-path p1" d="M20,20 Q50,50 80,80" />
-					<path class="claw-path p2" d="M30,10 Q60,40 90,70" />
-					<path class="claw-path p3" d="M10,30 Q40,60 70,90" />
-				</svg>
-			`;
-			el.appendChild(clawDiv);
-		}
-		
-		// [原有邏輯] 發光
-		if (card.glow) el.classList.add(`glow-${card.glow}`);
-		if (card.isContinuous) el.classList.add('continuous');
+        // 受傷爪痕
+        if (card.isInjured) {
+            const clawDiv = document.createElement('div');
+            const animClass = isDrafting ? '' : 'claw-anim';
+            clawDiv.className = `claw-overlay ${animClass}`;
+            clawDiv.innerHTML = `
+                <svg class="claw-svg" viewBox="0 0 100 100">
+                    <path class="claw-path p1" d="M20,20 Q50,50 80,80" />
+                    <path class="claw-path p2" d="M30,10 Q60,40 90,70" />
+                    <path class="claw-path p3" d="M10,30 Q40,60 70,90" />
+                </svg>
+            `;
+            el.appendChild(clawDiv);
+        }
+        
+        // 發光特效
+        if (card.glow) el.classList.add(`glow-${card.glow}`);
+        if (card.isContinuous) el.classList.add('continuous');
 
-		// [原有邏輯] 圖片處理
-		if (card.image && (card.faceUp || card.isHyper)) {
-			// ... (省略圖片處理細節，請保持您原本的程式碼) ...
-			// 為了節省篇幅，這裡請保留您原本判斷 imageKey, styleKey, backgroundPosition 的邏輯
-			const imageSrc = globalImageRegistry[card.imageKey];
-			if (imageSrc) {
-				el.style.backgroundImage = `url(${imageSrc})`;
-				el.classList.add('has-image');
-				if (card.zone.includes('ability')) {
-					// ... (Ability 樣式邏輯)
-					const lookupKey = card.styleKey || card.imageKey;
-					const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[lookupKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
-					el.style.backgroundPosition = `${style.x}% ${style.y}%`;
-					el.style.backgroundSize = `${100 * style.scale}%`;
-				} else {
-					 el.style.backgroundSize = 'cover';
-					 el.style.backgroundPosition = 'center';
-					 el.style.backgroundRepeat = 'no-repeat';
-				}
-			}
-		}
-
-		// [原有邏輯] 能力卡樣式
-		if (card.zone.includes('ability')) {
-			el.classList.add('ability-card');
-			if (!card.faceUp) el.className = `card ability-card`; 
-		} else {
-			if (!card.stackType || !card.stackType.includes('puzzle')) {
-				el.style.transform = `rotate(${card.rotation}deg)`;
-			}
-		}
-		
-		// [原有邏輯] 選取狀態
-		if (pendingMove && pendingMove.cardIds.includes(card.id)) {
-			el.classList.add('selected');
-			if (!card.zone.includes('ability') && el.classList.contains('selected')) {
-			   if (!card.stackType || !card.stackType.includes('puzzle')) {
-				   el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
-			   }
-			}
-		}
-		
-		// [原有邏輯] 指向狀態
-		if (isPointing && pointTargets.includes(card.id)) {
-			el.classList.add('point-target-selected');
-		}
-		
-		// [原有邏輯] 註記
-		if (card.note) {
-			const noteEl = document.createElement('div');
-			noteEl.className = 'card-note';
-			noteEl.innerText = card.note;
-			el.appendChild(noteEl);
-		}
-
-		// [原有邏輯] 文字
-		if (card.faceUp || card.zone.includes('ability')) {
-			const contentDiv = document.createElement('div');
-			contentDiv.style.marginTop = card.note ? '10px' : '0';
-			contentDiv.innerHTML = `<div class="card-text">${card.text}</div>`;
-			if (card.power > 0) contentDiv.innerHTML += `<div class="card-power">${card.power}</div>`;
-			el.appendChild(contentDiv);
-		}
-		
-		let pressTimer = null;
-		const startPress = (e) => {
-            // 只接受左鍵
-            if (e.button !== 0) return;
-            
-            // 如果已經在多選模式，就不需要長按邏輯了，直接交給 click 處理
-            if (isMultiSelectMode) return;
-
-            pressTimer = setTimeout(() => {
-                // 1秒後觸發
-                // 強制進入多選模式，並將此卡加入選擇
-                enterMultiSelectModeByCard(card.id);
+        // 3. [關鍵修改] 圖片顯示邏輯
+        // 只有在 (表側) 或 (是超次元卡) 時才嘗試顯示圖片
+        // 如果是進化元且為蓋牌狀態 (faceUp=false)，這裡會為 false，因此顯示卡背
+        if (card.image && (card.faceUp || card.isHyper)) {
+            const imageSrc = globalImageRegistry[card.imageKey];
+            if (imageSrc) {
+                el.style.backgroundImage = `url(${imageSrc})`;
+                el.classList.add('has-image');
                 
-                // 手機震動回饋
-                if (navigator.vibrate) navigator.vibrate(50);
-            }, 300); // 0.5秒
-        };
+                // 針對 Ability 區的特殊裁切處理
+                if (card.zone.includes('ability')) {
+                    const lookupKey = card.styleKey || card.imageKey;
+                    const style = globalAbilityStyleRegistry ? (globalAbilityStyleRegistry[lookupKey] || { x: 50, y: 50, scale: 1 }) : { x: 50, y: 50, scale: 1 };
+                    el.style.backgroundPosition = `${style.x}% ${style.y}%`;
+                    el.style.backgroundSize = `${100 * style.scale}%`;
+                } else {
+                     el.style.backgroundSize = 'cover';
+                     el.style.backgroundPosition = 'center';
+                     el.style.backgroundRepeat = 'no-repeat';
+                }
+            }
+        } else if (!card.faceUp) {
+            // [保險] 如果是裡側表示，且沒有圖片 (或不該顯示圖片)，確保它是卡背樣式
+            // 這裡可以擴充：如果有自訂卡背圖 (Sleeve)，可以在這裡讀取 globalImageRegistry 的卡背 Key
+            // 目前維持預設 CSS 樣式 (radial-gradient)
+        }
 
-        const cancelPress = () => {
-            if (pressTimer) clearTimeout(pressTimer);
+        // 4. [樣式修正] 能力卡樣式
+        if (card.zone.includes('ability')) {
+            el.classList.add('ability-card');
+            if (!card.faceUp) el.className = `card ability-card`; // 強制重置 class 避免干擾
+        } else {
+            // 一般卡片旋轉 (排除 Puzzle 拼圖卡，因為拼圖卡位置由 parent 決定)
+            if (!card.stackType || !card.stackType.includes('puzzle')) {
+                el.style.transform = `rotate(${card.rotation}deg)`;
+            }
+        }
+        
+        // 選取時的浮起效果
+        if (pendingMove && pendingMove.cardIds.includes(card.id)) {
+            el.classList.add('selected');
+            if (!card.zone.includes('ability') && el.classList.contains('selected')) {
+               if (!card.stackType || !card.stackType.includes('puzzle')) {
+                   el.style.transform = `rotate(${card.rotation}deg) translateY(-5px)`;
+               }
+            }
+        }
+        
+        // 指向高亮
+        if (isPointing && pointTargets.includes(card.id)) {
+            el.classList.add('point-target-selected');
+        }
+        
+        // 註記 (Note)
+        if (card.note) {
+            const noteEl = document.createElement('div');
+            noteEl.className = 'card-note';
+            noteEl.innerText = card.note;
+            el.appendChild(noteEl);
+        }
+
+        // 5. [關鍵修改] 文字內容顯示邏輯
+        // 只有在 (表側) 或 (能力區) 時才顯示文字
+        // 這樣蓋牌的進化元就不會透出文字
+        if (card.faceUp || card.zone.includes('ability')) {
+            const contentDiv = document.createElement('div');
+            contentDiv.style.marginTop = card.note ? '10px' : '0';
+            contentDiv.innerHTML = `<div class="card-text">${card.text}</div>`;
+            if (card.power > 0) contentDiv.innerHTML += `<div class="card-power">${card.power}</div>`;
+            el.appendChild(contentDiv);
+        }
+        
+        // 長按事件 (手機版多選用)
+        let pressTimer = null;
+        const startPress = (e) => {
+            if (e.button !== 0) return;
+            if (isMultiSelectMode) return;
+            pressTimer = setTimeout(() => {
+                enterMultiSelectModeByCard(card.id);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 500);
         };
+        const cancelPress = () => { if (pressTimer) clearTimeout(pressTimer); };
 
         el.onpointerdown = startPress;
         el.onpointerup = cancelPress;
         el.onpointerleave = cancelPress;
         el.onpointercancel = cancelPress;
 
-		// [原有邏輯] 點擊事件
-		// [修正後] 點擊事件
-		const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
-
-		// 強制判斷：如果是能力區 (ability) 或是 非檢視區 (一般卡)，都綁定單擊事件
-		if (card.zone.includes('ability') || !isViewerZone) {
-			 el.onclick = (e) => handleCardSingleClick(e, card.id);
-			 
-			 // [額外防呆] 針對能力卡，確保右鍵也能觸發選取 (或是停用預設選單)
-			 if (card.zone.includes('ability')) {
-				 el.oncontextmenu = (e) => { 
-					 e.preventDefault(); 
-					 handleCardSingleClick(e, card.id); 
-				 };
-			 }
-		} else {
-			 el.onclick = (e) => { e.stopPropagation(); handleZoneClick(card.zone); };
-		}
-		
-		// --- [新增] 渲染 EX-Life 覆蓋層 ---
-		if (card.exLifeKey) {
-			const imgSrc = globalImageRegistry[card.exLifeKey];
-			if (imgSrc) {
-				const overlay = document.createElement('div');
-				overlay.className = 'ex-life-overlay';
-				overlay.style.backgroundImage = `url(${imgSrc})`;
-				
-				// 建立右上角的 [X] 按鈕
-				const closeBtn = document.createElement('div');
-				closeBtn.className = 'ex-life-close';
-				closeBtn.innerText = '✕';
-				closeBtn.title = '移除 EX-Life';
-				
-				// 綁定移除事件 (阻止冒泡以免觸發選取卡片)
-				closeBtn.onclick = (e) => {
-					e.stopPropagation();
-					removeExLife(card.id);
-				};
-				
-				overlay.appendChild(closeBtn);
-				el.appendChild(overlay);
-			}
-		}
-		// --------------------------------
-		
-		setTimeout(() => el.classList.add('interactive'), 0);
-		return el;
-	}
+        // 點擊事件綁定
+        const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
+        if (card.zone.includes('ability') || !isViewerZone) {
+             el.onclick = (e) => handleCardSingleClick(e, card.id);
+             if (card.zone.includes('ability')) {
+                 el.oncontextmenu = (e) => { e.preventDefault(); handleCardSingleClick(e, card.id); };
+             }
+        } else {
+             el.onclick = (e) => { e.stopPropagation(); handleZoneClick(card.zone); };
+        }
+        
+        // EX-Life 覆蓋層
+        if (card.exLifeKey) {
+            const imgSrc = globalImageRegistry[card.exLifeKey];
+            if (imgSrc) {
+                const overlay = document.createElement('div');
+                overlay.className = 'ex-life-overlay';
+                overlay.style.backgroundImage = `url(${imgSrc})`;
+                const closeBtn = document.createElement('div');
+                closeBtn.className = 'ex-life-close';
+                closeBtn.innerText = '✕';
+                closeBtn.title = '移除 EX-Life';
+                closeBtn.onclick = (e) => { e.stopPropagation(); removeExLife(card.id); };
+                overlay.appendChild(closeBtn);
+                el.appendChild(overlay);
+            }
+        }
+        
+        setTimeout(() => el.classList.add('interactive'), 0);
+        return el;
+    }
 	
 	// [修正] 透過長按卡片進入多選模式
     function enterMultiSelectModeByCard(cardId) {
