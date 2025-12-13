@@ -2947,6 +2947,133 @@
 		background: #c0392b;
 		color: white;
 	}
+	
+	/* --- [新增] 手牌隨機選擇按鈕與動畫 --- */
+
+	/* --- [新增] 手牌隨機選擇按鈕與動畫 --- */
+
+	/* 跳動動畫：利用 CSS 變數保留原本的旋轉角度 */
+	@keyframes card-jump-twice {
+		0%   { transform: var(--base-transform) translateY(0); }
+		25%  { transform: var(--base-transform) translateY(-25px); }
+		50%  { transform: var(--base-transform) translateY(0); }
+		75%  { transform: var(--base-transform) translateY(-25px); }
+		100% { transform: var(--base-transform) translateY(0); }
+	}
+
+	.card-jump {
+		animation: card-jump-twice 0.6s ease-in-out;
+		box-shadow: 0 0 20px #f1c40f !important; /* 金色高亮 */
+		border-color: #f1c40f !important;
+		z-index: 2000 !important; /* 確保跳起來時壓在最上面 */
+	}
+
+	/* 隨機按鈕樣式：位於手牌區右上角的半透明按鈕 */
+	.random-pick-btn {
+		position: absolute;
+		top: 5px;       /* 距離頂部 5px */
+		right: 5px;     /* 距離右邊 5px */
+		z-index: 1500;  /* 【關鍵】確保層級高於卡片(1000) */
+		
+		background: rgba(44, 62, 80, 0.8); /* 深色半透明背景，比較明顯 */
+		border: 1px solid rgba(255, 255, 255, 0.6);
+		color: white;
+		font-size: 0.75rem;
+		padding: 4px 8px;
+		border-radius: 12px;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-weight: bold;
+		box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+	}
+
+	.random-pick-btn:hover {
+		background: #f1c40f;
+		color: #2c3e50;
+		border-color: #f39c12;
+		transform: scale(1.1);
+	}
+	
+	/* --- [新增] 播放模式與手機版 UI 優化 --- */
+
+	/* 1. 手機模式下：隱藏隨機選擇按鈕 */
+	body.mobile-mode .random-pick-btn {
+		display: none !important;
+	}
+
+	/* 2. 桌機播放模式 (is-playing) 下的行為控制 */
+
+	/* A. 播放時也隱藏隨機按鈕 (避免視覺干擾) */
+	body.is-playing .random-pick-btn {
+		display: none !important;
+	}
+
+	/* B. 全面封鎖非播放相關的互動 */
+	/* 這些區域在播放時會無視滑鼠點擊，防止誤觸卡片或功能 */
+	body.is-playing #game-board-container,
+	body.is-playing #ability-stack-zone,
+	body.is-playing #toolbar,
+	body.is-playing #draft-bar,
+	body.is-playing #card-action-panel,
+	body.is-playing .turn-bar {
+		pointer-events: none !important;
+	}
+
+	/* [修正] 特別針對對話層，強制鎖定其下「所有子元件」 */
+	/* 這是為了覆蓋 JS 動態寫入的 pointer-events: auto */
+	body.is-playing #dialogue-layer,
+	body.is-playing #dialogue-layer * {
+		pointer-events: none !important;
+	}
+	
+	/* --- [新增] 未見卡 (Unseen) 檢測工具 --- */
+
+	/* 未見卡特效：幽靈青色呼吸燈 + 虛線框 */
+	@keyframes pulse-unseen {
+		0% { box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.4); border-color: rgba(0, 255, 255, 0.5); }
+		50% { box-shadow: 0 0 15px 5px rgba(0, 255, 255, 0.8); border-color: rgba(0, 255, 255, 1); }
+		100% { box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.4); border-color: rgba(0, 255, 255, 0.5); }
+	}
+
+	.glow-unseen {
+		animation: pulse-unseen 2s infinite ease-in-out !important;
+		border: 2px dashed #00ffff !important; /* 青色虛線 */
+		z-index: 500 !important; /* 確保浮起 */
+	}
+
+	/* 未見卡檢查按鈕 (位於隨機按鈕正下方) */
+	.unseen-check-btn {
+		position: absolute;
+		
+		/* [修改] 位置調整 */
+		top: 38px;      /* 原本是 5px，改為 38px (避開上方的隨機按鈕) */
+		right: 5px;     /* 原本是 left: 5px，改為 right: 5px (靠右對齊) */
+		left: auto;     /* 清除原本的靠左設定 */
+		
+		z-index: 1500;
+		
+		background: rgba(0, 0, 0, 0.6);
+		border: 1px solid rgba(0, 255, 255, 0.5);
+		color: #00ffff;
+		font-size: 0.75rem;
+		padding: 2px 6px;
+		border-radius: 12px;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-weight: bold;
+	}
+
+	.unseen-check-btn:hover, .unseen-check-btn.active {
+		background: #00ffff;
+		color: #000;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+	}
+
+	/* 手機版與播放模式隱藏此按鈕 */
+	body.mobile-mode .unseen-check-btn,
+	body.is-playing .unseen-check-btn {
+		display: none !important;
+	}
 	</style>
 </head>
 <body>
@@ -3074,7 +3201,11 @@
                 <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label" data-i18n="zone_shield">P2 護盾區</span></div>
                 <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label" data-i18n="zone_mana">P2 魔力區</span></div>
                 <div class="bottom-row">
-                    <div class="hand-zone zone" data-zone="p2-hand" onclick="handleZoneClick('p2-hand')"><span class="zone-label" data-i18n="zone_hand">P2 手牌</span></div>
+                    <div class="hand-zone zone" data-zone="p2-hand" onclick="handleZoneClick('p2-hand')">
+						<span class="zone-label" data-i18n="zone_hand">P2 手牌</span>
+						<button class="unseen-check-btn" onclick="event.stopPropagation(); toggleUnseenHighlight()" data-i18n="btn_check_unseen" title="Check Unseen Cards">👁️‍🗨️ 未見</button>
+						<button class="random-pick-btn" onclick="event.stopPropagation(); randomPickHand('p2-hand')" data-i18n="btn_random_pick" title="Random Select">🎲 隨機</button>
+					</div>
                     <div class="side-zone-group">
                         <div class="hyper-zone zone stacked" data-zone="p2-hyper" onclick="handleZoneClick('p2-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
                         <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
@@ -3089,7 +3220,11 @@
                 <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label" data-i18n="zone_shield">P1 護盾區</span></div>
                 <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label" data-i18n="zone_mana">P1 魔力區</span></div>
                 <div class="bottom-row">
-                    <div class="hand-zone zone" data-zone="p1-hand" onclick="handleZoneClick('p1-hand')"><span class="zone-label" data-i18n="zone_hand">P1 手牌</span></div>
+                    <div class="hand-zone zone" data-zone="p1-hand" onclick="handleZoneClick('p1-hand')">
+						<span class="zone-label" data-i18n="zone_hand">P1 手牌</span>
+						<button class="unseen-check-btn" onclick="event.stopPropagation(); toggleUnseenHighlight()" data-i18n="btn_check_unseen" title="Check Unseen Cards">👁️‍🗨️ 未見</button>
+						<button class="random-pick-btn" onclick="event.stopPropagation(); randomPickHand('p1-hand')" data-i18n="btn_random_pick" title="Random Select">🎲 隨機</button>
+					</div>
                     <div class="side-zone-group">
                         <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
                         <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
@@ -3880,6 +4015,7 @@
 			'lbl_rb_intensity': '裂度 (Scale):',
 			'msg_truncate_confirm': '⚠️ 危險操作 ⚠️\n\n確定要刪除此處 (Step #{n}) 之後的所有 ActionLog 嗎？',
 			'msg_truncate_backup': '這個動作會刪除大量資料，是否要先匯出備份？\n\n(按「確定」= 匯出並刪除，按「取消」= 直接刪除)',
+			'btn_random_pick': '🎲 隨機',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -4006,6 +4142,7 @@
 			'lbl_rb_intensity': 'Scale:',
 			'msg_truncate_confirm': '⚠️ DANGER ⚠️\n\nAre you sure you want to delete all steps after Step #{n}?',
 			'msg_truncate_backup': 'This action will delete a large amount of data. Do you want to export a backup first?\n\n(OK = Export & Delete, Cancel = Delete immediately)',
+			'btn_random_pick': '🎲 Random',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -4132,8 +4269,20 @@
 			'lbl_rb_intensity': '裂け目:',
 			'msg_truncate_confirm': '⚠️ 危険な操作 ⚠️\n\nここ (Step #{n}) から後のすべてのアクションを削除しますか？',
 			'msg_truncate_backup': 'この操作は大量のデータを削除します。先にバックアップをエクスポートしますか？\n\n(OK = エクスポートして削除, キャンセル = そのまま削除)',
+			'btn_random_pick': '🎲 ランダム',
 		}
 	};
+	
+	// --- [新增] 翻譯 ---
+	if (typeof TRANSLATIONS !== 'undefined') {
+		if(TRANSLATIONS.zh) TRANSLATIONS.zh.btn_check_unseen = '👁️‍🗨️ 未見';
+		if(TRANSLATIONS.en) TRANSLATIONS.en.btn_check_unseen = '👁️‍🗨️ Unseen';
+		if(TRANSLATIONS.jp) TRANSLATIONS.jp.btn_check_unseen = '👁️‍🗨️ 未見';
+	}
+
+	// --- [新增] 全域變數 ---
+	let globalSeenCardIds = new Set(); // 儲存所有「已見過」的卡片 ID
+	let isUnseenHighlightOn = false;   // 標記是否開啟高亮模式
 
     let currentLang = 'zh';
 	
@@ -5236,6 +5385,9 @@
             currentIndex = (typeof data.currentIndex === 'number' && data.currentIndex >= -1 && data.currentIndex < history.length) 
                            ? data.currentIndex 
                            : (history.length - 1);
+						   
+			// [修正] F5 刷新後，立刻根據讀回來的歷史紀錄，重新計算已見卡
+            calculateSeenCards();
             
             // **關鍵點 1**: 馬上渲染 UI (純文字版)
             try { renderUI(); } catch(e) { console.error(e); }
@@ -5611,6 +5763,9 @@
         updateDraftBar();
         renderUI();
         saveToStorage(); 
+		
+		// [新增] 更新未見卡清單
+        calculateSeenCards();
         
         // [關鍵修正] 存檔成功後，務必解鎖捲軸
         const list = document.getElementById('action-list');
@@ -6925,6 +7080,50 @@
 		}
 		openSelectorModal(zoneId);
 	}
+	
+	// --- [新增] 手牌隨機選擇功能 (無紀錄) ---
+	function randomPickHand(zoneId) {
+		// 1. 取得當前狀態下的手牌
+		const state = getCurrentDisplayState();
+		const cards = state.cards.filter(c => c.zone === zoneId);
+		
+		if (cards.length === 0) {
+			// 如果沒牌，稍微閃爍一下區域提示
+			const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
+			if(zoneEl) {
+				zoneEl.style.boxShadow = "inset 0 0 20px red";
+				setTimeout(() => zoneEl.style.boxShadow = "", 300);
+			}
+			return;
+		}
+
+		// 2. 隨機抽選一張
+		const randomIndex = Math.floor(Math.random() * cards.length);
+		const targetCard = cards[randomIndex];
+		const cardId = targetCard.id;
+
+		// 3. 抓取 DOM 元素
+		const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
+		
+		if (cardEl) {
+			// 4. 設定 CSS 變數以保留原本的 transform (旋轉角度)
+			// 這是為了避免動畫執行時，卡片原本的旋轉被覆蓋變成直立的
+			const currentTransform = cardEl.style.transform || '';
+			cardEl.style.setProperty('--base-transform', currentTransform);
+
+			// 5. 重置動畫 (移除 class -> 強制 reflow -> 加回 class)
+			cardEl.classList.remove('card-jump');
+			void cardEl.offsetWidth; // Trigger reflow
+			cardEl.classList.add('card-jump');
+
+			// 6. 動畫結束後 (0.6s) 自動移除 class
+			setTimeout(() => {
+				cardEl.classList.remove('card-jump');
+				// 清除暫存樣式
+				cardEl.style.removeProperty('--base-transform');
+			}, 600);
+		}
+	}
     
     document.addEventListener('click', (e) => {
         // [修改] 增加 e.target.closest('#card-action-panel') 
@@ -7534,8 +7733,19 @@
 
         document.querySelectorAll('.zone, .ability-column').forEach(el => {
             const label = el.querySelector('.zone-label, .ability-label');
-            el.innerHTML = '';
+            
+            // [修正] 在清空前，先尋找並暫存隨機按鈕
+            const randomBtn = el.querySelector('.random-pick-btn');
+			const unseenBtn = el.querySelector('.unseen-check-btn'); // <--- 新增這行
+
+            el.innerHTML = ''; // 這行會清空內容 (包含原本的按鈕)
+
             if(label) el.appendChild(label);
+            
+            // [修正] 如果原本有按鈕，就把它放回去
+			if(unseenBtn) el.appendChild(unseenBtn); // <--- 新增這行
+            if(randomBtn) el.appendChild(randomBtn);
+
             el.classList.remove('target-highlight');
             el.classList.remove('point-target-highlight'); 
             el.className = el.className.replace(/\bglow-\S+/g, '');
@@ -8672,6 +8882,14 @@
 	function createCardElement(card) {
 		const el = document.createElement('div');
 		el.className = `card ${card.faceUp ? '' : 'face-down'}`; 
+		
+		// --- [新增] 未見卡高亮邏輯 ---
+        // 只有當「高亮模式開啟」且「該卡不在已見清單中」才發光
+        if (isUnseenHighlightOn && !globalSeenCardIds.has(card.id)) {
+            el.classList.add('glow-unseen');
+        }
+        // --------------------------
+		
 		el.dataset.id = card.id; 
 
 		// [新增] 大紅勾 HTML
@@ -9974,6 +10192,9 @@
         storageQuotaExceeded = false;
         hasAlertedQuota = false;
         lastRenderedState = null; 
+		
+		// [修正] 匯入劇本後，立刻重新計算已見卡
+        calculateSeenCards();
         
         renderUI();
         saveToStorage();
@@ -10025,8 +10246,16 @@
         selectedCardsInModal = [];
         
         const title = document.getElementById('modal-title');
-        title.innerText = `${getZoneName(zoneId)} (${rawCards.length})`;
-        title.setAttribute('data-zone-id', zoneId); 
+		// [修正] 根據全域變數決定是否加上 active class
+		const activeClass = isUnseenHighlightOn ? 'active' : '';
+        title.innerHTML = `
+			${getZoneName(zoneId)} (${rawCards.length})
+			<button class="unseen-check-btn" 
+				style="position:relative; top:0; left:10px; display:inline-block;" 
+				onclick="toggleUnseenHighlight()" 
+				data-i18n="btn_check_unseen">👁️‍🗨️ 未見</button>
+		`;
+		title.setAttribute('data-zone-id', zoneId);
 
         // --------------------------------------------------------
         // [核心演算法] 視覺化排序：左群優先 -> 頂層優先 -> 淺層優先
@@ -10118,6 +10347,12 @@
             const el = document.createElement('div');
             el.className = 'card';
             
+			// --- [新增] Modal 內的未見卡高亮 ---
+            if (isUnseenHighlightOn && !globalSeenCardIds.has(card.id)) {
+                el.classList.add('glow-unseen');
+            }
+            // ---------------------------------
+			
             if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
                 const imgKey = card.imageKey || card.backImageKey;
                 el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
@@ -10857,6 +11092,90 @@
         };
         reader.readAsText(file);
     }
+	
+	// --- [核心] 計算所有已見過的卡片 ---
+	// 觸發時機：Load, Setup, SaveDraft, DeleteAction
+	function calculateSeenCards() {
+		console.time("CheckSeen");
+		globalSeenCardIds.clear();
+
+		// 定義哪些區域是「絕對公開」的
+		// 注意：手牌(Hand)、牌庫(Deck)、護盾(Shield) 預設為隱藏，除非 faceUp
+		const publicZones = [
+			'p1-battle', 'p2-battle', 
+			'p1-mana', 'p2-mana', 
+			'p1-grave', 'p2-grave', 
+			'p1-hyper', 'p2-hyper', 
+			'reveal-zone'
+		];
+
+		// 輔助檢查函式
+		const checkCard = (card) => {
+			if (globalSeenCardIds.has(card.id)) return; // 已經標記過就不重複檢查
+
+			// 條件 1: 位於公開區域
+			// 條件 2: 位於隱藏區域 (Shield/Deck) 但 faceUp 為 true
+			// 注意：手牌即使 faceUp 為 true (對自己可見)，對觀眾仍是隱藏，除非透過 reveal-zone 展示
+			// 但為了嚴謹，如果劇本中有操作讓手牌 faceUp 且非自己回合，理論上也是 Seen? 
+			// 這裡依照您的定義：[沒有被使用過或進入展示的手牌] = 未見。
+			// 所以手牌區我們一律視為 UNSEEN，除非它有特殊 flag (暫不考慮)。
+			
+			if (publicZones.includes(card.zone)) {
+				// 公開區域通常預設就是 faceUp，但保險起見我們只檢查區域
+				globalSeenCardIds.add(card.id);
+			} 
+			else if (card.faceUp) {
+				// 位於 護盾 或 牌庫 且 表側
+				if (card.zone.includes('shield') || card.zone.includes('deck')) {
+					globalSeenCardIds.add(card.id);
+				}
+			}
+		};
+
+		// 1. 遍歷歷史紀錄 (History)
+		history.forEach(step => {
+			if (step.state && step.state.cards) {
+				step.state.cards.forEach(checkCard);
+			}
+		});
+
+		// 2. 遍歷當前編輯中的狀態 (Draft)
+		// 這是為了防止你在編輯模式把牌丟出去，卻還顯示它是未見的
+		if (isDrafting && tempState && tempState.cards) {
+			tempState.cards.forEach(checkCard);
+		}
+
+		console.timeEnd("CheckSeen");
+		console.log(`[UnseenCheck] Total Seen Cards: ${globalSeenCardIds.size}`);
+	}
+
+	// --- [UI] 切換高亮模式 ---
+	// --- [UI] 切換高亮模式 (修正版) ---
+	function toggleUnseenHighlight() {
+		isUnseenHighlightOn = !isUnseenHighlightOn;
+		
+		// 1. 更新並重繪主戰場 (Main Board)
+		// 雖然 renderUI 會重繪區域，但我們有寫保護邏輯把按鈕救回來
+		// 所以這裡我們要手動更新一下按鈕的 active class，確保視覺一致
+		document.querySelectorAll('.unseen-check-btn').forEach(btn => {
+			if (isUnseenHighlightOn) btn.classList.add('active');
+			else btn.classList.remove('active');
+		});
+
+		renderUI();
+
+		// 2. [修正] 檢查是否有開啟清單視窗 (Modal)，若有則刷新內容
+		const modal = document.getElementById('card-selector-modal');
+		if (modal && modal.style.display === 'flex') {
+			const title = document.getElementById('modal-title');
+			// 從標題取得目前是哪個區域 (Zone ID)
+			const zoneId = title.getAttribute('data-zone-id');
+			if (zoneId) {
+				// 重新呼叫開啟視窗函式，這會觸發卡片重新渲染 (套用 glow-unseen)
+				openSelectorModal(zoneId);
+			}
+		}
+	}
 
     // --- Main Entry Point ---
     window.onload = function() {
