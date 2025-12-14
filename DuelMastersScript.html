@@ -250,10 +250,10 @@
         align-items: center;
         justify-content: flex-start;
         
-        /* 自動佔滿剩下空間 */
+        /* flex-grow: 1 (自動填滿右邊剩下的所有空間) */
         flex: 1 1 auto; 
         
-        padding-left: 15px; /* 與護盾區隔開一點 */
+        padding-left: 15px;
         overflow: visible;
         z-index: 5;
     }
@@ -264,16 +264,15 @@
         align-items: center;
         justify-content: flex-start;
         
-        /* 條件2: 基礎寬度設為約 5 張重疊卡片的寬度 (180px) */
-        /* 條件3: flex-grow: 1 允許它在沒卡時也佔據空間，但 max-width 限制它不要吃掉魔力區 */
-        flex: 1 1 auto;
-        min-width: 150px; 
-        max-width: 50%; /* 限制最大寬度，保留空間給魔力區 */
+        /* [核心修正] 
+           flex-grow: 0 (不主動變大，解決留白過多的問題)
+           flex-shrink: 1 (空間不足時允許縮小)
+           flex-basis: 260px (基準寬度 = 5張牌寬 250px + 緩衝 10px) 
+        */
+        flex: 0 1 260px;
         
         padding-left: 5px;
         border-right: 2px dashed rgba(0,0,0,0.1);
-        
-        /* 關鍵：移除 overflow: hidden，改為 visible 以顯示重疊卡片 */
         overflow: visible; 
         z-index: 10;
     }
@@ -295,9 +294,7 @@
     /* 這裡設定預設的負邊距，讓卡片像扇子一樣疊在一起 */
     .shield-zone .card-group,
     .mana-zone .card-group {
-        /* 讓卡片彼此重疊 (負邊距) */
-        /* 卡寬 50px，設定 -20px 代表露出 30px，這樣可以塞很多張 */
-        margin-right: -25px; 
+        margin-right: -15px; 
         transition: margin 0.2s ease, transform 0.2s;
     }
 
@@ -310,8 +307,8 @@
     /* [UX 優化] 滑鼠指到某張重疊卡時，提高層級以免被遮住 */
     .shield-zone .card-group:hover,
     .mana-zone .card-group:hover {
-        z-index: 500 !important; /* 確保浮在最上面 */
-        margin-right: -5px; /* 展開一點點方便選取 */
+        z-index: 500 !important;
+        margin-right: -2px; /* 展開方便選取 */
     }
 
     .zone {
@@ -9136,16 +9133,12 @@
     }
 
 	function initMobileMode(scriptUrl) {
-		document.body.classList.add('mobile-mode');
+		// document.body.classList.add('mobile-mode'); // 這行 onload 已經加過了，這裡可以註解或保留皆可
 		
-		// 只有在真的是手機裝置時才預設靜音
 		if (isMobileDevice()) {
 			globalAudioPlayer.muted = true;
 		} 
 
-		// [修改] 確保 scriptUrl 已經包含時間戳 (如果 confirmMobileScript 沒加到的話這裡補強)
-        // 但你的 confirmMobileScript 已經有加 '?v=' + timestamp，所以這裡主要依賴 fetch 設定
-        // 為了雙重保險，我們可以檢查一下
         let finalUrl = scriptUrl;
         if (!finalUrl.includes('?')) {
              finalUrl += '?v=' + Date.now();
@@ -9157,10 +9150,11 @@
 				if(!data.history || !data.initialState) throw new Error("Invalid script");
 				processGameData(data, true);
 				
-				window.addEventListener('resize', handleOrientation);
-				window.addEventListener('orientationchange', handleOrientation);
+				// [修正] 這裡不需要再 addEventListener 了，因為 onload 已經做過
+				// window.addEventListener('resize', handleOrientation);
+				// window.addEventListener('orientationchange', handleOrientation);
 				
-				// 初始檢查
+				// 資料載入完成，手動觸發一次判斷，這會啟動自動播放 (因為此時 isGameActive 為 true)
 				handleOrientation();
 			})
 			.catch(e => {
@@ -9171,26 +9165,32 @@
 	function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
 		const controls = document.getElementById('mobile-controls');
+		// [新增] 檢查選單是否已關閉 (代表遊戲已開始)
+        const selector = document.getElementById('mobile-script-selector');
+        const isGameActive = selector && selector.style.display === 'none';
 		const isLandscape = window.innerWidth > window.innerHeight;
         
         if (isLandscape) {
-            // --- 橫向模式 (播放/繼續) ---
+            // --- 橫向模式 ---
 			overlay.style.display = 'none';
-			if (controls) controls.style.display = 'flex';
+            // 只有遊戲開始後才顯示控制列
+			if (controls && isGameActive) controls.style.display = 'flex';
 			
-			setTimeout(autoScaleBoard, 100);
+            // [修正] 只有遊戲開始後，才執行縮放與自動播放邏輯
+            if (isGameActive) {
+                setTimeout(autoScaleBoard, 100);
 
-			// [需求2] 第一次進入橫向 -> 自動播放
-			if (!hasEnteredLandscapeOnce) {
-				hasEnteredLandscapeOnce = true;
-				if (!playTimeout) togglePlay(); 
-			} 
-			// [需求2] 非第一次，檢查「轉直前」是否為播放狀態
-			else if (wasPlayingBeforePortrait) {
-				if (!playTimeout) togglePlay(); // 恢復播放
-				wasPlayingBeforePortrait = false; // 重置狀態
-			}
-			// 如果轉直前是暫停，這裡什麼都不做，保持暫停
+                // [需求2] 第一次進入橫向 -> 自動播放
+                if (!hasEnteredLandscapeOnce) {
+                    hasEnteredLandscapeOnce = true;
+                    if (!playTimeout) togglePlay(); 
+                } 
+                // [需求2] 非第一次，檢查「轉直前」是否為播放狀態
+                else if (wasPlayingBeforePortrait) {
+                    if (!playTimeout) togglePlay(); // 恢復播放
+                    wasPlayingBeforePortrait = false; // 重置狀態
+                }
+            }
 
         } else {
             // --- 直向模式 (暫停) ---
@@ -9580,21 +9580,25 @@
 
         // 3. 根據裝置載入資料
         if (isMobile) {
-            // --- [修改] 手機版邏輯 ---
+            // --- [修正] 手機版邏輯 ---
             
-            // 判斷 URL 是否有帶 scriptUrl
-            // 注意：這裡 urlParams.get('scriptUrl') 抓到的是純檔名 (例如 demo.json)
+            // [新增] 立即加入 mobile-mode class 與偵測監聽器
+            document.body.classList.add('mobile-mode');
+            window.addEventListener('resize', handleOrientation);
+            window.addEventListener('orientationchange', handleOrientation);
+            
+            // 立即執行一次檢查 (確保直式進入時馬上跳提示)
+            handleOrientation();
+
+            // 判斷 URL 參數
             const rawScriptParam = urlParams.get('scriptUrl');
 
             if (!rawScriptParam) {
-                // 如果沒帶參數，預設顯示選單，並且不選取任何項目 (或您可以指定第一個為預設)
                 showMobileScriptSelector(null);
             } else {
-                // 如果有帶參數，顯示選單並將該檔案設為預設選取
                 showMobileScriptSelector(rawScriptParam);
             }
             
-            // 初始化靜音按鈕狀態
             updateMuteButtonUI();
             
         } else {
