@@ -7008,7 +7008,18 @@
             const options = ['rock', 'paper', 'scissors'];
 
             // 輔助函式：產生玩家的手牌 HTML (維持原樣)
+            // 輔助函式：產生玩家的手牌 HTML
             const createHandHTML = (playerId, chosenType, isWinner) => {
+                
+                // =========== [設定] 猜拳圖片網址設定區 ===========
+                const rpsImages = {
+                    // 請在引號內填入您的圖片網址 (例如: 'https://imgur.com/example.jpg')
+                    rock:     'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-056.jpg',   // ✊ 石頭 (Rock)
+                    paper:    'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-103.jpg',   // 🖐️ 布 (Paper)
+                    scissors: 'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-060.jpg'    // ✌️ 剪刀 (Scissors)
+                };
+                // =================================================
+
                 let html = '';
                 options.forEach(type => {
                     const isSelected = (type === chosenType);
@@ -7017,9 +7028,12 @@
                     else classes += ' unselected';
                     if (isSelected && isWinner) classes += ' winner';
 
-                    // 讀取圖片 (優先找全域，沒有則讀檔)
+                    // 圖片讀取邏輯：
+                    // 1. 優先找 globalImageRegistry (如果您有用 Ctrl+V 貼上並命名為 rps_rock 等)
+                    // 2. 其次使用上方設定的網址 (rpsImages)
+                    // 3. 最後使用本地 fallback (雖然這裡設為空字串，但在 CSS background-image 中若無效會顯示白底)
                     const imgKey = `rps_${type}`;
-                    const bgUrl = globalImageRegistry[imgKey] || `./scripts/${type}.webp`;
+                    const bgUrl = globalImageRegistry[imgKey] || rpsImages[type] || '';
 
                     html += `
                         <div class="${classes}" style="background-image: url('${bgUrl}')">
