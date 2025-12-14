@@ -8521,14 +8521,13 @@
             // [核心修改] 分流邏輯
             if (battleEntryIds.length > 0) {
                 // 如果有卡片進戰場：
-                // 1. 先等待 600ms (讓卡片飛行的 CSS 動畫跑完)
-                // 2. 執行特寫序列
-                // 3. 序列結束後，遞迴呼叫 playNextStep
+                // 原本是 600，現在改為 1500
+                // 500ms (飛行) + 900ms (王牌特效) + 100ms (緩衝) = 1500ms
                 playTimeout = setTimeout(() => {
                     runMobileBattleZoomSequence(battleEntryIds, () => {
                         playNextStep(); // 序列播完，繼續下一步
                     });
-                }, 600); 
+                }, 1500);
             } else {
                 // 一般情況：使用標準延遲
                 playTimeout = setTimeout(playNextStep, finalDelay);
