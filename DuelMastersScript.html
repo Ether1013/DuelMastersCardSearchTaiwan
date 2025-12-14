@@ -1423,9 +1423,12 @@
         font-size: 1.5rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
-    /* Mobile Card Display Tweaks */
+    /* [修改] 行動版：戰鬥區卡片間距放大 (由 15px 增至 30px) */
     body.mobile-mode .battle-zone .card-group {
-        transform: scale(1.5); transform-origin: center center; margin: 25px 15px !important; z-index: 10;
+        transform: scale(1.5); 
+        transform-origin: center center; 
+        margin: 25px 30px !important; /* 左右間距加大 */
+        z-index: 10;
     }
     body.mobile-mode .mana-zone .card-group, body.mobile-mode .hand-zone .card-group { margin: 0 2px !important; }
     body.mobile-mode #reveal-zone { padding: 20px 15px !important; gap: 8px !important; }
@@ -1509,6 +1512,10 @@
     .hyper-zone .zone-label { top: 25% !important; }
     .grave-zone .zone-label { top: 50% !important; }
     .deck-zone .zone-label { top: 75% !important; }
+	
+	/* [新增] 行動版：猜拳上下距離拉開 (避免互撞) */
+    body.mobile-mode .rps-container.p2 { top: 2% !important; }
+    body.mobile-mode .rps-container.p1 { bottom: 2% !important; }
 </style>
 </head>
 <body>
@@ -7897,6 +7904,56 @@
 		viewer.innerHTML = `<img src="${src}" />`;
 		viewer.style.display = 'flex';
 	}
+	
+	// --- [修改] 手機版：戰鬥區進場卡片依序特寫 (含過濾邏輯) ---
+	function runMobileBattleZoomSequence(cardIds, onComplete) {
+		const viewer = document.getElementById('mobile-card-viewer');
+		const state = getCurrentDisplayState();
+		
+		// [核心修改] 過濾邏輯更新
+		const validCards = cardIds.map(id => state.cards.find(c => c.id == id)).filter(c => {
+            // 1. 基礎檢查：卡片存在且有圖片
+            if (!c || !c.imageKey) return false;
+
+            // 2. 條件 A：必須是表側 (Face Up)
+            if (!c.faceUp) return false;
+
+            // 3. 條件 B：不能是疊在下方的牌
+            // 檢查 stackType，如果是 bottom 或 bottom_exposed 代表它是進化元或被覆蓋的牌
+            if (c.stackType === 'bottom' || c.stackType === 'bottom_exposed') return false;
+
+            return true;
+        });
+		
+		if (validCards.length === 0) {
+			if (onComplete) onComplete();
+			return;
+		}
+
+		let idx = 0;
+
+		function showNext() {
+			if (idx >= validCards.length) {
+				// 全部播完，隱藏視窗並執行回呼
+				viewer.style.display = 'none';
+				if (onComplete) onComplete();
+				return;
+			}
+
+			const card = validCards[idx];
+			const src = globalImageRegistry[card.imageKey];
+			if (src) {
+				viewer.innerHTML = `<img src="${src}" style="border: 4px solid #f1c40f; box-shadow: 0 0 30px rgba(0,0,0,0.8);" />`;
+				viewer.style.display = 'flex';
+			}
+
+			idx++;
+			// 停留 0.5 秒後播下一張
+			setTimeout(showNext, 500);
+		}
+
+		showNext();
+	}
 
 	function hideMobileCardZoom() {
 		// 1. 關閉視窗
@@ -8371,84 +8428,85 @@
         if(!document.body.classList.contains('mobile-mode')) saveToStorage();
     }
 
-    // --- [修改] playNextStep 函式 (結束時移除 class) ---
-	// [修改] playNextStep 函式
+    // --- [修改] playNextStep 函式 (整合手機版特寫邏輯) ---
     function playNextStep() {
         if (currentIndex < history.length - 1) {
-            // 1. 取得「上一步」的 BGM 狀態 (用來比對是否有變化)
             const prevBgm = history[currentIndex].state.bgm;
             
             currentIndex++;
-            renderUI(); // 這會渲染畫面
+            renderUI();
             if(!document.body.classList.contains('mobile-mode')) saveToStorage();
             
-            // 2. 取得「這一步」的 BGM 狀態
             const currState = history[currentIndex].state;
             const currBgm = currState.bgm;
 
-            // 3. [核心] 檢查 BGM 是否改變
-            // 只有在連續播放模式下 (playTimeout != null) 才執行音樂切換
-            // 注意：togglePlay 設定 playTimeout 是在 playNextStep 之前，所以這裡可以判斷
+            // BGM 檢查
             if (currBgm !== prevBgm) {
                 if (currBgm) {
-                    // 切換新歌
-                    // 只有當 src 真的不同時才重置 (避免同首歌重新播放，雖然這裡邏輯是狀態變了才會進來)
-                    if (!globalAudioPlayer.src.includes(currBgm)) {
+                    if (!globalAudioPlayer.src.includes(encodeURI(currBgm))) {
                         globalAudioPlayer.src = BGM_FOLDER + currBgm;
-                        globalAudioPlayer.play().catch(e => console.log("Auto-play blocked", e));
+                        globalAudioPlayer.play().catch(e => {});
                     } else {
-                        // 如果狀態變了但檔名一樣 (罕見，或是從 null 變回同一首)，確保播放
                         globalAudioPlayer.play().catch(e => {});
                     }
                 } else {
-                    // 狀態變成 null -> 停止
                     globalAudioPlayer.pause();
                 }
             }
 
-            // 4. 計算延遲 (No Delay Logic)
-            let delay = TIME_ACTION_BASE;
+            // --- 判斷是否有卡片進入戰鬥區 (手機版特寫用) ---
             const currAction = history[currentIndex].action;
+            const isMobile = document.body.classList.contains('mobile-mode');
+            let battleEntryIds = [];
+
+            if (isMobile) {
+                // 找出所有目的地是 battle 的移動操作
+                const moveOps = currAction.operations.filter(o => o.type === 'MOVE' && o.toZone.includes('battle'));
+                moveOps.forEach(op => {
+                    op.cardIds.forEach(id => battleEntryIds.push(id));
+                });
+            }
+
+            // 計算標準延遲
+            let delay = TIME_ACTION_BASE;
             const currOp = currAction.operations ? currAction.operations[0] : null;
 
-            // 如果這一步「只有」設定 BGM，則延遲設為極短 (0 或 50ms)，達成無延遲效果
-            // 讓它馬上跳下一步
             if (currAction.operations.length === 1 && currOp && currOp.type === 'SET_BGM') {
                 delay = 50; 
             }
-            // [新增] 如果是次元破裂特效，強制等待 2.8 秒 (特效約 2.5 秒)
             else if (currOp && currOp.type === 'REALITY_BREAK') {
                 delay = 2800; 
             }
             else if (currOp && currOp.type === 'DIALOGUE') {
-                // ... (原本的對話延遲邏輯) ...
-                const currData = currOp.data;
-                // ... (省略原本的字數計算代碼，請保留原樣) ...
-                // 為了簡潔，這裡不重複貼上對話計算代碼，請確保原本的邏輯還在
-                // 範例：delay = 1000 + textLength * 100;
+                // 簡易估算，若有完整邏輯請保留
+                delay = 1500;
             }
 			else if (currOp && currOp.type === 'MOVE' && currOp.withShuffleAnim) {
                 delay = 1500; 
             }
 
-            // 套用速度倍率
             let finalDelay = delay * currentSpeedFactor;
 
-            playTimeout = setTimeout(playNextStep, finalDelay);
+            // [核心修改] 分流邏輯
+            if (battleEntryIds.length > 0) {
+                // 如果有卡片進戰場：
+                // 1. 先等待 600ms (讓卡片飛行的 CSS 動畫跑完)
+                // 2. 執行特寫序列
+                // 3. 序列結束後，遞迴呼叫 playNextStep
+                playTimeout = setTimeout(() => {
+                    runMobileBattleZoomSequence(battleEntryIds, () => {
+                        playNextStep(); // 序列播完，繼續下一步
+                    });
+                }, 600); 
+            } else {
+                // 一般情況：使用標準延遲
+                playTimeout = setTimeout(playNextStep, finalDelay);
+            }
             
         } else {
-            // --- [修改這裡] 播放結束的邏輯 ---
+            // 播放結束
 			playTimeout = null;
-			updatePlayButtonUI(); // 按鈕變回 ▶
-			
-			// [修改 1] 保持 'is-playing' 狀態
-			// 不要執行 document.body.classList.remove('is-playing');
-			// 這樣可以隱藏編輯器介面，等待 Ending 特效出現，視覺比較連貫。
-
-			// [修改 2] 也不要立刻暫停音樂，交給 triggerEnding 去做淡出
-			// globalAudioPlayer.pause(); 
-
-			// [修改 3] 設定 2 秒後觸發 Ending
+			updatePlayButtonUI();
 			setTimeout(() => {
 				triggerEnding();
 			}, 2000);
