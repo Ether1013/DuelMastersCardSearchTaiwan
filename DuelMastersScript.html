@@ -1513,9 +1513,40 @@
     .grave-zone .zone-label { top: 50% !important; }
     .deck-zone .zone-label { top: 75% !important; }
 	
-	/* [新增] 行動版：猜拳上下距離拉開 (避免互撞) */
-    body.mobile-mode .rps-container.p2 { top: 2% !important; }
-    body.mobile-mode .rps-container.p1 { bottom: 2% !important; }
+	/* =========================================
+       [修正] 手機版猜拳防撞專用設定
+       ========================================= */
+
+    /* 1. 定義手機版專用的出牌動畫 
+       - 移動距離減半：由 -80px 改為 -40px
+       - 縮放比例減小：由 1.5倍 改為 1.25倍
+    */
+    @keyframes rps-play-sequence-mobile {
+        0%, 30% { transform: translateY(0) scale(1); z-index: 1; }
+        100% { transform: translateY(-40px) scale(1.25); z-index: 50; }
+    }
+
+    /* 2. 套用動畫到手機版 (覆寫原本的動畫名稱) */
+    body.mobile-mode .rps-card.selected {
+        animation-name: rps-play-sequence-mobile;
+    }
+
+    body.mobile-mode .rps-card.winner {
+        /* 必須完整重寫 animation 屬性，確保同時套用新的移動動畫 + 舊的閃爍動畫 */
+        animation: 
+            rps-play-sequence-mobile 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+            rps-winner-flash 0.5s ease-in-out 1.5s infinite alternate; 
+    }
+
+    /* 3. 極限貼邊：將起始位置往上下邊緣推 
+       - 原本 height: 150px，設定負邊距 (-20px) 可以讓卡片起始點更遠離中央
+    */
+    body.mobile-mode .rps-container.p2 { 
+        top: -20px !important; 
+    }
+    body.mobile-mode .rps-container.p1 { 
+        bottom: -20px !important; 
+    }
 </style>
 </head>
 <body>
@@ -7949,7 +7980,7 @@
 
 			idx++;
 			// 停留 0.5 秒後播下一張
-			setTimeout(showNext, 500);
+			setTimeout(showNext, 700);
 		}
 
 		showNext();
