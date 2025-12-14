@@ -8676,9 +8676,31 @@
 		console.log("圖片遷移完成！");
 		renderUI(); // 重繪確保顯示正常
 	}
+	
+	// --- [新增] 圖片預載入函式 ---
+    function preloadImagesFromRegistry() {
+        console.log("正在掃描並預載入外部圖片...");
+        let count = 0;
+        
+        // 遍歷所有註冊的圖片
+        Object.values(globalImageRegistry).forEach(src => {
+            // 檢查是否為網址 (http/https 開頭，且非 base64)
+            if (src && typeof src === 'string' && src.startsWith('http')) {
+                const img = new Image();
+                img.src = src; // 瀏覽器會自動下載並快取
+                count++;
+            }
+        });
+        
+        if (count > 0) {
+            console.log(`[Preload] 已啟動 ${count} 張外部圖片的預先載入。`);
+        }
+    }
 
     function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
+		// [新增] 立即觸發預載入 (讓瀏覽器在背景下載)
+        preloadImagesFromRegistry();
         globalAbilityStyleRegistry = data.abilityRegistry || {};
         globalLastUsedStyles = data.lastUsedStyles || {};
         globalAceRegistry = data.aceRegistry || {};
@@ -10174,109 +10196,163 @@
     }
 
     // --- 統一的貼上監聽器 (Unified Paste Handler) ---
+	// --- [修改] 統一的貼上監聽器 (支援 圖片檔 與 圖片網址) ---
 	document.addEventListener('paste', (e) => {
-		const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        // 1. 取得剪貼簿資料
+		const clipboardData = (e.clipboardData || e.originalEvent.clipboardData);
+		const items = clipboardData.items;
 		let blob = null;
 
+        // 2. 優先檢查是否有圖片檔案 (Blob)
 		for (let item of items) {
 			if (item.kind === 'file' && item.type.startsWith('image/')) {
 				blob = item.getAsFile();
 				break;
 			}
 		}
-		if (!blob) return;
 
-		// [新增] 情境 D：次元破裂編輯器開啟中
-        if (rbEditorState && rbEditorState.active) {
-            handleRbPaste(blob);
-            e.preventDefault();
-            return;
+        // -------------------------------------------------------------
+        // 分支 A: 貼上的是圖片檔案 -> 走原本的壓縮 Base64 流程
+        // -------------------------------------------------------------
+		if (blob) {
+            // [情境 D] 次元破裂編輯器
+            if (rbEditorState && rbEditorState.active) {
+                handleRbPaste(blob);
+                e.preventDefault();
+                return;
+            }
+            
+            // [情境 A] 對話頭像 (維持 Base64，因為需要裁切)
+            const diagModal = document.getElementById('dialogue-modal');
+            if (diagModal && diagModal.style.display === 'flex') {
+                // ... (保留原本對話頭像的貼上邏輯，因為它需要 canvas 裁切) ...
+                // 為了節省篇幅，這裡呼叫原本的邏輯，或請您保留原本那段 Canvas 處理代碼
+                // 建議：直接複製您原本程式碼中處理 diagModal 的那一段貼回來這裡
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const size = 200; 
+                    canvas.width = size; canvas.height = size;
+                    ctx.fillStyle = "#222"; ctx.fillRect(0, 0, size, size);
+                    let sWidth = img.width; let sHeight = img.height;
+                    const ratio = Math.max(size / sWidth, size / sHeight);
+                    const newWidth = sWidth * ratio; const newHeight = sHeight * ratio;
+                    const dx = (size - newWidth) / 2; const dy = (size - newHeight) / 2;
+                    ctx.drawImage(img, dx, dy, newWidth, newHeight);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.85);
+                    const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
+                    const key = `avatar_${lastFocusPid}_${currentEmo}`;
+                    globalImageRegistry[key] = base64;
+                    const activeOpt = document.querySelector(`#emotion-grid-${lastFocusPid} .emotion-opt[data-emo="${currentEmo}"]`);
+                    if (activeOpt) activeOpt.style.backgroundImage = `url(${base64})`;
+                    URL.revokeObjectURL(url);
+                    saveToStorage();
+                };
+                img.src = url;
+                e.preventDefault();
+                return;
+            }
+
+            // [情境 C] 卡片清單視窗 (單選)
+            const selectorModal = document.getElementById('card-selector-modal');
+            if (selectorModal && selectorModal.style.display === 'flex') {
+                if (selectedCardsInModal.length === 1) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => processImage(ev.target.result, selectedCardsInModal[0]);
+                    reader.readAsDataURL(blob);
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // [情境 B] 桌面單選
+            if (pendingMove && pendingMove.cardIds.length === 1) {
+                const reader = new FileReader();
+                reader.onload = (ev) => processImage(ev.target.result);
+                reader.readAsDataURL(blob);
+                e.preventDefault();
+                return;
+            }
+            return; // 有檔案但無處可貼，結束
         }
-		
-		// 1. 情境 A：對話視窗開啟中 -> 處理頭像 (修復邏輯已補回)
-		const diagModal = document.getElementById('dialogue-modal');
-		if (diagModal && diagModal.style.display === 'flex') {
-			const url = URL.createObjectURL(blob);
-			const img = new Image();
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				const ctx = canvas.getContext('2d');
-				
-				// 設定頭像儲存尺寸 (正方形)
-				const size = 200; 
-				canvas.width = size;
-				canvas.height = size;
 
-				// 繪製深色背景
-				ctx.fillStyle = "#222";
-				ctx.fillRect(0, 0, size, size);
+        // -------------------------------------------------------------
+        // 分支 B: 沒有檔案 -> 檢查是否為「文字網址」
+        // -------------------------------------------------------------
+        const pastedText = clipboardData.getData('text');
+        
+        // 簡單的正則表達式檢查是否為 http/https 開頭
+        if (pastedText && pastedText.match(/^https?:\/\/.+/i)) {
+            
+            // [情境 D] 次元破裂編輯器 (直接載入 URL)
+            if (rbEditorState && rbEditorState.active) {
+                loadRbUrl(pastedText); // 呼叫既有的載入函式
+                e.preventDefault();
+                return;
+            }
 
-				// 計算縮放比例 (Cover 模式：填滿正方形)
-				let sWidth = img.width;
-				let sHeight = img.height;
-				const ratio = Math.max(size / sWidth, size / sHeight);
-				const newWidth = sWidth * ratio;
-				const newHeight = sHeight * ratio;
-				
-				// 置中裁切
-				const dx = (size - newWidth) / 2;
-				const dy = (size - newHeight) / 2;
+            // 判斷目標卡片 ID
+            let targetCardId = null;
 
-				ctx.drawImage(img, dx, dy, newWidth, newHeight);
+            // [情境 C] Modal 單選
+            const selectorModal = document.getElementById('card-selector-modal');
+            if (selectorModal && selectorModal.style.display === 'flex') {
+                if (selectedCardsInModal.length === 1) {
+                    targetCardId = selectedCardsInModal[0];
+                }
+            }
+            // [情境 B] 桌面單選
+            else if (pendingMove && pendingMove.cardIds.length === 1) {
+                targetCardId = pendingMove.cardIds[0];
+            }
 
-				const base64 = canvas.toDataURL('image/jpeg', 0.85);
-				
-				// 根據最後點擊的腳色 (p1/p2) 與當前選中的表情 (emotion) 來決定 Key
-				const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
-				const key = `avatar_${lastFocusPid}_${currentEmo}`;
-				
-				// 更新全域圖片註冊表
-				globalImageRegistry[key] = base64;
-				
-				// 立即更新編輯器上的預覽圖示
-				const activeOpt = document.querySelector(`#emotion-grid-${lastFocusPid} .emotion-opt[data-emo="${currentEmo}"]`);
-				if (activeOpt) {
-					activeOpt.style.backgroundImage = `url(${base64})`;
-				}
-				
-				// 釋放記憶體
-				URL.revokeObjectURL(url);
-				
-				// 嘗試存檔 (非強制，僅更新 core data 內的 registry)
-				saveToStorage();
-			};
-			img.src = url;
-			e.preventDefault();
-			return;
-		}
-
-		// [新增] 2. 情境 C：卡片清單視窗 (Deck/Grave View) 開啟中 -> 處理指定卡片
-		const selectorModal = document.getElementById('card-selector-modal');
-		if (selectorModal && selectorModal.style.display === 'flex') {
-				// 檢查是否剛好選中了一張牌
-				if (selectedCardsInModal.length === 1) {
-					const reader = new FileReader();
-					reader.onload = (event) => {
-						// 呼叫 processImage 並傳入選中的卡片 ID
-						processImage(event.target.result, selectedCardsInModal[0]);
-					};
-					reader.readAsDataURL(blob);
-					e.preventDefault();
-					return;
-				}
-		}
-
-		// 3. 情境 B：桌面選取卡片中 -> 處理卡圖
-		if (pendingMove && pendingMove.cardIds.length === 1) {
-			const reader = new FileReader();
-			reader.onload = (event) => {
-				processImage(event.target.result); // 不傳參數，預設用 pendingMove
-			};
-			reader.readAsDataURL(blob);
-			e.preventDefault();
-			return;
-		}
+            // 如果有目標卡片，執行網址處理
+            if (targetCardId) {
+                processPastedUrl(pastedText, targetCardId);
+                e.preventDefault();
+            }
+        }
 	});
+	
+	// --- [新增] 處理貼上的網址 (不壓縮，直接儲存) ---
+    function processPastedUrl(url, targetId) {
+        // 1. 顯示簡易 Loading (可選)
+        const cardEl = document.querySelector(`.card[data-id="${targetId}"]`);
+        if (cardEl) cardEl.style.opacity = '0.5';
+
+        // 2. 驗證網址是否為有效圖片
+        const img = new Image();
+        img.crossOrigin = "Anonymous"; // 嘗試跨域，雖然存網址不需要，但有些圖源需要
+        
+        img.onload = () => {
+            // 載入成功！
+            if (cardEl) cardEl.style.opacity = '1';
+            
+            console.log("網址圖片驗證成功，直接儲存 URL:", url);
+            
+            // [核心] 直接呼叫 updateCardImageGlobal
+            // 該函式會將此 URL 視為 key 對應的 value 存入 globalImageRegistry
+            // CSS 的 background-image: url('...') 可以完美支援 http 網址
+            updateCardImageGlobal(targetId, url);
+        };
+        
+        img.onerror = () => {
+            // 載入失敗 (可能不是圖片，或是由 CORS 阻擋導致無法 Image onload)
+            // 但即使 CORS 阻擋，如果瀏覽器能顯示，我們還是可以存存看，但為了安全通常建議失敗就不存
+            // 這裡採取寬容策略：如果是 404 就真的失敗，如果是 CORS 還是可以試著顯示
+            
+            if (cardEl) cardEl.style.opacity = '1';
+            
+            // 簡單提示
+            if (confirm("無法驗證此網址為有效圖片 (或存取被拒)。\n是否仍要強制設為卡圖？")) {
+                updateCardImageGlobal(targetId, url);
+            }
+        };
+        
+        img.src = url;
+    }
 	
 	// --- [新增] 次元破裂 (Reality Break) 系統 ---
 
