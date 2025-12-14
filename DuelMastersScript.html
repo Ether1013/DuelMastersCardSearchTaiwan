@@ -1048,11 +1048,114 @@
     #playback-slider::-webkit-slider-thumb:hover { transform: scale(1.4); }
 
     /* RPS (Rock Paper Scissors) */
+    /* =========================================
+       RPS (Rock Paper Scissors) - Animated Sequence
+       ========================================= */
     #rps-overlay {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none; z-index: 2500; display: none;
-        justify-content: center; align-items: center; gap: 50px; background: rgba(0,0,0,0.3); animation: fadeIn 0.3s ease;
+        flex-direction: column; justify-content: center; align-items: center;
+        background: rgba(0,0,0,0.6); 
+        perspective: 1000px;
     }
+
+    .rps-container {
+        position: absolute; width: 100%; height: 150px;
+        display: flex; justify-content: center; align-items: center; gap: 15px;
+    }
+    /* P2 容器旋轉 180 度，滿足「圖頂朝中線」的需求 */
+    .rps-container.p2 { top: 10%; transform: rotate(180deg); } 
+    .rps-container.p1 { bottom: 10%; }
+
+    .rps-card {
+        width: var(--card-width); 
+        height: var(--card-height);
+        background-color: white; border: 1px solid #333; border-radius: 4px;
+        background-size: cover; background-position: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        /* 初始狀態：靜止於原位 */
+        transform: translateY(0) scale(1);
+    }
+
+    /* --- 動畫定義 (總長 1.5秒) --- */
+    
+    /* 1. 出牌動畫：前 30% 時間靜止(準備)，之後伸出 */
+    @keyframes rps-play-sequence {
+        0%, 30% { transform: translateY(0) scale(1); z-index: 1; } 
+        100% { transform: translateY(-80px) scale(1.5); z-index: 50; } 
+    }
+	
+	/* 同步修正勝者動畫的最終狀態 (保持一致) */
+    @keyframes rps-winner-pulse {
+        from { box-shadow: 0 0 20px 5px gold; }
+        to { box-shadow: 0 0 40px 10px rgba(255, 215, 0, 0.5); transform: translateY(-80px) scale(1.55); }
+    }
+
+    /* 2. 未選中動畫：前 30% 時間靜止，之後淡出 */
+    @keyframes rps-fade-sequence {
+        0%, 30% { opacity: 1; transform: scale(1); filter: grayscale(0%); }
+        100% { opacity: 0.3; transform: scale(0.8); filter: grayscale(100%); }
+    }
+
+    /* 3. 勝者光暈：延遲閃爍 */
+    @keyframes rps-winner-flash {
+        0% { box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-color: #333; }
+        100% { box-shadow: 0 0 40px 10px rgba(255, 215, 0, 0.8); border-color: gold; }
+    }
+
+    /* 4. 結果文字彈出 */
+    @keyframes rps-pop-in {
+        0% { transform: translate(-50%,-50%) rotate(-15deg) scale(0); opacity: 0; }
+        100% { transform: translate(-50%,-50%) rotate(-15deg) scale(1); opacity: 1; }
+    }
+
+    /* --- 套用動畫到 Class --- */
+
+    .rps-card.selected {
+        /* 執行出牌動畫，停在最後一格 */
+        animation: rps-play-sequence 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .rps-card.unselected {
+        animation: rps-fade-sequence 1.5s ease forwards;
+    }
+
+    .rps-card.winner {
+        /* 出牌動畫: 1.5s 
+           閃爍動畫: 延遲 1.5s 後開始，持續閃爍
+        */
+        animation: 
+            rps-play-sequence 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+            rps-winner-flash 0.5s ease-in-out 1.5s infinite alternate; 
+    }
+
+    /* 標籤與 VS 文字也配合延遲顯示 */
+    .rps-label {
+        position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
+        color: white; font-weight: bold; background: rgba(0,0,0,0.5); 
+        padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;
+        opacity: 0; 
+        animation: fadeIn 0.5s 1.5s forwards; /* 修正為 1.5s */
+    }
+    .rps-container.p2 .rps-label { transform: translateX(-50%) rotate(180deg); bottom: auto; top: -25px; }
+
+    .rps-vs-text {
+        font-size: 3rem; font-weight: 900; color: #f1c40f; 
+        text-shadow: 2px 2px 0 #c0392b; z-index: 5;
+        opacity: 0; 
+        animation: fadeIn 0.5s 1.5s forwards; /* 修正為 1.5s */
+    }
+    
+    /* 平手文字樣式 */
+    .rps-result-msg {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-15deg);
+        font-size: 4rem; color: white; font-weight: 900; text-shadow: 0 0 10px black;
+        border: 5px solid white; padding: 10px 40px; border-radius: 10px; 
+        background: rgba(230,126,34,0.9); z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        opacity: 0;
+        animation: rps-pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.5s forwards; /* 最晚出現 */
+    }
+	
     .rps-hand {
         font-size: 5rem; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; flex-direction: column;
         align-items: center; color: white; transition: transform 0.3s;
@@ -2123,6 +2226,45 @@
                     globalImageRegistry[key] = drawFace(color, emo);
                 }
             });
+        });
+    }
+	
+	// [新增] 產生猜拳卡片的預設圖 (若 globalImageRegistry 沒圖時使用)
+    function generateRpsPlaceholders() {
+        const types = ['rock', 'paper', 'scissors'];
+        const icons = { rock: '✊', paper: '🖐️', scissors: '✌️' };
+        const colors = { rock: '#e74c3c', paper: '#3498db', scissors: '#2ecc71' };
+
+        types.forEach(type => {
+            const key = `rps_${type}`;
+            // 只有當尚未註冊時才生成
+            if (!globalImageRegistry[key]) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 200; canvas.height = 280; // 符合卡片比例
+                const ctx = canvas.getContext('2d');
+                
+                // 背景
+                ctx.fillStyle = '#fdfdfd';
+                ctx.fillRect(0,0,200,280);
+                
+                // 邊框
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = colors[type];
+                ctx.strokeRect(5,5,190,270);
+                
+                // 圖示
+                ctx.font = "100px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(icons[type], 100, 140);
+                
+                // 文字
+                ctx.font = "bold 30px Arial";
+                ctx.fillStyle = "#333";
+                ctx.fillText(type.toUpperCase(), 100, 220);
+
+                globalImageRegistry[key] = canvas.toDataURL();
+            }
         });
     }
 	
@@ -6858,34 +7000,69 @@
         });
 		
 		// --- [修改] 渲染猜拳結果 ---
+        // --- [修改] 渲染猜拳結果 (卡牌版) ---
         const rpsOverlay = document.getElementById('rps-overlay');
         
-        // 只有在「有結果」且「不在編輯模式」時才顯示
         if (state.rpsResult && !isDrafting) { 
             const { p1, p2, winner } = state.rpsResult;
-            
-            const iconMap = { rock: '✊', paper: '🖐️', scissors: '✌️' };
-            const p1Class = winner === 1 ? 'winner' : (winner === 2 ? 'loser' : '');
-            const p2Class = winner === 2 ? 'winner' : (winner === 1 ? 'loser' : '');
+            const options = ['rock', 'paper', 'scissors'];
 
-            // [修正] 移除 style="position:absolute...", 改由 CSS 控制
+            // 輔助函式：產生玩家的手牌 HTML (維持原樣)
+            const createHandHTML = (playerId, chosenType, isWinner) => {
+                let html = '';
+                options.forEach(type => {
+                    const isSelected = (type === chosenType);
+                    let classes = 'rps-card';
+                    if (isSelected) classes += ' selected';
+                    else classes += ' unselected';
+                    if (isSelected && isWinner) classes += ' winner';
+
+                    // 讀取圖片 (優先找全域，沒有則讀檔)
+                    const imgKey = `rps_${type}`;
+                    const bgUrl = globalImageRegistry[imgKey] || `./scripts/${type}.webp`;
+
+                    html += `
+                        <div class="${classes}" style="background-image: url('${bgUrl}')">
+                            ${isSelected ? `<div class="rps-label">P${playerId}</div>` : ''}
+                        </div>
+                    `;
+                });
+                return html;
+            };
+
+            const p1Win = (winner === 1);
+            const p2Win = (winner === 2);
+
             rpsOverlay.innerHTML = `
-                <div class="rps-hand p2 ${p2Class}">
-                    <div>${iconMap[p2]}</div>
-                    <div class="rps-tag">P2</div>
+                <div class="rps-container p2">
+                    ${createHandHTML(2, p2, p2Win)}
                 </div>
-                
-                <div class="rps-vs">VS</div>
-                
-                <div class="rps-hand p1 ${p1Class}">
-                    <div>${iconMap[p1]}</div>
-                    <div class="rps-tag">P1</div>
+                <div class="rps-vs-text">VS</div>
+                <div class="rps-container p1">
+                    ${createHandHTML(1, p1, p1Win)}
                 </div>
-                
-                ${winner === null ? '<div class="rps-result-text" style="position:absolute; font-size:2rem; color:white; font-weight:bold; text-shadow:0 0 5px black; background:rgba(230,126,34,0.9); padding:5px 20px; border-radius:10px;">DRAW!</div>' : ''}
+                ${winner === null ? '<div class="rps-result-msg">DRAW!</div>' : ''}
             `;
             
+            // 2. 顯示畫面並重置透明度
             rpsOverlay.style.display = 'flex';
+            rpsOverlay.style.transition = 'none'; // 移除過渡以便瞬間顯示
+            rpsOverlay.style.opacity = '1';
+
+            // 3. 設定自動關閉 (總時長 3.5秒 = 1.5秒動畫 + 2秒閃爍)
+            const timerId = setTimeout(() => {
+                // 開始淡出
+                rpsOverlay.style.transition = 'opacity 0.5s ease';
+                rpsOverlay.style.opacity = '0';
+                
+                // 淡出動畫結束後隱藏 DOM
+                setTimeout(() => {
+                    rpsOverlay.style.display = 'none';
+                }, 500); 
+            }, 3500); // 1500ms (動作) + 2000ms (閃爍) = 3500ms
+
+            rpsOverlay.dataset.timer = timerId;
+
         } else {
             rpsOverlay.style.display = 'none';
         }
@@ -9555,6 +9732,7 @@
 
         // 生成預設頭像
         generateDefaultPortraits();
+		generateRpsPlaceholders(); // <--- 加入這行，確保有圖
 
         // 啟動面板拖曳功能 (電腦版/手機版皆初始化，雖然手機版主要隱藏面板，但防止報錯)
         initDraggablePanel();
