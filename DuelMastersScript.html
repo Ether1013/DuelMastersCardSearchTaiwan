@@ -12,3069 +12,1404 @@
     <meta property="og:description" content="Create, edit, and share Duel Masters battle scenarios with dialogue. 線上決鬥王盤面模擬與劇本編輯工具。">
     <meta property="og:type" content="website">
     <style>
-        :root {
-            --card-width: 50px;
-            --card-height: 70px;
-            --bg-color: #dcdcdc;
-            
-            /* [修改] 定義動態主題變數 (預設: P1藍, P2紅) */
-            --p1-main: #3498db;
-            --p1-bg: #e3f2fd;
-            --p2-main: #e53935;
-            --p2-bg: #fce4ec;
-
-            --timeline-width: 320px;
-            --highlight-color: #f1c40f;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #toolbar {
-            height: 40px; /* 原本 45px -> 縮小為 40px */
-            background: #2c3e50;
-            color: white;
-            display: flex;
-            align-items: center;
-            padding: 0 5px; /* 縮小左右邊距 */
-            gap: 5px;       /* 縮小按鈕間距 (原本 10px -> 5px) */
-            flex-shrink: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 50;
-            
-            /* [新增] 讓 toolbar 內容過多時可以水平捲動，避免破版 */
-            overflow-x: auto; 
-            white-space: nowrap;
-            /* 隱藏捲軸但保留功能 */
-            scrollbar-width: none; 
-        }
-        #toolbar::-webkit-scrollbar { display: none; }
-		
-		/* [新增] 針對 Toolbar 內的按鈕進行特別縮小 */
-        #toolbar button, 
-        #toolbar select {
-            font-size: 0.75rem !important; /* 原本約 0.85rem -> 縮小 */
-            padding: 3px 6px !important;   /* 縮小內距 */
-            height: 28px;                  /* 固定高度，讓排列整齊 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* 標題文字也稍微縮小 */
-        #toolbar div[style*="font-weight: 800"] {
-            font-size: 1rem !important; /* 原本 1.1rem */
-            margin-right: 5px !important;
-        }
-		
-        #draft-bar {
-            background: #e67e22;
-            color: white;
-            padding: 5px 10px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        #draft-bar label {
-            display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;
-            background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 4px;
-        }
-
-        #point-bar {
-            background: #8e44ad;
-            color: white;
-            padding: 5px 10px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        /* --- 修改：操作面板樣式 (雙層版) --- */
-		#card-action-panel {
-			position: fixed;
-			bottom: auto; 
-			left: 0; 
-			transform: none; 
-			cursor: move;
-			
-			background: rgba(44, 62, 80, 0.95);
-			color: white;
-			padding: 8px 12px;
-			border-radius: 8px;
-			
-			/* [修改] 改為垂直排列，讓兩行分開 */
-			display: none; /* 由 JS 控制顯示 */
-			flex-direction: column; 
-			gap: 8px; /* 上下行的間距 */
-			
-			align-items: center;
-			z-index: 1000;
-			box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-			backdrop-filter: blur(5px);
-			border: 1px solid #555;
-			
-			/* 寬度設為 auto，讓內容撐開 */
-			width: auto;
-			max-width: 90vw; /* 防止超出螢幕 */
-		}
-
-        /* [新增] 單行容器樣式 */
-        .panel-row {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap; /* 空間不足時允許換行 */
-        }
-
-        /* [新增] 垂直分隔線樣式 */
-        .panel-sep {
-            border-left: 1px solid #7f8c8d; 
-            height: 20px; 
-            margin: 0 5px;
-            opacity: 0.5;
-        }
-
-		/* 避免拖曳時選取到面板內的文字 */
-		#card-action-panel * { user-select: none; }
-		#card-action-panel input, #card-action-panel button { cursor: pointer; }
-		#card-action-panel input { cursor: text; user-select: auto; }
-
-		/* 避免拖曳時選取到面板內的文字 */
-		#card-action-panel * {
-			user-select: none;
-		}
-
-		/* 輸入框與按鈕恢復預設游標 */
-		#card-action-panel input,
-		#card-action-panel button {
-			cursor: pointer;
-		}
-		#card-action-panel input {
-			cursor: text;
-			user-select: auto;
-		}
+    /* =========================================
+       1. ROOT VARIABLES & GLOBAL RESET
+       ========================================= */
+    :root {
+        /* [設定] 全域基準 (手牌區使用此大小) */
+        --card-width: 60px;
+        --card-height: 84px;
         
-        button {
-            background: #34495e;
-            color: white;
-            border: 1px solid #566573;
-            padding: 4px 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-        button:hover { background: #4e6479; transform: translateY(-1px); }
-        button:active { transform: translateY(1px); }
+        --bg-color: #dcdcdc;
         
-        button.primary { background: #2ecc71; border-color: #27ae60; font-weight: bold; }
-        button.primary:hover { background: #27ae60; }
-        
-        button.danger { background: #c0392b; border-color: #e74c3c; }
-        button.danger:hover { background: #e74c3c; }
-
-        input[type="text"], input[type="number"] {
-            padding: 4px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            font-size: 0.85rem;
-        }
-
-        #workspace {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #svg-layer {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			pointer-events: none; 
-			z-index: 999; 
-			/* 確保沒有其他 transform 干擾，它會繼承父層 workspace 的 scale */
-		}
-        
-        .arrow-line {
-            stroke: rgba(231, 76, 60, 0.8);
-            stroke-width: 4;
-            stroke-dasharray: 10, 5;
-            animation: dash 1s linear infinite;
-            marker-end: url(#arrowhead);
-            fill: none;
-        }
-        @keyframes dash { to { stroke-dashoffset: -15; } }
-
-        #ability-stack-zone {
-            width: 100px;
-            background: #bdc3c7;
-            border-right: 2px solid #7f8c8d;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            z-index: 10;
-        }
-
-        #ability-stack-zone.rotated-view {
-            flex-direction: column-reverse;
-        }
-
-        .ability-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 5px 0;
-            overflow-y: auto;
-            position: relative;
-            gap: 5px;
-        }
-
-        /* [修改] 待處理區背景色改用變數，與主戰場連動 */
-        #ability-zone-p2 { 
-            background: var(--p2-bg); 
-            /* 保留原本的透明度質感也可以，但直接用變數會更一致 */
-        }
-        #ability-zone-p1 { 
-            background: var(--p1-bg); 
-        }
-
-        #ability-stack-zone:not(.rotated-view) #ability-zone-p2 { border-bottom: 2px dashed #7f8c8d; }
-        #ability-stack-zone.rotated-view #ability-zone-p1 { border-bottom: 2px dashed #7f8c8d; }
-
-        .ability-label {
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-            opacity: 0.7;
-        }
-
-        #game-board-container {
-            flex: 1;
-            background: #95a5a6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden; 
-        }
-
-        #main-board {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-        }
-
-        /* Turn Indicators */
-        .turn-bar {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 12px;
-            background: #95a5a6;
-            z-index: 50;
-            transition: all 0.5s ease;
-            border-right: 1px solid rgba(0,0,0,0.1);
-			cursor: pointer; /* [新增] 提示可點擊 */
-        }
-        
-        /* [修改] P1 呼吸燈動畫 (使用變數) */
-        #player1-area.active-turn .turn-bar {
-            background: var(--p1-main);
-            box-shadow: 0 0 15px 2px var(--p1-main); /* 用 JS 動態調整或設為變數太複雜，這裡簡化處理 */
-            animation: pulse-p1 2s infinite;
-        }
-        
-        /* [修改] P2 呼吸燈動畫 (使用變數) */
-        #player2-area.active-turn .turn-bar {
-            background: var(--p2-main);
-            box-shadow: 0 0 15px 2px var(--p2-main);
-            animation: pulse-p2 2s infinite;
-        }
-        
-		/* [修改] 定義通用的呼吸燈 Keyframes (利用 CSS 變數) */
-        /* 注意：CSS Keyframes 對變數支援度有時有坑，
-           這裡我們改用 opacity 變化，或者直接在 JS 注入 keyframes。
-           為了簡單穩健，我們維持原本的 pulse-blue/red 但顏色改為接近的變數效果，
-           或是最簡單的方式：直接修改 pulse-blue/red 的內容如下：
-        */
-        @keyframes pulse-p1 {
-            0% { box-shadow: 0 0 10px 2px var(--p1-main); opacity: 0.8; }
-            50% { box-shadow: 0 0 25px 8px var(--p1-main); opacity: 1; }
-            100% { box-shadow: 0 0 10px 2px var(--p1-main); opacity: 0.8; }
-        }
-        @keyframes pulse-p2 {
-            0% { box-shadow: 0 0 10px 2px var(--p2-main); opacity: 0.8; }
-            50% { box-shadow: 0 0 25px 8px var(--p2-main); opacity: 1; }
-            100% { box-shadow: 0 0 10px 2px var(--p2-main); opacity: 0.8; }
-        }
-
-        #reveal-zone {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            min-width: 200px;
-            min-height: 120px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px dashed #f1c40f;
-            border-radius: 10px;
-            z-index: 300; 
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 30px 20px 20px 20px; 
-            transition: opacity 0.3s;
-            box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
-        }
-        
-        #reveal-zone .zone-label {
-            top: 5px;
-            left: 10px;
-            width: auto;
-            transform: none;
-            color: #f1c40f;
-            text-shadow: none;
-            font-size: 1rem;
-            pointer-events: none;
-        }
-
-        #timeline-panel {
-            width: var(--timeline-width);
-            background: #ecf0f1;
-            border-left: 1px solid #bdc3c7;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            z-index: 20;
-        }
-
-        #timeline-header {
-            padding: 8px;
-            background: #34495e;
-            color: white;
-            font-weight: bold;
-            text-align: center;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-        }
-
-        #action-list {
-            flex: 1;
-            overflow-y: auto;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            padding-bottom: 20px;
-        }
-
-        /* [修改] 確保 Gap 容器設定正確 */
-		.timeline-gap {
-			height: 20px; /* 加高感應區，比較好點 */
-			display: flex !important; /* 強制 Flex 佈局 */
-			justify-content: center;
-			align-items: center;
-			cursor: default;
-			position: relative;
-			
-			/* 移除 gap，改用按鈕的 margin 來推開 */
-			gap: 0 !important; 
-			
-			transition: background 0.2s;
-		}
-
-		
-        .timeline-gap:hover::after {
-            content: "+";
-            background: #3498db;
-            color: white;
-            width: 20px; height: 20px;
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-weight: bold;
-            font-size: 14px;
-            position: absolute;
-            z-index: 5;
-        }
-        .timeline-gap::before {
-            content: "";
-            height: 2px;
-            background: #ccc;
-            width: 80%;
-            position: absolute;
-        }
-
-        .action-item {
-            padding: 8px 10px;
-            border-bottom: 1px solid #dcdcdc;
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            background: #fdfdfd;
-            border-left: 4px solid transparent;
-        }
-        .action-item:hover { background: #f0f4f7; }
-        .action-item.active { background: #e8f6fd; border-left-color: #2980b9;}
-        .action-item.editing { background: #fff3e0; border-left-color: #e67e22; }
-
-        .action-item.p1-action { border-left: 4px solid #3498db; background: rgba(52, 152, 219, 0.05); }
-        .action-item.p1-action.active { background: rgba(52, 152, 219, 0.2); }
-        
-        .action-item.p2-action { border-left: 4px solid #e91e63; background: rgba(233, 30, 99, 0.05); }
-        .action-item.p2-action.active { background: rgba(233, 30, 99, 0.2); }
-
-        .action-header { display: flex; align-items: center; width: 100%; justify-content: space-between; }
-        .action-index { font-weight: bold; margin-right: 6px; min-width: 18px; text-align: right; color: #7f8c8d;}
-        .action-desc { flex: 1; white-space: pre-wrap; word-break: break-all; font-weight: 500;}
-        
-        .action-controls {
-            display: flex; gap: 5px; margin-top: 5px; padding-left: 24px; opacity: 0.4; transition: opacity 0.2s;
-        }
-        .action-item:hover .action-controls, .action-item.active .action-controls { opacity: 1; }
-        
-        .mini-btn { font-size: 0.75rem; padding: 3px 8px; background: #bdc3c7; border: none; color: #2c3e50; border-radius: 3px; cursor: pointer;}
-        .mini-btn:hover { background: #95a5a6; color: white; }
-        .mini-btn.play-from { background: #2ecc71; color: white; }
-        .mini-btn.play-from:hover { background: #27ae60; }
-        .mini-btn.play-step { background: #3498db; color: white; }
-        .mini-btn.play-step:hover { background: #2980b9; }
-        .mini-btn.edit { background: #f39c12; color: white; }
-        .mini-btn.edit:hover { background: #e67e22; }
-        .mini-btn.delete-all { background: #c0392b; color: white; font-weight:bold; padding: 2px 6px; border-radius:3px; cursor:pointer; border:none;}
-
-        .icon-btn { background: none; border: none; cursor: pointer; padding: 2px; opacity: 0.5; font-size: 1rem; }
-        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
-        .icon-btn.delete { color: #c0392b; }
-
-        .player-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 2px;
-            position: relative;
-            padding-left: 15px; /* Space for turn bar */
-        }
-
-        #player2-area {
-            background-color: var(--p2-bg); /* [修改] */
-            border-bottom: 2px dashed #999;
-        }
-        
-        #player2-area .bottom-row { order: -1; }
-        #player2-area .mana-zone { order: 0; }
-        #player2-area .shield-zone { order: 1; }
-        #player2-area .battle-zone { order: 2; }
-        
-        #player1-area { 
-            background-color: var(--p1-bg); /* [修改] */
-        }
-
-        .zone {
-            border: 1px solid rgba(0,0,0,0.15);
-            margin: 1px;
-            display: flex;
-            align-items: center;
-            position: relative;
-            min-height: var(--card-height);
-            border-radius: 3px;
-        }
-        
-        .zone.target-highlight {
-            background-color: rgba(46, 204, 113, 0.4);
-            border: 2px dashed #27ae60;
-            box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.5);
-            cursor: copy;
-            z-index: 100;
-        }
-        
-        /* Zone Glows (New Feature) */
-        .zone.glow-red { box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.5); border: 2px solid red; }
-        .zone.glow-yellow { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5); border: 2px solid gold; }
-        .zone.glow-green { box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.5); border: 2px solid lime; }
-        .zone.glow-blue { box-shadow: inset 0 0 20px rgba(0, 191, 255, 0.5); border: 2px solid deepskyblue; }
-        .zone.glow-black { box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5); border: 2px solid black; }
-        .zone.glow-white { box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.8); border: 2px solid white; }
-        .zone.glow-rainbow { animation: zone-rainbow 2s linear infinite; }
-        @keyframes zone-rainbow {
-            0% { border-color: red; box-shadow: inset 0 0 20px rgba(255,0,0,0.5); }
-            50% { border-color: blue; box-shadow: inset 0 0 20px rgba(0,255,0,0.5); }
-            100% { border-color: red; box-shadow: inset 0 0 20px rgba(255,0,0,0.5); }
-        }
-
-        .zone.point-target-highlight {
-            background-color: rgba(142, 68, 173, 0.2);
-            border: 2px dashed #9b59b6;
-            cursor: crosshair;
-            z-index: 100;
-        }
-        .card.point-target-highlight {
-            box-shadow: 0 0 10px 5px rgba(155, 89, 182, 0.8);
-            z-index: 101;
-            cursor: crosshair;
-        }
-        .card.point-target-selected {
-            box-shadow: 0 0 15px 8px #8e44ad;
-            border: 2px solid #8e44ad;
-        }
-
-        .zone-label {
-            position: absolute; font-size: 0.8rem; color: rgba(0,0,0,0.25);
-            font-weight: 900; pointer-events: none; z-index: 0; width: 100%; text-align: center;
-            top: 50%; transform: translateY(-50%); text-transform: uppercase;
-        }
-
-        .bottom-row { display: flex; height: var(--card-height); margin-top: auto; }
-        .hand-zone { 
-            flex: 1; 
-            overflow-x: auto; 
-            padding: 2px; 
-            
-            /* [新增] 隱藏捲軸但保留滾動功能 */
-            scrollbar-width: none;       /* Firefox */
-            -ms-overflow-style: none;    /* IE/Edge */
-        }
-
-        /* [新增] 針對 Chrome/Safari 隱藏捲軸 */
-        .hand-zone::-webkit-scrollbar {
-            display: none;
-        }
-        .side-zone-group { width: 170px; display: flex; gap: 3px; padding-left: 3px; flex-shrink: 0; }
-        
-        .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
-        .mana-zone { height: calc(var(--card-height) * 0.6); background: rgba(0,0,0,0.05); }
-        .shield-zone { height: calc(var(--card-height) * 0.85); justify-content: center; gap: 5px; }
-        .battle-zone { flex: 1; background: rgba(255,255,255,0.6); justify-content: center; gap: 4px; padding: 5px; }
-
-        .card-group {
-            position: relative;
-            /* Changed from fixed width to auto/min-width to support God Link/Puzzle stacking */
-            width: auto; 
-            min-width: var(--card-width);
-            height: var(--card-height);
-            margin: 0 5px; /* Increased margin for better separation */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s;
-        }
-
-        .card {
-            width: var(--card-width); height: var(--card-height);
-            background-color: white; border: 1px solid #333; border-radius: 3px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            position: relative; font-size: 9px; cursor: pointer;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.4); user-select: none;
-            transition: box-shadow 0.2s, border-color 0.2s; 
-            z-index: 1; flex-shrink: 0; overflow: hidden;
-            will-change: transform, top, left;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        
-        .card.has-image { border: none; }
-        .card.has-image[class*="glow-"] { border: 1px solid transparent; }
-        .card.has-image .card-text { display: none; }
-
-        .card.interactive { transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .card:hover { z-index: 200; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        /* 修改後 (加入 !important) */
-		.card.selected { 
-			box-shadow: 0 0 0 3px #f1c40f, 0 0 8px #f1c40f !important; 
-			z-index: 100; 
-		}
-        .card.face-down { 
-            background: #2c3e50;
-            background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
-            background-size: 15px 15px; border: 1px solid white; color: transparent; 
-        }
-        
-        .card-note {
-            position: absolute; top: 1px; left: 2px; right: 2px;
-            background: #f1c40f; color: black; font-size: 8px; text-align: center;
-            border: 1px solid #d35400; z-index: 5;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            pointer-events: none; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
-		
-		/* --- [新增] 待處理區註記樣式 (左側縱條) --- */
-        
-        /* 1. 覆寫原本橫條的位置，改為左側直條 */
-        .ability-card .card-note {
-            /* 重置原本的定位 */
-            top: 0 !important;
-            bottom: 0 !important; /* 填滿高度 */
-            left: 0 !important;
-            right: auto !important;
-            
-            /* 設定寬度 */
-            width: 16px; 
-            height: 100%;
-            
-            /* 垂直文字排版 (直書) */
-            writing-mode: vertical-rl; 
-            text-orientation: upright; /* 讓中文字直立，英文轉向 */
-            
-            /* 內容置中 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            
-            /* 外觀修飾：左邊圓角，右邊直線 */
-            border-radius: 2px 0 0 2px !important;
-            border: none !important;
-            border-right: 1px solid #d35400 !important;
-            
-            /* 陰影改成往右打 */
-            box-shadow: 1px 0 3px rgba(0,0,0,0.2) !important;
-            
-            /* 字體微調 */
-            font-size: 9px;
-            letter-spacing: 1px;
-            padding: 2px 0;
-        }
-
-        /* 2. 修正卡片文字內距，避免被左邊的註記條擋住 */
-        .ability-card .card-text {
-            padding-left: 18px !important; /* 讓出空間給左側條 (16px + 2px buffer) */
-            text-align: left !important;   /* 改為靠左對齊比較好看 */
-        }
-
-        /* Stacking classes */
-        .stack-base { z-index: 10; position: absolute; }
-        .stack-top { z-index: 20; position: absolute; }
-        .stack-bottom { z-index: 5; position: absolute; }
-        .stack-shift-up { z-index: 20; position: absolute; }
-        .stack-shift-down { z-index: 20; position: absolute; }
-        .stack-bottom-exposed { z-index: 5; position: absolute; }
-        .stack-top-offset { z-index: 20; position: absolute; }
-        
-        /* New Puzzle/Link Stacking Classes */
-        .puzzle-link { /* Generic marker */ }
-        .stack-puzzle-top { z-index: 20; position: absolute; }
-        .stack-puzzle-bottom { z-index: 20; position: absolute; }
-        .stack-puzzle-left { z-index: 20; position: absolute; }
-        .stack-puzzle-right { z-index: 20; position: absolute; }
-
-        .glow-red { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8) !important; border-color: red !important; }
-        .glow-yellow { box-shadow: 0 0 8px 4px rgba(255, 215, 0, 0.8) !important; border-color: gold !important; }
-        .glow-green { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8) !important; border-color: lime !important; }
-        .glow-blue { box-shadow: 0 0 8px 4px rgba(0, 191, 255, 0.8) !important; border-color: deepskyblue !important; }
-        .glow-black { box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.8) !important; border-color: black !important; }
-        .glow-white { box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.9) !important; border-color: white !important; }
-        .glow-rainbow { animation: rainbow 2s linear infinite !important; }
-		
-		/* 補回遺失的 rainbow 動畫關鍵影格 */
-        @keyframes rainbow {
-            0% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
-            15% { box-shadow: 0 0 8px 4px rgba(255, 165, 0, 0.8); border-color: orange; }
-            30% { box-shadow: 0 0 8px 4px rgba(255, 255, 0, 0.8); border-color: yellow; }
-            45% { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8); border-color: lime; }
-            60% { box-shadow: 0 0 8px 4px rgba(0, 127, 255, 0.8); border-color: cyan; }
-            75% { box-shadow: 0 0 8px 4px rgba(0, 0, 255, 0.8); border-color: blue; }
-            90% { box-shadow: 0 0 8px 4px rgba(139, 0, 255, 0.8); border-color: violet; }
-            100% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
-        }
-		
-		/* --- [新增] 下半部發光特效 (Bottom Glow) --- */
-
-		/* 1. 基礎設定 */
-		.card[class*="glow-bottom-"]::after {
-			content: "";
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			width: 100%;
-			height: 50%; /* 覆蓋下半部 50% */
-			z-index: 10;
-			pointer-events: none;
-			border-bottom-left-radius: 3px;
-			border-bottom-right-radius: 3px;
-			opacity: 0.85;
-			transition: opacity 0.2s;
-		}
-
-		/* --- [新增] 下半部發光特效 (Bottom Glow) --- */
-
-		/* 1. 基礎設定 */
-		.card[class*="glow-bottom-"]::after {
-			content: "";
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			width: 100%;
-			height: 50%; /* 覆蓋下半部 50% */
-			z-index: 10;
-			pointer-events: none;
-			border-bottom-left-radius: 3px;
-			border-bottom-right-radius: 3px;
-			opacity: 0.85;
-			transition: opacity 0.2s;
-		}
-
-		/* 2. 各顏色定義 */
-		.card.glow-bottom-red::after {
-			background: linear-gradient(to top, rgba(255, 0, 0, 0.8) 0%, rgba(255, 0, 0, 0) 100%);
-			border-bottom: 3px solid red;
-			box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5);
-		}
-		.card.glow-bottom-yellow::after {
-			background: linear-gradient(to top, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0) 100%);
-			border-bottom: 3px solid gold;
-			box-shadow: 0 4px 10px rgba(255, 215, 0, 0.5);
-		}
-		.card.glow-bottom-green::after {
-			background: linear-gradient(to top, rgba(0, 255, 0, 0.8) 0%, rgba(0, 255, 0, 0) 100%);
-			border-bottom: 3px solid lime;
-			box-shadow: 0 4px 10px rgba(0, 255, 0, 0.5);
-		}
-		.card.glow-bottom-blue::after {
-			background: linear-gradient(to top, rgba(0, 191, 255, 0.8) 0%, rgba(0, 191, 255, 0) 100%);
-			border-bottom: 3px solid deepskyblue;
-			box-shadow: 0 4px 10px rgba(0, 191, 255, 0.5);
-		}
-		.card.glow-bottom-black::after {
-			background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
-			border-bottom: 3px solid black;
-			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-		}
-		.card.glow-bottom-white::after {
-			background: linear-gradient(to top, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 100%);
-			border-bottom: 3px solid white;
-			box-shadow: 0 4px 10px rgba(255, 255, 255, 0.5);
-		}
-		.card.glow-bottom-rainbow::after {
-			background: linear-gradient(to top, rgba(255, 0, 255, 0.6) 0%, rgba(0, 255, 255, 0) 100%);
-			border-bottom: 3px solid white;
-			animation: bottom-rainbow-anim 2s linear infinite;
-		}
-
-		@keyframes bottom-rainbow-anim {
-			0% { border-bottom-color: red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
-			50% { border-bottom-color: blue; box-shadow: 0 4px 10px rgba(0,0,255,0.5); }
-			100% { border-bottom-color: red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
-		}
-
-        .ability-card { width: 80px; height: 35px; flex-direction: row; font-size: 8px; transform: none !important; cursor: pointer; overflow: hidden; }
-        .ability-card .card-text { font-size: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 90%; }
-        .ability-card .card-power { display: none; }
-
-        .card-power { 
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            background: rgba(255,255,255,0.9); border-top: 1px solid #000; 
-            text-align: center; font-weight: bold; font-size: 9px; color: black;
-        }
-        .card-text { padding: 2px; text-align: center; line-height: 1.1; font-weight: 500;}
-
-        .count-badge {
-            position: absolute; top: -6px; right: -6px;
-            background: #e74c3c; color: white;
-            border-radius: 50%; width: 20px; height: 20px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 10px; font-weight: bold; z-index: 50;
-            border: 1px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 2000;
-            justify-content: center; align-items: center; backdrop-filter: blur(2px);
-        }
-        .modal-content {
-            background: white; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            padding: 20px; display: flex; flex-direction: column;
-            animation: slideUp 0.3s ease;
-        }
-        
-        #setup-modal { display: none; }
-        #setup-modal .modal-content { width: 320px; gap: 15px; }
-        .input-group { display: flex; justify-content: space-between; align-items: center; }
-        .input-group label { font-weight: bold; font-size: 0.9rem; }
-        .input-group input { width: 60px; text-align: center; }
-
-        #card-selector-modal .modal-content { width: 85%; max-width: 900px; height: 85%; }
-        #modal-body { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 12px; padding: 15px; background: #f8f9fa; border-radius: 4px; align-content: flex-start; }
-        /* Style for cards in selector list that have images */
-        #modal-body .card.has-image-icon { background-size: cover; background-position: center; color: transparent; text-shadow: none; }
-
-        #position-selector-modal .modal-content { width: 90%; max-width: 600px; height: auto; max-height: 80vh; display: flex; flex-direction: column; }
-		
-		/* 容器：縮小間距讓縫隙感更明顯 */
-        #position-list {
-            flex: 1; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 2px;            /* [修改] 間距縮小，讓插槽緊貼卡片 */
-            padding: 10px; 
-            background: #eee; 
-            border-radius: 4px; 
-            min-height: 0;
-            align-content: flex-start;
-        }
-
-		/* 插槽：強制設定為極窄的縫隙 (約 14px) */
-        .position-slot {
-            /* 強制固定寬度，不讓 Flex 或內容撐開 */
-            width: 14px !important;
-            min-width: 14px !important; 
-            max-width: 14px !important;
-            height: var(--card-height);
-            
-            /* 隱藏溢出的文字 (Top/Bottom/+) */
-            overflow: hidden; 
-            
-            background: rgba(0, 0, 0, 0.1); 
-            border: 1px dashed #999;
-            border-radius: 2px;
-            
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            
-            /* 讓這個元素不會被壓縮或放大 */
-            flex-shrink: 0;
-            flex-grow: 0;
-            
-            /* 隱藏文字顏色 */
-            color: transparent; 
-        }
-        
-        /* 滑鼠移上去時：變寬、變色，方便操作 */
-        .position-slot:hover { 
-            /* Hover 時展開到一半卡片寬，方便確認 */
-            width: 25px !important; 
-            min-width: 25px !important;
-            max-width: 25px !important;
-            
-            background: #3498db; 
-            border-color: #2980b9; 
-            z-index: 100;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.8);
-            
-            /* Hover 時顯示一點文字提示 (如果顏色不是透明的話) */
-            /* color: white; */ 
-        }
-
-        /* 為了區分頭尾，我們可以利用 JS 賦予的 title 屬性來做樣式 (選用)
-           或是保持統一的縫隙樣式，讓使用者依賴直覺 (最左=底，最右=頂) */
-        
-        /* 2. 參考卡樣式：尺寸同卡片，作為視覺參考 */
-        .position-card-ref {
-            width: var(--card-width); 
-            height: var(--card-height);
-            border: 1px solid #7f8c8d;
-            border-radius: 3px;
-            background-color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.6rem;
-            color: #333;
-            pointer-events: none; /* 禁止點擊卡片本身，強迫點擊插槽 */
-            flex-shrink: 0;
-            background-size: cover;
-            background-position: center;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-            overflow: hidden;
-            opacity: 0.85;
-        }
-
-        /* [選用] 在卡片右側加一個微小的箭頭指示順序 */
-        .position-card-ref::after {
-            content: "➜";
-            position: absolute;
-            right: -8px; 
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 8px;
-            color: #999;
-            z-index: 5;
-            display: none; /* 如果覺得畫面太亂可以保持隱藏 */
-        }
-        
-        #stack-gui {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* Changed to 3 columns to fit more options */
-            gap: 10px;
-            margin-top: 10px;
-            overflow-y: auto;
-        }
-        .stack-option {
-            background: #f8f9fa; border: 2px solid #ddd;
-            border-radius: 8px; padding: 10px;
-            text-align: center; cursor: pointer;
-            transition: all 0.2s;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
-            font-size: 0.8rem;
-        }
-        .stack-option:hover { border-color: #3498db; background: #ebf5fb; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
-        .stack-icon {
-            width: 30px; height: 40px; background: #ccc; border: 1px solid #999;
-            position: relative; display: block; margin-bottom: 5px;
-        }
-        /* Existing Icons */
-        .icon-top .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#3498db; border:1px solid white; z-index:2; opacity:0.8; }
-        .icon-bottom .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#2c3e50; border:1px solid white; z-index:-1; }
-        .icon-up .child { position: absolute; top:-15px; left:0; width:100%; height:100%; background:#e67e22; border:1px solid white; z-index:2; opacity:0.9; }
-        .icon-down .child { position: absolute; top:15px; left:0; width:100%; height:100%; background:#9b59b6; border:1px solid white; z-index:2; opacity:0.9; }
-        .icon-bottom-exp .child { position: absolute; top:20px; left:0; width:100%; height:100%; background:#27ae60; border:1px solid white; z-index:-1; opacity: 0.9; }
-        
-        /* New Puzzle Icons */
-        .icon-p-top .child { position: absolute; top:-38px; left:0; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
-        .icon-p-bottom .child { position: absolute; top:38px; left:0; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
-        .icon-p-left .child { position: absolute; top:0; left:-28px; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
-        .icon-p-right .child { position: absolute; top:0; left:28px; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
-
-        .rotated-view #main-board { transform: rotate(180deg); }
-
-		/* --- 修改部分：將位置選擇器改為網格佈局 (仿照 UI A) --- */
-        #position-list {
-            flex: 1; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-wrap: wrap; /* 允許換行 */
-            gap: 8px;        /* 間距 */
-            padding: 15px; 
-            background: #eee; 
-            border-radius: 4px; 
-            min-height: 0;
-            align-content: flex-start;
-            justify-content: flex-start; /* 靠左對齊，符合閱讀順序 */
-        }
-
-        /* 插槽樣式：看起來像一張虛線卡片 */
-        .position-slot {
-            width: var(--card-width); 
-            height: var(--card-height);
-            background: rgba(255, 255, 255, 0.5); 
-            border: 2px dashed #999;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #555;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            position: relative;
-        }
-        
-        .position-slot:hover { 
-            background: #dff9fb; 
-            border-color: #2980b9; 
-            color: #2980b9; 
-            font-weight: bold;
-            transform: scale(1.05);
-            z-index: 10;
-        }
-        
-        /* 參考卡樣式：顯示在插槽中間，僅供參考，不可點擊 */
-        .position-card-ref {
-            width: var(--card-width); 
-            height: var(--card-height);
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            background-color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.6rem;
-            color: #aaa;
-            opacity: 0.7; /* 稍微淡化，區分可點擊區域 */
-            pointer-events: none; /* 禁止點擊 */
-            flex-shrink: 0;
-            background-size: cover;
-            background-position: center;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-            overflow: hidden;
-            text-align: center;
-            padding: 2px;
-        }
-        
-        /* 為了讓視覺動線更清楚，我們可以加一個小箭頭或線條 (選擇性) */
-        .position-card-ref::after {
-            content: "▶";
-            position: absolute;
-            right: -12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #ccc;
-            font-size: 8px;
-            display: none; /* 暫時隱藏，避免太亂 */
-        }
-		
-		/* --- [新增] 爪痕特效樣式 --- */
-		.claw-overlay {
-			position: absolute;
-			top: 0; left: 0; width: 100%; height: 100%;
-			pointer-events: none; /* 讓滑鼠可以穿透點擊卡片 */
-			z-index: 50;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			opacity: 0.9;
-		}
-
-		.claw-svg {
-			width: 130%;  /* 原本是 80%，改成 130% 讓它超出卡片邊界 */
-			height: 130%; /* 原本是 80%，改成 130% */
-			overflow: visible;
-		}
-
-		.claw-path {
-			fill: none;
-			stroke: #c0392b; /* 血紅色 */
-			stroke-width: 8;
-			stroke-linecap: round;
-			filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
-		}
-
-		/* 播放時的動畫 Class */
-		.claw-anim .claw-path {
-			stroke-dasharray: 100;
-			stroke-dashoffset: 100;
-			animation: scratch-anim 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-		}
-
-		/* 讓三條爪痕有時間差，看起來更像抓擊 */
-		.claw-anim .p1 { animation-delay: 0s; }
-		.claw-anim .p2 { animation-delay: 0.1s; }
-		.claw-anim .p3 { animation-delay: 0.05s; }
-
-		@keyframes scratch-anim {
-			to { stroke-dashoffset: 0; }
-		}
-		
-		/* 手機版勝利畫面修正 */
-		body.mobile-mode #win-overlay .win-text {
-			font-size: 3rem; /* 原本是 5rem，手機版改小一點 */
-		}
-
-		body.mobile-mode #win-overlay .win-sub {
-			font-size: 1.2rem; /* 原本是 2rem，稍微縮小 */
-			margin-top: 5px;
-		}
-
-		/* --- [新增] 勝利慶祝動畫 --- */
-        #win-overlay {
-            position: fixed; 
-			top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-			z-index: 2000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-        }
-
-        .win-text {
-            font-size: 5rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #f1c40f;
-            text-shadow: 0 0 20px rgba(0,0,0,0.8), 3px 3px 0 #c0392b;
-            transform: scale(0);
-            animation: win-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        .win-sub {
-            font-size: 2rem;
-            color: white;
-            margin-top: 10px;
-            opacity: 0;
-            animation: slideUp 0.5s ease 0.5s forwards;
-            text-shadow: 0 0 5px black;
-        }
-        
-        /* 簡單的彩帶特效 (使用偽元素模擬) */
-        .confetti {
-            position: absolute;
-            width: 10px; height: 10px;
-            background-color: #f00;
-            animation: confetti-fall 3s linear infinite;
-        }
-
-        @keyframes win-pop {
-            0% { transform: scale(0) rotate(-15deg); opacity: 0; }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        
-        @keyframes confetti-fall {
-            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(800px) rotate(720deg); opacity: 0; }
-        }
-		
-		/* 語言選單樣式 */
-		#lang-select {
-			background: #34495e;
-			color: white;
-			border: 1px solid #566573;
-			padding: 4px 8px;
-			border-radius: 4px;
-			margin-right: 10px;
-			font-size: 0.85rem;
-			cursor: pointer;
-			outline: none;
-		}
-		#lang-select:hover {
-			background: #4e6479;
-		}
-
-		/* 隱藏不需要的編輯工具，但保留 Timeline */
-		body.mobile-mode #toolbar, 
-		body.mobile-mode #draft-bar, 
-		body.mobile-mode #point-bar, 
-		body.mobile-mode #card-action-panel, 
-		body.mobile-mode #setup-modal,
-		body.mobile-mode .turn-bar {
-			display: none !important;
-		}
-
-		/* 1. 虛擬畫布設定 - 加大寬度以容納右側 Sidebar */
-		body.mobile-mode #workspace {
-			width: 1600px !important; /* 加大：1200 -> 1600 */
-			height: 800px !important;
-			
-			position: absolute;
-			top: 0; left: 0;
-			transform-origin: 0 0; 
-			
-			display: flex !important;
-			flex-direction: row;
-			background: #95a5a6;
-			box-shadow: 0 0 50px rgba(0,0,0,0.5);
-			
-			/* [新增] 讓整個工作區無法點擊/拖曳 */
-			pointer-events: none !important;
-		}
-
-		/* 2. SVG 設為穿透，避免擋到任何東西 */
-		body.mobile-mode #svg-layer {
-			pointer-events: none !important; 
-			z-index: 500; 
-		}
-
-		/* 3. 左側能力區：維持顯示 */
-		body.mobile-mode #ability-stack-zone {
-			display: flex !important;
-			width: 100px !important;
-			flex-shrink: 0;
-			height: 100%;
-			border-right: 2px solid #7f8c8d;
-			z-index: 600;
-		}
-
-		/* 4. 中間戰場：【關鍵】這裡設為 none，達成「透明擋板」效果 */
-		body.mobile-mode #game-board-container {
-			flex: 1;
-			height: 100%;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			overflow: hidden;
-			
-			/* 這裡禁止互動！ */
-			pointer-events: none !important; 
-		}
-
-		/* --- 移動控制面板位置 (靠右下角修正版) --- */
-		/* --- 移動控制面板位置 --- */
-		#mobile-controls {
-			display: none; /* 由 JS 控制顯示 */
-			align-items: center;
-			justify-content: flex-end;
-			gap: 8px; /* [修改] 間距稍微縮小 */
-			
-			position: fixed;
-			bottom: calc(15px + env(safe-area-inset-bottom)); 
-			right: calc(15px + env(safe-area-inset-right));
-			
-			z-index: 5000;
-			flex-shrink: 0;
-			opacity: 0.95;
-		}
-
-		/* 隱藏原本的停止按鈕 (如果 CSS 還有殘留) */
-		#mob-stop-btn { display: none !important; }
-
-		/* 音樂按鈕樣式：靜音時顯示紅色，播放時顯示綠色或白色 */
-		#mob-music-btn.active {
-			border-color: #2ecc71;
-			color: #2ecc71;
-			box-shadow: 0 0 5px #2ecc71;
-		}
-
-		/* 確保手機模式下 body 不會產生滾動條，避免 fixed 元素跑位 */
-		body.mobile-mode {
-			overflow: hidden;
-			position: fixed; /* 鎖定 body */
-			width: 100%;
-			height: 100%;
-			/* ... 其他樣式保持不變 ... */
-		}
-
-		/* --- 移動版速度選單 (縮小版) --- */
-		#mob-speed-select {
-			height: 36px; /* [修改] 高度縮小以配合按鈕 */
-			border-radius: 18px;
-			border: 2px solid white;
-			background: rgba(44, 62, 80, 0.9);
-			color: white;
-			font-size: 0.85rem; /* [修改] 字體縮小 */
-			padding: 0 10px;
-			outline: none;
-			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-			text-align: center;
-		}
-
-		/* 手機版播放按鈕 (如果你還要保留這個浮動按鈕的話) */
-		body.mobile-mode #mobile-controls {
-			display: flex;
-			z-index: 2000;
-		}
-
-		#orientation-overlay {
-			display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-			background: #2c3e50; color: white; z-index: 10000;
-			flex-direction: column; justify-content: center; align-items: center; text-align: center;
-		}
-		#orientation-overlay .icon { font-size: 50px; margin-bottom: 20px; animation: rotate 2s infinite; }
-		@keyframes rotate { 0% {transform: rotate(0deg);} 50% {transform: rotate(-90deg);} 100% {transform: rotate(0deg);} }
-
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-		
-		/* --- 垂直進度條樣式 (修正版) --- */
-		#playback-slider-container {
-			position: fixed;
-			/* [修改點 2] 桌機版位置調整 */
-			/* Timeline 寬度是 320px，我們設定 325px 讓它剛好在列表左側邊緣 */
-			right: 0px; 
-			
-			top: 50%;
-			transform: translateY(-50%);
-			
-			/* [修改點 1] 長度調整：容器高度設為 95% 視窗高度 */
-			height: 95vh; 
-			
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			z-index: 3001; /* 確保在阻擋層之上 */
-			gap: 10px;
-			pointer-events: none; /* 容器本身不擋滑鼠，讓內部元件擋就好 */
-		}
-
-		/* 讓內部元件可以被點擊 */
-		#playback-slider-container > * {
-			pointer-events: auto;
-		}
-
-		/* --- 新版進度條區域樣式 (Slider Zone) --- */
-		#slider-zone {
-			/* 桌機版佈局設定 */
-			width: 30px; /* 固定寬度，形成一個窄條 */
-			background: #2c3e50; /* 深色背景，區隔展示區與列表 */
-			border-left: 1px solid #34495e;
-			border-right: 1px solid #bdc3c7;
-			
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			
-			position: relative;
-			z-index: 20; /* 確保在普通層級之上 */
-			flex-shrink: 0; /* 禁止被壓縮 */
-		}
-
-		#slider-tooltip {
-			position: absolute;
-			/* 讓提示文字轉正，並顯示在滑桿上方或旁邊 */
-			top: 20px;
-			background: rgba(241, 196, 15, 0.9);
-			color: #000;
-			padding: 2px 6px;
-			border-radius: 4px;
-			font-size: 0.7rem;
-			font-weight: bold;
-			pointer-events: none;
-			z-index: 25;
-			white-space: nowrap;
-		}
-
-		#playback-slider {
-			-webkit-appearance: none;
-			appearance: none;
-			
-			/* 長度設定：
-			   因為旋轉了 90度，這裡的 width 控制的是螢幕上的「垂直高度」。
-			*/
-			width: 90vh; 
-			
-			height: 6px; /* 軌道寬度 */
-			background: rgba(255, 255, 255, 0.2);
-			border-radius: 3px;
-			outline: none;
-			
-			/* [關鍵修改] 
-			   改成 90deg (順時針旋轉)。
-			   原本的 range 是「左小右大」。
-			   轉 90 度後變成了「上小下大」，符合你要的 Top=0%, Bottom=100%。
-			*/
-			transform: rotate(90deg); 
-			
-			cursor: pointer;
-		}
-
-		#playback-slider::-webkit-slider-thumb {
-			-webkit-appearance: none;
-			appearance: none;
-			width: 16px;
-			height: 16px;
-			border-radius: 50%;
-			background: #f1c40f;
-			cursor: pointer;
-			border: 2px solid #fff;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-			transition: transform 0.1s;
-		}
-
-		#playback-slider::-webkit-slider-thumb:hover {
-			transform: scale(1.4);
-		}
-
-		/* --- 手機版模式修正 (Mobile Mode Fixes) --- */
-
-		/* 1. 隱藏原本的時間軸 (Action Log) */
-		body.mobile-mode #timeline-panel {
-			display: none !important;
-		}
-
-		/* 2. 顯示並重設 Slider Zone 的排版 */
-		/* 讓它像 Timeline 一樣，乖乖待在 Workspace 裡面的右側 */
-		body.mobile-mode #slider-zone {
-			display: flex !important;
-			position: relative !important; /* 關鍵：參與 Flex 排版 */
-			
-			/* 清除原本 fixed 的定位屬性 */
-			top: auto !important;
-			right: auto !important;
-			transform: none !important;
-			
-			/* 設定在虛擬畫布中的尺寸 */
-			width: 60px !important;  
-			height: 100% !important; 
-			
-			/* 確保層級與互動 */
-			z-index: 3000 !important;
-			background: rgba(44, 62, 80, 0.6); /* 半透明深色背景，更有質感 */
-			border-left: 1px solid rgba(255,255,255,0.2);
-			flex-shrink: 0; 
-			
-			/* 【關鍵】因為父層 workspace 是 pointer-events: none，這裡必須開啟 auto 才能拖拉 */
-			pointer-events: auto !important;
-		}
-
-		/* 3. 調整滑桿 (Input Range) 的尺寸 */
-		/* 因為畫布高度是 800px，我們設定 700px 讓它夠長 */
-		body.mobile-mode #playback-slider {
-			width: 700px !important; /* 足夠長度 */
-			height: 40px !important; /* 加高觸控區 */
-			transform: rotate(90deg);
-			background: rgba(255, 255, 255, 0.2);
-			border-radius: 20px;
-			cursor: pointer;
-		}
-
-		/* 加大手機版滑塊按鈕 (Thumb) */
-		body.mobile-mode #playback-slider::-webkit-slider-thumb {
-			width: 36px !important;
-			height: 36px !important;
-			background: #f1c40f;
-			box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-			border: 3px solid #fff;
-		}
-
-		/* 修正提示文字的位置 (轉正) */
-		body.mobile-mode #slider-tooltip {
-			transform: rotate(0deg); 
-			top: 30px;
-			right: auto;
-			font-size: 1.5rem; /* 字體加大，方便手機閱讀 */
-			font-weight: 800;
-			text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-		}
-
-		/* 確保進度條與手機按鈕永遠在阻擋層之上 */
-		#playback-slider-container, #mobile-controls {
-			z-index: 3001 !important;
-		}
-		
-		/* --- 調整側邊堆疊區的文字高度，避免英文版重疊 --- */
-
-		/* 超次元 (Hyper): 設為 25% */
-		.hyper-zone .zone-label {
-			top: 25% !important; /* 使用 !important 確保覆蓋預設值 */
-		}
-
-		/* 墓地 (Grave): 設為 50% (維持中間) */
-		.grave-zone .zone-label {
-			top: 50% !important;
-		}
-
-		/* 牌庫 (Deck): 設為 75% */
-		.deck-zone .zone-label {
-			top: 75% !important;
-		}
-		
-		/* --- 手機版專用：戰鬥區卡片放大 1.5 倍 (修正版) --- */
-		body.mobile-mode .battle-zone .card-group {
-			/* 1. 改用 transform: scale，這是標準屬性，getBoundingClientRect 能完美支援 */
-			transform: scale(1.5);
-			
-			/* 2. 設定縮放原點為「中心」，確保放大後位置不會亂跑 */
-			transform-origin: center center;
-			
-			/* 3. 【關鍵】因為 transform 只是視覺放大，不會「撐開」原本的空間 */
-			/* 所以必須手動增加 margin (外距)，否則放大後的卡片會互相重疊 */
-			/* 寬度 50px * 1.5 = 75px (差 25px)，左右各補約 12px */
-			margin: 25px 15px !important; 
-			
-			/* 確保放大後的層級正確 */
-			z-index: 10;
-		}
-		
-		/* --- 修正：強制在手機版顯示回合呼吸燈 --- */
-		body.mobile-mode .turn-bar {
-			display: block !important; /* 原本被設為 none，這裡強制顯示 */
-			
-			/* 手機螢幕較小，建議稍微加寬一點，視覺上會更明顯 */
-			width: 20px !important; 
-			
-			/* 確保它的層級夠高，不會被放大的卡片蓋住 */
-			z-index: 50 !important; 
-		}
-
-		/* 選擇性調整：如果你覺得手機版呼吸燈太亮或太暗，可以調整這裡 */
-		body.mobile-mode #player1-area.active-turn .turn-bar {
-			box-shadow: 0 0 25px 5px rgba(52, 152, 219, 0.9);
-		}
-		body.mobile-mode #player2-area.active-turn .turn-bar {
-			box-shadow: 0 0 25px 5px rgba(233, 30, 99, 0.9);
-		}
-		/* --- [新增] 低調訪客計數器 --- */
-        #visitor-counter {
-            position: fixed;
-            z-index: 100; /* 層級適中，不擋重要元素 */
-            font-family: sans-serif;
-            font-size: 10px; /* 字體極小 */
-            pointer-events: none; /* 滑鼠穿透 */
-            opacity: 0.5; /* 半透明，很不明顯 */
-            
-            /* 預設先隱藏，等腳本載入成功後會自動透過 JS 顯示(由不蒜子控制)，
-               或者我們可以強制 block，但不蒜子會控制內部 span 的 display */
-            display: block !important; 
-        }
-
-        /* 桌機版：左下角，深灰色 */
-        body:not(.mobile-mode) #visitor-counter {
-            bottom: 5px;
-            left: 5px;
-            color: rgba(0, 0, 0, 0.3);
-        }
-
-        /* 手機版：左下角，淺白色 (因為手機版背景較深) */
-        body.mobile-mode #visitor-counter {
-            bottom: 5px;
-            left: 5px;
-            color: rgba(255, 255, 255, 0.3);
-            /* 手機版稍微離開邊緣一點，避免被圓角切到 */
-            transform: translate(5px, -5px); 
-        }
-		
-		/* --- SRW Dialogue System Styles --- */
-        #dialogue-layer {
-            position: absolute; 
-            top: 0; 
-            
-            /* --- 修改開始：避開左右面板 --- */
-            left: 100px;   /* 避開左側 Ability Zone (100px) */
-            right: 380px;  /* 避開右側 Timeline (320px) + Slider (30px) + 5px間距 */
-            width: auto;   /* 刪除原本的 width: 100% */
-            /* --- 修改結束 --- */
-
-            height: 100%;
-            pointer-events: none; 
-            z-index: 2000;
-            display: none; 
-            flex-direction: column; 
-            justify-content: space-between;
-            overflow: hidden; 
-            padding: 20px 0;
-        }
-        #dialogue-layer.active { display: flex; }
-
-		/* 額外修正：確保手機版 (Mobile Mode) 因為右側面板隱藏，對話框要延伸回去 */
-        body.mobile-mode #dialogue-layer {
-            right: 70 !important;
-            /* 左側 Ability Zone 在手機版依然存在，所以 left: 100px 保持不變 */
-        }
-		
-        /* 上下對話區塊容器 */
-        .diag-row {
-            display: flex; width: 100%; height: 180px; align-items: flex-end; position: relative;
-            opacity: 0; transition: opacity 0.2s; pointer-events: none; /* 預設隱藏 */
-        }
-        .diag-row.visible { opacity: 1; pointer-events: auto; }
-
-        /* 頂部 (P2/敵方) - 頭像在右，框在左 */
-        .diag-row.top { flex-direction: row-reverse; align-items: flex-start; }
-        /* 底部 (P1/我方) - 頭像在左，框在右 */
-        .diag-row.bottom { flex-direction: row; }
-
-        /* 立繪容器 */
-        .diag-portrait {
-            width: 160px; height: 160px; flex-shrink: 0;
-            margin: 0 10px; border-radius: 8px;
-            background-size: cover; background-position: center;
-            border: 2px solid rgba(255,255,255,0.5);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            background-color: rgba(0,0,0,0.8);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        /* 對話框本體 */
-        .diag-box {
-            flex: 1; height: 100%; max-width: 70%;
-            background: linear-gradient(180deg, rgba(0,20,40,0.9) 0%, rgba(0,10,20,0.95) 100%);
-            border: 2px solid var(--p1-main); /* 預設 P1 顏色 */
-            display: flex; flex-direction: column; padding: 15px;
-            position: relative; margin: 0 20px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2); /* 簡化陰影，避免顏色運算 */
-            backdrop-filter: blur(2px);
-        }
-        		
-		/* P1 對話樣式 */
-        .diag-row.bottom .diag-box { border-color: var(--p1-main); }
-        .diag-row.bottom .diag-portrait { border-color: var(--p1-main); }
-        .diag-row.bottom .diag-name { background: var(--p1-main); }
-
-        /* P2 對話樣式 */
-        .diag-row.top .diag-box { border-color: var(--p2-main); }
-        .diag-row.top .diag-portrait { border-color: var(--p2-main); }
-        .diag-row.top .diag-name { background: var(--p2-main); }
-		
-		#theme-picker-modal .modal-content {
-            width: 340px;
-        }
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 15px 0;
-        }
-        .color-swatch {
-            aspect-ratio: 1;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: transform 0.2s;
-            position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .color-swatch:hover { transform: scale(1.1); }
-        .color-swatch.active { border-color: #333; transform: scale(0.95); }
-        .color-swatch.disabled { 
-            opacity: 0.2; 
-            cursor: not-allowed; 
-            filter: grayscale(1);
-        }
-        .color-swatch.disabled::after {
-            content: "✖";
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: #333; font-weight: bold;
-        }
-
-        /* 名字標籤 */
-        .diag-name {
-            background: #3498db; color: white; padding: 2px 10px;
-            font-size: 0.9rem; font-weight: bold; display: inline-block;
-            transform: skewX(-15deg); margin-bottom: 8px; align-self: flex-start;
-            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-        }
-        .diag-row.top .diag-name { background: #c0392b; align-self: flex-end; }
-
-        /* 文字內容 */
-        .diag-text { 
-            color: white; 
-            line-height: 1.4; 
-            white-space: pre-wrap; 
-            text-shadow: 1px 1px 2px black; 
-            flex: 1; 
-            overflow-y: auto;
-            
-            /* [新增] 隱藏捲軸但保留滾動功能 */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-        }
-        
-        /* [新增] 針對 Chrome/Safari/Webkit 隱藏捲軸 */
-        .diag-text::-webkit-scrollbar {
-            display: none;
-        }
-		
-        /* 文字大小 */
-        .text-s { font-size: 1rem; }
-        .text-m { font-size: 1.5rem; }
-        .text-l { font-size: 2.2rem; font-weight: bold; color: #f1c40f; }
-
-        /* 進場特效動畫 */
-        .fx-fade { animation: fadeIn 0.5s ease forwards; }
-        .fx-slide { animation: slideInX 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .fx-direct { /* No animation */ }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* 左側滑入 */
-        .diag-row.bottom .fx-slide { animation-name: slideInLeft; }
-        @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        /* 右側滑入 */
-        .diag-row.top .fx-slide { animation-name: slideInRight; }
-        @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* 編輯器樣式 */
-        .emotion-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 5px; }
-        .emotion-opt { 
-            width: 100%; aspect-ratio: 1; border: 2px solid #555; cursor: pointer; 
-            background-size: cover; border-radius: 4px; opacity: 0.6;
-        }
-        .emotion-opt:hover { opacity: 1; }
-        .emotion-opt.active { border-color: #f1c40f; opacity: 1; box-shadow: 0 0 5px #f1c40f; }
-        
-        .diag-editor-row { display: flex; gap: 10px; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fdfdfd; }
-        .diag-editor-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-        .diag-section-title { font-weight: bold; margin-bottom: 5px; border-bottom: 2px solid #eee; padding-bottom: 2px; }
-		
-		/* --- 新增：編輯中的佔位符樣式 --- */
-        .action-item.placeholder {
-            border: 2px dashed #f1c40f;
-            background: rgba(241, 196, 15, 0.1);
-            color: #7f8c8d;
-            text-align: center;
-            padding: 15px 10px;
-            font-style: italic;
-            font-weight: bold;
-            animation: pulse-placeholder 1.5s infinite;
-            cursor: default;
-        }
-
-        @keyframes pulse-placeholder {
-            0% { background: rgba(241, 196, 15, 0.05); }
-            50% { background: rgba(241, 196, 15, 0.15); }
-            100% { background: rgba(241, 196, 15, 0.05); }
-        }
-
-        /* --- 新增：鎖定列表滾動 --- */
-        #action-list.locked {
-            overflow-y: hidden !important; /* 強制鎖住滾動 */
-            padding-right: 0; /* 避免滾動條消失造成的輕微跳動(視瀏覽器而定) */
-        }
-		
-		/* --- 灰階化按鈕樣式 --- */
-        button.disabled-gray {
-            filter: grayscale(100%);
-            opacity: 0.5;
-            pointer-events: none;
-            cursor: not-allowed;
-        }
-
-        /* --- 修正 Modal 內按鈕間距 --- */
-        .diag-editor-col button { margin-top: 5px; }
-		
-		/* --- 持續效果卡片樣式 --- */
-		.card.ability-card.continuous {
-			border: 3px double #8e44ad !important; /* 紫色雙線框 */
-			background: #f4ecf7; /* 淡紫色背景 */
-			box-shadow: 0 0 5px rgba(142, 68, 173, 0.4);
-		}
-
-		/* 在卡片右上角加上 ∞ 符號 */
-		.card.ability-card.continuous::after {
-			content: "∞";
-			position: absolute;
-			top: -8px;
-			right: -4px;
-			color: #fff;
-			background: #8e44ad;
-			width: 18px;
-			height: 18px;
-			border-radius: 50%;
-			font-size: 14px;
-			font-weight: bold;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			z-index: 10;
-			box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-			line-height: 1;
-		}
-		
-		/* --- [新增] 王牌系統樣式 --- */
-		/* 1. 王牌星星 (右上角) - [修改] 黑框白肉版 */
-		.ace-star-mark {
-			position: absolute;
-			top: -6px; right: -2px; /* 稍微往外推一點，避免擋住卡圖太多 */
-			font-size: 16px; /* 稍微加大 */
-			
-			/* [核心修改] 黑框白肉 */
-			color: white; 
-			-webkit-text-stroke: 1.5px black; /* 這是文字描邊最有效的方法 */
-			/* 為了相容性，加一點陰影讓它在淺色背景也能看清 */
-			text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
-			
-			cursor: pointer;
-			z-index: 50;
-			transition: transform 0.2s;
-			
-			/* 移除原本的 filter: drop-shadow(0 0 2px gold); */
-		}
-		
-		.ace-star-mark:hover { 
-			transform: scale(1.4); 
-			color: #e74c3c; /* Hover 時變紅，提示可點擊 */
-			-webkit-text-stroke: 1px #c0392b;
-		}
-		
-		/* [新增] 播放模式或手機模式時，隱藏王牌星星 */
-		body.is-playing .ace-star-mark,
-		body.mobile-mode .ace-star-mark {
-			display: none !important;
-		}
-
-		/* 2. 長按集氣邊框 (SVG) - [修改] 光束質感版 */
-		.ace-loader-svg {
-			position: absolute;
-			top: 0; left: 0;
-			width: 100%; height: 100%;
-			pointer-events: none;
-			z-index: 40;
-			display: none; 
-			
-			/* [關鍵] 允許光暈超出 SVG 邊界，否則光會被切掉 */
-			overflow: visible; 
-		}
-
-		.ace-loader-rect {
-			fill: none;
-			
-			/* [核心修改 1] 線條本體改為白色 (模擬光的中心) */
-			stroke: #fff; 
-			
-			/* [核心修改 2] 線條改細一點，把視覺留給光暈 */
-			stroke-width: 3; 
-			
-			/* [核心修改 3] 利用多層陰影製造強烈的金色光暈效果 (Neon Glow) */
-			/* 第一層(2px)是高光，第二層(8px)是擴散光 */
-			filter: drop-shadow(0 0 2px #f1c40f) drop-shadow(0 0 8px gold);
-			
-			stroke-dasharray: 240; 
-			stroke-dashoffset: 240; 
-			stroke-linecap: round; /* 讓光束頭尾圓潤 */
-		}
-		/* 觸發集氣動畫：0.7秒內跑完 */
-		.charging .ace-loader-svg { display: block; }
-		.charging .ace-loader-rect {
-			animation: ace-fill 0.7s linear forwards;
-		}
-		@keyframes ace-fill {
-			to { stroke-dashoffset: 0; }
-		}
-
-		/* --- [精簡版] 王牌特效 (移除 Zoom In，僅保留金光與閃光) --- */
-        
-        .anim-flash-white {
-            display: block !important;
-            /* 0.5秒的閃光：快閃 -> 全白 -> 慢退 */
-            animation: flash-white 0.5s ease-out forwards;
-        }
-
-        @keyframes flash-white {
-            0% { opacity: 0; }
-            50% { opacity: 1; } /* 瞬間全白 */
-            100% { opacity: 0; }
-        }
-		
-		/* --- [獨立光圈版] 王牌特效 --- */
-        
-        /* 1. 全螢幕閃光遮罩 (維持不變) */
-        #ace-flash-layer {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: white;
-            z-index: 9999;
-            opacity: 0;
-            pointer-events: none;
-            display: none;
-        }
-        
-		/* 2. 外掛發光圈 (獨立於卡片之外) - 絕對尺寸版 */
-        .ace-external-ring {
-			position: fixed !important;
-			z-index: 4000 !important;
-			pointer-events: none;
-			background: transparent;
-			border-radius: 4px;
-			box-sizing: border-box; 
-
-			/* 讀取 JS 算好的絕對座標與尺寸 */
-			top: var(--y);
-			left: var(--x);
-			width: var(--w);
-			height: var(--h);
-			
-			/* [新增] 預設顏色 (金色)，如果 JS 沒傳入會用這個 */
-			--ace-color: 255, 215, 0; 
-
-			/* 動畫設定 */
-			animation: ace-ring-power-up 0.7s linear forwards;
-		}
-
-        .ace-external-ring.power-down {
-			animation: ace-ring-power-down 0.7s linear forwards;
-		}
-
-		/* [修改] 將原本寫死的 rgba 數值改為 var(--ace-color) */
-		@keyframes ace-ring-power-up {
-			0% {
-				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
-				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-			}
-			30% {
-				box-shadow: 0 0 15px 5px rgba(var(--ace-color), 0.4);
-				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-			}
-			60% {
-				box-shadow: 0 0 35px 15px rgba(var(--ace-color), 0.7);
-				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
-			}
-			100% {
-				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 1);
-				transform: translate(-50%, -50%) rotate(var(--rot)) scale(1.05);
-			}
-		}
-
-		@keyframes ace-ring-power-down {
-			0% {
-				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 1);
-				transform: rotate(var(--rot)) scale(1.05);
-			}
-			40% {
-				box-shadow: 0 0 35px 15px rgba(var(--ace-color), 0.7);
-			}
-			70% {
-				box-shadow: 0 0 15px 5px rgba(var(--ace-color), 0.4);
-			}
-			100% {
-				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
-				transform: rotate(var(--rot)) scale(1);
-			}
-		}
-		
-		/* --- [新增] 多重選取模式樣式 --- */
-        
-        /* 選取時的大紅勾 */
-        .card .check-mark {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 40px;
-            color: #e74c3c;
-            font-weight: 900;
-            text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
-            z-index: 200; /* 確保蓋在文字和圖片上 */
-            pointer-events: none;
-            display: none;
-        }
-        
-        /* 顯示紅勾 */
-        .card.multi-selected .check-mark {
-            display: block;
-        }
-        
-        /* 選取時的邊框 */
-        .card.multi-selected {
-            border: 3px solid #e74c3c !important;
-            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
-        }
-
-        /* 按鈕啟動狀態 */
-        #btn-multi-move.active {
-            background: #e74c3c !important;
-            border-color: #c0392b !important;
-            animation: pulse-red 2s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-		
-		/* [新增] 王牌按鈕啟用狀態 (亮金色) */
-		#btn-ace.active {
-			background: #f1c40f !important;
-			border-color: #f39c12 !important;
-			color: #2c3e50 !important;
-			font-weight: bold;
-			box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
-		}
-
-		/* [新增] 移除原本的集氣動畫與 SVG 樣式 (因為長按改成多選了) */
-		.ace-loader-svg, .charging .ace-loader-rect {
-			display: none !important;
-		}
-
-		/* 確保星星還是看得到，但滑鼠游標改回預設 (因為不能點了) */
-		.ace-star-mark {
-			cursor: default !important;
-			pointer-events: none !important; /* 讓點擊穿透星星選到卡片 */
-		}
-		
-		/* [新增] BGM 列表樣式 */
-        .bgm-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background 0.2s;
-        }
-        .bgm-item:hover { background: #f9f9f9; }
-        .bgm-item.selected { background: #e8f6fd; color: #2980b9; font-weight: bold; }
-        .bgm-item.playing-preview::after {
-            content: "🔊";
-            margin-left: auto;
-        }
-		/* [新增] 手機版隱藏 BGM 按鈕 (強制隱藏) */
-        body.mobile-mode #btn-bgm {
-            display: none !important;
-        }
-
-        /* [新增] 手機版按鈕通用樣式 (確保 Stop 跟 Play 長得像) */
-        .mobile-btn {
-			width: 36px;  /* [修改] 縮小尺寸 */
-			height: 36px; /* [修改] 縮小尺寸 */
-			border-radius: 50%;
-			border: 2px solid white;
-			background: rgba(44, 62, 80, 0.9);
-			color: white;
-			font-size: 0.9rem; /* [修改] 字體縮小 */
-			cursor: pointer;
-			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-			display: flex; justify-content: center; align-items: center;
-			padding: 0;
-			flex-shrink: 0;
-		}
-        .mobile-btn:active { transform: scale(0.95); }
-		
-		/* [新增] Play 按鈕發光引導動畫 (Pulse Effect) */
-        @keyframes play-btn-pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7);
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            70% {
-                box-shadow: 0 0 0 20px rgba(241, 196, 15, 0);
-                transform: scale(1.1);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(241, 196, 15, 0);
-                transform: scale(1);
-            }
-        }
-
-        /* 套用在按鈕上的 class */
-        .btn-highlight {
-            animation: play-btn-pulse 2s infinite;
-            background: #f39c12 !important; /* 讓底色稍微亮一點 */
-            border-color: #f1c40f !important;
-            font-weight: bold;
-            z-index: 3005 !important; /* 確保在最上層 */
-        }
-		
-		body.mobile-mode #reveal-zone .card {
-			transform: scale(1.5);
-			transform-origin: center center;
-			margin: 25px 8px !important;   /* 配合放大比例，稍微縮小左右外距 */
-		}
-
-        /* 1. 間距減半 (手牌與魔力區) */
-		body.mobile-mode .mana-zone .card-group,
-		body.mobile-mode .hand-zone .card-group {
-			margin: 0 2px !important; /* 原本是 5px，改為 2px */
-		}
-
-		/* 2. 展示區調整 (放大 1.5倍 + 間距縮小) */
-		body.mobile-mode #reveal-zone {
-			padding: 20px 15px !important; /* 縮小內距 */
-			gap: 8px !important;           /* 縮小卡片間距 */
-		}
-		
-		/* 讓手牌區的卡片間距變小，甚至稍微重疊 */
-        .hand-zone .card-group {
-            margin: 0 -5px; /* 原本是 0 5px，改成負值可以重疊 */
-        }
-        
-        /* 滑鼠移上去時，該張牌要浮上來，避免被擋住 */
-        .hand-zone {
-            z-index: 1000;
-            margin: 0 5px; /* Hover 時暫時撐開空間 (選用) */
-        }
-		
-		/* --- [修改] 堆疊展開優化：移除舊的 CSS Hover，改由 JS 接管 --- */
-        
-        /* 1. 停用 CSS 自動展開 (加入 !important 確保覆蓋) */
-        .card-group:hover .stack-base,
-        .card-group:hover .stack-top,
-        .card-group:hover .stack-shift-up,
-        .card-group:hover .stack-shift-down,
-        .card-group:hover .stack-bottom { 
-            /* 讓 JS 的 inline-style 能夠生效，不受 CSS 干擾 */
-            top: auto; 
-            z-index: auto;
-        }
-
-        /* 2. 讓卡片移動時有滑順動畫 */
-        .card-group .card {
-            /* 確保 JS 寫入 top/left 時有過渡效果 */
-            transition: top 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                        left 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                        transform 0.2s;
-            /* 讓 JS 能夠覆蓋定位 */
-            margin: 0 !important; 
-        }
-
-        /* 3. Hover 時提高層級，避免展開後被隔壁的牌擋住 */
-        .card-group:hover {
-            z-index: 1000 !important;
-        }
-		
-		/* 1. 對話層修正：針對 #dialogue-layer 及其「所有子元件」強制封鎖 */
-		/* 使用 * 選擇器選取底下所有東西，並用 !important 覆蓋 JS 的行內樣式 */
-		body.mobile-mode #dialogue-layer,
-		body.mobile-mode #dialogue-layer * {
-			pointer-events: none !important;
-		}
-		
-		/* 2. 牌庫、墓地、超次元、待處理區修正 */
-		/* 這些區域的卡片也必須強制封鎖，避免 JS 綁定的 onclick 生效 */
-		body.mobile-mode .deck-zone .card,
-		body.mobile-mode .grave-zone .card,
-		body.mobile-mode .hyper-zone .card,
-		body.mobile-mode #ability-stack-zone .card {
-			pointer-events: none !important;
-		}
-
-		/* 3. 確保展示區(Reveal Zone)的卡片「可以」被點擊 (放大檢視用) */
-		/* 因為上面用了 * 選擇器可能會誤殺，這裡再度確保展示區是活的 */
-		body.mobile-mode #reveal-zone .card {
-			pointer-events: auto !important;
-		}
-
-		/* 3. 強制開啟卡片點擊 (原本是 none，為了讓點擊生效改為 auto) */
-		body.mobile-mode .card {
-			pointer-events: auto !important; 
-		}
-		/* 但底下的容器依然保持穿透，避免誤觸拖曳邏輯 */
-		body.mobile-mode #game-board-container,
-		body.mobile-mode .zone {
-			pointer-events: none !important;
-		}
-		
-		/* 4. [新增] 手機版右側卡片放大檢視視窗 */
-		#mobile-card-viewer {
-			display: none;
-			position: fixed;
-			top: 0; 
-			left: 0; 
-			width: 100%; 
-			height: 100%;
-			background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
-			z-index: 6000; /* 確保在最上層 */
-			justify-content: flex-end; /* 靠右對齊 */
-			align-items: center;
-			padding-right: 50px; /* 右側留一點邊距 */
-			backdrop-filter: blur(2px);
-		}
-
-		#mobile-card-viewer img {
-			max-height: 90vh; /* 高度不超過螢幕 90% */
-			max-width: 50vw;  /* 寬度不超過螢幕一半 */
-			box-shadow: 0 0 20px rgba(0,0,0,0.8);
-			border: 3px solid white;
-			border-radius: 10px;
-			animation: zoomIn 0.2s ease-out;
-		}
-
-		@keyframes zoomIn {
-			from { transform: scale(0.8); opacity: 0; }
-			to { transform: scale(1); opacity: 1; }
-		}
-		
-		/* --- [優化版] 王牌特效樣式 --- */
-
-		/* 1. 動畫期間強制解除卡牌的邊界限制，讓光能透出來 */
-		.card.animating-ace {
-			overflow: visible !important;   /* 關鍵！讓光暈不會被切掉 */
-			z-index: 3000 !important;       /* 確保壓在所有卡片之上 */
-			will-change: transform;         /* 優化渲染效能 */
-		}
-
-		/* 2. 內部光暈層 (取代原本的 External Ring) */
-		.ace-internal-glow {
-			position: absolute;
-			top: 0; 
-			left: 0; 
-			width: 100%; 
-			height: 100%;
-			pointer-events: none;
-			border-radius: 4px;
-			
-			/* 預設從中心開始 */
-			transform-origin: center center;
-			
-			/* 動畫設定 */
-			animation: ace-pop-sequence 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-		}
-
-		/* 3. 動畫序列：擴大發光 -> 轉白閃光 -> 消退 */
-		@keyframes ace-pop-sequence {
-			0% {
-				transform: scale(1);
-				box-shadow: 0 0 0 0 rgba(var(--ace-color), 0);
-				background: rgba(var(--ace-color), 0);
-				opacity: 0.5;
-			}
-			40% {
-				/* 階段一：光暈迅速擴大，顏色飽和 */
-				transform: scale(1.4);
-				box-shadow: 0 0 30px 10px rgba(var(--ace-color), 0.8);
-				background: rgba(var(--ace-color), 0.3);
-				opacity: 1;
-			}
-			60% {
-				/* 階段二：變成強烈白光 (Flash) */
-				transform: scale(1.5);
-				box-shadow: 0 0 60px 20px rgba(255, 255, 255, 1); /* 強制白光 */
-				background: rgba(255, 255, 255, 0.6);
-				opacity: 1;
-				border: 2px solid white;
-			}
-			100% {
-				/* 階段三：消退 */
-				transform: scale(1.6);
-				box-shadow: 0 0 80px 40px rgba(var(--ace-color), 0);
-				background: rgba(var(--ace-color), 0);
-				opacity: 0;
-				border: 0px solid white;
-			}
-		}
-		/* --- Ending Effect: CRT Switch Off --- */
-
-		/* --- [新增] Ending 特效：CRT 電視關機 --- */
-
-		/* 1. 黑色遮罩 (FIN 畫面) */
-		#ending-overlay {
-			position: fixed;
-			top: 0; left: 0; width: 100vw; height: 100vh;
-			background: black;
-			z-index: 9999;
-			display: none;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			opacity: 0;
-			transition: opacity 1.5s ease-in; /* 文字慢慢浮現 */
-			pointer-events: none; /* 避免遮擋點擊 (直到完全顯示) */
-		}
-
-		/* 2. 結束文字樣式 */
-		.end-title {
-			color: white;
-			font-size: 3rem;
-			font-weight: 900;
-			letter-spacing: 5px;
-			margin-bottom: 20px;
-			text-shadow: 0 0 10px rgba(255,255,255,0.8);
-			font-family: 'Courier New', Courier, monospace; /* 復古字體感 */
-		}
-		.end-sub {
-			color: #7f8c8d;
-			font-size: 1.2rem;
-			font-family: sans-serif;
-			letter-spacing: 2px;
-		}
-
-		/* 3. 關機動畫 Keyframes */
-		@keyframes crt-shutdown {
-			0% { transform: scale(1, 1); filter: brightness(1); }
-			40% { transform: scale(1, 0.005); filter: brightness(5); } /* 擠壓成亮線 */
-			50% { transform: scale(1, 0.005); }
-			100% { transform: scale(0, 0.005); filter: brightness(0); } /* 縮成點並消失 */
-		}
-
-		/* 4. 觸發動畫的 Class */
-		body.shutdown-mode #workspace,
-		body.shutdown-mode #toolbar, 
-		body.shutdown-mode #card-action-panel,
-		body.shutdown-mode #timeline-panel {
-			animation: crt-shutdown 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-		}
-
-		/* [修正] 手機版關機特效強制置中 */
-		/* 原本手機版是以左上角為原點，這裡強制改成中心點並重新定位 */
-		body.mobile-mode.shutdown-mode #workspace {
-			top: 50% !important;
-			left: 50% !important;
-			transform-origin: center center !important;
-			
-			/* 因為畫布固定為 1600x800，回推一半的寬高來置中 */
-			margin-left: -800px !important;
-			margin-top: -400px !important;
-		}
-		
-		/* --- [新增] Ending Credit 樣式 --- */
-		.end-credits {
-			margin-top: 50px;
-			display: flex;
-			flex-direction: column;
-			gap: 20px;
-			text-align: center;
-			
-			/* 讓名單比標題晚一點浮現 */
-			opacity: 0;
-			animation: slideUp 1.5s ease 2s forwards; 
-		}
-
-		.credit-group {
-			display: flex;
-			flex-direction: column;
-			gap: 2px;
-		}
-
-		.credit-role {
-			color: #7f8c8d; /* 灰色職稱 */
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			font-family: sans-serif;
-		}
-
-		.credit-name {
-			color: #ecf0f1; /* 亮白色名字 */
-			font-size: 1rem;
-			font-weight: bold;
-			font-family: sans-serif;
-			letter-spacing: 1px;
-		}
-
-		/* --- [修正] 手機版 Ending 資訊：縮小字體 + 改為橫排 --- */
-		body.mobile-mode .end-title {
-			font-size: 3rem !important;
-			margin-bottom: 5px;
-		}
-		
-		body.mobile-mode .end-sub {
-			font-size: 1rem !important;
-			letter-spacing: 1px;
-		}
-
-		body.mobile-mode .end-credits {
-			margin-top: 30px !important;
-			
-			/* [核心修改] 改為橫向排列 */
-			flex-direction: row !important; 
-			flex-wrap: wrap !important;      /* 空間不夠時自動換行 */
-			justify-content: center !important; /* 水平置中 */
-			
-			gap: 15px 25px !important;       /* 上下 15px, 左右 25px 間距 */
-		}
-
-		/* 確保每個群組內的文字保持垂直 (職稱在上，名字在下) 並置中 */
-		body.mobile-mode .credit-group {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			min-width: 120px; /* 確保每個區塊有基本寬度，排列比較整齊 */
-		}
-
-		body.mobile-mode .credit-role {
-			font-size: 0.6rem !important;
-			letter-spacing: 1px;
-			margin-bottom: 3px;
-		}
-
-		body.mobile-mode .credit-name {
-			font-size: 0.9rem !important;
-		}
-		
-		/* --- [新增] 手機版劇本選擇器樣式 --- */
-        #mobile-script-selector {
-            display: none; /* 預設隱藏 */
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 20, 30, 0.95); /* 深色背景 */
-            z-index: 9999; /* 最上層 */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-        }
-
-        .script-list-container {
-            width: 100%;
-            max-width: 500px;
-            max-height: 60vh;
-            overflow-y: auto;
-            margin: 20px 0;
-            border: 1px solid #444;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.3);
-        }
-
-        .script-item {
-            padding: 15px;
-            border-bottom: 1px solid #444;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #ccc;
-			position: relative; /* [新增] 設為定位基準點 */
-        }
-		
-		/* [新增] 語言標籤樣式 */
-        .script-item-lang {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            text-transform: uppercase; /* 自動轉大寫 (zh -> ZH) */
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #555;
-            color: #888;
-        }
-
-        /* [新增] 選中時讓標籤也變亮 */
-        .script-item.selected .script-item-lang {
-            background: #2980b9;
-            border-color: #5dade2;
-            color: white;
-        }
-        
-        .script-item:last-child { border-bottom: none; }
-        .script-item:hover { background: rgba(255,255,255,0.05); }
-        
-        /* 選中狀態 */
-        .script-item.selected {
-            background: rgba(52, 152, 219, 0.2);
-            border-left: 5px solid #3498db;
-            color: white;
-        }
-
-        .script-item-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .script-item-desc {
-            font-size: 0.85rem;
-            opacity: 0.7;
-            line-height: 1.4;
-        }
-
-        #btn-mobile-start {
-            font-size: 1.2rem;
-            padding: 12px 40px;
-            background: #f1c40f;
-            color: #2c3e50;
-            border: none;
-            border-radius: 30px;
-            font-weight: 900;
-            box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        #btn-mobile-start:active { transform: scale(0.95); }
-        #btn-mobile-start:disabled { 
-            background: #7f8c8d; 
-            color: #bdc3c7; 
-            cursor: not-allowed; 
-            box-shadow: none;
-        }
-		
-		/* [修改] 無月之門按鈕 - 未啟動狀態 (OFF) */
-        #btn-moonless {
-            background: #34495e; /* 標準深藍灰 */
-            border-color: #566573;
-            color: #bdc3c7;      /* 文字稍微暗一點 */
-            transition: all 0.2s;
-        }
-
-        /* [修改] 無月之門按鈕 - 啟動狀態 (ON) */
-        #btn-moonless.active {
-            background: #8e44ad !important; /* 鮮豔的紫色 */
-            border-color: #9b59b6 !important; /* 亮紫色邊框 */
-            color: #fff !important;           /* 純白文字 */
-            
-            /* 加入發光陰影，讓它看起來是亮著的 */
-            box-shadow: 0 0 12px rgba(142, 68, 173, 0.8), inset 0 0 5px rgba(255,255,255,0.3);
-            
-            font-weight: bold;
-            transform: scale(1.05); /* 稍微放大一點點 */
-        }
-		
-		/* 猜拳結果顯示層 */
-    #rps-overlay {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none;
-        z-index: 2500; /* 比對話框高，比 Menu 低 */
-        display: none;
-        justify-content: center;
-        align-items: center;
-        gap: 50px;
-        background: rgba(0,0,0,0.3); /* 稍微暗一點突顯結果 */
-        animation: fadeIn 0.3s ease;
+        /* 動態主題變數 */
+        --p1-main: #3498db;
+        --p1-bg: #e3f2fd;
+        --p2-main: #e53935;
+        --p2-bg: #fce4ec;
+
+        --timeline-width: 320px;
+        --highlight-color: #f1c40f;
     }
 
-    .rps-hand {
-        font-size: 5rem;
-        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        overflow: hidden; /* 防止整體捲動 */
+    }
+
+    /* =========================================
+       2. UI COMPONENTS (Buttons, Inputs, Scrollbars)
+       ========================================= */
+    /* 隱藏捲軸但保留功能 (Chrome/Safari/Webkit) */
+    .hand-zone::-webkit-scrollbar,
+    #toolbar::-webkit-scrollbar,
+    .diag-text::-webkit-scrollbar {
+        display: none;
+    }
+    /* Firefox / Edge */
+    .hand-zone, #toolbar, .diag-text {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    button {
+        background: #34495e;
         color: white;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .rps-hand.winner {
-        transform: scale(1.5);
-        text-shadow: 0 0 20px gold;
-        filter: drop-shadow(0 0 5px gold);
-    }
-
-    .rps-hand.loser {
-        opacity: 0.5;
-        transform: scale(0.8);
-        filter: grayscale(1);
-    }
-
-    .rps-vs {
-        font-size: 2rem;
-        font-weight: 900;
-        color: #f1c40f;
-        font-family: impact, sans-serif;
-        transform: rotate(-10deg);
-    }
-
-    .rps-tag {
-        font-size: 1rem;
-        background: #2c3e50;
-        padding: 2px 8px;
+        border: 1px solid #566573;
+        padding: 4px 10px;
+        cursor: pointer;
         border-radius: 4px;
-        margin-top: 10px;
-        font-weight: bold;
+        font-size: 0.85rem;
+        transition: all 0.2s;
     }
+    button:hover { background: #4e6479; transform: translateY(-1px); }
+    button:active { transform: translateY(1px); }
+    
+    button.primary { background: #2ecc71; border-color: #27ae60; font-weight: bold; }
+    button.primary:hover { background: #27ae60; }
+    
+    button.danger { background: #c0392b; border-color: #e74c3c; }
+    button.danger:hover { background: #e74c3c; }
+
+    button.disabled-gray {
+        filter: grayscale(100%);
+        opacity: 0.5;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+    input[type="text"], input[type="number"] {
+        padding: 4px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 0.85rem;
+    }
+
+    /* =========================================
+       3. TOP TOOLBAR & STATUS BARS
+       ========================================= */
+    #toolbar {
+        height: 40px;
+        background: #2c3e50;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 5px;
+        gap: 5px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 50;
+        overflow-x: auto; 
+        white-space: nowrap;
+    }
+
+    #toolbar button, 
+    #toolbar select {
+        font-size: 0.75rem !important;
+        padding: 3px 6px !important;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #toolbar div[style*="font-weight: 800"] {
+        font-size: 1rem !important;
+        margin-right: 5px !important;
+    }
+
+    #lang-select {
+        background: #34495e; color: white; border: 1px solid #566573;
+        padding: 4px 8px; border-radius: 4px; margin-right: 10px;
+        font-size: 0.85rem; cursor: pointer; outline: none;
+    }
+    #lang-select:hover { background: #4e6479; }
+
+    #draft-bar, #point-bar {
+        padding: 5px 10px;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #draft-bar { background: #e67e22; color: white; }
+    #point-bar { background: #8e44ad; color: white; }
+
+    #draft-bar label {
+        display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;
+        background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 4px;
+    }
+
+    /* 多重選取提示列 */
+    #multi-select-bar {
+        display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+        background: rgba(44, 62, 80, 0.9); padding: 10px 20px; border-radius: 30px;
+        color: white; font-weight: bold; z-index: 2000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3); align-items: center; gap: 10px;
+    }
+
+    /* =========================================
+       4. WORKSPACE & LAYOUT
+       ========================================= */
+    #workspace {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    #game-board-container {
+        flex: 1;
+        background: #95a5a6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden; 
+    }
+
+    #main-board {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .rotated-view #main-board { transform: rotate(180deg); }
+
+    /* SVG Arrows Layer */
+    #svg-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 999; 
+    }
+    .arrow-line {
+        stroke: rgba(231, 76, 60, 0.8); stroke-width: 4; stroke-dasharray: 10, 5;
+        animation: dash 1s linear infinite; marker-end: url(#arrowhead); fill: none;
+    }
+    @keyframes dash { to { stroke-dashoffset: -15; } }
+
+    /* =========================================
+       5. ZONES & PLAYERS
+       ========================================= */
+    .player-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 2px;
+        position: relative; /* 確保 z-index 生效 */
+        padding-left: 15px;
+        transition: z-index 0s; /* 讓切換瞬間生效 */
+        z-index: 1; /* 預設層級 */
+    }
+
+    /* [新增] 關鍵修復：滑鼠操作中的區域自動浮起 */
+    /* 這樣 P2 展開卡片時，P2 區域會在 P1 之上，反之亦然 */
+    .player-area:hover {
+        z-index: 100;
+    }
+
+    #player1-area { background-color: var(--p1-bg); }
+    #player2-area { 
+        background-color: var(--p2-bg);
+        border-bottom: 2px dashed #999;
+    }
+    /* P2 Layout Reordering */
+		{ order: -1; }
+    #player2-area .bottom-row { order: -1; } /* 手牌在最上面 */
+    #player2-area .middle-row { order: 0; }  /* 護盾+魔力在中間 */
+    #player2-area .battle-zone { order: 1; } /* 戰鬥區在最下面(靠內) */
+	
+	/* [新增] 中排容器：將護盾與魔力併排 */
+    .middle-row {
+        display: flex;
+        flex-direction: row;
+        height: var(--card-height);
+        width: 100%;
+        margin: 1px 0;
+        overflow: visible; /* 關鍵：讓卡片可以凸出來，不要切掉 */
+        position: relative;
+        z-index: 5; /* 確保中排在戰鬥區之上 (避免展開時被遮住) */
+    }
+
+    /* [修改] 移除舊的高度限制，改為 flex 分配 */
+    .mana-zone {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        
+        /* 自動佔滿剩下空間 */
+        flex: 1 1 auto; 
+        
+        padding-left: 15px; /* 與護盾區隔開一點 */
+        overflow: visible;
+        z-index: 5;
+    }
+    
+    .shield-zone {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        
+        /* 條件2: 基礎寬度設為約 5 張重疊卡片的寬度 (180px) */
+        /* 條件3: flex-grow: 1 允許它在沒卡時也佔據空間，但 max-width 限制它不要吃掉魔力區 */
+        flex: 1 1 auto;
+        min-width: 150px; 
+        max-width: 50%; /* 限制最大寬度，保留空間給魔力區 */
+        
+        padding-left: 5px;
+        border-right: 2px dashed rgba(0,0,0,0.1);
+        
+        /* 關鍵：移除 overflow: hidden，改為 visible 以顯示重疊卡片 */
+        overflow: visible; 
+        z-index: 10;
+    }
+	
+	/* 條件4 & 5: 視覺重疊設定 */
+    /* 讓魔力區與護盾區內的卡片群組稍微負邊距，製造重疊感 */
+    .mana-zone .card-group, .shield-zone .card-group {
+        margin-right: -10px; /* 讓卡片更緊湊 */
+    }
+	
+	/* [新增] 針對戰鬥、魔力、護盾區進行縮小 (50px/70px 為原始尺寸) */
+    /* 這滿足了「縮小17%」的需求 (60->50, 84->70) */
+    .mana-zone, .shield-zone, .hand-zone {
+        --card-width: 50px;
+        --card-height: 70px;
+    }
+	
+	/* [新增] 條件 4 & 5：卡片緊湊排列與重疊邏輯 */
+    /* 這裡設定預設的負邊距，讓卡片像扇子一樣疊在一起 */
+    .shield-zone .card-group,
+    .mana-zone .card-group {
+        /* 讓卡片彼此重疊 (負邊距) */
+        /* 卡寬 50px，設定 -20px 代表露出 30px，這樣可以塞很多張 */
+        margin-right: -25px; 
+        transition: margin 0.2s ease, transform 0.2s;
+    }
+
+    /* 最後一張卡片不需要負邊距，否則右邊會空掉 */
+    .shield-zone .card-group:last-child,
+    .mana-zone .card-group:last-child {
+        margin-right: 0;
+    }
+
+    /* [UX 優化] 滑鼠指到某張重疊卡時，提高層級以免被遮住 */
+    .shield-zone .card-group:hover,
+    .mana-zone .card-group:hover {
+        z-index: 500 !important; /* 確保浮在最上面 */
+        margin-right: -5px; /* 展開一點點方便選取 */
+    }
+
+    .zone {
+        border: 1px solid rgba(0,0,0,0.15);
+        margin: 1px;
+        display: flex;
+        align-items: center;
+        position: relative;
+        min-height: var(--card-height);
+        border-radius: 3px;
+    }
+    
+    .zone-label {
+        position: absolute; font-size: 0.8rem; color: rgba(0,0,0,0.25);
+        font-weight: 900; pointer-events: none; z-index: 0; width: 100%; text-align: center;
+        top: 50%; transform: translateY(-50%); text-transform: uppercase;
+    }
+
+    /* Layout specific zones */
+    .bottom-row { display: flex; height: var(--card-height); margin-top: auto; }
+    .hand-zone { flex: 1; overflow-x: auto; padding: 2px; z-index: 1000; margin: 0 5px; }
+    .hand-zone .card-group { margin: 0 -5px; } /* 手牌重疊效果 */
+    
+    .side-zone-group { width: 170px; display: flex; gap: 3px; padding-left: 3px; flex-shrink: 0; }
+    .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
+    
+    .battle-zone { flex: 1; background: rgba(255,255,255,0.6); justify-content: center; gap: 4px; padding: 5px; }
+
+    /* Zone Highlights */
+    .zone.target-highlight {
+        background-color: rgba(46, 204, 113, 0.4);
+        border: 2px dashed #27ae60;
+        box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.5);
+        cursor: copy; z-index: 100;
+    }
+    .zone.point-target-highlight {
+        background-color: rgba(142, 68, 173, 0.2);
+        border: 2px dashed #9b59b6;
+        cursor: crosshair; z-index: 100;
+    }
+
+    /* Ability/Stack Zone (Left Panel) */
+    #ability-stack-zone {
+        width: 100px;
+        background: #bdc3c7;
+        border-right: 2px solid #7f8c8d;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        z-index: 10;
+    }
+    #ability-stack-zone.rotated-view { flex-direction: column-reverse; }
+    
+    .ability-column {
+        flex: 1; display: flex; flex-direction: column; align-items: center;
+        padding: 5px 0; overflow-y: auto; position: relative; gap: 5px;
+    }
+    #ability-zone-p1 { background: var(--p1-bg); }
+    #ability-zone-p2 { background: var(--p2-bg); }
+    
+    #ability-stack-zone:not(.rotated-view) #ability-zone-p2 { border-bottom: 2px dashed #7f8c8d; }
+    #ability-stack-zone.rotated-view #ability-zone-p1 { border-bottom: 2px dashed #7f8c8d; }
+    
+    .ability-label {
+        font-size: 0.7rem; font-weight: bold; color: #555; margin-bottom: 5px; opacity: 0.7;
+    }
+
+    /* Reveal Zone (Center Overlay) */
+    #reveal-zone {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        min-width: 200px; min-height: 120px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px dashed #f1c40f; border-radius: 10px;
+        z-index: 300; display: none;
+        justify-content: center; align-items: center; flex-wrap: wrap;
+        gap: 10px; padding: 30px 20px 20px 20px; 
+        transition: opacity 0.3s;
+        box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+    }
+    #reveal-zone .zone-label {
+        top: 5px; left: 10px; width: auto; transform: none;
+        color: #f1c40f; text-shadow: none; font-size: 1rem; pointer-events: none;
+    }
+
+    /* Turn Indicators */
+    .turn-bar {
+        position: absolute; left: 0; top: 0; bottom: 0;
+        width: 12px; background: #95a5a6; z-index: 50;
+        transition: all 0.5s ease;
+        border-right: 1px solid rgba(0,0,0,0.1); cursor: pointer;
+    }
+    #player1-area.active-turn .turn-bar {
+        background: var(--p1-main);
+        box-shadow: 0 0 15px 2px var(--p1-main);
+        animation: pulse-p1 2s infinite;
+    }
+    #player2-area.active-turn .turn-bar {
+        background: var(--p2-main);
+        box-shadow: 0 0 15px 2px var(--p2-main);
+        animation: pulse-p2 2s infinite;
+    }
+    @keyframes pulse-p1 {
+        0%, 100% { box-shadow: 0 0 10px 2px var(--p1-main); opacity: 0.8; }
+        50% { box-shadow: 0 0 25px 8px var(--p1-main); opacity: 1; }
+    }
+    @keyframes pulse-p2 {
+        0%, 100% { box-shadow: 0 0 10px 2px var(--p2-main); opacity: 0.8; }
+        50% { box-shadow: 0 0 25px 8px var(--p2-main); opacity: 1; }
+    }
+
+    /* =========================================
+       6. CARDS
+       ========================================= */
+    .card-group {
+        position: relative;
+        width: auto; min-width: var(--card-width); height: var(--card-height);
+        margin: 0 5px;
+        display: flex; justify-content: center; align-items: center;
+        transition: all 0.3s;
+    }
+    .card-group:hover { z-index: 1000 !important; }
+    
+    /* Disable CSS hover expansion to let JS handle it */
+    .card-group:hover .stack-base,
+    .card-group:hover .stack-top,
+    .card-group:hover .stack-shift-up,
+    .card-group:hover .stack-shift-down,
+    .card-group:hover .stack-bottom { 
+        top: auto; z-index: auto;
+    }
+
+    .card {
+        width: var(--card-width); height: var(--card-height);
+        background-color: white; border: 1px solid #333; border-radius: 3px;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        position: relative; font-size: 9px; cursor: pointer;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.4); user-select: none;
+        transition: box-shadow 0.2s, border-color 0.2s, top 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s;
+        z-index: 1; flex-shrink: 0; overflow: hidden;
+        will-change: transform, top, left;
+        background-size: cover; background-position: center; background-repeat: no-repeat;
+    }
+
+    .card.has-image { border: none; }
+    .card.has-image[class*="glow-"] { border: 1px solid transparent; }
+    .card.has-image .card-text { display: none; }
+    .card:hover { z-index: 200; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    
+    .card.selected { 
+        box-shadow: 0 0 0 3px #f1c40f, 0 0 8px #f1c40f !important; 
+        z-index: 100; 
+    }
+    .card.face-down { 
+        background: #2c3e50;
+        background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
+        background-size: 15px 15px; border: 1px solid white; color: transparent; 
+    }
+
+    .card-note {
+        position: absolute; top: 1px; left: 2px; right: 2px;
+        background: #f1c40f; color: black; font-size: 8px; text-align: center;
+        border: 1px solid #d35400; z-index: 5;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        pointer-events: none; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .card-power { 
+        position: absolute; bottom: 0; left: 0; width: 100%;
+        background: rgba(255,255,255,0.9); border-top: 1px solid #000; 
+        text-align: center; font-weight: bold; font-size: 9px; color: black;
+    }
+    .card-text { padding: 2px; text-align: center; line-height: 1.1; font-weight: 500;}
+
+    /* Ability Card Specifics */
+    .ability-card { 
+        width: 80px; height: 35px; flex-direction: row; 
+        font-size: 8px; transform: none !important; cursor: pointer; overflow: hidden; 
+    }
+    .ability-card .card-text { 
+        font-size: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 90%; 
+        padding-left: 18px !important; text-align: left !important;
+    }
+    .ability-card .card-power { display: none; }
+    
+    /* Ability Card Side Note (Vertical) */
+    .ability-card .card-note {
+        top: 0 !important; bottom: 0 !important; left: 0 !important; right: auto !important;
+        width: 16px; height: 100%;
+        writing-mode: vertical-rl; text-orientation: upright;
+        display: flex; justify-content: center; align-items: center;
+        border-radius: 2px 0 0 2px !important; border: none !important; border-right: 1px solid #d35400 !important;
+        box-shadow: 1px 0 3px rgba(0,0,0,0.2) !important;
+        font-size: 9px; letter-spacing: 1px; padding: 2px 0;
+    }
+    
+    .card.ability-card.continuous {
+        border: 3px double #8e44ad !important;
+        background: #f4ecf7;
+        box-shadow: 0 0 5px rgba(142, 68, 173, 0.4);
+    }
+    .card.ability-card.continuous::after {
+        content: "∞";
+        position: absolute; top: -8px; right: -4px;
+        color: #fff; background: #8e44ad; width: 18px; height: 18px;
+        border-radius: 50%; font-size: 14px; font-weight: bold;
+        display: flex; justify-content: center; align-items: center;
+        z-index: 10; box-shadow: 1px 1px 2px rgba(0,0,0,0.3); line-height: 1;
+    }
+
+    /* Stacking Helper Classes */
+    .stack-base { z-index: 10; position: absolute; }
+    .stack-top { z-index: 20; position: absolute; }
+    .stack-bottom { z-index: 5; position: absolute; }
+    .stack-shift-up { z-index: 20; position: absolute; }
+    .stack-shift-down { z-index: 20; position: absolute; }
+    .stack-bottom-exposed { z-index: 5; position: absolute; }
+    .stack-top-offset { z-index: 20; position: absolute; }
+    .stack-puzzle-top { z-index: 20; position: absolute; }
+    .stack-puzzle-bottom { z-index: 20; position: absolute; }
+    .stack-puzzle-left { z-index: 20; position: absolute; }
+    .stack-puzzle-right { z-index: 20; position: absolute; }
+
+    /* Count Badge */
+    .count-badge {
+        position: absolute; top: -6px; right: -6px;
+        background: #e74c3c; color: white;
+        border-radius: 50%; width: 20px; height: 20px;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 10px; font-weight: bold; z-index: 50;
+        border: 1px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* =========================================
+       7. TIMELINE PANEL (Right Side)
+       ========================================= */
+    #timeline-panel {
+        width: var(--timeline-width);
+        background: #ecf0f1;
+        border-left: 1px solid #bdc3c7;
+        display: flex; flex-direction: column; flex-shrink: 0; z-index: 20;
+    }
+
+    #timeline-header {
+        padding: 8px; background: #34495e; color: white;
+        font-weight: bold; text-align: center;
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 0.9rem;
+    }
+
+    #action-list {
+        flex: 1; overflow-y: auto; list-style: none;
+        padding: 0; margin: 0; padding-bottom: 20px;
+    }
+    #action-list.locked { overflow-y: hidden !important; padding-right: 0; }
+
+    .action-item {
+        padding: 8px 10px; border-bottom: 1px solid #dcdcdc;
+        cursor: pointer; font-size: 0.85rem;
+        display: flex; flex-direction: column; gap: 5px;
+        background: #fdfdfd; border-left: 4px solid transparent;
+    }
+    .action-item:hover { background: #f0f4f7; }
+    .action-item.active { background: #e8f6fd; border-left-color: #2980b9;}
+    .action-item.editing { 
+        background: #fffbe6 !important; border-left: 2px dashed #f39c12 !important; border: 2px dashed #f39c12 !important;
+        transform: scale(1.02); box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 5;
+    }
+    .action-item.placeholder {
+        border: 2px dashed #f1c40f; background: rgba(241, 196, 15, 0.1);
+        color: #7f8c8d; text-align: center; padding: 15px 10px;
+        font-style: italic; font-weight: bold; animation: pulse-placeholder 1.5s infinite; cursor: default;
+    }
+    @keyframes pulse-placeholder {
+        0% { background: rgba(241, 196, 15, 0.05); }
+        50% { background: rgba(241, 196, 15, 0.15); }
+        100% { background: rgba(241, 196, 15, 0.05); }
+    }
+
+    .action-item.p1-action { border-left: 4px solid #3498db; background: rgba(52, 152, 219, 0.05); }
+    .action-item.p1-action.active { background: rgba(52, 152, 219, 0.2); }
+    
+    .action-item.p2-action { border-left: 4px solid #e91e63; background: rgba(233, 30, 99, 0.05); }
+    .action-item.p2-action.active { background: rgba(233, 30, 99, 0.2); }
+
+    .action-header { display: flex; align-items: center; width: 100%; justify-content: space-between; }
+    .action-index { font-weight: bold; margin-right: 6px; min-width: 18px; text-align: right; color: #7f8c8d;}
+    .action-desc { flex: 1; white-space: pre-wrap; word-break: break-all; font-weight: 500;}
+    
+    .action-controls {
+        display: flex; gap: 5px; margin-top: 5px; padding-left: 24px; opacity: 0.4; transition: opacity 0.2s;
+    }
+    .action-item:hover .action-controls, .action-item.active .action-controls { opacity: 1; }
+    
+    .mini-btn { font-size: 0.75rem; padding: 3px 8px; background: #bdc3c7; border: none; color: #2c3e50; border-radius: 3px; cursor: pointer;}
+    .mini-btn:hover { background: #95a5a6; color: white; }
+    .mini-btn.play-from { background: #2ecc71; color: white; }
+    .mini-btn.play-step { background: #3498db; color: white; }
+    .mini-btn.edit { background: #f39c12; color: white; }
+    .mini-btn.delete-all { background: #c0392b; color: white; font-weight:bold; padding: 2px 6px; }
+    .icon-btn { background: none; border: none; cursor: pointer; padding: 2px; opacity: 0.5; font-size: 1rem; }
+    .icon-btn:hover { opacity: 1; transform: scale(1.1); }
+    .icon-btn.delete { color: #c0392b; }
+
+    /* Timeline Gaps & Insert Buttons */
+    .timeline-gap {
+        height: 14px; display: flex; justify-content: center; align-items: center;
+        cursor: default; position: relative; gap: 15px; transition: background 0.2s;
+    }
+    .timeline-gap::before {
+        content: ""; height: 2px; background: #ccc; width: 90%; position: absolute; z-index: 0;
+    }
+    .timeline-gap:hover::after { display: none !important; }
+    
+    .gap-btn {
+        width: 24px; height: 24px; border-radius: 50%;
+        display: none; justify-content: center; align-items: center;
+        font-weight: bold; font-size: 16px; z-index: 10;
+        cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        transition: transform 0.1s; line-height: 1; padding-bottom: 2px;
+        margin: 0 40px !important;
+    }
+    .timeline-gap:hover .gap-btn { display: flex; }
+    .gap-btn:hover { transform: scale(1.2); }
+    .gap-btn-plus { background: #3498db; color: white; }
+    .gap-btn-minus { background: #c0392b; color: white; }
+
+    /* =========================================
+       8. FLOATING ACTION PANEL
+       ========================================= */
+    #card-action-panel {
+        position: fixed; bottom: auto; left: 0; transform: none; cursor: move;
+        background: rgba(44, 62, 80, 0.95); color: white;
+        padding: 8px 12px; border-radius: 8px;
+        display: none; flex-direction: column; gap: 8px;
+        align-items: center; z-index: 1000;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px); border: 1px solid #555;
+        width: auto; max-width: 90vw;
+    }
+    #card-action-panel * { user-select: none; }
+    #card-action-panel input, #card-action-panel button { cursor: pointer; }
+    #card-action-panel input { cursor: text; user-select: auto; }
+
+    .panel-row {
+        display: flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap;
+    }
+    .panel-sep {
+        border-left: 1px solid #7f8c8d; height: 20px; margin: 0 5px; opacity: 0.5;
+    }
+
+    /* =========================================
+       9. CARD EFFECTS & ANIMATIONS
+       ========================================= */
+    
+    /* Glow Effects */
+    .glow-red { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8) !important; border-color: red !important; }
+    .glow-yellow { box-shadow: 0 0 8px 4px rgba(255, 215, 0, 0.8) !important; border-color: gold !important; }
+    .glow-green { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8) !important; border-color: lime !important; }
+    .glow-blue { box-shadow: 0 0 8px 4px rgba(0, 191, 255, 0.8) !important; border-color: deepskyblue !important; }
+    .glow-black { box-shadow: 0 0 8px 4px rgba(0, 0, 0, 0.8) !important; border-color: black !important; }
+    .glow-white { box-shadow: 0 0 8px 4px rgba(255, 255, 255, 0.9) !important; border-color: white !important; }
+    .glow-rainbow { animation: rainbow 2s linear infinite !important; }
+    @keyframes rainbow {
+        0% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
+        15% { box-shadow: 0 0 8px 4px rgba(255, 165, 0, 0.8); border-color: orange; }
+        30% { box-shadow: 0 0 8px 4px rgba(255, 255, 0, 0.8); border-color: yellow; }
+        45% { box-shadow: 0 0 8px 4px rgba(0, 255, 0, 0.8); border-color: lime; }
+        60% { box-shadow: 0 0 8px 4px rgba(0, 127, 255, 0.8); border-color: cyan; }
+        75% { box-shadow: 0 0 8px 4px rgba(0, 0, 255, 0.8); border-color: blue; }
+        90% { box-shadow: 0 0 8px 4px rgba(139, 0, 255, 0.8); border-color: violet; }
+        100% { box-shadow: 0 0 8px 4px rgba(255, 0, 0, 0.8); border-color: red; }
+    }
+
+    /* Zone Glows */
+    .zone.glow-red { box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.5); border: 2px solid red; }
+    .zone.glow-yellow { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.5); border: 2px solid gold; }
+    .zone.glow-green { box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.5); border: 2px solid lime; }
+    .zone.glow-blue { box-shadow: inset 0 0 20px rgba(0, 191, 255, 0.5); border: 2px solid deepskyblue; }
+    .zone.glow-black { box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5); border: 2px solid black; }
+    .zone.glow-white { box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.8); border: 2px solid white; }
+    .zone.glow-rainbow { animation: zone-rainbow 2s linear infinite; }
+    @keyframes zone-rainbow {
+        0% { border-color: red; box-shadow: inset 0 0 20px rgba(255,0,0,0.5); }
+        50% { border-color: blue; box-shadow: inset 0 0 20px rgba(0,255,0,0.5); }
+        100% { border-color: red; box-shadow: inset 0 0 20px rgba(255,0,0,0.5); }
+    }
+
+    /* Bottom Glow (Partial) */
+    .card[class*="glow-bottom-"]::after {
+        content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+        z-index: 10; pointer-events: none; border-bottom-left-radius: 3px; border-bottom-right-radius: 3px;
+        opacity: 0.85; transition: opacity 0.2s;
+    }
+    .card.glow-bottom-red::after { background: linear-gradient(to top, rgba(255,0,0,0.8), transparent); border-bottom: 3px solid red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
+    .card.glow-bottom-yellow::after { background: linear-gradient(to top, rgba(255,215,0,0.8), transparent); border-bottom: 3px solid gold; box-shadow: 0 4px 10px rgba(255,215,0,0.5); }
+    .card.glow-bottom-green::after { background: linear-gradient(to top, rgba(0,255,0,0.8), transparent); border-bottom: 3px solid lime; box-shadow: 0 4px 10px rgba(0,255,0,0.5); }
+    .card.glow-bottom-blue::after { background: linear-gradient(to top, rgba(0,191,255,0.8), transparent); border-bottom: 3px solid deepskyblue; box-shadow: 0 4px 10px rgba(0,191,255,0.5); }
+    .card.glow-bottom-black::after { background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); border-bottom: 3px solid black; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .card.glow-bottom-white::after { background: linear-gradient(to top, rgba(255,255,255,0.9), transparent); border-bottom: 3px solid white; box-shadow: 0 4px 10px rgba(255,255,255,0.5); }
+    .card.glow-bottom-rainbow::after { background: linear-gradient(to top, rgba(255,0,255,0.6), transparent); border-bottom: 3px solid white; animation: bottom-rainbow-anim 2s linear infinite; }
+    @keyframes bottom-rainbow-anim {
+        0% { border-bottom-color: red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
+        50% { border-bottom-color: blue; box-shadow: 0 4px 10px rgba(0,0,255,0.5); }
+        100% { border-bottom-color: red; box-shadow: 0 4px 10px rgba(255,0,0,0.5); }
+    }
+
+    /* Claw / Injury Effect */
+    .claw-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 50; display: flex; justify-content: center; align-items: center; opacity: 0.9;
+    }
+    .claw-svg { width: 130%; height: 130%; overflow: visible; }
+    .claw-path { fill: none; stroke: #c0392b; stroke-width: 8; stroke-linecap: round; filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5)); }
+    .claw-anim .claw-path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: scratch-anim 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+    .claw-anim .p1 { animation-delay: 0s; }
+    .claw-anim .p2 { animation-delay: 0.1s; }
+    .claw-anim .p3 { animation-delay: 0.05s; }
+    @keyframes scratch-anim { to { stroke-dashoffset: 0; } }
+
+    /* Ace Card System */
+    .ace-star-mark {
+        position: absolute; top: -6px; right: -2px; font-size: 16px;
+        color: white; -webkit-text-stroke: 1.5px black; text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        cursor: pointer; z-index: 50; transition: transform 0.2s;
+    }
+    .ace-star-mark:hover { transform: scale(1.4); color: #e74c3c; -webkit-text-stroke: 1px #c0392b; }
+    body.is-playing .ace-star-mark, body.mobile-mode .ace-star-mark { display: none !important; }
+    
+    .ace-star-mark { cursor: default !important; pointer-events: none !important; } /* In panel mode */
+    #btn-ace.active {
+        background: #f1c40f !important; border-color: #f39c12 !important; color: #2c3e50 !important;
+        font-weight: bold; box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    }
+
+    /* Ace Animation (Internal Glow) */
+    .card.animating-ace { overflow: visible !important; z-index: 3000 !important; will-change: transform; }
+    .ace-internal-glow {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 4px;
+        transform-origin: center center; animation: ace-pop-sequence 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes ace-pop-sequence {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--ace-color), 0); background: rgba(var(--ace-color), 0); opacity: 0.5; }
+        40% { transform: scale(1.4); box-shadow: 0 0 30px 10px rgba(var(--ace-color), 0.8); background: rgba(var(--ace-color), 0.3); opacity: 1; }
+        60% { transform: scale(1.5); box-shadow: 0 0 60px 20px rgba(255, 255, 255, 1); background: rgba(255, 255, 255, 0.6); opacity: 1; border: 2px solid white; }
+        100% { transform: scale(1.6); box-shadow: 0 0 80px 40px rgba(var(--ace-color), 0); background: rgba(var(--ace-color), 0); opacity: 0; border: 0px solid white; }
+    }
+    
+    #ace-flash-layer {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: white; z-index: 9999; opacity: 0; pointer-events: none; display: none;
+    }
+    .anim-flash-white { display: block !important; animation: flash-white 0.5s ease-out forwards; }
+    @keyframes flash-white { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+
+    /* Multi-Select Checkmark */
+    .card .check-mark {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        font-size: 40px; color: #e74c3c; font-weight: 900;
+        text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
+        z-index: 200; pointer-events: none; display: none;
+    }
+    .card.multi-selected .check-mark { display: block; }
+    .card.multi-selected { border: 3px solid #e74c3c !important; box-shadow: 0 0 10px rgba(231, 76, 60, 0.5); }
+    #btn-multi-move.active {
+        background: #e74c3c !important; border-color: #c0392b !important; animation: pulse-red 2s infinite;
+    }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+
+    /* EX-Life Overlay */
+    .ex-life-overlay {
+        position: absolute; top: 20%; left: 0; width: 100%; height: 40%; z-index: 15;
+        background-size: cover; background-position: center; background-repeat: no-repeat;
+        border-top: 1px dashed rgba(255,255,255,0.5); border-bottom: 1px dashed rgba(255,255,255,0.5);
+        pointer-events: none; opacity: 0.9;
+    }
+    .ex-life-close {
+        position: absolute; top: -6px; right: -6px; width: 14px; height: 14px;
+        font-size: 9px; font-weight: bold; background: #c0392b; color: white;
+        border: 1px solid white; border-radius: 50%; cursor: pointer; display: none;
+        justify-content: center; align-items: center; pointer-events: auto; z-index: 20;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .card:hover .ex-life-close { display: flex; }
+
+    /* Unseen Cards */
+    @keyframes pulse-unseen {
+        0%, 100% { box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.4); border-color: rgba(0, 255, 255, 0.5); }
+        50% { box-shadow: 0 0 15px 5px rgba(0, 255, 255, 0.8); border-color: rgba(0, 255, 255, 1); }
+    }
+    .glow-unseen { animation: pulse-unseen 2s infinite ease-in-out !important; border: 2px dashed #00ffff !important; z-index: 500 !important; }
+
+    /* Random Pick & Unseen Check Buttons */
+    .random-pick-btn {
+        position: absolute; top: 5px; right: 5px; z-index: 1500;
+        background: rgba(44, 62, 80, 0.8); border: 1px solid rgba(255, 255, 255, 0.6);
+        color: white; font-size: 0.75rem; padding: 4px 8px; border-radius: 12px;
+        cursor: pointer; transition: all 0.2s; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .random-pick-btn:hover { background: #f1c40f; color: #2c3e50; border-color: #f39c12; transform: scale(1.1); }
+    
+    .unseen-check-btn {
+        position: absolute; top: 38px; right: 5px; left: auto; z-index: 1500;
+        background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 255, 255, 0.5);
+        color: #00ffff; font-size: 0.75rem; padding: 2px 6px; border-radius: 12px;
+        cursor: pointer; transition: all 0.2s; font-weight: bold;
+    }
+    .unseen-check-btn:hover, .unseen-check-btn.active { background: #00ffff; color: #000; box-shadow: 0 0 10px rgba(0, 255, 255, 0.6); }
+
+    /* Card Jump Anim */
+    @keyframes card-jump-twice {
+        0%, 50%, 100% { transform: var(--base-transform) translateY(0); }
+        25%, 75% { transform: var(--base-transform) translateY(-25px); }
+    }
+    .card-jump {
+        animation: card-jump-twice 0.6s ease-in-out;
+        box-shadow: 0 0 20px #f1c40f !important; border-color: #f1c40f !important;
+        z-index: 2000 !important;
+    }
+
+    /* =========================================
+       10. MODALS & POPUPS
+       ========================================= */
+    .modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 2000;
+        justify-content: center; align-items: center; backdrop-filter: blur(2px);
+    }
+    .modal-content {
+        background: white; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        padding: 20px; display: flex; flex-direction: column;
+        animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Setup Modal */
+    #setup-modal .modal-content { width: 320px; gap: 15px; }
+    .input-group { display: flex; justify-content: space-between; align-items: center; }
+    .input-group label { font-weight: bold; font-size: 0.9rem; }
+    .input-group input { width: 60px; text-align: center; }
+
+    /* Card Selector Modal */
+    #card-selector-modal .modal-content { width: 85%; max-width: 900px; height: 85%; }
+    #modal-body { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 12px; padding: 15px; background: #f8f9fa; border-radius: 4px; align-content: flex-start; }
+    #modal-body .card.has-image-icon { background-size: cover; background-position: center; color: transparent; text-shadow: none; }
+
+    /* Position Selector Modal */
+    #position-selector-modal .modal-content { width: 90%; max-width: 600px; height: auto; max-height: 80vh; display: flex; flex-direction: column; }
+    #position-list {
+        flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px;
+        padding: 15px; background: #eee; border-radius: 4px; min-height: 0;
+        align-content: flex-start; justify-content: flex-start;
+    }
+    .position-slot {
+        width: var(--card-width); height: var(--card-height);
+        background: rgba(255, 255, 255, 0.5); border: 2px dashed #999; border-radius: 4px;
+        display: flex; justify-content: center; align-items: center;
+        text-align: center; font-size: 0.7rem; color: #555; cursor: pointer;
+        transition: all 0.2s; flex-shrink: 0; position: relative;
+    }
+    .position-slot:hover { background: #dff9fb; border-color: #2980b9; color: #2980b9; font-weight: bold; transform: scale(1.05); z-index: 10; }
+    .position-card-ref {
+        width: var(--card-width); height: var(--card-height);
+        border: 1px solid #ccc; border-radius: 3px; background-color: #fff;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 0.6rem; color: #aaa; opacity: 0.7; pointer-events: none;
+        flex-shrink: 0; background-size: cover; background-position: center;
+        box-shadow: 1px 1px 2px rgba(0,0,0,0.1); overflow: hidden; text-align: center; padding: 2px;
+    }
+
+    #stack-gui { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; overflow-y: auto; }
+    .stack-option {
+        background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 10px;
+        text-align: center; cursor: pointer; transition: all 0.2s;
+        display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem;
+    }
+    .stack-option:hover { border-color: #3498db; background: #ebf5fb; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+    .stack-icon { width: 30px; height: 40px; background: #ccc; border: 1px solid #999; position: relative; display: block; margin-bottom: 5px; }
+    /* Icons */
+    .icon-top .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#3498db; border:1px solid white; z-index:2; opacity:0.8; }
+    .icon-bottom .child { position: absolute; top:0; left:0; width:100%; height:100%; background:#2c3e50; border:1px solid white; z-index:-1; }
+    .icon-up .child { position: absolute; top:-15px; left:0; width:100%; height:100%; background:#e67e22; border:1px solid white; z-index:2; opacity:0.9; }
+    .icon-down .child { position: absolute; top:15px; left:0; width:100%; height:100%; background:#9b59b6; border:1px solid white; z-index:2; opacity:0.9; }
+    .icon-bottom-exp .child { position: absolute; top:20px; left:0; width:100%; height:100%; background:#27ae60; border:1px solid white; z-index:-1; opacity: 0.9; }
+    .icon-p-top .child { position: absolute; top:-38px; left:0; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+    .icon-p-bottom .child { position: absolute; top:38px; left:0; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+    .icon-p-left .child { position: absolute; top:0; left:-28px; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+    .icon-p-right .child { position: absolute; top:0; left:28px; width:100%; height:100%; background:#e74c3c; border:1px solid white; z-index:2; }
+
+    /* Theme Picker */
+    #theme-picker-modal .modal-content { width: 340px; }
+    .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
+    .color-swatch {
+        aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 3px solid transparent;
+        transition: transform 0.2s; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { border-color: #333; transform: scale(0.95); }
+    .color-swatch.disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+    .color-swatch.disabled::after { content: "✖"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #333; font-weight: bold; }
+
+    /* BGM Modal */
+    .bgm-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+    .bgm-item:hover { background: #f9f9f9; }
+    .bgm-item.selected { background: #e8f6fd; color: #2980b9; font-weight: bold; }
+    .bgm-item.playing-preview::after { content: "🔊"; margin-left: auto; }
+
+    /* Import List */
+    .import-script-item {
+        padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;
+        position: relative; display: flex; flex-direction: column; gap: 4px;
+    }
+    .import-script-item:hover { background: #e8f6fd; }
+    .import-script-item:last-child { border-bottom: none; }
+    .import-script-title { font-weight: bold; font-size: 1rem; color: #2c3e50; }
+    .import-script-desc { font-size: 0.85rem; color: #7f8c8d; }
+    .import-script-lang {
+        position: absolute; top: 10px; right: 10px; font-size: 0.7rem; background: #eee;
+        color: #555; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase;
+    }
+
+    /* =========================================
+       11. DIALOGUE SYSTEM
+       ========================================= */
+    #dialogue-layer {
+        position: absolute; top: 0; left: 100px; right: 380px; width: auto; height: 100%;
+        pointer-events: none; z-index: 2000; display: none;
+        flex-direction: column; justify-content: space-between; overflow: hidden; padding: 20px 0;
+    }
+    #dialogue-layer.active { display: flex; }
+
+    .diag-row {
+        display: flex; width: 100%; height: 180px; align-items: flex-end; position: relative;
+        opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .diag-row.visible { opacity: 1; pointer-events: auto; }
+    .diag-row.top { flex-direction: row-reverse; align-items: flex-start; }
+    .diag-row.bottom { flex-direction: row; }
+
+    .diag-portrait {
+        width: 160px; height: 160px; flex-shrink: 0; margin: 0 10px; border-radius: 8px;
+        background-size: cover; background-position: center;
+        border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        background-color: rgba(0,0,0,0.8); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .diag-box {
+        flex: 1; height: 100%; max-width: 70%;
+        background: linear-gradient(180deg, rgba(0,20,40,0.9) 0%, rgba(0,10,20,0.95) 100%);
+        border: 2px solid var(--p1-main);
+        display: flex; flex-direction: column; padding: 15px; position: relative; margin: 0 20px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2); backdrop-filter: blur(2px);
+    }
+
+    .diag-row.bottom .diag-box { border-color: var(--p1-main); }
+    .diag-row.bottom .diag-portrait { border-color: var(--p1-main); }
+    .diag-row.bottom .diag-name { background: var(--p1-main); }
+    .diag-row.top .diag-box { border-color: var(--p2-main); }
+    .diag-row.top .diag-portrait { border-color: var(--p2-main); }
+    .diag-row.top .diag-name { background: var(--p2-main); }
+
+    .diag-name {
+        background: #3498db; color: white; padding: 2px 10px;
+        font-size: 0.9rem; font-weight: bold; display: inline-block;
+        transform: skewX(-15deg); margin-bottom: 8px; align-self: flex-start;
+        box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    }
+    .diag-row.top .diag-name { background: #c0392b; align-self: flex-end; }
+
+    .diag-text { 
+        color: white; line-height: 1.4; white-space: pre-wrap; text-shadow: 1px 1px 2px black;
+        flex: 1; overflow-y: auto; 
+    }
+    .text-s { font-size: 1rem; }
+    .text-m { font-size: 1.5rem; }
+    .text-l { font-size: 2.2rem; font-weight: bold; color: #f1c40f; }
+
+    /* Animations */
+    .fx-fade { animation: fadeIn 0.5s ease forwards; }
+    .fx-slide { animation: slideInX 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .diag-row.bottom .fx-slide { animation-name: slideInLeft; }
+    @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .diag-row.top .fx-slide { animation-name: slideInRight; }
+    @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* Dialogue Editor */
+    .emotion-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 5px; }
+    .emotion-opt { 
+        width: 100%; aspect-ratio: 1; border: 2px solid #555; cursor: pointer; 
+        background-size: cover; border-radius: 4px; opacity: 0.6;
+    }
+    .emotion-opt:hover { opacity: 1; }
+    .emotion-opt.active { border-color: #f1c40f; opacity: 1; box-shadow: 0 0 5px #f1c40f; }
+    .diag-editor-row { display: flex; gap: 10px; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fdfdfd; }
+    .diag-editor-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    .diag-editor-col button { margin-top: 5px; }
+
+    #emotion-preview-tooltip {
+        position: fixed; width: 200px; height: 200px;
+        background-color: #222; border: 2px solid #f1c40f; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        z-index: 10000; display: none; background-size: contain; background-repeat: no-repeat;
+        background-position: center; pointer-events: none; border-radius: 8px; backdrop-filter: blur(5px);
+    }
+
+    /* =========================================
+       12. SPECIAL EFFECTS & FEATURES
+       ========================================= */
+    
+    /* Playback Slider (Vertical) */
+    #playback-slider-container {
+        position: fixed; right: 0px; top: 50%; transform: translateY(-50%); height: 95vh;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        z-index: 3001; gap: 10px; pointer-events: none;
+    }
+    #playback-slider-container > * { pointer-events: auto; }
+    
+    #slider-zone {
+        width: 30px; background: #2c3e50; border-left: 1px solid #34495e; border-right: 1px solid #bdc3c7;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        position: relative; z-index: 20; flex-shrink: 0;
+    }
+    #slider-tooltip {
+        position: absolute; top: 20px; background: rgba(241, 196, 15, 0.9); color: #000;
+        padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;
+        pointer-events: none; z-index: 25; white-space: nowrap;
+    }
+    #playback-slider {
+        -webkit-appearance: none; appearance: none; width: 90vh; height: 6px;
+        background: rgba(255, 255, 255, 0.2); border-radius: 3px; outline: none;
+        transform: rotate(90deg); cursor: pointer;
+    }
+    #playback-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
+        border-radius: 50%; background: #f1c40f; cursor: pointer; border: 2px solid #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.5); transition: transform 0.1s;
+    }
+    #playback-slider::-webkit-slider-thumb:hover { transform: scale(1.4); }
+
+    /* RPS (Rock Paper Scissors) */
+    #rps-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 2500; display: none;
+        justify-content: center; align-items: center; gap: 50px; background: rgba(0,0,0,0.3); animation: fadeIn 0.3s ease;
+    }
+    .rps-hand {
+        font-size: 5rem; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+        align-items: center; color: white; transition: transform 0.3s;
+    }
+    .rps-hand.winner { transform: scale(1.5); text-shadow: 0 0 20px gold; filter: drop-shadow(0 0 5px gold); }
+    .rps-hand.loser { opacity: 0.5; transform: scale(0.8); filter: grayscale(1); }
+    .rps-vs { font-size: 2rem; font-weight: 900; color: #f1c40f; font-family: impact, sans-serif; transform: rotate(-10deg); }
+    .rps-tag { font-size: 1rem; background: #2c3e50; padding: 2px 8px; border-radius: 4px; margin-top: 10px; font-weight: bold; }
     .rps-hand.p1 .rps-tag { background: #3498db; }
     .rps-hand.p2 .rps-tag { background: #c0392b; }
-    
-	/* --- [新增] 猜拳介面定位設定 (從 JS 移出) --- */
     .rps-hand.p2 { position: absolute; top: 20%; }
     .rps-hand.p1 { position: absolute; bottom: 20%; }
 
-    /* --- [新增] 手機版猜拳介面優化 (解決擠壓問題) --- */
-    body.mobile-mode #rps-overlay .rps-hand {
-        font-size: 3rem; /* 縮小拳頭圖示 (原本 5rem) */
+    /* Reality Break (Cut In) */
+    #rb-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 9500; display: none; overflow: hidden; pointer-events: none;
     }
-    body.mobile-mode #rps-overlay .rps-vs {
-        font-size: 1.5rem; /* 縮小 VS 字樣 */
+    #rb-inner-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #000; background-position: center; background-repeat: no-repeat; background-size: cover;
+        z-index: 10; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); transition: clip-path 2.5s cubic-bezier(0.2, 1, 0.3, 1); will-change: clip-path;
     }
-    body.mobile-mode #rps-overlay .rps-tag {
-        font-size: 0.8rem; /* 縮小標籤 */
-        padding: 1px 6px;
+    #rb-paper-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #fdfdfd; 
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+        z-index: 5; clip-path: polygon(50% 50%, 50% 50%, 50% 50%); transition: clip-path 2.5s cubic-bezier(0.2, 1, 0.3, 1); will-change: clip-path;
+    }
+    #rb-overlay.editing #rb-inner-layer { clip-path: none !important; cursor: move; pointer-events: auto; border: 2px dashed #f1c40f; z-index: 20; }
+    #rb-overlay.editing #rb-paper-layer { display: none; }
+    #rb-edit-hint {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        color: rgba(255,255,255,0.5); font-size: 2rem; font-weight: bold; text-align: center;
+        pointer-events: none; text-shadow: 0 0 5px black; display: none;
+    }
+    #rb-overlay.editing #rb-edit-hint { display: block; }
+    #rb-flash-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: white; opacity: 0; pointer-events: none; z-index: 9600; transition: opacity 0.5s ease-out;
+    }
+    #rb-controls {
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+        display: none; gap: 10px; z-index: 9700; pointer-events: auto;
+    }
+    #rb-overlay.editing #rb-controls { display: flex; }
+    #rb-url-input {
+        background: #333; color: white; border: 1px solid #555; padding: 4px 8px;
+        border-radius: 4px; width: 150px; font-size: 0.8rem; outline: none; transition: width 0.2s;
+    }
+    #rb-url-input:focus { width: 250px; border-color: #3498db; background: #444; }
+    #btn-rb-effect.highlight {
+        background-color: #f1c40f !important; color: #2c3e50 !important; font-weight: bold; border-color: #d35400 !important;
+        box-shadow: 0 0 15px rgba(241, 196, 15, 0.8); animation: rb-btn-pulse 1.5s infinite ease-in-out;
+    }
+    @keyframes rb-btn-pulse {
+        0% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+        50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(241, 196, 15, 1); }
+        100% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
+    }
+    @keyframes violent-shake {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        10% { transform: translate(-10px, -10px) rotate(-1deg); } 20% { transform: translate(10px, 10px) rotate(1deg); }
+        30% { transform: translate(-15px, 5px) rotate(0deg); } 40% { transform: translate(15px, -15px) rotate(1deg); }
+        50% { transform: translate(-5px, 15px) rotate(-1deg); } 60% { transform: translate(10px, 5px) rotate(0deg); }
+        70% { transform: translate(-15px, -15px) rotate(1deg); } 80% { transform: translate(10px, 10px) rotate(-1deg); }
+        90% { transform: translate(-5px, -5px) rotate(0deg); }
+    }
+    body.shaking-outer #workspace, body.shaking-outer #toolbar, body.shaking-outer #rb-paper-layer { animation: violent-shake 0.5s linear infinite; }
+    body.shaking-inner #rb-inner-layer { animation: violent-shake 0.5s linear infinite; }
+
+    /* Moonless Button */
+    #btn-moonless { background: #34495e; border-color: #566573; color: #bdc3c7; transition: all 0.2s; }
+    #btn-moonless.active {
+        background: #8e44ad !important; border-color: #9b59b6 !important; color: #fff !important;
+        box-shadow: 0 0 12px rgba(142, 68, 173, 0.8), inset 0 0 5px rgba(255,255,255,0.3);
+        font-weight: bold; transform: scale(1.05);
+    }
+
+    /* Win Animation */
+    #win-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2000;
+        display: none; flex-direction: column; justify-content: center; align-items: center;
+        background: rgba(0, 0, 0, 0.4); overflow: hidden;
+    }
+    .win-text {
+        font-size: 5rem; font-weight: 900; text-transform: uppercase; color: #f1c40f;
+        text-shadow: 0 0 20px rgba(0,0,0,0.8), 3px 3px 0 #c0392b; transform: scale(0);
+        animation: win-pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .win-sub {
+        font-size: 2rem; color: white; margin-top: 10px; opacity: 0;
+        animation: slideUp 0.5s ease 0.5s forwards; text-shadow: 0 0 5px black;
+    }
+    .confetti {
+        position: absolute; width: 10px; height: 10px; background-color: #f00;
+        animation: confetti-fall 3s linear infinite;
+    }
+    @keyframes win-pop { 0% { transform: scale(0) rotate(-15deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+    @keyframes confetti-fall { 0% { transform: translateY(-100px) rotate(0deg); opacity: 1; } 100% { transform: translateY(800px) rotate(720deg); opacity: 0; } }
+
+    /* Ending (CRT Shutdown) */
+    #ending-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: black; z-index: 9999; display: none; flex-direction: column;
+        justify-content: center; align-items: center; opacity: 0; transition: opacity 1.5s ease-in; pointer-events: none;
+    }
+    .end-title {
+        color: white; font-size: 3rem; font-weight: 900; letter-spacing: 5px;
+        margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .end-sub { color: #7f8c8d; font-size: 1.2rem; font-family: sans-serif; letter-spacing: 2px; }
+    
+    @keyframes crt-shutdown {
+        0% { transform: scale(1, 1); filter: brightness(1); }
+        40% { transform: scale(1, 0.005); filter: brightness(5); }
+        50% { transform: scale(1, 0.005); }
+        100% { transform: scale(0, 0.005); filter: brightness(0); }
+    }
+    body.shutdown-mode #workspace, body.shutdown-mode #toolbar, body.shutdown-mode #card-action-panel, body.shutdown-mode #timeline-panel {
+        animation: crt-shutdown 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
     }
     
-    /* 將上下兩方往邊緣推，讓中間留白 */
-    body.mobile-mode #rps-overlay .rps-hand.p2 {
-        top: 8% !important; 
+    .end-credits {
+        margin-top: 50px; display: flex; flex-direction: column; gap: 20px; text-align: center;
+        opacity: 0; animation: slideUp 1.5s ease 2s forwards;
     }
-    body.mobile-mode #rps-overlay .rps-hand.p1 {
-        bottom: 8% !important; 
+    .credit-group { display: flex; flex-direction: column; gap: 2px; }
+    .credit-role { color: #7f8c8d; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; font-family: sans-serif; }
+    .credit-name { color: #ecf0f1; font-size: 1rem; font-weight: bold; font-family: sans-serif; letter-spacing: 1px; }
+
+    /* Shuffle Animation */
+    .flying-card {
+        position: fixed; width: var(--card-width); height: var(--card-height);
+        background: #2c3e50; background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
+        background-size: 15px 15px; border: 2px solid white; border-radius: 4px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 9999; pointer-events: none;
+        transform-origin: center center; opacity: 0;
+    }
+
+    /* Visitor Counter */
+    #visitor-counter {
+        position: fixed; z-index: 100; font-family: sans-serif; font-size: 10px; pointer-events: none;
+        opacity: 0.5; display: block !important;
+    }
+    body:not(.mobile-mode) #visitor-counter { bottom: 5px; left: 5px; color: rgba(0, 0, 0, 0.3); }
+
+    /* =========================================
+       13. MODE SPECIFICS
+       ========================================= */
+    
+    /* Play Mode (Interaction Lock) */
+    body.is-playing .ace-star-mark,
+    body.is-playing .random-pick-btn,
+    body.is-playing .unseen-check-btn { display: none !important; }
+    
+    body.is-playing #game-board-container,
+    body.is-playing #ability-stack-zone,
+    body.is-playing #toolbar,
+    body.is-playing #draft-bar,
+    body.is-playing #card-action-panel,
+    body.is-playing .turn-bar,
+    body.is-playing #dialogue-layer,
+    body.is-playing #dialogue-layer * {
+        pointer-events: none !important;
+    }
+
+    /* =========================================
+       14. MOBILE MODE OVERRIDES
+       ========================================= */
+    #mobile-controls, #orientation-overlay, #mobile-card-viewer, #mobile-script-selector { display: none; }
+
+    body.mobile-mode {
+        overflow: hidden; position: fixed; width: 100%; height: 100%;
     }
     
-    /* 勝利/平手文字調整 */
-    body.mobile-mode #rps-overlay .rps-result-text {
-        font-size: 1.5rem !important;
-        padding: 5px 15px !important;
+    body.mobile-mode #toolbar, 
+    body.mobile-mode #draft-bar, 
+    body.mobile-mode #point-bar, 
+    body.mobile-mode #card-action-panel, 
+    body.mobile-mode #setup-modal,
+    body.mobile-mode #timeline-panel,
+    body.mobile-mode .random-pick-btn,
+    body.mobile-mode .unseen-check-btn,
+    body.mobile-mode #btn-bgm {
+        display: none !important;
     }
-	/* --- [新增] 表情大圖預覽視窗 --- */
-    #emotion-preview-tooltip {
-        position: fixed;
-        width: 200px;  /* 預設顯示大小 (可容納原寸) */
-        height: 200px;
-        background-color: #222; /* 深色背景 */
-        border: 2px solid #f1c40f; /* 金色邊框 */
-        box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-        z-index: 10000; /* 確保在 Modal 之上 */
-        display: none;
-        background-size: contain; /* 完整顯示圖片 */
-        background-repeat: no-repeat;
-        background-position: center;
-        pointer-events: none; /* 關鍵：讓滑鼠穿透，避免閃爍 */
-        border-radius: 8px;
-        backdrop-filter: blur(5px);
+
+    body.mobile-mode #workspace {
+        width: 1600px !important; height: 800px !important;
+        position: absolute; top: 0; left: 0; transform-origin: 0 0;
+        display: flex !important; flex-direction: row;
+        background: #95a5a6; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        pointer-events: none !important;
     }
-	
-	/* --- [新增] 次元破裂 (Reality Break) 特效樣式 --- */
 
-	/* 1. 全螢幕容器 */
-	#rb-overlay {
-		position: fixed;
-		top: 0; left: 0; width: 100vw; height: 100vh;
-		z-index: 9500; /* 比對話框高，但在選單之下 */
-		display: none; /* 預設隱藏 */
-		overflow: hidden;
-		pointer-events: none; /* 播放時不擋滑鼠，但編輯時會開啟 */
-	}
+    body.mobile-mode #svg-layer { pointer-events: none !important; z-index: 500; }
+    body.mobile-mode #ability-stack-zone { display: flex !important; width: 100px !important; height: 100%; z-index: 600; }
+    body.mobile-mode #game-board-container { flex: 1; height: 100%; overflow: hidden; pointer-events: none !important; }
 
-	#rb-inner-layer {
-		position: absolute;
-		top: 0; left: 0; width: 100%; height: 100%;
-		background-color: #000;
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: cover;
-		
-		z-index: 10; /* [關鍵] 壓在紙張層上面 */
-		
-		/* 移除原本簡單的 polygon，改為動態生成 */
-		clip-path: polygon(50% 50%, 50% 50%, 50% 50%); 
-		transition: clip-path 2.5s cubic-bezier(0.2, 1, 0.3, 1); /* 配合 JS 設定時間 */
-		will-change: clip-path;
-	}
+    /* Mobile Controls */
+    #mobile-controls {
+        display: none; align-items: center; justify-content: flex-end; gap: 8px;
+        position: fixed; bottom: calc(15px + env(safe-area-inset-bottom)); 
+        right: calc(15px + env(safe-area-inset-right));
+        z-index: 5000; flex-shrink: 0; opacity: 0.95;
+    }
+    body.mobile-mode #mobile-controls { display: flex; z-index: 2000; }
+    
+    .mobile-btn {
+        width: 36px; height: 36px; border-radius: 50%; border: 2px solid white;
+        background: rgba(44, 62, 80, 0.9); color: white; font-size: 0.9rem;
+        cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        display: flex; justify-content: center; align-items: center; padding: 0; flex-shrink: 0;
+    }
+    .mobile-btn:active { transform: scale(0.95); }
+    #mob-music-btn.active { border-color: #2ecc71; color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+    
+    #mob-speed-select {
+        height: 36px; border-radius: 18px; border: 2px solid white;
+        background: rgba(44, 62, 80, 0.9); color: white; font-size: 0.85rem;
+        padding: 0 10px; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.3); text-align: center;
+    }
 
-	/* [新增] 紙張邊緣層 (原紙層) */
-	#rb-paper-layer {
-		position: absolute;
-		top: 0; left: 0; width: 100%; height: 100%;
-		background-color: #fdfdfd; /* 純白或微黃的紙張色 */
-		background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E"); /* 加一點噪點紋理 */
-		
-		z-index: 5; /* [關鍵] 在內層圖片下面 */
-		
-		clip-path: polygon(50% 50%, 50% 50%, 50% 50%);
-		transition: clip-path 2.5s cubic-bezier(0.2, 1, 0.3, 1);
-		will-change: clip-path;
-	}
+    /* Play Button Highlight Animation */
+    @keyframes play-btn-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); transform: scale(1); }
+        50% { transform: scale(1.1); }
+        70% { box-shadow: 0 0 0 20px rgba(241, 196, 15, 0); transform: scale(1.1); }
+        100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); transform: scale(1); }
+    }
+    .btn-highlight {
+        animation: play-btn-pulse 2s infinite; background: #f39c12 !important;
+        border-color: #f1c40f !important; font-weight: bold; z-index: 3005 !important;
+    }
 
-	/* 編輯模式下的內層：顯示完整，且可互動 */
-	/* 編輯模式下，隱藏紙張層 (只看圖片)，並讓圖片全顯 */
-	#rb-overlay.editing #rb-inner-layer {
-		clip-path: none !important; 
-		cursor: move;
-		pointer-events: auto;
-		border: 2px dashed #f1c40f; 
-		z-index: 20;
-	}
-	#rb-overlay.editing #rb-paper-layer {
-		display: none; /* 編輯時不需要看到白邊 */
-	}
+    /* Mobile Orientation Overlay */
+    #orientation-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #2c3e50; color: white; z-index: 10000;
+        flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    }
+    #orientation-overlay .icon { font-size: 50px; margin-bottom: 20px; animation: rotate 2s infinite; }
+    @keyframes rotate { 0% {transform: rotate(0deg);} 50% {transform: rotate(-90deg);} 100% {transform: rotate(0deg);} }
 
-	/* 編輯模式的提示文字 */
-	#rb-edit-hint {
-		position: absolute;
-		top: 50%; left: 50%;
-		transform: translate(-50%, -50%);
-		color: rgba(255,255,255,0.5);
-		font-size: 2rem;
-		font-weight: bold;
-		text-align: center;
-		pointer-events: none;
-		text-shadow: 0 0 5px black;
-		display: none;
-	}
-	#rb-overlay.editing #rb-edit-hint { display: block; }
+    /* Mobile Slider Zone */
+    body.mobile-mode #slider-zone {
+        display: flex !important; position: relative !important;
+        top: auto !important; right: auto !important; transform: none !important;
+        width: 60px !important; height: 100% !important;
+        z-index: 3000 !important; background: rgba(44, 62, 80, 0.6);
+        border-left: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; pointer-events: auto !important;
+    }
+    body.mobile-mode #playback-slider {
+        width: 700px !important; height: 40px !important; transform: rotate(90deg);
+        background: rgba(255, 255, 255, 0.2); border-radius: 20px;
+    }
+    body.mobile-mode #playback-slider::-webkit-slider-thumb {
+        width: 36px !important; height: 36px !important; background: #f1c40f;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 3px solid #fff;
+    }
+    body.mobile-mode #slider-tooltip {
+        transform: rotate(0deg); top: 30px; right: auto;
+        font-size: 1.5rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
 
-	/* 3. 白光閃爍層 (Flash) */
-	#rb-flash-layer {
-		position: absolute;
-		top: 0; left: 0; width: 100%; height: 100%;
-		background: white;
-		opacity: 0;
-		pointer-events: none;
-		z-index: 9600;
-		transition: opacity 0.5s ease-out;
-	}
+    /* Mobile Card Display Tweaks */
+    body.mobile-mode .battle-zone .card-group {
+        transform: scale(1.5); transform-origin: center center; margin: 25px 15px !important; z-index: 10;
+    }
+    body.mobile-mode .mana-zone .card-group, body.mobile-mode .hand-zone .card-group { margin: 0 2px !important; }
+    body.mobile-mode #reveal-zone { padding: 20px 15px !important; gap: 8px !important; }
+    body.mobile-mode #reveal-zone .card { transform: scale(1.5); transform-origin: center center; margin: 25px 8px !important; }
+    
+    /* Mobile Interaction Fixes */
+    body.mobile-mode .turn-bar { display: block !important; width: 20px !important; z-index: 50 !important; }
+    body.mobile-mode #player1-area.active-turn .turn-bar { box-shadow: 0 0 25px 5px rgba(52, 152, 219, 0.9); }
+    body.mobile-mode #player2-area.active-turn .turn-bar { box-shadow: 0 0 25px 5px rgba(233, 30, 99, 0.9); }
+    
+    body.mobile-mode #dialogue-layer { right: 70 !important; } /* Adjust for hidden timeline */
+    body.mobile-mode #dialogue-layer, body.mobile-mode #dialogue-layer * { pointer-events: none !important; }
+    body.mobile-mode .deck-zone .card, body.mobile-mode .grave-zone .card, body.mobile-mode .hyper-zone .card, body.mobile-mode #ability-stack-zone .card { pointer-events: none !important; }
+    body.mobile-mode #reveal-zone .card, body.mobile-mode .card { pointer-events: auto !important; }
+    body.mobile-mode #game-board-container, body.mobile-mode .zone { pointer-events: none !important; }
 
-	/* 4. 畫面震動動畫 (Earthquake) */
-	/* 4. 畫面震動動畫 (Earthquake) */
-	@keyframes violent-shake {
-		0% { transform: translate(0, 0) rotate(0deg); }
-		10% { transform: translate(-10px, -10px) rotate(-1deg); }
-		20% { transform: translate(10px, 10px) rotate(1deg); }
-		30% { transform: translate(-15px, 5px) rotate(0deg); }
-		40% { transform: translate(15px, -15px) rotate(1deg); }
-		50% { transform: translate(-5px, 15px) rotate(-1deg); }
-		60% { transform: translate(10px, 5px) rotate(0deg); }
-		70% { transform: translate(-15px, -15px) rotate(1deg); }
-		80% { transform: translate(10px, 10px) rotate(-1deg); }
-		90% { transform: translate(-5px, -5px) rotate(0deg); }
-		100% { transform: translate(0, 0) rotate(0deg); }
-	}
+    /* Mobile Card Viewer */
+    #mobile-card-viewer {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6); z-index: 6000; justify-content: flex-end; align-items: center;
+        padding-right: 50px; backdrop-filter: blur(2px);
+    }
+    #mobile-card-viewer img {
+        max-height: 90vh; max-width: 50vw; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        border: 3px solid white; border-radius: 10px; animation: zoomIn 0.2s ease-out;
+    }
+    @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-	/* --- 修改：分離震動控制 --- */
+    /* Mobile Script Selector */
+    #mobile-script-selector {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(10, 20, 30, 0.95); z-index: 9999; flex-direction: column;
+        align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);
+    }
+    .script-list-container {
+        width: 100%; max-width: 500px; max-height: 60vh; overflow-y: auto; margin: 20px 0;
+        border: 1px solid #444; border-radius: 8px; background: rgba(0,0,0,0.3);
+    }
+    .script-item {
+        padding: 15px; border-bottom: 1px solid #444; cursor: pointer; transition: all 0.2s; color: #ccc; position: relative;
+    }
+    .script-item-lang {
+        position: absolute; top: 12px; right: 12px; font-size: 0.7rem; font-weight: bold;
+        text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1); border: 1px solid #555; color: #888;
+    }
+    .script-item.selected .script-item-lang { background: #2980b9; border-color: #5dade2; color: white; }
+    .script-item:last-child { border-bottom: none; }
+    .script-item:hover { background: rgba(255,255,255,0.05); }
+    .script-item.selected { background: rgba(52, 152, 219, 0.2); border-left: 5px solid #3498db; color: white; }
+    .script-item-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+    .script-item-desc { font-size: 0.85rem; opacity: 0.7; line-height: 1.4; }
+    #btn-mobile-start {
+        font-size: 1.2rem; padding: 12px 40px; background: #f1c40f; color: #2c3e50; border: none;
+        border-radius: 30px; font-weight: 900; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.4);
+        cursor: pointer; transition: transform 0.2s;
+    }
+    #btn-mobile-start:active { transform: scale(0.95); }
+    #btn-mobile-start:disabled { background: #7f8c8d; color: #bdc3c7; cursor: not-allowed; box-shadow: none; }
 
-	/* 4. 畫面震動動畫 (Earthquake) - Keyframes 維持不變 */
-	@keyframes violent-shake {
-		0% { transform: translate(0, 0) rotate(0deg); }
-		10% { transform: translate(-10px, -10px) rotate(-1deg); }
-		20% { transform: translate(10px, 10px) rotate(1deg); }
-		30% { transform: translate(-15px, 5px) rotate(0deg); }
-		40% { transform: translate(15px, -15px) rotate(1deg); }
-		50% { transform: translate(-5px, 15px) rotate(-1deg); }
-		60% { transform: translate(10px, 5px) rotate(0deg); }
-		70% { transform: translate(-15px, -15px) rotate(1deg); }
-		80% { transform: translate(10px, 10px) rotate(-1deg); }
-		90% { transform: translate(-5px, -5px) rotate(0deg); }
-		100% { transform: translate(0, 0) rotate(0deg); }
-	}
+    /* Mobile Ending Screen Fixes */
+    body.mobile-mode .end-title { font-size: 3rem !important; margin-bottom: 5px; }
+    body.mobile-mode .end-sub { font-size: 1rem !important; letter-spacing: 1px; }
+    body.mobile-mode .end-credits { margin-top: 30px !important; flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; gap: 15px 25px !important; }
+    body.mobile-mode .credit-group { display: flex; flex-direction: column; align-items: center; min-width: 120px; }
+    body.mobile-mode .credit-role { font-size: 0.6rem !important; letter-spacing: 1px; margin-bottom: 3px; }
+    body.mobile-mode .credit-name { font-size: 0.9rem !important; }
+    body.mobile-mode.shutdown-mode #workspace {
+        top: 50% !important; left: 50% !important; transform-origin: center center !important;
+        margin-left: -800px !important; margin-top: -400px !important;
+    }
+    body.mobile-mode #visitor-counter { bottom: 5px; left: 5px; color: rgba(255, 255, 255, 0.3); transform: translate(5px, -5px); }
+    body.mobile-mode #rps-overlay .rps-hand { font-size: 3rem; }
+    body.mobile-mode #rps-overlay .rps-vs { font-size: 1.5rem; }
+    body.mobile-mode #rps-overlay .rps-tag { font-size: 0.8rem; padding: 1px 6px; }
+    body.mobile-mode #rps-overlay .rps-hand.p2 { top: 8% !important; }
+    body.mobile-mode #rps-overlay .rps-hand.p1 { bottom: 8% !important; }
+    body.mobile-mode #rps-overlay .rps-result-text { font-size: 1.5rem !important; padding: 5px 15px !important; }
 
-	/* [A] 表層震動：包含 遊戲盤面(workspace)、工具列(toolbar)、以及撕裂的白邊(paper-layer) */
-	/* 因為白邊是屬於表層紙張的一部分，物理上它必須跟著盤面一起晃 */
-	body.shaking-outer #workspace, 
-	body.shaking-outer #toolbar,
-	body.shaking-outer #rb-paper-layer { 
-		animation: violent-shake 0.5s linear infinite;
-	}
-
-	/* [B] 底層震動：只包含 露出的內層圖片(inner-layer) */
-	body.shaking-inner #rb-inner-layer { 
-		animation: violent-shake 0.5s linear infinite;
-	}
-
-	/* 5. 編輯器控制列 */
-	#rb-controls {
-		position: absolute;
-		bottom: 20px;
-		left: 50%;
-		transform: translateX(-50%);
-		display: none;
-		gap: 10px;
-		z-index: 9700;
-		pointer-events: auto;
-	}
-	#rb-overlay.editing #rb-controls { display: flex; }
-	
-	/* --- [修改] UI 狀態優化 --- */
-
-	/* 1. 編輯中的 Action Log：明顯的虛線框 */
-	.action-item.editing {
-		border: 2px dashed #f39c12 !important; /* 橘色虛線 */
-		background-color: #fffbe6 !important;   /* 淡黃底色 */
-		
-		/* 稍微放大並加陰影，讓它浮起來的感覺 */
-		transform: scale(1.02); 
-		box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-		z-index: 5;
-		border-left: 2px dashed #f39c12 !important; /* 覆蓋原本的左側實線 */
-	}
-
-	/* 2. 特效按鈕亮起狀態 (Highlight) */
-	#btn-rb-effect.highlight {
-		background-color: #f1c40f !important; /* 亮黃色 */
-		color: #2c3e50 !important;            /* 深色文字 */
-		font-weight: bold;
-		border-color: #d35400 !important;     /* 深橘邊框 */
-		
-		/* 發光呼吸燈動畫 */
-		box-shadow: 0 0 15px rgba(241, 196, 15, 0.8);
-		animation: rb-btn-pulse 1.5s infinite ease-in-out;
-	}
-
-	@keyframes rb-btn-pulse {
-		0% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
-		50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(241, 196, 15, 1); }
-		100% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
-	}
-	/* --- [新增] 匯入清單樣式 --- */
-	.import-script-item {
-		padding: 12px;
-		border-bottom: 1px solid #eee;
-		cursor: pointer;
-		transition: background 0.2s;
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.import-script-item:hover {
-		background: #e8f6fd;
-	}
-	.import-script-item:last-child {
-		border-bottom: none;
-	}
-	.import-script-title {
-		font-weight: bold;
-		font-size: 1rem;
-		color: #2c3e50;
-	}
-	.import-script-desc {
-		font-size: 0.85rem;
-		color: #7f8c8d;
-	}
-	.import-script-lang {
-		position: absolute;
-		top: 10px; right: 10px;
-		font-size: 0.7rem;
-		background: #eee;
-		color: #555;
-		padding: 2px 6px;
-		border-radius: 4px;
-		font-weight: bold;
-		text-transform: uppercase;
-	}
-	
-	/* --- 洗牌特效樣式 --- */
-	/* --- 洗牌特效樣式 (修正版) --- */
-	.flying-card {
-		position: fixed;
-		width: var(--card-width);
-		height: var(--card-height);
-		/* 強制顯示為卡背樣式 */
-		background: #2c3e50;
-		background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
-		background-size: 15px 15px;
-		border: 2px solid white; /* 加粗邊框讓動態更明顯 */
-		border-radius: 4px;
-		box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-		z-index: 9999;
-		pointer-events: none;
-		/* 預設中心點 */
-		transform-origin: center center;
-		/* 初始狀態：隱藏 */
-		opacity: 0; 
-	}
-	
-	/* --- [新增] EX-Life 覆蓋層樣式 --- */
-	.ex-life-overlay {
-		position: absolute;
-		top: 20%;        /* 起始位置 20% */
-		left: 0;
-		width: 100%;
-		height: 40%;     /* 高度佔 40% (20%~60%) */
-		z-index: 15;     /* 位於文字之下，但在底圖之上 */
-		background-size: cover;
-		background-position: center;
-		background-repeat: no-repeat;
-		border-top: 1px dashed rgba(255,255,255,0.5);
-		border-bottom: 1px dashed rgba(255,255,255,0.5);
-		pointer-events: none; /* 讓點擊穿透到卡片本身 */
-		opacity: 0.9;
-	}
-
-	/* 右上角刪除按鈕 [X] */
-	.ex-life-close {
-		position: absolute;
-		top: -6px;
-		right: -6px;
-		width: 14px;
-		height: 14px;
-		font-size: 9px;
-		font-weight: bold;
-		background: #c0392b;
-		color: white;
-		border: 1px solid white;
-		border-radius: 50%;
-		cursor: pointer;
-		display: none; /* 預設隱藏，Hover 時顯示 */
-		justify-content: center;
-		align-items: center;
-		pointer-events: auto; /* 開啟點擊 */
-		z-index: 20;
-		box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-	}
-
-	/* 當滑鼠移過卡片時，顯示刪除按鈕 */
-	.card:hover .ex-life-close {
-		display: flex;
-	}
-	
-	/* --- [新增] CutIn URL 輸入框樣式 --- */
-	#rb-url-input {
-		background: #333;
-		color: white;
-		border: 1px solid #555;
-		padding: 4px 8px;
-		border-radius: 4px;
-		width: 150px;
-		font-size: 0.8rem;
-		outline: none;
-		transition: width 0.2s;
-	}
-	#rb-url-input:focus {
-		width: 250px; /* 聚焦時變長方便編輯 */
-		border-color: #3498db;
-		background: #444;
-	}
-	
-	/* [修改] Timeline Gap 容器 */
-	.timeline-gap {
-		height: 14px; /* 稍微加高一點 */
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		cursor: default; /* 改為預設，因為點擊是針對內部的按鈕 */
-		position: relative;
-		gap: 15px; /* 兩個按鈕的間距 */
-		transition: background 0.2s;
-	}
-
-	/* [新增] 移除原本的 ::after 偽元素效果，改由內部按鈕呈現 */
-	.timeline-gap:hover::after {
-		display: none !important;
-	}
-
-	/* 線條背景 (維持視覺連貫) */
-	.timeline-gap::before {
-		content: "";
-		height: 2px;
-		background: #ccc;
-		width: 90%;
-		position: absolute;
-		z-index: 0;
-	}
-
-	/* [修改] 按鈕樣式：加入 margin 強制推開 */
-	.gap-btn {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		
-		display: none; /* 預設隱藏 */
-		
-		justify-content: center;
-		align-items: center;
-		font-weight: bold;
-		font-size: 16px;
-		z-index: 10; /* 提高層級，確保浮在線條之上 */
-		cursor: pointer;
-		border: 2px solid white;
-		box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-		transition: transform 0.1s;
-		line-height: 1;
-		padding-bottom: 2px;
-		
-		/* --- [關鍵修改] 使用 margin 撐開距離 --- */
-		/* 左右各 40px，代表兩個按鈕中間會有 80px 的距離 */
-		margin: 0 40px !important; 
-	}
-
-	/* Hover 時顯示按鈕 */
-	.timeline-gap:hover .gap-btn {
-		display: flex;
-	}
-
-	.gap-btn:hover {
-		transform: scale(1.2);
-	}
-
-	/* [+] 按鈕樣式 */
-	.gap-btn-plus {
-		background: #3498db;
-		color: white;
-	}
-
-	/* [-] 按鈕樣式 (紅色) */
-	.gap-btn-minus {
-		background: #c0392b;
-		color: white;
-	}
-	
-	/* --- [新增] 手牌隨機選擇按鈕與動畫 --- */
-
-	/* --- [新增] 手牌隨機選擇按鈕與動畫 --- */
-
-	/* 跳動動畫：利用 CSS 變數保留原本的旋轉角度 */
-	@keyframes card-jump-twice {
-		0%   { transform: var(--base-transform) translateY(0); }
-		25%  { transform: var(--base-transform) translateY(-25px); }
-		50%  { transform: var(--base-transform) translateY(0); }
-		75%  { transform: var(--base-transform) translateY(-25px); }
-		100% { transform: var(--base-transform) translateY(0); }
-	}
-
-	.card-jump {
-		animation: card-jump-twice 0.6s ease-in-out;
-		box-shadow: 0 0 20px #f1c40f !important; /* 金色高亮 */
-		border-color: #f1c40f !important;
-		z-index: 2000 !important; /* 確保跳起來時壓在最上面 */
-	}
-
-	/* 隨機按鈕樣式：位於手牌區右上角的半透明按鈕 */
-	.random-pick-btn {
-		position: absolute;
-		top: 5px;       /* 距離頂部 5px */
-		right: 5px;     /* 距離右邊 5px */
-		z-index: 1500;  /* 【關鍵】確保層級高於卡片(1000) */
-		
-		background: rgba(44, 62, 80, 0.8); /* 深色半透明背景，比較明顯 */
-		border: 1px solid rgba(255, 255, 255, 0.6);
-		color: white;
-		font-size: 0.75rem;
-		padding: 4px 8px;
-		border-radius: 12px;
-		cursor: pointer;
-		transition: all 0.2s;
-		font-weight: bold;
-		box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-	}
-
-	.random-pick-btn:hover {
-		background: #f1c40f;
-		color: #2c3e50;
-		border-color: #f39c12;
-		transform: scale(1.1);
-	}
-	
-	/* --- [新增] 播放模式與手機版 UI 優化 --- */
-
-	/* 1. 手機模式下：隱藏隨機選擇按鈕 */
-	body.mobile-mode .random-pick-btn {
-		display: none !important;
-	}
-
-	/* 2. 桌機播放模式 (is-playing) 下的行為控制 */
-
-	/* A. 播放時也隱藏隨機按鈕 (避免視覺干擾) */
-	body.is-playing .random-pick-btn {
-		display: none !important;
-	}
-
-	/* B. 全面封鎖非播放相關的互動 */
-	/* 這些區域在播放時會無視滑鼠點擊，防止誤觸卡片或功能 */
-	body.is-playing #game-board-container,
-	body.is-playing #ability-stack-zone,
-	body.is-playing #toolbar,
-	body.is-playing #draft-bar,
-	body.is-playing #card-action-panel,
-	body.is-playing .turn-bar {
-		pointer-events: none !important;
-	}
-
-	/* [修正] 特別針對對話層，強制鎖定其下「所有子元件」 */
-	/* 這是為了覆蓋 JS 動態寫入的 pointer-events: auto */
-	body.is-playing #dialogue-layer,
-	body.is-playing #dialogue-layer * {
-		pointer-events: none !important;
-	}
-	
-	/* --- [新增] 未見卡 (Unseen) 檢測工具 --- */
-
-	/* 未見卡特效：幽靈青色呼吸燈 + 虛線框 */
-	@keyframes pulse-unseen {
-		0% { box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.4); border-color: rgba(0, 255, 255, 0.5); }
-		50% { box-shadow: 0 0 15px 5px rgba(0, 255, 255, 0.8); border-color: rgba(0, 255, 255, 1); }
-		100% { box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.4); border-color: rgba(0, 255, 255, 0.5); }
-	}
-
-	.glow-unseen {
-		animation: pulse-unseen 2s infinite ease-in-out !important;
-		border: 2px dashed #00ffff !important; /* 青色虛線 */
-		z-index: 500 !important; /* 確保浮起 */
-	}
-
-	/* 未見卡檢查按鈕 (位於隨機按鈕正下方) */
-	.unseen-check-btn {
-		position: absolute;
-		
-		/* [修改] 位置調整 */
-		top: 38px;      /* 原本是 5px，改為 38px (避開上方的隨機按鈕) */
-		right: 5px;     /* 原本是 left: 5px，改為 right: 5px (靠右對齊) */
-		left: auto;     /* 清除原本的靠左設定 */
-		
-		z-index: 1500;
-		
-		background: rgba(0, 0, 0, 0.6);
-		border: 1px solid rgba(0, 255, 255, 0.5);
-		color: #00ffff;
-		font-size: 0.75rem;
-		padding: 2px 6px;
-		border-radius: 12px;
-		cursor: pointer;
-		transition: all 0.2s;
-		font-weight: bold;
-	}
-
-	.unseen-check-btn:hover, .unseen-check-btn.active {
-		background: #00ffff;
-		color: #000;
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
-	}
-
-	/* 手機版與播放模式隱藏此按鈕 */
-	body.mobile-mode .unseen-check-btn,
-	body.is-playing .unseen-check-btn {
-		display: none !important;
-	}
-	</style>
+    /* Mobile Text Offset Fixes */
+    .hyper-zone .zone-label { top: 25% !important; }
+    .grave-zone .zone-label { top: 50% !important; }
+    .deck-zone .zone-label { top: 75% !important; }
+</style>
 </head>
 <body>
 
@@ -3197,9 +1532,14 @@
 
             <div id="player2-area" class="player-area">
                 <div class="turn-bar" onclick="openThemePicker(2)" title="點擊更換 P2 代表色"></div>
+                
                 <div class="battle-zone zone" data-zone="p2-battle" onclick="handleZoneClick('p2-battle')"><span class="zone-label" data-i18n="zone_battle">P2 戰鬥場</span></div>
-                <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label" data-i18n="zone_shield">P2 護盾區</span></div>
-                <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label" data-i18n="zone_mana">P2 魔力區</span></div>
+                
+                <div class="middle-row">
+                    <div class="shield-zone zone" data-zone="p2-shield" onclick="handleZoneClick('p2-shield')"><span class="zone-label" data-i18n="zone_shield">P2 護盾區</span></div>
+                    <div class="mana-zone zone" data-zone="p2-mana" onclick="handleZoneClick('p2-mana')"><span class="zone-label" data-i18n="zone_mana">P2 魔力區</span></div>
+                </div>
+
                 <div class="bottom-row">
                     <div class="hand-zone zone" data-zone="p2-hand" onclick="handleZoneClick('p2-hand')">
 						<span class="zone-label" data-i18n="zone_hand">P2 手牌</span>
@@ -3216,9 +1556,14 @@
 
             <div id="player1-area" class="player-area">
                 <div class="turn-bar" onclick="openThemePicker(1)" title="點擊更換 P1 代表色"></div>
+                
                 <div class="battle-zone zone" data-zone="p1-battle" onclick="handleZoneClick('p1-battle')"><span class="zone-label" data-i18n="zone_battle">P1 戰鬥場</span></div>
-                <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label" data-i18n="zone_shield">P1 護盾區</span></div>
-                <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label" data-i18n="zone_mana">P1 魔力區</span></div>
+                
+                <div class="middle-row">
+                    <div class="shield-zone zone" data-zone="p1-shield" onclick="handleZoneClick('p1-shield')"><span class="zone-label" data-i18n="zone_shield">P1 護盾區</span></div>
+                    <div class="mana-zone zone" data-zone="p1-mana" onclick="handleZoneClick('p1-mana')"><span class="zone-label" data-i18n="zone_mana">P1 魔力區</span></div>
+                </div>
+
                 <div class="bottom-row">
                     <div class="hand-zone zone" data-zone="p1-hand" onclick="handleZoneClick('p1-hand')">
 						<span class="zone-label" data-i18n="zone_hand">P1 手牌</span>
@@ -4941,8 +3286,8 @@
 			
 			// [修改 1] 解析度提升 (原本 100x140 -> 200x280)
 			// 這樣在手機版放大時依然清晰
-			const targetW = 200;
-			const targetH = 280;
+			const targetW = 240;
+			const targetH = 336;
 			
 			canvas.width = targetW;
 			canvas.height = targetH;
