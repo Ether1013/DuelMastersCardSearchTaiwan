@@ -8761,16 +8761,36 @@
                 }
             }
 
-            // --- 判斷是否有卡片進入戰鬥區 (手機版特寫用) ---
-            const currAction = history[currentIndex].action;
+            // --- [修正版 v2] 判斷是否有卡片進入戰鬥區 (狀態比對 + 堆疊過濾) ---
             const isMobile = document.body.classList.contains('mobile-mode');
             let battleEntryIds = [];
 
             if (isMobile) {
-                // 找出所有目的地是 battle 的移動操作
-                const moveOps = currAction.operations.filter(o => o.type === 'MOVE' && o.toZone.includes('battle'));
-                moveOps.forEach(op => {
-                    op.cardIds.forEach(id => battleEntryIds.push(id));
+                // 1. 取得這一步的結果狀態 (Current)
+                const currState = history[currentIndex].state;
+                // 2. 取得這一步之前的狀態 (Previous)
+                const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
+
+                // 3. 掃描當前狀態的所有卡片
+                currState.cards.forEach(currCard => {
+                    // A. 終點檢查：必須現在位於戰鬥區 (battle)
+                    if (!currCard.zone.includes('battle')) return;
+
+                    // B. 狀態檢查：必須是表側 (Face Up)
+                    if (!currCard.faceUp) return;
+
+                    // C. [新增] 堆疊檢查：不能是「被壓在底下」的牌 (進化元)
+                    // 如果這一步結束時，它是 bottom (底下) 或 bottom_exposed (露底)，代表它被蓋住了，不應特寫
+                    if (currCard.stackType === 'bottom' || currCard.stackType === 'bottom_exposed') return;
+
+                    // D. 起點檢查：比對上一個狀態
+                    const prevCard = prevState.cards.find(c => c.id === currCard.id);
+
+                    // 如果上一個狀態這張卡「已經在戰鬥區」，代表它只是在場上移動、合體或轉向，不觸發特寫
+                    if (prevCard && prevCard.zone.includes('battle')) return;
+
+                    // 通過所有檢查，加入特寫清單
+                    battleEntryIds.push(currCard.id);
                 });
             }
 
