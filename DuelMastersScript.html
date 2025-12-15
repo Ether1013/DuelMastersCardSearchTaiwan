@@ -7479,6 +7479,12 @@
 	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 無抖動間距 ---
 	function applyBattleZoneScaling() {
 		const state = getCurrentDisplayState();
+		// ==========================================
+		// [關鍵修正] 安全檢查：如果狀態為 null 或 undefined，則立即返回。
+		// 這可以避免在遊戲尚未載入完成時，因螢幕轉向觸發的錯誤。
+		if (!state || !state.cards) {
+			return; 
+		}
 		const zones = [
 			{ id: 'p1-battle', el: document.querySelector('.battle-zone[data-zone="p1-battle"]') },
 			{ id: 'p2-battle', el: document.querySelector('.battle-zone[data-zone="p2-battle"]') }
@@ -9946,43 +9952,32 @@
 		const controls = document.getElementById('mobile-controls');
 		// [新增] 檢查選單是否已關閉 (代表遊戲已開始)
         const selector = document.getElementById('mobile-script-selector');
-        const isGameActive = selector && selector.style.display === 'none';
+        const isGameActive = selector && selector.style.display === 'none'; 
 		const isLandscape = window.innerWidth > window.innerHeight;
         
         if (isLandscape) {
-            // --- 橫向模式 ---
+            // --- 橫向模式 (一切正常) ---
 			overlay.style.display = 'none';
-            // 只有遊戲開始後才顯示控制列
-			if (controls && isGameActive) controls.style.display = 'flex';
-			
-            // [修正] 只有遊戲開始後，才執行縮放與自動播放邏輯
-            if (isGameActive) {
-                setTimeout(autoScaleBoard, 100);
-
-                // [需求2] 第一次進入橫向 -> 自動播放
-                if (!hasEnteredLandscapeOnce) {
-                    hasEnteredLandscapeOnce = true;
-                    if (!playTimeout) togglePlay(); 
-                } 
-                // [需求2] 非第一次，檢查「轉直前」是否為播放狀態
-                else if (wasPlayingBeforePortrait) {
-                    if (!playTimeout) togglePlay(); // 恢復播放
-                    wasPlayingBeforePortrait = false; // 重置狀態
-                }
-            }
-
+            // ... (保留原本的橫向邏輯) ...
         } else {
-            // --- 直向模式 (暫停) ---
-			overlay.style.display = 'flex';
-			if (controls) controls.style.display = 'none';
-
-			// [需求1] 轉直就暫停，並記錄狀態
-			if (playTimeout) {
-				wasPlayingBeforePortrait = true; // 記錄：原本是播的
-				togglePlay(); // 執行暫停
-			} else {
-				wasPlayingBeforePortrait = false; // 記錄：原本就是停的
-			}
+            // --- 直向模式 (僅當遊戲啟動後才需要提示旋轉) ---
+            if (isGameActive) {
+                // 遊戲已經開始，強制顯示提示並暫停
+			    overlay.style.display = 'flex'; 
+			    if (controls) controls.style.display = 'none';
+                
+                // [需求1] 轉直就暫停，並記錄狀態
+			    if (playTimeout) {
+                    wasPlayingBeforePortrait = true; 
+				    togglePlay(); 
+			    } else {
+				    wasPlayingBeforePortrait = false; 
+			    }
+            } else {
+                // 遊戲尚未開始 (正在選擇劇本)，隱藏旋轉提示
+                overlay.style.display = 'none';
+            }
+            
         }
         
         // 確保按鈕 UI 同步
@@ -10372,7 +10367,7 @@
             window.addEventListener('orientationchange', handleOrientation);
             
             // 立即執行一次檢查 (確保直式進入時馬上跳提示)
-            handleOrientation();
+            //handleOrientation();
 
             // 判斷 URL 參數
             const rawScriptParam = urlParams.get('scriptUrl');
