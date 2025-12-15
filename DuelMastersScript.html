@@ -7553,7 +7553,7 @@
 			// 設定 CSS 變數 (縮放)
 			zone.el.style.setProperty('--bz-scale', finalScale);
 
-			// 設定垂直 Padding (置中)
+			// 設定垂直 Padding (置中) - 保持原樣
 			if (calc.hasCards) {
 				const visualHeight = calc.maxSafeHeight * finalScale;
 				const paddingV = Math.max(0, (calc.containerH - visualHeight) / 2);
@@ -7565,29 +7565,45 @@
 			}
 
 			// 計算並套用 Margin
+			const rootCards = allCards.filter(c => c.zone === zone.id && !c.parentId); // 再次過濾出 Root Cards
 			const groupEls = Array.from(zone.el.querySelectorAll('.card-group'));
-			
-			groupEls.forEach((groupDiv) => {
-				const baseW = parseFloat(groupDiv.dataset.baseW || 60);
+
+			// 確保卡群 DOM 元素的數量與 Root Card 數量一致，才能進行精確的 Margin 計算
+			rootCards.forEach((rootCard, rootIndex) => {
+				const groupDiv = groupEls[rootIndex];
+				if (!groupDiv) return;
+
+				// 1. 取得該卡群在「縮放前」的實際寬度 (透過 measureCardGroupBounds 取得的結果)
+				const b0 = measureCardGroupBounds(rootCard, allCards, 0);
+				const b90 = measureCardGroupBounds(rootCard, allCards, 90);
+				// 取得該卡群旋轉 0 度或 90 度時的最大佔用寬度 (Base Width)
+				const baseW = Math.max(b0.width, b90.width);
 				
-				// 數學公式：
-				// 視覺寬度 = 原始寬 * 縮放
+				// 2. 計算卡群縮放後的「視覺寬度」
 				const visualW = baseW * finalScale;
 				
-				// 目標間隙 = 視覺寬度 * 10%
-				const targetGap = visualW * GAP_RATIO;
+				// 3. 計算所需的「目標間隙寬度」 (10% of 視覺寬度)
+				const targetGap = visualW * GAP_RATIO; // GAP_RATIO = 0.1
 				
-				// 補償 Margin = (目標總寬 - 實際佔位) / 2
+				// 4. 計算每個卡群需要的「總邊距」 (Total Margin)
+				// 總邊距 = (視覺寬度 + 目標間隙) - 原始寬度
+				// 這個公式確保：卡群DOM寬度(baseW) + 總邊距 = 視覺寬度(visualW) + 間隙(targetGap)
 				const totalMargin = (visualW + targetGap) - baseW;
+				
+				// 5. 分配到左右兩邊的 Margin
 				const marginPerSide = totalMargin / 2;
 
-				// 套用 Margin (此時 initializing 還在，所以是瞬間定位，不會抖動)
+				// 6. 套用 Margin
 				groupDiv.style.marginLeft = `${marginPerSide}px`;
 				groupDiv.style.marginRight = `${marginPerSide}px`;
+				
+				// [新增] 更新 dataset.baseW，供 expandStack 使用
+				groupDiv.dataset.baseW = baseW;
 			});
 
+			// ... (後續的解除鎖定邏輯保持原樣) ...
+
 			// 4. 【關鍵】解除鎖定
-			// 強制重繪 (Reflow)，確保上面的 Margin 已經「生效」在畫面上
 			void zone.el.offsetWidth; 
 
 			// 移除 initializing class，讓之後的互動 (如滑鼠移入、新增卡片) 恢復動畫效果
