@@ -9950,18 +9950,48 @@
 	function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
 		const controls = document.getElementById('mobile-controls');
-		// [新增] 檢查選單是否已關閉 (代表遊戲已開始)
-        const selector = document.getElementById('mobile-script-selector');
-        const isGameActive = selector && selector.style.display === 'none'; 
+		const selector = document.getElementById('mobile-script-selector');
+        
+        // [修正] 使用更可靠的遊戲狀態檢查：劇本是否已載入 (history 是否有內容)
+        // 必須確保 history 變數在全局範圍內是可訪問的
+        const isGameLoaded = (typeof history !== 'undefined' && history.length > 0);
+        
 		const isLandscape = window.innerWidth > window.innerHeight;
         
         if (isLandscape) {
-            // --- 橫向模式 (一切正常) ---
-			overlay.style.display = 'none';
-            // ... (保留原本的橫向邏輯) ...
+            // --- 橫向模式 ---
+			overlay.style.display = 'none'; // 隱藏旋轉提示
+            
+            // 只有當劇本已載入時，才顯示控制列並執行播放邏輯
+			if (controls && isGameLoaded) {
+                controls.style.display = 'flex'; 
+                
+                // [修正] 強制隱藏選擇器，因為遊戲已載入，選擇器不應再出現
+                if (selector) selector.style.display = 'none'; 
+
+                // --- 恢復自動播放功能 ---
+                // [需求2] 第一次進入橫向 -> 自動播放
+                if (!hasEnteredLandscapeOnce) {
+                    hasEnteredLandscapeOnce = true;
+                    if (!playTimeout) togglePlay(); 
+                } 
+                // [需求2] 非第一次，檢查「轉直前」是否為播放狀態
+                else if (wasPlayingBeforePortrait) {
+                    if (!playTimeout) togglePlay(); // 恢復播放
+                    wasPlayingBeforePortrait = false; // 重置狀態
+                }
+                // --- 結束自動播放功能 ---
+            } else {
+                 // 遊戲尚未載入，確保 controls 隱藏
+                 if (controls) controls.style.display = 'none';
+            }
+            
+            // 延遲後執行縮放，讓佈局穩定
+            setTimeout(autoScaleBoard, 100); 
+
         } else {
-            // --- 直向模式 (僅當遊戲啟動後才需要提示旋轉) ---
-            if (isGameActive) {
+            // --- 直向模式 (暫停/選擇劇本) ---
+            if (isGameLoaded) {
                 // 遊戲已經開始，強制顯示提示並暫停
 			    overlay.style.display = 'flex'; 
 			    if (controls) controls.style.display = 'none';
@@ -9974,14 +10004,12 @@
 				    wasPlayingBeforePortrait = false; 
 			    }
             } else {
-                // 遊戲尚未開始 (正在選擇劇本)，隱藏旋轉提示
+                // 遊戲尚未開始 (正在選擇劇本)，顯示選擇器
                 overlay.style.display = 'none';
+                if (selector) selector.style.display = 'flex'; // 確保直向時選擇器顯示
+                if (controls) controls.style.display = 'none';
             }
-            
         }
-        
-        // 確保按鈕 UI 同步
-		updatePlayButtonUI();
     }
 	
 	// --- [修正版] 手機版音樂開關 (強制同步狀態) ---
