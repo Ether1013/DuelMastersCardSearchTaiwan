@@ -428,18 +428,32 @@
 
 	/* 3. 縮放邏輯：嚴格限定只在戰鬥區生效 */
 	.battle-zone .card-group {
-		/* 縮放由 JS 控制 */
-		transform: scale(var(--bz-scale, 1));
-		/* 縮放原點設為中上，這樣計算 Padding 比較容易預測 */
+		/* 核心佈局設定 */
 		transform-origin: center top; 
-		
-		transition: transform 0.2s ease, margin 0.2s ease;
 		flex-shrink: 0;
 		position: relative;
 		z-index: 10;
+		margin: 0 2px; /* 預設邊距 */
 		
-		/* 預設邊距 (JS 會覆蓋它) */
-		margin: 0 2px;
+		/* 預設：開起動畫 (讓後續的操作有平滑效果) */
+		transform: scale(var(--bz-scale, 1));
+		transition: transform 0.2s ease, margin 0.2s ease;
+	}
+	
+	/* 【新增】初始化狀態：強制關閉動畫 */
+	/* 當卡片剛生成、JS 還在算間距時，加上這個 class */
+	.battle-zone .card-group.initializing {
+		transition: none !important;
+	}
+	
+	/* 【新增】當 JS 計算完成並加上此 class 後，才讓卡片現身 */
+	.battle-zone .card-group.layout-done {
+		opacity: 1;
+	}
+
+	/* (確保這段還在) 滑鼠懸停時置頂 */
+	.battle-zone .card-group:hover {
+		z-index: 9999 !important;
 	}
 	
 	/* 4. [關鍵] 恢復卡片本體的滑鼠感應，這樣 Hover/Click 才會生效 */
@@ -460,11 +474,6 @@
 	.hand-zone .card-group,
 	.side-zone-group .card-group {
 		transform: none !important;
-	}
-
-	/* 4. 滑鼠移過去時，絕對置頂，且展開 */
-	.battle-zone .card-group:hover {
-		z-index: 9999 !important; /* 確保蓋過一切 */
 	}
 
     /* Zone Highlights */
@@ -1689,7 +1698,10 @@
     body.mobile-mode .rps-container.p1 { 
         bottom: -20px !important; 
     }
-	
+	/* [新增] 防止排版計算時的視覺抖動 */
+	body.no-transition * {
+		transition: none !important;
+	}
 </style>
 </head>
 <body>
@@ -6537,14 +6549,14 @@
 				const totalW = bounds.maxX - bounds.minX;
 				const totalH = bounds.maxY - bounds.minY;
 				const div = document.createElement('div');
-				div.className = 'card-group';
+				
+				// 【修改這行】加上 initializing class
+				div.className = 'card-group initializing'; 
 				
 				div.style.width = `${totalW}px`;
 				div.style.height = `${totalH}px`;
 				div.style.position = 'relative'; 
-				
-				// [紀錄] 寫入原始佈局寬度，供 applyBattleZoneScaling 計算使用
-				div.dataset.baseW = totalW;
+				div.dataset.baseW = totalW; // 這行很重要，不能拿掉
 
 				// -------------------------------------------------------------
 				// [修復] 補回這裡遺失的 Hover 事件監聽器
@@ -7420,7 +7432,7 @@
 		};
 	}
 
-	// --- [最終修正版] 戰鬥區自動佈局演算法 (P1/P2 同步縮放 + 堆疊支援 + 間距補償) ---
+	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 無抖動間距 ---
 	function applyBattleZoneScaling() {
 		const state = getCurrentDisplayState();
 		const zones = [
@@ -7428,29 +7440,26 @@
 			{ id: 'p2-battle', el: document.querySelector('.battle-zone[data-zone="p2-battle"]') }
 		];
 
-		// 間隙比例 (卡片視覺寬度的 10%)
-		const GAP_RATIO = 0.1; 
+		const GAP_RATIO = 0.1; // 間隙 = 視覺寬度的 10%
 		const allCards = state.cards;
 
-		// --- 階段一：分別計算雙方的「理想縮放比例」與「最大佔用空間」 ---
+		// 1. 分別計算雙方的理想比例 (最大化運算)
 		const zoneCalculations = zones.map(zone => {
 			if (!zone.el) return null;
-
-			// 1. 取得容器空間
+			
+			// 取得容器空間
 			const style = window.getComputedStyle(zone.el);
 			const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
 			const containerH = zone.el.clientHeight; 
 			const availW = zone.el.clientWidth - paddingX;
 
-			// 2. 取得根卡片
 			const rootCards = allCards.filter(c => c.zone === zone.id && !c.parentId);
 			
-			// 若該區無卡片，標記為無資料
 			if (rootCards.length === 0) {
 				return { hasCards: false, idealScale: Infinity, maxSafeHeight: 0, containerH };
 			}
 
-			// 3. 模擬計算 (0度與90度取最大值)
+			// 模擬最大佔用空間 (0度與90度取大者)
 			let totalSafeWidth = 0;
 			let maxSafeHeight = 0;
 
@@ -7458,97 +7467,91 @@
 				const b0 = measureCardGroupBounds(root, allCards, 0);
 				const b90 = measureCardGroupBounds(root, allCards, 90);
 				
-				// 取最寬與最高 (預留旋轉空間)
+				// 這裡計算的是「最大物理佔用」，確保轉動不超出
 				const safeW = Math.max(b0.width, b90.width);
 				const safeH = Math.max(b0.height, b90.height);
 
-				// 累加寬度 (含間隙)
+				// 預留間隙空間 (尚未縮放)
 				totalSafeWidth += safeW * (1 + GAP_RATIO);
 				
 				if (safeH > maxSafeHeight) maxSafeHeight = safeH;
 			});
 
-			// 4. 計算該區域的理想 Scale (尚未設限)
-			const targetH = containerH * 0.9; // 高度留 10% 緩衝
+			// 計算 Scale
+			const targetH = containerH * 0.9; 
 			const scaleByHeight = targetH / maxSafeHeight;
 			const scaleByWidth = availW / totalSafeWidth;
 			
 			return {
 				hasCards: true,
-				idealScale: Math.min(scaleByHeight, scaleByWidth), // 取寬高限制較嚴格者
+				idealScale: Math.min(scaleByHeight, scaleByWidth),
 				maxSafeHeight: maxSafeHeight,
 				containerH: containerH
 			};
 		});
 
-		// --- 階段二：決定全域統一縮放比例 (Global Scale) ---
-		// 規則：P1 與 P2 必須一樣大，所以取兩者中「較小」的比例 (配合卡片多的一方)
-		
+		// 2. 決定全域比例 (P1/P2 取小)
 		const isMobile = document.body.classList.contains('mobile-mode');
 		const maxScaleLimit = isMobile ? 1.8 : 2.2; 
 		const minScaleLimit = 0.3;
 
-		// 找出所有有卡片區域的 idealScale
-		const validScales = zoneCalculations
-							.filter(res => res && res.hasCards)
-							.map(res => res.idealScale);
+		const validScales = zoneCalculations.filter(res => res && res.hasCards).map(res => res.idealScale);
+		let finalScale = (validScales.length > 0) ? Math.min(...validScales) : maxScaleLimit;
 
-		let finalScale = maxScaleLimit; // 預設值 (如果雙方都沒牌)
-
-		if (validScales.length > 0) {
-			// [關鍵] 取最小值，實現 P1/P2 尺寸同步
-			finalScale = Math.min(...validScales);
-		}
-
-		// 限制上下限
 		if (finalScale > maxScaleLimit) finalScale = maxScaleLimit;
 		if (finalScale < minScaleLimit) finalScale = minScaleLimit;
 
-		// --- 階段三：套用樣式 (Scale, Padding, Margin) ---
+		// 3. 套用樣式與間距 (Margin)
 		zones.forEach((zone, index) => {
 			if (!zone.el) return;
 			const calc = zoneCalculations[index];
 			if (!calc) return;
 
-			// 1. 套用統一的 Scale
+			// 設定 CSS 變數 (縮放)
 			zone.el.style.setProperty('--bz-scale', finalScale);
 
-			// 2. 計算垂直置中 (Padding)
-			// 雖然 Scale 一樣，但每邊的卡片堆疊高度可能不同 (有的有進化，有的沒有)
-			// 這裡依照各自的 maxSafeHeight 來算置中，視覺上會比較平衡
+			// 設定垂直 Padding (置中)
 			if (calc.hasCards) {
 				const visualHeight = calc.maxSafeHeight * finalScale;
 				const paddingV = Math.max(0, (calc.containerH - visualHeight) / 2);
 				zone.el.style.paddingTop = `${paddingV}px`;
 				zone.el.style.paddingBottom = `${paddingV}px`;
 			} else {
-				// 沒卡片時恢復預設
 				zone.el.style.paddingTop = '20px';
 				zone.el.style.paddingBottom = '20px';
 			}
 
-			// 3. 計算動態間距 (Margin)
+			// 計算並套用 Margin
 			const groupEls = Array.from(zone.el.querySelectorAll('.card-group'));
 			
 			groupEls.forEach((groupDiv) => {
-				// 讀取該群組的原始寬度 (由 renderCardTree 計算寫入)
+				// 從 dataset 讀取原始寬度 (這是最穩的，不受 CSS 影響)
 				const baseW = parseFloat(groupDiv.dataset.baseW || 60);
 				
-				// 計算視覺寬度
+				// 數學公式：
+				// 視覺寬度 = 原始寬 * 縮放
 				const visualW = baseW * finalScale;
 				
-				// 計算目標間隙 (10%)
-				const gap = visualW * GAP_RATIO;
-
-				// 計算 Margin 補償
-				// DOM 佔位 = baseW
-				// 目標佔位 = visualW + gap
-				const totalMargin = (visualW + gap) - baseW;
+				// 目標間隙 = 視覺寬度 * 10%
+				const targetGap = visualW * GAP_RATIO;
+				
+				// 需要的總空間 = 視覺寬度 + 間隙
+				// 實際佔用空間 = baseW (因為 scale 不影響 flow)
+				// 補償 Margin = (需要 - 實際) / 2
+				const totalMargin = (visualW + targetGap) - baseW;
 				const marginPerSide = totalMargin / 2;
 
+				// 套用 Margin (此時 transition: none，所以是瞬間定位)
 				groupDiv.style.marginLeft = `${marginPerSide}px`;
 				groupDiv.style.marginRight = `${marginPerSide}px`;
 			});
+
+			// 4. 【關鍵】解除鎖定
+			// 強制重繪，確保上面的 Margin 已經生效
+			void zone.el.offsetWidth; 
+
+			// 移除 initializing class，讓之後的互動恢復動畫
+			groupEls.forEach(el => el.classList.remove('initializing'));
 		});
 	}
 	
