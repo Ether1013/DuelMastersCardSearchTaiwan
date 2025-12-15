@@ -416,7 +416,7 @@
 		justify-content: center;
 		/* 預設靠上對齊 (滿足：重置狀態靠上) */
 		align-items: flex-start; 
-		gap: 2px;
+		gap: 0 !important;
 		
 		/* 透過 JS 計算的 padding (上下留白) */
 		padding-top: var(--bz-padding-v, 20px);
@@ -435,8 +435,15 @@
 		transform: scale(var(--bz-scale, 1));
 		/* 縮放原點設為中上，配合 flex-start 讓它貼頂 */
 		transform-origin: center top; 
-		transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+		transition: margin 0.3s ease, transform 0.3s;
 		flex-shrink: 0;
+		margin: 0;
+		pointer-events: auto !important;
+	}
+	
+	/* 4. [關鍵] 恢復卡片本體的滑鼠感應，這樣 Hover/Click 才會生效 */
+	.battle-zone .card-group .card {
+		pointer-events: auto;
 	}
 
 	/* 橫置群組：垂直置中 (覆寫上面的 flex-start) */
@@ -456,7 +463,7 @@
 
 	/* 確保展開時層級最高 (維持原有功能) */
 	.battle-zone .card-group:hover {
-		z-index: 1000 !important;
+		z-index: 2000 !important;
 	}
 
     /* Zone Highlights */
@@ -6528,25 +6535,39 @@
             const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
 
             // [修改] 綁定 Hover 事件
-            const createContainer = (bounds) => {
-                const totalW = bounds.maxX - bounds.minX;
-                const totalH = bounds.maxY - bounds.minY;
-                const div = document.createElement('div');
-                div.className = 'card-group';
-                div.style.width = `${totalW}px`;
-                div.style.height = `${totalH}px`;
-                div.style.position = 'relative'; 
-                div.style.margin = '5px 10px';
-                
-                // --- 新增：綁定 JS Hover 邏輯 ---
-                // 傳入 rootCard.id 讓我們知道這整疊牌的根源是誰，方便反查
-                div.onmouseenter = () => expandStack(div, familyMembers);
-                div.onmouseleave = () => collapseStack(div);
-                // -----------------------------
+            // 在 renderCardTree 函式內部
+			// 在 renderCardTree 函式內部
+			// 在 renderCardTree 函式內部 ...
 
-                container.appendChild(div);
-                return { div, offsetX: -bounds.minX, offsetY: -bounds.minY };
-            };
+			const createContainer = (bounds) => {
+				const totalW = bounds.maxX - bounds.minX;
+				const totalH = bounds.maxY - bounds.minY;
+				const div = document.createElement('div');
+				div.className = 'card-group';
+				
+				div.style.width = `${totalW}px`;
+				div.style.height = `${totalH}px`;
+				div.style.position = 'relative'; 
+				
+				// [紀錄] 寫入原始佈局寬度，供 applyBattleZoneScaling 計算使用
+				div.dataset.baseW = totalW;
+
+				// -------------------------------------------------------------
+				// [修復] 補回這裡遺失的 Hover 事件監聽器
+				// -------------------------------------------------------------
+				div.onmouseenter = () => {
+					// 呼叫展開函式 (familyMembers 來自 renderCardTree 的閉包變數)
+					expandStack(div, familyMembers);
+				};
+				
+				div.onmouseleave = () => {
+					collapseStack(div);
+				};
+				// -------------------------------------------------------------
+
+				container.appendChild(div);
+				return { div, offsetX: -bounds.minX, offsetY: -bounds.minY };
+			};
 
             // Mode 1: 無月之門例外渲染 (保持不變)
             if (moonlessAce) {
@@ -7410,57 +7431,75 @@
 		const state = getCurrentDisplayState();
 		const battleZones = ['p1-battle', 'p2-battle'];
 		
-		// A. 取得戰鬥區 DOM 高度 (假設 P1/P2 高度相同，取 P1)
+		// =========================================================
+		// 1. 尺寸與縮放比例計算 (保留原本邏輯)
+		// =========================================================
 		const p1ZoneEl = document.querySelector('.battle-zone[data-zone="p1-battle"]');
 		if (!p1ZoneEl) return;
 		
-		// clientHeight 是包含 padding 的總高度
 		const zoneTotalHeight = p1ZoneEl.clientHeight;
-		
-		// B. 計算 5% Padding (基於高度)
 		const paddingPx = zoneTotalHeight * 0.05;
 		
-		// C. 寫入 CSS 變數 (修正 1P 沒頂到上面的問題)
 		document.querySelectorAll('.battle-zone').forEach(el => {
 			el.style.setProperty('--bz-padding-v', `${paddingPx}px`);
 		});
 
-		// D. 計算剩餘可用高度 (90% 區域 = 總高 - 上下Padding)
 		const targetAvailHeight = zoneTotalHeight - (paddingPx * 2);
-
-		// E. 找出全場「潛在最大高度」
-		let maxElementHeight = 84; // 預設至少單卡高
-
+		let maxElementHeight = 84; 
 		const allCards = state.cards;
 
 		battleZones.forEach(zoneId => {
 			const rootCards = allCards.filter(c => c.zone === zoneId && !c.parentId);
-			
 			rootCards.forEach(root => {
-				// [關鍵修正] 同時計算直立與橫置的高度，取最大值
-				// 這確保了「單純旋轉時，計算基準不變」，所以大小不會變
 				const bounds0 = measureCardGroupBounds(root, allCards, 0);
 				const bounds90 = measureCardGroupBounds(root, allCards, 90);
-				
 				const potentialMaxH = Math.max(bounds0.height, bounds90.height);
-				
 				if (potentialMaxH > maxElementHeight) {
 					maxElementHeight = potentialMaxH;
 				}
 			});
 		});
 
-		// F. 計算比例
-		// 0.95 是微調係數，避免因為邊框(border)導致剛好溢出
+		// 計算 Scale
 		let scale = (targetAvailHeight / maxElementHeight) * 0.95;
-
-		// 設定合理邊界 (避免無限放大或縮太小)
 		if (scale < 0.2) scale = 0.2; 
 		if (scale > 2.2) scale = 2.2; 
 
-		// G. 套用
+		// 套用 Scale
 		document.querySelectorAll('.battle-zone').forEach(el => {
 			el.style.setProperty('--bz-scale', scale);
+		});
+
+		// =========================================================
+		// 2. [修正] 動態邊距校正 (解決單卡與卡群間距問題)
+		// =========================================================
+		
+		// 定義標準單卡寬度 (需與 CSS 變數一致，通常是 60px)
+		const STANDARD_CARD_W = 60; 
+		
+		document.querySelectorAll('.battle-zone .card-group').forEach(group => {
+			// A. 讀取 renderCardTree 寫入的原始寬度
+			const baseW = parseFloat(group.dataset.baseW || STANDARD_CARD_W);
+			
+			// B. 計算實際看到的視覺寬度
+			const visualW = baseW * scale;
+			
+			// C. 計算您要求的目標間距：(視覺寬度的 10%)
+			// 例如：視覺寬度 30px -> 間距 3px
+			const targetGap = visualW * 0.1;
+
+			// D. 計算死區校正值 (Dead Space Correction)
+			// 因為 transform: scale 是視覺縮放，佈局空間(baseW)沒變
+			// 我們需要用負邊距把多出來的空間「吃掉」
+			// 公式：(視覺寬度 - 原始寬度) / 2
+			const correctionPerSide = (visualW - baseW) / 2;
+			
+			// E. 計算最終 Margin
+			// 最終邊距 = 死區校正(負值) + 目標間距的一半(正值)
+			const finalMargin = correctionPerSide + (targetGap / 2);
+			
+			// 套用
+			group.style.margin = `0 ${finalMargin}px`;
 		});
 	}
 	
