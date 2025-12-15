@@ -8760,6 +8760,9 @@
                     globalAudioPlayer.pause();
                 }
             }
+			
+			// [關鍵修復] 補回這一行！下方的延遲計算需要用到它，否則會報錯
+            const currAction = history[currentIndex].action;
 
             // --- [修正版 v2] 判斷是否有卡片進入戰鬥區 (狀態比對 + 堆疊過濾) ---
             const isMobile = document.body.classList.contains('mobile-mode');
