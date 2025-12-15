@@ -428,16 +428,23 @@
 
 	/* 3. 縮放邏輯：嚴格限定只在戰鬥區生效 */
 	.battle-zone .card-group {
-		/* 核心佈局設定 */
+		/* 核心佈局 */
 		transform-origin: center top; 
 		flex-shrink: 0;
 		position: relative;
 		z-index: 10;
-		margin: 0 2px; /* 預設邊距 */
+		margin: 0 2px;
 		
-		/* 預設：開起動畫 (讓後續的操作有平滑效果) */
+		/* 平常開啟動畫 (讓操作滑順) */
 		transform: scale(var(--bz-scale, 1));
 		transition: transform 0.2s ease, margin 0.2s ease;
+	}
+	
+	/* 【開關】初始化時，強制關閉所有動畫 (包含內部子元素) */
+	.battle-zone .card-group.initializing,
+	.battle-zone .card-group.initializing * {
+		transition: none !important;
+		animation: none !important;
 	}
 	
 	/* 【新增】初始化狀態：強制關閉動畫 */
@@ -6550,26 +6557,16 @@
 				const totalH = bounds.maxY - bounds.minY;
 				const div = document.createElement('div');
 				
-				// 【修改這行】加上 initializing class
+				// 【修改】加上 initializing
 				div.className = 'card-group initializing'; 
 				
 				div.style.width = `${totalW}px`;
 				div.style.height = `${totalH}px`;
 				div.style.position = 'relative'; 
-				div.dataset.baseW = totalW; // 這行很重要，不能拿掉
+				div.dataset.baseW = totalW; 
 
-				// -------------------------------------------------------------
-				// [修復] 補回這裡遺失的 Hover 事件監聽器
-				// -------------------------------------------------------------
-				div.onmouseenter = () => {
-					// 呼叫展開函式 (familyMembers 來自 renderCardTree 的閉包變數)
-					expandStack(div, familyMembers);
-				};
-				
-				div.onmouseleave = () => {
-					collapseStack(div);
-				};
-				// -------------------------------------------------------------
+				div.onmouseenter = () => expandStack(div, familyMembers);
+				div.onmouseleave = () => collapseStack(div);
 
 				container.appendChild(div);
 				return { div, offsetX: -bounds.minX, offsetY: -bounds.minY };
@@ -6632,12 +6629,22 @@
 				const isRootTapped = (Math.abs(rootCard.rotation) % 180) === 90;
 
 				if (isRootTapped) {
-					// 條件 6: 橫置狀態元素靠中對齊
-					div.classList.add('tapped-group');
-				} else {
-					// 條件 6: 重置狀態元素靠上對齊 (預設 Flex-start)
-					div.classList.remove('tapped-group');
-				}
+                    // 條件 6: 橫置狀態元素靠中對齊
+                    div.classList.add('tapped-group');
+                } else {
+                    // 條件 6: 重置狀態元素靠上對齊 (預設 Flex-start)
+                    div.classList.remove('tapped-group');
+                }
+				
+				// --- [修正] 無月之門對齊修正 ---
+                // 無月之門的陣型為圓形，無論主卡是否橫置，容器本身都應該「永遠垂直置中」。
+                // 這樣可以避免主卡轉向時，因為從 flex-start(頂) 跳到 center(中) 導致的 Y 軸位移。
+                
+                // 強制加入 tapped-group class (利用既有的 CSS 讓它 align-self: center)
+                div.classList.add('tapped-group');
+                
+                // 額外確保變形原點在中心 (配合圓形旋轉視覺)
+                div.style.transformOrigin = 'center center';
 				
 				// --- [新增修正] 強制垂直置中校正 (Fix Vertical Alignment) ---
                 // 1. 計算容器總高度
@@ -7360,78 +7367,115 @@
 
 	// 1. 計算卡片群組的絕對邊界 (包含子卡片與旋轉模擬)
 	function measureCardGroupBounds(rootCard, allCards, forcedRotation = null) {
-		// 基礎參數 (必須與 CSS :root 的 --card-width/height 一致)
-		const CARD_W = 60;
-		const CARD_H = 84;
-		
-		// 建立親子關係索引 (優化效能)
+		const CARD_W = 60; const CARD_H = 84;
+		const HW = CARD_W / 2; const HH = CARD_H / 2;
+		const state = getCurrentDisplayState();
+
+		// 建立家族樹
+		const familyMembers = [];
 		const childMap = {};
-		allCards.forEach(c => {
-			if (c.parentId) {
-				if (!childMap[c.parentId]) childMap[c.parentId] = [];
-				childMap[c.parentId].push(c);
-			}
-		});
+		const queue = [rootCard];
+		const processed = new Set();
+		while(queue.length > 0) {
+			const node = queue.shift();
+			if (processed.has(node.id)) continue;
+			processed.add(node.id);
+			familyMembers.push(node);
+			const children = allCards.filter(c => c.parentId === node.id);
+			if (children.length > 0) childMap[node.id] = children;
+			children.forEach(c => queue.push(c));
+		}
 
-		let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+		const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
 
-		// 決定此樹狀結構的計算角度 (如果有強制指定，就用強制的值)
-		const baseRotation = (forcedRotation !== null) ? forcedRotation : rootCard.rotation;
-		
-		// 遞迴計算絕對座標
-		const traverse = (card, currentOffsetX, currentOffsetY) => {
-			const hw = CARD_W / 2;
-			const hh = CARD_H / 2;
+		// === 無月之門：計算最大包圍盒 (Union) ===
+		if (moonlessAce) {
+			let minX = 0, maxX = 0, minY = 0, maxY = 0;
+
+			// 1. 素材圈 (不旋轉)
+			const isPuzzle = (c) => c.stackType && c.stackType.includes('puzzle');
+			const subjects = familyMembers.filter(c => c.id !== moonlessAce.id && !isPuzzle(c));
 			
-			// 原始四角座標 (相對於卡片中心)
-			const corners = [
-				{x: -hw, y: -hh}, {x: hw, y: -hh},
-				{x: hw, y: hh},   {x: -hw, y: hh}
-			];
+			if (subjects.length > 0) {
+				const step = 360 / subjects.length;
+				const startAngle = -90 + (step / 2); 
+				subjects.forEach((sub, idx) => {
+					const rad = (startAngle + step * idx) * (Math.PI / 180);
+					const offX = 12 * Math.cos(rad);
+					const offY = 12 * Math.sin(rad);
+					// Margin = 40
+					if (offX - 40 < minX) minX = offX - 40;
+					if (offX + 40 > maxX) maxX = offX + 40;
+					if (offY - 40 < minY) minY = offY - 40;
+					if (offY + 40 > maxY) maxY = offY + 40;
+				});
+			} else {
+				minX = -30; maxX = 30; minY = -42; maxY = 42;
+			}
 
-			// 旋轉矩陣參數 (使用 baseRotation 整組一起轉)
-			const rotRad = baseRotation * (Math.PI / 180);
-			const cos = Math.cos(rotRad);
-			const sin = Math.sin(rotRad);
-
-			// 該卡片中心點旋轉後的絕對座標
-			const finalCenterX = currentOffsetX * cos - currentOffsetY * sin;
-			const finalCenterY = currentOffsetX * sin + currentOffsetY * cos;
-
-			// 計算四個角落旋轉後的位置
-			corners.forEach(pt => {
-				const rx = pt.x * cos - pt.y * sin;
-				const ry = pt.x * sin + pt.y * cos;
-
-				const absX = finalCenterX + rx;
-				const absY = finalCenterY + ry;
-
-				if (absX < minX) minX = absX;
-				if (absX > maxX) maxX = absX;
-				if (absY < minY) minY = absY;
-				if (absY > maxY) maxY = absY;
-			});
-
-			// 處理子卡片 (累積位移)
-			const children = childMap[card.id] || [];
-			children.forEach(child => {
-				const offset = getBaseStackOffset(child.stackType);
-				traverse(child, currentOffsetX + offset.x, currentOffsetY + offset.y);
-			});
-		};
-
-		// 從 Root (0,0) 開始
-		traverse(rootCard, 0, 0);
-
-		// 防呆
-		if (minX === Infinity) return { width: CARD_W, height: CARD_H };
-
-		return {
-			width: maxX - minX,
-			height: maxY - minY
-		};
+			// 2. 主卡與連結卡 (檢查 0度 與 90度 取最大值)
+			const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
+			const checkBounds = (simAngle) => {
+				const rotRad = simAngle * (Math.PI / 180);
+				const cos = Math.cos(rotRad), sin = Math.sin(rotRad);
+				const checkCorner = (cx, cy) => {
+					[{x:-HW,y:-HH}, {x:HW,y:-HH}, {x:HW,y:HH}, {x:-HW,y:HH}].forEach(pt => {
+						const rx = pt.x * cos - pt.y * sin;
+						const ry = pt.x * sin + pt.y * cos;
+						const absX = cx + rx; const absY = cy + ry;
+						if (absX < minX) minX = absX; if (absX > maxX) maxX = absX;
+						if (absY < minY) minY = absY; if (absY > maxY) maxY = absY;
+					});
+				};
+				checkCorner(0, 0); // Check Ace
+				const measurePuzzle = (card, px, py) => {
+					const children = puzzlePartners.filter(p => p.parentId === card.id);
+					children.forEach(child => {
+						const base = getBaseStackOffset(child.stackType);
+						const ro = rotateVector(base.x, base.y, simAngle);
+						const cx = px + ro.x; const cy = py + ro.y;
+						checkCorner(cx, cy);
+						measurePuzzle(child, cx, cy);
+					});
+				};
+				puzzlePartners.filter(p => p.parentId === moonlessAce.id).forEach(p => {
+					const base = getBaseStackOffset(p.stackType);
+					const ro = rotateVector(base.x, base.y, simAngle);
+					measurePuzzle(p, ro.x, ro.y);
+				});
+			};
+			checkBounds(0);
+			checkBounds(90);
+			return { width: maxX - minX, height: maxY - minY };
+		} 
+		// === 普通堆疊：維持原樣 (安全) ===
+		else {
+			let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+			const baseRotation = (forcedRotation !== null) ? forcedRotation : rootCard.rotation;
+			const traverse = (card, ox, oy) => {
+				const rotRad = baseRotation * (Math.PI / 180);
+				const cos = Math.cos(rotRad), sin = Math.sin(rotRad);
+				const fcx = ox * cos - oy * sin;
+				const fcy = ox * sin + oy * cos;
+				[{x:-HW,y:-HH}, {x:HW,y:-HH}, {x:HW,y:HH}, {x:-HW,y:HH}].forEach(pt => {
+					const rx = pt.x * cos - pt.y * sin;
+					const ry = pt.x * sin + pt.y * cos;
+					const ax = fcx + rx; const ay = fcy + ry;
+					if (ax < minX) minX = ax; if (ax > maxX) maxX = ax;
+					if (ay < minY) minY = ay; if (ay > maxY) maxY = ay;
+				});
+				(childMap[card.id] || []).forEach(child => {
+					const off = getBaseStackOffset(child.stackType);
+					traverse(child, ox + off.x, oy + off.y);
+				});
+			};
+			traverse(rootCard, 0, 0);
+			if (minX === Infinity) return { width: CARD_W, height: CARD_H };
+			return { width: maxX - minX, height: maxY - minY };
+		}
 	}
 
+	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 無抖動間距 ---
 	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 無抖動間距 ---
 	function applyBattleZoneScaling() {
 		const state = getCurrentDisplayState();
@@ -7459,7 +7503,7 @@
 				return { hasCards: false, idealScale: Infinity, maxSafeHeight: 0, containerH };
 			}
 
-			// 模擬最大佔用空間 (0度與90度取大者)
+			// 模擬最大佔用空間 (0度與90度取大者，確保轉動時不被切掉)
 			let totalSafeWidth = 0;
 			let maxSafeHeight = 0;
 
@@ -7467,7 +7511,6 @@
 				const b0 = measureCardGroupBounds(root, allCards, 0);
 				const b90 = measureCardGroupBounds(root, allCards, 90);
 				
-				// 這裡計算的是「最大物理佔用」，確保轉動不超出
 				const safeW = Math.max(b0.width, b90.width);
 				const safeH = Math.max(b0.height, b90.height);
 
@@ -7490,7 +7533,7 @@
 			};
 		});
 
-		// 2. 決定全域比例 (P1/P2 取小)
+		// 2. 決定全域比例 (P1/P2 取小，達成一致性)
 		const isMobile = document.body.classList.contains('mobile-mode');
 		const maxScaleLimit = isMobile ? 1.8 : 2.2; 
 		const minScaleLimit = 0.3;
@@ -7525,7 +7568,6 @@
 			const groupEls = Array.from(zone.el.querySelectorAll('.card-group'));
 			
 			groupEls.forEach((groupDiv) => {
-				// 從 dataset 讀取原始寬度 (這是最穩的，不受 CSS 影響)
 				const baseW = parseFloat(groupDiv.dataset.baseW || 60);
 				
 				// 數學公式：
@@ -7535,22 +7577,20 @@
 				// 目標間隙 = 視覺寬度 * 10%
 				const targetGap = visualW * GAP_RATIO;
 				
-				// 需要的總空間 = 視覺寬度 + 間隙
-				// 實際佔用空間 = baseW (因為 scale 不影響 flow)
-				// 補償 Margin = (需要 - 實際) / 2
+				// 補償 Margin = (目標總寬 - 實際佔位) / 2
 				const totalMargin = (visualW + targetGap) - baseW;
 				const marginPerSide = totalMargin / 2;
 
-				// 套用 Margin (此時 transition: none，所以是瞬間定位)
+				// 套用 Margin (此時 initializing 還在，所以是瞬間定位，不會抖動)
 				groupDiv.style.marginLeft = `${marginPerSide}px`;
 				groupDiv.style.marginRight = `${marginPerSide}px`;
 			});
 
 			// 4. 【關鍵】解除鎖定
-			// 強制重繪，確保上面的 Margin 已經生效
+			// 強制重繪 (Reflow)，確保上面的 Margin 已經「生效」在畫面上
 			void zone.el.offsetWidth; 
 
-			// 移除 initializing class，讓之後的互動恢復動畫
+			// 移除 initializing class，讓之後的互動 (如滑鼠移入、新增卡片) 恢復動畫效果
 			groupEls.forEach(el => el.classList.remove('initializing'));
 		});
 	}
