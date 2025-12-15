@@ -142,13 +142,60 @@
         font-weight: bold;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    #draft-bar { background: #e67e22; color: white; }
-    #point-bar { background: #8e44ad; color: white; }
-
-    #draft-bar label {
-        display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;
-        background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 4px;
+    /* [修改] Draft Bar 樣式：緊湊兩行版 */
+    #draft-bar {
+        /* 垂直排列兩行 */
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        
+        background: #e67e22; 
+        color: white;
+        /* 縮小 padding 與間距 */
+        padding: 4px 8px;
+        gap: 2px;
+        
+        display: none; 
+        border-bottom: 3px solid #d35400;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        flex-shrink: 0; 
+        z-index: 50;
     }
+
+    /* 第一行：狀態文字 */
+    #draft-bar .row-info {
+        text-align: left; /* [修改] 改為靠左對齊 */
+        font-size: 0.9rem;
+        font-weight: bold;
+        padding-bottom: 2px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 第二行：控制項 (Checkbox + 按鈕) */
+    #draft-bar .row-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* 調整按鈕大小以適應窄欄 */
+    #draft-bar button {
+        padding: 1px 8px;
+        font-size: 0.85rem;
+        height: 24px; /* 固定高度 */
+    }
+    
+    #draft-bar label {
+        font-size: 0.8rem;
+        background: transparent; /* 移除原本背景 */
+        padding: 0;
+    }
+	
+    #point-bar { background: #8e44ad; color: white; }
 
     /* 多重選取提示列 */
     #multi-select-bar {
@@ -335,7 +382,82 @@
     .side-zone-group { width: 170px; display: flex; gap: 3px; padding-left: 3px; flex-shrink: 0; }
     .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
     
-    .battle-zone { flex: 1; background: rgba(255,255,255,0.6); justify-content: center; gap: 4px; padding: 5px; }
+    /* =========================================
+   修正版佈局 CSS (請替換原有的對應區塊)
+   ========================================= */
+
+	/* 1. 鎖定非戰鬥區的高度 (防止變大或被擠壓) */
+	.middle-row, 
+	.bottom-row {
+		/* 關鍵：不伸縮 (grow=0, shrink=0)，高度自動 (由內容撐開) */
+		flex: 0 0 auto !important; 
+		height: auto !important; 
+		z-index: 10;
+		position: relative;
+	}
+
+	* [修改] 針對所有「非戰鬥區」統一縮小尺寸 (50x70) */
+    /* 包含：魔力、護盾、手牌、牌庫、墓地、超次元 */
+    .mana-zone, .shield-zone, .hand-zone, 
+    .deck-zone, .grave-zone, .hyper-zone {
+        --card-width: 40px;
+        --card-height: 56px;
+    }
+
+	/* 2. 戰鬥區設定：佔據剩下所有空間 */
+	.battle-zone {
+		/* 佔滿中間剩餘空間 */
+		flex: 1 1 0%; 
+		width: 100%;
+		
+		/* 內部排版 */
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		/* 預設靠上對齊 (滿足：重置狀態靠上) */
+		align-items: flex-start; 
+		gap: 2px;
+		
+		/* 透過 JS 計算的 padding (上下留白) */
+		padding-top: var(--bz-padding-v, 20px);
+		padding-bottom: var(--bz-padding-v, 20px);
+		padding-left: 5px;
+		padding-right: 5px;
+		
+		box-sizing: border-box; 
+		position: relative;
+		overflow: visible !important; /* 允許懸停時展開突出 */
+	}
+
+	/* 3. 縮放邏輯：嚴格限定只在戰鬥區生效 */
+	.battle-zone .card-group {
+		/* 只有戰鬥區的卡片會吃到這個變數 */
+		transform: scale(var(--bz-scale, 1));
+		/* 縮放原點設為中上，配合 flex-start 讓它貼頂 */
+		transform-origin: center top; 
+		transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+		flex-shrink: 0;
+	}
+
+	/* 橫置群組：垂直置中 (覆寫上面的 flex-start) */
+	.battle-zone .card-group.tapped-group {
+		align-self: center;
+		/* 橫置時改為中心縮放，確保視覺居中 */
+		transform-origin: center center;
+	}
+
+	/* 4. 安全網：強制其他區域不縮放 */
+	.mana-zone .card-group,
+	.shield-zone .card-group,
+	.hand-zone .card-group,
+	.side-zone-group .card-group {
+		transform: none !important;
+	}
+
+	/* 確保展開時層級最高 (維持原有功能) */
+	.battle-zone .card-group:hover {
+		z-index: 1000 !important;
+	}
 
     /* Zone Highlights */
     .zone.target-highlight {
@@ -1547,6 +1669,7 @@
     body.mobile-mode .rps-container.p1 { 
         bottom: -20px !important; 
     }
+	
 </style>
 </head>
 <body>
@@ -1582,23 +1705,6 @@
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
 	<button onclick="document.getElementById('trans-modal').style.display='flex'" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_trans">🌐 翻譯 (Trans)</button>
 	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;" data-i18n="btn_about">ℹ️ About</button>
-</div>
-
-<div id="draft-bar">
-    <span>
-        <span data-i18n="lbl_draft_warning">⚠️ 編輯中... (已累積 </span>
-        <span id="draft-count">0</span>
-        <span data-i18n="lbl_draft_ops"> 個操作)</span>
-    </span>
-	<span id="draft-mode-hint" style="margin-left:15px; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; font-weight:normal;"></span>
-    <label title="開啟此選項後，本次編輯的結果將會影響後續所有步驟的狀態">
-        <input type="checkbox" id="propagate-check" checked> 
-        <span data-i18n="chk_propagate">🔗 連動更新後續</span>
-    </label>
-    <div style="display:flex; gap:10px;">
-        <button onclick="cancelDraft()" class="danger" data-i18n="btn_cancel">取消</button>
-        <button onclick="saveDraft()" class="primary" data-i18n="btn_save_step">💾 儲存此步</button>
-    </div>
 </div>
 
 <div id="point-bar">
@@ -1730,6 +1836,22 @@
         <div id="timeline-header">
 			<span style="flex:1;" data-i18n="lbl_action_log">Action Log</span>
 			<small style="font-weight:normal; opacity:0.8; margin-right:5px;" id="step-counter">0/0</small>
+		</div>
+		<div id="draft-bar">
+			<div class="row-info" id="draft-status-text">
+				Loading...
+			</div>
+			
+			<div class="row-controls">
+				<label title="開啟此選項後，本次編輯的結果將會影響後續所有步驟的狀態" style="cursor: pointer; user-select: none;">
+					<input type="checkbox" id="propagate-check" checked style="margin-right: 4px;"> 
+					<span data-i18n="chk_propagate">🔗 連動後續</span>
+				</label>
+				<div style="display:flex; gap:6px;">
+					<button onclick="saveDraft()" class="primary" data-i18n="btn_save_step">💾 存檔</button>
+					<button onclick="cancelDraft()" class="danger" data-i18n="btn_cancel">取消</button>
+				</div>
+			</div>
 		</div>
         <ul id="action-list"></ul>
         <div style="padding: 10px; background: #ecf0f1; border-top:1px solid #bdc3c7;">
@@ -4342,32 +4464,34 @@
 
     function updateDraftBar() {
         const bar = document.getElementById('draft-bar');
-        const hintEl = document.getElementById('draft-mode-hint');
+        const statusText = document.getElementById('draft-status-text');
 
         if (isDrafting) {
             bar.style.display = 'flex';
             
-            // --- [新增] 狀態文字判斷邏輯 ---
-            let hintText = "";
+            // --- 產生 L1 文字: "新增/修改#126 5個動作" ---
+            let modeStr = "";
             if (editModeType === 'EDIT') {
-                // 編輯模式：直接顯示當前 index
-                hintText = t('msg_editing_step').replace('{n}', insertIndex);
+                // 編輯模式
+                modeStr = t('msg_editing_step').replace('{n}', insertIndex);
             } else {
-                // 新增模式：顯示插在誰後面 (index - 1)
-                // 如果 insertIndex 為 0 (極少見)，顯示 "Start" 或 0
+                // 新增模式
                 const prevIndex = insertIndex > 0 ? (insertIndex - 1) : 0;
-                hintText = t('msg_insert_after').replace('{n}', prevIndex);
+                modeStr = t('msg_insert_after').replace('{n}', prevIndex);
             }
-            if (hintEl) hintEl.innerText = hintText;
-            // -----------------------------
+            
+            const opCount = draftOperations.length;
+            // 組合字串
+            statusText.innerText = `${modeStr} (${opCount} ${t('op_count_suffix') || 'ops'})`;
+            // -------------------------------------------
 
-            // 使用 t() 翻譯按鈕 (維持原有邏輯)
+            // 更新按鈕翻譯
             const saveBtn = bar.querySelector('.primary');
             const cancelBtn = bar.querySelector('.danger');
             
-            if (saveBtn) saveBtn.innerText = t('btn_save_step');
-            if (cancelBtn) cancelBtn.innerText = t('btn_cancel_draft');
-            document.getElementById('draft-count').innerText = draftOperations.length;
+            if (saveBtn) saveBtn.innerText = t('btn_save_step'); // "💾 儲存此步"
+            if (cancelBtn) cancelBtn.innerText = t('btn_cancel'); // "取消"
+
         } else {
             bar.style.display = 'none';
         }
@@ -6448,6 +6572,18 @@
 
                 const { div, offsetX, offsetY } = createContainer(bounds);
 				
+				// --- [插入這段] 判斷對齊方式 ---
+				// 根據 Root Card 的旋轉角度判斷
+				const isRootTapped = (Math.abs(rootCard.rotation) % 180) === 90;
+
+				if (isRootTapped) {
+					// 條件 6: 橫置狀態元素靠中對齊
+					div.classList.add('tapped-group');
+				} else {
+					// 條件 6: 重置狀態元素靠上對齊 (預設 Flex-start)
+					div.classList.remove('tapped-group');
+				}
+				
 				// --- [新增修正] 強制垂直置中校正 (Fix Vertical Alignment) ---
                 // 1. 計算容器總高度
                 const containerHeight = bounds.maxY - bounds.minY;
@@ -6656,6 +6792,11 @@
             }
         });
 
+		// [新增] 在所有卡片 DOM 生成完畢後，執行縮放計算
+		// 使用 requestAnimationFrame 確保 DOM clientHeight 已經是排版後的值
+		requestAnimationFrame(() => {
+			applyBattleZoneScaling();
+		});
         renderTimeline();
         renderArrows();
 
@@ -7159,6 +7300,141 @@
              scrollToActiveStep();
         }
     }
+	
+	// --- [最終修正版 JS] 戰鬥區自動佈局演算法 ---
+
+	// 1. 計算卡片群組的絕對邊界 (包含子卡片與旋轉模擬)
+	function measureCardGroupBounds(rootCard, allCards, forcedRotation = null) {
+		// 基礎參數 (必須與 CSS :root 的 --card-width/height 一致)
+		const CARD_W = 60;
+		const CARD_H = 84;
+		
+		// 建立親子關係索引 (優化效能)
+		const childMap = {};
+		allCards.forEach(c => {
+			if (c.parentId) {
+				if (!childMap[c.parentId]) childMap[c.parentId] = [];
+				childMap[c.parentId].push(c);
+			}
+		});
+
+		let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+		// 決定此樹狀結構的計算角度 (如果有強制指定，就用強制的值)
+		const baseRotation = (forcedRotation !== null) ? forcedRotation : rootCard.rotation;
+		
+		// 遞迴計算絕對座標
+		const traverse = (card, currentOffsetX, currentOffsetY) => {
+			const hw = CARD_W / 2;
+			const hh = CARD_H / 2;
+			
+			// 原始四角座標 (相對於卡片中心)
+			const corners = [
+				{x: -hw, y: -hh}, {x: hw, y: -hh},
+				{x: hw, y: hh},   {x: -hw, y: hh}
+			];
+
+			// 旋轉矩陣參數 (使用 baseRotation 整組一起轉)
+			const rotRad = baseRotation * (Math.PI / 180);
+			const cos = Math.cos(rotRad);
+			const sin = Math.sin(rotRad);
+
+			// 該卡片中心點旋轉後的絕對座標
+			const finalCenterX = currentOffsetX * cos - currentOffsetY * sin;
+			const finalCenterY = currentOffsetX * sin + currentOffsetY * cos;
+
+			// 計算四個角落旋轉後的位置
+			corners.forEach(pt => {
+				const rx = pt.x * cos - pt.y * sin;
+				const ry = pt.x * sin + pt.y * cos;
+
+				const absX = finalCenterX + rx;
+				const absY = finalCenterY + ry;
+
+				if (absX < minX) minX = absX;
+				if (absX > maxX) maxX = absX;
+				if (absY < minY) minY = absY;
+				if (absY > maxY) maxY = absY;
+			});
+
+			// 處理子卡片 (累積位移)
+			const children = childMap[card.id] || [];
+			children.forEach(child => {
+				const offset = getBaseStackOffset(child.stackType);
+				traverse(child, currentOffsetX + offset.x, currentOffsetY + offset.y);
+			});
+		};
+
+		// 從 Root (0,0) 開始
+		traverse(rootCard, 0, 0);
+
+		// 防呆
+		if (minX === Infinity) return { width: CARD_W, height: CARD_H };
+
+		return {
+			width: maxX - minX,
+			height: maxY - minY
+		};
+	}
+
+	// 2. 主計算函式 (計算 Padding 與 Scale)
+	function applyBattleZoneScaling() {
+		const state = getCurrentDisplayState();
+		const battleZones = ['p1-battle', 'p2-battle'];
+		
+		// A. 取得戰鬥區 DOM 高度 (假設 P1/P2 高度相同，取 P1)
+		const p1ZoneEl = document.querySelector('.battle-zone[data-zone="p1-battle"]');
+		if (!p1ZoneEl) return;
+		
+		// clientHeight 是包含 padding 的總高度
+		const zoneTotalHeight = p1ZoneEl.clientHeight;
+		
+		// B. 計算 5% Padding (基於高度)
+		const paddingPx = zoneTotalHeight * 0.05;
+		
+		// C. 寫入 CSS 變數 (修正 1P 沒頂到上面的問題)
+		document.querySelectorAll('.battle-zone').forEach(el => {
+			el.style.setProperty('--bz-padding-v', `${paddingPx}px`);
+		});
+
+		// D. 計算剩餘可用高度 (90% 區域 = 總高 - 上下Padding)
+		const targetAvailHeight = zoneTotalHeight - (paddingPx * 2);
+
+		// E. 找出全場「潛在最大高度」
+		let maxElementHeight = 84; // 預設至少單卡高
+
+		const allCards = state.cards;
+
+		battleZones.forEach(zoneId => {
+			const rootCards = allCards.filter(c => c.zone === zoneId && !c.parentId);
+			
+			rootCards.forEach(root => {
+				// [關鍵修正] 同時計算直立與橫置的高度，取最大值
+				// 這確保了「單純旋轉時，計算基準不變」，所以大小不會變
+				const bounds0 = measureCardGroupBounds(root, allCards, 0);
+				const bounds90 = measureCardGroupBounds(root, allCards, 90);
+				
+				const potentialMaxH = Math.max(bounds0.height, bounds90.height);
+				
+				if (potentialMaxH > maxElementHeight) {
+					maxElementHeight = potentialMaxH;
+				}
+			});
+		});
+
+		// F. 計算比例
+		// 0.95 是微調係數，避免因為邊框(border)導致剛好溢出
+		let scale = (targetAvailHeight / maxElementHeight) * 0.95;
+
+		// 設定合理邊界 (避免無限放大或縮太小)
+		if (scale < 0.2) scale = 0.2; 
+		if (scale > 2.2) scale = 2.2; 
+
+		// G. 套用
+		document.querySelectorAll('.battle-zone').forEach(el => {
+			el.style.setProperty('--bz-scale', scale);
+		});
+	}
 	
 	function expandStack(groupDiv, familyMembers) {
         // 1. 檢查無月之門狀態 (若有無月卡則不展開)
@@ -9839,6 +10115,10 @@
 			}
 		}
 	}
+	
+	window.addEventListener('resize', () => {
+		applyBattleZoneScaling();
+	});
 
     // --- Main Entry Point ---
     window.onload = function() {
