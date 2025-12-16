@@ -4085,8 +4085,8 @@
             currentIndex = (typeof data.currentIndex === 'number' && data.currentIndex >= -1 && data.currentIndex < history.length) 
                            ? data.currentIndex 
                            : (history.length - 1);
-						   
-			// [修正] F5 刷新後，立刻根據讀回來的歷史紀錄，重新計算已見卡
+                           
+            // [修正] F5 刷新後，立刻根據讀回來的歷史紀錄，重新計算已見卡
             calculateSeenCards();
             
             // **關鍵點 1**: 馬上渲染 UI (純文字版)
@@ -4118,8 +4118,6 @@
                                 generateDefaultPortraits();
                             }
                             
-                            // [修復重點] 圖片載入後，必須再呼叫一次 renderUI
-                            // 這樣如果當前畫面是對話，大頭貼才會顯示出來
                             renderUI(); 
 
                         } catch(e) { console.error("Error loading portraits", e); }
@@ -4130,6 +4128,11 @@
                             renderUI();
                         }
                     }
+
+                    // 【關鍵修正】在所有圖片資料 (Base64 + URL Key) 都載入字典後
+                    // 觸發一次網址圖片預載，確保 Cut In 等特效圖被瀏覽器快取
+                    preloadImagesFromRegistry();
+
                 }, 50); 
                 
             }, 50); 
