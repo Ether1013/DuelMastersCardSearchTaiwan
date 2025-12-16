@@ -8475,37 +8475,23 @@
         const svg = document.getElementById('svg-layer');
         const workspace = document.getElementById('workspace');
         
-        // 防呆：如果 SVG 還是不在 workspace 裡面，強制把它移進去
-        if (svg && workspace && svg.parentNode !== workspace) {
-            workspace.insertBefore(svg, workspace.firstChild);
-        }
-
-        // 清空並重繪 Marker 定義
-        svg.innerHTML = `
-            <defs>
-                <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-                    <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
-                </marker>
-            </defs>
-        `;
+        // ... (省略：清空 SVG 內容的程式碼) ...
         
-        // 取得當前的操作步驟
-        let ops = [];
-        if (isDrafting) {
-            ops = draftOperations;
-        } else if (currentIndex >= 0 && history[currentIndex]) {
-            ops = history[currentIndex].action.operations;
-        }
+        // 取得當前的操作步驟 (保持原樣)
+        // ... (省略：讀取 ops 的程式碼) ...
 
+        if (!ops || ops.length === 0) return;
+
+        // --- 核心修改：計算座標轉換比例 ---
+        
         // 1. 取得 SVG/Workspace 在螢幕上的實際位置和尺寸 (已縮放)
         const wsRect = workspace.getBoundingClientRect(); 
         
         // 2. 取得 SVG/Workspace 的「實際內部尺寸」(未縮放)
-        // 注意：在您的手機模式 CSS 中，workspace 虛擬尺寸為 1600x800
         const wsInternalWidth = workspace.offsetWidth;
         const wsInternalHeight = workspace.offsetHeight;
         
-        // 3. 計算縮放比例 (這才是真正的縮放因子)
+        // 3. 計算縮放比例 (這是判斷縮放倍率的關鍵)
         const scaleX = wsRect.width / wsInternalWidth;
         const scaleY = wsRect.height / wsInternalHeight;
         
@@ -8515,19 +8501,21 @@
 
         // 5. 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
         const toLocal = (rect) => {
-            // 1. 算出元素的中心點 (螢幕座標)
+            // [最終穩定修正]
+            // 步驟 A: 算出元素的**螢幕中心點**
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             
-            // 2. 減去畫布起點，並除以縮放比例
-            // [關鍵修正點]：將中心點從螢幕座標轉換回 SVG 畫布（未縮放）的相對座標
+            // 步驟 B: 將螢幕中心點 (已縮放) 轉換回 SVG 畫布（未縮放）的相對座標
+            // 公式：(螢幕座標 - 畫布起點) / 縮放因子
             return {
                 x: (centerX - offsetX) / scaleX,
                 y: (centerY - offsetY) / scaleY
             };
         };
+        // ----------------------------------------------------------------------
 
-        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK');
+        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
         
         pointOps.forEach(op => {
             const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
@@ -8564,6 +8552,9 @@
             const startPoint = toLocal(attacker.getBoundingClientRect());
             
             targetEls.forEach(target => {
+                // [關鍵點] 如果目標元素在 DOM 中不存在 (可能已被移除)，跳過
+                if (!target.isConnected) return; 
+                
                 const endPoint = toLocal(target.getBoundingClientRect());
                 const isSelf = (target === attacker);
                 
