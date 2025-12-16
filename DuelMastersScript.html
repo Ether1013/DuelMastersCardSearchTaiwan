@@ -8475,10 +8475,27 @@
         const svg = document.getElementById('svg-layer');
         const workspace = document.getElementById('workspace');
         
-        // ... (省略：清空 SVG 內容的程式碼) ...
+        // 防呆：如果 SVG 還是不在 workspace 裡面，強制把它移進去
+        if (svg && workspace && svg.parentNode !== workspace) {
+            workspace.insertBefore(svg, workspace.firstChild);
+        }
+
+        // 清空並重繪 Marker 定義
+        svg.innerHTML = `
+            <defs>
+                <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+                    <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+                </marker>
+            </defs>
+        `;
         
         // 取得當前的操作步驟 (保持原樣)
-        // ... (省略：讀取 ops 的程式碼) ...
+        let ops = [];
+        if (isDrafting) {
+            ops = draftOperations;
+        } else if (currentIndex >= 0 && history[currentIndex]) {
+            ops = history[currentIndex].action.operations;
+        }
 
         if (!ops || ops.length === 0) return;
 
@@ -8501,8 +8518,7 @@
 
         // 5. 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
         const toLocal = (rect) => {
-            // [最終穩定修正]
-            // 步驟 A: 算出元素的**螢幕中心點**
+            // 步驟 A: 算出元素的螢幕中心點
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             
@@ -8513,7 +8529,6 @@
                 y: (centerY - offsetY) / scaleY
             };
         };
-        // ----------------------------------------------------------------------
 
         const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
         
@@ -8521,6 +8536,7 @@
             const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
             if (!attacker) return;
             let targetEls = [];
+            
             // [修正] 增加 || op.targetType === 'ZONE'
             if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
                 if (Array.isArray(op.targetIds)) {
