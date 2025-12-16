@@ -4285,14 +4285,10 @@
             }, 50);
         }
     }
-	
-	// 全域變數新增（如果尚未新增）
-	let shouldRecalculateBattleZone = false;
 
     function addOperation(op) {
         // --- 新增：互斥鎖邏輯 ---
         const hasDialog = draftOperations.some(o => o.type === 'DIALOGUE');
-		
         
         // 1. 如果已存在對話，禁止加入其他動作 (如移動卡片)
         if (hasDialog && op.type !== 'DIALOGUE') {
@@ -4306,38 +4302,6 @@
             return;
         }
         // --- 結束 ---
-		
-		
-		// [新增] 佈局變更判斷邏輯
-		let needsRecalculate = false;
-		// 條件：類型為 MOVE 且目標是戰鬥區，並且不是純堆疊
-		if (op.type === 'MOVE' && (op.toZone.includes('p1-battle') || op.toZone.includes('p2-battle'))) {
-			
-			// 判斷是否為「進場」且非「完全隱藏的堆疊」
-			if (!op.stackTargetId) {
-				// 情境 A: 沒有堆疊目標，視為新的獨立個體進入戰場
-				needsRecalculate = true;
-			} else {
-				// 情境 B: 有堆疊目標，檢查堆疊類型
-				// 只有當堆疊類型是「無露出」時，才不影響佈局
-				const isPureStack = (op.stackType === 'top' || op.stackType === 'bottom');
-
-				if (!isPureStack) {
-					// 只要是露出、位移、或拼圖連結，都會改變卡群的佔用邊界，需要重算
-					needsRecalculate = true;
-				}
-			}
-		} 
-		// 條件：會改變卡群總佔用空間的操作
-		else if (op.type === 'DELETE_CARD' || op.type === 'TOGGLE_MOONLESS') {
-			// 刪除卡片或切換無月之門，都可能大幅改變佈局，需要重算
-			needsRecalculate = true;
-		}
-		
-		// [設定旗標] 
-		if (needsRecalculate) {
-			shouldRecalculateBattleZone = true;
-		}
 
         // [修改] 自動判斷編輯模式
         if (!isDrafting) {
@@ -6893,12 +6857,7 @@
 		// [新增] 在所有卡片 DOM 生成完畢後，執行縮放計算
 		// 使用 requestAnimationFrame 確保 DOM clientHeight 已經是排版後的值
 		requestAnimationFrame(() => {
-			// [關鍵修正] 只有當 shouldRecalculateBattleZone 為 true 時才執行重算
-            if (shouldRecalculateBattleZone) {
-			    applyBattleZoneScaling(); 
-                // 重算完成後，將旗標重設為 false
-                shouldRecalculateBattleZone = false; 
-            }
+			applyBattleZoneScaling();
 		});
         renderTimeline();
         renderArrows();
