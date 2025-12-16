@@ -6738,9 +6738,23 @@
                 const renderNodeRecursive = (card, zIndex) => {
                     const pos = nodePositions.get(card.id);
                     if (!pos) return;
+                    
+                    const cardW = 60; 
+                    const cardH = 84; 
+
+                    // [核心修正 1: 計算絕對 Group 內部中心點]
+                    // absCenterX/Y 是相對於 Group 容器的頂點 (minX/minY) 的未縮放中心點
+                    const absCenterX = pos.x + offsetX + (cardW / 2); 
+                    const absCenterY = pos.y + offsetY + (cardH / 2); 
+
                     const cardEl = createCardElement(card);
                     
-                    // [修改] 記錄原始位置到 dataset，方便 JS 讀取進行動畫運算
+                    // [核心修正 2: 儲存絕對畫布中心點]
+                    // 這裡先儲存 Group 內部的絕對中心點
+                    cardEl.dataset.logicX = absCenterX; 
+                    cardEl.dataset.logicY = absCenterY; 
+                    
+                    // 記錄原始位置到 dataset (供 expandStack 使用) - 保持原樣
                     const orgLeft = pos.x + offsetX;
                     const orgTop = pos.y + offsetY;
                     
@@ -6858,9 +6872,14 @@
 		// 使用 requestAnimationFrame 確保 DOM clientHeight 已經是排版後的值
 		requestAnimationFrame(() => {
 			applyBattleZoneScaling();
+			
+			// 2. [關鍵] 在縮放計算「之後」的下一幀，才執行畫箭頭
+			// 這樣 getBoundingClientRect 才能抓到縮放後的正確位置
+			requestAnimationFrame(() => {
+				renderArrows();
+			});
 		});
         renderTimeline();
-        renderArrows();
 
 		// --- Dialogue Rendering ---
 		const diagLayer = document.getElementById('dialogue-layer');
@@ -7963,6 +7982,42 @@
         if (isMultiSelectMode && multiSelectedIds.includes(card.id)) {
             el.classList.add('multi-selected');
         }
+		
+		// 獲取卡片的原始邏輯寬高 (這是在未縮放畫布上的尺寸)
+		const cardW = parseFloat(getComputedStyle(el).getPropertyValue('--card-width').trim()) || 60;
+		const cardH = parseFloat(getComputedStyle(el).getPropertyValue('--card-height').trim()) || 84;
+		
+		let logicalX = 0;
+		let logicalY = 0;
+
+		// 1. 處理堆疊卡 (Stacking Card - 必須從 position 取得邏輯座標)
+		if (card.parentId || card.zone.includes('battle')) {
+			// 對於 Battle Zone 的卡，我們必須提取其絕對定位或相對定位的邏輯值
+			// 由於您在 renderCardTree 中使用了 orgLeft/orgTop 儲存了卡片相對於其父容器的未縮放座標，
+			// 我們應使用這些值，並將其轉換為中心點。
+			
+			// 如果是堆疊卡，直接從 dataset 讀取 renderCardTree 賦予的相對座標
+			const orgLeft = parseFloat(el.dataset.orgLeft) || 0;
+			const orgTop = parseFloat(el.dataset.orgTop) || 0;
+			
+			// 邏輯中心點 = 頂點座標 + 邏輯尺寸的一半
+			logicalX = orgLeft + (cardW / 2); 
+			logicalY = orgTop + (cardH / 2); 
+		} else {
+			// 對於非戰鬥區的卡片，我們暫時保持原來的 DOM 座標獲取方式
+			// 由於我們只關注戰鬥區，這裡可以暫時忽略。
+			// 但如果目標是區域（Zone），renderArrows 會從 getBoundingClientRect 獲取。
+			
+			// 確保非戰場卡片的中心點在未來也能被正確計算（可選，因為通常不指向非戰場單卡）
+			logicalX = 0; 
+			logicalY = 0; 
+		}
+
+		// 將邏輯中心點儲存到 dataset，這是未縮放畫布（SVG 坐標系）的座標！
+		// 注意：這裡存的座標是相對於 card-group 父元素，而非整個 SVG 畫布，需要在 renderArrows 中校正。
+		// [優化] 由於卡片在 Battle Zone 中，我們只需要知道它相對於其 Group 的邏輯中心點。
+		el.dataset.logicCenterX = logicalX;
+		el.dataset.logicCenterY = logicalY;
 
         // 2. 插入輔助標記 (勾勾、星星、受傷、EX-Life)
         
@@ -8472,130 +8527,118 @@
     }
 
     function renderArrows() {
-        const svg = document.getElementById('svg-layer');
-        const workspace = document.getElementById('workspace');
-        const mainBoard = document.getElementById('main-board');
-        
-        // 防呆：如果 SVG 還是不在 workspace 裡面，強制把它移進去
-        if (svg && workspace && svg.parentNode !== workspace) {
-            workspace.insertBefore(svg, workspace.firstChild);
-        }
+		// 使用 requestAnimationFrame 確保在 CSS transform (縮放) 套用後才計算座標
+		requestAnimationFrame(() => {
+			const svg = document.getElementById('svg-layer');
+			const workspace = document.getElementById('workspace');
+			
+			// 1. 清空 SVG
+			svg.innerHTML = `
+				<defs>
+					<marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+						<path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+					</marker>
+				</defs>
+			`;
+			
+			let ops = [];
+			if (isDrafting) {
+				ops = draftOperations;
+			} else if (currentIndex >= 0 && history[currentIndex]) {
+				ops = history[currentIndex].action.operations;
+			}
 
-        // 清空並重繪 Marker 定義
-        svg.innerHTML = `
-            <defs>
-                <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-                    <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
-                </marker>
-            </defs>
-        `;
-        
-        // 取得當前的操作步驟 (保持原樣)
-        let ops = [];
-        if (isDrafting) {
-            ops = draftOperations;
-        } else if (currentIndex >= 0 && history[currentIndex]) {
-            ops = history[currentIndex].action.operations;
-        }
+			if (!ops || ops.length === 0) return;
 
-        if (!ops || ops.length === 0) return;
+			// --- [核心座標計算修正] ---
+			
+			const wsRect = workspace.getBoundingClientRect();
+			
+			// [關鍵] 計算 Workspace 本身的全域縮放因子 (Global Scale)
+			// offsetWidth 是元素內部的 CSS 寬度 (例如 1600px)
+			// wsRect.width 是元素在螢幕上實際顯示的寬度 (例如手機上可能縮小成 800px)
+			// 比例 = 螢幕寬 / CSS寬
+			const globalScaleX = wsRect.width / workspace.offsetWidth;
+			const globalScaleY = wsRect.height / workspace.offsetHeight;
 
-        // --- 核心修改：計算座標轉換比例 ---
-        
-        // 1. 取得 SVG/Workspace 在螢幕上的實際位置和尺寸 (已縮放)
-        const wsRect = workspace.getBoundingClientRect(); 
-        
-        // 2. 取得 SVG/Workspace 的「實際內部尺寸」(未縮放)
-        const wsInternalWidth = workspace.offsetWidth;
-        const wsInternalHeight = workspace.offsetHeight;
-        
-        // 3. 計算縮放比例 
-        const scaleX = wsRect.width / wsInternalWidth;
-        const scaleY = wsRect.height / wsInternalHeight;
-        
-        // 4. 畫布在螢幕上的左上角起點
-        const offsetX = wsRect.left;
-        const offsetY = wsRect.top;
+			// 輔助函式：取得元素在「SVG 座標系」中的準確中心點
+			// 此方法可以完美相容 CSS transform: scale() 造成的位移
+			const getSvgCenterPoint = (el) => {
+				// 1. 獲取元素的螢幕絕對位置 (BoundingBox 包含縮放後的結果)
+				const rect = el.getBoundingClientRect();
+				
+				// 2. 計算該元素在「螢幕上」的視覺中心點
+				const screenCenterX = rect.left + rect.width / 2;
+				const screenCenterY = rect.top + rect.height / 2;
+				
+				// 3. 將「螢幕座標」轉換為「Workspace 內部座標 (SVG座標)」
+				// 公式：(螢幕絕對座標 - Workspace螢幕起點) / 縮放因子
+				const svgX = (screenCenterX - wsRect.left) / globalScaleX;
+				const svgY = (screenCenterY - wsRect.top) / globalScaleY;
 
-        // 5. 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
-        const toLocal = (rect) => {
-            // 步驟 A: 算出元素的螢幕中心點
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            // 步驟 B: 將螢幕中心點 (已縮放) 轉換回 SVG 畫布（未縮放）的相對座標
-            // 公式：(螢幕座標 - 畫布起點) / 縮放因子
-            return {
-                x: (centerX - offsetX) / scaleX,
-                y: (centerY - offsetY) / scaleY
-            };
-        };
+				return { x: svgX, y: svgY };
+			};
 
-        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
-        
-        pointOps.forEach(op => {
-            const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
-            if (!attacker) return;
-            let targetEls = [];
-            
-            // [修正] 增加 || op.targetType === 'ZONE'
-            if (op.targetType === 'CARD' || op.targetType === 'CREATURE' || op.targetType === 'SHIELD') {
-                if (Array.isArray(op.targetIds)) {
-                    op.targetIds.forEach(tid => {
-                        const el = document.querySelector(`.card[data-id="${tid}"]`);
-                        if(el) targetEls.push(el);
-                    });
-                }
-            } 
-            // [新增] 專門處理區域指向 (Zone) 的邏輯
-            else if (op.targetType === 'ZONE') {
-                if (Array.isArray(op.targetIds)) {
-                    op.targetIds.forEach(zid => {
-                        // 尋找對應的區域元素
-                        const el = document.querySelector(`.zone[data-zone="${zid}"]`);
-                        if(el) targetEls.push(el);
-                    });
-                }
-            }
-            else if (op.targetType === 'PLAYER') {
-                // ... (原本的 PLAYER 邏輯保持不變) ...
-                const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
-                const oppId = attackerOwner === 1 ? 2 : 1;
-                const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
-                if(deck) targetEls.push(deck);
-            }
-            
-            // 使用轉換函式計算起點
-            const startPoint = toLocal(attacker.getBoundingClientRect());
-            
-            targetEls.forEach(target => {
-                if (!target.isConnected) return; 
-                
-                const endPoint = toLocal(target.getBoundingClientRect());
-                const isSelf = (target === attacker);
-                
-                if (isSelf) {
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    const r = 40; 
-                    // 繪製一個圍繞自己的圓形路徑
-                    const d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x-r*2},${startPoint.y-r*2} ${startPoint.x},${startPoint.y}`;
-                    path.setAttribute("d", d);
-                    path.setAttribute("class", "arrow-line");
-                    path.setAttribute("fill", "none");
-                    svg.appendChild(path);
-                } else {
-                    // 繪製直線箭頭
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", startPoint.x);
-                    line.setAttribute("y1", startPoint.y);
-                    line.setAttribute("x2", endPoint.x);
-                    line.setAttribute("y2", endPoint.y);
-                    line.setAttribute("class", "arrow-line");
-                    svg.appendChild(line);
-                }
-            });
-        });
-    }
+			// --- 執行繪圖 ---
+			const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+			
+			pointOps.forEach(op => {
+				const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
+				if (!attacker) return;
+				
+				const startPoint = getSvgCenterPoint(attacker);
+				if (!startPoint) return;
+				
+				let targetEls = [];
+				// 目標選取邏輯 (保持不變)
+				if (op.targetType === 'CARD' || op.type === 'CREATURE' || op.type === 'SHIELD') {
+					if (Array.isArray(op.targetIds)) {
+						op.targetIds.forEach(tid => {
+							const el = document.querySelector(`.card[data-id="${tid}"]`);
+							if(el) targetEls.push(el);
+						});
+					}
+				} else if (op.targetType === 'ZONE') {
+					if (Array.isArray(op.targetIds)) {
+						op.targetIds.forEach(zid => {
+							const el = document.querySelector(`.zone[data-zone="${zid}"]`);
+							if(el) targetEls.push(el);
+						});
+					}
+				} else if (op.targetType === 'PLAYER') {
+					const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
+					const oppId = attackerOwner === 1 ? 2 : 1;
+					const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
+					if(deck) targetEls.push(deck);
+				}
+
+				targetEls.forEach(target => {
+					const endPoint = getSvgCenterPoint(target);
+					if (!endPoint) return; 
+
+					const isSelf = (target === attacker);
+					
+					if (isSelf) {
+						const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+						const r = 40; 
+						const d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x-r*2},${startPoint.y-r*2} ${startPoint.x},${startPoint.y}`;
+						path.setAttribute("d", d);
+						path.setAttribute("class", "arrow-line");
+						path.setAttribute("fill", "none");
+						svg.appendChild(path);
+					} else {
+						const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+						line.setAttribute("x1", startPoint.x);
+						line.setAttribute("y1", startPoint.y);
+						line.setAttribute("x2", endPoint.x);
+						line.setAttribute("y2", endPoint.y);
+						line.setAttribute("class", "arrow-line");
+						svg.appendChild(line);
+					}
+				});
+			});
+		}); // End requestAnimationFrame
+	}
 
     function renderTimeline() {
         const list = document.getElementById('action-list');
