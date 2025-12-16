@@ -8497,35 +8497,37 @@
             ops = history[currentIndex].action.operations;
         }
 
-        if (!ops || ops.length === 0) return;
-
-        // --- 核心修改：計算座標轉換比例 ---
-        // 我們需要算出「螢幕像素」轉成「畫布內部像素」的比例
-        // workspace.getBoundingClientRect() 取得的是縮放後(螢幕上)的尺寸
-        // workspace.offsetWidth 取得的是原始排版(內部)的尺寸 (手機版固定為 1200)
+        // 1. 取得 SVG/Workspace 在螢幕上的實際位置和尺寸 (已縮放)
+        const wsRect = workspace.getBoundingClientRect(); 
         
-        const wsRect = workspace.getBoundingClientRect();
-        const scaleX = wsRect.width / workspace.offsetWidth;
-        const scaleY = wsRect.height / workspace.offsetHeight;
+        // 2. 取得 SVG/Workspace 的「實際內部尺寸」(未縮放)
+        // 注意：在您的手機模式 CSS 中，workspace 虛擬尺寸為 1600x800
+        const wsInternalWidth = workspace.offsetWidth;
+        const wsInternalHeight = workspace.offsetHeight;
         
-        // 畫布在螢幕上的左上角起點
+        // 3. 計算縮放比例 (這才是真正的縮放因子)
+        const scaleX = wsRect.width / wsInternalWidth;
+        const scaleY = wsRect.height / wsInternalHeight;
+        
+        // 4. 畫布在螢幕上的左上角起點
         const offsetX = wsRect.left;
         const offsetY = wsRect.top;
 
-        // 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
+        // 5. 轉換函式：將螢幕座標 (Screen Coords) 轉為 畫布座標 (Local Coords)
         const toLocal = (rect) => {
             // 1. 算出元素的中心點 (螢幕座標)
             const centerX = rect.left + rect.width / 2;
             const centerY = rect.top + rect.height / 2;
             
             // 2. 減去畫布起點，並除以縮放比例
+            // [關鍵修正點]：將中心點從螢幕座標轉換回 SVG 畫布（未縮放）的相對座標
             return {
                 x: (centerX - offsetX) / scaleX,
                 y: (centerY - offsetY) / scaleY
             };
         };
 
-        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+        const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK');
         
         pointOps.forEach(op => {
             const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
