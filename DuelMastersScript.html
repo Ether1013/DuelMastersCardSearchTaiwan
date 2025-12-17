@@ -1526,6 +1526,46 @@
     body.mobile-mode #ability-stack-zone { display: flex !important; width: 100px !important; height: 100%; z-index: 600; }
     body.mobile-mode #game-board-container { flex: 1; height: 100%; overflow: hidden; pointer-events: none !important; }
 
+	/* =========================================
+	   [CSS] 手機版：卡牌預覽尺寸修正 (80vh)
+	   ========================================= */
+
+	body.mobile-mode #hover-preview {
+		/* 1. 高度強制設為 80% 視窗高度 */
+		height: 80vh !important;
+		
+		/* 2. 寬度設為自動，讓它依照比例縮放 */
+		width: auto !important;
+		
+		/* 3. 限制最大寬度，避免某些寬螢幕手機上太寬 */
+		max-width: 90vw !important;
+		
+		/* 4. 確保容器內的排版 */
+		display: flex !important;
+		align-items: center;
+		justify-content: center;
+		
+		/* 5. 位置微調 (保持垂直置中) */
+		top: 50% !important;
+		transform: translateY(-50%) !important;
+		
+		/* 確保背景透明，只秀圖 */
+		background-color: transparent !important;
+		box-shadow: none !important; /* 如果原本有陰影，這會移除框框陰影，只留圖片 */
+	}
+
+	/* 針對內部的圖片元素進行強制約束 */
+	body.mobile-mode #hover-preview img {
+		/* 圖片高度填滿容器 (也就是 80vh) */
+		height: 100% !important;
+		
+		/* 寬度自動維持比例 */
+		width: auto !important;
+		
+		/* 確保圖片完整呈現不裁切 */
+		object-fit: contain !important;
+	}
+
     /* Mobile Controls */
     #mobile-controls {
         display: none; align-items: center; justify-content: flex-end; gap: 8px;
