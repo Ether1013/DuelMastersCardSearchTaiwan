@@ -9325,24 +9325,44 @@
 	}
 	
 	// --- [新增] 圖片預載入函式 ---
-    function preloadImagesFromRegistry() {
-        console.log("正在掃描並預載入外部圖片...");
-        let count = 0;
-        
-        // 遍歷所有註冊的圖片
-        Object.values(globalImageRegistry).forEach(src => {
-            // 檢查是否為網址 (http/https 開頭，且非 base64)
-            if (src && typeof src === 'string' && src.startsWith('http')) {
-                const img = new Image();
-                img.src = src; // 瀏覽器會自動下載並快取
-                count++;
-            }
-        });
-        
-        if (count > 0) {
-            console.log(`[Preload] 已啟動 ${count} 張外部圖片的預先載入。`);
-        }
-    }
+    // --- [修正版] 圖片預載入函式 ---
+	function preloadImagesFromRegistry() {
+		console.log("正在掃描並預載入外部圖片...");
+		let count = 0;
+
+		// 1. 預載劇本中的圖片 (Registry)
+		Object.values(globalImageRegistry).forEach(src => {
+			if (src && typeof src === 'string' && !src.startsWith('data:')) {
+				const img = new Image();
+				img.src = src;
+				count++;
+			}
+		});
+
+		// 2. [新增] 預載寫死的猜拳圖片 (Hardcoded RPS)
+		// 因為它們不在 Registry 裡，所以我們要手動抓出來
+		// 請確認以下網址是否與您程式碼中寫死的一致，或是直接指向您的圖片變數
+		const rps_urls = [
+			// 如果您程式碼裡是用變數存的（例如 const IMG_ROCK = "..."），請直接填變數名
+			// 如果是直接寫死在函式裡的字串，請把那三個網址複製過來：
+            'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-056.jpg',   // ✊ 石頭 (Rock)
+            'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-103.jpg',   // 🖐️ 布 (Paper)
+            'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-060.jpg'    // ✌️ 剪刀 (Scissors)
+		];
+
+		rps_urls.forEach(src => {
+			if (src && !src.startsWith('data:')) { // 同樣排除 base64
+				const img = new Image();
+				img.src = src;
+				console.log("預載系統圖片:", src);
+				count++;
+			}
+		});
+
+		if (count > 0) {
+			console.log(`[Preload] 總計已啟動 ${count} 張圖片的預先載入。`);
+		}
+	}
 
     function processGameData(data, resetToStart = false) {
         globalImageRegistry = data.imageRegistry || {}; 
