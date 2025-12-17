@@ -174,7 +174,9 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );	
 	
-	var setCode = "NET-068";
+	
+	
+	var setCode = "NET-070";
 	var setName = "台灣CS大賽20251206 1st【闇王＠元丰】";
 	var isDeck = true;
 	var setCardList = [
@@ -195,6 +197,26 @@
 		{ name : "闇王ゼーロ", count : 4, },
 		{ name : "不死鳥縫合 ブラック・ビッグバン", count : 2, },
 		{ name : "戦国接続 ギャラクテスト・シデンシーザー", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	const setCode = "NET-068";
+	const setName = "台灣CS大賽20251130 1st【バクテラス＠SANADA】";
+	const isDeck = true;
+	const setCardList = [
+		{ name : "メンデルスゾーン", count : 4, },
+		{ name : "ボルシャック・栄光・ルピア", count : 4, },
+		{ name : "ボルシャック・ドラゴン/決闘者・チャージャー", count : 4, },
+		{ name : "頂上連結 ロッド・ゾージア5th", count : 2, },
+		{ name : "ボルシャック・スーパーヒーロー/超英雄タイム", count : 4, },
+		{ name : "ボルシャック・ドリーム・ドラゴン", count : 4, },
+		{ name : "竜皇神 ボルシャック・バクテラス", count : 4, },
+		{ name : "光鎧龍ホーリーグレイス", count : 3, },
+		{ name : "BARUGA-雷座87", count : 3, },
+		{ name : "ボルシャック・ロマネスク", count : 4, },
+		{ name : "王闘竜皇 ボルシャック・ドラゴン", count : 1, },
+		{ name : "時の法皇 ミラダンテⅫ", count : 1, },
+		{ name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」", count : 2, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
