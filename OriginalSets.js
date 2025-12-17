@@ -197,3 +197,23 @@
 		{ name : "戦国接続 ギャラクテスト・シデンシーザー", count : 1, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-069";
+	var setName = "台灣CS大賽20251214 1st【封殺車＠元丰】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "轟速奪取 トップギジャ", count : 4, },
+		{ name : "ROYAL-減亜5", count : 4, },
+		{ name : "天体妖精エスメル /「お茶はいかがですか？」", count : 2, },
+		{ name : "轟速 ジャ・レッド", count : 4, },
+		{ name : "アーテル・ゴルギーニ", count : 4, },
+		{ name : "魔誕幻獣ボンメェ", count : 1, },
+		{ name : "王道ダチ ケントナーク", count : 1, },
+		{ name : "弐闘路と轟点火の決断", count : 4, },
+		{ name : "PP-「P（プリン）」", count : 3, },
+		{ name : "ギガクローズ", count : 3, },
+		{ name : "熱き邪道 レッドゾーンZ（ゼット）", count : 2, },
+		{ name : "魔誕の封殺ディアス Z（ゼータ）", count : 4, },
+		{ name : "轟く邪道 レッドゾーン", count : 4, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );

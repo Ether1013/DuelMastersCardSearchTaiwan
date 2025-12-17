@@ -460,9 +460,12 @@
 					bgCivil = cardDataBySort[i].civil;
 					if ( cardDataBySort[i].ws != null ){
 						bgCivil = 0;
-						for (const wsItem of cardDataBySort[i].ws) {
-							const theFullData = cardDatas.getDataByName( cardDataBySort[i].name , null , null, wsItem.udIndex ); // 假設 wsItem 包含 udIndex
-							bgCivil |= theFullData.civil;
+						// 改用索引來遍歷，直接將索引作為 udIndex 傳入
+						for (let udIndex = 0; udIndex < cardDataBySort[i].ws.length; udIndex++) {
+							const theFullData = cardDatas.getDataByName( cardDataBySort[i].name , null , null, udIndex );
+							if ( theFullData != null ){
+								bgCivil |= theFullData.civil;
+							}
 						}
 					}
 				}
