@@ -1366,14 +1366,20 @@
         50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(241, 196, 15, 1); }
         100% { transform: scale(1); box-shadow: 0 0 5px rgba(241, 196, 15, 0.5); }
     }
-    @keyframes violent-shake {
-        0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        10% { transform: translate(-10px, -10px) rotate(-1deg); } 20% { transform: translate(10px, 10px) rotate(1deg); }
-        30% { transform: translate(-15px, 5px) rotate(0deg); } 40% { transform: translate(15px, -15px) rotate(1deg); }
-        50% { transform: translate(-5px, 15px) rotate(-1deg); } 60% { transform: translate(10px, 5px) rotate(0deg); }
-        70% { transform: translate(-15px, -15px) rotate(1deg); } 80% { transform: translate(10px, 10px) rotate(-1deg); }
-        90% { transform: translate(-5px, -5px) rotate(0deg); }
-    }
+    /* [修正後] 支援防穿幫的震動動畫 */
+	@keyframes violent-shake {
+		/* 在每一幀都加入 scale(1.05) 讓圖片放大 5%，作為出血邊 */
+		0%, 100% { transform: scale(1.05) translate(0, 0) rotate(0deg); }
+		10% { transform: scale(1.05) translate(-10px, -10px) rotate(-1deg); }
+		20% { transform: scale(1.05) translate(10px, 10px) rotate(1deg); }
+		30% { transform: scale(1.05) translate(-15px, 5px) rotate(0deg); }
+		40% { transform: scale(1.05) translate(15px, -15px) rotate(1deg); }
+		50% { transform: scale(1.05) translate(-5px, 15px) rotate(-1deg); }
+		60% { transform: scale(1.05) translate(10px, 5px) rotate(0deg); }
+		70% { transform: scale(1.05) translate(-15px, -15px) rotate(1deg); }
+		80% { transform: scale(1.05) translate(10px, 10px) rotate(-1deg); }
+		90% { transform: scale(1.05) translate(-5px, -5px) rotate(0deg); }
+	}
     body.shaking-outer #workspace, body.shaking-outer #toolbar, body.shaking-outer #rb-paper-layer { animation: violent-shake 0.5s linear infinite; }
     body.shaking-inner #rb-inner-layer { animation: violent-shake 0.5s linear infinite; }
 
