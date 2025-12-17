@@ -200,10 +200,10 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
-	const setCode = "NET-068";
-	const setName = "台灣CS大賽20251130 1st【バクテラス＠SANADA】";
-	const isDeck = true;
-	const setCardList = [
+	var setCode = "NET-068";
+	var setName = "台灣CS大賽20251130 1st【バクテラス＠SANADA】";
+	var isDeck = true;
+	var setCardList = [
 		{ name : "メンデルスゾーン", count : 4, },
 		{ name : "ボルシャック・栄光・ルピア", count : 4, },
 		{ name : "ボルシャック・ドラゴン/決闘者・チャージャー", count : 4, },
