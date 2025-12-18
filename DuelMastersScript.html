@@ -379,7 +379,18 @@
     .hand-zone { flex: 1; overflow-x: auto; padding: 2px; z-index: 1000; margin: 0 5px; }
     .hand-zone .card-group { margin: 0 -5px; } /* 手牌重疊效果 */
     
-    .side-zone-group { width: 170px; display: flex; gap: 3px; padding-left: 3px; flex-shrink: 0; }
+    .side-zone-group {
+		display: flex;
+		flex-direction: row; /* 確保橫向排列 */
+		flex-wrap: nowrap;   /* 禁止換行 */
+		gap: 3px;
+		padding: 0 5px;
+		/* 原本約 170px，現在有 Deck, Grave, Hyper, Abyss 四區 */
+		/* 40px * 4 + 間距 ≈ 175px，我們抓寬一點避免擠壓 */
+		width: 215px; 
+		align-items: center;
+		justify-content: flex-start;
+	}
     .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
     
     /* =========================================
@@ -1759,6 +1770,42 @@
 	body.no-transition * {
 		transition: none !important;
 	}
+	
+	/* 深淵區基礎設定 (繼承 stacked) */
+	.abyss-zone {
+		/* 基礎背景，深灰色 */
+		background-color: #2c3e50; 
+		border-color: #555;
+		position: relative; /* 為了讓偽元素定位 */
+	}
+
+	/* 關鍵需求：30% 半透明黑幕遮罩 */
+	.abyss-zone::after {
+		content: "";
+		position: absolute;
+		top: 0; left: 0; 
+		width: 100%; height: 100%;
+		
+		/* 30% 黑色半透明 (op屬性效果) */
+		background-color: rgba(0, 0, 0, 0.3); 
+		
+		/* 關鍵：pointer-events: none 讓滑鼠點擊可以「穿透」黑幕 */
+		/* 這樣才能點到下面的卡片觸發 handleZoneClick */
+		pointer-events: none; 
+		
+		/* 層級設定： */
+		/* 100 會蓋過普通卡片 (z-index 1~50) -> 達到卡片變暗的效果 */
+		/* 但 hover 時卡片 z-index 會變成 200 -> 卡片浮起時會變亮，不受黑幕影響 */
+		z-index: 100; 
+		
+		border-radius: 3px;
+	}
+
+	/* 微調側邊欄寬度，容納第四個區域 (原本 170px -> 215px) */
+	/* 40px * 4張卡 + 3px * 3間距 = 169px，原本寬度其實勉強夠，但為了保險稍微加寬 */
+	.side-zone-group {
+		width: 215px; 
+	}
 </style>
 </head>
 <body>
@@ -1881,9 +1928,12 @@
 					</div>
                     <div class="side-zone-group">
                         <div class="hyper-zone zone stacked" data-zone="p2-hyper" onclick="handleZoneClick('p2-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
-                        <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
                         <div class="deck-zone zone stacked" data-zone="p2-deck" onclick="handleZoneClick('p2-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
-                    </div>
+                        <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
+						<div class="abyss-zone zone stacked" data-zone="p2-abyss" onclick="handleZoneClick('p2-abyss')">
+							<span class="zone-label" data-i18n="zone_abyss">深淵</span>
+						</div>
+					</div>
                 </div>
             </div>
 
@@ -1904,8 +1954,11 @@
 						<button class="random-pick-btn" onclick="event.stopPropagation(); randomPickHand('p1-hand')" data-i18n="btn_random_pick" title="Random Select">🎲 隨機</button>
 					</div>
                     <div class="side-zone-group">
-                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
+						<div class="abyss-zone zone stacked" data-zone="p1-abyss" onclick="handleZoneClick('p1-abyss')">
+							<span class="zone-label" data-i18n="zone_abyss">深淵</span>
+						</div>
                         <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
+                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
                         <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
                     </div>
                 </div>
@@ -2433,7 +2486,7 @@
             ]
         },
         {
-            filename: 'script20251217.txt',
+            filename: 'script20251218.txt',
             title: '天寶翔天 VS 双極LO',
             description: '作者2026的新牌組 VS 2025最後一場CS的特色牌組',
 			counter_url: 'https://www.f-counter.net/j/66/1765939832/',
@@ -3036,6 +3089,9 @@
 		if(TRANSLATIONS.zh) TRANSLATIONS.zh.btn_check_unseen = '👁️‍🗨️ 未見';
 		if(TRANSLATIONS.en) TRANSLATIONS.en.btn_check_unseen = '👁️‍🗨️ Unseen';
 		if(TRANSLATIONS.jp) TRANSLATIONS.jp.btn_check_unseen = '👁️‍🗨️ 未見';
+		TRANSLATIONS.zh['zone_abyss'] = '深淵區';
+		TRANSLATIONS.en['zone_abyss'] = 'Abyss';
+		TRANSLATIONS.jp['zone_abyss'] = '深淵';
 	}
 
 	// --- [新增] 全域變數 ---
@@ -6589,7 +6645,11 @@
             }
         });
 
-        const stackedZones = ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper', 'p1-shield', 'p2-shield'];
+        const stackedZones = [
+			'p1-deck', 'p1-grave', 'p1-hyper', 'p1-abyss', // 加入 p1-abyss
+			'p2-deck', 'p2-grave', 'p2-hyper', 'p2-abyss', // 加入 p2-abyss
+			'p1-shield', 'p2-shield'
+		];
 
 		const renderCardTree = (rootCard, container) => {
             const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
@@ -8175,7 +8235,7 @@
         el.onpointercancel = cancelPress;
 
         // 點擊事件綁定
-        const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper');
+        const isViewerZone = card.zone.includes('deck') || card.zone.includes('grave') || card.zone.includes('hyper') || card.zone.includes('abyss');;
         if (card.zone.includes('ability') || !isViewerZone) {
              el.onclick = (e) => handleCardSingleClick(e, card.id);
              if (card.zone.includes('ability')) {
@@ -8256,7 +8316,12 @@
 			const state = getCurrentDisplayState();
 			const card = state.cards.find(c => c.id === cardId);
 			if (!card) return;
-			const ignoredZones = ['p1-deck', 'p2-deck', 'p1-grave', 'p2-grave', 'p1-hyper', 'p2-hyper'];
+			const ignoredZones = [
+				'p1-deck', 'p2-deck', 
+				'p1-grave', 'p2-grave', 
+				'p1-hyper', 'p2-hyper',
+				'p1-abyss', 'p2-abyss'
+			];
 			const isIgnored = ignoredZones.includes(card.zone) || card.zone.includes('ability');
 			if (card.image && card.faceUp && !isIgnored) {
 				showMobileCardZoom(card.id);
@@ -10371,10 +10436,9 @@
 		// 定義哪些區域是「絕對公開」的
 		// 注意：手牌(Hand)、牌庫(Deck)、護盾(Shield) 預設為隱藏，除非 faceUp
 		const publicZones = [
-			'p1-battle', 'p2-battle', 
-			'p1-mana', 'p2-mana', 
-			'p1-grave', 'p2-grave', 
-			'p1-hyper', 'p2-hyper', 
+			'p1-battle', 'p2-battle', 'p1-mana', 'p2-mana', 
+			'p1-grave', 'p2-grave', 'p1-hyper', 'p2-hyper', 
+			'p1-abyss', 'p2-abyss', // 加入這兩個
 			'reveal-zone'
 		];
 
