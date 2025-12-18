@@ -2956,43 +2956,58 @@
 	const parseObjectToSring = (obj) => JSON.stringify(obj, null, 4);
 
 	/** 複製文字 */
+	/** * [修正版] 複製文字工具
+	 * 修正說明：優先使用現代 navigator.clipboard API 以解決手機版失效問題
+	 */
 	window.Clipboard = (() => {
-		let textArea, copy;
-
-		function isOS() {
-			return navigator.userAgent.match(/ipad|iphone/i);
-		}
-
-		function createTextArea(text) {
-			textArea = document.createElement('textArea');
+		
+		// 舊版 iOS/通用 Fallback 複製法
+		function fallbackCopyTextToClipboard(text) {
+			var textArea = document.createElement("textarea");
 			textArea.value = text;
+			
+			// 避免手機版鍵盤彈出或畫面跳動
+			textArea.style.top = "0";
+			textArea.style.left = "0";
+			textArea.style.position = "fixed";
+			textArea.style.opacity = "0";
+
 			document.body.appendChild(textArea);
-		}
+			textArea.focus();
+			textArea.select();
 
-		function selectText() {
-			let range, selection;
-
-			if (isOS()) {
-				range = document.createRange();
-				range.selectNodeContents(textArea);
-				selection = window.getSelection();
-				selection.removeAllRanges();
-				selection.addRange(range);
-				textArea.setSelectionRange(0, 999999);
-			} else {
-				textArea.select();
+			try {
+				var successful = document.execCommand('copy');
+				if (successful) {
+					customAlert("已複製卡名：\n" + text);
+				} else {
+					customAlert("複製失敗");
+				}
+			} catch (err) {
+				console.error('Fallback: Oops, unable to copy', err);
+				customAlert("您的瀏覽器不支援複製功能");
 			}
-		}
 
-		function copyToClipboard() {        
-			document.execCommand('copy');
 			document.body.removeChild(textArea);
 		}
 
-		copy = (text) => {
-			createTextArea(text);
-			selectText();
-			copyToClipboard();
+		const copy = (text) => {
+			if (!text) return;
+
+			// 1. 優先嘗試現代 API (HTTPS 環境下手機版主要靠這個)
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(text).then(() => {
+					// 成功時跳出提示 (手機版因為沒有滑鼠游標變化，需要提示)
+					customAlert("已複製卡名：\n" + text);
+				}).catch(err => {
+					console.error('Async: Could not copy text: ', err);
+					// 失敗則回退舊版
+					fallbackCopyTextToClipboard(text);
+				});
+			} else {
+				// 2. 舊版瀏覽器或非 HTTPS 環境
+				fallbackCopyTextToClipboard(text);
+			}
 		};
 
 		return {
