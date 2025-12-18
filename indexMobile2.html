@@ -784,12 +784,13 @@
 		changePage();
 		// 初始化能力下拉選單 (Mobile)
 		createAbilitySelect(document.getElementById("abilityContainer_Mobile"), false);
-		// 初始化 ab_race (Mobile)
+		// [修正] 初始化 ab_race (Mobile)
+		// 重點：config 中的 id 必須是 "ab_race"，這樣 functions.js 的搜尋功能才抓得到
 		createRaceInput(
 			document.getElementById("abRaceContainer_Mobile"), 
 			false, 
 			{ 
-				id: "ab_race_mobile",    // Mobile ID 需不同，或者搜尋邏輯要改
+				id: "ab_race",           // <--- 請改成 "ab_race" (原本範例為 ab_race_mobile)
 				name: "ab_race_value", 
 				showMatchAll: true,
 				allowMultiple: false
