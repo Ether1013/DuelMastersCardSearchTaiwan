@@ -127,22 +127,118 @@
 				width:320px;
 				height:320px;
 			}
+			
+			/* --- 手機版 AutoComplete 完整修正樣式 --- */
+
+			/* 1. 容器：必須設為相對定位，這樣下拉選單 (absolute) 才會乖乖黏在它下面 */
+			.race-row {
+				position: relative; 
+				display: flex;
+				align-items: center; /* 垂直置中 */
+				margin-bottom: 10px; /* 增加一點間距 */
+			}
+
+			/* 2. 輸入框：強制高度與樣式 */
+			.race-input-display {
+				flex: 1;             /* 佔滿剩餘寬度 */
+				
+				/* [關鍵] 強制高度 */
+				height: 20px;        
+				line-height: 15px;   
+				box-sizing: border-box;
+				
+				/* [關鍵] 移除 iOS/Android 預設的圓角與陰影 */
+				-webkit-appearance: none;
+				appearance: none;
+				
+				font-size: 12px;     /* 字體夠大防止 iOS 縮放 */
+				padding: 0 35px 0 10px; /* 右邊多留一點位置給 [x] 按鈕 */
+				margin: 0;
+				border: 1px solid #999;
+				border-radius: 4px;
+				background-color: #fff;
+			}
+
+			/* 3. 按鈕 (+/-)：強制高度與輸入框一致 */
+			.race-btn {
+				/* [關鍵] 強制高度 */
+				height: 20px;
+				width: 20px;         /* 設為正方形比較好按 */
+				box-sizing: border-box;
+				
+				/* [關鍵] 移除預設樣式 */
+				-webkit-appearance: none;
+				appearance: none;
+				
+				margin-left: 8px;
+				padding: 0;
+				
+				font-size: 12px;     /* 符號大一點 */
+				line-height: 19px;   /* 垂直置中 (height - border*2) */
+				text-align: center;
+				
+				background: #f0f0f0;
+				border: 1px solid #999;
+				border-radius: 4px;
+				color: #333;
+			}
+
+			/* 4. 全符合 Checkbox 的容器微調 */
+			.race-row label {
+				display: flex;
+				align-items: center;
+				height: 20px;        /* 確保跟輸入框一樣高 */
+				margin-left: 8px;
+				font-size: 14px;
+				white-space: nowrap;
+			}
+
+			/* 5. [關鍵] 下拉選單樣式 (確保顯示與堆疊層級) */
+			.race-dropdown-list {
+				display: none;       /* JS 控制顯示 */
+				position: absolute;
+				top: 100%;           /* 接在輸入框下方 */
+				left: 0;
+				right: 0;            /* 寬度撐滿容器 */
+				
+				z-index: 9999;       /* [重點] 確保浮在最上層 */
+				
+				max-height: 250px;   /* 超過高度捲動 */
+				overflow-y: auto;
+				background: white;
+				border: 1px solid #999;
+				box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+
+			.race-dropdown-list li {
+				padding: 12px 10px;  /* 手機版點擊範圍加大 */
+				border-bottom: 1px solid #eee;
+				font-size: 16px;
+				color: #000;
+			}
+
+			.race-dropdown-list li:active {
+				background-color: #ddd; /* 點擊時的反饋 */
+			}
 		</style>
 		<script>
 			var mVersion = true;
 		</script>
 		<script src="./tw_cn.js" id="tc2cJS"></script>
-		<script src="./functions.js?v=20251217"></script>
+		<script src="./functions.js?v=20251218"></script>
 		<script src="./moment.js"></script>
 		<script src="./fuse.js"></script>
-		<script src="./basicDatas.js?v=20251217"></script>
-		<script src="./basicDatas_abilities.js?v=20251217"></script>
-		<script src="./basicDatas_raceList.js?v=20251217"></script>
-		<script src="./parseDMVault.js?v=20251217"></script>
+		<script src="./basicDatas.js?v=20251218"></script>
+		<script src="./basicDatas_abilities.js?v=20251218"></script>
+		<script src="./basicDatas_raceList.js?v=20251218"></script>
+		<script src="./parseDMVault.js?v=20251218"></script>
 
-		<script src="./AllCards.js?v=20251217"></script>
-		<script src="./OfficeSets.js?v=20251217"></script>
-		<script src="./OriginalSets.js?v=20251217"></script>
+		<script src="./AllCards.js?v=20251218"></script>
+		<script src="./OfficeSets.js?v=20251218"></script>
+		<script src="./OriginalSets.js?v=20251218"></script>
 		<script src="./html2canvas.js"></script>
 		<script src="./canvas2image.js"></script>
 
@@ -311,6 +407,9 @@
 										<input name="soul" type="checkbox" value="W" ><span onclick="checkedBrother(this,true);" class="pointer">W</span> 
 										<input name="soul" type="checkbox" value="B" ><span onclick="checkedBrother(this,true);" class="pointer">B</span> 
 										<input name="soul" type="checkbox" value="U" ><span onclick="checkedBrother(this,true);" class="pointer">U</span> 
+										<input name="soul" type="checkbox" value="SW" ><span onclick="checkedBrother(this,true);" class="pointer">劍</span> 
+										<input name="soul" type="checkbox" value="MI" ><span onclick="checkedBrother(this,true);" class="pointer">鏡</span> 
+										<input name="soul" type="checkbox" value="SP" ><span onclick="checkedBrother(this,true);" class="pointer">魂</span> 
 									</span>
 								</td>
 							</tr>
@@ -342,15 +441,7 @@
 									<input type="radio" name="rLan" value="Chi" onclick="changeRaceLan();changeKeyWordLan();" ><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">中文</span>
 									<input type="radio" name="rLan" value="Eng" onclick="changeRaceLan();changeKeyWordLan();" ><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">英文</span>
 									<BR>
-									<select id="race" class="raceSelector" name="filter_race" style="width:164px;" NT="1">
-									</select>
-									<input type="checkbox" id="absoluteRace" name="filter_absoluteRace" value="Y">全符合
-									<BR>
-									<span id="race2Span" style="display:none;">
-										<select id="race2" class="raceSelector" name="filter_race" style="width:164px;">
-										</select>
-										<input type="checkbox" id="absoluteRace2" name="filter_absoluteRace" value="Y">全符合
-									</span>
+									<div id="raceContainer_Mobile"></div>
 								</td>
 							</tr>
 							<tr style="width:98%;">
@@ -359,15 +450,10 @@
 									<span>
 										<input type="text" id="customerAbilitiesFilter" style="width:164px;"> (自由輸入)
 										<BR>
-										<select name="abilities" style="width:164px;">
-										</select>
+										<div id="abilityContainer_Mobile" style="margin-top:4px;"></div>
 									</span>
 									<span id="regularAbilitiesFilter" style="display:none;">
-										<BR>
-										<select name="abilities" style="width:164px;">
-										</select><BR>
-										<select id="ab_race" class="raceSelector" name="ab_race" style="width:164px;">
-										</select> (種族)<BR>
+										<div id="abRaceContainer_Mobile" style="display:block;"></div> (種族)<BR>
 										<select id="ab_name" name="ab_name" style="width:164px;">
 										</select> (卡名)
 									</span>
@@ -696,6 +782,19 @@
 	</body>
 	<script>
 		changePage();
+		// 初始化能力下拉選單 (Mobile)
+		createAbilitySelect(document.getElementById("abilityContainer_Mobile"), false);
+		// 初始化 ab_race (Mobile)
+		createRaceInput(
+			document.getElementById("abRaceContainer_Mobile"), 
+			false, 
+			{ 
+				id: "ab_race_mobile",    // Mobile ID 需不同，或者搜尋邏輯要改
+				name: "ab_race_value", 
+				showMatchAll: true,
+				allowMultiple: false
+			}
+		);
 	</script>
 	<script src="./dataTail.js"></script>
 	<script>
@@ -710,6 +809,6 @@
 				gotoPC();
 			}
 		}
-		checkUpdate("20251217");
+		checkUpdate("20251218");
 	</script>
 </html>

@@ -550,7 +550,10 @@
 				{ code : "W",	Jap : "ワイルド・ソウル",	Eng : "Wild Soul",		Chi : "野魂", 	},
 				{ code : "U",	Jap : "ウルトラ・ソウル",	Eng : "Ultra Soul",		Chi : "超魂", 	},
 				{ code : "C",	Jap : "キャット・ソウル",	Eng : "Cat Soul",		Chi : "貓魂", 	},
-				{ code : "D",	Jap : "ドッグ・ソウル",		Eng : "Dog Soul",		Chi : "犬魂", 	},
+				{ code : "D",	Jap : "ドッグ・ソウル",	Eng : "Dog Soul",		Chi : "犬魂", 	},
+				{ code : "SP",	Jap : "魂・ソウル",		Eng : "Spirit Soul",	Chi : "魂魂", 	},
+				{ code : "SW",	Jap : "剣・ソウル",		Eng : "Sword Soul",		Chi : "劍魂", 	},
+				{ code : "MI",	Jap : "鏡・ソウル",		Eng : "Mirror Soul",	Chi : "鏡魂", 	},
 			];
 			initialData.forEach(item => {
 				this.map.set(item.code, item);
@@ -823,6 +826,13 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2025/12/18",
+				log : [ 
+						"種族過濾選單改版",
+						"新增三魂",
+				],	
+			},
 			{	
 				date : "2025/12/17",
 				log : [ 

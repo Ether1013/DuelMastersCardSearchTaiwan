@@ -225,6 +225,11 @@
 		//將能力字串轉換成DOM Object陣列
 		transTags : function( str ){
 		
+			// [新增] 預設行為：若有 IG 標籤，移除標籤殼，保留內部文字供顯示用
+			if (str) {
+				str = str.replace(/\(IG\)/g, "").replace(/\(\/IG\)/g, "");
+			}
+			
 			const rtnElements = [];
 			let findTag = null;
 			let currentStr = str;
@@ -1266,6 +1271,9 @@
 						wDatas.push( cardDatas.getSelectedCardByUdIndex( theCard, udIndex ) );
 					}
 					for (const wData of wDatas) {
+						// [修改] 在覆蓋 sp 之前，先將原始能力備份到 orgSp
+						wData.orgSp = wData.sp;
+						
 						wData.sp = allSps;
 						insertDatas.push( wData );
 					}
@@ -1317,16 +1325,27 @@
 						}
 					}
 				}
-				//B.種族
+				// B.種族 (修正版)
 				let isErrorRace = false;
-				for ( let r = 0 ; r < raceLimits.length ; r++ ){
-					const rValue = raceLimits[r];
-					if ( rValue !== "" ){
-						if ( insertData.race == null ){
+
+				// 1. [關鍵修正] 只抓取 "主種族過濾器" 容器內的 race-row
+				// 這樣可以避免 ab_race (位於 abilityContainer) 被誤認為是卡片種族條件
+				const raceRows = document.querySelectorAll("#raceContainer_PC .race-row, #raceContainer_Mobile .race-row");
+				
+				// 2. 遍歷每一列條件
+				for (const row of raceRows) {
+					const valInput = row.querySelector('input[name="raceValue"]');
+					const absCheck = row.querySelector('input[name="raceAbsolute"]');
+
+					if (valInput && valInput.value && valInput.value !== "") {
+						const rValue = valInput.value; 
+						const isAbsolute = absCheck ? absCheck.checked : false;
+
+						if ( insertData.race == null || insertData.race.length === 0 ){
 							isErrorRace = true;
 							break;
 						}
-						if ( raceAbsoluteCheckeds[r] ){
+						if (isAbsolute) {
 							if ( !insertData.race.includes( rValue ) ){
 								isErrorRace = true;
 								break;
@@ -1339,6 +1358,7 @@
 						}
 					}
 				}
+
 				if ( isErrorRace ){
 					continue;
 				}
@@ -1424,17 +1444,35 @@
 					
 						let hasKeyWordAbility = false;
 						//如果是無能力卡牌
+						//如果是無能力卡牌
 						if ( isKW && abilitiesValue === "empty" ){
+							
+							// [修改] 決定檢查對象：若有備份的原始能力(orgSp)則優先使用，否則使用目前能力(sp)
+							const checkTargetSp = insertData.orgSp || insertData.sp;
+
 							//如果無能力、或是能力數量為0的話就通過
-							if ( insertData.sp == null || insertData.sp.length === 0 ){
+							// [修改] 改檢查 checkTargetSp
+							if ( checkTargetSp == null || checkTargetSp.length === 0 ){
 								hasKeyWordAbility = true;
-							//否則就用"沒有書寫任何能力"去做搜尋
 							} else {
-								for (const spItem of insertData.sp) {
-									if ( spItem.includes( "沒有書寫任何能力" ) ){
-										hasKeyWordAbility = true;
+								// [修改] 嚴謹判斷：檢查是否為「實質」無能力 (忽略 IG 標籤內容)
+								// 預設假設它沒有能力，只要發現任何一行有「實質內容」就翻盤
+								let isVanilla = true;
+								
+								// [修改] 改遍歷 checkTargetSp
+								for (const spItem of checkTargetSp) {
+									// 1. 先把 IG 內容挖乾淨，並去除前後空白
+									const cleanStr = spItem.replace(/\(IG\)[\s\S]*?\(\/IG\)/g, "").trim();
+									
+									// 2. 如果挖完還有剩字，且剩下的不是「沒有書寫任何能力」這種官方廢話
+									if ( cleanStr.length > 0 && !cleanStr.includes( "沒有書寫任何能力" ) ){
+										isVanilla = false; // 抓到了！你有寫實質效果！
 										break;
 									}
+								}
+								
+								if ( isVanilla ){
+									hasKeyWordAbility = true;
 								}
 							}
 						//搜尋目標不是無能力卡牌的話
@@ -1446,12 +1484,18 @@
 							} else {
 							
 								for (const spItem of insertData.sp) {
+									
+									// [修改] 搜尋時：先將 (IG)...(/IG) 整段內容挖空
+									const searchTargetStr = spItem.replace(/\(IG\)[\s\S]*?\(\/IG\)/g, "");
+
 									//先判斷能力裡面有沒有關鍵字，有再往下做以節省時間
-									if ( spItem.indexOf( abilitiesValue ) === -1 ){
+									// [修改] 改用 searchTargetStr 判斷
+									if ( searchTargetStr.indexOf( abilitiesValue ) === -1 ){
 										continue;
 									}
 									//將能力轉成TAG
-									const parseTags = keyWords.transTags( spItem );
+									// [修改] 改用 searchTargetStr 轉換，確保不會產生隱藏內容的 TAG
+									const parseTags = keyWords.transTags( searchTargetStr );
 									if ( parseTags != null ){
 										for (const tag of parseTags) {
 											//要有getAttribute
@@ -1490,7 +1534,12 @@
 				if ( customerAbilitiesFilterValue.length > 0 ){
 					let abText = "";
 					for (const spItem of insertData.sp) {
-						const parseTags = keyWords.transTags( spItem );
+						
+						// [修改] 搜尋時：先將 (IG)...(/IG) 整段內容挖空
+						const searchTargetStr = spItem.replace(/\(IG\)[\s\S]*?\(\/IG\)/g, "");
+
+						// [修改] 改用 searchTargetStr
+						const parseTags = keyWords.transTags( searchTargetStr );
 						for (const tag of parseTags) {
 							abText += ( tag.innerText == null ? tag.data : tag.innerText );
 						}
@@ -2163,145 +2212,80 @@
 	//將單一能力字串轉成DOM物件群
 	const transAbilitiesTags = (ability) => keyWords.transTags( ability );
 	
-	//變更能力選單語言
-	const changeKeyWordLan = () => {
-		const value = getRadioValue( "rLan" );
-		const abSelectorObjs = getByName( "abilities" );
-		for (const abSelectorObj of abSelectorObjs) {
-			const lastSelectedAb = abSelectorObj.value;
-			let optionOfEmpty = null;
-			const optionOfSkip = abSelectorObj.options[0];
-			const sortNewOptions = [];
+	/**
+	 * [修正版 v2] 變更種族輸入框的顯示語言
+	 * 修正重點：
+	 * 1. 修正 placeholder 強制轉簡體的問題：不再自行判斷 isTC，而是直接讀取全域變數 isTC2C。
+	 * 2. 分離「語言選擇(Chi/Eng/Jap)」與「繁簡轉換(isTC2C)」的邏輯。
+	 */
+	function changeRaceLan() {
+		// 1. 取得全域設定的繁簡轉換參數 (依賴 tw_cn.js 中的設定)
+		// 通常 isTC2C=true 為轉簡體，false 為繁體
+		const getIsTC = () => (typeof isTC2C !== 'undefined' ? isTC2C : false);
+		const globalIsTC = getIsTC();
 
-			for (let i = 0; i < abSelectorObj.options.length; i++) {
-				const option = abSelectorObj.options[i];
-				const japAb = option.value;
-				
-				if (japAb === "empty") {
-					optionOfEmpty = option;
-					continue;
-				}
-				
-				const japAbObj = abilityMapping.getDataByJap( japAb );
-				if ( japAbObj != null ){
-					let abText = japAbObj[value];
-					//如果要求簡體中文的話就進行翻譯
-					if ( value === "Chi" ){
-						abText = translateText( abText, isTC2C );
-					}
-					option.text = abText;
-					
-					//"不過濾"置頂，不加入排序；熱門略過
-					if ( i > 0 && option.getAttribute("popTop") !== "1" ){
-						let insertIndex = sortNewOptions.length;
-						for ( let ii = 0 ; ii < sortNewOptions.length ; ii++ ){
-							if ( option.text < sortNewOptions[ii].text ){
-								insertIndex = ii;
-								break;
-							}
-						}
-						arrayInsert( sortNewOptions, insertIndex , option );
-					}
-				}
+		// 2. 取得目前選中的語言
+		const rLanVal = $('input[name=rLan]:checked').val(); // "Jap", "Chi", "Eng"
+
+		// 3. 遍歷所有顯示框進行更新
+		const displays = document.getElementsByClassName("race-input-display");
+		
+		for (const disp of displays) {
+			// A. 更新 Placeholder
+			if (rLanVal === "Eng") {
+				disp.placeholder = "All Races";
+			} else {
+				// 中文或日文模式下，使用全域設定來決定是否轉簡體
+				disp.placeholder = translateText("全種族", globalIsTC);
 			}
-			//清除下拉式選單之後重新加入option
-			clearChildren( abSelectorObj );
-			//先新增熱門選項
-			const popOtions = [];
-			for (const option of sortNewOptions) {
-				if ( option.getAttribute( "pop" ) === "1" ){
-					const popOtion = $(option).clone();
-					$(popOtion[0]).css('color','red');
-					popOtion[0].setAttribute("popTop","1");
-					popOtions.push( popOtion[0] );
-				}
-			}
-			//新增分隔線
-			arrayInsert( sortNewOptions, sortNewOptions.length , optionOfEmpty );
-			const lineOption = document.createElement('option');
-			lineOption.text = "--------";
-			lineOption.setAttribute("popTop","1");
-			lineOption.setAttribute("disabled","true");
-			popOtions.push( lineOption );
-			for ( let p = popOtions.length-1 ; p >= 0 ; p-- ){
-				arrayInsert( sortNewOptions, 0 , popOtions[p] );
-			}
-			//將"不過濾"置頂
-			arrayInsert( sortNewOptions, 0 , optionOfSkip );
-			//加入所有種族
-			for (const option of sortNewOptions) {
-				abSelectorObj.appendChild( option );
-			}
-			setSelectValue2( abSelectorObj , lastSelectedAb );
-		}
-	};
-	
-	//變更種族選單語言
-	const changeRaceLan = () => {
-		const value = getRadioValue( "rLan" );
-		const raceSelectorObjs = getByClass( "raceSelector" );
-		for (const raceSelectorObj of raceSelectorObjs) {
-			const lastSelectedRace = raceSelectorObj.value;
-			const sortNewOptions = [];
-			for (let i = 0; i < raceSelectorObj.options.length; i++) {
-				const option = raceSelectorObj.options[i];
-				const japRace = option.value;
-				const japRaceObj = raceMapping.getDataByJap( japRace );
-				if ( japRaceObj != null ){
-					let raceText = japRaceObj[value];
-					let cateRaceHint = ( japRaceObj.isCategory ? " (類別種族)" : "" );
-					//如果要求簡體中文的話就進行翻譯
-					if ( value === "Chi" ){
-						raceText = translateText( raceText, isTC2C );
-					}
-					cateRaceHint = translateText( cateRaceHint, isTC2C );
-					option.text = raceText + cateRaceHint;
-					
-					//"全種族"置頂，不加入排序；熱門種族略過
-					if ( i > 0 && option.getAttribute("popTop") !== "1" ){
-						let insertIndex = sortNewOptions.length;
-						for ( let ii = 0 ; ii < sortNewOptions.length ; ii++ ){
-							if ( option.text < sortNewOptions[ii].text ){
-								insertIndex = ii;
-								break;
-							}
-						}
-						arrayInsert( sortNewOptions, insertIndex , option );
-					}
-				}
-			}
-			const theTop = raceSelectorObj.options[0];
-			//清除下拉式選單之後重新加入option
-			clearChildren( raceSelectorObj );
-			//先新增熱門選項
-			const popOtions = [];
-			for (const option of sortNewOptions) {
-				if ( option.getAttribute( "pop" ) === "1" ){
-					const popOtion = $(option).clone();
-					$(popOtion[0]).css('color','red');
-					popOtion[0].setAttribute("popTop","1");
-					popOtions.push( popOtion[0] );
-				}
-			}
-			const lineOption = document.createElement('option');
-			lineOption.text = "--------";
-			lineOption.setAttribute("popTop","1");
-			lineOption.setAttribute("disabled","true");
-			popOtions.push( lineOption );
+
+			// B. 更新已顯示的值
+			const row = disp.parentNode;
+			if (!row) continue;
 			
-			for ( let p = popOtions.length-1 ; p >= 0 ; p-- ){
-				arrayInsert( sortNewOptions, 0 , popOtions[p] );
+			// 抓取 hidden input (相容 ab_race 與 raceValue)
+			const hidden = row.querySelector('input[type="hidden"]');
+			
+			if (hidden && hidden.value && hidden.value !== "") {
+				const raceID = hidden.value;
+				if (typeof raceMapping !== 'undefined') {
+					const raceObj = raceMapping.getDataByJap(raceID);
+					if (raceObj) {
+						let newText = "";
+						
+						// 根據語言選取對應欄位
+						if (rLanVal === "Chi") {
+							// 只有在選中中文時，才讀取 Chi 欄位並套用繁簡轉換
+							if (raceObj.Chi) {
+								newText = translateText(raceObj.Chi, globalIsTC);
+							} else {
+								newText = raceObj.Jap; // 防呆
+							}
+						} else if (rLanVal === "Eng") {
+							newText = raceObj.Eng;
+						} else {
+							// Jap
+							newText = raceObj.Jap;
+						}
+
+						// 處理類別後綴
+						if (raceObj.isCategory) {
+							let suffix = "(類別種族)";
+							if (rLanVal === "Eng") {
+								suffix = "(Category)";
+							} else {
+								suffix = translateText(suffix, globalIsTC);
+							}
+							newText += " " + suffix;
+						}
+
+						disp.value = newText;
+					}
+				}
 			}
-			//將"全種族"置頂
-			arrayInsert( sortNewOptions, 0 , theTop );
-			//再新增一般選項
-			for (const option of sortNewOptions) {
-				raceSelectorObj.appendChild( option );
-			}
-			setSelectValue( raceSelectorObj.id , lastSelectedRace );
 		}
-	};
-	
+	}
+
 	//帶入radio物件值
 	const setRadioValue = (radioName, value) => {
 		if ( radioName == null || radioName === "" )
@@ -3868,69 +3852,6 @@
 		getById("setCode").onchange();
 	};
 	
-	//開啟/關閉進階過濾器
-	const filter_adv = (obj) => {
-		const doOpen = "＋" === obj.innerText;
-		const filterTitles = getByClass("filterTitle");
-		for (const title of filterTitles) {
-			title.innerText = doOpen ? "進階搜尋" : "基本搜尋";
-		}
-		//符號變更
-		obj.innerText = doOpen ? "－" : "＋";
-		//攻擊力與費用的比較
-		const seconds = [ getByClass("cost2"), getByClass("power2") ];
-		for (const second of seconds) {
-			for (const element of second) {
-				element.style.display = doOpen ? "inline" : "none";
-			}
-		}
-		//雙極比較
-		if ( doOpen ){
-			$(".wUdDiv").show();
-		} else {
-			$(".wUdDiv").hide();
-		}
-		//魂
-		getById("filter_tr_soul").style.display = doOpen ? "" : "none";
-		//稀有度
-		getById("filter_tr_rarility").style.display = doOpen ? "" : "none";
-		//第二組種族過濾器
-		getById("race2Span").style.display = doOpen ? "inline" : "none";
-		//能力過濾器
-		getById("regularAbilitiesFilter").style.display = doOpen ? "" : "none";
-		//卡牌種類
-		const subTypes = getByClass("subType");
-		for (const subType of subTypes) {
-			subType.style.display = doOpen ? "" : "none";
-			subType.children[0].checked = false;
-		}
-		
-		//如果是關閉的話，要將鎖起來的過濾項目初始化
-		if ( !doOpen ){
-			//攻擊力與費用的比較
-			setSelectValue( "cost2" , "" );
-			setSelectValue( "power2" , "" );
-			//雙極比較
-			$('input[name=wUdCase]').prop("checked",true);
-			//魂
-			setCheckboxValue( "soul" , null );
-			//稀有度
-			setCheckboxValue( "rarility" , null );
-			//第二組種族過濾器
-			setSelectValue( "race2" , "" );
-			getById( "absoluteRace2" ).checked = false;
-			//能力過濾器
-			const absFilterObjs = getByName( "abilities" );
-			for ( let abs = 1 ; abs < absFilterObjs.length ; abs++ ){
-				setSelectValue2( absFilterObjs[abs] , "" );
-			}
-			//能力過濾器(種族)
-			setSelectValue2( getById( "ab_race" ) , "" );
-			//能力過濾器(卡名)
-			setSelectValue2( getById( "ab_name" ) , "" );
-		}
-	};
-		
 	//比對兩字串，回傳不符合字數。[ッ][っ]只算半個，[．][．]只算0.1，全形英數符號沒找到的話可以用半形再找一次
 	const helfChars = [ "ッ" , "っ" ];
 	const skipChars = [ "．" , "．" ];
@@ -4341,4 +4262,536 @@
 			}
 		}
 		console.log( "END" );
+	};
+	
+	/**
+	 * [修正版 v4] 建立 AutoComplete 種族輸入框 (通用版)
+	 * @param {HTMLElement} container 容器
+	 * @param {boolean} isRemovable 是否可刪除
+	 * @param {object} config 設定檔 { id: hiddenInputId, name: hiddenInputName, showMatchAll: boolean, allowMultiple: boolean }
+	 */
+	function createRaceInput(container, isRemovable, config) {
+		if (!container) return;
+
+		// 預設設定
+		const cfg = Object.assign({
+			id: null,               // Hidden Input 的 ID
+			name: "raceValue",      // Hidden Input 的 Name
+			showMatchAll: true,     // 是否顯示「全符合」Checkbox
+			allowMultiple: true     // 是否顯示 [+] 新增按鈕
+		}, config);
+
+		const row = document.createElement("div");
+		row.className = "race-row";
+		row.style.display = "flex";
+		row.style.alignItems = "center";
+		row.style.marginBottom = "4px";
+
+		const getIsTC = () => (typeof isTC2C !== 'undefined' ? isTC2C : false);
+		const getRLanVal = () => {
+			const checked = $('input[name=rLan]:checked');
+			if (checked.length > 0) return checked.val();
+			return "Jap"; 
+		};
+		
+		// 翻譯 Helper (略...與前版相同)
+		const getTransName = (rObj) => {
+			const lan = getRLanVal();
+			let name = rObj.Jap; 
+			if (lan === "Chi") {
+				name = rObj.Chi;
+				name = translateText(name, getIsTC());
+			} else if (lan === "Eng") {
+				name = rObj.Eng;
+			}
+			return name;
+		};
+		const getCategorySuffix = () => {
+			const lan = getRLanVal();
+			let suffix = "(類別種族)";
+			if (lan === "Eng") {
+				suffix = "(Category)";
+			} else {
+				suffix = translateText(suffix, getIsTC());
+			}
+			return " " + suffix;
+		};
+
+		// 1. 顯示輸入框
+		const inputDisplay = document.createElement("input");
+		inputDisplay.type = "text";
+		inputDisplay.className = "race-input-display";
+		
+		let initPlaceHolder = "全種族";
+		if (getRLanVal() === "Eng") initPlaceHolder = "All Races";
+		else initPlaceHolder = translateText(initPlaceHolder, getIsTC());
+		inputDisplay.placeholder = initPlaceHolder;
+
+		inputDisplay.autocomplete = "off";
+		if (container.id.includes("Mobile")) {
+			inputDisplay.style.flex = "1"; 
+		} else {
+			inputDisplay.style.width = "140px";
+		}
+
+		// 2. 實際值的 hidden input
+		const inputValue = document.createElement("input");
+		inputValue.type = "hidden";
+		inputValue.name = cfg.name; // 使用設定的 name
+		if (cfg.id) inputValue.id = cfg.id; // 使用設定的 id (這對 ab_race 很重要)
+		inputValue.value = "";
+
+		// 3. 清除按鈕
+		const btnClear = document.createElement("span");
+		btnClear.innerText = "×";
+		btnClear.title = "清除";
+		const btnStyle = btnClear.style;
+		btnStyle.cursor = "pointer";
+		btnStyle.fontSize = "14px";
+		btnStyle.fontWeight = "bold";
+		btnStyle.display = "inline-block";
+		btnStyle.width = "18px";
+		btnStyle.height = "18px";
+		btnStyle.lineHeight = "18px";
+		btnStyle.textAlign = "center";
+		btnStyle.marginLeft = "-24px";
+		btnStyle.marginRight = "6px";
+		btnStyle.zIndex = "10";
+		btnStyle.borderRadius = "50%";
+		btnStyle.transition = "background-color 0.2s, color 0.2s";
+
+		const setClearBtnState = (isError) => {
+			if (isError) {
+				btnStyle.color = "#FFF";
+				btnStyle.backgroundColor = "#FF0000";
+				btnStyle.boxShadow = "0 0 2px rgba(0,0,0,0.3)";
+			} else {
+				btnStyle.color = "#999";
+				btnStyle.backgroundColor = "transparent";
+				btnStyle.boxShadow = "none";
+			}
+		};
+		setClearBtnState(false);
+		
+		// 4. 下拉選單 UL
+		const ulList = document.createElement("ul");
+		ulList.className = "race-dropdown-list";
+
+		const checkValidity = () => {
+			const isInvalid = (inputDisplay.value !== "" && inputValue.value === "");
+			setClearBtnState(isInvalid);
+		};
+
+		btnClear.onclick = () => {
+			inputDisplay.value = "";
+			inputValue.value = "";
+			checkValidity();
+			ulList.style.display = "none";
+			inputDisplay.focus();
+		};
+
+		const buildOptions = (filterText) => {
+			ulList.innerHTML = "";
+			const catSuffix = getCategorySuffix();
+			
+			const createLi = (text, value, isHot) => {
+				const li = document.createElement("li");
+				li.textContent = text;
+				if (isHot) li.style.color = "red";
+				li.onmousedown = (e) => {
+					e.preventDefault();
+					inputDisplay.value = text;
+					inputValue.value = value;
+					checkValidity();
+					ulList.style.display = "none";
+				};
+				return li;
+			};
+
+			if (!filterText) {
+				const liAll = document.createElement("li");
+				let allText = "全種族";
+				if (getRLanVal() === "Eng") allText = "All Races";
+				else allText = translateText(allText, getIsTC());
+				
+				liAll.textContent = allText;
+				liAll.onmousedown = (e) => {
+					e.preventDefault();
+					inputDisplay.value = "";
+					inputValue.value = "";
+					checkValidity();
+					ulList.style.display = "none";
+				};
+				ulList.appendChild(liAll);
+			}
+
+			if (typeof raceMapping !== 'undefined') {
+				const races = Array.from(raceMapping.map.keys());
+				let exactMatchId = null;
+				let processedRaces = [];
+
+				for (const raceJap of races) {
+					const raceObj = raceMapping.getDataByJap(raceJap);
+					let raceDisplay = getTransName(raceObj);
+					if (raceObj.isCategory) raceDisplay += catSuffix;
+
+					if (filterText && (raceDisplay.toUpperCase() === filterText || raceJap.toUpperCase() === filterText)) {
+						exactMatchId = raceJap;
+					}
+
+					if (filterText && 
+						!raceDisplay.toUpperCase().includes(filterText) && 
+						!raceJap.toUpperCase().includes(filterText)) {
+						continue;
+					}
+
+					processedRaces.push({
+						text: raceDisplay,
+						value: raceJap,
+						isHot: !!raceObj.pop,
+						sortKey: raceDisplay.toUpperCase()
+					});
+				}
+
+				processedRaces.sort((a, b) => a.text.localeCompare(b.text));
+				const hotList = processedRaces.filter(r => r.isHot);
+				const normalList = processedRaces.filter(r => !r.isHot);
+
+				hotList.forEach(item => ulList.appendChild(createLi(item.text, item.value, true)));
+				if (hotList.length > 0 && (!filterText || normalList.length > 0)) {
+					const liSep = document.createElement("li");
+					liSep.textContent = "--------";
+					liSep.style.color = "#888";
+					liSep.style.cursor = "default";
+					liSep.onmousedown = (e) => e.stopPropagation();
+					ulList.appendChild(liSep);
+				}
+				normalList.forEach(item => ulList.appendChild(createLi(item.text, item.value, false)));
+
+				if (exactMatchId) inputValue.value = exactMatchId;
+			}
+
+			if (ulList.children.length === 0) {
+				const liNone = document.createElement("li");
+				let noneText = "查無符合種族";
+				if (getRLanVal() === "Eng") noneText = "No Result";
+				else noneText = translateText(noneText, getIsTC());
+				liNone.textContent = noneText;
+				liNone.style.color = "#999";
+				liNone.style.cursor = "default";
+				liNone.onmousedown = (e) => e.stopPropagation();
+				ulList.appendChild(liNone);
+			}
+			checkValidity();
+		};
+
+		inputDisplay.onfocus = () => {
+			buildOptions(inputDisplay.value.toUpperCase());
+			ulList.style.display = "block";
+		};
+		inputDisplay.oninput = () => {
+			inputValue.value = "";
+			buildOptions(inputDisplay.value.toUpperCase());
+			ulList.style.display = "block";
+		};
+		inputDisplay.onblur = () => {
+			checkValidity();
+			setTimeout(() => { ulList.style.display = "none"; }, 200);
+		};
+
+		row.appendChild(inputDisplay);
+		row.appendChild(btnClear);
+		row.appendChild(inputValue);
+		row.appendChild(ulList);
+
+		// 全符合 Checkbox
+		if (cfg.showMatchAll) {
+			const labelAbs = document.createElement("label");
+			labelAbs.style.fontSize = "12px";
+			labelAbs.style.cursor = "pointer";
+			labelAbs.style.whiteSpace = "nowrap";
+			labelAbs.style.display = "flex";
+			labelAbs.style.alignItems = "center";
+			const checkAbs = document.createElement("input");
+			checkAbs.type = "checkbox";
+			checkAbs.name = "raceAbsolute";
+			checkAbs.value = "Y";
+			checkAbs.style.margin = "0 2px 0 0";
+			checkAbs.checked = false;
+			labelAbs.appendChild(checkAbs);
+			labelAbs.appendChild(document.createTextNode("全符合"));
+			row.appendChild(labelAbs);
+		}
+
+		// 新增/刪除按鈕
+		if (cfg.allowMultiple) {
+			if (!isRemovable) {
+				const btnAdd = document.createElement("button");
+				btnAdd.type = "button";
+				btnAdd.className = "race-btn race-add-btn";
+				btnAdd.textContent = "+";
+				btnAdd.onclick = () => { createRaceInput(container, true, config); };
+				btnAdd.style.display = "none"; 
+				row.appendChild(btnAdd);
+			} else {
+				const btnDel = document.createElement("button");
+				btnDel.type = "button";
+				btnDel.className = "race-btn";
+				btnDel.textContent = "-";
+				btnDel.onclick = () => { container.removeChild(row); };
+				row.appendChild(btnDel);
+			}
+		}
+
+		container.appendChild(row);
+	}
+	
+	
+	// -----------------------------------------------------------
+	// [新增函數] 用於填充單一 Ability Select 的選項
+	// -----------------------------------------------------------
+	const buildAbilityOptions = (selectObj) => {
+		// 1. 取得目前選擇的語言
+		let rLanVal = "Jap";
+		const checked = $('input[name=rLan]:checked');
+		if (checked.length > 0) rLanVal = checked.val();
+
+		// 2. 判斷是否繁簡轉換
+		const isTC = (typeof isTC2C !== 'undefined' ? isTC2C : false);
+
+		// 3. 記住目前選中的值，重建後要選回來
+		const lastSelectedAb = selectObj.value;
+
+		// 4. 準備選項陣列
+		// 先加入預設選項 (不過濾)
+		const optionOfSkip = document.createElement('option');
+		optionOfSkip.value = "";
+		optionOfSkip.text = (rLanVal === "Eng") ? "All Abilities" : translateText("不過濾", isTC);
+		
+		// 無能力選項
+		const optionOfEmpty = document.createElement('option');
+		optionOfEmpty.value = "empty";
+		optionOfEmpty.text = (rLanVal === "Eng") ? "No Ability" : translateText("無能力", isTC);
+
+		const sortNewOptions = [];
+
+		// 5. 遍歷 abilityMapping 產生選項
+		if (typeof abilityMapping !== 'undefined') {
+			for (const [japKey, abData] of abilityMapping.map) {
+				const option = document.createElement('option');
+				option.value = japKey;
+
+				// 根據語言決定顯示文字
+				let abText = abData.Jap;
+				if (rLanVal === "Chi") {
+					abText = translateText(abData.Chi, isTC);
+				} else if (rLanVal === "Eng") {
+					abText = abData.Eng;
+				}
+				option.text = abText;
+				
+				// 標記熱門屬性
+				if (abData.pop) {
+					option.style.color = "red";
+					option.setAttribute("pop", "1");
+				}
+
+				sortNewOptions.push(option);
+			}
+		}
+
+		// 6. 排序 (依顯示文字排序，熱門置頂邏輯稍後處理)
+		sortNewOptions.sort((a, b) => a.text.localeCompare(b.text));
+
+		// 7. 重新組裝 (熱門 -> 分隔線 -> 一般)
+		const hotOptions = sortNewOptions.filter(opt => opt.getAttribute("pop") === "1");
+		const normalOptions = sortNewOptions.filter(opt => opt.getAttribute("pop") !== "1");
+
+		// 清空並依序加入
+		clearChildren(selectObj);
+
+		// (1) 不過濾
+		selectObj.appendChild(optionOfSkip);
+		
+		// (2) 無能力 (放在最上面方便點選)
+		selectObj.appendChild(optionOfEmpty);
+
+		// (3) 熱門選項
+		if (hotOptions.length > 0) {
+			const lineOption = document.createElement('option');
+			lineOption.text = "--------";
+			lineOption.disabled = true;
+			
+			hotOptions.forEach(opt => selectObj.appendChild(opt));
+			selectObj.appendChild(lineOption);
+		}
+
+		// (4) 一般選項
+		normalOptions.forEach(opt => selectObj.appendChild(opt));
+
+		// 8. 還原選取值
+		setSelectValue2(selectObj, lastSelectedAb);
+	};
+
+	// -----------------------------------------------------------
+	// [修改函數] 變更能力選單語言 (遍歷所有動態產生的 select)
+	// -----------------------------------------------------------
+	const changeKeyWordLan = () => {
+		const abSelectorObjs = document.getElementsByName("abilities");
+		for (const selectObj of abSelectorObjs) {
+			buildAbilityOptions(selectObj);
+		}
+	};
+
+	// -----------------------------------------------------------
+	// [新增函數] 建立動態 Ability Select UI
+	// -----------------------------------------------------------
+	function createAbilitySelect(container, isRemovable) {
+		if (!container) return;
+
+		const row = document.createElement("div");
+		row.className = "ability-row";
+		row.style.marginBottom = "4px";
+		row.style.display = "flex";
+		row.style.alignItems = "center";
+
+		// 1. 建立 Select
+		const select = document.createElement("select");
+		select.name = "abilities";
+		
+		// 依容器決定寬度 (手機版寬一點，PC版固定)
+		if (container.id === "abilityContainer_Mobile") {
+			select.style.flex = "1";
+		} else {
+			select.style.width = "164px";
+		}
+
+		// 立即填充選項
+		buildAbilityOptions(select);
+
+		row.appendChild(select);
+
+		// 2. 建立按鈕 (+ / -)
+		if (!isRemovable) {
+			// 第一列：新增按鈕
+			const btnAdd = document.createElement("button");
+			btnAdd.type = "button";
+			btnAdd.className = "race-btn ability-add-btn"; // 借用 race-btn 樣式
+			btnAdd.textContent = "+";
+			btnAdd.onclick = () => { createAbilitySelect(container, true); };
+			// 預設隱藏，由 filter_adv 控制
+			btnAdd.style.display = "none";
+			row.appendChild(btnAdd);
+		} else {
+			// 其他列：刪除按鈕
+			const btnDel = document.createElement("button");
+			btnDel.type = "button";
+			btnDel.className = "race-btn"; // 借用 race-btn 樣式
+			btnDel.textContent = "-";
+			btnDel.onclick = () => { container.removeChild(row); };
+			row.appendChild(btnDel);
+		}
+
+		container.appendChild(row);
+	}
+
+	// -----------------------------------------------------------
+	// [修改函數] filter_adv (修正版)
+	// 修正重點：關閉進階過濾時，保留第一列 (基本搜尋區) 的能力過濾值
+	// -----------------------------------------------------------
+	const filter_adv = (obj) => {
+		const doOpen = "＋" === obj.innerText; // 判斷是要開啟還是關閉
+		const filterTitles = getByClass("filterTitle");
+		for (const title of filterTitles) {
+			title.innerText = doOpen ? "進階搜尋" : "基本搜尋";
+		}
+		// 符號變更
+		obj.innerText = doOpen ? "－" : "＋";
+
+		// --- 種族 UI 控制 ---
+		const raceContainers = [getById("raceContainer_PC"), getById("raceContainer_Mobile")];
+		for (const container of raceContainers) {
+			if (!container) continue;
+			// 控制 [+] 按鈕
+			const addBtns = container.getElementsByClassName("race-add-btn");
+			if (addBtns.length > 0) {
+				addBtns[0].style.display = doOpen ? "inline-block" : "none";
+			}
+			// 關閉時移除多餘的列
+			if (!doOpen) {
+				const rows = container.getElementsByClassName("race-row");
+				while (rows.length > 1) {
+					container.removeChild(rows[rows.length - 1]);
+				}
+			}
+		}
+
+		// --- [新增] 能力 UI 控制 ---
+		const abilityContainers = [getById("abilityContainer_PC"), getById("abilityContainer_Mobile")];
+		for (const container of abilityContainers) {
+			if (!container) continue;
+			
+			// 1. 控制 [+] 按鈕顯示
+			const addBtns = container.getElementsByClassName("ability-add-btn");
+			if (addBtns.length > 0) addBtns[0].style.display = doOpen ? "inline-block" : "none";
+
+			// 2. 關閉時重置：只移除第一列以外的所有下拉選單
+			if (!doOpen) {
+				const rows = container.getElementsByClassName("ability-row");
+				// 從後面往前刪，保留第一個 (index 0)
+				while (rows.length > 1) {
+					container.removeChild(rows[rows.length - 1]);
+				}
+				
+				// [修正] 這裡移除了原本重置第一列值的程式碼
+				// 讓使用者切換回基本搜尋時，原本選的值還在
+			}
+		}
+
+		// --- 其他原有過濾器邏輯 ---
+		const seconds = [ getByClass("cost2"), getByClass("power2") ];
+		for (const second of seconds) {
+			for (const element of second) {
+				element.style.display = doOpen ? "inline" : "none";
+			}
+		}
+		if ( doOpen ){ $(".wUdDiv").show(); } else { $(".wUdDiv").hide(); }
+		getById("filter_tr_soul").style.display = doOpen ? "" : "none";
+		getById("filter_tr_rarility").style.display = doOpen ? "" : "none";
+		
+		// 進階能力過濾器中的額外欄位 (種族/卡名)
+		getById("regularAbilitiesFilter").style.display = doOpen ? "" : "none";
+
+		const subTypes = getByClass("subType");
+		for (const subType of subTypes) {
+			subType.style.display = doOpen ? "" : "none";
+			subType.children[0].checked = false;
+		}
+		
+		// 關閉時重置其他隱藏的進階欄位
+		if ( !doOpen ){
+			setSelectValue( "cost2" , "" );
+			setSelectValue( "power2" , "" );
+			$('input[name=wUdCase]').prop("checked",true);
+			setCheckboxValue( "soul" , null );
+			setCheckboxValue( "rarility" , null );
+			
+			// [修正] ab_race 現在是 createRaceInput 生成的，有 inputDisplay 和 hiddenInput
+			// 要把 hiddenInput 的值清空，並把 display input 清空
+			const abRaceContainer = getById("ab_race_container"); // 注意 id 變化
+			if (abRaceContainer) {
+				 const hidden = abRaceContainer.querySelector("input[type='hidden']");
+				 const display = abRaceContainer.querySelector(".race-input-display");
+				 if (hidden) hidden.value = "";
+				 if (display) display.value = "";
+				 // 也要隱藏清除按鈕的錯誤狀態 (如果有)
+				 const clearBtn = abRaceContainer.querySelector("span[title*='清除']");
+				 if (clearBtn) {
+					 clearBtn.style.color = "#999";
+					 clearBtn.style.backgroundColor = "transparent";
+					 clearBtn.boxShadow = "none";
+				 }
+			}
+			setSelectValue2( getById( "ab_name" ) , "" );
+		}
 	};

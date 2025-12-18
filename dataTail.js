@@ -1,31 +1,18 @@
 	//依照種族列表去產生種族下拉選單
 	translatePageInit();
-	const raceSelectors = getByClass( "raceSelector" );
-	for (const raceSelector of raceSelectors) {
-		let option = document.createElement('option');
-		option.value = "";
-		option.text = translateText( "全種族", isTC2C );
-		raceSelector.appendChild( option );
-		
-		const races = Array.from(raceMapping.map.keys()).sort();
-
-		for (const raceJap of races) {
-			const raceObj = raceMapping.getDataByJap( raceJap );
-			let raceText = raceObj.Jap;
-			if ( raceObj != null && raceObj.isCategory ){
-				raceText += " " + translateText( " (類別種族)", isTC2C );
-			}
-			option = document.createElement('option');
-			option.value = raceJap;
-			option.text = raceText;
-			option.setAttribute("NT","1");
-			if ( raceObj.pop ){
-				option.setAttribute("pop","1");
-			}
-			raceSelector.appendChild( option );
-		}
+	// PC 版初始化
+	const containerPC = document.getElementById("raceContainer_PC");
+	if (containerPC) {
+		containerPC.innerHTML = ""; // 清空防止重複
+		createRaceInput(containerPC, false); // 建立第一列 (不可刪除, 帶有 [+] 鈕)
 	}
-	changeRaceLan();
+
+	// Mobile 版初始化
+	const containerMobile = document.getElementById("raceContainer_Mobile");
+	if (containerMobile) {
+		containerMobile.innerHTML = "";
+		createRaceInput(containerMobile, false);
+	}
 	
 	//依照卡名分類取產生下拉選單
 	const nameSelector = getById("ab_name");
@@ -373,3 +360,4 @@
 			getById("newest").appendChild(theHref);
 		}
 	}
+	

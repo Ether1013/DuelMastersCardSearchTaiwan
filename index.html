@@ -8,7 +8,7 @@
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="./tw_cn.js" id="tc2cJS"></script>
-<script src="./functions.js?v=20251217"></script>
+<script src="./functions.js?v=20251218"></script>
 <script>
 	const gotoMobile = () => {
 		location.href = "./indexMobile2.html"+window.location.search;
@@ -17,14 +17,14 @@
 </script>
 <script src="./moment.js"></script>
 <script src="./fuse.js"></script>
-<script src="./basicDatas.js?v=20251217"></script>
-<script src="./basicDatas_abilities.js?v=20251217"></script>
-<script src="./basicDatas_raceList.js?v=20251217"></script>
+<script src="./basicDatas.js?v=20251218"></script>
+<script src="./basicDatas_abilities.js?v=20251218"></script>
+<script src="./basicDatas_raceList.js?v=20251218"></script>
 <script src="./parseDMVault.js"></script>
-<script src="./AllCards.js?v=20251217"></script>
+<script src="./AllCards.js?v=20251218"></script>
 <script src="./parseDMVault.js"></script>
-<script src="./OfficeSets.js?v=20251217"></script>
-<script src="./OriginalSets.js?v=20251217"></script>
+<script src="./OfficeSets.js?v=20251218"></script>
+<script src="./OriginalSets.js?v=20251218"></script>
 <script src="./html2canvas.js"></script>
 <script src="./canvas2image.js"></script>
 <style type="text/css">
@@ -104,6 +104,53 @@
 		width: 100vw; 
 		height: 100vh;
 		top: 10vh;
+	}
+	
+	/* AutoComplete 種族選擇器樣式 */
+	.race-row {
+		position: relative;
+		display: flex;
+		align-items: center;
+		margin-bottom: 4px;
+	}
+	.race-input-display {
+		width: 150px; /* PC版寬度 */
+		padding: 2px;
+	}
+	.race-dropdown-list {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		width: 250px; /* 下拉選單可以比輸入框寬 */
+		max-height: 300px;
+		overflow-y: auto;
+		background: white;
+		border: 1px solid #888;
+		z-index: 2000;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+	}
+	.race-dropdown-list li {
+		padding: 4px 8px;
+		cursor: pointer;
+		border-bottom: 1px solid #eee;
+		color: #000;
+		text-align: left;
+	}
+	.race-dropdown-list li:hover, .race-dropdown-list li.selected {
+		background-color: #bde4ff;
+	}
+	.race-btn {
+		margin-left: 5px;
+		cursor: pointer;
+		padding: 1px 6px;
+		font-size: 14px;
+		background: #eee;
+		border: 1px solid #ccc;
+		border-radius: 3px;
 	}
 -->
 </style>
@@ -402,6 +449,9 @@
 													<input name="soul" type="checkbox" value="W" ><span onclick="checkedBrother(this,true);" class="pointer">W</span> 
 													<input name="soul" type="checkbox" value="B" ><span onclick="checkedBrother(this,true);" class="pointer">B</span> 
 													<input name="soul" type="checkbox" value="U" ><span onclick="checkedBrother(this,true);" class="pointer">U</span> 
+													<input name="soul" type="checkbox" value="SW" ><span onclick="checkedBrother(this,true);" class="pointer">劍</span> 
+													<input name="soul" type="checkbox" value="MI" ><span onclick="checkedBrother(this,true);" class="pointer">鏡</span> 
+													<input name="soul" type="checkbox" value="SP" ><span onclick="checkedBrother(this,true);" class="pointer">魂</span> 
 												</span>
 											</td>
 										</tr>
@@ -433,15 +483,7 @@
 												<input type="radio" name="rLan" value="Chi" onclick="changeRaceLan();changeKeyWordLan();" ><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">中文</span>
 												<input type="radio" name="rLan" value="Eng" onclick="changeRaceLan();changeKeyWordLan();" ><span onclick="checkedBrother(this,true);changeRaceLan();changeKeyWordLan();" class="pointer">英文</span>
 												<BR>
-												<select id="race" class="raceSelector" name="filter_race" style="width:164px;">
-												</select>
-												<input type="checkbox" id="absoluteRace" name="filter_absoluteRace" value="Y">全符合
-												<BR>
-												<span id="race2Span" style="display:none;">
-													<select id="race2" class="raceSelector" name="filter_race" style="width:164px;">
-													</select>
-													<input type="checkbox" id="absoluteRace2" name="filter_absoluteRace" value="Y">全符合
-												</span>
+												<div id="raceContainer_PC"></div>
 											</td>
 										</tr>
 										<tr style="width:98%;">
@@ -450,15 +492,10 @@
 												<span>
 													<input type="text" id="customerAbilitiesFilter" style="width:157px;"> (自由輸入)
 													<BR>
-													<select name="abilities" style="width:164px;">
-													</select>
+													<div id="abilityContainer_PC" style="margin-top:4px;"></div>
 												</span>
 												<span id="regularAbilitiesFilter" style="display:none;">
-													<BR>
-													<select name="abilities" style="width:164px;">
-													</select><BR>
-													<select id="ab_race" class="raceSelector" name="ab_race" style="width:164px;">
-													</select> (種族)
+													<div id="abRaceContainer_PC" style="display:inline-block;"></div> (種族)<BR>
 													<select id="ab_name" name="ab_name" style="width:164px;">
 													</select> (卡名)
 												</span>
@@ -604,6 +641,19 @@
 <script src="./dataTail.js"></script>
 </body>
 <script>		
+	// 初始化能力下拉選單 (PC)
+    createAbilitySelect(document.getElementById("abilityContainer_PC"), false);
+	// 初始化 ab_race (PC)
+    createRaceInput(
+        document.getElementById("abRaceContainer_PC"), 
+        false, 
+        { 
+            id: "ab_race",           // 設定 ID，讓 getById('ab_race').value 能運作
+            name: "ab_race_value",   // 設定 distinct name
+            showMatchAll: true,      // 依照需求顯示或隱藏全符合
+            allowMultiple: false     // ab_race 通常是單一過濾條件
+        }
+    );
 	if ( !popListOnly ){
 		//Local端開啟Coding用功能
 		if ( isRD() ){
@@ -617,7 +667,7 @@
 			gotoMobile();
 		}
 	}
-	checkUpdate("20251217");
+	checkUpdate("20251218");
 
 </script>
 </html>
