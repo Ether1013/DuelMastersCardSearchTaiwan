@@ -9395,10 +9395,9 @@
 		renderUI(); // 重繪確保顯示正常
 	}
 	
-	// --- [新增] 圖片預載入函式 ---
-    // --- [修正版] 圖片預載入函式 ---
+	// --- [修正版] 圖片預載入函式 (支援 Cut-In 網路圖片) ---
 	function preloadImagesFromRegistry() {
-		console.log("正在掃描並預載入外部圖片...");
+		console.log("正在掃描並預載入圖片...");
 		let count = 0;
 
 		// 1. 預載劇本中的圖片 (Registry)
@@ -9410,24 +9409,33 @@
 			}
 		});
 
-		// 2. [新增] 預載寫死的猜拳圖片 (Hardcoded RPS)
-		// 因為它們不在 Registry 裡，所以我們要手動抓出來
-		// 請確認以下網址是否與您程式碼中寫死的一致，或是直接指向您的圖片變數
-		const rps_urls = [
-			// 如果您程式碼裡是用變數存的（例如 const IMG_ROCK = "..."），請直接填變數名
-			// 如果是直接寫死在函式裡的字串，請把那三個網址複製過來：
-            'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-056.jpg',   // ✊ 石頭 (Rock)
-            'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-103.jpg',   // 🖐️ 布 (Paper)
-            'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-060.jpg'    // ✌️ 剪刀 (Scissors)
-		];
+		// 2. [新增] 掃描歷史紀錄中的 Cut-In 網路圖片 (Reality Break)
+		if (typeof history !== 'undefined' && Array.isArray(history)) {
+			history.forEach(step => {
+				if (step.action && step.action.operations) {
+					step.action.operations.forEach(op => {
+						// 檢查是否為特效操作，且包含 imgUrl (網路連結)
+						if (op.type === 'REALITY_BREAK' && op.data && op.data.imgUrl) {
+							const img = new Image();
+							img.src = op.data.imgUrl;
+							count++;
+							// console.log("預載 Cut-In URL:", op.data.imgUrl);
+						}
+					});
+				}
+			});
+		}
 
+		// 3. 預載寫死的猜拳圖片 (Hardcoded RPS)
+		const rps_urls = [
+			'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-056.jpg',
+			'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-103.jpg',
+			'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-060.jpg'
+		];
 		rps_urls.forEach(src => {
-			if (src && !src.startsWith('data:')) { // 同樣排除 base64
-				const img = new Image();
-				img.src = src;
-				console.log("預載系統圖片:", src);
-				count++;
-			}
+			const img = new Image();
+			img.src = src;
+			count++;
 		});
 
 		if (count > 0) {
