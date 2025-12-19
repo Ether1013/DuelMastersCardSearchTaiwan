@@ -938,12 +938,20 @@
     }
     @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-    /* EX-Life Overlay */
+    /* EX-Life Overlay 修訂 */
     .ex-life-overlay {
-        position: absolute; top: 20%; left: 0; width: 100%; height: 40%; z-index: 15;
-        background-size: cover; background-position: center; background-repeat: no-repeat;
-        border-top: 1px dashed rgba(255,255,255,0.5); border-bottom: 1px dashed rgba(255,255,255,0.5);
-        pointer-events: none; opacity: 0.9;
+        position: absolute; 
+        top: 20%; 
+        left: 0; 
+        width: 100%; 
+        height: 40%; 
+        z-index: 15;
+        /* 移除原本的 background-size: cover，由 JS 動態控制或寫死在 CSS */
+        border-top: 1px dashed rgba(255,255,255,0.5); 
+        border-bottom: 1px dashed rgba(255,255,255,0.5);
+        pointer-events: none; 
+        opacity: 0.9;
+        overflow: hidden; /* 確保內容不溢出 */
     }
     .ex-life-close {
         position: absolute; top: -6px; right: -6px; width: 14px; height: 14px;
@@ -1806,6 +1814,7 @@
 	.side-zone-group {
 		width: 215px; 
 	}
+	
 </style>
 </head>
 <body>
@@ -8267,20 +8276,33 @@
         
         // EX-Life 覆蓋層
         if (card.exLifeKey) {
-            const imgSrc = globalImageRegistry[card.exLifeKey];
-            if (imgSrc) {
-                const overlay = document.createElement('div');
-                overlay.className = 'ex-life-overlay';
-                overlay.style.backgroundImage = `url(${imgSrc})`;
-                const closeBtn = document.createElement('div');
-                closeBtn.className = 'ex-life-close';
-                closeBtn.innerText = '✕';
-                closeBtn.title = '移除 EX-Life';
-                closeBtn.onclick = (e) => { e.stopPropagation(); removeExLife(card.id); };
-                overlay.appendChild(closeBtn);
-                el.appendChild(overlay);
-            }
-        }
+			const imgSrc = globalImageRegistry[card.exLifeKey];
+			if (imgSrc) {
+				const overlay = document.createElement('div');
+				overlay.className = 'ex-life-overlay';
+				
+				// 直接引用原始圖片
+				overlay.style.backgroundImage = `url(${imgSrc})`;
+				
+				// 參考效果小卡的呈現邏輯：
+				// 固定顯示中心 (50% 50%)，縮放倍率維持 1.0 (或依需求微調)
+				// 不需要 UI 調整，直接寫死原始擷取位置
+				overlay.style.backgroundPosition = 'center';
+				overlay.style.backgroundSize = '120%'; // 稍微放大以符合擷取感
+				overlay.style.backgroundRepeat = 'no-repeat';
+
+				const closeBtn = document.createElement('div');
+				closeBtn.className = 'ex-life-close';
+				closeBtn.innerText = '✕';
+				closeBtn.title = '移除 EX-Life';
+				closeBtn.onclick = (e) => {
+					e.stopPropagation();
+					removeExLife(card.id);
+				};
+				overlay.appendChild(closeBtn);
+				el.appendChild(overlay);
+			}
+		}
         
         setTimeout(() => el.classList.add('interactive'), 0);
         return el;
@@ -8468,65 +8490,20 @@
 		}
 	}
 	
-	// 3. 處理選擇並生成圖片
-	function processExLifeSelection(sourceCardId) {
+	function processExLifeSelection(materialCardId) {
 		const state = getCurrentDisplayState();
-		const sourceCard = state.cards.find(c => c.id === sourceCardId);
+		const materialCard = state.cards.find(c => c.id === materialCardId);
 		
-		// 驗證：必須是戰鬥區
-		if (!sourceCard || !sourceCard.zone.includes('battle')) {
-			alert("請選擇戰鬥區的卡片！");
-			return;
-		}
+		if (!materialCard || !materialCard.imageKey) return;
 
-		// 取得來源圖片 Key
-		const imgKey = sourceCard.imageKey;
-		const srcBase64 = globalImageRegistry[imgKey];
+		// 直接將素材的 imageKey 存入目標護盾的 exLifeKey
+		addOperation({
+			type: 'SET_EX_LIFE',
+			targetId: exLifeTargetId,
+			imgKey: materialCard.imageKey // 不再傳入新的 canvas 圖片，而是原始引用
+		});
 
-		if (!srcBase64) {
-			alert("這張卡片沒有圖片，無法製作 EX-Life。");
-			return;
-		}
-
-		// 開始裁切處理
-		const img = new Image();
-		img.onload = () => {
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
-
-			// 設定 Canvas 尺寸 (寬度不變，高度取 40%)
-			const w = img.width;
-			const h = img.height;
-			const cropY = h * 0.2; // 上緣起 20%
-			const cropH = h * 0.4; // 取 40% 高度 (20%~60%)
-
-			canvas.width = w;
-			canvas.height = cropH;
-
-			// 1. 設定灰階濾鏡
-			ctx.filter = 'grayscale(100%)';
-			
-			// 2. 繪製裁切區域
-			// drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
-			ctx.drawImage(img, 0, cropY, w, cropH, 0, 0, w, cropH);
-
-			// 3. 輸出 Base64
-			const resultBase64 = canvas.toDataURL('image/jpeg', 0.85);
-			
-			// 4. 註冊新圖片到全域 (使用特殊前綴避免衝突)
-			const newImgKey = `exlife_${Date.now()}_${Math.floor(Math.random()*1000)}`;
-			globalImageRegistry[newImgKey] = resultBase64;
-
-			addOperation({
-				type: 'SET_EX_LIFE',
-				targetId: exLifeTargetId,
-				imgKey: newImgKey
-			});
-
-			// 6. 結束模式
-			cancelPointMode();
-		};
-		img.src = srcBase64;
+		cancelPointMode(); // 結束選擇模式
 	}
 
 	// 4. 移除 EX-Life
