@@ -2493,6 +2493,14 @@
 			speed: 1,
             lang: 'zh',
         },
+        {
+            filename: 'script_test.txt',
+            title: '封殺車 VS 三魂',
+            description: '隨時都會更換內容的測試用對局',
+			counter_url: 'https://www.f-counter.net/j/66/1766109155/',
+			speed: 1,
+            lang: 'zh',
+        },
         // 您可以在此擴充更多劇本...
     ];
 	// [新增] 用來記錄當前正在運行的劇本設定 (包含 credits)
@@ -5624,28 +5632,32 @@
     }
 
     function selectBGMPreview(filename) {
-        tempSelectedBgm = filename;
-        
-        // UI 更新
-        document.querySelectorAll('.bgm-item').forEach(el => {
-            el.classList.remove('selected', 'playing-preview');
-            // dataset.file 是字串，null 會變空字串
-            const targetVal = filename === null ? '' : filename;
-            if (el.dataset.file === targetVal) {
-                el.classList.add('selected');
-                if (filename) el.classList.add('playing-preview'); // 只有非停止才有喇叭圖示
-            }
-        });
+		tempSelectedBgm = filename;
 
-        // 試聽邏輯
-        if (filename) {
-            previewAudioPlayer.src = BGM_FOLDER + filename;
-            previewAudioPlayer.currentTime = 0;
-            previewAudioPlayer.play().catch(e => console.warn("Preview play failed", e));
-        } else {
-            previewAudioPlayer.pause();
-        }
-    }
+		// [新增] 當使用者開始選擇/試聽音樂時，先暫停原本全域播放器正在撥放的音樂
+		if (typeof globalAudioPlayer !== 'undefined') {
+			globalAudioPlayer.pause();
+		}
+
+		// UI 更新 (維持原樣)
+		document.querySelectorAll('.bgm-item').forEach(el => {
+			el.classList.remove('selected', 'playing-preview');
+			const targetVal = filename === null ? '' : filename;
+			if (el.dataset.file === targetVal) {
+				el.classList.add('selected');
+				if (filename) el.classList.add('playing-preview');
+			}
+		});
+
+		// 試聽邏輯 (維持原樣)
+		if (filename) {
+			previewAudioPlayer.src = BGM_FOLDER + filename;
+			previewAudioPlayer.currentTime = 0;
+			previewAudioPlayer.play().catch(e => console.warn("Preview play failed", e));
+		} else {
+			previewAudioPlayer.pause();
+		}
+	}
 
     function closeBGMModal() {
         document.getElementById('bgm-modal').style.display = 'none';
