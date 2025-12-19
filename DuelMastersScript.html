@@ -381,16 +381,32 @@
     
     .side-zone-group {
 		display: flex;
-		flex-direction: row; /* 確保橫向排列 */
-		flex-wrap: nowrap;   /* 禁止換行 */
+		flex-direction: row;
+		flex-wrap: nowrap;
 		gap: 3px;
 		padding: 0 5px;
-		/* 原本約 170px，現在有 Deck, Grave, Hyper, Abyss 四區 */
-		/* 40px * 4 + 間距 ≈ 175px，我們抓寬一點避免擠壓 */
 		width: 215px; 
 		align-items: center;
 		justify-content: flex-start;
+		/* 新增：防止被左側手牌區擠壓 */
+		flex-shrink: 0 !important; 
 	}
+	
+	/* 修正：針對側邊群組內的堆疊區給予固定寬度 */
+	.side-zone-group .stacked {
+		/* 取消原本的 flex: 1，改為固定不壓縮 */
+		flex: 0 0 50px !important; 
+		width: 50px;
+		justify-content: center;
+		cursor: zoom-in;
+		background: rgba(0,0,0,0.1);
+		border: 1px solid rgba(0,0,0,0.3);
+		/* 確保內部卡片置中且不溢出導致重疊 */
+		display: flex;
+		align-items: center;
+		position: relative;
+	}
+
     .stacked { flex: 1; justify-content: center; cursor: zoom-in; background: rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.3); }
     
     /* =========================================
@@ -627,6 +643,10 @@
         background-image: radial-gradient(circle, #34495e 10%, transparent 10%);
         background-size: 15px 15px; border: 1px solid white; color: transparent; 
     }
+	
+	.card.face-down .ace-star-mark {
+		display: none !important;
+	}
 
     .card-note {
         position: absolute; top: 1px; left: 2px; right: 2px;
@@ -1963,12 +1983,12 @@
 						<button class="random-pick-btn" onclick="event.stopPropagation(); randomPickHand('p1-hand')" data-i18n="btn_random_pick" title="Random Select">🎲 隨機</button>
 					</div>
                     <div class="side-zone-group">
+                        <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
+                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
+                        <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
 						<div class="abyss-zone zone stacked" data-zone="p1-abyss" onclick="handleZoneClick('p1-abyss')">
 							<span class="zone-label" data-i18n="zone_abyss">深淵</span>
 						</div>
-                        <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
-                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
-                        <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
                     </div>
                 </div>
             </div>
@@ -2316,10 +2336,6 @@
             <div style="margin-bottom: 12px;">
                 <div style="font-weight:bold; color:#2c3e50;">Music / BGM Assets</div>
                 <div>魔王魂 (<a href="https://maou.audio" target="_blank" style="color:#e67e22; text-decoration:none;">maou.audio</a>)</div>
-            </div>
-			<div style="margin-bottom: 12px;">
-                <div style="font-weight:bold; color:#2c3e50;">Language Guidance</div>
-                <div>SHAO</div>
             </div>
         </div>
 
