@@ -2147,6 +2147,58 @@
 			getById("HK").checked = true;
 		}
 		getByName("rLan")[0].click();
+
+		// [新增] 手動重置自定義 Race Selector (PC, Mobile, 進階搜尋)
+		const raceContainers = ["raceContainer_PC", "raceContainer_Mobile", "abRaceContainer_PC"];
+		for (const cid of raceContainers) {
+			const container = getById(cid);
+			if (!container) continue;
+
+			// 1. 移除多餘的列 (保留第一列，刪除其餘)
+			const rows = container.getElementsByClassName("race-row");
+			while (rows.length > 1) {
+				container.removeChild(rows[rows.length - 1]);
+			}
+
+			// 2. 重置第一列的狀態
+			if (rows.length > 0) {
+				const row = rows[0];
+				
+				// 清空顯示框
+				const disp = row.querySelector(".race-input-display");
+				if (disp) disp.value = "";
+				
+				// 清空隱藏值
+				const hidden = row.querySelector("input[type='hidden']");
+				if (hidden) hidden.value = "";
+				
+				// 取消全符合勾選
+				const abs = row.querySelector("input[name='raceAbsolute']");
+				if (abs) abs.checked = false;
+
+				// 還原「清除按鈕」樣式 (變回無效狀態的灰色)
+				const clearBtn = row.querySelector("span[title='清除']");
+				if (clearBtn) {
+					clearBtn.style.color = "#999";
+					clearBtn.style.backgroundColor = "transparent";
+					clearBtn.style.boxShadow = "none";
+				}
+			}
+		}
+
+		// [新增] 順便重置自定義 Ability Selector (避免進階搜尋的能力欄位殘留多餘列)
+		const abilityContainers = ["abilityContainer_PC", "abilityContainer_Mobile"];
+		for (const cid of abilityContainers) {
+			const container = getById(cid);
+			if (!container) continue;
+			const rows = container.getElementsByClassName("ability-row");
+			// 移除多餘列
+			while (rows.length > 1) {
+				container.removeChild(rows[rows.length - 1]);
+			}
+			// 第一列的值會被上面的 $formObj[0].reset() 重置為預設選項，無需額外處理
+		}
+
 		//文明過濾初始化
 		getByName("allowCivil").forEach(btn => btn.className = "btnClick");
 		getByName("allowType").forEach(btn => btn.className = "btnClick");
@@ -4712,7 +4764,7 @@
 
 	// -----------------------------------------------------------
 	// [修改函數] filter_adv (修正版)
-	// 修正重點：關閉進階過濾時，保留第一列 (基本搜尋區) 的能力過濾值
+	// 修正重點：關閉進階過濾時，清除 ab_race 的內容與樣式
 	// -----------------------------------------------------------
 	const filter_adv = (obj) => {
 		const doOpen = "＋" === obj.innerText; // 判斷是要開啟還是關閉
@@ -4741,7 +4793,7 @@
 			}
 		}
 
-		// --- [新增] 能力 UI 控制 ---
+		// --- 能力 UI 控制 ---
 		const abilityContainers = [getById("abilityContainer_PC"), getById("abilityContainer_Mobile")];
 		for (const container of abilityContainers) {
 			if (!container) continue;
@@ -4757,9 +4809,6 @@
 				while (rows.length > 1) {
 					container.removeChild(rows[rows.length - 1]);
 				}
-				
-				// [修正] 這裡移除了原本重置第一列值的程式碼
-				// 讓使用者切換回基本搜尋時，原本選的值還在
 			}
 		}
 
@@ -4791,20 +4840,24 @@
 			setCheckboxValue( "soul" , null );
 			setCheckboxValue( "rarility" , null );
 			
-			// [修正] ab_race 現在是 createRaceInput 生成的，有 inputDisplay 和 hiddenInput
-			// 要把 hiddenInput 的值清空，並把 display input 清空
-			const abRaceContainer = getById("ab_race_container"); // 注意 id 變化
+			// [修正] 關閉時清除 ab_race (進階搜尋中的種族欄位)
+			// 注意：HTML 中的 ID 是 abRaceContainer_PC
+			const abRaceContainer = getById("abRaceContainer_PC"); 
 			if (abRaceContainer) {
 				 const hidden = abRaceContainer.querySelector("input[type='hidden']");
 				 const display = abRaceContainer.querySelector(".race-input-display");
+				 const absCheck = abRaceContainer.querySelector("input[name='raceAbsolute']");
+				 
 				 if (hidden) hidden.value = "";
 				 if (display) display.value = "";
-				 // 也要隱藏清除按鈕的錯誤狀態 (如果有)
+				 if (absCheck) absCheck.checked = false;
+
+				 // 也要還原清除按鈕的樣式 (變回灰色)
 				 const clearBtn = abRaceContainer.querySelector("span[title*='清除']");
 				 if (clearBtn) {
 					 clearBtn.style.color = "#999";
 					 clearBtn.style.backgroundColor = "transparent";
-					 clearBtn.boxShadow = "none";
+					 clearBtn.style.boxShadow = "none";
 				 }
 			}
 			setSelectValue2( getById( "ab_name" ) , "" );
