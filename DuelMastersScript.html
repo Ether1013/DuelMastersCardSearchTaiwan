@@ -1835,6 +1835,39 @@
 		width: 215px; 
 	}
 	
+	
+	/* === 編輯模式專用樣式 (Edit Mode Veil) === */
+	/* 當進入編輯模式時，讓所有 ActionLog 變淡、模糊並無法點擊 */
+	body.in-edit-mode .action-item {
+		opacity: 0.2;
+		pointer-events: none; /* 禁止點擊 */
+		filter: blur(1px) grayscale(0.5); /* 模糊與灰階效果 */
+		transition: all 0.3s ease;
+	}
+
+	/* [例外] 正在編輯的項目 (editing) 與 新增中的虛線框 (placeholder) 保持清晰 */
+	body.in-edit-mode .action-item.editing,
+	body.in-edit-mode .action-item.placeholder {
+		opacity: 1 !important;
+		pointer-events: auto !important; /* 恢復可點擊 */
+		filter: none !important;
+		z-index: 100; /* 確保浮在最上層 */
+		box-shadow: 0 0 15px rgba(0,0,0,0.3); /* 加強凸顯效果 */
+		transform: scale(1.02); /* 稍微放大 */
+	}
+
+	/* 鎖定 ActionLog 列表的 Scrollbar (隱藏捲軸) */
+	body.in-edit-mode #action-list {
+		overflow-y: hidden !important;
+		padding-right: 5px; /* 避免捲軸消失造成的版面跳動 */
+	}
+
+	/* 鎖定下方進度條 (無法拖曳) */
+	body.in-edit-mode #playback-slider {
+		pointer-events: none !important;
+		opacity: 0.3;
+		cursor: not-allowed;
+	}
 </style>
 </head>
 <body>
@@ -8758,6 +8791,11 @@
 	}
 
     function renderTimeline() {
+	
+		// [新增] 根據編輯狀態切換 body 的 class，啟動 CSS 薄紗效果
+		if (isDrafting) document.body.classList.add('in-edit-mode');
+		else document.body.classList.remove('in-edit-mode');
+		
         const list = document.getElementById('action-list');
         list.innerHTML = '';
         
