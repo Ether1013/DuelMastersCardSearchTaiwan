@@ -1868,6 +1868,58 @@
 		opacity: 0.3;
 		cursor: not-allowed;
 	}
+	
+	/* --- [新增] 回合切換切入動畫 (Turn Cut-In) --- */
+	#turn-transition-overlay {
+		position: fixed;
+		top: 40%;
+		left: 0;
+		width: 100%;
+		height: 150px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.85); /* 深色背景 */
+		z-index: 9999;
+		opacity: 0;
+		pointer-events: none;
+		transform: scaleX(0); /* 初始收縮 */
+		transition: transform 0.2s ease-out, opacity 0.2s ease-in;
+	}
+
+	#turn-transition-overlay.active {
+		opacity: 1;
+		transform: scaleX(1); /* 展開 */
+		pointer-events: auto;
+	}
+
+	#tto-content {
+		font-size: 3.5rem;
+		font-weight: 900;
+		font-style: italic;
+		color: white;
+		text-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		opacity: 0;
+		transform: translateY(20px);
+		transition: all 0.3s ease-out 0.2s; /* 延遲顯示文字 */
+	}
+
+	#turn-transition-overlay.active #tto-content {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	/* 裝飾線條 */
+	.tto-line {
+		height: 4px;
+		flex: 1;
+		background: white;
+		box-shadow: 0 0 10px currentColor;
+	}
 </style>
 </head>
 <body>
@@ -2920,6 +2972,7 @@
 			'msg_truncate_confirm': '⚠️ 危險操作 ⚠️\n\n確定要刪除此處 (Step #{n}) 之後的所有 ActionLog 嗎？',
 			'msg_truncate_backup': '這個動作會刪除大量資料，是否要先匯出備份？\n\n(按「確定」= 匯出並刪除，按「取消」= 直接刪除)',
 			'btn_random_pick': '🎲 隨機',
+			'msg_turn_change': "交換回合至 {player} Turn {count}",
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3047,6 +3100,7 @@
 			'msg_truncate_confirm': '⚠️ DANGER ⚠️\n\nAre you sure you want to delete all steps after Step #{n}?',
 			'msg_truncate_backup': 'This action will delete a large amount of data. Do you want to export a backup first?\n\n(OK = Export & Delete, Cancel = Delete immediately)',
 			'btn_random_pick': '🎲 Random',
+			'msg_turn_change': "Turn Change to {player} Turn {count}",
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3174,6 +3228,7 @@
 			'msg_truncate_confirm': '⚠️ 危険な操作 ⚠️\n\nここ (Step #{n}) から後のすべてのアクションを削除しますか？',
 			'msg_truncate_backup': 'この操作は大量のデータを削除します。先にバックアップをエクスポートしますか？\n\n(OK = エクスポートして削除, キャンセル = そのまま削除)',
 			'btn_random_pick': '🎲 ランダム',
+			'msg_turn_change': "{player} Turn {count} へターン交代",
 		}
 	};
 	
@@ -9159,118 +9214,184 @@
         if(!document.body.classList.contains('mobile-mode')) saveToStorage();
     }
 
-    // --- [修改] playNextStep 函式 (整合手機版特寫邏輯) ---
-    function playNextStep() {
-        if (currentIndex < history.length - 1) {
-            const prevBgm = history[currentIndex].state.bgm;
-            
-            currentIndex++;
-            renderUI();
-            if(!document.body.classList.contains('mobile-mode')) saveToStorage();
-            
-            const currState = history[currentIndex].state;
-            const currBgm = currState.bgm;
+    // --- [修改] 播放下一步 (playNextStep) - 支援回合切換插播 ---
+	// 請用此函式「完全替換」原有的 playNextStep
+	let isTurnAnimPlaying = false; // 防止重複觸發的旗標
 
-            // BGM 檢查
-            if (currBgm !== prevBgm) {
-                if (currBgm) {
-                    if (!globalAudioPlayer.src.includes(encodeURI(currBgm))) {
-                        globalAudioPlayer.src = BGM_FOLDER + currBgm;
-                        globalAudioPlayer.play().catch(e => {});
-                    } else {
-                        globalAudioPlayer.play().catch(e => {});
-                    }
-                } else {
-                    globalAudioPlayer.pause();
-                }
-            }
-			
-			// [關鍵修復] 補回這一行！下方的延遲計算需要用到它，否則會報錯
-            const currAction = history[currentIndex].action;
+	function playNextStep() {
+		// 如果正在播動畫，直接暫停邏輯，等待動畫回調
+		if (isTurnAnimPlaying) return;
 
-            // --- [修正版 v2] 判斷是否有卡片進入戰鬥區 (狀態比對 + 堆疊過濾) ---
-            const isMobile = document.body.classList.contains('mobile-mode');
-            let battleEntryIds = [];
+		if (currentIndex < history.length - 1) {
+			const nextIndex = currentIndex + 1;
+			const currState = history[currentIndex].state;
+			const nextState = history[nextIndex].state;
 
-            if (isMobile) {
-                // 1. 取得這一步的結果狀態 (Current)
-                const currState = history[currentIndex].state;
-                // 2. 取得這一步之前的狀態 (Previous)
-                const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
+			// --- [新增] 檢查回合是否切換 ---
+			// 條件：當前玩家與下一步玩家不同 且 是在自動播放模式
+			if (currState.turnPlayer !== nextState.turnPlayer) {
+				// 暫停計時器 (確保不會有雙重觸發)
+				if (playTimeout) clearTimeout(playTimeout);
+				
+				isTurnAnimPlaying = true; // 鎖定
+				
+				// 計算這是該玩家的第幾回合
+				const nextPlayer = nextState.turnPlayer;
+				const turnCount = getTurnCount(nextIndex, nextPlayer);
 
-                // 3. 掃描當前狀態的所有卡片
-                currState.cards.forEach(currCard => {
-                    // A. 終點檢查：必須現在位於戰鬥區 (battle)
-                    if (!currCard.zone.includes('battle')) return;
+				// 播放動畫 -> 結束後執行回調
+				showTurnTransition(nextPlayer, turnCount, () => {
+					isTurnAnimPlaying = false; // 解鎖
+					// 動畫結束，這裡不手動 currentIndex++，而是再次呼叫 playNextStep
+					// 但因為這一次 currState.turnPlayer === nextState.turnPlayer 依然成立 (我們還沒前進)
+					// 所以會造成無窮迴圈？
+					// 不會，因為我們需要在這裡「手動前進」一步，然後再設 timer
+					
+					performStepLogic(nextIndex); // 執行真正的換頁邏輯
+				});
+				return; // 中斷本次執行
+			}
 
-                    // B. 狀態檢查：必須是表側 (Face Up)
-                    if (!currCard.faceUp) return;
+			// --- 正常播放邏輯 ---
+			performStepLogic(nextIndex);
 
-                    // C. [新增] 堆疊檢查：不能是「被壓在底下」的牌 (進化元)
-                    // 如果這一步結束時，它是 bottom (底下) 或 bottom_exposed (露底)，代表它被蓋住了，不應特寫
-                    if (currCard.stackType === 'bottom' || currCard.stackType === 'bottom_exposed') return;
+		} else {
+			// 播放結束
+			stopPlayback();
+			setTimeout(() => { triggerEnding(); }, 2000);
+		}
+	}
 
-                    // D. 起點檢查：比對上一個狀態
-                    const prevCard = prevState.cards.find(c => c.id === currCard.id);
+	// --- [新增] 抽離出來的步驟執行邏輯 (供上面呼叫) ---
+	function performStepLogic(nextIndex) {
+		const prevBgm = history[currentIndex].state.bgm;
+		
+		currentIndex = nextIndex; // 前進一步
+		
+		renderUI();
+		if(!document.body.classList.contains('mobile-mode')) saveToStorage();
 
-                    // 如果上一個狀態這張卡「已經在戰鬥區」，代表它只是在場上移動、合體或轉向，不觸發特寫
-                    if (prevCard && prevCard.zone.includes('battle')) return;
+		const currState = history[currentIndex].state;
+		const currAction = history[currentIndex].action; // 取得 Action 物件
+		
+		// BGM 檢查
+		const currBgm = currState.bgm;
+		if (currBgm !== prevBgm) {
+			if (currBgm) {
+				const bgmSrc = BGM_FOLDER + currBgm;
+				if (!globalAudioPlayer.src.includes(encodeURI(currBgm))) {
+					globalAudioPlayer.src = bgmSrc;
+					globalAudioPlayer.play().catch(e => {});
+				} else {
+					globalAudioPlayer.play().catch(e => {});
+				}
+			} else {
+				globalAudioPlayer.pause();
+			}
+		}
 
-                    // 通過所有檢查，加入特寫清單
-                    battleEntryIds.push(currCard.id);
-                });
-            }
+		// --- 延遲計算邏輯 (維持原有) ---
+		let delay = TIME_ACTION_BASE;
+		const currOp = currAction.operations ? currAction.operations[0] : null;
 
-            // 計算標準延遲
-            let delay = TIME_ACTION_BASE;
-            const currOp = currAction.operations ? currAction.operations[0] : null;
+		// 特殊動作延遲判斷
+		if (currAction.operations.length === 1 && currOp && currOp.type === 'SET_BGM') {
+			delay = 50;
+		} else if (currOp && currOp.type === 'REALITY_BREAK') {
+			delay = 2800;
+		} else if (currOp && currOp.type === 'RPS') {
+			delay = 4000;
+		} else if (currOp && currOp.type === 'DIALOGUE') {
+			delay = 1500;
+		} else if (currOp && currOp.type === 'MOVE' && currOp.withShuffleAnim) {
+			delay = 1500;
+		}
 
-            if (currAction.operations.length === 1 && currOp && currOp.type === 'SET_BGM') {
-                delay = 50; 
-            }
-            else if (currOp && currOp.type === 'REALITY_BREAK') {
-                delay = 2800; 
-            }
-            else if (currOp && currOp.type === 'RPS') {
-                delay = 4000; 
-            }
-            else if (currOp && currOp.type === 'DIALOGUE') {
-                // 簡易估算，若有完整邏輯請保留
-                delay = 1500;
-            }
-			else if (currOp && currOp.type === 'MOVE' && currOp.withShuffleAnim) {
-                delay = 1500; 
-            }
+		// 手機版戰鬥特寫邏輯 (維持原有)
+		const isMobile = document.body.classList.contains('mobile-mode');
+		let battleEntryIds = [];
+		if (isMobile) {
+			const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
+			currState.cards.forEach(currCard => {
+				if (!currCard.zone.includes('battle')) return;
+				if (!currCard.faceUp) return;
+				if (currCard.stackType === 'bottom' || currCard.stackType === 'bottom_exposed') return;
+				const prevCard = prevState.cards.find(c => c.id === currCard.id);
+				if (prevCard && prevCard.zone.includes('battle')) return;
+				battleEntryIds.push(currCard.id);
+			});
+		}
 
-            let finalDelay = delay * currentSpeedFactor;
+		let finalDelay = delay * currentSpeedFactor;
 
-            // [核心修改] 分流邏輯
-            if (battleEntryIds.length > 0) {
-                // 如果有卡片進戰場：
-                // 原本是 600，現在改為 1500
-                // 500ms (飛行) + 900ms (王牌特效) + 100ms (緩衝) = 1500ms
-                playTimeout = setTimeout(() => {
-                    runMobileBattleZoomSequence(battleEntryIds, () => {
-                        playNextStep(); // 序列播完，繼續下一步
-                    });
-                }, 1500);
-            } else {
-                // 一般情況：使用標準延遲
-                playTimeout = setTimeout(playNextStep, finalDelay);
-            }
-            
-        } else {
-            // 播放結束
-			playTimeout = null;
-			updatePlayButtonUI();
-			setTimeout(() => {
-				triggerEnding();
-			}, 2000);
-        }
-    }
+		if (battleEntryIds.length > 0) {
+			playTimeout = setTimeout(() => {
+				if (typeof runMobileBattleZoomSequence === 'function') {
+					runMobileBattleZoomSequence(battleEntryIds, () => {
+						playNextStep();
+					});
+				} else {
+					playNextStep();
+				}
+			}, 1500);
+		} else {
+			playTimeout = setTimeout(playNextStep, finalDelay);
+		}
+	}
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
     
+	// --- [新增] 計算當前是該玩家的第幾回合 ---
+	function getTurnCount(targetIndex, playerId) {
+		let count = 1; // 預設第1回合
+		// 從頭開始掃描到目標步驟
+		for (let i = 1; i <= targetIndex; i++) {
+			if (i >= history.length) break;
+			const prevFn = history[i-1].state.turnPlayer;
+			const currFn = history[i].state.turnPlayer;
+			
+			// 如果回合權轉移給該玩家，計數+1
+			if (prevFn !== playerId && currFn === playerId) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	// --- [新增] 顯示過場動畫 ---
+	function showTurnTransition(nextPlayerId, turnCount, callback) {
+		const overlay = document.getElementById('turn-transition-overlay');
+		const content = document.getElementById('tto-content');
+		
+		// 1. 取得設定顏色與名稱
+		const colorKey = (nextPlayerId === 1) ? globalThemeSettings.p1 : globalThemeSettings.p2;
+		const theme = THEME_PALETTE[colorKey] || (nextPlayerId === 1 ? THEME_PALETTE.blue : THEME_PALETTE.red);
+		const pName = (nextPlayerId === 1) ? "1P" : "2P"; // 或從設定讀取名字
+		
+		// 2. 設定文字與顏色
+		const msg = t('msg_turn_change')
+			.replace('{player}', pName)
+			.replace('{count}', turnCount);
+			
+		content.innerHTML = `
+			<div class="tto-line" style="background:${theme.main}; box-shadow:0 0 15px ${theme.main}"></div>
+			<span style="color:${theme.main}; border-bottom: 3px solid ${theme.main}; padding-bottom:5px;">${msg}</span>
+			<div class="tto-line" style="background:${theme.main}; box-shadow:0 0 15px ${theme.main}"></div>
+		`;
+
+		// 3. 播放動畫
+		overlay.classList.add('active');
+
+		// 4. 停留 1.5 秒後消失並回調
+		setTimeout(() => {
+			overlay.classList.remove('active');
+			// 等待 CSS transition 結束 (0.2s) 後才繼續遊戲
+			setTimeout(() => {
+				if (callback) callback();
+			}, 200); 
+		}, 1500);
+	}
+
     function exportData() {
         // [新增] 在匯出前執行一次遷移腳本，確保舊資料都被優化
         optimizeAndMigrateImages(); 
@@ -12210,6 +12331,11 @@
         <div style="text-align:right; margin-top:15px;">
             <button class="danger" onclick="document.getElementById('import-selector-modal').style.display='none'" data-i18n="btn_cancel">取消 (Cancel)</button>
         </div>
+    </div>
+</div>
+<div id="turn-transition-overlay">
+    <div id="tto-content">
+        <span id="tto-text">TURN START</span>
     </div>
 </div>
 </body>
