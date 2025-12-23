@@ -2972,7 +2972,7 @@
 			'msg_truncate_confirm': '⚠️ 危險操作 ⚠️\n\n確定要刪除此處 (Step #{n}) 之後的所有 ActionLog 嗎？',
 			'msg_truncate_backup': '這個動作會刪除大量資料，是否要先匯出備份？\n\n(按「確定」= 匯出並刪除，按「取消」= 直接刪除)',
 			'btn_random_pick': '🎲 隨機',
-			'msg_turn_change': "交換回合至 {player} Turn {count}",
+			'msg_turn_change': "交換至 {player} 的回合",
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3100,7 +3100,7 @@
 			'msg_truncate_confirm': '⚠️ DANGER ⚠️\n\nAre you sure you want to delete all steps after Step #{n}?',
 			'msg_truncate_backup': 'This action will delete a large amount of data. Do you want to export a backup first?\n\n(OK = Export & Delete, Cancel = Delete immediately)',
 			'btn_random_pick': '🎲 Random',
-			'msg_turn_change': "Turn Change to {player} Turn {count}",
+			'msg_turn_change': "Switch to {player}\'s Turn",
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3228,7 +3228,7 @@
 			'msg_truncate_confirm': '⚠️ 危険な操作 ⚠️\n\nここ (Step #{n}) から後のすべてのアクションを削除しますか？',
 			'msg_truncate_backup': 'この操作は大量のデータを削除します。先にバックアップをエクスポートしますか？\n\n(OK = エクスポートして削除, キャンセル = そのまま削除)',
 			'btn_random_pick': '🎲 ランダム',
-			'msg_turn_change': "{player} Turn {count} へターン交代",
+			'msg_turn_change': "{player} のターンへ",
 		}
 	};
 	
@@ -9214,12 +9214,10 @@
         if(!document.body.classList.contains('mobile-mode')) saveToStorage();
     }
 
-    // --- [修改] 播放下一步 (playNextStep) - 支援回合切換插播 ---
-	// 請用此函式「完全替換」原有的 playNextStep
-	let isTurnAnimPlaying = false; // 防止重複觸發的旗標
+    // --- [修改] 播放下一步 (playNextStep) - 簡化版 ---
+	let isTurnAnimPlaying = false; 
 
 	function playNextStep() {
-		// 如果正在播動畫，直接暫停邏輯，等待動畫回調
 		if (isTurnAnimPlaying) return;
 
 		if (currentIndex < history.length - 1) {
@@ -9227,36 +9225,24 @@
 			const currState = history[currentIndex].state;
 			const nextState = history[nextIndex].state;
 
-			// --- [新增] 檢查回合是否切換 ---
-			// 條件：當前玩家與下一步玩家不同 且 是在自動播放模式
+			// 檢查回合是否切換 (且在自動播放中)
 			if (currState.turnPlayer !== nextState.turnPlayer) {
-				// 暫停計時器 (確保不會有雙重觸發)
 				if (playTimeout) clearTimeout(playTimeout);
+				isTurnAnimPlaying = true; 
 				
-				isTurnAnimPlaying = true; // 鎖定
-				
-				// 計算這是該玩家的第幾回合
 				const nextPlayer = nextState.turnPlayer;
-				const turnCount = getTurnCount(nextIndex, nextPlayer);
-
-				// 播放動畫 -> 結束後執行回調
-				showTurnTransition(nextPlayer, turnCount, () => {
-					isTurnAnimPlaying = false; // 解鎖
-					// 動畫結束，這裡不手動 currentIndex++，而是再次呼叫 playNextStep
-					// 但因為這一次 currState.turnPlayer === nextState.turnPlayer 依然成立 (我們還沒前進)
-					// 所以會造成無窮迴圈？
-					// 不會，因為我們需要在這裡「手動前進」一步，然後再設 timer
-					
-					performStepLogic(nextIndex); // 執行真正的換頁邏輯
+				
+				// 直接呼叫動畫，不需要傳入 turnCount
+				showTurnTransition(nextPlayer, () => {
+					isTurnAnimPlaying = false; 
+					performStepLogic(nextIndex); 
 				});
-				return; // 中斷本次執行
+				return; 
 			}
 
-			// --- 正常播放邏輯 ---
 			performStepLogic(nextIndex);
 
 		} else {
-			// 播放結束
 			stopPlayback();
 			setTimeout(() => { triggerEnding(); }, 2000);
 		}
@@ -9340,38 +9326,19 @@
 	}
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
-    
-	// --- [新增] 計算當前是該玩家的第幾回合 ---
-	function getTurnCount(targetIndex, playerId) {
-		let count = 1; // 預設第1回合
-		// 從頭開始掃描到目標步驟
-		for (let i = 1; i <= targetIndex; i++) {
-			if (i >= history.length) break;
-			const prevFn = history[i-1].state.turnPlayer;
-			const currFn = history[i].state.turnPlayer;
-			
-			// 如果回合權轉移給該玩家，計數+1
-			if (prevFn !== playerId && currFn === playerId) {
-				count++;
-			}
-		}
-		return count;
-	}
 
-	// --- [新增] 顯示過場動畫 ---
-	function showTurnTransition(nextPlayerId, turnCount, callback) {
+	// --- [修改] 顯示過場動畫 (不顯示回合數) ---
+	function showTurnTransition(nextPlayerId, callback) {
 		const overlay = document.getElementById('turn-transition-overlay');
 		const content = document.getElementById('tto-content');
 		
 		// 1. 取得設定顏色與名稱
 		const colorKey = (nextPlayerId === 1) ? globalThemeSettings.p1 : globalThemeSettings.p2;
 		const theme = THEME_PALETTE[colorKey] || (nextPlayerId === 1 ? THEME_PALETTE.blue : THEME_PALETTE.red);
-		const pName = (nextPlayerId === 1) ? "1P" : "2P"; // 或從設定讀取名字
+		const pName = (nextPlayerId === 1) ? "1P" : "2P"; 
 		
-		// 2. 設定文字與顏色
-		const msg = t('msg_turn_change')
-			.replace('{player}', pName)
-			.replace('{count}', turnCount);
+		// 2. 設定文字與顏色 (只替換 player，不需 count)
+		const msg = t('msg_turn_change').replace('{player}', pName);
 			
 		content.innerHTML = `
 			<div class="tto-line" style="background:${theme.main}; box-shadow:0 0 15px ${theme.main}"></div>
@@ -9385,7 +9352,6 @@
 		// 4. 停留 1.5 秒後消失並回調
 		setTimeout(() => {
 			overlay.classList.remove('active');
-			// 等待 CSS transition 結束 (0.2s) 後才繼續遊戲
 			setTimeout(() => {
 				if (callback) callback();
 			}, 200); 
