@@ -7712,72 +7712,72 @@
 		}
 	}
 
-	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 無抖動間距 ---
-	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 無抖動間距 ---
-	// --- [最終修正版] 戰鬥區佈局：防止高度累積 + 穩定 Margin + 凍結動畫 ---
+	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 後算間距 ---
 	function applyBattleZoneScaling() {
 		const state = getCurrentDisplayState();
 		const zones = [
 			{ id: 'p1-battle', el: document.querySelector('.battle-zone[data-zone="p1-battle"]') },
 			{ id: 'p2-battle', el: document.querySelector('.battle-zone[data-zone="p2-battle"]') }
 		];
-
-		const GAP_RATIO = 0.1; 
+		
+		// [修正 2] 移除預設 GAP_RATIO，改為動態計算
 		const allCards = state.cards;
 
 		// 1. 計算 Scale
 		const zoneCalculations = zones.map(zone => {
 			if (!zone.el) return null;
 			
-			// 【關鍵修正】在測量之前，先清除舊的 Padding！
-			// 這確保我們讀到的是「容器的原始高度」，而不是「被上次 Padding 撐高後的高度」
-			// 這能徹底解決「高度緩緩變化」的 BUG
+			// 清除舊 Padding 以取得真實高度
 			zone.el.style.paddingTop = '';
 			zone.el.style.paddingBottom = '';
-
+			
 			const style = window.getComputedStyle(zone.el);
 			const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
 			
-			// 讀取高度 (此時已是乾淨的高度)
-			const containerH = zone.el.clientHeight; 
+			const containerH = zone.el.clientHeight;
 			const availW = zone.el.clientWidth - paddingX;
-
+			
 			const rootCards = allCards.filter(c => c.zone === zone.id && !c.parentId);
 			
 			if (rootCards.length === 0) {
-				return { hasCards: false, idealScale: Infinity, maxSafeHeight: 0, containerH };
+				return { hasCards: false, idealScale: Infinity, maxSafeHeight: 0, containerH, availW, rootCount: 0 };
 			}
 
 			let totalSafeWidth = 0;
 			let maxSafeHeight = 0;
 
 			rootCards.forEach(root => {
-				// 使用修正後的 measure 函式 (穩定預測無月之門)
 				const b0 = measureCardGroupBounds(root, allCards, 0);
 				const b90 = measureCardGroupBounds(root, allCards, 90);
 				
 				const safeW = Math.max(b0.width, b90.width);
 				const safeH = Math.max(b0.height, b90.height);
-
-				totalSafeWidth += safeW * (1 + GAP_RATIO);
+				
+				// [修正 2] 累加時不包含間距，只計算純內容寬度
+				totalSafeWidth += safeW; 
 				if (safeH > maxSafeHeight) maxSafeHeight = safeH;
 			});
 
-			const targetH = containerH * 0.9; 
+			const targetH = containerH * 0.9;
 			const scaleByHeight = targetH / maxSafeHeight;
-			const scaleByWidth = availW / totalSafeWidth;
-			
-			return {
-				hasCards: true,
-				idealScale: Math.min(scaleByHeight, scaleByWidth),
-				maxSafeHeight: maxSafeHeight,
-				containerH: containerH
+			const scaleByWidth = availW / totalSafeWidth; // [修正 2] 分母不含間距，允許卡片緊貼以獲得最大尺寸
+
+			return { 
+				hasCards: true, 
+				idealScale: Math.min(scaleByHeight, scaleByWidth), 
+				maxSafeHeight: maxSafeHeight, 
+				containerH: containerH,
+				availW: availW,
+				totalBaseWidth: totalSafeWidth,
+				rootCount: rootCards.length
 			};
 		});
 
 		// 2. 決定全域 Scale (取最小值)
 		const isMobile = document.body.classList.contains('mobile-mode');
-		const maxScaleLimit = isMobile ? 1.8 : 2.2; 
+		
+		// [修正 1] 放寬最大縮放限制 (2.2 -> 10.0)，解決瀏覽器縮放時卡片無法最大化的問題
+		const maxScaleLimit = isMobile ? 1.8 : 10.0; 
 		const minScaleLimit = 0.3;
 
 		const validScales = zoneCalculations.filter(res => res && res.hasCards).map(res => res.idealScale);
@@ -7794,32 +7794,55 @@
 
 			zone.el.style.setProperty('--bz-scale', finalScale);
 
-			// 重新計算並套用 Padding (這時候再加回去)
 			if (calc.hasCards) {
+				// 垂直置中 Padding
 				const visualHeight = calc.maxSafeHeight * finalScale;
 				const paddingV = Math.max(0, (calc.containerH - visualHeight) / 2);
 				zone.el.style.paddingTop = `${paddingV}px`;
 				zone.el.style.paddingBottom = `${paddingV}px`;
+				
+				// [修正 2] 這裡才開始計算間距 (後算)
+				// 剩餘空間 = 容器寬度 - (純內容寬度 * 縮放比例)
+				const occupiedW = calc.totalBaseWidth * finalScale;
+				const remainingW = calc.availW - occupiedW;
+				
+				let gapPerCard = 0;
+				if (calc.rootCount > 1) {
+					// 將剩餘空間分配給間距 (如果卡片是因高度受限，剩餘空間會很大)
+					const gapTotal = Math.max(0, remainingW);
+					// 分配策略：讓卡片之間有空隙
+					gapPerCard = gapTotal / (calc.rootCount + 1); 
+					
+					// 設定間距上限 (例如卡片寬度的 25%)，避免卡片分太開
+					const maxGap = (60 * finalScale) * 0.25; 
+					if (gapPerCard > maxGap) gapPerCard = maxGap;
+				}
+
+				const groupEls = Array.from(zone.el.querySelectorAll('.card-group'));
+				groupEls.forEach((groupDiv) => {
+					const baseW = parseFloat(groupDiv.dataset.baseW || 60);
+					const visualW = baseW * finalScale;
+					
+					// Margin 計算公式：
+					// 目標佔用空間 = (視覺寬度 + 分配到的間距)
+					// 實際 DOM 佔用空間 = (基礎寬度) [因為 scale 不影響 flow]
+					// 修正 Margin = 目標 - 實際
+					
+					const neededTotalMargin = (visualW + gapPerCard) - baseW;
+					const marginPerSide = neededTotalMargin / 2;
+					
+					groupDiv.style.marginLeft = `${marginPerSide}px`;
+					groupDiv.style.marginRight = `${marginPerSide}px`;
+				});
+				
 			} else {
 				zone.el.style.paddingTop = '20px';
 				zone.el.style.paddingBottom = '20px';
 			}
 
-			const groupEls = Array.from(zone.el.querySelectorAll('.card-group'));
-			
-			groupEls.forEach((groupDiv) => {
-				const baseW = parseFloat(groupDiv.dataset.baseW || 60);
-				const visualW = baseW * finalScale;
-				const gap = visualW * GAP_RATIO;
-				const totalMargin = (visualW + gap) - baseW;
-				const marginPerSide = totalMargin / 2;
-
-				groupDiv.style.marginLeft = `${marginPerSide}px`;
-				groupDiv.style.marginRight = `${marginPerSide}px`;
-			});
-
-			// 解鎖動畫 (配合 CSS 的 initializing class)
+			// 解鎖動畫
 			void zone.el.offsetWidth; 
+			const groupEls = Array.from(zone.el.querySelectorAll('.card-group'));
 			groupEls.forEach(el => el.classList.remove('initializing'));
 		});
 	}
