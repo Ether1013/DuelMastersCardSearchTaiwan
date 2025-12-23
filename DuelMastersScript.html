@@ -1869,32 +1869,32 @@
 		cursor: not-allowed;
 	}
 	
-	/* --- [新增] 回合切換切入動畫 (Turn Cut-In) --- */
+	/* --- [修正版] 回合切換切入動畫 (全螢幕置中) --- */
 	#turn-transition-overlay {
 		position: fixed;
-		top: 40%;
+		top: 0;       /* 從 40% 改為 0，佔滿頂部 */
 		left: 0;
 		width: 100%;
-		height: 150px;
+		height: 100%; /* 改為 100%，佔滿整個視窗高度 */
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.85); /* 深色背景 */
+		align-items: center;    /* 垂直置中關鍵 */
+		justify-content: center; /* 水平置中關鍵 */
+		background: rgba(0, 0, 0, 0.85);
 		z-index: 9999;
 		opacity: 0;
 		pointer-events: none;
-		transform: scaleX(0); /* 初始收縮 */
-		transition: transform 0.2s ease-out, opacity 0.2s ease-in;
+		transform: scaleX(1); /* 修正：預設不需收縮，改由透明度控制即可，避免手機版閃爍 */
+		transition: opacity 0.2s ease-in;
 	}
 
 	#turn-transition-overlay.active {
 		opacity: 1;
-		transform: scaleX(1); /* 展開 */
-		pointer-events: auto;
+		pointer-events: auto; /* 顯示時阻擋點擊 */
 	}
 
+	/* 內容區塊維持原樣，但稍微調整手機版字體大小 */
 	#tto-content {
-		font-size: 3.5rem;
+		font-size: 3.5rem; /* 電腦版字體 */
 		font-weight: 900;
 		font-style: italic;
 		color: white;
@@ -1905,7 +1905,9 @@
 		gap: 20px;
 		opacity: 0;
 		transform: translateY(20px);
-		transition: all 0.3s ease-out 0.2s; /* 延遲顯示文字 */
+		transition: all 0.3s ease-out 0.2s;
+		width: 100%;       /* 確保線條能延伸 */
+		justify-content: center;
 	}
 
 	#turn-transition-overlay.active #tto-content {
@@ -1913,12 +1915,24 @@
 		transform: translateY(0);
 	}
 
-	/* 裝飾線條 */
 	.tto-line {
 		height: 4px;
-		flex: 1;
+		flex: 1; /* 線條自動填滿剩餘空間 */
+		max-width: 300px; /* 限制線條最大長度，避免寬螢幕時太長 */
 		background: white;
 		box-shadow: 0 0 10px currentColor;
+	}
+
+	/* --- [新增] 手機版響應式調整 --- */
+	@media (max-width: 768px) {
+		#tto-content {
+			font-size: 2rem; /* 手機版縮小字體 */
+			gap: 10px;
+		}
+		.tto-line {
+			height: 3px;
+			max-width: 60px; /* 手機版線條縮短 */
+		}
 	}
 </style>
 </head>
