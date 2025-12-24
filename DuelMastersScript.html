@@ -2174,6 +2174,26 @@
         font-size: 1rem; box-sizing: border-box;
     }
     .dm-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+	/* --- 右上角懸浮關閉按鈕 --- */
+	.zone-close-btn {
+		position: absolute;
+		top: 30px;
+		right: 40px;
+		font-size: 50px;       /* 字體加大 */
+		font-weight: 100;      /* 細字體看起來更有質感 */
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		z-index: 2100;         /* 確保比 modal-content (2000) 還高 */
+		line-height: 1;
+		transition: all 0.2s;
+		user-select: none;     /* 防止被選取 */
+	}
+
+	.zone-close-btn:hover {
+		color: #ff5252;        /* 懸停變紅 */
+		transform: scale(1.1) rotate(90deg); /* 懸停時稍微放大並旋轉 */
+		text-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
+	}
 </style>
 </head>
 <body>
@@ -2501,6 +2521,7 @@
 </div>
 
 <div id="card-selector-modal" class="modal">
+	<div class="zone-close-btn" onclick="closeSelectorModal()" title="Close (ESC)">✕</div>
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
             <span id="modal-title" style="font-weight:bold; font-size:1.2rem;">Zone</span>
@@ -12756,6 +12777,8 @@
     <ul>
         <li onclick="runDeckContextAction('shuffle')">🔄 洗牌 (Shuffle)</li>
         <li onclick="runDeckContextAction('move')">➡️ 移動卡片... (Move)</li>
+        <li class="separator" style="height:1px; background:#eee; margin:5px 0; cursor:default;"></li>
+        <li onclick="document.getElementById('deck-context-menu').style.display='none'" style="color:#e74c3c;">✖ 關閉選單 (Close)</li>
     </ul>
 </div>
 
