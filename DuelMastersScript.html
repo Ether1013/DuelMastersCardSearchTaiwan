@@ -2141,6 +2141,39 @@
 		left: auto !important;
 	}
 	
+	/* =========================================
+       15. DECK CONTEXT MENU & MODAL
+       ========================================= */
+    #deck-context-menu {
+        display: none;
+        position: absolute;
+        z-index: 10000;
+        background: #fff;
+        border: 1px solid #bdc3c7;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+        border-radius: 4px;
+        min-width: 150px;
+        font-family: sans-serif;
+        color: #333;
+        overflow: hidden;
+    }
+    #deck-context-menu ul { list-style: none; padding: 0; margin: 0; }
+    #deck-context-menu li {
+        padding: 10px 15px; cursor: pointer; font-size: 0.9rem;
+        border-bottom: 1px solid #f0f0f0; transition: background 0.2s;
+    }
+    #deck-context-menu li:last-child { border-bottom: none; }
+    #deck-context-menu li:hover { background-color: #e8f6fd; color: #2980b9; }
+
+    /* Move Modal Specifics */
+    #deck-move-modal .modal-content { width: 320px; text-align: center; }
+    .dm-row { margin-bottom: 15px; text-align: left; }
+    .dm-row label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9rem; }
+    .dm-row select, .dm-row input { 
+        width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; 
+        font-size: 1rem; box-sizing: border-box;
+    }
+    .dm-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 </style>
 </head>
 <body>
@@ -2263,7 +2296,10 @@
 					</div>
                     <div class="side-zone-group">
                         <div class="hyper-zone zone stacked" data-zone="p2-hyper" onclick="handleZoneClick('p2-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
-                        <div class="deck-zone zone stacked" data-zone="p2-deck" onclick="handleZoneClick('p2-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
+                        <div <div class="deck-zone zone stacked" data-zone="p2-deck" onclick="handleZoneClick('p2-deck')" 
+							 oncontextmenu="showDeckContextMenu(event, 'p2-deck')">
+							<span class="zone-label" data-i18n="zone_deck">牌庫</span>
+						</div>
                         <div class="grave-zone zone stacked" data-zone="p2-grave" onclick="handleZoneClick('p2-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
 						<div class="abyss-zone zone stacked" data-zone="p2-abyss" onclick="handleZoneClick('p2-abyss')">
 							<span class="zone-label" data-i18n="zone_abyss">深淵</span>
@@ -2290,8 +2326,11 @@
 					</div>
                     <div class="side-zone-group">
                         <div class="hyper-zone zone stacked" data-zone="p1-hyper" onclick="handleZoneClick('p1-hyper')"><span class="zone-label" data-i18n="zone_hyper">超次元</span></div>
-                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')"><span class="zone-label" data-i18n="zone_deck">牌庫</span></div>
-                        <div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
+                        <div class="deck-zone zone stacked" data-zone="p1-deck" onclick="handleZoneClick('p1-deck')" 
+							 oncontextmenu="showDeckContextMenu(event, 'p1-deck')">
+							<span class="zone-label" data-i18n="zone_deck">牌庫</span>
+						</div>
+						<div class="grave-zone zone stacked" data-zone="p1-grave" onclick="handleZoneClick('p1-grave')"><span class="zone-label" data-i18n="zone_grave">墓地</span></div>
 						<div class="abyss-zone zone stacked" data-zone="p1-abyss" onclick="handleZoneClick('p1-abyss')">
 							<span class="zone-label" data-i18n="zone_abyss">深淵</span>
 						</div>
@@ -10993,6 +11032,126 @@
 	window.addEventListener('resize', () => {
 		applyBattleZoneScaling();
 	});
+	
+	// =========================================
+    //  DECK CONTEXT MENU LOGIC
+    // =========================================
+    let contextMenuTargetZone = null; // 紀錄目前是對哪個牌庫操作 ('p1-deck' 或 'p2-deck')
+
+    // 1. 顯示右鍵選單
+    // 1. 顯示右鍵選單
+    function showDeckContextMenu(e, zoneId) {
+        e.preventDefault(); // 阻止瀏覽器預設選單
+        contextMenuTargetZone = zoneId;
+        
+        const menu = document.getElementById('deck-context-menu');
+        menu.style.display = 'block';
+        
+        // 設定水平位置 (X軸)
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+
+        // 判斷方向：如果是 P1 (下方玩家)，選單往上長；如果是 P2 (上方玩家)，選單往下長
+        if (zoneId.startsWith('p1')) {
+            // translateY(-100%) 會把元素本身的 100% 高度往上推，
+            // 讓元素的「底部」對齊滑鼠游標
+            menu.style.transform = 'translateY(-100%)';
+        } else {
+            // P2 維持預設 (none)，元素的「頂部」對齊滑鼠游標
+            menu.style.transform = 'none';
+        }
+    }
+
+    // 點擊其他地方關閉選單
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('deck-context-menu');
+        if (menu) menu.style.display = 'none';
+    });
+
+    // 2. 執行選單動作
+    function runDeckContextAction(action) {
+        if (!contextMenuTargetZone) return;
+
+        if (action === 'shuffle') {
+            // 直接呼叫既有的 Shuffle Operation
+            // 這會自動處理洗牌動畫與紀錄
+            if (!isDrafting) startDraftAtEnd(); // 確保開始新步驟
+            
+            addOperation({ type: 'SHUFFLE', zoneId: contextMenuTargetZone });
+            saveDraft(`[洗牌] ${getZoneName(contextMenuTargetZone)}`);
+            
+            // 觸發視覺上的洗牌特效 (選用)
+            triggerShuffleAnimation(10, contextMenuTargetZone);
+        } 
+        else if (action === 'move') {
+            // 開啟移動設定視窗
+            document.getElementById('dm-qty').value = 1;
+            document.getElementById('deck-move-modal').style.display = 'flex';
+        }
+    }
+
+    // 3. 確認移動卡片
+    function confirmDeckMove() {
+        const qty = parseInt(document.getElementById('dm-qty').value) || 1;
+        const targetType = document.getElementById('dm-target').value; // hand, mana...
+        
+        // 解析目標區域 ID
+        // 例如來源是 p1-deck，目標選 hand -> p1-hand
+        const playerPrefix = contextMenuTargetZone.split('-')[0]; // "p1" or "p2"
+		// [修改這裡] 判斷目標區域 ID
+        let targetZoneId;
+        if (targetType === 'reveal') {
+            targetZoneId = 'reveal-zone'; // 固定 ID，不分玩家
+        } else {
+            targetZoneId = `${playerPrefix}-${targetType}`; // 其他區域 (p1-hand, p2-mana...)
+        }
+
+        // 取得牌庫內容
+        const state = getCurrentDisplayState();
+        // 注意：getCardsInZone 取得的陣列順序通常是 ID 排序或加入順序
+        // 但我們需要模擬「從上面抽」。
+        // 在您的程式中，新卡片是用 push 加入陣列，所以陣列尾端 (Last) 通常視為牌庫頂。
+        const deckCards = getCardsInZone(state, contextMenuTargetZone);
+        
+        if (deckCards.length < qty) {
+            alert(t('msg_deck_empty').replace('{n}', playerPrefix === 'p1' ? '1' : '2'));
+            return;
+        }
+
+        // 取得最後 N 張卡片 (視為牌庫頂)
+        // slice(-N) 會取得最後 N 個元素
+        const movingCards = deckCards.slice(-qty);
+        const movingIds = movingCards.map(c => c.id);
+
+        // 關閉視窗
+        document.getElementById('deck-move-modal').style.display = 'none';
+
+        // 執行移動操作
+        if (!isDrafting) startDraftAtEnd();
+
+        // 判斷是否需要翻開 (只有去手牌且是自己、或是去魔力/戰場才翻開，其餘維持蓋牌)
+        // 為了簡化，除了去 Shield/Deck 之外，通常移動後都預設翻開以便確認
+        let faceUp = true;
+        if (targetType === 'shield' || targetType === 'deck') faceUp = false;
+        // 如果是去手牌，且是移動對手的牌到對手手牌(模擬抽濾)，通常也是要給對手看(FaceUp=T)? 
+        // 但實體卡牌抽牌是看不到的。這裡為了操作方便，通常設為 True (操作者上帝視角)，或者您可以維持 False。
+        // 這裡設定：去手牌也翻開 (方便編輯者看)，去護盾蓋起來。
+
+        addOperation({ 
+            type: 'MOVE', 
+            cardIds: movingIds, 
+            toZone: targetZoneId, 
+            faceUp: faceUp,
+            shuffleSelection: false 
+        });
+
+        // 如果是去魔力區，自動轉 180 度
+        if (targetType === 'mana') {
+            addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 180 });
+        }
+
+        saveDraft(`[盲移] ${qty}張 從 ${getZoneName(contextMenuTargetZone)} -> ${getZoneName(targetZoneId)}`);
+    }
 
     // --- Main Entry Point ---
     window.onload = function() {
@@ -12591,6 +12750,39 @@
 <div id="turn-transition-overlay">
     <div id="tto-content">
         <span id="tto-text">TURN START</span>
+    </div>
+</div>
+<div id="deck-context-menu">
+    <ul>
+        <li onclick="runDeckContextAction('shuffle')">🔄 洗牌 (Shuffle)</li>
+        <li onclick="runDeckContextAction('move')">➡️ 移動卡片... (Move)</li>
+    </ul>
+</div>
+
+<div id="deck-move-modal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:#2c3e50;">從牌庫頂移動</h3>
+        <div class="dm-row">
+            <label>數量 (Quantity):</label>
+            <input type="number" id="dm-qty" value="1" min="1" max="40">
+        </div>
+        <div class="dm-row">
+            <label>移動到 (Destination):</label>
+            <select id="dm-target">
+                <option value="hand">✋ 手牌 (Hand)</option>
+                <option value="mana">💧 魔力區 (Mana)</option>
+                <option value="shield">🛡️ 護盾區 (Shield)</option>
+                <option value="grave">💀 墓地 (Graveyard)</option>
+				<option value="reveal">👁️ 展示區 (Reveal)</option>
+                <option value="battle">⚔️ 戰鬥場 (Battle)</option>
+                <option value="hyper">🌀 超次元 (Hyperspatial)</option>
+                <option value="abyss">🌑 深淵 (Abyss)</option>
+            </select>
+        </div>
+        <div class="dm-btns">
+            <button class="danger" onclick="document.getElementById('deck-move-modal').style.display='none'">取消</button>
+            <button class="primary" onclick="confirmDeckMove()">確認移動</button>
+        </div>
     </div>
 </div>
 </body>
