@@ -1663,7 +1663,6 @@
 		position: fixed !important;
 		top: auto !important;
 		right: auto !important;
-		left: 0 !important; /* 固定在左側 */
 		
 		/* [修改] 底部留出空間給按鈕，原本是 height: 100% 會蓋到底 */
 		bottom: 80px !important; 
@@ -2143,42 +2142,6 @@
 		left: auto !important;
 	}
 	
-	/* =========================================
-       FIX: Mobile Landscape Progress Bar
-       修正手機橫向模式下，進度條跑版/靠左的問題
-       ========================================= */
-    @media screen and (orientation: landscape) and (max-height: 600px) {
-        /* 強制控制面板固定在底部且滿版 */
-        #control-panel {
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            transform: none !important; /* 移除原本可能的置中位移 */
-            border-radius: 0 !important; /* 移除圓角以節省空間 */
-            background: rgba(0, 0, 0, 0.85) !important; /* 確保背景清晰 */
-            padding: 5px 0 !important;
-            z-index: 10000 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-        }
-
-        /* 確保進度條容器在橫向模式下有足夠寬度 */
-        #progress-container {
-            width: 90% !important;
-            margin: 5px auto !important;
-            display: block !important;
-        }
-
-        /* 微調按鈕區域，避免在橫向高度不足時遮擋太多 */
-        .control-buttons {
-            margin-bottom: 2px !important;
-            transform: scale(0.9); /* 稍微縮小按鈕以適應高度 */
-        }
-    }
 </style>
 </head>
 <body>
