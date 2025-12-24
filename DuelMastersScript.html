@@ -1934,6 +1934,83 @@
 			max-width: 60px; /* 手機版線條縮短 */
 		}
 	}
+	
+	/* =========================================
+   [新增] 桌機播放模式專用樣式 (Desktop Playback Mode)
+   ========================================= */
+
+	/* 1. 隱藏桌機版右下角 ActionLog 下方的 [停止撥放] 鍵 (依您的需求) */
+	/* 注意：這會隱藏原本在 Timeline 下方的按鈕區，如果您只想隱藏停止鈕，請針對該按鈕 ID 設定 */
+	/* 這裡假設您是指隱藏浮動按鈕或特定按鈕，若無特定 ID，透過模式切換會自然隱藏 Timeline */
+
+	/* 2. 當 body 擁有 .desktop-playing class 時，隱藏所有編輯器 UI */
+	body.desktop-playing #toolbar,
+	body.desktop-playing #timeline-panel,      /* 隱藏右側時間軸 */
+	body.desktop-playing #card-action-panel,   /* 隱藏卡片操作面板 */
+	body.desktop-playing #draft-bar,
+	body.desktop-playing #point-bar,
+	body.desktop-playing #slider-zone,         /* 隱藏原本的垂直進度條 */
+	body.desktop-playing .ace-star-mark,
+	body.desktop-playing .random-pick-btn,
+	body.desktop-playing .unseen-check-btn,
+	body.desktop-playing #visitor-counter {
+		display: none !important;
+	}
+
+	/* 3. 強制顯示手機版的控制列 (原本在桌機版是隱藏的) */
+	body.desktop-playing #mobile-controls {
+		display: flex !important;
+		position: fixed;
+		bottom: 20px;
+		right: 20px;
+		z-index: 9999;
+	}
+
+	/* 4. 調整手機版進度條在桌機播放模式下的樣式 (轉為橫向) */
+	/* 這裡我們借用原本手機版的 slider-zone 但調整位置 */
+	body.desktop-playing #slider-zone {
+		display: flex !important;
+		position: fixed !important;
+		top: auto !important;
+		bottom: 80px !important; /* 位於控制列上方 */
+		right: 20px !important;
+		left: auto !important;
+		
+		/* 外觀設定 */
+		width: auto !important;
+		height: 40px !important;
+		background: rgba(44, 62, 80, 0.8);
+		border: 1px solid rgba(255,255,255,0.3);
+		border-radius: 20px;
+		padding: 0 15px;
+		
+		/* 取消原本的垂直變形，改為橫向 */
+		transform: none !important;
+		flex-direction: row;
+		align-items: center;
+		z-index: 5000;
+	}
+
+	/* 進度條本體調整 */
+	body.desktop-playing #playback-slider {
+		width: 300px !important;
+		height: 8px !important;
+		transform: none !important; /* 取消旋轉 */
+		margin: 0 10px;
+		cursor: pointer;
+	}
+
+	/* 進度提示文字位置微調 */
+	body.desktop-playing #slider-tooltip {
+		top: -35px;
+		left: 50%;
+		transform: translateX(-50%);
+		right: auto;
+		font-size: 1rem;
+		background: rgba(241, 196, 15, 0.9);
+		padding: 2px 8px;
+		border-radius: 4px;
+	}
 </style>
 </head>
 <body>
@@ -2650,17 +2727,6 @@
             lang: 'zh',
 			credits: [
                 { role: 'Special Thanks', name: 'COAT CORPORATION / All Worlds Video' },
-            ]
-        },
-        {
-            filename: 'script_mamoru_20251223.txt',
-            title: '馬露露軸劍轟團長',
-            description: '測試構築展示Combo核心概念',
-			counter_url: 'https://www.f-counter.net/j/66/1766495206/',
-			speed: 1,
-            lang: 'zh',
-			credits: [
-                { role: '❤️', name: 'Ether' },
             ]
         },
         // 您可以在此擴充更多劇本...
@@ -9065,10 +9131,21 @@
     function prevStep() { if (currentIndex > 0) { currentIndex--; renderUI(); saveToStorage(); } }
     function nextStep() { if (currentIndex < history.length - 1) { currentIndex++; renderUI(); saveToStorage(); } }
     
-    function playFromStep(idx) { 
-        currentIndex = idx; renderUI(); saveToStorage();
-        if (!playInterval) togglePlay(); 
-    }
+    function playFromStep(idx) {
+		currentIndex = idx;
+		renderUI();
+		saveToStorage();
+		
+		// === [修改重點] 強制進入播放介面 ===
+		document.body.classList.add('desktop-playing');
+		document.body.classList.add('is-playing');
+
+		// 如果目前沒有在播放，才呼叫 togglePlay 開始
+		// (如果已經在播放，只要更新 currentIndex 就好，不需要 toggle 否則會變暫停)
+		if (!playTimeout) {
+			togglePlay();
+		}
+	}
 
     function playSingleStep(idx) {
         if (playTimeout) togglePlay(); 
@@ -9085,86 +9162,86 @@
 	let wasPlayingBeforePortrait = false; // 記錄轉直前是否正在播放
 	let hasEnteredLandscapeOnce = false;  // 記錄是否已經進入過橫向模式(用於第一次自動播放)
 
-    // --- [整合版] 播放控制 (包含 BGM 起始同步) ---
     // --- [整合版] 播放控制 (修復 iOS Safari 音樂問題) ---
-    function togglePlay() {
-		const isMobile = isMobileDevice();
-        if (playTimeout) {
-            // --- [暫停邏輯] ---
+	function togglePlay() {
+		// 檢查是否為手機版 (相容舊版檢測方式)
+		const isMobileCheck = (typeof isMobileDevice === 'function') ? isMobileDevice() : document.body.classList.contains('mobile-mode');
+
+		if (playTimeout) {
+			// --- [暫停邏輯] ---
 			clearTimeout(playTimeout);
 			playTimeout = null;
-			
 			updatePlayButtonUI();
-			document.body.classList.remove('is-playing');
 			
-			// [修改需求 1] 手機版暫停時，音樂也要暫停
-			if (isMobile) {
+			// 暫停時只移除 is-playing (解鎖互動)，但不移除 desktop-playing (保持播放介面)
+			document.body.classList.remove('is-playing');
+
+			// 手機版暫停時，音樂也要暫停
+			if (isMobileCheck) {
 				globalAudioPlayer.pause();
 			}
-
-        } else {
-            // --- [開始播放] ---
-            
-            // 1. [iOS 關鍵修正] 
-            // 在使用者點擊的當下，強制「解鎖」Audio 物件
-            // 哪怕現在沒有音樂，也要 play 一下再 pause，或是載入空音軌
-            // 這裡我們直接嘗試播放當前應有的音樂，或者讓它處於「準備就緒」狀態
-            if (globalAudioPlayer.paused) {
-                // 嘗試播放一個空的 Promise 來觸發 AudioContext
-                globalAudioPlayer.play().then(() => {
-                    // 如果當前其實不該有音樂 (null)，那就立刻暫停，但此時 Audio 已解鎖
-                    const currState = (currentIndex >= 0 && history[currentIndex]) ? history[currentIndex].state : initialState;
-                    if (!currState.bgm) {
-                        globalAudioPlayer.pause();
-                    }
-                }).catch(e => {
-                    console.log("Audio unlock attempt", e);
-                });
-            }
+		} else {
+			// --- [開始播放] ---
 			
-			removePlayHighlight();
-			
-            if (currentIndex >= history.length - 1) {
-                currentIndex = -1; // 從頭開始
-            }
-            
-            document.body.classList.add('is-playing');
-            
-			// [修改需求 1 延伸] 手機版恢復播放時，如果當前有 BGM 且不是靜音狀態，要恢復音樂
-			if (isMobile) {
-				 const state = getCurrentDisplayState();
-				 if (state.bgm && !globalAudioPlayer.muted) {
-					 globalAudioPlayer.play().catch(e => {});
-				 }
+			// 1. [iOS 關鍵修正] Audio 解鎖
+			if (globalAudioPlayer.paused) {
+				globalAudioPlayer.play().then(() => {
+					// 如果當前其實不該有音樂 (null)，那就立刻暫停，但此時 Audio 已解鎖
+					const currState = (currentIndex >= 0 && history[currentIndex]) ? history[currentIndex].state : initialState;
+					if (!currState.bgm) {
+						globalAudioPlayer.pause();
+					}
+				}).catch(e => {
+					console.log("Audio unlock attempt", e);
+				});
 			}
 			
-            // 2. BGM 同步邏輯 (確保按下播放的瞬間音樂正確)
-            let startBgm = null;
-            if (currentIndex >= 0 && history[currentIndex]) {
-                startBgm = history[currentIndex].state.bgm;
-            } else if (initialState) {
-                startBgm = initialState.bgm;
-            }
-
-            if (startBgm) {
-                const targetSrc = BGM_FOLDER + startBgm;
-                // 只有當來源不同時才重置，避免中斷連續播放的音樂
-                // 注意：iOS 上 src 若未包含完整路徑可能會有差異，用 includes 判斷較保險
-                if (!globalAudioPlayer.src.includes(encodeURI(startBgm))) {
-                    globalAudioPlayer.src = targetSrc;
-                    globalAudioPlayer.currentTime = 0;
-                }
-                // 這裡再呼叫一次 play 確保萬無一失
-                globalAudioPlayer.play().catch(e => {});
-            } else {
-                globalAudioPlayer.pause();
-            }
-
-            // 開始跑下一步
-            playNextStep();
-            updatePlayButtonUI();
-        }
-    }
+			// 移除引導高亮
+			if (typeof removePlayHighlight === 'function') removePlayHighlight();
+			
+			// 如果已經播到最後，重置到開頭
+			if (currentIndex >= history.length - 1) {
+				currentIndex = -1; 
+			}
+			
+			// === [修改重點] 加入桌機播放模式 Class ===
+			document.body.classList.add('desktop-playing');
+			document.body.classList.add('is-playing');
+			
+			// 手機版恢復播放時，如果當前有 BGM 且不是靜音狀態，要恢復音樂
+			if (isMobileCheck) {
+				const state = getCurrentDisplayState();
+				if (state.bgm && !globalAudioPlayer.muted) {
+					globalAudioPlayer.play().catch(e => {});
+				}
+			}
+			
+			// 2. BGM 同步邏輯 (確保按下播放的瞬間音樂正確)
+			let startBgm = null;
+			if (currentIndex >= 0 && history[currentIndex]) {
+				startBgm = history[currentIndex].state.bgm;
+			} else if (initialState) {
+				startBgm = initialState.bgm;
+			}
+			
+			if (startBgm) {
+				const targetSrc = BGM_FOLDER + startBgm;
+				// 只有當來源不同時才重置，避免中斷連續播放的音樂
+				if (!globalAudioPlayer.src.includes(encodeURI(startBgm))) {
+					globalAudioPlayer.src = targetSrc;
+					globalAudioPlayer.currentTime = 0;
+				}
+				// 這裡再呼叫一次 play 確保萬無一失
+				globalAudioPlayer.play().catch(e => {});
+			} else {
+				globalAudioPlayer.pause();
+			}
+			
+			// 開始跑下一步
+			playNextStep();
+			updatePlayButtonUI();
+		}
+	}
 	
 	// --- [新增] 手機版靜音切換 ---
     function toggleMute() {
@@ -9216,28 +9293,33 @@
     }
 
 	// --- [新增] 停止播放函式 ---
-    function stopPlayback() {
-        // 1. 停止計時器
-        if (playTimeout) {
-            clearTimeout(playTimeout);
-            playTimeout = null;
-        }
-
-        // 2. 重置狀態
-        currentIndex = 0; // 回到第一步 (初始狀態)
-        
-        // 3. UI 重置
-        updatePlayButtonUI();
-        document.body.classList.remove('is-playing'); // 顯示星星/編輯器
-
-        // 4. 音樂重置
-        globalAudioPlayer.pause();
-        globalAudioPlayer.currentTime = 0;
-
-        // 5. 畫面重繪
-        renderUI();
-        if(!document.body.classList.contains('mobile-mode')) saveToStorage();
-    }
+	function stopPlayback() {
+		// 1. 停止計時器
+		if (playTimeout) {
+			clearTimeout(playTimeout);
+			playTimeout = null;
+		}
+		
+		// 2. [關鍵修改] 移除重置進度 (currentIndex = 0)
+		// 現在保持 currentIndex 在當前位置，實現「停在該禎」
+		
+		// 3. UI 重置
+		updatePlayButtonUI();
+		document.body.classList.remove('is-playing');
+		
+		// === [修改重點] 移除桌機播放模式，介面切換回來 ===
+		document.body.classList.remove('desktop-playing');
+		
+		// 4. 音樂暫停 (但不重置時間，或者您可以選擇重置)
+		globalAudioPlayer.pause();
+		
+		// 5. 畫面重繪 (這會更新 ActionLog 的高亮位置)
+		renderUI();
+		
+		if(!document.body.classList.contains('mobile-mode')) {
+			saveToStorage();
+		}
+	}
 
     // --- [修改] 播放下一步 (playNextStep) - 簡化版 ---
 	let isTurnAnimPlaying = false; 
