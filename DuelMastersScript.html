@@ -3298,6 +3298,30 @@
 			'msg_truncate_backup': '這個動作會刪除大量資料，是否要先匯出備份？\n\n(按「確定」= 匯出並刪除，按「取消」= 直接刪除)',
 			'btn_random_pick': '🎲 隨機',
 			'msg_turn_change': "交換至 {player} 的回合",
+			// --- Context Menu & Deck Modal ---
+			ctx_shuffle: "🔄 洗牌",
+			ctx_move: "➡️ 移動卡片...",
+			ctx_recall: "🔙 全部收回",
+			ctx_close: "✖ 關閉選單",
+			
+			title_move_modal: "從牌庫頂移動",
+			lbl_qty: "數量:",
+			lbl_dest: "移動到:",
+			btn_do_move: "確認移動",
+			
+			dest_hand: "✋ 手牌",
+			dest_mana: "💧 魔力區",
+			dest_shield: "🛡️ 護盾區",
+			dest_grave: "💀 墓地",
+			dest_battle: "⚔️ 戰鬥場",
+			dest_hyper: "🌀 超次元",
+			dest_abyss: "🌑 深淵",
+			dest_reveal: "👁️ 展示區",
+			
+			msg_confirm_recall: "確定要將 {player} 的所有外部卡片（手牌/戰場/墓地等）全部收回牌庫並洗牌嗎？",
+			msg_no_recall_cards: "沒有需要收回的卡片。",
+			log_blind_move: "[盲移]",
+			log_recall: "[重置] 全卡回牌庫",
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -3426,6 +3450,30 @@
 			'msg_truncate_backup': 'This action will delete a large amount of data. Do you want to export a backup first?\n\n(OK = Export & Delete, Cancel = Delete immediately)',
 			'btn_random_pick': '🎲 Random',
 			'msg_turn_change': "Switch to {player}\'s Turn",
+			// --- Context Menu & Deck Modal ---
+			ctx_shuffle: "🔄 Shuffle",
+			ctx_move: "➡️ Move Cards...",
+			ctx_recall: "🔙 Recall All",
+			ctx_close: "✖ Close Menu",
+
+			title_move_modal: "Move from Deck Top",
+			lbl_qty: "Quantity:",
+			lbl_dest: "Destination:",
+			btn_do_move: "Move",
+
+			dest_hand: "✋ Hand",
+			dest_mana: "💧 Mana Zone",
+			dest_shield: "🛡️ Shield Zone",
+			dest_grave: "💀 Graveyard",
+			dest_battle: "⚔️ Battle Zone",
+			dest_hyper: "🌀 Hyperspatial",
+			dest_abyss: "🌑 Abyss",
+			dest_reveal: "👁️ Reveal Zone",
+
+			msg_confirm_recall: "Are you sure you want to recall all cards for {player} to the deck?",
+			msg_no_recall_cards: "No cards found to recall.",
+			log_blind_move: "[Blind Move]",
+			log_recall: "[Reset] Recall All",
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -3554,6 +3602,31 @@
 			'msg_truncate_backup': 'この操作は大量のデータを削除します。先にバックアップをエクスポートしますか？\n\n(OK = エクスポートして削除, キャンセル = そのまま削除)',
 			'btn_random_pick': '🎲 ランダム',
 			'msg_turn_change': "{player} のターンへ",
+			
+			// --- Context Menu & Deck Modal ---
+			ctx_shuffle: "🔄 シャッフル",
+			ctx_move: "➡️ 移動...",
+			ctx_recall: "🔙 全て回収",
+			ctx_close: "✖ メニューを閉じる",
+
+			title_move_modal: "山札の上から移動",
+			lbl_qty: "枚数:",
+			lbl_dest: "移動先:",
+			btn_do_move: "移動実行",
+
+			dest_hand: "✋ 手札",
+			dest_mana: "💧 マナゾーン",
+			dest_shield: "🛡️ シールド",
+			dest_grave: "💀 墓地",
+			dest_battle: "⚔️ バトルゾーン",
+			dest_hyper: "🌀 超次元",
+			dest_abyss: "🌑 アビス",
+			dest_reveal: "👁️ 公開領域",
+
+			msg_confirm_recall: "{player} のカード（手札・場・墓地など）を全て山札に戻してシャッフルしますか？",
+			msg_no_recall_cards: "回収するカードがありません。",
+			log_blind_move: "[山札移動]",
+			log_recall: "[リセット] 全回収",
 		}
 	};
 	
@@ -11109,6 +11182,10 @@
             document.getElementById('dm-qty').value = 1;
             document.getElementById('deck-move-modal').style.display = 'flex';
         }
+		// [新增] 收回邏輯
+        else if (action === 'recall') {
+            recallAllCards();
+        }
     }
 
     // 3. 確認移動卡片
@@ -11171,7 +11248,54 @@
             addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 180 });
         }
 
-        saveDraft(`[盲移] ${qty}張 從 ${getZoneName(contextMenuTargetZone)} -> ${getZoneName(targetZoneId)}`);
+        // 原本的 saveDraft 改為：
+        const logPrefix = t('log_blind_move'); 
+        // 取得目標區域名稱的翻譯 (簡單處理：直接用 targetType 組字串，或者用 getZoneName)
+        // 這裡我們簡單組裝字串記錄
+        saveDraft(`${logPrefix} ${qty} cards: ${getZoneName(contextMenuTargetZone)} -> ${getZoneName(targetZoneId)}`);
+    }
+	
+	// 全部收回功能
+    function recallAllCards() {
+        if (!contextMenuTargetZone) return;
+        
+        const playerPrefix = contextMenuTargetZone.split('-')[0]; 
+        const ownerId = (playerPrefix === 'p1') ? 1 : 2;
+        
+        // [修改] 使用翻譯後的確認訊息
+        const msg = t('msg_confirm_recall').replace('{player}', playerPrefix.toUpperCase());
+        if (!confirm(msg)) return;
+
+        const state = getCurrentDisplayState();
+        
+        const targetZones = [
+            `${playerPrefix}-hand`, `${playerPrefix}-mana`, `${playerPrefix}-shield`,
+            `${playerPrefix}-battle`, `${playerPrefix}-grave`, `${playerPrefix}-hyper`,
+            `${playerPrefix}-abyss`, 'reveal-zone'
+        ];
+
+        const cardsToRecall = state.cards.filter(c => 
+            c.ownerId === ownerId && targetZones.includes(c.zone)
+        );
+
+        if (cardsToRecall.length === 0) {
+            // [修改] 使用翻譯後的錯誤訊息
+            alert(t('msg_no_recall_cards'));
+            return;
+        }
+
+        const ids = cardsToRecall.map(c => c.id);
+
+        if (!isDrafting) startDraftAtEnd();
+
+        addOperation({ type: 'MOVE', cardIds: ids, toZone: contextMenuTargetZone, faceUp: false, shuffleSelection: false });
+        addOperation({ type: 'ROTATE_CARD', cardIds: ids, finalRotation: 0 });
+        addOperation({ type: 'SHUFFLE', zoneId: contextMenuTargetZone });
+
+        // [修改] 使用翻譯後的 Log
+        saveDraft(`${t('log_recall')} (${playerPrefix.toUpperCase()})`);
+        
+        triggerShuffleAnimation(20, contextMenuTargetZone);
     }
 
     // --- Main Entry Point ---
@@ -12775,36 +12899,42 @@
 </div>
 <div id="deck-context-menu">
     <ul>
-        <li onclick="runDeckContextAction('shuffle')">🔄 洗牌 (Shuffle)</li>
-        <li onclick="runDeckContextAction('move')">➡️ 移動卡片... (Move)</li>
+        <li onclick="runDeckContextAction('shuffle')" data-i18n="ctx_shuffle">🔄 洗牌</li>
+        <li onclick="runDeckContextAction('move')" data-i18n="ctx_move">➡️ 移動卡片...</li>
+        <li onclick="runDeckContextAction('recall')" data-i18n="ctx_recall">🔙 全部收回</li>
+        
         <li class="separator" style="height:1px; background:#eee; margin:5px 0; cursor:default;"></li>
-        <li onclick="document.getElementById('deck-context-menu').style.display='none'" style="color:#e74c3c;">✖ 關閉選單 (Close)</li>
+        <li onclick="document.getElementById('deck-context-menu').style.display='none'" style="color:#e74c3c;" data-i18n="ctx_close">✖ 關閉選單</li>
     </ul>
 </div>
 
 <div id="deck-move-modal" class="modal">
+    <div class="zone-close-btn" onclick="document.getElementById('deck-move-modal').style.display='none'">✕</div>
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#2c3e50;">從牌庫頂移動</h3>
+        <h3 style="margin-top:0; color:#2c3e50;" data-i18n="title_move_modal">從牌庫頂移動</h3>
+        
         <div class="dm-row">
-            <label>數量 (Quantity):</label>
+            <label data-i18n="lbl_qty">數量:</label>
             <input type="number" id="dm-qty" value="1" min="1" max="40">
         </div>
+        
         <div class="dm-row">
-            <label>移動到 (Destination):</label>
+            <label data-i18n="lbl_dest">移動到:</label>
             <select id="dm-target">
-                <option value="hand">✋ 手牌 (Hand)</option>
-                <option value="mana">💧 魔力區 (Mana)</option>
-                <option value="shield">🛡️ 護盾區 (Shield)</option>
-                <option value="grave">💀 墓地 (Graveyard)</option>
-				<option value="reveal">👁️ 展示區 (Reveal)</option>
-                <option value="battle">⚔️ 戰鬥場 (Battle)</option>
-                <option value="hyper">🌀 超次元 (Hyperspatial)</option>
-                <option value="abyss">🌑 深淵 (Abyss)</option>
+                <option value="hand" data-i18n="dest_hand">✋ 手牌</option>
+                <option value="mana" data-i18n="dest_mana">💧 魔力區</option>
+                <option value="shield" data-i18n="dest_shield">🛡️ 護盾區</option>
+                <option value="grave" data-i18n="dest_grave">💀 墓地</option>
+                <option value="battle" data-i18n="dest_battle">⚔️ 戰鬥場</option>
+                <option value="hyper" data-i18n="dest_hyper">🌀 超次元</option>
+                <option value="abyss" data-i18n="dest_abyss">🌑 深淵</option>
+                <option value="reveal" data-i18n="dest_reveal">👁️ 展示區</option>
             </select>
         </div>
+        
         <div class="dm-btns">
-            <button class="danger" onclick="document.getElementById('deck-move-modal').style.display='none'">取消</button>
-            <button class="primary" onclick="confirmDeckMove()">確認移動</button>
+            <button class="danger" onclick="document.getElementById('deck-move-modal').style.display='none'" data-i18n="btn_cancel">取消</button>
+            <button class="primary" onclick="confirmDeckMove()" data-i18n="btn_do_move">確認移動</button>
         </div>
     </div>
 </div>
