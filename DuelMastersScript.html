@@ -1658,16 +1658,40 @@
 
     /* Mobile Slider Zone */
     body.mobile-mode #slider-zone {
-        display: flex !important; position: relative !important;
-        top: auto !important; right: auto !important; transform: none !important;
-        width: 60px !important; height: 100% !important;
-        z-index: 3000 !important; background: rgba(44, 62, 80, 0.6);
-        border-left: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; pointer-events: auto !important;
-    }
+		/* 原本樣式保留 */
+		display: flex !important;
+		position: fixed !important;
+		top: auto !important;
+		right: auto !important;
+		left: 0 !important; /* 固定在左側 */
+		
+		/* [修改] 底部留出空間給按鈕，原本是 height: 100% 會蓋到底 */
+		bottom: 80px !important; 
+		height: auto !important;
+		top: 20px !important; /* 頂部也留一點 */
+		
+		width: 60px !important;
+		z-index: 3000 !important;
+		background: rgba(44, 62, 80, 0.0); /* 背景改透明一點 */
+		border-left: none !important;
+		pointer-events: auto !important;
+		
+		/* 讓 Slider 垂直置中 */
+		flex-direction: column;
+		justify-content: center;
+	}
     body.mobile-mode #playback-slider {
-        width: 700px !important; height: 40px !important; transform: rotate(90deg);
-        background: rgba(255, 255, 255, 0.2); border-radius: 20px;
-    }
+		width: 60vh !important; /* 改用視窗高度百分比 */
+		height: 40px !important;
+		transform: rotate(90deg);
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 20px;
+		margin: 0;
+	}
+	/* 2. 確保桌機播放模式不會影響手機版 (安全網) */
+	body.mobile-mode.desktop-playing #mobile-controls {
+		display: flex !important; /* 手機版原本就有，確保顯示 */
+	}
     body.mobile-mode #playback-slider::-webkit-slider-thumb {
         width: 36px !important; height: 36px !important; background: #f1c40f;
         box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 3px solid #fff;
@@ -9158,12 +9182,13 @@
 		renderUI();
 		saveToStorage();
 		
-		// === [修改重點] 強制進入播放介面 ===
-		document.body.classList.add('desktop-playing');
+		// [修正] 只有非手機版才強制進入桌機播放介面
+		if (!document.body.classList.contains('mobile-mode')) {
+			document.body.classList.add('desktop-playing');
+		}
+		
 		document.body.classList.add('is-playing');
 
-		// 如果目前沒有在播放，才呼叫 togglePlay 開始
-		// (如果已經在播放，只要更新 currentIndex 就好，不需要 toggle 否則會變暫停)
 		if (!playTimeout) {
 			togglePlay();
 		}
@@ -9185,60 +9210,60 @@
 	let hasEnteredLandscapeOnce = false;  // 記錄是否已經進入過橫向模式(用於第一次自動播放)
 
     // --- [整合版] 播放控制 (修復 iOS Safari 音樂問題) ---
+	// --- [修正版] 播放控制 ---
 	function togglePlay() {
-		// 檢查是否為手機版 (相容舊版檢測方式)
-		const isMobileCheck = (typeof isMobileDevice === 'function') ? isMobileDevice() : document.body.classList.contains('mobile-mode');
+		const isMobile = document.body.classList.contains('mobile-mode'); // 準確判斷 CSS class
 
 		if (playTimeout) {
-			// --- [暫停邏輯] ---
+			// --- [暫停] ---
 			clearTimeout(playTimeout);
 			playTimeout = null;
 			updatePlayButtonUI();
 			
-			// 暫停時只移除 is-playing (解鎖互動)，但不移除 desktop-playing (保持播放介面)
+			// 移除播放狀態
 			document.body.classList.remove('is-playing');
+			if (!isMobile) {
+				document.body.classList.remove('desktop-playing'); // 只有桌機才移除這個
+			}
 
 			// 手機版暫停時，音樂也要暫停
-			if (isMobileCheck) {
+			if (isMobile) {
 				globalAudioPlayer.pause();
 			}
 		} else {
-			// --- [開始播放] ---
+			// --- [播放] ---
 			
-			// 1. [iOS 關鍵修正] Audio 解鎖
+			// Audio 解鎖
 			if (globalAudioPlayer.paused) {
 				globalAudioPlayer.play().then(() => {
-					// 如果當前其實不該有音樂 (null)，那就立刻暫停，但此時 Audio 已解鎖
 					const currState = (currentIndex >= 0 && history[currentIndex]) ? history[currentIndex].state : initialState;
-					if (!currState.bgm) {
-						globalAudioPlayer.pause();
-					}
-				}).catch(e => {
-					console.log("Audio unlock attempt", e);
-				});
+					if (!currState.bgm) globalAudioPlayer.pause();
+				}).catch(e => { console.log("Audio unlock attempt", e); });
 			}
 			
-			// 移除引導高亮
-			if (typeof removePlayHighlight === 'function') removePlayHighlight();
+			removePlayHighlight();
 			
-			// 如果已經播到最後，重置到開頭
 			if (currentIndex >= history.length - 1) {
 				currentIndex = -1; 
 			}
 			
-			// === [修改重點] 加入桌機播放模式 Class ===
-			document.body.classList.add('desktop-playing');
 			document.body.classList.add('is-playing');
 			
-			// 手機版恢復播放時，如果當前有 BGM 且不是靜音狀態，要恢復音樂
-			if (isMobileCheck) {
+			// [關鍵修正] 只有「非手機版」才加入 desktop-playing
+			// 這樣手機版就不會被桌機的 CSS (如隱藏側邊欄、強制橫向進度條) 給覆蓋壞掉
+			if (!isMobile) {
+				document.body.classList.add('desktop-playing');
+			}
+			
+			// 手機版恢復音樂
+			if (isMobile) {
 				const state = getCurrentDisplayState();
 				if (state.bgm && !globalAudioPlayer.muted) {
 					globalAudioPlayer.play().catch(e => {});
 				}
 			}
 			
-			// 2. BGM 同步邏輯 (確保按下播放的瞬間音樂正確)
+			// BGM 同步
 			let startBgm = null;
 			if (currentIndex >= 0 && history[currentIndex]) {
 				startBgm = history[currentIndex].state.bgm;
@@ -9248,18 +9273,15 @@
 			
 			if (startBgm) {
 				const targetSrc = BGM_FOLDER + startBgm;
-				// 只有當來源不同時才重置，避免中斷連續播放的音樂
 				if (!globalAudioPlayer.src.includes(encodeURI(startBgm))) {
 					globalAudioPlayer.src = targetSrc;
 					globalAudioPlayer.currentTime = 0;
 				}
-				// 這裡再呼叫一次 play 確保萬無一失
 				globalAudioPlayer.play().catch(e => {});
 			} else {
 				globalAudioPlayer.pause();
 			}
 			
-			// 開始跑下一步
 			playNextStep();
 			updatePlayButtonUI();
 		}
@@ -9756,83 +9778,82 @@
 	}
 
     function processGameData(data, resetToStart = false) {
-        globalImageRegistry = data.imageRegistry || {}; 
-		// [新增] 立即觸發預載入 (讓瀏覽器在背景下載)
-        preloadImagesFromRegistry();
-        globalAbilityStyleRegistry = data.abilityRegistry || {};
-        globalLastUsedStyles = data.lastUsedStyles || {};
-        globalAceRegistry = data.aceRegistry || {};
-        
-        if (data.themeSettings) {
-            globalThemeSettings = data.themeSettings;
-        } else {
-            globalThemeSettings = { p1: 'blue', p2: 'red' };
-        }
-        applyThemeVariables();
-        
-        if (data.moonlessRegistry) {
-            if (!data.initialState.moonless) data.initialState.moonless = {};
-            Object.assign(data.initialState.moonless, data.moonlessRegistry);
-        }
-
-        initialState = data.initialState;
-        if (!initialState.moonless) initialState.moonless = {};
-        if (initialState.rpsResult === undefined) initialState.rpsResult = null;
-        
-        let loadedHistory = data.history;
-        if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
-        
-        for (let i = 1; i < loadedHistory.length; i++) {
-            const ops = loadedHistory[i].action.operations;
-            if (ops) {
-                ops.forEach(op => {
-                    if (op.type === 'SET_BGM' && op.filename) {
-                        if (!BGM_FILES.includes(op.filename)) {
-                            console.warn(`[BGM Warning] Script uses: "${op.filename}", which is not in BGM_FILES list.`);
-                        }
-                    }
-                });
-            }
-            if (!loadedHistory[i].state) {
-                if (loadedHistory[i].detachedStartState) {
-                    loadedHistory[i].state = cloneState(loadedHistory[i].detachedStartState);
-                } 
-                else {
-                    const prevState = loadedHistory[i-1].state;
-                    const newState = cloneState(prevState);
-                    const ops = loadedHistory[i].action.operations;
-                    ops.forEach(op => applyOperation(newState, op));
-                    loadedHistory[i].state = newState;
-                }
-            }
-        }
-        history = loadedHistory;
-        currentIndex = resetToStart ? 0 : (data.currentIndex || 0);
-
-        // ==========================================
-        // [BUG FIX] 防止載入時自動觸發特效
-        // ==========================================
-        // 將「上一次播放的步驟」強制同步為「當前載入的步驟」
-        // 這樣 renderUI 在第一次執行時，會發現 index 相同而跳過特效播放
-        lastRbStep = currentIndex;       // 修正：次元破裂
-        lastShuffleStep = currentIndex;  // 修正：洗牌特效
-        lastAnimatedStep = currentIndex; // 修正：王牌進場特效
-        // ==========================================
-
-        storageQuotaExceeded = false;
-        hasAlertedQuota = false;
-        lastRenderedState = null; 
+		globalImageRegistry = data.imageRegistry || {};
 		
-		// [修正] 匯入劇本後，立刻重新計算已見卡
-        calculateSeenCards();
-        
-        renderUI();
-        saveToStorage();
-        
-        if (typeof generateDefaultPortraits === 'function') {
-            generateDefaultPortraits();
-        }
-    }
+		// [修改] 移除這裡的 preloadImagesFromRegistry(); 
+		// 改在 initMobileMode 或 loadFromStorage 裡面呼叫，或使用延遲呼叫
+		// 讓 UI 呈現與播放優先
+		setTimeout(() => {
+			console.log("背景啟動圖片預載...");
+			preloadImagesFromRegistry();
+		}, 1000); // 延遲 1 秒，讓瀏覽器先處理畫面渲染與播放啟動
+
+		globalAbilityStyleRegistry = data.abilityRegistry || {};
+		globalLastUsedStyles = data.lastUsedStyles || {};
+		globalAceRegistry = data.aceRegistry || {};
+
+		if (data.themeSettings) {
+			globalThemeSettings = data.themeSettings;
+		} else {
+			globalThemeSettings = { p1: 'blue', p2: 'red' };
+		}
+		applyThemeVariables();
+
+		if (data.moonlessRegistry) {
+			if (!data.initialState.moonless) data.initialState.moonless = {};
+			Object.assign(data.initialState.moonless, data.moonlessRegistry);
+		}
+
+		initialState = data.initialState;
+		if (!initialState.moonless) initialState.moonless = {};
+		if (initialState.rpsResult === undefined) initialState.rpsResult = null;
+
+		let loadedHistory = data.history;
+		if (!loadedHistory[0].state) loadedHistory[0].state = cloneState(initialState);
+
+		// 重建 State 鏈 (保持不變)
+		for (let i = 1; i < loadedHistory.length; i++) {
+			const ops = loadedHistory[i].action.operations;
+			// BGM 檢查 (保持不變)
+			if (ops) {
+				ops.forEach(op => {
+					if (op.type === 'SET_BGM' && op.filename && !BGM_FILES.includes(op.filename)) {
+						console.warn(`[BGM Warning] Missing: "${op.filename}"`);
+					}
+				});
+			}
+			if (!loadedHistory[i].state) {
+				if (loadedHistory[i].detachedStartState) {
+					loadedHistory[i].state = cloneState(loadedHistory[i].detachedStartState);
+				} else {
+					const prevState = loadedHistory[i-1].state;
+					const newState = cloneState(prevState);
+					const ops = loadedHistory[i].action.operations;
+					ops.forEach(op => applyOperation(newState, op));
+					loadedHistory[i].state = newState;
+				}
+			}
+		}
+
+		history = loadedHistory;
+		currentIndex = resetToStart ? 0 : (data.currentIndex || 0);
+
+		// 防止載入時自動觸發特效
+		lastRbStep = currentIndex; 
+		lastShuffleStep = currentIndex;
+		
+		storageQuotaExceeded = false;
+		hasAlertedQuota = false;
+		lastRenderedState = null;
+
+		calculateSeenCards();
+		renderUI();
+		saveToStorage();
+
+		if (typeof generateDefaultPortraits === 'function') {
+			generateDefaultPortraits();
+		}
+	}
 
     function resolveImportConflict(choice) {
         document.getElementById('import-conflict-modal').style.display = 'none';
