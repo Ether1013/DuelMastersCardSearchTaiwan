@@ -2194,6 +2194,80 @@
 		transform: scale(1.1) rotate(90deg); /* 懸停時稍微放大並旋轉 */
 		text-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
 	}
+	
+	/* --- New Move Modal UI --- */
+	#deck-move-modal .modal-content {
+		width: 450px; /* 加寬一點以容納按鈕 */
+		text-align: left;
+	}
+
+	/* 數量選擇區 */
+	.qty-group {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 15px;
+		align-items: center;
+	}
+	.qty-btn {
+		flex: 1;
+		padding: 8px 0;
+		border: 1px solid #bdc3c7;
+		background: #f9f9f9;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: bold;
+		color: #2c3e50;
+		transition: all 0.2s;
+	}
+	.qty-btn:hover { background: #eef2f5; }
+	.qty-btn.active {
+		background: #3498db;
+		color: white;
+		border-color: #2980b9;
+	}
+	#dm-qty {
+		width: 60px;
+		text-align: center;
+		font-weight: bold;
+		padding: 8px;
+	}
+
+	/* 目標區域選擇 (網格佈局) */
+	.dest-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr); /* 兩列 */
+		gap: 10px;
+		margin-bottom: 20px;
+	}
+	.dest-btn {
+		padding: 10px;
+		border: 1px solid #bdc3c7;
+		background: #fff;
+		border-radius: 6px;
+		cursor: pointer;
+		text-align: left;
+		display: flex;
+		align-items: center;
+		transition: all 0.1s;
+		font-size: 0.95rem;
+	}
+	.dest-btn:hover {
+		background: #f0f8ff;
+		border-color: #3498db;
+	}
+	.dest-btn.active {
+		background: #3498db;
+		color: white;
+		border-color: #2980b9;
+		box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+	}
+	.dest-btn i {
+		font-style: normal;
+		margin-right: 8px;
+		font-size: 1.2rem;
+		width: 24px;
+		text-align: center;
+	}
 </style>
 </head>
 <body>
@@ -11127,6 +11201,38 @@
 		applyBattleZoneScaling();
 	});
 	
+	// 設定數量 (點擊 1-6 按鈕)
+    function setMoveQty(n) {
+        const input = document.getElementById('dm-qty');
+        input.value = n;
+        updateQtyBtnState(n);
+    }
+
+    // 更新數量按鈕的樣式 (讓對應數字變色)
+    function updateQtyBtnState(val) {
+        val = parseInt(val);
+        const btns = document.querySelectorAll('.qty-btn');
+        btns.forEach((btn, index) => {
+            // index 0 是數字1, index 5 是數字6
+            if ((index + 1) === val) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // 設定目標 (點擊區域按鈕)
+    function setMoveDest(targetVal, btnEl) {
+        // 更新隱藏欄位
+        document.getElementById('dm-target-val').value = targetVal;
+        
+        // 更新視覺樣式
+        const allBtns = document.querySelectorAll('.dest-btn');
+        allBtns.forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+	
 	// =========================================
     //  DECK CONTEXT MENU LOGIC
     // =========================================
@@ -11189,9 +11295,14 @@
             triggerShuffleAnimation(10, contextMenuTargetZone);
         } 
         else if (action === 'move') {
-            document.getElementById('dm-qty').value = 1;
-            document.getElementById('deck-move-modal').style.display = 'flex';
-        }
+			// 重置數量為 1
+			setMoveQty(1); 
+			
+			// 重置目標為手牌 (Hand) - 模擬點擊第一個按鈕
+			const handBtn = document.querySelector('.dest-btn'); // 假設第一個是 Hand
+			if(handBtn) setMoveDest('hand', handBtn);
+			
+			document.getElementById('deck-move-modal').style.display = 'flex';        }
         else if (action === 'recall') {
             recallAllCards();
         }
@@ -11200,7 +11311,8 @@
     // 3. 確認移動卡片
     function confirmDeckMove() {
         const qty = parseInt(document.getElementById('dm-qty').value) || 1;
-        const targetType = document.getElementById('dm-target').value; 
+        // [修改這裡] 改為讀取 hidden input 的值
+        const targetType = document.getElementById('dm-target-val').value;
         
         const playerPrefix = contextMenuTargetZone.split('-')[0]; 
         
@@ -12917,26 +13029,50 @@
 
 <div id="deck-move-modal" class="modal">
     <div class="zone-close-btn" onclick="document.getElementById('deck-move-modal').style.display='none'">✕</div>
+    
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#2c3e50;" data-i18n="title_move_modal">從牌庫頂移動</h3>
+        <h3 style="margin-top:0; color:#2c3e50; text-align:center;" data-i18n="title_move_modal">從牌庫頂移動</h3>
         
-        <div class="dm-row">
-            <label data-i18n="lbl_qty">數量:</label>
-            <input type="number" id="dm-qty" value="1" min="1" max="40">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#7f8c8d;" data-i18n="lbl_qty">數量:</label>
+        <div class="qty-group">
+            <button class="qty-btn active" onclick="setMoveQty(1)">1</button>
+            <button class="qty-btn" onclick="setMoveQty(2)">2</button>
+            <button class="qty-btn" onclick="setMoveQty(3)">3</button>
+            <button class="qty-btn" onclick="setMoveQty(4)">4</button>
+            <button class="qty-btn" onclick="setMoveQty(5)">5</button>
+            <button class="qty-btn" onclick="setMoveQty(6)">6</button>
+            <input type="number" id="dm-qty" value="1" min="1" max="40" oninput="updateQtyBtnState(this.value)">
         </div>
         
-        <div class="dm-row">
-            <label data-i18n="lbl_dest">移動到:</label>
-            <select id="dm-target">
-                <option value="hand" data-i18n="dest_hand">✋ 手牌</option>
-                <option value="mana" data-i18n="dest_mana">💧 魔力區</option>
-                <option value="shield" data-i18n="dest_shield">🛡️ 護盾區</option>
-                <option value="grave" data-i18n="dest_grave">💀 墓地</option>
-                <option value="battle" data-i18n="dest_battle">⚔️ 戰鬥場</option>
-                <option value="hyper" data-i18n="dest_hyper">🌀 超次元</option>
-                <option value="abyss" data-i18n="dest_abyss">🌑 深淵</option>
-                <option value="reveal" data-i18n="dest_reveal">👁️ 展示區</option>
-            </select>
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#7f8c8d;" data-i18n="lbl_dest">移動到:</label>
+        
+        <input type="hidden" id="dm-target-val" value="hand">
+
+        <div class="dest-grid">
+            <div class="dest-btn active" onclick="setMoveDest('hand', this)">
+                <i>✋</i> <span data-i18n="dest_hand">手牌</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('mana', this)">
+                <i>💧</i> <span data-i18n="dest_mana">魔力區</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('shield', this)">
+                <i>🛡️</i> <span data-i18n="dest_shield">護盾區</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('grave', this)">
+                <i>💀</i> <span data-i18n="dest_grave">墓地</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('battle', this)">
+                <i>⚔️</i> <span data-i18n="dest_battle">戰鬥場</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('reveal', this)">
+                <i>👁️</i> <span data-i18n="dest_reveal">展示區</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('hyper', this)">
+                <i>🌀</i> <span data-i18n="dest_hyper">超次元</span>
+            </div>
+            <div class="dest-btn" onclick="setMoveDest('abyss', this)">
+                <i>🌑</i> <span data-i18n="dest_abyss">深淵</span>
+            </div>
         </div>
         
         <div class="dm-btns">
