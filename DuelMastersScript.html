@@ -3018,10 +3018,10 @@
         {
             filename: 'script20251224_tw.txt',
             title: '深淵 VS 俳句爵',
-            description: '餅圖大決戰(台語)',
+            description: '餅圖大決戰',
 			counter_url: 'https://www.f-counter.net/j/66/1766542455/',
 			speed: 1,
-            lang: 'zh',
+            lang: 'tw',
 			credits: [
                 { role: 'Special Thanks', name: 'エルシャダイ / UTV Ignition Entertainment' },
             ]
@@ -10655,6 +10655,11 @@
         } else {
             targetLang = scriptLang; // 否則使用劇本設定 (若劇本沒設，上面已預設為 zh)
         }
+		
+		// [新增] 特殊處理：如果是 'tw'，介面顯示 [TW] 但內部運作視為 'zh'
+		if (targetLang === 'tw') {
+			targetLang = 'zh';
+		}
         
         // D. 套用語言 (更新 UI 文字與下拉選單)
         changeLanguage(targetLang);
@@ -10754,6 +10759,14 @@
                 
                 // 執行載入流程 (利用既有的 processGameData)
                 processGameData(data, true); // true = 重置到第一步
+				
+				// [修改] 語言判斷
+				if (scriptData.lang) {
+					let lang = scriptData.lang;
+					// 若標記為 tw，強制使用 zh 資源
+					if (lang === 'tw') lang = 'zh';
+					changeLanguage(lang);
+				}
                 
                 // 套用額外設定 (語言、速度、計數器)
                 if (scriptData.lang) changeLanguage(scriptData.lang);
