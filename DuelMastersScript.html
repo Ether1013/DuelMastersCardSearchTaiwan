@@ -10760,14 +10760,17 @@
                 // 執行載入流程 (利用既有的 processGameData)
                 processGameData(data, true); // true = 重置到第一步
 				
-				// [修改] 語言判斷
+				// 2. [關鍵修改] 語言判斷：攔截 'tw' 並轉回 'zh'
+				// 這段必須在 alert 之前執行，這樣下面的訊息才會是中文
 				if (scriptData.lang) {
 					let lang = scriptData.lang;
-					// 若標記為 tw，強制使用 zh 資源
-					if (lang === 'tw') lang = 'zh';
+					
+					// ★ 如果劇本是 tw，就騙系統說是 zh
+					if (lang === 'tw') lang = 'zh'; 
+					
 					changeLanguage(lang);
 				}
-                
+				
                 // 套用額外設定 (語言、速度、計數器)
                 if (scriptData.lang) changeLanguage(scriptData.lang);
                 if (scriptData.speed) changePlaybackSpeed(scriptData.speed);
