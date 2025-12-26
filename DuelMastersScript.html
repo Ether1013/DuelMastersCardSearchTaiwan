@@ -10622,73 +10622,52 @@
     }
 	
     function confirmMobileScript() {
-        if (!selectedMobileScript) return;
-
-        // 1. 關閉選單
-        document.getElementById('mobile-script-selector').style.display = 'none';
-
-        // 2. 處理路徑
-        const timestamp = Date.now(); 
-        const fullPath = 'scripts/' + selectedMobileScript + '?v=' + timestamp;
-
-        // 3. 初始化行動版
-        initMobileMode(fullPath);
-        
-        // 4. 找出劇本資料
-        const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
-		// [新增] 記錄當前劇本設定
+		if (!selectedMobileScript) return;
+		document.getElementById('mobile-script-selector').style.display = 'none';
+		const timestamp = Date.now();
+		const fullPath = 'scripts/' + selectedMobileScript + '?v=' + timestamp;
+		initMobileMode(fullPath);
+		
+		const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
 		currentScriptConfig = scriptData;
-		
-        // --- [新增] 語言設定邏輯 (URL優先 > 劇本設定 > 預設zh) ---
-        
-        // A. 嘗試讀取 URL 參數 (doGet)
-        const urlLang = getUrlParameter('lang');
-        
-        // B. 嘗試讀取劇本設定
-        const scriptLang = (scriptData && scriptData.lang) ? scriptData.lang : 'zh';
-        
-        // C. 判定最終語言
-        let targetLang = 'zh'; // 預設值
-        
-        if (urlLang && ['zh', 'en', 'jp'].includes(urlLang)) {
-            targetLang = urlLang; // 如果 URL 有帶有效參數，絕對優先
-        } else {
-            targetLang = scriptLang; // 否則使用劇本設定 (若劇本沒設，上面已預設為 zh)
-        }
-		
-		// [新增] 特殊處理：如果是 'tw'，介面顯示 [TW] 但內部運作視為 'zh'
+
+		// --- 語言設定邏輯 ---
+		const urlLang = getUrlParameter('lang');
+		const scriptLang = (scriptData && scriptData.lang) ? scriptData.lang : 'zh';
+
+		let targetLang = 'zh';
+		// [修改] 允許網址參數帶入 'tw'
+		if (urlLang && ['zh', 'en', 'jp', 'tw'].includes(urlLang)) {
+			targetLang = urlLang;
+		} else {
+			targetLang = scriptLang;
+		}
+
+		// [新增] 關鍵攔截：如果是 'tw'，強制轉回 'zh' 讓系統運作正常
 		if (targetLang === 'tw') {
 			targetLang = 'zh';
 		}
-        
-        // D. 套用語言 (更新 UI 文字與下拉選單)
-        changeLanguage(targetLang);
-        // 同步更新下拉選單顯示 (雖然手機版看不到，但保持狀態一致)
-        const langSelect = document.getElementById('lang-select');
-        if (langSelect) langSelect.value = targetLang;
 
-        // -------------------------------------------------------
+		changeLanguage(targetLang);
+		// -------------------
 
-        // 5. 套用劇本預設速度
-        let targetSpeed = 1.0;
-        if (scriptData && scriptData.speed !== undefined) {
-            targetSpeed = scriptData.speed;
-        }
-        changePlaybackSpeed(targetSpeed);
+		const langSelect = document.getElementById('lang-select');
+		if (langSelect) langSelect.value = targetLang;
 
-        // 6. 音訊解鎖
-        globalAudioPlayer.muted = true; 
-        globalAudioPlayer.play().catch(e => {
-            console.log("Audio context unlocked (muted)");
-        });
-        
-        // 7. 更新劇本專屬計數器
-        let urlToLoad = (scriptData && scriptData.counter_url) ? scriptData.counter_url : null;
-        updateVisitorCounter(urlToLoad);
+		let targetSpeed = 1.0;
+		if (scriptData && scriptData.speed !== undefined) {
+			targetSpeed = scriptData.speed;
+		}
+		changePlaybackSpeed(targetSpeed);
 
-        // 8. 更新靜音按鈕 UI
-        updateMuteButtonUI();
-    }
+		globalAudioPlayer.muted = true;
+		globalAudioPlayer.play().catch(e => { console.log("Audio context unlocked (muted)"); });
+
+		let urlToLoad = (scriptData && scriptData.counter_url) ? scriptData.counter_url : null;
+		updateVisitorCounter(urlToLoad);
+		
+		updateMuteButtonUI();
+	}
 	
 	// --- [新增] 匯入選擇器邏輯 ---
 
@@ -10736,53 +10715,43 @@
 
     // 3. 載入內建劇本 (Fetch & Load)
     function loadInternalScript(scriptData) {
-        if (!confirm(t('msg_confirm_load_script').replace('{title}', scriptData.title))) return;
-		// [新增] 記錄當前劇本設定，供 Ending 使用
+		if (!confirm(t('msg_confirm_load_script').replace('{title}', scriptData.title))) return;
+		
 		currentScriptConfig = scriptData;
+		document.getElementById('import-selector-modal').style.display = 'none';
+		const path = 'scripts/' + scriptData.filename + '?v=' + Date.now();
 
-        // 關閉視窗
-        document.getElementById('import-selector-modal').style.display = 'none';
+		console.log("Loading script:", path);
+		fetch(path, { cache: "no-store" })
+			.then(res => {
+				if(!res.ok) throw new Error(`HTTP ${res.status}`);
+				return res.json();
+			})
+			.then(data => {
+				if(!data.history || !data.initialState) throw new Error("Invalid script format");
+				processGameData(data, true);
 
-        // 處理路徑 (加上時間戳避免快取)
-        const path = 'scripts/' + scriptData.filename + '?v=' + Date.now();
-
-        // 顯示 Loading (可選)
-        console.log("Loading script:", path);
-
-        fetch(path, { cache: "no-store" })
-            .then(res => {
-                if(!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                if(!data.history || !data.initialState) throw new Error("Invalid script format");
-                
-                // 執行載入流程 (利用既有的 processGameData)
-                processGameData(data, true); // true = 重置到第一步
-				
-				// 2. [關鍵修改] 語言判斷：攔截 'tw' 並轉回 'zh'
-				// 這段必須在 alert 之前執行，這樣下面的訊息才會是中文
+				// [修改] 語言設定與攔截
 				if (scriptData.lang) {
 					let lang = scriptData.lang;
-					
-					// ★ 如果劇本是 tw，就騙系統說是 zh
+					// ★ 關鍵修正：如果是 'tw'，騙系統說是 'zh'
+					// 這樣接下來的 changeLanguage('zh') 會載入繁中字典
+					// 下面的 alert(t('msg_import_success')) 就能正確顯示中文
 					if (lang === 'tw') lang = 'zh'; 
 					
 					changeLanguage(lang);
 				}
+
+				if (scriptData.speed) changePlaybackSpeed(scriptData.speed);
+				if (scriptData.counter_url) updateVisitorCounter(scriptData.counter_url);
 				
-                // 套用額外設定 (語言、速度、計數器)
-                if (scriptData.lang) changeLanguage(scriptData.lang);
-                if (scriptData.speed) changePlaybackSpeed(scriptData.speed);
-                if (scriptData.counter_url) updateVisitorCounter(scriptData.counter_url);
-                
-                alert(t('msg_import_success'));
-            })
-            .catch(err => {
-                console.error(err);
-                alert(t('msg_import_fail') + ": " + err.message);
-            });
-    }
+				alert(t('msg_import_success'));
+			})
+			.catch(err => {
+				console.error(err);
+				alert(t('msg_import_fail') + ": " + err.message);
+			});
+	}
 
 // --- 新增的手機端邏輯 ---
 
