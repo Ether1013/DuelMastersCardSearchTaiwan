@@ -12627,8 +12627,11 @@
 				// 建議改為由點擊觸發重置，或是設定一個較長的 timeout (例如 10秒)
 				// 這裡示範改為 15秒後自動重置
 				setTimeout(() => {
+					globalAudioPlayer.pause();
 					resetEnding();
 				}, 7000); 
+			} else {
+				globalAudioPlayer.pause();
 			}
 
 		}, 500); 
@@ -12668,8 +12671,6 @@
 
 	function resetEnding() {
 	
-		globalAudioPlayer.pause();
-
 		// 移除動畫 Class
 		document.body.classList.remove('shutdown-mode');
 		
