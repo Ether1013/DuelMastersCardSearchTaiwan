@@ -5798,29 +5798,74 @@
         }
     }
 
-    // [優化] 旋轉：直接修改 transform
+    // [修正] 旋轉：恢復堆疊連動邏輯
 	function rotateCard(deg) {
-		if (!pendingMove || pendingMove.cardIds.length === 0) { alert(t('msg_select_rotate')); return; }
-		
-		const op = { type: 'ROTATE_CARD', cardIds: [...pendingMove.cardIds], deg: deg };
-		addOperation(op, true); 
-		
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
+		const state = getCurrentDisplayState();
+
+		// --- 恢復原始的堆疊搜尋邏輯 ---
+		const getRoot = (cardId) => {
+			let current = state.cards.find(c => c.id === cardId);
+			while (current && current.parentId) {
+				const parent = state.cards.find(c => c.id === current.parentId);
+				if (!parent) break;
+				current = parent;
+			}
+			return current;
+		};
+
+		const getRotatableTree = (rootIds) => {
+			const results = new Set();
+			const queue = [...rootIds];
+			rootIds.forEach(id => results.add(id));
+			while(queue.length > 0) {
+				const currentId = queue.shift();
+				const children = state.cards.filter(c => c.parentId === currentId);
+				// 讀取 state.moonless
+				const isMoonless = state.moonless && state.moonless[currentId];
+				children.forEach(child => {
+					if (isMoonless && child.stackType === 'bottom') return;
+					if (!results.has(child.id)) {
+						results.add(child.id);
+						queue.push(child.id);
+					}
+				});
+			}
+			return Array.from(results);
+		};
+
+		// 1. 找出 Roots
+		const roots = new Set();
 		pendingMove.cardIds.forEach(id => {
-			const card = tempState.cards.find(c => c.id === id);
+			const r = getRoot(id);
+			if (r) roots.add(r.id);
+		});
+
+		// 2. 找出所有連動卡片
+		const allTargets = getRotatableTree(Array.from(roots));
+
+		// 3. 送出指令
+		addOperation({ type: 'ROTATE_CARD', cardIds: allTargets, deg: deg }, true);
+
+		// 4. 手動更新 DOM (包含所有連動目標)
+		allTargets.forEach(id => {
+			const card = state.cards.find(c => c.id === id); // 此時 state 已經被 addOperation 更新過角度
 			const el = document.querySelector(`.card[data-id="${id}"]`);
 			if (el && card) {
-				// 保持原有的 transform 邏輯 (如果有 selected 浮起效果要保留)
 				let transform = `rotate(${card.rotation}deg)`;
-				if (el.classList.contains('selected') && !card.stackType?.includes('puzzle')) {
+				if (el.classList.contains('selected') && !card.zone.includes('ability')) {
+					// 簡易判斷：非能力區且被選取時浮起
 					transform += ` translateY(-5px)`;
 				}
 				el.style.transform = transform;
 				
-				// 如果是戰鬥區，橫置(90度)可能需要調整 flex alignment，但通常 transform 就足夠視覺表現
-				if (Math.abs(card.rotation) % 180 !== 0) {
-					el.parentElement.classList.add('tapped-group');
-				} else {
-					el.parentElement.classList.remove('tapped-group');
+				// 戰鬥區橫置時的垂直置中修正
+				if (card.zone.includes('battle')) {
+					if (Math.abs(card.rotation) % 180 !== 0) {
+						el.parentElement.classList.add('tapped-group');
+					} else {
+						el.parentElement.classList.remove('tapped-group');
+					}
 				}
 			}
 		});
@@ -5847,35 +5892,31 @@
 		if(el) el.innerText = val;
 	}
     
-    // 2. 新增註記後存檔
-	// [優化] 註記：直接操作 .card-note 元素
+    // [修正] 註記：使用正確的 ADD_NOTE 指令
 	function addCardNote() {
-		if (!pendingMove || pendingMove.cardIds.length !== 1) return;
-		const id = pendingMove.cardIds[0];
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		const val = document.getElementById('note-input').value;
 		
-		const op = { type: 'NOTE_CARD', cardIds: [id], note: val };
+		// 指令名稱修正為 ADD_NOTE
+		const op = { type: 'ADD_NOTE', cardIds: [...pendingMove.cardIds], note: val };
 		addOperation(op, true);
 		
-		const cardEl = document.querySelector(`.card[data-id="${id}"]`);
-		if (cardEl) {
-			let noteEl = cardEl.querySelector('.card-note');
-			if (val) {
-				if (!noteEl) {
-					noteEl = document.createElement('div');
-					noteEl.className = 'card-note';
-					cardEl.appendChild(noteEl);
+		pendingMove.cardIds.forEach(id => {
+			const cardEl = document.querySelector(`.card[data-id="${id}"]`);
+			if (cardEl) {
+				let noteEl = cardEl.querySelector('.card-note');
+				if (val) {
+					if (!noteEl) {
+						noteEl = document.createElement('div');
+						noteEl.className = 'card-note';
+						cardEl.appendChild(noteEl);
+					}
+					noteEl.innerText = val;
+				} else {
+					if (noteEl) noteEl.remove();
 				}
-				noteEl.innerText = val;
-				// 如果是 Ability Card，需要重新調整樣式 (垂直/水平)
-				if (cardEl.classList.contains('ability-card')) {
-					// 簡易重繪 (或者您可以在此手動設定 CSS)
-					// 考慮到 Ability Card 結構複雜，單張重繪可能較安全，但這裡我們試著直接改文字
-				}
-			} else {
-				if (noteEl) noteEl.remove();
 			}
-		}
+		});
 	}
     
     // 1. 調整位置後存檔
@@ -5930,48 +5971,166 @@
         resetBoard(state.turnPlayer);
     }
 
-    function toggleGlow() {
+    // [修正] 發光：支援 sourceId (效果卡) 與 parentId (堆疊) 的雙向連動
+	function toggleGlow() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
-		
-		// 送出指令，並跳過 renderUI
-		const op = { type: 'TOGGLE_GLOW', cardIds: [...pendingMove.cardIds] };
-		addOperation(op, true); 
+		const state = getCurrentDisplayState();
 
-		// 手動更新 DOM
-		pendingMove.cardIds.forEach(id => {
-			// 從 tempState 取得最新的 glow 狀態 (因為 applyOperation 已經執行過了)
-			const card = tempState.cards.find(c => c.id === id);
-			const el = document.querySelector(`.card[data-id="${id}"]`);
-			if (el && card) {
-				// 移除舊的發光 Class
-				el.classList.forEach(cls => {
-					if(cls.startsWith('glow-')) el.classList.remove(cls);
+		// --- 1. 尋找整組關聯卡片 (包含效果卡 sourceId 與堆疊 parentId) ---
+		const getLinkedGroup = (startIds) => {
+			const resultIds = new Set();
+			const queue = [...startIds];
+			
+			// 先將選取的卡片加入結果
+			startIds.forEach(id => resultIds.add(id));
+
+			// 廣度優先搜尋 (BFS) 找出所有關聯
+			// 我們需要不斷往上找 (Parent/Source) 和往下找 (Children/Effects)
+			let idx = 0;
+			while(idx < queue.length){
+				const currId = queue[idx++];
+				const currCard = state.cards.find(c => c.id === currId);
+				if (!currCard) continue;
+
+				// A. 往上找 (Find Parents/Sources)
+				const parentId = currCard.parentId;
+				const sourceId = currCard.sourceId; // 效果卡專用連結
+
+				if (parentId && !resultIds.has(parentId)) {
+					resultIds.add(parentId);
+					queue.push(parentId);
+				}
+				if (sourceId && !resultIds.has(sourceId)) {
+					resultIds.add(sourceId);
+					queue.push(sourceId);
+				}
+
+				// B. 往下找 (Find Children/Linked Effects)
+				// 找出所有指認當前卡片為 Parent 或 Source 的卡
+				const relatives = state.cards.filter(c => 
+					(c.parentId === currId) || (c.sourceId === currId)
+				);
+				
+				relatives.forEach(child => {
+					if (!resultIds.has(child.id)) {
+						resultIds.add(child.id);
+						queue.push(child.id);
+					}
 				});
-				// 加上新的
-				if (card.glow) el.classList.add(`glow-${card.glow}`);
+			}
+			return Array.from(resultIds);
+		};
+
+		const allTargetIds = getLinkedGroup(pendingMove.cardIds);
+		// ----------------------------------------
+
+		// 2. 決定下一個顏色
+		// 優先以「位於戰鬥區/主要區域」的卡片狀態為主，若無則取第一張
+		const mainCardId = allTargetIds.find(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && (c.zone.includes('battle') || c.zone.includes('hand') || c.zone.includes('mana'));
+		}) || allTargetIds[0];
+
+		const mainCard = state.cards.find(c => c.id === mainCardId);
+		
+		const colors = ['red', 'yellow', 'green', 'blue', 'black', 'white', 'rainbow', null];
+		let currentGlow = mainCard ? mainCard.glow : null;
+		
+		// 如果目前是底光，切換模式時重置
+		if (currentGlow && currentGlow.startsWith('bottom-')) currentGlow = null;
+
+		let idx = colors.indexOf(currentGlow);
+		if (idx === -1) idx = 7; 
+		let nextColor = colors[(idx + 1) % colors.length];
+
+		// 3. 送出指令 (針對整組)
+		const op = { type: 'SET_GLOW', cardIds: allTargetIds, color: nextColor };
+		addOperation(op, true); // skipRender = true
+
+		// 4. 手動更新 DOM (針對整組)
+		allTargetIds.forEach(id => {
+			const el = document.querySelector(`.card[data-id="${id}"]`);
+			if (el) {
+				el.classList.forEach(cls => {
+					if(cls.startsWith('glow-') && cls !== 'glow-unseen') el.classList.remove(cls);
+				});
+				if (nextColor) el.classList.add(`glow-${nextColor}`);
 			}
 		});
 	}
-	
-	// [優化] 底光：同上
+
+	// [修正] 底光：同上，支援 sourceId 與 parentId
 	function toggleBottomGlow() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
-		
-		const op = { type: 'TOGGLE_GLOW_BOTTOM', cardIds: [...pendingMove.cardIds] };
+		const state = getCurrentDisplayState();
+
+		// 1. 尋找整組
+		const getLinkedGroup = (startIds) => {
+			const resultIds = new Set();
+			const queue = [...startIds];
+			startIds.forEach(id => resultIds.add(id));
+
+			let idx = 0;
+			while(idx < queue.length){
+				const currId = queue[idx++];
+				const currCard = state.cards.find(c => c.id === currId);
+				if (!currCard) continue;
+
+				// Upward
+				if (currCard.parentId && !resultIds.has(currCard.parentId)) {
+					resultIds.add(currCard.parentId);
+					queue.push(currCard.parentId);
+				}
+				if (currCard.sourceId && !resultIds.has(currCard.sourceId)) {
+					resultIds.add(currCard.sourceId);
+					queue.push(currCard.sourceId);
+				}
+				// Downward
+				const relatives = state.cards.filter(c => 
+					(c.parentId === currId) || (c.sourceId === currId)
+				);
+				relatives.forEach(child => {
+					if (!resultIds.has(child.id)) {
+						resultIds.add(child.id);
+						queue.push(child.id);
+					}
+				});
+			}
+			return Array.from(resultIds);
+		};
+
+		const allTargetIds = getLinkedGroup(pendingMove.cardIds);
+
+		// 2. 決定顏色
+		const mainCardId = allTargetIds.find(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && (c.zone.includes('battle') || c.zone.includes('hand') || c.zone.includes('mana'));
+		}) || allTargetIds[0];
+		const mainCard = state.cards.find(c => c.id === mainCardId);
+
+		const bottomColors = [ 'bottom-red', 'bottom-yellow', 'bottom-green', 'bottom-blue', 'bottom-black', 'bottom-white', 'bottom-rainbow' ];
+		let currentGlow = mainCard ? mainCard.glow : null;
+
+		let idx = bottomColors.indexOf(currentGlow);
+		let nextColor;
+		if (idx === -1) {
+			nextColor = bottomColors[0];
+		} else {
+			nextColor = bottomColors[(idx + 1) % bottomColors.length];
+		}
+
+		// 3. 送出指令
+		const op = { type: 'SET_GLOW', cardIds: allTargetIds, color: nextColor };
 		addOperation(op, true);
 
-		pendingMove.cardIds.forEach(id => {
-			const card = tempState.cards.find(c => c.id === id);
+		// 4. 手動更新 DOM
+		allTargetIds.forEach(id => {
 			const el = document.querySelector(`.card[data-id="${id}"]`);
-			if (el && card) {
-				// 清除舊底光
+			if (el) {
 				el.classList.forEach(cls => {
-					if(cls.startsWith('glow-bottom-')) el.classList.remove(cls);
+					if(cls.startsWith('glow-') && cls !== 'glow-unseen') el.classList.remove(cls);
 				});
-				// 加上新底光
-				// 注意：這裡假設 card.glowBottom 是您在 applyOperation 裡處理的屬性
-				// 若原始代碼是複用 glow 屬性，請依據原始邏輯調整
-				 if (card.glow) el.classList.add(`glow-bottom-${card.glow}`);
+				if (nextColor) el.classList.add(`glow-${nextColor}`);
 			}
 		});
 	}
@@ -6083,25 +6242,41 @@
         el.blur(); // 移除焦點，避免誤觸
     }
 	
-	// [優化] 受傷/治癒切換
+	// [修正] 受傷：恢復 INJURED 指令
 	function toggleInjured() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
-		
-		const op = { type: 'TOGGLE_INJURED', cardIds: [...pendingMove.cardIds] };
+		const state = getCurrentDisplayState();
+
+		// 1. 檢查區域
+		const validZones = ['p1-battle', 'p2-battle', 'p1-shield', 'p2-shield'];
+		const isValid = pendingMove.cardIds.every(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && validZones.includes(c.zone);
+		});
+		if (!isValid) { alert(t('msg_injured_err')); return; }
+
+		// 2. 計算狀態 (只要有一張受傷，就全部改為未受傷；否則全部受傷)
+		const hasInjured = pendingMove.cardIds.some(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c.isInjured;
+		});
+		const nextState = !hasInjured;
+
+		// 3. 送出指令
+		const op = { type: 'INJURED', cardIds: [...pendingMove.cardIds], setInjured: nextState };
 		addOperation(op, true);
 
+		// 4. 手動更新 DOM
 		pendingMove.cardIds.forEach(id => {
-			const card = tempState.cards.find(c => c.id === id);
 			const el = document.querySelector(`.card[data-id="${id}"]`);
-			if (el && card) {
-				// 移除舊的爪痕
+			if (el) {
 				const oldClaw = el.querySelector('.claw-overlay');
 				if (oldClaw) oldClaw.remove();
 
-				// 如果受傷，加上新的
-				if (card.isInjured) {
+				if (nextState) {
 					const clawDiv = document.createElement('div');
-					clawDiv.className = 'claw-overlay'; // 編輯模式不加動畫 class 以免干擾
+					// 編輯時不加動畫 class 以免一直播放
+					clawDiv.className = 'claw-overlay'; 
 					clawDiv.innerHTML = `
 						<svg class="claw-svg" viewBox="0 0 100 100">
 							<path class="claw-path p1" d="M20,20 Q50,50 80,80" />
@@ -6113,6 +6288,9 @@
 				}
 			}
 		});
+		
+		// 強制刷新操作面板按鈕狀態 (變色)
+		if(typeof updateSelectionUI === 'function') updateSelectionUI();
 	}
 
 	// --- [新增] BGM 相關邏輯 ---
