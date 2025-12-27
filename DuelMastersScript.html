@@ -5971,12 +5971,12 @@
         resetBoard(state.turnPlayer);
     }
 
-    // [修正] 發光：支援 sourceId (效果卡) 與 parentId (堆疊) 的雙向連動
+    // [修正] 發光：支援 sourceId (效果卡) 的雙向連動
 	function toggleGlow() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		const state = getCurrentDisplayState();
 
-		// --- 1. 尋找整組關聯卡片 (包含效果卡 sourceId 與堆疊 parentId) ---
+		// --- 1. 尋找整組關聯卡片 (效果卡 sourceId) ---
 		const getLinkedGroup = (startIds) => {
 			const resultIds = new Set();
 			const queue = [...startIds];
@@ -5993,13 +5993,8 @@
 				if (!currCard) continue;
 
 				// A. 往上找 (Find Parents/Sources)
-				const parentId = currCard.parentId;
 				const sourceId = currCard.sourceId; // 效果卡專用連結
 
-				if (parentId && !resultIds.has(parentId)) {
-					resultIds.add(parentId);
-					queue.push(parentId);
-				}
 				if (sourceId && !resultIds.has(sourceId)) {
 					resultIds.add(sourceId);
 					queue.push(sourceId);
@@ -6008,7 +6003,7 @@
 				// B. 往下找 (Find Children/Linked Effects)
 				// 找出所有指認當前卡片為 Parent 或 Source 的卡
 				const relatives = state.cards.filter(c => 
-					(c.parentId === currId) || (c.sourceId === currId)
+					(c.sourceId === currId)
 				);
 				
 				relatives.forEach(child => {
@@ -6059,7 +6054,7 @@
 		});
 	}
 
-	// [修正] 底光：同上，支援 sourceId 與 parentId
+	// [修正] 底光：同上，支援 sourceId
 	function toggleBottomGlow() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		const state = getCurrentDisplayState();
@@ -6076,18 +6071,13 @@
 				const currCard = state.cards.find(c => c.id === currId);
 				if (!currCard) continue;
 
-				// Upward
-				if (currCard.parentId && !resultIds.has(currCard.parentId)) {
-					resultIds.add(currCard.parentId);
-					queue.push(currCard.parentId);
-				}
 				if (currCard.sourceId && !resultIds.has(currCard.sourceId)) {
 					resultIds.add(currCard.sourceId);
 					queue.push(currCard.sourceId);
 				}
 				// Downward
 				const relatives = state.cards.filter(c => 
-					(c.parentId === currId) || (c.sourceId === currId)
+					(c.sourceId === currId)
 				);
 				relatives.forEach(child => {
 					if (!resultIds.has(child.id)) {
