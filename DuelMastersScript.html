@@ -2468,7 +2468,7 @@
             <div style="display: flex; gap:5px; justify-content: center; margin-bottom: 5px;">
                 <button onclick="prevStep()">▲</button>
                 <button onclick="togglePlay()" id="btn-play">▶</button>
-				<button onclick="stopPlayback()" id="btn-stop">⏹</button>
+				<button onclick="stopPlayback(true)" id="btn-stop">⏹</button>
                 <button onclick="nextStep()">▼</button>
 				<select id="speed-select" onchange="changePlaybackSpeed(this.value)" style="padding:2px; border-radius:4px; border:1px solid #ccc; background:#fff; font-size:0.85rem; cursor:pointer;">
 					<option value="4.0">🚀 0.25x</option>
@@ -2686,7 +2686,7 @@
         <option value="0.25">⚡ 4.0x</option>
     </select>
 	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()" style="margin-left: 5px; margin-right: 5px;">🔊</button>
-    <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback()" style="margin-right:5px;">⏹</button>
+    <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)" style="margin-right:5px;">⏹</button>
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
 </div>
 
@@ -9692,7 +9692,7 @@
     }
 
 	// --- [3] 停止播放 (恢復 UI + 停在當下) ---
-	function stopPlayback() {
+	function stopPlayback( closeMusic ) {
 		// 1. 停止計時器
 		if (playTimeout) {
 			clearTimeout(playTimeout);
@@ -9711,7 +9711,9 @@
 		// currentIndex = 0; 
 		
 		// 5. 暫停音樂
-		globalAudioPlayer.pause();
+		if ( closeMusic ){
+			globalAudioPlayer.pause();
+		}
 		
 		// 6. 重繪介面 (更新 Timeline 高亮位置)
 		renderUI();
@@ -9751,7 +9753,7 @@
 			performStepLogic(nextIndex);
 
 		} else {
-			stopPlayback();
+			stopPlayback( false );
 			setTimeout(() => { triggerEnding(); }, 2000);
 		}
 	}
@@ -12564,12 +12566,6 @@
 	function triggerEnding() {
 		console.log("📺 觸發 CRT 關機特效...");
 
-		// 1. 音樂淡出邏輯 (保持原樣)
-		if (typeof globalAudioPlayer !== 'undefined' && !globalAudioPlayer.paused) {
-			// ... (原本的淡出程式碼保持不變) ...
-			// 為節省篇幅，此處省略，請保留您原本的音樂淡出程式碼
-		}
-
 		// 2. 加上 class 觸發 CSS 動畫
 		document.body.classList.add('shutdown-mode');
 
@@ -12632,7 +12628,7 @@
 				// 這裡示範改為 15秒後自動重置
 				setTimeout(() => {
 					resetEnding();
-				}, 15000); 
+				}, 7000); 
 			}
 
 		}, 500); 
@@ -12671,6 +12667,9 @@
 	});
 
 	function resetEnding() {
+	
+		globalAudioPlayer.pause();
+
 		// 移除動畫 Class
 		document.body.classList.remove('shutdown-mode');
 		
