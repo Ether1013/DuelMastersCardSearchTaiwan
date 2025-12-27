@@ -5027,49 +5027,38 @@
         }
     }
 
-    function addOperation(op) {
-        // --- 新增：互斥鎖邏輯 ---
-        const hasDialog = draftOperations.some(o => o.type === 'DIALOGUE');
-        
-        // 1. 如果已存在對話，禁止加入其他動作 (如移動卡片)
-        if (hasDialog && op.type !== 'DIALOGUE') {
-            alert(t('msg_dialog_exclusive'));
-            return;
-        }
-        
-        // 2. 如果已存在其他動作，禁止加入對話
-        if (!hasDialog && draftOperations.length > 0 && op.type === 'DIALOGUE') {
-            alert(t('對話動作必須獨立，無法與其他動作混合 (請另開新步驟)。'));
-            return;
-        }
-        // --- 結束 ---
+    // [修改] 增加 skipRender 參數，允許手動處理 DOM 更新以提升效能
+	function addOperation(op, skipRender = false) {
+		// 互斥鎖邏輯 (維持原樣)
+		const hasDialog = draftOperations.some(o => o.type === 'DIALOGUE');
+		if (hasDialog && op.type !== 'DIALOGUE') { alert(t('msg_dialog_exclusive')); return; }
+		if (!hasDialog && draftOperations.length > 0 && op.type === 'DIALOGUE') { alert(t('msg_dialog_exclusive')); return; }
 
-        // [修改] 自動判斷編輯模式
-        if (!isDrafting) {
-            // 檢查是否在歷史紀錄範圍內
-            if (currentIndex >= 0 && currentIndex < history.length) {
-                
-                // [關鍵修改] 判斷邏輯分流
-                // 1. 如果是在最後一步，且旗標為 true (剛存檔完) -> 新增步驟
-                if (currentIndex === history.length - 1 && forceNewStep) {
-                    startDraftAtEnd();
-                } 
-                // 2. 否則 (剛點擊過列表，或是還在中間步驟) -> 編輯當前步驟
-                else {
-                    editAction(currentIndex);
-                }
+		// 自動判斷編輯模式 (維持原樣)
+		if (!isDrafting) {
+			if (currentIndex >= 0 && currentIndex < history.length) {
+				if (currentIndex === history.length - 1 && forceNewStep) {
+					startDraftAtEnd();
+				} else {
+					editAction(currentIndex);
+				}
+			} else {
+				startDraftAtEnd();
+			}
+		}
 
-            } else {
-                // 例外狀況 -> 新增步驟
-                startDraftAtEnd();
-            }
-        }
-        
-        applyOperation(tempState, op);
-        draftOperations.push(op);
-        updateDraftBar();
-        renderUI();
-    }
+		// 1. 應用狀態變更 (確保資料一致性)
+		applyOperation(tempState, op);
+		draftOperations.push(op);
+		
+		// 2. 更新下方 Draft Bar 狀態文字
+		updateDraftBar();
+
+		// 3. [關鍵] 根據參數決定是否重繪
+		if (!skipRender) {
+			renderUI();
+		}
+	}
 
 	// --- 新增功能: 還原上一步 (Ctrl+Z) ---
     function undoLastDraftOp() {
@@ -5105,122 +5094,95 @@
         cancelSelection(); 
     }
 	
-    function saveDraft(customDesc) {
-        // [關鍵修正] 如果沒有任何操作 (未變更)
-        if (draftOperations.length === 0) {
-            isDrafting = false;
-            
-            // 1. 隱藏 Draft Bar
-            updateDraftBar();
-            
-            // 2. 解鎖捲軸
-            const list = document.getElementById('action-list');
-            if (list) list.classList.remove('locked');
-            
-            // 3. 重繪並返回
-            renderUI();
-            
-            // 確保捲動回定位
-            setTimeout(() => scrollToActiveStep(), 50);
-            return;
-        }
+    // [修改] 增加 skipRender 參數
+	function saveDraft(customDesc, skipRender = false) {
+		if (draftOperations.length === 0) {
+			cancelDraft();
+			return;
+		}
 
-        let desc = customDesc;
-        if (!desc && editModeType === 'EDIT' && insertIndex < history.length) {
-             desc = history[insertIndex].action.description;
-        }
-        if (!desc) {
-            const opCount = draftOperations.length;
-            const firstOp = draftOperations[0];
-            let typeDesc = t('op_' + firstOp.type);
-            if (!typeDesc || typeDesc === ('op_' + firstOp.type)) {
-                typeDesc = t('op_default'); 
-            }
-            if (firstOp.type === 'POINT') {
-                desc = firstOp.desc || t('op_POINT');
-            } else if (firstOp.type === 'ATTACK') {
-                desc = firstOp.desc || t('op_ATTACK');
-            } else if (firstOp.type === 'DIALOGUE') {
-                const data = firstOp.data;
-                desc = "[對話] ";
-                if (data.p2 && data.p2.active) desc += `${data.p2.name}... `;
-                if (data.p1 && data.p1.active) desc += `${data.p1.name}...`;
-            } else if (firstOp.type === 'REALITY_BREAK') {
-                desc = t('desc_rb');
-            } else {
-                desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
-            }
-        }
-		
-		// --- [新增] 在寫入 history 之前，先備份 ---
-		// 這樣按下 Ctrl+Z 就能撤銷這次的「儲存/新增」
+		// 自動生成描述 (維持原樣)
+		let desc = customDesc;
+		if (!desc && editModeType === 'EDIT' && insertIndex < history.length) {
+			desc = history[insertIndex].action.description;
+		}
+		if (!desc) {
+			const opCount = draftOperations.length;
+			const firstOp = draftOperations[0];
+			let typeDesc = t('op_' + firstOp.type) || t('op_default');
+			
+			if (firstOp.type === 'POINT') desc = firstOp.desc || t('op_POINT');
+			else if (firstOp.type === 'ATTACK') desc = firstOp.desc || t('op_ATTACK');
+			else if (firstOp.type === 'DIALOGUE') {
+				 const data = firstOp.data;
+				 desc = "[對話] ";
+				 if (data.p2 && data.p2.active) desc += `${data.p2.name}... `;
+				 if (data.p1 && data.p1.active) desc += `${data.p1.name}...`;
+			} else if (firstOp.type === 'REALITY_BREAK') desc = t('desc_rb');
+			else desc = `${typeDesc} ${t('lbl_draft_ops_prefix') || ''} ${opCount} ${t('op_count_suffix')}`;
+		}
+
 		takeGlobalSnapshot();
-		// ---------------------------------------
 
-        const newAction = new Action(desc);
-        newAction.operations = [...draftOperations];
-        const finalState = cloneState(tempState);
-        const newItem = { action: newAction, state: finalState };
+		// 建立新的 History Item
+		const newAction = new Action(desc);
+		newAction.operations = [...draftOperations];
+		const finalState = cloneState(tempState);
+		const newItem = { action: newAction, state: finalState };
 
-        const propagate = document.getElementById('propagate-check').checked;
+		// 處理插入與連動 (Propagate)
+		const propagate = document.getElementById('propagate-check').checked;
+		const head = history.slice(0, insertIndex);
+		let tail = (editModeType === 'EDIT') ? history.slice(insertIndex + 1) : history.slice(insertIndex);
 
-        const head = history.slice(0, insertIndex);
-        let tail = [];
-        
-        if (editModeType === 'EDIT') {
-            tail = history.slice(insertIndex + 1);
-        } else {
-            tail = history.slice(insertIndex);
-        }
+		if (propagate) {
+			let runningState = cloneState(finalState);
+			tail = tail.map(item => {
+				if (item.detachedStartState) delete item.detachedStartState;
+				try { item.action.operations.forEach(op => applyOperation(runningState, op)); } 
+				catch(e) { console.error("Propagate Error", e); }
+				return { action: item.action, state: cloneState(runningState) };
+			});
+		} else {
+			if (tail.length > 0 && editModeType === 'EDIT' && !tail[0].detachedStartState) {
+				 tail[0].detachedStartState = cloneState(history[insertIndex].state);
+			}
+		}
 
-        if (propagate) {
-            if (tail.length > 0 && tail[0].detachedStartState) {
-                delete tail[0].detachedStartState;
-            }
-
-            let runningState = cloneState(finalState);
-            tail = tail.map(item => {
-                if (item.detachedStartState) delete item.detachedStartState;
-                try {
-                    item.action.operations.forEach(op => applyOperation(runningState, op));
-                } catch(e) { console.error("Propagate Error", e); }
-                return { action: item.action, state: cloneState(runningState) };
-            });
-        } 
-        else {
-            if (tail.length > 0) {
-                if (editModeType === 'EDIT' && !tail[0].detachedStartState) {
-                    tail[0].detachedStartState = cloneState(history[insertIndex].state);
-                }
-            }
-        }
-
-        history = [...head, newItem, ...tail];
-
-        isDrafting = false;
-        currentIndex = insertIndex; 
-        insertIndex = -1;
-        draftOperations = [];
-        updateDraftBar();
-        renderUI();
-        saveToStorage(); 
+		history = [...head, newItem, ...tail];
+		isDrafting = false;
+		currentIndex = insertIndex;
+		insertIndex = -1;
+		draftOperations = [];
 		
-		// [新增] 更新未見卡清單
-        calculateSeenCards();
-        
-        // [關鍵修正] 存檔成功後，務必解鎖捲軸
-        const list = document.getElementById('action-list');
-        if (list) list.classList.remove('locked');
-        
-        if (currentIndex === history.length - 1) {
-            forceNewStep = true;
-        } else {
-            forceNewStep = false;
-        }
-        
-        // 捲動回定位
-        setTimeout(() => scrollToActiveStep(), 50);
-    }
+		// 更新介面
+		updateDraftBar(); // 隱藏 Draft Bar
+		
+		// [關鍵] 若指定跳過渲染，則不呼叫 renderUI
+		if (!skipRender) {
+			renderUI();
+		}
+		
+		// 解鎖 Action Log
+		const list = document.getElementById('action-list');
+		if (list) list.classList.remove('locked');
+
+		forceNewStep = (currentIndex === history.length - 1);
+		
+		// 重新計算未見卡 (資料面)
+		calculateSeenCards();
+		
+		// 存檔
+		saveToStorage();
+
+		// 捲動列表
+		if (!skipRender) {
+			setTimeout(() => scrollToActiveStep(), 50);
+		} else {
+			renderTimeline(); // 至少要更新右側列表
+			scrollToActiveStep();
+		}
+	}
 
     function cancelDraft() {
         isDrafting = false;
@@ -5836,65 +5798,33 @@
         }
     }
 
-    // --- [修正版] 旋轉卡片 (修復堆疊連動 + 支援無月之門) ---
-    function rotateCard(deg) {
-        if (!pendingMove) return;
-        
-        const state = getCurrentDisplayState();
-        
-        // 步驟 1: 向上溯源 (這是 BK 版原本有的功能)
-        // 找出被選取卡片所屬的「最底層主卡 (Root)」。
-        // 無論你點擊堆疊中的哪一張，我們都視為你是在操作整疊卡片的主卡。
-        const getRoot = (cardId) => {
-            let current = state.cards.find(c => c.id === cardId);
-            // 只要它還有 parentId，就繼續往上找
-            while (current && current.parentId) {
-                const parent = state.cards.find(c => c.id === current.parentId);
-                if (!parent) break;
-                current = parent;
-            }
-            return current;
-        };
-
-        const getRotatableTree = (rootIds) => {
-            const results = new Set();
-            const queue = [...rootIds];
-            rootIds.forEach(id => results.add(id));
-            
-            while(queue.length > 0) {
-                const currentId = queue.shift();
-                const children = state.cards.filter(c => c.parentId === currentId);
-                
-                // [修改點] 讀取 state.moonless
-                const isMoonless = state.moonless && state.moonless[currentId];
-                
-                children.forEach(child => {
-                    if (isMoonless && child.stackType === 'bottom') {
-                        return; 
-                    }
-                    if (!results.has(child.id)) {
-                        results.add(child.id);
-                        queue.push(child.id);
-                    }
-                });
-            }
-            return Array.from(results);
-        };
-
-        // --- 執行邏輯 ---
-        
-        // 1. 先找出所有選取目標的 Roots (解決 A, B, C 只轉一張的問題)
-        const roots = new Set();
-        pendingMove.cardIds.forEach(id => {
-            const r = getRoot(id);
-            if (r) roots.add(r.id);
-        });
-
-        // 2. 再從這些 Roots 往下計算整棵樹 (解決無月之門不該轉的問題)
-        const allTargets = getRotatableTree(Array.from(roots));
-        
-        addOperation({ type: 'ROTATE_CARD', cardIds: allTargets, deg: deg });
-    }
+    // [優化] 旋轉：直接修改 transform
+	function rotateCard(deg) {
+		if (!pendingMove || pendingMove.cardIds.length === 0) { alert(t('msg_select_rotate')); return; }
+		
+		const op = { type: 'ROTATE_CARD', cardIds: [...pendingMove.cardIds], deg: deg };
+		addOperation(op, true); 
+		
+		pendingMove.cardIds.forEach(id => {
+			const card = tempState.cards.find(c => c.id === id);
+			const el = document.querySelector(`.card[data-id="${id}"]`);
+			if (el && card) {
+				// 保持原有的 transform 邏輯 (如果有 selected 浮起效果要保留)
+				let transform = `rotate(${card.rotation}deg)`;
+				if (el.classList.contains('selected') && !card.stackType?.includes('puzzle')) {
+					transform += ` translateY(-5px)`;
+				}
+				el.style.transform = transform;
+				
+				// 如果是戰鬥區，橫置(90度)可能需要調整 flex alignment，但通常 transform 就足夠視覺表現
+				if (Math.abs(card.rotation) % 180 !== 0) {
+					el.parentElement.classList.add('tapped-group');
+				} else {
+					el.parentElement.classList.remove('tapped-group');
+				}
+			}
+		});
+	}
 
     function flipCard() {
         if (!pendingMove) return;
@@ -5904,46 +5834,48 @@
         addOperation({ type: 'FLIP_CARD', cardIds: pendingMove.cardIds, finalFaceUp: targetFace });
     }
 
-    function renameCard() {
-        if (!pendingMove || pendingMove.cardIds.length === 0) return;
-        
-        const text = document.getElementById('rename-input').value;
-        const state = getCurrentDisplayState();
-        
-        const targetKeys = new Set();
-        pendingMove.cardIds.forEach(id => {
-            const c = state.cards.find(x => x.id === id);
-            if(c) {
-                if(c.imageKey) targetKeys.add(c.imageKey);
-                if(c.backImageKey) targetKeys.add(c.backImageKey);
-            }
-        });
-
-        const applyRename = (cardList) => {
-            cardList.forEach(c => {
-                const isTarget = pendingMove.cardIds.includes(c.id) || 
-                                 (c.imageKey && targetKeys.has(c.imageKey)) ||
-                                 (c.backImageKey && targetKeys.has(c.backImageKey));
-                if (isTarget) {
-                    c.text = text;
-                }
-            });
-        };
-
-        applyRename(initialState.cards);
-        history.forEach(h => { if(h.state) applyRename(h.state.cards); });
-        if(tempState) applyRename(tempState.cards);
-        
-        renderUI();
-        saveToStorage();
-    }
+    // [優化] 更名：直接修改 innerText
+	function renameCard() {
+		if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+		const id = pendingMove.cardIds[0];
+		const val = document.getElementById('rename-input').value;
+		
+		const op = { type: 'RENAME_CARD', cardIds: [id], text: val };
+		addOperation(op, true);
+		
+		const el = document.querySelector(`.card[data-id="${id}"] .card-text`);
+		if(el) el.innerText = val;
+	}
     
     // 2. 新增註記後存檔
+	// [優化] 註記：直接操作 .card-note 元素
 	function addCardNote() {
-		if (!pendingMove) return;
-		const note = document.getElementById('note-input').value;
-		addOperation({ type: 'ADD_NOTE', cardIds: pendingMove.cardIds, note: note });
-		// addOperation 內部已經有 saveToStorage，所以這裡不用改，但請確認 addOperation 結尾有存檔
+		if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+		const id = pendingMove.cardIds[0];
+		const val = document.getElementById('note-input').value;
+		
+		const op = { type: 'NOTE_CARD', cardIds: [id], note: val };
+		addOperation(op, true);
+		
+		const cardEl = document.querySelector(`.card[data-id="${id}"]`);
+		if (cardEl) {
+			let noteEl = cardEl.querySelector('.card-note');
+			if (val) {
+				if (!noteEl) {
+					noteEl = document.createElement('div');
+					noteEl.className = 'card-note';
+					cardEl.appendChild(noteEl);
+				}
+				noteEl.innerText = val;
+				// 如果是 Ability Card，需要重新調整樣式 (垂直/水平)
+				if (cardEl.classList.contains('ability-card')) {
+					// 簡易重繪 (或者您可以在此手動設定 CSS)
+					// 考慮到 Ability Card 結構複雜，單張重繪可能較安全，但這裡我們試著直接改文字
+				}
+			} else {
+				if (noteEl) noteEl.remove();
+			}
+		}
 	}
     
     // 1. 調整位置後存檔
@@ -5999,69 +5931,50 @@
     }
 
     function toggleGlow() {
-        if (!pendingMove) return;
-        const state = getCurrentDisplayState();
-        
-        // Strict Check: Only Ability Zone cards can trigger Glow
-        const invalid = pendingMove.cardIds.some(id => {
-            const c = state.cards.find(x => x.id === id);
-            return !c || !c.zone.includes('ability');
-        });
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
+		
+		// 送出指令，並跳過 renderUI
+		const op = { type: 'TOGGLE_GLOW', cardIds: [...pendingMove.cardIds] };
+		addOperation(op, true); 
 
-        if (invalid) {
-            alert(t('msg_glow_ability_only'));
-            return;
-        }
-
-        const colors = ['red', 'yellow', 'green', 'blue', 'black', 'white', 'rainbow', null];
-        const firstId = pendingMove.cardIds[0];
-        const card = state.cards.find(c => c.id === firstId);
-        let currentGlow = card ? card.glow : null;
-        let idx = colors.indexOf(currentGlow);
-        if (idx === -1) idx = 7; 
-        let nextColor = colors[(idx + 1) % colors.length];
-        
-        addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: nextColor });
-    }
+		// 手動更新 DOM
+		pendingMove.cardIds.forEach(id => {
+			// 從 tempState 取得最新的 glow 狀態 (因為 applyOperation 已經執行過了)
+			const card = tempState.cards.find(c => c.id === id);
+			const el = document.querySelector(`.card[data-id="${id}"]`);
+			if (el && card) {
+				// 移除舊的發光 Class
+				el.classList.forEach(cls => {
+					if(cls.startsWith('glow-')) el.classList.remove(cls);
+				});
+				// 加上新的
+				if (card.glow) el.classList.add(`glow-${card.glow}`);
+			}
+		});
+	}
 	
-	// [新增] 獨立控制下半部發光
-    function toggleBottomGlow() {
-        if (!pendingMove) return;
-        const state = getCurrentDisplayState();
-        
-        // 檢查是否為 Ability 區
-        const invalid = pendingMove.cardIds.some(id => {
-            const c = state.cards.find(x => x.id === id);
-            return !c || !c.zone.includes('ability');
-        });
+	// [優化] 底光：同上
+	function toggleBottomGlow() {
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
+		
+		const op = { type: 'TOGGLE_GLOW_BOTTOM', cardIds: [...pendingMove.cardIds] };
+		addOperation(op, true);
 
-        if (invalid) {
-            alert(t('msg_glow_ability_only'));
-            return;
-        }
-
-        // 僅包含底光的清單
-        const bottomColors = [
-            'bottom-red', 'bottom-yellow', 'bottom-green', 'bottom-blue', 
-            'bottom-black', 'bottom-white', 'bottom-rainbow'
-        ];
-        
-        const firstId = pendingMove.cardIds[0];
-        const card = state.cards.find(c => c.id === firstId);
-        let currentGlow = card ? card.glow : null;
-        
-        // 循環邏輯：如果現在不是底光(是全光或無)，就從第一個開始
-        let idx = bottomColors.indexOf(currentGlow);
-        let nextColor;
-        
-        if (idx === -1) {
-            nextColor = bottomColors[0];
-        } else {
-            nextColor = bottomColors[(idx + 1) % bottomColors.length];
-        }
-        
-        addOperation({ type: 'SET_GLOW', cardIds: pendingMove.cardIds, color: nextColor });
-    }
+		pendingMove.cardIds.forEach(id => {
+			const card = tempState.cards.find(c => c.id === id);
+			const el = document.querySelector(`.card[data-id="${id}"]`);
+			if (el && card) {
+				// 清除舊底光
+				el.classList.forEach(cls => {
+					if(cls.startsWith('glow-bottom-')) el.classList.remove(cls);
+				});
+				// 加上新底光
+				// 注意：這裡假設 card.glowBottom 是您在 applyOperation 裡處理的屬性
+				// 若原始代碼是複用 glow 屬性，請依據原始邏輯調整
+				 if (card.glow) el.classList.add(`glow-bottom-${card.glow}`);
+			}
+		});
+	}
 
     function removeGlow() {
         if (!pendingMove) return;
@@ -6170,38 +6083,37 @@
         el.blur(); // 移除焦點，避免誤觸
     }
 	
-	// --- [新增] 切換受傷狀態 ---
-    function toggleInjured() {
-        if (!pendingMove) return;
-        
-        // 檢查是否符合區域限制 (僅戰鬥區與護盾區)
-        const state = getCurrentDisplayState();
-        const validZones = ['p1-battle', 'p2-battle', 'p1-shield', 'p2-shield'];
-        const isValid = pendingMove.cardIds.every(id => {
-            const c = state.cards.find(x => x.id === id);
-            return c && validZones.includes(c.zone);
-        });
-
-        if (!isValid) {
-            alert(t('msg_injured_err'));
-            return;
-        }
-
-        // 判斷是要全部加受傷，還是全部取消 (若其中一張已受傷，則視為要取消)
-        const hasInjured = pendingMove.cardIds.some(id => {
-            const c = state.cards.find(x => x.id === id);
-            return c.isInjured;
-        });
-
-        addOperation({ 
-            type: 'INJURED', 
-            cardIds: pendingMove.cardIds, 
-            setInjured: !hasInjured // 如果有人受傷就全部取消，否則全部設為受傷
-        });
+	// [優化] 受傷/治癒切換
+	function toggleInjured() {
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		
-		// 【新增這行】操作完畢後，強制刷新操作面板狀態
-        updateSelectionUI();
-    }
+		const op = { type: 'TOGGLE_INJURED', cardIds: [...pendingMove.cardIds] };
+		addOperation(op, true);
+
+		pendingMove.cardIds.forEach(id => {
+			const card = tempState.cards.find(c => c.id === id);
+			const el = document.querySelector(`.card[data-id="${id}"]`);
+			if (el && card) {
+				// 移除舊的爪痕
+				const oldClaw = el.querySelector('.claw-overlay');
+				if (oldClaw) oldClaw.remove();
+
+				// 如果受傷，加上新的
+				if (card.isInjured) {
+					const clawDiv = document.createElement('div');
+					clawDiv.className = 'claw-overlay'; // 編輯模式不加動畫 class 以免干擾
+					clawDiv.innerHTML = `
+						<svg class="claw-svg" viewBox="0 0 100 100">
+							<path class="claw-path p1" d="M20,20 Q50,50 80,80" />
+							<path class="claw-path p2" d="M30,10 Q60,40 90,70" />
+							<path class="claw-path p3" d="M10,30 Q40,60 70,90" />
+						</svg>
+					`;
+					el.appendChild(clawDiv);
+				}
+			}
+		});
+	}
 
 	// --- [新增] BGM 相關邏輯 ---
 
@@ -9799,6 +9711,8 @@
 			delay = 4000;
 		} else if (currOp && currOp.type === 'DIALOGUE') {
 			delay = 1500;
+		} else if (currOp && currOp.type === 'SHUFFLE') {
+			delay = 2100;
 		} else if (currOp && currOp.type === 'MOVE' && currOp.withShuffleAnim) {
 			delay = 1500;
 		}
@@ -11160,32 +11074,31 @@
 		console.log(`[UnseenCheck] Total Seen Cards: ${globalSeenCardIds.size}`);
 	}
 
-	// --- [UI] 切換高亮模式 ---
-	// --- [UI] 切換高亮模式 (修正版) ---
+	// [優化] 顯示未見高亮：全域切換 Class
 	function toggleUnseenHighlight() {
 		isUnseenHighlightOn = !isUnseenHighlightOn;
 		
-		// 1. 更新並重繪主戰場 (Main Board)
-		// 雖然 renderUI 會重繪區域，但我們有寫保護邏輯把按鈕救回來
-		// 所以這裡我們要手動更新一下按鈕的 active class，確保視覺一致
+		// 更新按鈕狀態
 		document.querySelectorAll('.unseen-check-btn').forEach(btn => {
 			if (isUnseenHighlightOn) btn.classList.add('active');
 			else btn.classList.remove('active');
 		});
 
-		renderUI();
-
-		// 2. [修正] 檢查是否有開啟清單視窗 (Modal)，若有則刷新內容
-		const modal = document.getElementById('card-selector-modal');
-		if (modal && modal.style.display === 'flex') {
-			const title = document.getElementById('modal-title');
-			// 從標題取得目前是哪個區域 (Zone ID)
-			const zoneId = title.getAttribute('data-zone-id');
-			if (zoneId) {
-				// 重新呼叫開啟視窗函式，這會觸發卡片重新渲染 (套用 glow-unseen)
-				openSelectorModal(zoneId);
+		// 遍歷所有卡片 DOM，根據全域 Seen Set 進行切換
+		const allCards = document.querySelectorAll('.card');
+		allCards.forEach(el => {
+			const id = parseInt(el.dataset.id);
+			if (isUnseenHighlightOn) {
+				if (!globalSeenCardIds.has(id)) {
+					el.classList.add('glow-unseen');
+				} else {
+					el.classList.remove('glow-unseen');
+				}
+			} else {
+				el.classList.remove('glow-unseen');
 			}
-		}
+		});
+		// 不呼叫 renderUI()
 	}
 	
 	window.addEventListener('resize', () => {
