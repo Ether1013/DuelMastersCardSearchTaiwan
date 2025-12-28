@@ -7267,7 +7267,10 @@
 	// [完整版 renderUI] 包含效能優化與原始完整邏輯
 	// =========================================================
 	function renderUI(skipScroll) {
-		const firstPositions = getCardPositions();
+	
+		// =========================================================
+		// 0. [修正] 先取得當前狀態，供全函式使用
+		// =========================================================
 		const state = getCurrentDisplayState();
 
 		// --- [效能優化] 區域重繪判斷 (ActionLog Mode) ---
@@ -7355,6 +7358,49 @@
 		}
 		
 		window.lastRenderedStepIndex = currentIndex;
+		
+		// =========================================================
+		// 2. [優化] 只量測「非跳過區域」的卡片座標
+		// =========================================================
+		const getOptimizedPositions = () => {
+			const positions = {};
+			// 只有當 zonesToSkip 沒有包含該區域時，才去 querySelectorAll
+			// 這樣可以避免對無變動的區域觸發 Reflow
+			const scanZone = (zoneId) => {
+				// ID 轉換確保一致
+				let checkId = zoneId;
+				if (zoneId === 'p1-ability') checkId = 'ability-zone-p1';
+				if (zoneId === 'p2-ability') checkId = 'ability-zone-p2';
+
+				if (zonesToSkip.has(checkId)) return; // ★ 關鍵優化：跳過量測
+
+				let el = document.querySelector(`.zone[data-zone="${zoneId}"]`);
+				if (zoneId.includes('ability')) el = document.getElementById(checkId);
+
+				if (el) {
+					// 【👇👇👇 請補上這段遺失的程式碼 👇👇👇】
+					// 必須紀錄區域本身的座標，否則堆疊中看不見的卡片會因為找不到起點而無法執行動畫
+					const zRect = el.getBoundingClientRect();
+					positions['ZONE_' + zoneId] = { left: zRect.left, top: zRect.top, width: zRect.width, height: zRect.height };
+					// 【👆👆👆 修正結束 👆👆👆】
+
+					const cards = el.querySelectorAll('.card');
+					cards.forEach(c => {
+						// 這裡是 getBoundingClientRect 是昂貴操作，現在只對髒區域執行
+						const rect = c.getBoundingClientRect();
+						positions[c.dataset.id] = { left: rect.left, top: rect.top };
+					});
+				}
+			};
+
+			// 掃描所有可能的區域
+			allZoneIds.forEach(zid => scanZone(zid));
+			return positions;
+		};
+
+		// ★ 執行優化後的量測 (變動前)
+		const firstPositions = getOptimizedPositions();
+
 
 		let winOverlay = document.getElementById('win-overlay');
 		if (!winOverlay) {
