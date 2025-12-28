@@ -7110,22 +7110,50 @@
         }
     }
 
-    function getCardPositions() {
-        const positions = {};
-        document.querySelectorAll('.card').forEach(el => {
-            if(el.dataset.id) {
-                const rect = el.getBoundingClientRect();
-                positions[el.dataset.id] = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-            }
-        });
-        document.querySelectorAll('.zone').forEach(el => {
-            if(el.dataset.zone) {
-                const rect = el.getBoundingClientRect();
-                positions['ZONE_' + el.dataset.zone] = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-            }
-        });
-        return positions;
-    }
+    // [優化版] 支援略過清單的座標測量函式
+	function getCardPositions(zonesToSkip = null) {
+		const positions = {};
+		
+		// 定義所有需要檢查的區域 ID
+		const allZones = [
+			'p1-battle', 'p1-mana', 'p1-shield', 'p1-hand', 'p1-grave', 'p1-deck', 'p1-hyper', 'p1-abyss',
+			'p2-battle', 'p2-mana', 'p2-shield', 'p2-hand', 'p2-grave', 'p2-deck', 'p2-hyper', 'p2-abyss',
+			'reveal-zone', 'ability-zone-p1', 'ability-zone-p2'
+		];
+
+		allZones.forEach(zoneId => {
+			// [關鍵優化] 如果此區域在略過名單中，直接 return，不執行 querySelectorAll
+			if (zonesToSkip && zonesToSkip.has(zoneId)) return;
+
+			// 取得區域 DOM (處理 ID 名稱不一致的情況)
+			let el;
+			if (zoneId === 'ability-zone-p1') el = document.getElementById('ability-zone-p1');
+			else if (zoneId === 'ability-zone-p2') el = document.getElementById('ability-zone-p2');
+			else el = document.querySelector(`.zone[data-zone="${zoneId}"]`);
+
+			if (el) {
+				// 1. 測量區域內所有卡片
+				el.querySelectorAll('.card').forEach(card => {
+					if (card.dataset.id) {
+						const rect = card.getBoundingClientRect();
+						positions[card.dataset.id] = { 
+							top: rect.top, 
+							left: rect.left, 
+							width: rect.width, 
+							height: rect.height 
+						};
+					}
+				});
+				
+				// 2. 順便測量區域本身 (堆疊動畫可能需要)
+				const zRect = el.getBoundingClientRect();
+				// 為了相容性，同時儲存兩種 Key 格式
+				positions['ZONE_' + zoneId] = { top: zRect.top, left: zRect.left, width: zRect.width, height: zRect.height };
+			}
+		});
+
+		return positions;
+	}
 
     function getCardsInZone(state, zoneName) {
         return state.cards.filter(c => c.zone === zoneName);
@@ -7994,7 +8022,7 @@
 		}
 
 		requestAnimationFrame(() => {
-			const lastPositions = getCardPositions();
+			const lastPositions = getCardPositions(zonesToSkip);
 			
 			Object.keys(lastPositions).forEach(id => {
 				if (id.startsWith('ZONE_')) return;
