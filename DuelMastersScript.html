@@ -7835,9 +7835,13 @@
 
 		// [新增] 在所有卡片 DOM 生成完畢後，執行縮放計算
 		requestAnimationFrame(() => {
-			applyBattleZoneScaling();
+			// 修改後：
+			// 檢查 p1-battle 或 p2-battle 是否在「不需要重繪 (Skip)」的清單中
+			// 如果它不在 Skip 清單中 (!has)，代表它是「髒」的，需要重新計算
+			const battleZonesDirty = !zonesToSkip.has('p1-battle') || !zonesToSkip.has('p2-battle');
+			applyBattleZoneScaling(battleZonesDirty);
 			
-			// 2. [關鍵] 在縮放計算「之後」的下一幀，才執行畫箭頭
+			// 2. 在縮放計算「之後」的下一幀，才執行畫箭頭
 			requestAnimationFrame(() => {
 				renderArrows();
 			});
@@ -8428,7 +8432,8 @@
 	}
 
 	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 後算間距 ---
-	function applyBattleZoneScaling() {
+	function applyBattleZoneScaling(force = true) {
+		if (!force) return; // 如果沒有強制更新，直接跳出，節省計算資源
 		const state = getCurrentDisplayState();
 		const zones = [
 			{ id: 'p1-battle', el: document.querySelector('.battle-zone[data-zone="p1-battle"]') },
