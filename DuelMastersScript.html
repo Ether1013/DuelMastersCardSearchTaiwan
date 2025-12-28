@@ -1572,12 +1572,12 @@
     body.mobile-mode #game-board-container { flex: 1; height: 100%; overflow: hidden; pointer-events: none !important; }
 
 	/* =========================================
-	   [CSS] 手機版：卡牌預覽尺寸修正 (80vh)
+	   [CSS] 手機版：卡牌預覽尺寸修正 (65vh)
 	   ========================================= */
 
 	body.mobile-mode #hover-preview {
-		/* 1. 高度強制設為 80% 視窗高度 */
-		height: 80vh !important;
+		/* 1. 高度強制設為 65% 視窗高度 */
+		height: 65vh !important;
 		
 		/* 2. 寬度設為自動，讓它依照比例縮放 */
 		width: auto !important;
@@ -7258,128 +7258,190 @@
         return `polygon(${points.join(',')})`;
     }
 
+	// =========================================================
+	// [效能優化模組] Dirty Checking (髒區檢查)
+	// =========================================================
+	let lastZoneHashes = {}; 
+
+	// 計算區域特徵值：只要卡片視覺屬性有變，Hash 就會變
+	function calculateZoneHash(cards) {
+		if (!cards || cards.length === 0) return "empty";
+		return cards.map(c => {
+			// 組合屬性：ID/轉向/正反/圖片/父層/堆疊類型/發光/受傷/註記/ExLife/無月Key
+			return `${c.id}_${c.rotation}_${c.faceUp}_${c.imageKey||''}_${c.parentId||''}_${c.stackType||''}_${c.glow||''}_${c.isInjured||''}_${c.note||''}_${c.exLifeKey||''}`;
+		}).join('|');
+	}
+
+	// =========================================================
+	// [完整版 renderUI] 包含效能優化與原始完整邏輯
+	// =========================================================
 	function renderUI(skipScroll) {
-        const firstPositions = getCardPositions();
-        const state = getCurrentDisplayState();
-        
-        let winOverlay = document.getElementById('win-overlay');
-        if (!winOverlay) {
-            winOverlay = document.createElement('div');
-            winOverlay.id = 'win-overlay';
-            document.body.appendChild(winOverlay);
-        }
+		const firstPositions = getCardPositions();
+		const state = getCurrentDisplayState();
 
-        const board = document.getElementById('game-board-container');
-        const abilityZone = document.getElementById('ability-stack-zone');
-        
-        const p1Area = document.getElementById('player1-area');
-        const p2Area = document.getElementById('player2-area');
-        
-        if (p1Area && p2Area) {
-            p1Area.classList.remove('active-turn');
-            p2Area.classList.remove('active-turn');
-            if (state.turnPlayer === 1) p1Area.classList.add('active-turn');
-            else p2Area.classList.add('active-turn');
-        }
-        
-        if (state.globalRotation) {
-            board.classList.add('rotated-view');
-            abilityZone.classList.add('rotated-view');
-        } else {
-            board.classList.remove('rotated-view');
-            abilityZone.classList.remove('rotated-view');
-        }
+		// --- [效能優化 Step 1] 計算哪些區域不需要重繪 ---
+		const zonesToSkip = new Set();
+		
+		// 只有在非編輯模式 (Playback) 下才開啟優化，避免拖曳時的視覺殘影
+		// (假設 isDrafting 是全域變數，若無此變數則預設開啟優化)
+		const isOptimizationActive = (typeof isDrafting === 'undefined' || !isDrafting);
 
-        document.querySelectorAll('.zone, .ability-column').forEach(el => {
-            const label = el.querySelector('.zone-label, .ability-label');
-            
-            // [修正] 在清空前，先尋找並暫存隨機按鈕
-            const randomBtn = el.querySelector('.random-pick-btn');
+		if (isOptimizationActive) {
+			// 1. 先將卡片按區域分類 (用於計算 Hash)
+			const tempZoneMap = {};
+			const allZoneIds = [
+				'p1-battle', 'p1-mana', 'p1-hand', 'p1-shield', 'p1-grave', 'p1-deck', 'p1-hyper', 'p1-abyss', 'ability-zone-p1',
+				'p2-battle', 'p2-mana', 'p2-hand', 'p2-shield', 'p2-grave', 'p2-deck', 'p2-hyper', 'p2-abyss', 'ability-zone-p2',
+				'reveal-zone'
+			];
+			// 初始化
+			allZoneIds.forEach(id => tempZoneMap[id] = []);
+			state.cards.forEach(c => {
+				let z = c.zone;
+				// 統一區域命名以符合 DOM ID
+				if (z === 'p1-ability') z = 'ability-zone-p1';
+				if (z === 'p2-ability') z = 'ability-zone-p2';
+				if (tempZoneMap[z]) tempZoneMap[z].push(c);
+			});
+
+			// 2. 比對 Hash
+			allZoneIds.forEach(zId => {
+				const newHash = calculateZoneHash(tempZoneMap[zId]);
+				if (lastZoneHashes[zId] === newHash) {
+					zonesToSkip.add(zId);
+				} else {
+					lastZoneHashes[zId] = newHash;
+				}
+			});
+		} else {
+			// 編輯模式下，清空快取強制重繪
+			lastZoneHashes = {};
+		}
+		// ----------------------------------------------------
+
+		let winOverlay = document.getElementById('win-overlay');
+		if (!winOverlay) {
+			winOverlay = document.createElement('div');
+			winOverlay.id = 'win-overlay';
+			document.body.appendChild(winOverlay);
+		}
+
+		const board = document.getElementById('game-board-container');
+		const abilityZone = document.getElementById('ability-stack-zone');
+		
+		const p1Area = document.getElementById('player1-area');
+		const p2Area = document.getElementById('player2-area');
+		
+		if (p1Area && p2Area) {
+			p1Area.classList.remove('active-turn');
+			p2Area.classList.remove('active-turn');
+			if (state.turnPlayer === 1) p1Area.classList.add('active-turn');
+			else p2Area.classList.add('active-turn');
+		}
+		
+		if (state.globalRotation) {
+			board.classList.add('rotated-view');
+			abilityZone.classList.add('rotated-view');
+		} else {
+			board.classList.remove('rotated-view');
+			abilityZone.classList.remove('rotated-view');
+		}
+
+		document.querySelectorAll('.zone, .ability-column').forEach(el => {
+			// [效能優化] 如果此區域在 Skip 名單中，直接跳過 DOM 清空操作
+			const zId = el.getAttribute('data-zone') || el.id;
+			if (zonesToSkip.has(zId)) return; 
+
+			const label = el.querySelector('.zone-label, .ability-label');
+			
+			// [修正] 在清空前，先尋找並暫存隨機按鈕
+			const randomBtn = el.querySelector('.random-pick-btn');
 			const unseenBtn = el.querySelector('.unseen-check-btn'); // <--- 新增這行
 
-            el.innerHTML = ''; // 這行會清空內容 (包含原本的按鈕)
+			el.innerHTML = ''; // 這行會清空內容 (包含原本的按鈕)
 
-            if(label) el.appendChild(label);
-            
-            // [修正] 如果原本有按鈕，就把它放回去
+			if(label) el.appendChild(label);
+			
+			// [修正] 如果原本有按鈕，就把它放回去
 			if(unseenBtn) el.appendChild(unseenBtn); // <--- 新增這行
-            if(randomBtn) el.appendChild(randomBtn);
+			if(randomBtn) el.appendChild(randomBtn);
 
-            el.classList.remove('target-highlight');
-            el.classList.remove('point-target-highlight'); 
-            el.className = el.className.replace(/\bglow-\S+/g, '');
-        });
-        
-        const revealZoneEl = document.getElementById('reveal-zone');
-        const revealCards = state.cards.filter(c => c.zone === 'reveal-zone');
-        if (revealCards.length > 0) {
-            revealZoneEl.style.display = 'flex';
-            // 修改這裡：使用 t() 和 data-i18n
-            revealZoneEl.innerHTML = `
-                <span class="zone-label" data-i18n="lbl_reveal_zone">${t('lbl_reveal_zone')}</span>
-                <button class="mini-btn danger" style="position:absolute; top:5px; right:5px;" onclick="closeRevealZone()">✕</button>
-            `;
-            revealCards.forEach(c => revealZoneEl.appendChild(createCardElement(c)));
-        } else {
-            revealZoneEl.style.display = 'none';
-            revealZoneEl.innerHTML = '';
-        }
+			el.classList.remove('target-highlight');
+			el.classList.remove('point-target-highlight'); 
+			el.className = el.className.replace(/\bglow-\S+/g, '');
+		});
+		
+		// 展示區比較特殊，且內容通常較少，這裡維持原樣 (或者也可以加入 Skip 判斷，但為了保險起見先不動)
+		const revealZoneEl = document.getElementById('reveal-zone');
+		if (revealZoneEl && !zonesToSkip.has('reveal-zone')) {
+			const revealCards = state.cards.filter(c => c.zone === 'reveal-zone');
+			if (revealCards.length > 0) {
+				revealZoneEl.style.display = 'flex';
+				// 修改這裡：使用 t() 和 data-i18n
+				revealZoneEl.innerHTML = `
+					<span class="zone-label" data-i18n="lbl_reveal_zone">${typeof t === 'function' ? t('lbl_reveal_zone') : 'Reveal Zone'}</span>
+					<button class="mini-btn danger" style="position:absolute; top:5px; right:5px;" onclick="closeRevealZone()">✕</button>
+				`;
+				revealCards.forEach(c => revealZoneEl.appendChild(createCardElement(c)));
+			} else {
+				revealZoneEl.style.display = 'none';
+				revealZoneEl.innerHTML = '';
+			}
+		}
 
-        if (pendingMove) document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
-        if (isPointing) document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
+		if (pendingMove) document.querySelectorAll('.zone').forEach(el => el.classList.add('target-highlight'));
+		if (isPointing) document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
 
-        const zoneMap = {};
-        const childMap = {}; 
-        const rootCards = []; 
+		const zoneMap = {};
+		const childMap = {}; 
+		const rootCards = []; 
 
-        state.cards.forEach(card => {
-            if (card.zone === 'reveal-zone') return;
-            if(!zoneMap[card.zone]) zoneMap[card.zone] = [];
-            zoneMap[card.zone].push(card);
-            if (card.parentId) {
-                if (!childMap[card.parentId]) childMap[card.parentId] = [];
-                childMap[card.parentId].push(card);
-            } else {
-                rootCards.push(card);
-            }
-        });
+		state.cards.forEach(card => {
+			if (card.zone === 'reveal-zone') return;
+			if(!zoneMap[card.zone]) zoneMap[card.zone] = [];
+			zoneMap[card.zone].push(card);
+			if (card.parentId) {
+				if (!childMap[card.parentId]) childMap[card.parentId] = [];
+				childMap[card.parentId].push(card);
+			} else {
+				rootCards.push(card);
+			}
+		});
 
-        ['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper'].forEach(zid => {
-            const cards = zoneMap[zid] || [];
-            const glowingCard = cards.find(c => c.glow);
-            if (glowingCard) {
-                const zoneEl = document.querySelector(`.zone[data-zone="${zid}"]`);
-                if (zoneEl) zoneEl.classList.add(`glow-${glowingCard.glow}`);
-            }
-        });
+		['p1-deck', 'p1-grave', 'p1-hyper', 'p2-deck', 'p2-grave', 'p2-hyper'].forEach(zid => {
+			// Skip check
+			if (zonesToSkip.has(zid)) return;
 
-        const stackedZones = [
+			const cards = zoneMap[zid] || [];
+			const glowingCard = cards.find(c => c.glow);
+			if (glowingCard) {
+				const zoneEl = document.querySelector(`.zone[data-zone="${zid}"]`);
+				if (zoneEl) zoneEl.classList.add(`glow-${glowingCard.glow}`);
+			}
+		});
+
+		const stackedZones = [
 			'p1-deck', 'p1-grave', 'p1-hyper', 'p1-abyss', // 加入 p1-abyss
 			'p2-deck', 'p2-grave', 'p2-hyper', 'p2-abyss', // 加入 p2-abyss
 			'p1-shield', 'p2-shield'
 		];
 
 		const renderCardTree = (rootCard, container) => {
-            const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
-            if (!isSpreadZone) return;
+			const isSpreadZone = !stackedZones.includes(rootCard.zone) || rootCard.zone.includes('shield');
+			if (!isSpreadZone) return;
 
-            // 預先掃描家族成員
-            const familyMembers = [];
-            const queue = [rootCard];
-            while(queue.length > 0) {
-                const node = queue.shift();
-                familyMembers.push(node);
-                const children = (childMap[node.id] || []);
-                children.forEach(c => queue.push(c));
-            }
+			// 預先掃描家族成員
+			const familyMembers = [];
+			const queue = [rootCard];
+			while(queue.length > 0) {
+				const node = queue.shift();
+				familyMembers.push(node);
+				const children = (childMap[node.id] || []);
+				children.forEach(c => queue.push(c));
+			}
 
-            // --- [修改點] 從 state.moonless 判斷 ---
-            const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
-
-            // [修改] 綁定 Hover 事件
-            // 在 renderCardTree 函式內部
-			// 在 renderCardTree 函式內部
-			// 在 renderCardTree 函式內部 ...
+			// --- [修改點] 從 state.moonless 判斷 ---
+			const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
 
 			const createContainer = (bounds) => {
 				const totalW = bounds.maxX - bounds.minX;
@@ -7401,225 +7463,224 @@
 				return { div, offsetX: -bounds.minX, offsetY: -bounds.minY };
 			};
 
-            // Mode 1: 無月之門例外渲染 (保持不變)
-            if (moonlessAce) {
-                // ... (這裡原本的無月之門邏輯保持不變，略) ...
-                // 為了節省篇幅，請保留您原本的 Mode 1 程式碼
-                const isPuzzle = (c) => c.stackType && c.stackType.includes('puzzle');
-                const subjects = familyMembers.filter(c => c.id !== moonlessAce.id && !isPuzzle(c));
-                const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
+			// Mode 1: 無月之門例外渲染 (保持不變)
+			if (moonlessAce) {
+				const isPuzzle = (c) => c.stackType && c.stackType.includes('puzzle');
+				const subjects = familyMembers.filter(c => c.id !== moonlessAce.id && !isPuzzle(c));
+				const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
 
-                const count = subjects.length;
-                const radius = 12; 
-                let bounds = { minX: 0, maxX: 50, minY: 0, maxY: 70 };
-                const layoutCache = new Map(); 
+				const count = subjects.length;
+				const radius = 12; 
+				let bounds = { minX: 0, maxX: 50, minY: 0, maxY: 70 };
+				const layoutCache = new Map(); 
 
-                if (count > 0) {
-                    const step = 360 / count;
-                    const startAngle = -90 + (step / 2); 
-                    subjects.forEach((sub, idx) => {
-                        const angleDeg = startAngle + step * idx;
-                        const rad = angleDeg * (Math.PI / 180);
-                        const offX = radius * Math.cos(rad);
-                        const offY = radius * Math.sin(rad);
-                        const visualRot = angleDeg + 270;
-                        layoutCache.set(sub.id, { x: offX, y: offY, rot: visualRot });
-                        const margin = 40; 
-                        bounds.minX = Math.min(bounds.minX, offX - margin);
-                        bounds.maxX = Math.max(bounds.maxX, offX + margin);
-                        bounds.minY = Math.min(bounds.minY, offY - margin);
-                        bounds.maxY = Math.max(bounds.maxY, offY + margin);
-                    });
-                } else {
-                    bounds = { minX: -5, maxX: 55, minY: -5, maxY: 75 };
-                }
+				if (count > 0) {
+					const step = 360 / count;
+					const startAngle = -90 + (step / 2); 
+					subjects.forEach((sub, idx) => {
+						const angleDeg = startAngle + step * idx;
+						const rad = angleDeg * (Math.PI / 180);
+						const offX = radius * Math.cos(rad);
+						const offY = radius * Math.sin(rad);
+						const visualRot = angleDeg + 270;
+						layoutCache.set(sub.id, { x: offX, y: offY, rot: visualRot });
+						const margin = 40; 
+						bounds.minX = Math.min(bounds.minX, offX - margin);
+						bounds.maxX = Math.max(bounds.maxX, offX + margin);
+						bounds.minY = Math.min(bounds.minY, offY - margin);
+						bounds.maxY = Math.max(bounds.maxY, offY + margin);
+					});
+				} else {
+					bounds = { minX: -5, maxX: 55, minY: -5, maxY: 75 };
+				}
 
-                const puzzleCache = new Map();
-                const measurePuzzleRecursive = (currentCard, parentX, parentY) => {
-                    const baseOffset = getBaseStackOffset(currentCard.stackType);
-                    const r = rotateVector(baseOffset.x, baseOffset.y, moonlessAce.rotation);
-                    const myX = parentX + r.x;
-                    const myY = parentY + r.y;
-                    puzzleCache.set(currentCard.id, { x: myX, y: myY });
-                    bounds.minX = Math.min(bounds.minX, myX);
-                    bounds.maxX = Math.max(bounds.maxX, myX + 50);
-                    bounds.minY = Math.min(bounds.minY, myY);
-                    bounds.maxY = Math.max(bounds.maxY, myY + 70);
-                    const children = puzzlePartners.filter(p => p.parentId === currentCard.id);
-                    children.forEach(child => measurePuzzleRecursive(child, myX, myY));
-                };
-                const directPuzzles = puzzlePartners.filter(p => p.parentId === moonlessAce.id);
-                directPuzzles.forEach(p => measurePuzzleRecursive(p, 0, 0));
+				const puzzleCache = new Map();
+				const measurePuzzleRecursive = (currentCard, parentX, parentY) => {
+					const baseOffset = getBaseStackOffset(currentCard.stackType);
+					const r = rotateVector(baseOffset.x, baseOffset.y, moonlessAce.rotation);
+					const myX = parentX + r.x;
+					const myY = parentY + r.y;
+					puzzleCache.set(currentCard.id, { x: myX, y: myY });
+					bounds.minX = Math.min(bounds.minX, myX);
+					bounds.maxX = Math.max(bounds.maxX, myX + 50);
+					bounds.minY = Math.min(bounds.minY, myY);
+					bounds.maxY = Math.max(bounds.maxY, myY + 70);
+					const children = puzzlePartners.filter(p => p.parentId === currentCard.id);
+					children.forEach(child => measurePuzzleRecursive(child, myX, myY));
+				};
+				const directPuzzles = puzzlePartners.filter(p => p.parentId === moonlessAce.id);
+				directPuzzles.forEach(p => measurePuzzleRecursive(p, 0, 0));
 
-                const { div, offsetX, offsetY } = createContainer(bounds);
+				const { div, offsetX, offsetY } = createContainer(bounds);
 				
 				// --- [插入這段] 判斷對齊方式 ---
 				// 根據 Root Card 的旋轉角度判斷
 				const isRootTapped = (Math.abs(rootCard.rotation) % 180) === 90;
 
 				if (isRootTapped) {
-                    // 條件 6: 橫置狀態元素靠中對齊
-                    div.classList.add('tapped-group');
-                } else {
-                    // 條件 6: 重置狀態元素靠上對齊 (預設 Flex-start)
-                    div.classList.remove('tapped-group');
-                }
+					// 條件 6: 橫置狀態元素靠中對齊
+					div.classList.add('tapped-group');
+				} else {
+					// 條件 6: 重置狀態元素靠上對齊 (預設 Flex-start)
+					div.classList.remove('tapped-group');
+				}
 				
 				// --- [修正] 無月之門對齊修正 ---
-                // 無月之門的陣型為圓形，無論主卡是否橫置，容器本身都應該「永遠垂直置中」。
-                // 這樣可以避免主卡轉向時，因為從 flex-start(頂) 跳到 center(中) 導致的 Y 軸位移。
-                
-                // 強制加入 tapped-group class (利用既有的 CSS 讓它 align-self: center)
-                div.classList.add('tapped-group');
-                
-                // 額外確保變形原點在中心 (配合圓形旋轉視覺)
-                div.style.transformOrigin = 'center center';
+				// 無月之門的陣型為圓形，無論主卡是否橫置，容器本身都應該「永遠垂直置中」。
+				
+				// 強制加入 tapped-group class (利用既有的 CSS 讓它 align-self: center)
+				div.classList.add('tapped-group');
+				
+				// 額外確保變形原點在中心 (配合圓形旋轉視覺)
+				div.style.transformOrigin = 'center center';
 				
 				// --- [新增修正] 強制垂直置中校正 (Fix Vertical Alignment) ---
-                // 1. 計算容器總高度
-                const containerHeight = bounds.maxY - bounds.minY;
-                // 2. 卡片標準高度 (70px)
-                const cardHeight = 70; 
-                // 3. 計算 Ace 應該位於的 Top 座標 (容器正中間)
-                const idealAceTop = (containerHeight - cardHeight) / 2;
-                // 4. 計算位移量 (目標位置 - 原本計算出的 offsetY)
-                // 原本 offsetY 是 -bounds.minY，即 Ace 的 Top 座標
-                const shiftY = idealAceTop - offsetY;
-                // -------------------------------------------------------
+				// 1. 計算容器總高度
+				const containerHeight = bounds.maxY - bounds.minY;
+				// 2. 卡片標準高度 (70px)
+				const cardHeight = 70; 
+				// 3. 計算 Ace 應該位於的 Top 座標 (容器正中間)
+				const idealAceTop = (containerHeight - cardHeight) / 2;
+				// 4. 計算位移量 (目標位置 - 原本計算出的 offsetY)
+				// 原本 offsetY 是 -bounds.minY，即 Ace 的 Top 座標
+				const shiftY = idealAceTop - offsetY;
+				// -------------------------------------------------------
 
-                subjects.forEach(sub => {
-                    const layout = layoutCache.get(sub.id);
-                    const cardEl = createCardElement(sub);
-                    cardEl.style.position = 'absolute';
-                    cardEl.style.left = `${offsetX + layout.x}px`;
-                    
-                    // [修改] 加上 shiftY
-                    cardEl.style.top = `${offsetY + layout.y + shiftY}px`;
-                    
-                    cardEl.style.zIndex = 5; 
-                    cardEl.dataset.visualRot = layout.rot;
-                    cardEl.style.transform = `rotate(${layout.rot}deg)`;
-                    div.appendChild(cardEl);
-                });
-
-                const aceEl = createCardElement(moonlessAce);
-                aceEl.style.position = 'absolute';
-                aceEl.style.left = `${offsetX}px`;
-                aceEl.style.top = `${offsetY}px`;
-				// [修改] 加上 shiftY
-                aceEl.style.top = `${offsetY + shiftY}px`;
-                aceEl.style.zIndex = 50; 
-                aceEl.classList.add('stack-base');
-                let aceTransform = `rotate(${moonlessAce.rotation}deg)`;
-                if (pendingMove && pendingMove.cardIds.includes(moonlessAce.id)) {
-                    aceTransform += ` translateY(-5px)`;
-                }
-                aceEl.style.transform = aceTransform;
-                div.appendChild(aceEl);
-
-                puzzlePartners.forEach(p => {
-                    const pos = puzzleCache.get(p.id);
-                    if (!pos) return; 
-                    const pEl = createCardElement(p);
-                    pEl.style.position = 'absolute';
-                    pEl.style.left = `${offsetX + pos.x}px`;
+				subjects.forEach(sub => {
+					const layout = layoutCache.get(sub.id);
+					const cardEl = createCardElement(sub);
+					cardEl.style.position = 'absolute';
+					cardEl.style.left = `${offsetX + layout.x}px`;
+					
 					// [修改] 加上 shiftY
-                    pEl.style.top = `${offsetY + pos.y + shiftY}px`;
-                    pEl.style.top = `${offsetY + pos.y}px`;
-                    pEl.style.zIndex = 51;
-                    let pTransform = `rotate(${moonlessAce.rotation}deg)`; 
-                    if (pendingMove && pendingMove.cardIds.includes(p.id)) {
-                        pTransform += ` translateY(-5px)`;
-                    }
-                    pEl.style.transform = pTransform;
-                    div.appendChild(pEl);
-                });
+					cardEl.style.top = `${offsetY + layout.y + shiftY}px`;
+					
+					cardEl.style.zIndex = 5; 
+					cardEl.dataset.visualRot = layout.rot;
+					cardEl.style.transform = `rotate(${layout.rot}deg)`;
+					div.appendChild(cardEl);
+				});
 
-            } else {
-                // Mode 2: Standard (一般堆疊)
-                let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
-                const nodePositions = new Map(); 
-                const measureNode = (card, currentX, currentY) => {
-                    nodePositions.set(card.id, { x: currentX, y: currentY });
-                    const cx = currentX + 25; 
-                    const cy = currentY + 35;
-                    const corners = [{x:-25,y:-35}, {x:25,y:-35}, {x:25,y:35}, {x:-25,y:35}];
-                    corners.forEach(p => {
-                        const r = rotateVector(p.x, p.y, card.rotation);
-                        const finalX = cx + r.x;
-                        const finalY = cy + r.y;
-                        if (finalX < bounds.minX) bounds.minX = finalX;
-                        if (finalX > bounds.maxX) bounds.maxX = finalX;
-                        if (finalY < bounds.minY) bounds.minY = finalY;
-                        if (finalY > bounds.maxY) bounds.maxY = finalY;
-                    });
-                    const children = childMap[card.id] || [];
-                    children.forEach(child => {
-                        const baseOffset = getBaseStackOffset(child.stackType);
-                        const rotatedOffset = rotateVector(baseOffset.x, baseOffset.y, card.rotation);
-                        measureNode(child, currentX + rotatedOffset.x, currentY + rotatedOffset.y);
-                    });
-                };
-                measureNode(rootCard, 0, 0);
-                if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
-                const { div, offsetX, offsetY } = createContainer(bounds);
-                
-                const renderNodeRecursive = (card, zIndex) => {
-                    const pos = nodePositions.get(card.id);
-                    if (!pos) return;
-                    
-                    const cardW = 60; 
-                    const cardH = 84; 
+				const aceEl = createCardElement(moonlessAce);
+				aceEl.style.position = 'absolute';
+				aceEl.style.left = `${offsetX}px`;
+				// [修改] 加上 shiftY
+				aceEl.style.top = `${offsetY + shiftY}px`;
+				aceEl.style.zIndex = 50; 
+				aceEl.classList.add('stack-base');
+				let aceTransform = `rotate(${moonlessAce.rotation}deg)`;
+				if (pendingMove && pendingMove.cardIds.includes(moonlessAce.id)) {
+					aceTransform += ` translateY(-5px)`;
+				}
+				aceEl.style.transform = aceTransform;
+				div.appendChild(aceEl);
 
-                    // [核心修正 1: 計算絕對 Group 內部中心點]
-                    // absCenterX/Y 是相對於 Group 容器的頂點 (minX/minY) 的未縮放中心點
-                    const absCenterX = pos.x + offsetX + (cardW / 2); 
-                    const absCenterY = pos.y + offsetY + (cardH / 2); 
+				puzzlePartners.forEach(p => {
+					const pos = puzzleCache.get(p.id);
+					if (!pos) return; 
+					const pEl = createCardElement(p);
+					pEl.style.position = 'absolute';
+					pEl.style.left = `${offsetX + pos.x}px`;
+					// [修改] 加上 shiftY
+					pEl.style.top = `${offsetY + pos.y + shiftY}px`;
+					pEl.style.zIndex = 51;
+					let pTransform = `rotate(${moonlessAce.rotation}deg)`; 
+					if (pendingMove && pendingMove.cardIds.includes(p.id)) {
+						pTransform += ` translateY(-5px)`;
+					}
+					pEl.style.transform = pTransform;
+					div.appendChild(pEl);
+				});
 
-                    const cardEl = createCardElement(card);
-                    
-                    // [核心修正 2: 儲存絕對畫布中心點]
-                    // 這裡先儲存 Group 內部的絕對中心點
-                    cardEl.dataset.logicX = absCenterX; 
-                    cardEl.dataset.logicY = absCenterY; 
-                    
-                    // 記錄原始位置到 dataset (供 expandStack 使用) - 保持原樣
-                    const orgLeft = pos.x + offsetX;
-                    const orgTop = pos.y + offsetY;
-                    
-                    cardEl.style.position = 'absolute';
-                    cardEl.style.left = `${orgLeft}px`;
-                    cardEl.style.top = `${orgTop}px`;
-                    
-                    // 寫入 dataset 供 expandStack 使用
-                    cardEl.dataset.orgLeft = orgLeft;
-                    cardEl.dataset.orgTop = orgTop;
-                    cardEl.dataset.zIndex = zIndex; // 原始層級
+			} else {
+				// Mode 2: Standard (一般堆疊)
+				let bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+				const nodePositions = new Map(); 
+				const measureNode = (card, currentX, currentY) => {
+					nodePositions.set(card.id, { x: currentX, y: currentY });
+					const cx = currentX + 25; 
+					const cy = currentY + 35;
+					const corners = [{x:-25,y:-35}, {x:25,y:-35}, {x:25,y:35}, {x:-25,y:35}];
+					corners.forEach(p => {
+						const r = rotateVector(p.x, p.y, card.rotation);
+						const finalX = cx + r.x;
+						const finalY = cy + r.y;
+						if (finalX < bounds.minX) bounds.minX = finalX;
+						if (finalX > bounds.maxX) bounds.maxX = finalX;
+						if (finalY < bounds.minY) bounds.minY = finalY;
+						if (finalY > bounds.maxY) bounds.maxY = finalY;
+					});
+					const children = childMap[card.id] || [];
+					children.forEach(child => {
+						const baseOffset = getBaseStackOffset(child.stackType);
+						const rotatedOffset = rotateVector(baseOffset.x, baseOffset.y, card.rotation);
+						measureNode(child, currentX + rotatedOffset.x, currentY + rotatedOffset.y);
+					});
+				};
+				measureNode(rootCard, 0, 0);
+				if (bounds.minX === Infinity) bounds = { minX:0, maxX:50, minY:0, maxY:70 };
+				const { div, offsetX, offsetY } = createContainer(bounds);
+				
+				const renderNodeRecursive = (card, zIndex) => {
+					const pos = nodePositions.get(card.id);
+					if (!pos) return;
+					
+					const cardW = 60; 
+					const cardH = 84; 
 
-                    cardEl.style.zIndex = zIndex;
-                    let transformCSS = `rotate(${card.rotation}deg)`;
-                    if (pendingMove && pendingMove.cardIds.includes(card.id)) {
-                        transformCSS += ` translateY(-5px)`;
-                    }
-                    cardEl.style.transform = transformCSS;
-                    if (!card.parentId) cardEl.classList.add('stack-base');
-                    div.appendChild(cardEl);
-                    const children = childMap[card.id] || [];
-                    children.forEach(child => {
-                        let nextZ = zIndex;
-                        const type = child.stackType;
-                        if (['top','shift_up','puzzle_top','shift_down'].includes(type)) nextZ += 1;
-                        else nextZ -= 1;
-                        renderNodeRecursive(child, nextZ);
-                    });
-                };
-                renderNodeRecursive(rootCard, 10);
-            }
-        };
+					// [核心修正 1: 計算絕對 Group 內部中心點]
+					const absCenterX = pos.x + offsetX + (cardW / 2); 
+					const absCenterY = pos.y + offsetY + (cardH / 2); 
 
-        Object.keys(zoneMap).forEach(zoneId => {
-            const cardsInZone = zoneMap[zoneId];
-            if (zoneId.includes('ability')) {
+					const cardEl = createCardElement(card);
+					
+					// [核心修正 2: 儲存絕對畫布中心點]
+					cardEl.dataset.logicX = absCenterX; 
+					cardEl.dataset.logicY = absCenterY; 
+					
+					// 記錄原始位置到 dataset (供 expandStack 使用) - 保持原樣
+					const orgLeft = pos.x + offsetX;
+					const orgTop = pos.y + offsetY;
+					
+					cardEl.style.position = 'absolute';
+					cardEl.style.left = `${orgLeft}px`;
+					cardEl.style.top = `${orgTop}px`;
+					
+					// 寫入 dataset 供 expandStack 使用
+					cardEl.dataset.orgLeft = orgLeft;
+					cardEl.dataset.orgTop = orgTop;
+					cardEl.dataset.zIndex = zIndex; // 原始層級
+
+					cardEl.style.zIndex = zIndex;
+					let transformCSS = `rotate(${card.rotation}deg)`;
+					if (pendingMove && pendingMove.cardIds.includes(card.id)) {
+						transformCSS += ` translateY(-5px)`;
+					}
+					cardEl.style.transform = transformCSS;
+					if (!card.parentId) cardEl.classList.add('stack-base');
+					div.appendChild(cardEl);
+					const children = childMap[card.id] || [];
+					children.forEach(child => {
+						let nextZ = zIndex;
+						const type = child.stackType;
+						if (['top','shift_up','puzzle_top','shift_down'].includes(type)) nextZ += 1;
+						else nextZ -= 1;
+						renderNodeRecursive(child, nextZ);
+					});
+				};
+				renderNodeRecursive(rootCard, 10);
+			}
+		};
+
+		Object.keys(zoneMap).forEach(zoneId => {
+			// --- 🔴 [修正開始] 加入 ID 轉換邏輯，確保與 zonesToSkip 內的 Key 一致 ---
+			let checkId = zoneId;
+			if (zoneId === 'p1-ability') checkId = 'ability-zone-p1';
+			if (zoneId === 'p2-ability') checkId = 'ability-zone-p2';
+			if (zonesToSkip.has(checkId)) return;			// [效能優化] 如果此區域在 Skip 名單中，直接跳過繪圖運算
+
+			const cardsInZone = zoneMap[zoneId];
+			if (zoneId.includes('ability')) {
 				const zoneEl = document.getElementById(zoneId === 'p1-ability' ? 'ability-zone-p1' : 'ability-zone-p2');
 				
 				// [新增] 排序邏輯：持續效果 (isContinuous) 優先排在前面 (視覺上的上方)
@@ -7632,18 +7693,13 @@
 				cardsInZone.forEach(card => zoneEl.appendChild(createCardElement(card)));
 				return;
 			}
-            const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
-            if (!zoneEl) return;
-            if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
+			const zoneEl = document.querySelector(`.zone[data-zone="${zoneId}"]`);
+			if (!zoneEl) return;
+			if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
 				const count = cardsInZone.length;
 				
 				if (count > 0) {
 					// [智慧渲染演算法]
-					// 為了效能，我們不渲染所有卡片，只渲染「會造成視覺差異」的關鍵卡片
-					// 1. 最底下的卡 (Base)
-					// 2. 最上面的卡 (Top)
-					// 3. 任何與下一張卡角度不同的卡 (Transition)
-					
 					const indicesToRender = new Set();
 					indicesToRender.add(0);          // 底
 					indicesToRender.add(count - 1);  // 頂
@@ -7677,9 +7733,6 @@
 						// 設定層級，確保上面的蓋住下面的
 						cardEl.style.zIndex = index + 1; 
 						
-						// 如果卡片有旋轉，createCardElement 已經設定了 transform: rotate(...)
-						// 這裡不需要額外處理，瀏覽器會自己處理旋轉後的遮擋關係
-						
 						zoneEl.appendChild(cardEl);
 					});
 				}
@@ -7692,23 +7745,21 @@
 				badge.style.zIndex = 1000; 
 				zoneEl.appendChild(badge);
 			} else {
-                const roots = rootCards.filter(c => c.zone === zoneId);
-                roots.forEach(root => renderCardTree(root, zoneEl));
-            }
-        });
+				const roots = rootCards.filter(c => c.zone === zoneId);
+				roots.forEach(root => renderCardTree(root, zoneEl));
+			}
+		});
 
 		// [新增] 在所有卡片 DOM 生成完畢後，執行縮放計算
-		// 使用 requestAnimationFrame 確保 DOM clientHeight 已經是排版後的值
 		requestAnimationFrame(() => {
 			applyBattleZoneScaling();
 			
 			// 2. [關鍵] 在縮放計算「之後」的下一幀，才執行畫箭頭
-			// 這樣 getBoundingClientRect 才能抓到縮放後的正確位置
 			requestAnimationFrame(() => {
 				renderArrows();
 			});
 		});
-        renderTimeline();
+		renderTimeline();
 
 		// --- Dialogue Rendering ---
 		const diagLayer = document.getElementById('dialogue-layer');
@@ -7735,12 +7786,9 @@
 					// 綁定點擊事件
 					box.onclick = (e) => {
 						e.stopPropagation();
-						// 如果還沒在編輯模式，就觸發編輯當前步驟
-						// editAction 會自動判斷如果是對話動作，就開啟對話視窗
 						if (!isDrafting) {
 							editAction(currentIndex);
 						} else {
-							// 如果已經在編輯模式，直接開窗
 							openDialogueModal();
 						}
 					};
@@ -7754,32 +7802,11 @@
 					text.innerText = data.dataText; 
 					text.className = `diag-text text-${data.size}`;
 					
-					if (data && data.active) {
-						row.classList.add('visible');
-						
-						// ... (略: 綁定點擊事件的程式碼) ...
+					// --- [新增] 強制捲動到最底部 (Auto Scroll to Bottom) ---
+					setTimeout(() => {
+						text.scrollTop = text.scrollHeight;
+					}, 0);
 
-						// 重置動畫 Class 以觸發重播
-						row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
-						void row.offsetWidth; // 強制重繪 (Reflow)
-						row.classList.add(`fx-${data.effect}`);
-
-						name.innerText = data.name;
-						text.innerText = data.dataText; 
-						text.className = `diag-text text-${data.size}`;
-						
-						// --- [新增] 強制捲動到最底部 (Auto Scroll to Bottom) ---
-						// 使用 setTimeout 確保文字渲染完畢後才計算高度
-						setTimeout(() => {
-							text.scrollTop = text.scrollHeight;
-						}, 0);
-						// ----------------------------------------------------
-
-						const imgKey = `avatar_${id}_${data.emotion}`;
-						const src = globalImageRegistry[imgKey];
-						img.style.backgroundImage = src ? `url(${src})` : 'none';
-					}
-					
 					const imgKey = `avatar_${id}_${data.emotion}`;
 					const src = globalImageRegistry[imgKey];
 					img.style.backgroundImage = src ? `url(${src})` : 'none';
@@ -7795,175 +7822,174 @@
 		}
 
 		// --- [修改] 勝利畫面渲染邏輯 (限制僅在觸發當下播放) ---
-        
-        // 1. 判斷當前步驟是否為「觸發勝利」的那一步
-        let isWinActionStep = false;
-        if (currentIndex >= 0 && history[currentIndex]) {
-            // 檢查當前的 Action 裡面有沒有包含 GAME_WIN 操作
-            isWinActionStep = history[currentIndex].action.operations.some(o => o.type === 'GAME_WIN');
-        }
+		
+		// 1. 判斷當前步驟是否為「觸發勝利」的那一步
+		let isWinActionStep = false;
+		if (currentIndex >= 0 && history[currentIndex]) {
+			// 檢查當前的 Action 裡面有沒有包含 GAME_WIN 操作
+			isWinActionStep = history[currentIndex].action.operations.some(o => o.type === 'GAME_WIN');
+		}
 
-        // 2. 只有在「狀態有贏家」且「當前步驟正是勝利時刻」才顯示特效
-        if (state.winner && isWinActionStep) {
-            
-            // 如果畫面還沒顯示，才進行內容生成
-            if (winOverlay.style.display !== 'flex') {
-                winOverlay.style.display = 'flex';
-                
-                const winnerText = state.winner === 1 ? t('msg_p1_win') : t('msg_p2_win');
-                const color = state.winner === 1 ? "var(--p1-main)" : "var(--p2-main)";
-                
-                winOverlay.innerHTML = `
-                    <div class="win-text" style="color: ${color}">${winnerText}</div>
-                    <div class="win-sub">Congratulations!</div>
-                `;
-                
-                // 生成彩帶特效
-                const colors = ['#f1c40f', '#e74c3c', '#3498db', '#9b59b6', '#2ecc71'];
-                for (let i = 0; i < 50; i++) {
-                    const conf = document.createElement('div');
-                    conf.className = 'confetti';
-                    conf.style.left = Math.random() * 100 + 'vw';
-                    conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                    conf.style.animationDelay = (Math.random() * 2) + 's';
-                    conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    winOverlay.appendChild(conf);
-                }
-                
-                // 自動清除計時器
-                if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
-                winOverlayTimeout = setTimeout(() => {
-                    winOverlay.style.display = 'none';
-                    winOverlay.innerHTML = '';
-                }, 4500);
+		// 2. 只有在「狀態有贏家」且「當前步驟正是勝利時刻」才顯示特效
+		if (state.winner && isWinActionStep) {
+			
+			// 如果畫面還沒顯示，才進行內容生成
+			if (winOverlay.style.display !== 'flex') {
+				winOverlay.style.display = 'flex';
+				
+				const winnerText = state.winner === 1 ? t('msg_p1_win') : t('msg_p2_win');
+				const color = state.winner === 1 ? "var(--p1-main)" : "var(--p2-main)";
+				
+				winOverlay.innerHTML = `
+					<div class="win-text" style="color: ${color}">${winnerText}</div>
+					<div class="win-sub">Congratulations!</div>
+				`;
+				
+				// 生成彩帶特效
+				const colors = ['#f1c40f', '#e74c3c', '#3498db', '#9b59b6', '#2ecc71'];
+				for (let i = 0; i < 50; i++) {
+					const conf = document.createElement('div');
+					conf.className = 'confetti';
+					conf.style.left = Math.random() * 100 + 'vw';
+					conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+					conf.style.animationDelay = (Math.random() * 2) + 's';
+					conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+					winOverlay.appendChild(conf);
+				}
+				
+				// 自動清除計時器
+				if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
+				winOverlayTimeout = setTimeout(() => {
+					winOverlay.style.display = 'none';
+					winOverlay.innerHTML = '';
+				}, 4500);
 
-                winOverlay.onclick = () => {
-                    winOverlay.style.display = 'none';
-                    if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
-                };
-            }
-        } else {
-            // [關鍵] 如果不是勝利當下的步驟 (例如後續的補述、移動)，強制隱藏遮罩
-            winOverlay.style.display = 'none';
-            winOverlay.innerHTML = ''; 
-        }
-        // ------------------------------
-        // ------------------------------
+				winOverlay.onclick = () => {
+					winOverlay.style.display = 'none';
+					if (winOverlayTimeout) clearTimeout(winOverlayTimeout);
+				};
+			}
+		} else {
+			// [關鍵] 如果不是勝利當下的步驟 (例如後續的補述、移動)，強制隱藏遮罩
+			winOverlay.style.display = 'none';
+			winOverlay.innerHTML = ''; 
+		}
+		// ------------------------------
+		// ------------------------------
 
 		// --- [修改] 取得當前步驟的移動卡片 (通用化) ---
-        // 原本只檢查 reveal-zone，現在改為抓取任何 MOVE 操作
-        let movingCardIds = [];
+		// 原本只檢查 reveal-zone，現在改為抓取任何 MOVE 操作
+		let movingCardIds = [];
 
-        // 只有在播放或重繪當下，檢查當前 Action
-        if (currentIndex >= 0 && history[currentIndex]) {
-            const action = history[currentIndex].action;
+		// 只有在播放或重繪當下，檢查當前 Action
+		if (currentIndex >= 0 && history[currentIndex]) {
+			const action = history[currentIndex].action;
 			// 使用 Set 來確保 ID 不重複，並保持插入順序
-            const uniqueMovingIds = new Set();
-            // 找出這一步驟中的移動操作 (MOVE)
-            const moveOps = action.operations.filter(o => o.type === 'MOVE');
-            moveOps.forEach(op => {
-                op.cardIds.forEach(id => uniqueMovingIds.add(id));
-            });
+			const uniqueMovingIds = new Set();
+			// 找出這一步驟中的移動操作 (MOVE)
+			const moveOps = action.operations.filter(o => o.type === 'MOVE');
+			moveOps.forEach(op => {
+				op.cardIds.forEach(id => uniqueMovingIds.add(id));
+			});
 			
 			// 2. [新增] 抓取 TOGGLE_MOONLESS 操作
-            // 如果這一步有切換無月之門，受影響的整個家族都應該視為「正在移動」
-            const moonOps = action.operations.filter(o => o.type === 'TOGGLE_MOONLESS');
-            moonOps.forEach(op => {
-                // op.cardIds 通常是點擊的那張主卡
-                // 我們需要找出跟它連動的所有卡片 (主卡 + 素材)
-                const familyIds = getAllLinkedCardIds(state, op.cardIds);
-                familyIds.forEach(id => uniqueMovingIds.add(id));
-            });
+			// 如果這一步有切換無月之門，受影響的整個家族都應該視為「正在移動」
+			const moonOps = action.operations.filter(o => o.type === 'TOGGLE_MOONLESS');
+			moonOps.forEach(op => {
+				// op.cardIds 通常是點擊的那張主卡
+				// 我們需要找出跟它連動的所有卡片 (主卡 + 素材)
+				const familyIds = getAllLinkedCardIds(state, op.cardIds);
+				familyIds.forEach(id => uniqueMovingIds.add(id));
+			});
 
-            // 轉回陣列，這就是最終要套用 0.2s 延遲的清單
-            movingCardIds = Array.from(uniqueMovingIds);
-        }
+			// 轉回陣列，這就是最終要套用 0.2s 延遲的清單
+			movingCardIds = Array.from(uniqueMovingIds);
+		}
 
-        requestAnimationFrame(() => {
-            const lastPositions = getCardPositions();
-            
-            Object.keys(lastPositions).forEach(id => {
-                if (id.startsWith('ZONE_')) return;
-                const cardEl = document.querySelector(`.card[data-id="${id}"]`);
-                if (!cardEl) return;
-                
-                let start = firstPositions[id];
-                if (!start && lastRenderedState) {
-                    const prevCard = lastRenderedState.cards.find(c => c.id == id);
-                    if (prevCard) start = firstPositions['ZONE_' + prevCard.zone];
-                }
-                
-                if (start) {
-                    const last = lastPositions[id];
-                    const deltaX = start.left - last.left;
-                    const deltaY = start.top - last.top;
-                    
-                    // 只有當位置真的有變動時才執行動畫
-                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-                        const cardData = state.cards.find(c => c.id == id);
-                        let rotation = cardData ? cardData.rotation : 0;
-                        const isAbility = cardData && cardData.zone.includes('ability');
-
-                        // [修正] 如果 DOM 元素上有標記「視覺角度」(來自無月模式)，優先使用它
-                        if (cardEl.dataset.visualRot) {
-                            rotation = parseFloat(cardEl.dataset.visualRot);
-                        }
-
-                        if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
-                             // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
-                        } else {
-                            // 1. 先瞬間移動回起點 (保持在原區域的位置)
-                            cardEl.style.transition = 'none';
-                            cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
-                            
-                            // 2. 下一幀執行移動動畫
-                            requestAnimationFrame(() => {
-                                const flyTime = 0.5; // 單張飛行時間 0.5秒
-                                
-                                let duration = `${flyTime}s`;
-                                let delay = '0s';
-                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
-
-                                // --- [核心修改] 通用序列動畫邏輯 ---
-                                // 檢查這張卡片是否在當前的移動清單中
-                                // 使用 loose equality (==) 避免字串/數字型別問題
-                                const moveIndex = movingCardIds.findIndex(mid => mid == id);
-
-                                if (moveIndex !== -1) {
-                                    const totalCards = movingCardIds.length;
-                                    
-                                    // 如果只有一張牌，就不需要延遲
-                                    if (totalCards > 1) {
-                                        // 演算法：每張牌間隔飛行時間的 20%
-                                        let interval = flyTime * 0.2;
-                                        
-                                        // 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
-                                        // 這樣會變成機關槍式的快速發牌，而不是慢慢發
-                                        const maxTotalLag = 1.5;
-                                        if ((interval * totalCards) > maxTotalLag) {
-                                            interval = maxTotalLag / totalCards;
-                                        }
-                                        
-                                        // 設定延遲：第 N 張牌延遲 N * interval 秒
-                                        delay = `${moveIndex * interval}s`;
-                                    }
-                                }
-                                // -------------------------------
-
-                                cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
-                                cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
-                            });
-                        }
-                    }
-                }
-            });
+		requestAnimationFrame(() => {
+			const lastPositions = getCardPositions();
 			
-            lastRenderedState = cloneState(state);
+			Object.keys(lastPositions).forEach(id => {
+				if (id.startsWith('ZONE_')) return;
+				const cardEl = document.querySelector(`.card[data-id="${id}"]`);
+				if (!cardEl) return;
+				
+				let start = firstPositions[id];
+				if (!start && lastRenderedState) {
+					const prevCard = lastRenderedState.cards.find(c => c.id == id);
+					if (prevCard) start = firstPositions['ZONE_' + prevCard.zone];
+				}
+				
+				if (start) {
+					const last = lastPositions[id];
+					const deltaX = start.left - last.left;
+					const deltaY = start.top - last.top;
+					
+					// 只有當位置真的有變動時才執行動畫
+					if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+						const cardData = state.cards.find(c => c.id == id);
+						let rotation = cardData ? cardData.rotation : 0;
+						const isAbility = cardData && cardData.zone.includes('ability');
+
+						// [修正] 如果 DOM 元素上有標記「視覺角度」(來自無月模式)，優先使用它
+						if (cardEl.dataset.visualRot) {
+							rotation = parseFloat(cardEl.dataset.visualRot);
+						}
+
+						if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
+							 // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
+						} else {
+							// 1. 先瞬間移動回起點 (保持在原區域的位置)
+							cardEl.style.transition = 'none';
+							cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+							
+							// 2. 下一幀執行移動動畫
+							requestAnimationFrame(() => {
+								const flyTime = 0.5; // 單張飛行時間 0.5秒
+								
+								let duration = `${flyTime}s`;
+								let delay = '0s';
+								let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+
+								// --- [核心修改] 通用序列動畫邏輯 ---
+								// 檢查這張卡片是否在當前的移動清單中
+								// 使用 loose equality (==) 避免字串/數字型別問題
+								const moveIndex = movingCardIds.findIndex(mid => mid == id);
+
+								if (moveIndex !== -1) {
+									const totalCards = movingCardIds.length;
+									
+									// 如果只有一張牌，就不需要延遲
+									if (totalCards > 1) {
+										// 演算法：每張牌間隔飛行時間的 20%
+										let interval = flyTime * 0.2;
+										
+										// 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
+										const maxTotalLag = 1.5;
+										if ((interval * totalCards) > maxTotalLag) {
+											interval = maxTotalLag / totalCards;
+										}
+										
+										// 設定延遲：第 N 張牌延遲 N * interval 秒
+										delay = `${moveIndex * interval}s`;
+									}
+								}
+								// -------------------------------
+
+								cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
+								cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+							});
+						}
+					}
+				}
+			});
+			
+			lastRenderedState = cloneState(state);
 			
 			// --- [新增] 修正：在播放時觸發次元破裂 (Reality Break) ---
-            if (currentIndex >= 0 && history[currentIndex]) {
-                const action = history[currentIndex].action;
-            
+			if (currentIndex >= 0 && history[currentIndex]) {
+				const action = history[currentIndex].action;
+			
 				// 1. 檢查是否處於播放模式 (或手機版)
 				const isPlaying = document.body.classList.contains('is-playing');
 				const isMobile = document.body.classList.contains('mobile-mode');
@@ -8005,211 +8031,206 @@
 					// 離開了有洗牌的那一步，重置鎖定變數，這樣下次跳回來時可以再播
 					lastShuffleStep = -1;
 				}
-                const rbOp = action.operations.find(o => o.type === 'REALITY_BREAK');
-                
-                // 條件：(有特效指令) AND (正在播放) AND (這一步還沒播過)
-                if (rbOp && (isPlaying || isMobile) && currentIndex !== lastRbStep) {
-                    console.log("偵測到次元破裂特效，開始播放...");
-                    lastRbStep = currentIndex; // 標記此步驟已處理
-                    playRealityBreak(rbOp.data);
-                }
+				const rbOp = action.operations.find(o => o.type === 'REALITY_BREAK');
+				
+				// 條件：(有特效指令) AND (正在播放) AND (這一步還沒播過)
+				if (rbOp && (isPlaying || isMobile) && currentIndex !== lastRbStep) {
+					console.log("偵測到次元破裂特效，開始播放...");
+					lastRbStep = currentIndex; // 標記此步驟已處理
+					playRealityBreak(rbOp.data);
+				}
 				// 情況 B：這一步沒有特效 -> 解鎖 (關鍵修改！)
-                else {
-                    // 只要離開了有特效的那一步，就重置變數
-                    // 這樣下次再回來時，currentIndex(5) != lastRbStep(-1) 就會成立，特效就會重播
-                    lastRbStep = -1; 
-                }
-            }
+				else {
+					// 只要離開了有特效的那一步，就重置變數
+					// 這樣下次再回來時，currentIndex(5) != lastRbStep(-1) 就會成立，特效就會重播
+					lastRbStep = -1; 
+				}
+			}
 
-            // [新增] 王牌進場特效觸發檢查
-            // 檢查當前這一步 (currentIndex) 是否有移動操作
-            if (currentIndex >= 0 && history[currentIndex]) {
-                
-                // 1. 篩選出這一步驟有移動且是王牌的卡片
-                const movedAces = movingCardIds.filter(id => globalAceRegistry[id]);
+			// [新增] 王牌進場特效觸發檢查
+			// 檢查當前這一步 (currentIndex) 是否有移動操作
+			if (currentIndex >= 0 && history[currentIndex]) {
+				
+				// 1. 篩選出這一步驟有移動且是王牌的卡片
+				const movedAces = movingCardIds.filter(id => globalAceRegistry[id]);
 
-                if (movedAces.length > 0 && currentIndex !== lastAnimatedStep) {
-                    
-                    const currState = history[currentIndex].state;
-                    const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
+				if (movedAces.length > 0 && currentIndex !== lastAnimatedStep) {
+					
+					const currState = history[currentIndex].state;
+					const prevState = (currentIndex > 0) ? history[currentIndex - 1].state : initialState;
 
-                    for (const aceId of movedAces) {
-                        // A. 檢查終點 (Current State): 必須在戰鬥區
-                        const currCard = currState.cards.find(c => c.id == aceId);
-                        const isInBattleNow = currCard && currCard.zone.includes('battle');
+					for (const aceId of movedAces) {
+						// A. 檢查終點 (Current State): 必須在戰鬥區
+						const currCard = currState.cards.find(c => c.id == aceId);
+						const isInBattleNow = currCard && currCard.zone.includes('battle');
 
-                        // B. 檢查起點 (Previous State): 必須「不在」戰鬥區
-                        let wasInBattleBefore = false;
-                        if (prevState) {
-                            const prevCard = prevState.cards.find(c => c.id == aceId);
-                            if (prevCard && prevCard.zone.includes('battle')) {
-                                wasInBattleBefore = true;
-                            }
-                        }
+						// B. 檢查起點 (Previous State): 必須「不在」戰鬥區
+						let wasInBattleBefore = false;
+						if (prevState) {
+							const prevCard = prevState.cards.find(c => c.id == aceId);
+							if (prevCard && prevCard.zone.includes('battle')) {
+								wasInBattleBefore = true;
+							}
+						}
 
-                        // C. 檢查堆疊狀態: 是否為隱藏的進化元?
-                        // 我們只過濾掉 'bottom' 和 'bottom_exposed' (進化元)
-                        // 但保留 'puzzle_bottom' (連結卡)，因為連結卡視為場上的個別生物
-                        const isUnderneath = currCard.parentId && currCard.stackType && 
-                                             (currCard.stackType === 'bottom' || currCard.stackType === 'bottom_exposed');
+						// C. 檢查堆疊狀態: 是否為隱藏的進化元?
+						// 我們只過濾掉 'bottom' 和 'bottom_exposed' (進化元)
+						// 但保留 'puzzle_bottom' (連結卡)，因為連結卡視為場上的個別生物
+						const isUnderneath = currCard.parentId && currCard.stackType && 
+											 (currCard.stackType === 'bottom' || currCard.stackType === 'bottom_exposed');
 
-                        // D. 綜合判斷：(進戰場) AND (原本不在) AND (不是進化元)
-                        if (isInBattleNow && !wasInBattleBefore && !isUnderneath) {
-                            
-                            // 計算精確的落地時間
-                            const flyTime = 0.5; // CSS動畫時間 0.5s
-                            let arrivalTime = flyTime * 1000; 
+						// D. 綜合判斷：(進戰場) AND (原本不在) AND (不是進化元)
+						if (isInBattleNow && !wasInBattleBefore && !isUnderneath) {
+							
+							// 計算精確的落地時間
+							const flyTime = 0.5; // CSS動畫時間 0.5s
+							let arrivalTime = flyTime * 1000; 
 
-                            // 計算排隊延遲
-                            const mIndex = movingCardIds.findIndex(mid => mid == aceId);
-                            if (mIndex !== -1 && movingCardIds.length > 1) {
-                                let interval = flyTime * 0.2; 
-                                const maxTotalLag = 1.5;
-                                if ((interval * movingCardIds.length) > maxTotalLag) {
-                                    interval = maxTotalLag / movingCardIds.length;
-                                }
-                                arrivalTime += (mIndex * interval * 1000);
-                            }
+							// 計算排隊延遲
+							const mIndex = movingCardIds.findIndex(mid => mid == aceId);
+							if (mIndex !== -1 && movingCardIds.length > 1) {
+								let interval = flyTime * 0.2; 
+								const maxTotalLag = 1.5;
+								if ((interval * movingCardIds.length) > maxTotalLag) {
+									interval = maxTotalLag / movingCardIds.length;
+								}
+								arrivalTime += (mIndex * interval * 1000);
+							}
 
-                            console.log("觸發王牌特效 (進場 - 允許Puzzle) ID:", aceId);
-                            
-                            triggerAceAnimation(aceId, arrivalTime);
-                            
-                            lastAnimatedStep = currentIndex;
-                            break; 
-                        }
-                    }
-                    
-                    // 標記已檢查過此步驟
-                    if (currentIndex !== lastAnimatedStep) {
-                        lastAnimatedStep = currentIndex;
-                    }
-                }
-            }
-        });
+							console.log("觸發王牌特效 (進場 - 允許Puzzle) ID:", aceId);
+							
+							triggerAceAnimation(aceId, arrivalTime);
+							
+							lastAnimatedStep = currentIndex;
+							break; 
+						}
+					}
+					
+					// 標記已檢查過此步驟
+					if (currentIndex !== lastAnimatedStep) {
+						lastAnimatedStep = currentIndex;
+					}
+				}
+			}
+		});
 		
-		// --- [修改] 渲染猜拳結果 ---
-        // --- [修改] 渲染猜拳結果 (卡牌版) ---
-        const rpsOverlay = document.getElementById('rps-overlay');
-        
-        if (state.rpsResult && !isDrafting) { 
-            const { p1, p2, winner } = state.rpsResult;
-            const options = ['rock', 'paper', 'scissors'];
+		// --- [修改] 渲染猜拳結果 (卡牌版) ---
+		const rpsOverlay = document.getElementById('rps-overlay');
+		
+		if (state.rpsResult && !isDrafting) { 
+			const { p1, p2, winner } = state.rpsResult;
+			const options = ['rock', 'paper', 'scissors'];
 
-            // 輔助函式：產生玩家的手牌 HTML (維持原樣)
-            // 輔助函式：產生玩家的手牌 HTML
-            const createHandHTML = (playerId, chosenType, isWinner) => {
-                
-                // =========== [設定] 猜拳圖片網址設定區 ===========
-                const rpsImages = {
-                    // 請在引號內填入您的圖片網址 (例如: 'https://imgur.com/example.jpg')
-                    rock:     'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-056.jpg',   // ✊ 石頭 (Rock)
-                    paper:    'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-103.jpg',   // 🖐️ 布 (Paper)
-                    scissors: 'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-060.jpg'    // ✌️ 剪刀 (Scissors)
-                };
-                // =================================================
+			// 輔助函式：產生玩家的手牌 HTML
+			const createHandHTML = (playerId, chosenType, isWinner) => {
+				
+				// =========== [設定] 猜拳圖片網址設定區 ===========
+				const rpsImages = {
+					rock:     'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-056.jpg',   // ✊ 石頭
+					paper:    'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-103.jpg',   // 🖐️ 布
+					scissors: 'https://dm.takaratomy.co.jp/wp-content/card/cardthumb/dm28-060.jpg'    // ✌️ 剪刀
+				};
+				// =================================================
 
-                let html = '';
-                options.forEach(type => {
-                    const isSelected = (type === chosenType);
-                    let classes = 'rps-card';
-                    if (isSelected) classes += ' selected';
-                    else classes += ' unselected';
-                    if (isSelected && isWinner) classes += ' winner';
+				let html = '';
+				options.forEach(type => {
+					const isSelected = (type === chosenType);
+					let classes = 'rps-card';
+					if (isSelected) classes += ' selected';
+					else classes += ' unselected';
+					if (isSelected && isWinner) classes += ' winner';
 
-                    // 圖片讀取邏輯：
-                    // 1. 優先找 globalImageRegistry (如果您有用 Ctrl+V 貼上並命名為 rps_rock 等)
-                    // 2. 其次使用上方設定的網址 (rpsImages)
-                    // 3. 最後使用本地 fallback (雖然這裡設為空字串，但在 CSS background-image 中若無效會顯示白底)
-                    const imgKey = `rps_${type}`;
-                    const bgUrl = globalImageRegistry[imgKey] || rpsImages[type] || '';
+					const imgKey = `rps_${type}`;
+					const bgUrl = globalImageRegistry[imgKey] || rpsImages[type] || '';
 
-                    html += `
-                        <div class="${classes}" style="background-image: url('${bgUrl}')">
-                            ${isSelected ? `<div class="rps-label">P${playerId}</div>` : ''}
-                        </div>
-                    `;
-                });
-                return html;
-            };
+					html += `
+						<div class="${classes}" style="background-image: url('${bgUrl}')">
+							${isSelected ? `<div class="rps-label">P${playerId}</div>` : ''}
+						</div>
+					`;
+				});
+				return html;
+			};
 
-            const p1Win = (winner === 1);
-            const p2Win = (winner === 2);
+			const p1Win = (winner === 1);
+			const p2Win = (winner === 2);
 
-            rpsOverlay.innerHTML = `
-                <div class="rps-container p2">
-                    ${createHandHTML(2, p2, p2Win)}
-                </div>
-                <div class="rps-vs-text">VS</div>
-                <div class="rps-container p1">
-                    ${createHandHTML(1, p1, p1Win)}
-                </div>
-                ${winner === null ? '<div class="rps-result-msg">DRAW!</div>' : ''}
-            `;
-            
-            // 2. 顯示畫面並重置透明度
-            rpsOverlay.style.display = 'flex';
-            rpsOverlay.style.transition = 'none'; // 移除過渡以便瞬間顯示
-            rpsOverlay.style.opacity = '1';
+			rpsOverlay.innerHTML = `
+				<div class="rps-container p2">
+					${createHandHTML(2, p2, p2Win)}
+				</div>
+				<div class="rps-vs-text">VS</div>
+				<div class="rps-container p1">
+					${createHandHTML(1, p1, p1Win)}
+				</div>
+				${winner === null ? '<div class="rps-result-msg">DRAW!</div>' : ''}
+			`;
+			
+			// 2. 顯示畫面並重置透明度
+			rpsOverlay.style.display = 'flex';
+			rpsOverlay.style.transition = 'none'; // 移除過渡以便瞬間顯示
+			rpsOverlay.style.opacity = '1';
 
-            // 3. 設定自動關閉 (總時長 3.5秒 = 1.5秒動畫 + 2秒閃爍)
-            const timerId = setTimeout(() => {
-                // 開始淡出
-                rpsOverlay.style.transition = 'opacity 0.5s ease';
-                rpsOverlay.style.opacity = '0';
-                
-                // 淡出動畫結束後隱藏 DOM
-                setTimeout(() => {
-                    rpsOverlay.style.display = 'none';
-                }, 500); 
-            }, 3500); // 1500ms (動作) + 2000ms (閃爍) = 3500ms
+			// 3. 設定自動關閉 (總時長 3.5秒 = 1.5秒動畫 + 2秒閃爍)
+			const timerId = setTimeout(() => {
+				// 開始淡出
+				rpsOverlay.style.transition = 'opacity 0.5s ease';
+				rpsOverlay.style.opacity = '0';
+				
+				// 淡出動畫結束後隱藏 DOM
+				setTimeout(() => {
+					rpsOverlay.style.display = 'none';
+				}, 500); 
+			}, 3500); 
 
-            rpsOverlay.dataset.timer = timerId;
+			rpsOverlay.dataset.timer = timerId;
 
-        } else {
-            rpsOverlay.style.display = 'none';
-        }
+		} else {
+			rpsOverlay.style.display = 'none';
+		}
 		
 		updateSliderUI();
 		
 		// [新增] 檢查手機版音樂按鈕可見性
-		checkMobileMusicButtonVisibility(); // <--- 加入這行
+		if (typeof checkMobileMusicButtonVisibility === 'function') {
+			checkMobileMusicButtonVisibility();
+		}
 
 		// --- [新增] 檢查並更新「特效按鈕」狀態 ---
-        const btnRb = document.getElementById('btn-rb-effect');
-        if (btnRb) {
-            let hasRb = false;
+		const btnRb = document.getElementById('btn-rb-effect');
+		if (btnRb) {
+			let hasRb = false;
 
-            // 1. 優先檢查 Draft (編輯模式)
-            if (isDrafting && draftOperations.length > 0) {
-                if (draftOperations.some(o => o.type === 'REALITY_BREAK')) {
-                    hasRb = true;
-                }
-            } 
-            // 2. 其次檢查 Current Step (檢視模式)
-            else if (currentIndex >= 0 && history[currentIndex]) {
-                const ops = history[currentIndex].action.operations;
-                if (ops && ops.some(o => o.type === 'REALITY_BREAK')) {
-                    hasRb = true;
-                }
-            }
+			// 1. 優先檢查 Draft (編輯模式)
+			if (isDrafting && draftOperations.length > 0) {
+				if (draftOperations.some(o => o.type === 'REALITY_BREAK')) {
+					hasRb = true;
+				}
+			} 
+			// 2. 其次檢查 Current Step (檢視模式)
+			else if (currentIndex >= 0 && history[currentIndex]) {
+				const ops = history[currentIndex].action.operations;
+				if (ops && ops.some(o => o.type === 'REALITY_BREAK')) {
+					hasRb = true;
+				}
+			}
 
-            // 切換樣式
-            if (hasRb) {
-                btnRb.classList.add('highlight');
-                btnRb.title = "點擊編輯此特效"; // 加入提示文字
-            } else {
-                btnRb.classList.remove('highlight');
-                btnRb.title = "插入新特效";
-            }
-        }
-        // ----------------------------------------
+			// 切換樣式
+			if (hasRb) {
+				btnRb.classList.add('highlight');
+				btnRb.title = "點擊編輯此特效"; // 加入提示文字
+			} else {
+				btnRb.classList.remove('highlight');
+				btnRb.title = "插入新特效";
+			}
+		}
+		// ----------------------------------------
 		
 		// [修改] 增加 !skipScroll 判斷，手動點擊時不捲動
-        if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
-             scrollToActiveStep();
-        }
-    }
+		if (!document.body.classList.contains('mobile-mode') && !skipScroll) {
+			 scrollToActiveStep();
+		}
+	}
 	
 	// --- [最終修正版 JS] 戰鬥區自動佈局演算法 ---
 
@@ -9643,6 +9664,40 @@
 	window.addEventListener('resize', checkOrientation);
 	// 初始化時也呼叫一次
 	window.addEventListener('load', checkOrientation);
+	// --- [新增/修改] 頁面載入初始化 ---
+	window.addEventListener('load', () => {
+		// 1. 初始化拖曳面板 (原本建議的)
+		initDraggablePanel();
+		
+		// 2. 檢查轉向 (手機版)
+		checkOrientation();
+
+		// 3. [關鍵修正] 強制初次渲染
+		// 清空優化快取，欺騙系統認為「所有區域都變髒了」，強制重繪
+		if (typeof lastZoneHashes !== 'undefined') {
+			lastZoneHashes = {}; 
+		}
+		
+		// 嘗試從 LocalStorage 載入上次進度
+		// (如果 loadFromStorage 內部有呼叫 renderUI，這會是第一次)
+		const hasLoaded = loadFromStorage(); 
+
+		// 4. [保險機制] 延遲再次渲染
+		// 為了確保字型、圖片或 DOM 佈局完全就緒，稍微延遲後再強制畫一次
+		// 這能解決「一開啟時畫面空白」的問題
+		setTimeout(() => {
+			// 再次清空快取 (確保這次 render 一定會執行 DOM 操作)
+			if (typeof lastZoneHashes !== 'undefined') {
+				lastZoneHashes = {}; 
+			}
+			renderUI(); 
+			
+			// 如果載入成功，順便捲動到最新的步驟
+			if (hasLoaded && typeof scrollToActiveStep === 'function') {
+				scrollToActiveStep();
+			}
+		}, 200); // 200ms 的延遲通常足夠讓瀏覽器完成版面配置
+	});
 
     function playSingleStep(idx) {
         if (playTimeout) togglePlay(); 
