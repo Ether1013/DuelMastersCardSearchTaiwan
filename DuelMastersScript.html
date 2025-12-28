@@ -7263,15 +7263,6 @@
 	// =========================================================
 	let lastZoneHashes = {}; 
 
-	// 計算區域特徵值：只要卡片視覺屬性有變，Hash 就會變
-	function calculateZoneHash(cards) {
-		if (!cards || cards.length === 0) return "empty";
-		return cards.map(c => {
-			// 組合屬性：ID/轉向/正反/圖片/父層/堆疊類型/發光/受傷/註記/ExLife/無月Key
-			return `${c.id}_${c.rotation}_${c.faceUp}_${c.imageKey||''}_${c.parentId||''}_${c.stackType||''}_${c.glow||''}_${c.isInjured||''}_${c.note||''}_${c.exLifeKey||''}`;
-		}).join('|');
-	}
-
 	// =========================================================
 	// [完整版 renderUI] 包含效能優化與原始完整邏輯
 	// =========================================================
@@ -7279,45 +7270,91 @@
 		const firstPositions = getCardPositions();
 		const state = getCurrentDisplayState();
 
-		// --- [效能優化 Step 1] 計算哪些區域不需要重繪 ---
+		// --- [效能優化] 區域重繪判斷 (ActionLog Mode) ---
 		const zonesToSkip = new Set();
-		
-		// 只有在非編輯模式 (Playback) 下才開啟優化，避免拖曳時的視覺殘影
-		// (假設 isDrafting 是全域變數，若無此變數則預設開啟優化)
-		const isOptimizationActive = (typeof isDrafting === 'undefined' || !isDrafting);
+		const allZoneIds = [
+			'p1-battle', 'p1-mana', 'p1-hand', 'p1-shield', 'p1-grave', 'p1-deck', 'p1-hyper', 'p1-abyss', 'ability-zone-p1',
+			'p2-battle', 'p2-mana', 'p2-hand', 'p2-shield', 'p2-grave', 'p2-deck', 'p2-hyper', 'p2-abyss', 'ability-zone-p2',
+			'reveal-zone'
+		];
+
+		// 初始化全域記錄變數
+		if (typeof window.lastRenderedStepIndex === 'undefined') window.lastRenderedStepIndex = -1;
+
+		// 判斷是否啟用優化：非編輯模式、非首步、且為連續播放
+		const isOptimizationActive = (!isDrafting && currentIndex > 0 && 
+									  window.lastRenderedStepIndex === (currentIndex - 1) &&
+									  history[currentIndex] && history[currentIndex-1]);
 
 		if (isOptimizationActive) {
-			// 1. 先將卡片按區域分類 (用於計算 Hash)
-			const tempZoneMap = {};
-			const allZoneIds = [
-				'p1-battle', 'p1-mana', 'p1-hand', 'p1-shield', 'p1-grave', 'p1-deck', 'p1-hyper', 'p1-abyss', 'ability-zone-p1',
-				'p2-battle', 'p2-mana', 'p2-hand', 'p2-shield', 'p2-grave', 'p2-deck', 'p2-hyper', 'p2-abyss', 'ability-zone-p2',
-				'reveal-zone'
-			];
-			// 初始化
-			allZoneIds.forEach(id => tempZoneMap[id] = []);
-			state.cards.forEach(c => {
-				let z = c.zone;
-				// 統一區域命名以符合 DOM ID
+			// 1. 預設全跳過
+			allZoneIds.forEach(id => zonesToSkip.add(id));
+
+			const dirtyZones = new Set();
+			const currentAction = history[currentIndex].action;
+			const prevState = history[currentIndex - 1].state;
+
+			const markDirty = (z) => {
+				if (!z) return;
 				if (z === 'p1-ability') z = 'ability-zone-p1';
 				if (z === 'p2-ability') z = 'ability-zone-p2';
-				if (tempZoneMap[z]) tempZoneMap[z].push(c);
-			});
+				dirtyZones.add(z);
+			};
 
-			// 2. 比對 Hash
-			allZoneIds.forEach(zId => {
-				const newHash = calculateZoneHash(tempZoneMap[zId]);
-				if (lastZoneHashes[zId] === newHash) {
-					zonesToSkip.add(zId);
-				} else {
-					lastZoneHashes[zId] = newHash;
-				}
-			});
+			if (currentAction && currentAction.operations) {
+				currentAction.operations.forEach(op => {
+					// A. 標記目標區域
+					if (op.toZone) markDirty(op.toZone);
+					if (op.zoneId) markDirty(op.zoneId);
+					if (op.targetZone) markDirty(op.targetZone);
+					if (op.targetType === 'ZONE' && op.targetIds) op.targetIds.forEach(zid => markDirty(zid));
+
+					// B. 標記受影響卡片的「起始」與「結束」區域
+					let affectedCardIds = [];
+					if (op.cardIds && Array.isArray(op.cardIds)) affectedCardIds = [...op.cardIds];
+					if (op.sourceCardId) affectedCardIds.push(op.sourceCardId);
+					if (op.attackerId) affectedCardIds.push(op.attackerId);
+					if (op.targetId) affectedCardIds.push(op.targetId);
+
+					// --- [修正] 在標記 Dirty 時加入 Source (效果卡) 連動檢查 ---
+					affectedCardIds.forEach(cid => {
+						// 1. 結束位置 (Current State)
+						const currC = state.cards.find(c => c.id == cid);
+						if (currC) {
+							markDirty(currC.zone);
+							// [修正] 如果是 Ability 卡且有來源 (Source)，來源所在區域也要重繪
+							if (currC.sourceId && currC.zone.includes('ability')) {
+								const source = state.cards.find(s => s.id === currC.sourceId);
+								if (source) markDirty(source.zone);
+							}
+						}
+
+						// 2. 起始位置 (Previous State)
+						const prevC = prevState.cards.find(c => c.id == cid);
+						if (prevC) {
+							markDirty(prevC.zone);
+							// [修正] 移除或移動時，舊來源的區域也要重繪
+							if (prevC.sourceId && prevC.zone.includes('ability')) {
+								const source = prevState.cards.find(s => s.id === prevC.sourceId);
+								if (source) markDirty(source.zone);
+							}
+						}
+					});
+				});
+			}
+			
+			// 移除髒區域 (即需要重繪)
+			dirtyZones.forEach(z => zonesToSkip.delete(z));
+			
+			// 強制重繪展示區與對話，確保圖層正確
+			zonesToSkip.delete('reveal-zone');
+			if (state.dialogueData) zonesToSkip.clear();
+
 		} else {
-			// 編輯模式下，清空快取強制重繪
-			lastZoneHashes = {};
+			zonesToSkip.clear(); // 強制全繪
 		}
-		// ----------------------------------------------------
+		
+		window.lastRenderedStepIndex = currentIndex;
 
 		let winOverlay = document.getElementById('win-overlay');
 		if (!winOverlay) {
@@ -8894,7 +8931,25 @@
         }
         
         // 發光特效
-        if (card.glow) el.classList.add(`glow-${card.glow}`);
+        // --- [修正] Glow 邏輯 (包含 Ability 繼承) ---
+        let activeGlow = card.glow;
+        
+        // 如果這張卡不是 Ability 卡，檢查它是否有正在發光的 Ability 子卡
+        if (!card.zone.includes('ability')) {
+             // [修正] 取得當前狀態
+             // 因為 createCardElement 在函式外部，無法讀取 'state'，所以要用 getCurrentDisplayState()
+             const currentState = (typeof state !== 'undefined') ? state : getCurrentDisplayState();
+
+             // [修正] 找出所有指認這張卡為 Source 的 Ability 卡
+             // 注意：改為使用 currentState
+             const abilityChildren = currentState.cards.filter(c => c.sourceId === card.id && c.zone.includes('ability'));
+             
+             // 如果有任何子卡發光，繼承其光暈
+             const glowingChild = abilityChildren.find(c => c.glow);
+             if (glowingChild) activeGlow = glowingChild.glow;
+        }
+
+        if (activeGlow) el.classList.add(`glow-${activeGlow}`);
         if (card.isContinuous) el.classList.add('continuous');
 
         // 3. [關鍵修改] 圖片顯示邏輯
