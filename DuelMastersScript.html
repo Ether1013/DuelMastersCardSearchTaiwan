@@ -9597,6 +9597,40 @@
 		else document.body.classList.remove('in-edit-mode');
 		
         const list = document.getElementById('action-list');
+		
+		// === 🚀 [效能優化] 智慧更新模式 ===
+		// 計算預期的 DOM 元素數量： (歷史步驟數 * 2) + 1 個結尾 Gap
+		// 結構是：[Gap, Item, Gap, Item, ..., Gap]
+		const expectedCount = (history.length * 2) + 1;
+
+		// 如果 (1) 不在編輯模式 (內容不會變) 且 (2) DOM 數量正確
+		// 則只更新 Active 樣式，不進行銷毀重建
+		if (!isDrafting && list.children.length === expectedCount) {
+			// 遍歷所有步驟，更新 active class
+			for (let i = 0; i < history.length; i++) {
+				// Item 位於： i * 2 + 1 (因為前面有一個 Gap)
+				const itemEl = list.children[i * 2 + 1];
+				
+				// 安全檢查：確保它是 action-item
+				if (itemEl && itemEl.classList.contains('action-item')) {
+					if (i === currentIndex) {
+						itemEl.classList.add('active');
+						// 確保 active 的項目其左側邊框顏色正確 (p1/p2)
+						// (這部分通常不需變動，但若有 bug 可在此補強)
+					} else {
+						itemEl.classList.remove('active');
+					}
+				}
+			}
+			
+			// 更新計數器文字
+			document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
+			
+			// 既然已經更新完樣式，直接結束函式，跳過下方的暴力重建
+			return; 
+		}
+		// ===================================
+		
         list.innerHTML = '';
         
         // 輔助函式：建立佔位符 (虛線框)
