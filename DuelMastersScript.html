@@ -5171,7 +5171,11 @@
 		
 		// 解鎖 Action Log
 		const list = document.getElementById('action-list');
-		if (list) list.classList.remove('locked');
+		if (list) {
+			list.classList.remove('locked');
+			// [Fix] 延遲 100ms 再次解鎖，防止 startDraft 的 setTimeout(50ms) 覆蓋此設定
+			setTimeout(() => list.classList.remove('locked'), 100);
+		}
 
 		forceNewStep = (currentIndex === history.length - 1);
 		
@@ -11487,36 +11491,46 @@
     }
 	
 	// [新增] 切換橫置按鈕的狀態
+	// [修正] 切換橫置按鈕 (點擊時切換樣式)
 	function toggleTapModifier(e, el) {
-		e.stopPropagation(); // <--- 關鍵：阻止點擊事件傳遞給父層 (避免觸發移動)
-		
+		e.stopPropagation(); // 阻止冒泡
 		el.classList.toggle('active');
-		const icon = el.querySelector('span'); // 抓取裡面的圖示
+		const icon = el.querySelector('span');
 
-		// 視覺回饋更新
 		if (el.classList.contains('active')) {
-			el.style.backgroundColor = 'rgba(255, 215, 0, 0.2)'; // 背景微亮
-			if(icon) {
-				icon.style.filter = 'none'; // 彩色
+			// [ON] 啟用狀態：亮黃色背景 + 彩色圖示
+			el.style.backgroundColor = 'rgba(255, 215, 0, 0.3)'; 
+			if (icon) {
+				icon.style.filter = 'none';
 				icon.style.opacity = '1';
 			}
 		} else {
-			el.style.backgroundColor = 'rgba(0,0,0,0.15)'; // 回復暗色
-			if(icon) {
-				icon.style.filter = 'grayscale(100%)'; // 灰階
+			// [OFF] 停用狀態：深黑背景 + 灰階圖示
+			el.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+			if (icon) {
+				icon.style.filter = 'grayscale(100%)';
 				icon.style.opacity = '0.5';
 			}
 		}
 	}
 
 	// [新增] 重置橫置按鈕 (每次開選單時呼叫)
+	// [修正] 重置按鈕狀態 (開選單時呼叫)
 	function resetTapModifier() {
 		const btn = document.getElementById('btn-tap-modifier');
 		if (btn) {
+			// 1. 移除邏輯標記
 			btn.classList.remove('active');
-			btn.style.opacity = '0.6';
-			btn.style.borderColor = '';
-			btn.style.color = '';
+			
+			// 2. [關鍵] 強制重置視覺樣式 (回到深色背景)
+			btn.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+			
+			// 3. 重置圖示為灰色
+			const icon = btn.querySelector('span');
+			if (icon) {
+				icon.style.filter = 'grayscale(100%)';
+				icon.style.opacity = '0.5';
+			}
 		}
 	}
 
@@ -11651,7 +11665,7 @@
 
 			// 如果按鈕亮起 -> 90度 (橫置)
 			// 如果按鈕沒亮 -> 180度 (倒置)
-			const rotationDeg = isTapActive ? 90 : 180;
+			const rotationDeg = isTapActive ? 270 : 180;
 
 			addOperation({ 
 				type: 'ROTATE_CARD', 
