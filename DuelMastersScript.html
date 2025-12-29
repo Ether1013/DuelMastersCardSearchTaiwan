@@ -11574,59 +11574,65 @@
 
     // 3. 確認移動卡片
     function confirmDeckMove() {
-        const qty = parseInt(document.getElementById('dm-qty').value) || 1;
-        // [修改這裡] 改為讀取 hidden input 的值
-        const targetType = document.getElementById('dm-target-val').value;
-        
-        const playerPrefix = contextMenuTargetZone.split('-')[0]; 
-        
-        // 解析目標區域
-        let targetZoneId;
-        if (targetType === 'reveal') {
-            targetZoneId = 'reveal-zone';
-        } else {
-            targetZoneId = `${playerPrefix}-${targetType}`;
-        }
+		// 1. 取得移動參數
+		const qtyInput = document.getElementById('dm-qty-input') || document.querySelector('#deck-move-modal input[type="number"]'); 
+		const qty = parseInt(qtyInput.value) || 1;
+		const targetType = document.getElementById('dm-target-val').value; // 例如 'mana', 'hand'
+		
+		if (!contextMenuTargetZone || !targetType) return;
 
-        const state = getCurrentDisplayState();
-        const deckCards = getCardsInZone(state, contextMenuTargetZone);
-        
-        if (deckCards.length < qty) {
-            alert(t('msg_deck_empty').replace('{n}', playerPrefix === 'p1' ? '1' : '2'));
-            return;
-        }
+		const state = getCurrentDisplayState();
+		const cards = state.cards.filter(c => c.zone === contextMenuTargetZone);
+		
+		// 牌庫沒牌的防呆
+		if (cards.length === 0) {
+			document.getElementById('deck-move-modal').style.display = 'none';
+			return;
+		}
 
-        const movingCards = deckCards.slice(-qty);
-        const movingIds = movingCards.map(c => c.id);
+		// 2. 取得牌庫頂的 N 張卡 (陣列後方為頂端)
+		// 雖然 Deck Zone 在 UI 上有反向排序，但資料陣列通常 push 是在後面
+		const cardsToMove = cards.slice(-qty); 
+		const cardIds = cardsToMove.map(c => c.id);
 
-        document.getElementById('deck-move-modal').style.display = 'none';
+		// 3. 組合目標區域名稱 (例如 'p1-mana')
+		const playerPrefix = contextMenuTargetZone.split('-')[0]; // 'p1' or 'p2'
+		const targetZoneId = `${playerPrefix}-${targetType}`;
 
-        if (!isDrafting) startDraftAtEnd();
+		// 4. 開啟新步驟 (若非編輯中)
+		if (!isDrafting) startDraftAtEnd();
 
-        let faceUp = true;
-        if (targetType === 'shield' || targetType === 'deck') faceUp = false;
+		// 5. 設定卡片狀態 (魔力區與戰鬥區預設為表側，其他看情況)
+		let faceUp = true;
+		if (targetType === 'shield' || targetType === 'deck') faceUp = false;
+		// P2 手牌對 P1 來說是隱藏的，但 ownerId 視角通常設為 faceUp=true (系統會自動遮蔽)
+		
+		// 6. 執行移動指令
+		addOperation({ 
+			type: 'MOVE', 
+			cardIds: cardIds, 
+			toZone: targetZoneId, 
+			faceUp: faceUp, 
+			shuffleSelection: false 
+		});
 
-        // 1. 移動操作
-        const moveOp = { 
-            type: 'MOVE', 
-            cardIds: movingIds, 
-            toZone: targetZoneId, 
-            faceUp: faceUp,
-            shuffleSelection: false 
-        };
-        addOperation(moveOp);
-        applyOperation(state, moveOp); // 立即應用
+		// --- [Fix] 補上魔力區自動旋轉邏輯 ---
+		if (targetType === 'mana') {
+			addOperation({ 
+				type: 'ROTATE_CARD', 
+				cardIds: cardIds, 
+				deg: 180 
+			});
+		}
+		// ----------------------------------
 
-        // 2. 如果是去魔力區，追加旋轉操作
-        if (targetType === 'mana') {
-            const rotateOp = { type: 'ROTATE_CARD', cardIds: movingIds, deg: 180 };
-            addOperation(rotateOp);
-            applyOperation(state, rotateOp); // 立即應用
-        }
-
-        // 3. 重新渲染
-        renderGame();
-    }
+		// 7. 關閉視窗與選單
+		document.getElementById('deck-move-modal').style.display = 'none';
+		document.getElementById('deck-context-menu').style.display = 'none';
+		
+		// 存檔
+		saveDraft(`${t('log_blind_move')} ${qty} -> ${t('dest_' + targetType)}`);
+	}
 	
 	// 全部收回功能
     function recallAllCards() {
