@@ -3348,6 +3348,8 @@
 			'opt_rb_center': '⚡ 中間撕裂 (Center)',
 			'opt_rb_tl': '📐 左上撕裂 (Top-Left)',
 			'opt_rb_br': '📐 右下撕裂 (Btm-Right)',
+			'opt_rb_pan_up': '🔼 緩緩上升 (Pan Up)',
+			'opt_rb_pan_down': '🔽 緩緩下降 (Pan Down)', // [新增]
 			'btn_preview': '▶ 預覽',
 			'btn_save': '💾 儲存 (Save)',
 			'msg_rb_hint': '點擊此處並按下 Ctrl+V 貼上圖片\n(拖曳可移動，滾輪可縮放)',
@@ -3500,6 +3502,8 @@
 			'opt_rb_center': '⚡ Center Tear',
 			'opt_rb_tl': '📐 Top-Left',
 			'opt_rb_br': '📐 Btm-Right',
+			'opt_rb_pan_up': '🔼 Pan Up',
+			'opt_rb_pan_down': '🔽 Pan Down', // [新增]
 			'btn_preview': '▶ Preview',
 			'btn_save': '💾 Save',
 			'msg_rb_hint': 'Click here & Ctrl+V to paste image\n(Drag to move, Scroll to scale)',
@@ -3652,6 +3656,8 @@
 			'opt_rb_center': '⚡ 中央引き裂き',
 			'opt_rb_tl': '📐 左上から',
 			'opt_rb_br': '📐 右下から',
+			'opt_rb_pan_up': '🔼 緩やかに上昇 (Pan Up)',
+			'opt_rb_pan_down': '🔽 緩やかに下降 (Pan Down)', // [新增]
 			'btn_preview': '▶ プレビュー',
 			'btn_save': '💾 保存',
 			'msg_rb_hint': 'ここをクリックして Ctrl+V で画像貼り付け\n(ドラッグで移動、ホイールで拡大)',
@@ -9591,173 +9597,163 @@
 	}
 
     function renderTimeline() {
-	
-		// [新增] 根據編輯狀態切換 body 的 class，啟動 CSS 薄紗效果
+		// 【優化 1】播放模式下不進行處理 (因為觀眾看不到，且大量 DOM 操作會拖慢動畫)
+		if (document.body.classList.contains('desktop-playing') || 
+			document.body.classList.contains('mobile-mode')) {
+			return;
+		}
+
+		// 根據編輯狀態切換 body 的 class
 		if (isDrafting) document.body.classList.add('in-edit-mode');
 		else document.body.classList.remove('in-edit-mode');
+
+		const list = document.getElementById('action-list');
 		
-        const list = document.getElementById('action-list');
-		
-		// === 🚀 [效能優化] 智慧更新模式 ===
 		// 計算預期的 DOM 元素數量： (歷史步驟數 * 2) + 1 個結尾 Gap
 		// 結構是：[Gap, Item, Gap, Item, ..., Gap]
 		const expectedCount = (history.length * 2) + 1;
 
-		// 如果 (1) 不在編輯模式 (內容不會變) 且 (2) DOM 數量正確
-		// 則只更新 Active 樣式，不進行銷毀重建
+		// 【優化 2】CSS 控制：若結構未變，僅切換 Active 樣式 (避免 innerHTML 暴力重繪)
+		// 條件：不在編輯模式 (編輯模式可能涉及插入/刪除) 且 DOM 數量符合預期
 		if (!isDrafting && list.children.length === expectedCount) {
-			// 遍歷所有步驟，更新 active class
-			for (let i = 0; i < history.length; i++) {
-				// Item 位於： i * 2 + 1 (因為前面有一個 Gap)
-				const itemEl = list.children[i * 2 + 1];
-				
-				// 安全檢查：確保它是 action-item
-				if (itemEl && itemEl.classList.contains('action-item')) {
-					if (i === currentIndex) {
-						itemEl.classList.add('active');
-						// 確保 active 的項目其左側邊框顏色正確 (p1/p2)
-						// (這部分通常不需變動，但若有 bug 可在此補強)
-					} else {
-						itemEl.classList.remove('active');
-					}
-				}
+			
+			// 1. 移除舊的 active 狀態 (只找這一個 DOM，比遍歷快)
+			const prevActive = list.querySelector('.action-item.active');
+			if (prevActive) {
+				prevActive.classList.remove('active');
 			}
-			
-			// 更新計數器文字
-			document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
-			
-			// 既然已經更新完樣式，直接結束函式，跳過下方的暴力重建
-			return; 
-		}
-		// ===================================
-		
-        list.innerHTML = '';
-        
-        // 輔助函式：建立佔位符 (虛線框)
-        const createPlaceholder = () => {
-            const li = document.createElement('li');
-            li.className = 'action-item placeholder';
-            li.innerText = t('msg_editing_placeholder');
-            li.id = 'active-placeholder'; // 給個 ID 方便定位
-            return li;
-        };
 
-        history.forEach((item, index) => {
-            const gap = document.createElement('div');
-            gap.className = 'timeline-gap';
-            gap.title = "插入新步驟";
-            
-            // [修改] 如果正在編輯且插入點在這裡，gap 失去點擊功能(或隱藏)，並顯示佔位符
-            if (isDrafting && editModeType === 'INSERT' && insertIndex === index) {
-                gap.style.pointerEvents = 'none'; 
-                list.appendChild(gap);
-                list.appendChild(createPlaceholder());
-            } else {
-                // --- [核心修改] 插入 [+] 與 [-] 按鈕 ---
-            
-				// 1. 建立 [+] 按鈕
+			// 2. 設定新的 active 狀態
+			// 原理：Item 位於 indices: 1, 3, 5... (公式: stepIndex * 2 + 1)
+			const newActive = list.children[currentIndex * 2 + 1];
+			if (newActive && newActive.classList.contains('action-item')) {
+				newActive.classList.add('active');
+				
+				// (選用) 確保目前步驟在視野內，但為了效能可略過 behavior: 'smooth'
+				// newActive.scrollIntoView({ block: 'nearest' });
+			}
+
+			// 3. 更新計數器文字
+			const counter = document.getElementById('step-counter');
+			if (counter) counter.innerText = `${currentIndex}/${history.length-1}`;
+			
+			// 直接結束，跳過下方的重繪邏輯
+			return;
+		}
+
+		// ===================================
+		// 下方為「結構改變」時的完整重繪邏輯 (如新增、刪除、載入劇本時執行)
+		// ===================================
+		list.innerHTML = '';
+
+		// 輔助函式：建立佔位符 (虛線框)
+		const createPlaceholder = () => {
+			const li = document.createElement('li');
+			li.className = 'action-item placeholder';
+			li.innerText = (typeof t === 'function') ? t('msg_editing_placeholder') : '... Editing ...';
+			li.id = 'active-placeholder';
+			return li;
+		};
+
+		history.forEach((item, index) => {
+			const gap = document.createElement('div');
+			gap.className = 'timeline-gap';
+			gap.title = "插入新步驟";
+
+			if (isDrafting && editModeType === 'INSERT' && insertIndex === index) {
+				gap.style.pointerEvents = 'none';
+				list.appendChild(gap);
+				list.appendChild(createPlaceholder());
+			} else {
+				// 建立 [+] 按鈕
 				const btnPlus = document.createElement('div');
 				btnPlus.className = 'gap-btn gap-btn-plus';
 				btnPlus.innerText = '+';
-				btnPlus.title = t('msg_insert_pos_title') || "在此處插入步驟";
 				btnPlus.onclick = (e) => {
-					e.stopPropagation(); // 阻止冒泡
+					e.stopPropagation();
 					startDraft(index);
 				};
-
-				// 2. 建立 [-] 按鈕
+				
+				// 建立 [-] 按鈕
 				const btnMinus = document.createElement('div');
 				btnMinus.className = 'gap-btn gap-btn-minus';
 				btnMinus.innerText = '-';
-				btnMinus.title = "刪除此處以下的所有步驟";
 				btnMinus.onclick = (e) => {
-					e.stopPropagation(); // 阻止冒泡
+					e.stopPropagation();
 					truncateTimeline(index);
 				};
 
-				// 將按鈕加入 Gap
 				gap.appendChild(btnPlus);
-				
-				// 第一個 Gap (index=0) 通常不建議讓使用者把整個遊戲刪光，所以可以隱藏 [-]
-				// 或者如果允許刪光重來也可以顯示。這裡建議 index > 0 才顯示 [-]
-				if (index > 0) {
-					gap.appendChild(btnMinus);
-				}
-				// ------------------------------------
-				
+				if (index > 0) gap.appendChild(btnMinus);
 				list.appendChild(gap);
-            }
+			}
 
-            const li = document.createElement('li');
-            
-            let colorClass = '';
-            if (item.action.operations && item.action.operations.length > 0) {
-                const op = item.action.operations.find(o => o.cardIds && o.cardIds.length > 0);
-                if (op) {
-                    const cardId = op.cardIds[0];
-                    const card = item.state.cards.find(c => c.id === cardId);
-                    if (card) {
-                        if (card.ownerId === 1) colorClass = 'p1-action';
-                        else if (card.ownerId === 2) colorClass = 'p2-action';
-                    }
-                }
-            }
+			const li = document.createElement('li');
+			let colorClass = '';
+			
+			// 判斷顏色條 (P1/P2)
+			if (item.action.operations && item.action.operations.length > 0) {
+				const op = item.action.operations.find(o => o.cardIds && o.cardIds.length > 0);
+				if (op) {
+					const cardId = op.cardIds[0];
+					const card = item.state.cards.find(c => c.id === cardId);
+					if (card) {
+						if (card.ownerId === 1) colorClass = 'p1-action';
+						else if (card.ownerId === 2) colorClass = 'p2-action';
+					}
+				}
+			}
 
-            // 如果正在編輯這一步 (Edit Mode)，給它一個特殊的樣式
-            if (isDrafting && editModeType === 'EDIT' && insertIndex === index) {
-                li.className = `action-item editing ${colorClass}`;
-            } else {
-                li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
-            }
+			if (isDrafting && editModeType === 'EDIT' && insertIndex === index) {
+				li.className = `action-item editing ${colorClass}`;
+			} else {
+				li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
+			}
 
-            const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="${t('btn_delete_step')}">🗑</button>`;
-            //const editBtn = `<button class="mini-btn edit" onclick="event.stopPropagation(); editAction(${index})" data-i18n="btn_edit_step">${t('btn_edit_step')}</button>`;
-            
-            const controls = `
-                <div class="action-controls">
-                    <button class="mini-btn play-from" onclick="event.stopPropagation(); playFromStep(${index})" data-i18n="btn_play_from">${t('btn_play_from')}</button>
-                    <button class="mini-btn play-step" onclick="event.stopPropagation(); playSingleStep(${index})" data-i18n="btn_play_step">${t('btn_play_step')}</button>
-                    ${delBtn}
-                </div>
-            `;
+			// 按鈕區塊
+			const btnDelTitle = (typeof t === 'function') ? t('btn_delete_step') : 'Delete';
+			const delBtn = `<button class="icon-btn delete" onclick="event.stopPropagation(); deleteAction(${index})" title="${btnDelTitle}">🗑</button>`;
+			const btnPlayFrom = (typeof t === 'function') ? t('btn_play_from') : 'Play From Here';
+			const btnPlayStep = (typeof t === 'function') ? t('btn_play_step') : 'Demo Step';
 
-            // 在 renderTimeline 函式內，找到 li.onclick 設定的部分
+			const controls = `
+				<div class="action-controls">
+					<button class="mini-btn play-from" onclick="event.stopPropagation(); playFromStep(${index})">${btnPlayFrom}</button>
+					<button class="mini-btn play-step" onclick="event.stopPropagation(); playSingleStep(${index})">${btnPlayStep}</button>
+					${delBtn}
+				</div>
+			`;
+
 			li.onclick = (e) => {
-				// 鎖定時禁止點擊切換步驟
-				if (isDrafting) return; 
+				if (isDrafting) return;
 				if(e.target.tagName === 'BUTTON') return;
 				
 				currentIndex = index;
-				
-				// [新增] 使用者主動點擊了歷史紀錄，代表他想聚焦在這一步 (可能是為了修改)
-                // 所以重置旗標，讓下一個動作觸發 editAction 而不是 startDraftAtEnd
-                forceNewStep = false;
-
-                renderUI(true); 
-                saveToStorage();
+				forceNewStep = false;
+				// 點擊列表時，強制進行一次完整重繪以更新畫面，但 Timeline 本身因為上面的優化，只會切換 Class
+				renderUI(true); 
+				if(typeof saveToStorage === 'function') saveToStorage();
 			};
 
-            li.innerHTML = `
-                <div class="action-header">
-                    <span class="action-index">${index}</span>
-                    <span class="action-desc">${item.action.description}</span>
-                </div>
-                ${controls}
-            `;
-            list.appendChild(li);
-        });
-        
-        // 處理列表最後面的 Gap
-        const endGap = document.createElement('div');
-        endGap.className = 'timeline-gap';
-        
-        // [修改] 如果插入點在最後
-        if (isDrafting && editModeType === 'INSERT' && insertIndex === history.length) {
-            endGap.style.pointerEvents = 'none';
-            list.appendChild(endGap);
-            list.appendChild(createPlaceholder());
-        } else {
-            // 最後一個 Gap 只需要 [+] (因為已經在最後了，[-] 沒有意義)
+			li.innerHTML = `
+				<div class="action-header">
+					<span class="action-index">${index}</span>
+					<span class="action-desc">${item.action.description}</span>
+				</div>
+				${controls}
+			`;
+			list.appendChild(li);
+		});
+
+		// 處理結尾 Gap
+		const endGap = document.createElement('div');
+		endGap.className = 'timeline-gap';
+
+		if (isDrafting && editModeType === 'INSERT' && insertIndex === history.length) {
+			endGap.style.pointerEvents = 'none';
+			list.appendChild(endGap);
+			list.appendChild(createPlaceholder());
+		} else {
 			const btnPlusEnd = document.createElement('div');
 			btnPlusEnd.className = 'gap-btn gap-btn-plus';
 			btnPlusEnd.innerText = '+';
@@ -9767,20 +9763,11 @@
 			};
 			endGap.appendChild(btnPlusEnd);
 			list.appendChild(endGap);
-        }
+		}
 
-        document.getElementById('step-counter').innerText = `${currentIndex}/${history.length-1}`;
-        
-        // [新增] 如果有佔位符，自動捲動到該位置
-        if (isDrafting) {
-            const placeholder = document.getElementById('active-placeholder');
-            if (placeholder) {
-                // 這裡我們不強制 scrollIntoView，因為 startDraft 會處理「鎖定前」的捲動
-                // 但如果是因為操作(如貼上圖片)導致的重繪，這裡可以確保它在視野內
-                // placeholder.scrollIntoView({ block: 'center', behavior: 'auto' });
-            }
-        }
-    }
+		const counter = document.getElementById('step-counter');
+		if (counter) counter.innerText = `${currentIndex}/${history.length-1}`;
+	}
 
     function prevStep() { if (currentIndex > 0) { currentIndex--; renderUI(); saveToStorage(); } }
     function nextStep() { if (currentIndex < history.length - 1) { currentIndex++; renderUI(); saveToStorage(); } }
@@ -12651,79 +12638,135 @@
     }
 
     // 6. 播放特效 (核心動畫邏輯)
-    // 6. 播放特效 (核心動畫邏輯)
     function playRealityBreak(data, onComplete) {
         // [新增] 鎖定捲軸，防止震動時出現 Scrollbar
         document.body.style.overflow = 'hidden';
 
-        // 優先讀取 data 中的設定，若無則使用預設值 (向下相容)
+        // 優先讀取 data 中的設定，若無則使用預設值
         const ENABLE_OUTER_SHAKE = (data.shakeOuter !== undefined) ? data.shakeOuter : false;
         const ENABLE_INNER_SHAKE = (data.shakeInner !== undefined) ? data.shakeInner : true;
         const TEAR_INTENSITY = (data.tearScale !== undefined) ? data.tearScale : 0.7;
-        
-        // ==========================================
 
         const overlay = document.getElementById('rb-overlay');
         const imgLayer = document.getElementById('rb-inner-layer');
         const paperLayer = document.getElementById('rb-paper-layer');
-        const flash = document.getElementById('rb-flash-layer');
         const body = document.body;
-        
-        // --- [新增] 解析圖片來源優先順序 ---
-		let srcImage = null;
-		
-		if (data.imgUrl) {
-			// 優先使用網址
-			srcImage = data.imgUrl;
-		} else if (data.imgKey) {
-			// 其次使用全域緩存
-			srcImage = globalImageRegistry[data.imgKey];
-		} else if (data.imgData) {
-			// 相容舊資料
-			srcImage = data.imgData;
-		}
-        
-        const hint = document.getElementById('rb-edit-hint');
 
-        // A. 初始化
+        // 解析圖片來源
+        let srcImage = null;
+        if (data.imgUrl) {
+            srcImage = data.imgUrl;
+        } else if (data.imgKey) {
+            srcImage = globalImageRegistry[data.imgKey];
+        } else if (data.imgData) {
+            srcImage = data.imgData;
+        }
+
+        const hint = document.getElementById('rb-edit-hint');
+        
+        // A. 初始化顯示
         overlay.style.display = 'block';
         overlay.classList.remove('editing');
-        
         if (hint) hint.style.display = 'none';
-        
-        const setLayerStyle = (el, isPaper) => {
-            if (!isPaper && srcImage) {
-                el.style.backgroundImage = `url(${srcImage})`;
-                el.style.backgroundColor = 'transparent';
-            } else if (isPaper) {
-                el.style.backgroundImage = ''; 
-                el.style.backgroundColor = ''; 
-            } else {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = 'white';
-            }
-            
-            const st = data.style || {x:50, y:50, scale:1};
-            el.style.backgroundPosition = `${st.x}% ${st.y}%`;
-            el.style.backgroundSize = `${st.scale * 100}%`;
-            el.style.opacity = '1';
-            el.style.transition = 'none'; 
-        };
 
-        setLayerStyle(imgLayer, false);
-        setLayerStyle(paperLayer, true);
-        
-        paperLayer.style.display = 'block';
-
-        // B. 準備隨機鋸齒種子
-        const seedImg = Array.from({length: 100}, () => (Math.random() - 0.5));
-        const seedPaper = Array.from({length: 100}, () => (Math.random() - 0.5));
-        
+        // 取得基本位置設定
+        const st = data.style || {x:50, y:50, scale:1};
         let pattern = data.pattern;
         if (!pattern || pattern === 'random') {
             const opts = ['center', 'corner-tl', 'corner-br'];
             pattern = opts[Math.floor(Math.random() * opts.length)];
         }
+
+        // ===============================================
+        // [新增] 第四種效果：緩緩上升 (Pan Up) 專用邏輯
+        // ===============================================
+        if (pattern === 'pan_up' || pattern === 'pan_down') {
+            // 1. 隱藏不需要的撕裂層
+            paperLayer.style.display = 'none';
+            
+            // 2. 設定內層圖片初始狀態
+            if (srcImage) {
+                imgLayer.style.backgroundImage = `url(${srcImage})`;
+                imgLayer.style.backgroundColor = 'transparent';
+            }
+            imgLayer.style.clipPath = 'none'; // 不裁切
+            
+            // 判斷運鏡方向
+            // Pan Up (鏡頭向上): 內容從低處(Start +) 往 高處(End -) 移動
+            // Pan Down (鏡頭向下): 內容從高處(Start -) 往 低處(End +) 移動
+            let startOffset = 15;
+            let endOffset = -15;
+
+            if (pattern === 'pan_down') {
+                startOffset = -15;
+                endOffset = 15;
+            }
+
+            const startY = st.y + startOffset;
+            const endY = st.y + endOffset;
+            
+            imgLayer.style.backgroundPosition = `${st.x}% ${startY}%`;
+            imgLayer.style.backgroundSize = `${st.scale * 100}%`;
+            imgLayer.style.opacity = '0';      // 初始透明
+            imgLayer.style.transition = 'none'; // 瞬間重置
+
+            // 強制重繪
+            void imgLayer.offsetWidth;
+
+            // 3. 執行序列動畫
+            setTimeout(() => {
+                // 階段一：浮現 + 開始運鏡 (總長 4秒)
+                imgLayer.style.transition = 'opacity 0.8s ease-out, background-position 4s linear';
+                
+                imgLayer.style.opacity = '1';
+                imgLayer.style.backgroundPosition = `${st.x}% ${endY}%`;
+
+                // 階段二：快速消退 (3.5秒處)
+                setTimeout(() => {
+                    imgLayer.style.transition = 'opacity 0.5s ease-in'; 
+                    imgLayer.style.opacity = '0';
+                }, 3500);
+
+            }, 50);
+
+            // 結束回調
+            if (onComplete) setTimeout(onComplete, 4000);
+            return;
+        }
+
+        // ===============================================
+        // 以下為原本的撕裂 (Tearing) 邏輯
+        // ===============================================
+
+        const setLayerStyle = (el, isPaper) => {
+            if (!isPaper && srcImage) {
+                el.style.backgroundImage = `url(${srcImage})`;
+                el.style.backgroundColor = 'transparent';
+            } else if (isPaper) {
+                el.style.backgroundImage = '';
+                el.style.backgroundColor = '';
+            } else {
+                el.style.backgroundImage = 'none';
+                el.style.backgroundColor = 'white';
+            }
+            
+            // [撕裂版] 鏡頭上移特效：初始位置設定
+            // 為了營造鏡頭感，撕裂版我們也保留一點點位移 (+5%)
+            let startY = st.y;
+            if (!isPaper) startY = st.y + 5; 
+
+            el.style.backgroundPosition = `${st.x}% ${startY}%`;
+            el.style.backgroundSize = `${st.scale * 100}%`;
+            el.style.opacity = '1';
+            el.style.transition = 'none';
+        };
+        setLayerStyle(imgLayer, false);
+        setLayerStyle(paperLayer, true);
+        paperLayer.style.display = 'block';
+
+        // B. 準備隨機鋸齒種子
+        const seedImg = Array.from({length: 100}, () => (Math.random() - 0.5));
+        const seedPaper = Array.from({length: 100}, () => (Math.random() - 0.5));
 
         // C. 設定初始狀態 (閉合)
         const startPolyImg = generateJaggedPoly(0, pattern, seedImg, 'image');
@@ -12733,16 +12776,15 @@
         paperLayer.style.clipPath = startPolyPaper;
 
         // D. 開始動畫序列
-        
         // 1. 套用震動
         if (ENABLE_OUTER_SHAKE) body.classList.add('shaking-outer');
         if (ENABLE_INNER_SHAKE) body.classList.add('shaking-inner');
-        
-        void imgLayer.offsetWidth;
+        void imgLayer.offsetWidth; // 強制重繪
 
-        // 2. 撕裂過程
+        // 2. 撕裂過程 & 鏡頭移動
         setTimeout(() => {
-            const transitionCSS = 'clip-path 2.0s cubic-bezier(0.2, 1, 0.3, 1)';
+            // 在 transition 中加入 background-position 的平滑過渡
+            const transitionCSS = 'clip-path 2.0s cubic-bezier(0.2, 1, 0.3, 1), background-position 2.5s ease-out';
             imgLayer.style.transition = transitionCSS;
             paperLayer.style.transition = transitionCSS;
             
@@ -12751,25 +12793,22 @@
             
             imgLayer.style.clipPath = endPolyImg;
             paperLayer.style.clipPath = endPolyPaper;
+
+            // 設定鏡頭移動的目標位置 (往上 5%)
+            imgLayer.style.backgroundPosition = `${st.x}% ${st.y - 5}%`;
+
         }, 100);
 
-        // 3. 結束震動 & 白光閃爍
+        // 3. 結束震動
         setTimeout(() => {
             body.classList.remove('shaking-outer');
             body.classList.remove('shaking-inner');
-            
-            flash.style.opacity = '1';
-        }, 1800);
-
-        // 4. 退場
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            flash.style.opacity = '0';
-            
-            // [新增] 恢復捲軸
-            document.body.style.overflow = '';
-            
             if (onComplete) onComplete();
+        }, 500);
+
+        // 4. 退場 (撕裂版通常不自動消退，因為可能會連續播放，這裡維持原樣)
+        setTimeout(() => {
+            document.body.style.overflow = ''; // 解鎖捲軸
         }, 2500);
     }
 	
@@ -13258,6 +13297,8 @@
 					<option value="center" data-i18n="opt_rb_center">⚡ 中間撕裂 (Center)</option>
 					<option value="corner-tl" data-i18n="opt_rb_tl">📐 左上撕裂 (Top-Left)</option>
 					<option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
+					<option value="pan_up" data-i18n="opt_rb_pan_up">🔼 緩緩上升 (Pan Up)</option>
+					<option value="pan_down" data-i18n="opt_rb_pan_down">🔽 緩緩下降 (Pan Down)</option>
 				</select>
 			</div>
 			<div style="display:flex; flex-direction:column; gap:2px;">
