@@ -11601,7 +11601,7 @@
             applyOperation(getCurrentDisplayState(), op);
             
             // 3. 重新渲染畫面
-            renderGame();
+            renderUI();
             
             // 視覺特效 (選用)
             triggerShuffleAnimation(10, contextMenuTargetZone);
@@ -11623,7 +11623,7 @@
     }
 
     function confirmDeckMove() {
-		const qtyInput = document.getElementById('dm-qty-input') || document.querySelector('#deck-move-modal input[type="number"]'); 
+		const qtyInput = document.getElementById('dm-qty-input') || document.getElementById('dm-qty') || document.querySelector('#deck-move-modal input[type="number"]'); 
 		const qty = parseInt(qtyInput.value) || 1;
 		const targetType = document.getElementById('dm-target-val').value;
 		
@@ -11637,18 +11637,27 @@
 			return;
 		}
 
+		// 取得要移動的卡片 (從陣列末端/牌庫頂開始抓)
 		const cardsToMove = cards.slice(-qty); 
 		const cardIds = cardsToMove.map(c => c.id);
 
+		// 解析目標區域
 		const playerPrefix = contextMenuTargetZone.split('-')[0];
-		const targetZoneId = `${playerPrefix}-${targetType}`;
+		let targetZoneId;
+		if (targetType === 'reveal') {
+			targetZoneId = 'reveal-zone';
+		} else {
+			targetZoneId = `${playerPrefix}-${targetType}`;
+		}
 
+		// 若非編輯中，開啟新步驟
 		if (!isDrafting) startDraftAtEnd();
 
+		// 設定卡片狀態
 		let faceUp = true;
 		if (targetType === 'shield' || targetType === 'deck') faceUp = false;
 		
-		// 1. 移動卡片
+		// 1. 執行移動指令 (addOperation 會自動處理資料更新與 renderUI)
 		addOperation({ 
 			type: 'MOVE', 
 			cardIds: cardIds, 
@@ -11657,14 +11666,12 @@
 			shuffleSelection: false 
 		});
 
-		// --- [修改] 魔力區旋轉邏輯 ---
+		// 2. 魔力區特殊處理 (橫置/倒置)
 		if (targetType === 'mana') {
-			// 檢查橫置按鈕是否有被啟用 (class='active')
 			const tapBtn = document.getElementById('btn-tap-modifier');
 			const isTapActive = tapBtn && tapBtn.classList.contains('active');
-
-			// 如果按鈕亮起 -> 90度 (橫置)
-			// 如果按鈕沒亮 -> 180度 (倒置)
+			
+			// 根據按鈕狀態決定角度 (亮起=270度，沒亮=180度)
 			const rotationDeg = isTapActive ? 270 : 180;
 
 			addOperation({ 
@@ -11673,20 +11680,18 @@
 				deg: rotationDeg 
 			});
 		}
-		// ---------------------------
 
+		// 3. 關閉視窗與選單
 		document.getElementById('deck-move-modal').style.display = 'none';
 		document.getElementById('deck-context-menu').style.display = 'none';
 		
-		// [Fix] 移除自動存檔，改為更新介面
-		// 這樣動作會顯示在畫面上，但 Action Log 不會立刻增加
-		// 使用者需要自己按「儲存」或「下一步」
+		// 4. [Fix] 移除自動存檔，改為更新介面
+		// 這樣展示區 (Reveal Zone) 就會因為 renderUI 被呼叫而正確顯示
+		renderUI(); 
+		updateDraftBar();
 		
-		renderUI();        // 重繪畫面 (顯示移動後的卡片)
-		updateDraftBar();  // 更新下方紅條 (亮起儲存按鈕)
-		
-		// 選項：若希望能預先填好「建議的Log描述」到輸入框，但不送出
-		const descInput = document.getElementById('step-desc-input'); // 或是您介面上的輸入框ID
+		// (選用) 預填描述到輸入框
+		const descInput = document.getElementById('step-desc-input'); // 假設您的輸入框 ID
 		if (descInput) {
 			descInput.value = `${t('log_blind_move')} ${qty} -> ${t('dest_' + targetType)}`;
 		}
@@ -11741,7 +11746,7 @@
         applyOperation(state, shuffleOp);
 
         // 重新渲染
-        renderGame();
+        renderUI();
         triggerShuffleAnimation(20, contextMenuTargetZone);
     }
 
