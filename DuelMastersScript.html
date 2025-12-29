@@ -11485,6 +11485,40 @@
             }
         });
     }
+	
+	// [新增] 切換橫置按鈕的狀態
+	function toggleTapModifier(e, el) {
+		e.stopPropagation(); // <--- 關鍵：阻止點擊事件傳遞給父層 (避免觸發移動)
+		
+		el.classList.toggle('active');
+		const icon = el.querySelector('span'); // 抓取裡面的圖示
+
+		// 視覺回饋更新
+		if (el.classList.contains('active')) {
+			el.style.backgroundColor = 'rgba(255, 215, 0, 0.2)'; // 背景微亮
+			if(icon) {
+				icon.style.filter = 'none'; // 彩色
+				icon.style.opacity = '1';
+			}
+		} else {
+			el.style.backgroundColor = 'rgba(0,0,0,0.15)'; // 回復暗色
+			if(icon) {
+				icon.style.filter = 'grayscale(100%)'; // 灰階
+				icon.style.opacity = '0.5';
+			}
+		}
+	}
+
+	// [新增] 重置橫置按鈕 (每次開選單時呼叫)
+	function resetTapModifier() {
+		const btn = document.getElementById('btn-tap-modifier');
+		if (btn) {
+			btn.classList.remove('active');
+			btn.style.opacity = '0.6';
+			btn.style.borderColor = '';
+			btn.style.color = '';
+		}
+	}
 
     // 設定目標 (點擊區域按鈕)
     function setMoveDest(targetVal, btnEl) {
@@ -11566,48 +11600,41 @@
 			const handBtn = document.querySelector('.dest-btn'); // 假設第一個是 Hand
 			if(handBtn) setMoveDest('hand', handBtn);
 			
-			document.getElementById('deck-move-modal').style.display = 'flex';        }
+			document.getElementById('deck-move-modal').style.display = 'flex';     
+			resetTapModifier();			
+		}
         else if (action === 'recall') {
             recallAllCards();
         }
     }
 
-    // 3. 確認移動卡片
     function confirmDeckMove() {
-		// 1. 取得移動參數
 		const qtyInput = document.getElementById('dm-qty-input') || document.querySelector('#deck-move-modal input[type="number"]'); 
 		const qty = parseInt(qtyInput.value) || 1;
-		const targetType = document.getElementById('dm-target-val').value; // 例如 'mana', 'hand'
+		const targetType = document.getElementById('dm-target-val').value;
 		
 		if (!contextMenuTargetZone || !targetType) return;
 
 		const state = getCurrentDisplayState();
 		const cards = state.cards.filter(c => c.zone === contextMenuTargetZone);
 		
-		// 牌庫沒牌的防呆
 		if (cards.length === 0) {
 			document.getElementById('deck-move-modal').style.display = 'none';
 			return;
 		}
 
-		// 2. 取得牌庫頂的 N 張卡 (陣列後方為頂端)
-		// 雖然 Deck Zone 在 UI 上有反向排序，但資料陣列通常 push 是在後面
 		const cardsToMove = cards.slice(-qty); 
 		const cardIds = cardsToMove.map(c => c.id);
 
-		// 3. 組合目標區域名稱 (例如 'p1-mana')
-		const playerPrefix = contextMenuTargetZone.split('-')[0]; // 'p1' or 'p2'
+		const playerPrefix = contextMenuTargetZone.split('-')[0];
 		const targetZoneId = `${playerPrefix}-${targetType}`;
 
-		// 4. 開啟新步驟 (若非編輯中)
 		if (!isDrafting) startDraftAtEnd();
 
-		// 5. 設定卡片狀態 (魔力區與戰鬥區預設為表側，其他看情況)
 		let faceUp = true;
 		if (targetType === 'shield' || targetType === 'deck') faceUp = false;
-		// P2 手牌對 P1 來說是隱藏的，但 ownerId 視角通常設為 faceUp=true (系統會自動遮蔽)
 		
-		// 6. 執行移動指令
+		// 1. 移動卡片
 		addOperation({ 
 			type: 'MOVE', 
 			cardIds: cardIds, 
@@ -11616,21 +11643,27 @@
 			shuffleSelection: false 
 		});
 
-		// --- [Fix] 補上魔力區自動旋轉邏輯 ---
+		// --- [修改] 魔力區旋轉邏輯 ---
 		if (targetType === 'mana') {
+			// 檢查橫置按鈕是否有被啟用 (class='active')
+			const tapBtn = document.getElementById('btn-tap-modifier');
+			const isTapActive = tapBtn && tapBtn.classList.contains('active');
+
+			// 如果按鈕亮起 -> 90度 (橫置)
+			// 如果按鈕沒亮 -> 180度 (倒置)
+			const rotationDeg = isTapActive ? 90 : 180;
+
 			addOperation({ 
 				type: 'ROTATE_CARD', 
 				cardIds: cardIds, 
-				deg: 180 
+				deg: rotationDeg 
 			});
 		}
-		// ----------------------------------
+		// ---------------------------
 
-		// 7. 關閉視窗與選單
 		document.getElementById('deck-move-modal').style.display = 'none';
 		document.getElementById('deck-context-menu').style.display = 'none';
 		
-		// 存檔
 		saveDraft(`${t('log_blind_move')} ${qty} -> ${t('dest_' + targetType)}`);
 	}
 	
@@ -13376,9 +13409,20 @@
             <div class="dest-btn active" onclick="setMoveDest('hand', this)">
                 <i>✋</i> <span data-i18n="dest_hand">手牌</span>
             </div>
-            <div class="dest-btn" onclick="setMoveDest('mana', this)">
-                <i>💧</i> <span data-i18n="dest_mana">魔力區</span>
-            </div>
+            <div style="display: flex; width: 100%; margin-bottom: 5px;"> 
+    
+				<div class="dest-btn" onclick="setMoveDest('mana', this)" 
+					 style="flex-grow: 1; margin: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none; display: flex; align-items: center; justify-content: flex-start; padding-left: 10px; gap: 6px;">
+					<i>💧</i> <span data-i18n="dest_mana">魔力區</span>
+				</div>
+
+				<div id="btn-tap-modifier" onclick="toggleTapModifier(event, this)" 
+					 style="width: 40px; min-width: 40px; border: 1px solid #444; border-left: 1px solid rgba(255,255,255,0.2); border-top-right-radius: 4px; border-bottom-right-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(0,0,0,0.3);"
+					 title="切換是否橫置 (預設: 倒置)">
+					<span style="font-size: 1.2em; filter: grayscale(100%); opacity: 0.5;">⤵️</span>
+				</div>
+
+			</div>
             <div class="dest-btn" onclick="setMoveDest('shield', this)">
                 <i>🛡️</i> <span data-i18n="dest_shield">護盾區</span>
             </div>
