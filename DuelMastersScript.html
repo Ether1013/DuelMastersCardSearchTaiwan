@@ -11678,7 +11678,18 @@
 		document.getElementById('deck-move-modal').style.display = 'none';
 		document.getElementById('deck-context-menu').style.display = 'none';
 		
-		saveDraft(`${t('log_blind_move')} ${qty} -> ${t('dest_' + targetType)}`);
+		// [Fix] 移除自動存檔，改為更新介面
+		// 這樣動作會顯示在畫面上，但 Action Log 不會立刻增加
+		// 使用者需要自己按「儲存」或「下一步」
+		
+		renderUI();        // 重繪畫面 (顯示移動後的卡片)
+		updateDraftBar();  // 更新下方紅條 (亮起儲存按鈕)
+		
+		// 選項：若希望能預先填好「建議的Log描述」到輸入框，但不送出
+		const descInput = document.getElementById('step-desc-input'); // 或是您介面上的輸入框ID
+		if (descInput) {
+			descInput.value = `${t('log_blind_move')} ${qty} -> ${t('dest_' + targetType)}`;
+		}
 	}
 	
 	// 全部收回功能
