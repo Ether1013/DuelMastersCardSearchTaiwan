@@ -5804,12 +5804,11 @@
         }
     }
 
-    // [修正] 旋轉：恢復堆疊連動邏輯
-	function rotateCard(deg) {
+    function rotateCard(deg) {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		const state = getCurrentDisplayState();
 
-		// --- 恢復原始的堆疊搜尋邏輯 ---
+		// --- 1. 尋找整組關聯卡片 (保持原樣) ---
 		const getRoot = (cardId) => {
 			let current = state.cards.find(c => c.id === cardId);
 			while (current && current.parentId) {
@@ -5827,7 +5826,6 @@
 			while(queue.length > 0) {
 				const currentId = queue.shift();
 				const children = state.cards.filter(c => c.parentId === currentId);
-				// 讀取 state.moonless
 				const isMoonless = state.moonless && state.moonless[currentId];
 				children.forEach(child => {
 					if (isMoonless && child.stackType === 'bottom') return;
@@ -5840,41 +5838,22 @@
 			return Array.from(results);
 		};
 
-		// 1. 找出 Roots
 		const roots = new Set();
 		pendingMove.cardIds.forEach(id => {
 			const r = getRoot(id);
 			if (r) roots.add(r.id);
 		});
 
-		// 2. 找出所有連動卡片
 		const allTargets = getRotatableTree(Array.from(roots));
 
-		// 3. 送出指令
-		addOperation({ type: 'ROTATE_CARD', cardIds: allTargets, deg: deg }, true);
+		// --- 2. 送出指令 (關鍵修改) ---
+		// [Fix] 移除第二個參數 (true)，讓 addOperation 自動觸發 renderUI()
+		// 這樣介面會整個重畫，expandStack 就能讀到最新的 rotation
+		addOperation({ type: 'ROTATE_CARD', cardIds: allTargets, deg: deg }); 
 
-		// 4. 手動更新 DOM (包含所有連動目標)
-		allTargets.forEach(id => {
-			const card = state.cards.find(c => c.id === id); // 此時 state 已經被 addOperation 更新過角度
-			const el = document.querySelector(`.card[data-id="${id}"]`);
-			if (el && card) {
-				let transform = `rotate(${card.rotation}deg)`;
-				if (el.classList.contains('selected') && !card.zone.includes('ability')) {
-					// 簡易判斷：非能力區且被選取時浮起
-					transform += ` translateY(-5px)`;
-				}
-				el.style.transform = transform;
-				
-				// 戰鬥區橫置時的垂直置中修正
-				if (card.zone.includes('battle')) {
-					if (Math.abs(card.rotation) % 180 !== 0) {
-						el.parentElement.classList.add('tapped-group');
-					} else {
-						el.parentElement.classList.remove('tapped-group');
-					}
-				}
-			}
-		});
+		// --- 3. 移除舊的手動 DOM 更新代碼 ---
+		// (原本這裡有一大段 allTargets.forEach... 修改 style.transform 的程式碼，請全部刪除)
+		// 因為 renderUI() 已經會產生正確角度的新 DOM 了。
 	}
 
     function flipCard() {
