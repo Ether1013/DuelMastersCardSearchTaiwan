@@ -9972,38 +9972,40 @@
 
 	// --- [3] 停止播放 (恢復 UI + 停在當下) ---
 	function stopPlayback( closeMusic ) {
-	
-		document.exitFullscreen();
-	
+		if (document.fullscreenElement) {
+			document.exitFullscreen().catch(err => {}); // 防止非全螢幕時報錯
+		}
 		// 1. 停止計時器
 		if (playTimeout) {
 			clearTimeout(playTimeout);
 			playTimeout = null;
 		}
-		
 		// 2. 更新按鈕圖示
 		updatePlayButtonUI();
-		
 		// 3. [關鍵] 移除播放模式 Class -> 這會讓 CSS 裡的 display:none 失效
 		// 於是 Toolbar, Timeline 等編輯介面就會「恢復顯示」
 		document.body.classList.remove('desktop-playing');
 		document.body.classList.remove('is-playing');
 		
 		// 4. [關鍵] 註解掉重置邏輯，確保停在當下
-		// currentIndex = 0; 
-		
+		// currentIndex = 0;
+
 		// 5. 暫停音樂
 		if ( closeMusic ){
 			globalAudioPlayer.pause();
 		}
-		
-		// 6. 重繪介面 (更新 Timeline 高亮位置)
-		renderUI();
-		
-		// 7. 嘗試存檔位置
-		if(!document.body.classList.contains('mobile-mode')) {
-			saveToStorage();
+
+		// -----------------------------------------------------------
+		// [修正] 改用既有的 isMobileDevice() 函式判斷
+		// 如果「不是行動裝置」(即桌機版)，才執行列表重繪與捲動
+		if (!isMobileDevice()) { 
+			renderTimeline();
+			
+			setTimeout(() => {
+				scrollToActiveStep();
+			}, 50);
 		}
+		// -----------------------------------------------------------;
 	}
 
     // --- [修改] 播放下一步 (playNextStep) - 簡化版 ---
@@ -11938,18 +11940,17 @@
     }
 	
 	function scrollToActiveStep() {
-        // 1. 找到目前被標記為 active 的步驟項目
-        const activeItem = document.querySelector('.action-item.active');
-        const listContainer = document.getElementById('action-list');
-        
-        if (activeItem && listContainer) {
-            // 2. 計算捲動位置，讓該項目出現在列表視窗的中間
-            // 使用 scrollIntoView 是最簡單的 API
-            // block: 'center' 會盡量將該元素置中
-            // behavior: 'auto' 瞬間跳轉，避免拖曳進度條時畫面晃動太厲害
-            activeItem.scrollIntoView({ block: 'center', behavior: 'auto' });
-        }
-    }
+		// 1. 找到目前被標記為 active 或 editing 的步驟項目
+		// (修正：目前的渲染邏輯主要使用 .editing 來標示當前步驟)
+		const activeItem = document.querySelector('.action-item.active, .action-item.editing');
+		const listContainer = document.getElementById('action-list');
+		
+		if (activeItem && listContainer) {
+			// 2. 計算捲動位置，讓該項目出現在列表視窗的中間
+			// block: 'center' 會盡量將該元素置中
+			activeItem.scrollIntoView({ block: 'center', behavior: 'auto' });
+		}
+	}
 	
 	// --- Dialogue Editor Logic ---
     let lastDiagSettings = { 
