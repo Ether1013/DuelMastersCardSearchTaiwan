@@ -2387,6 +2387,76 @@
         background: rgba(0, 230, 118, 0.1);
         box-shadow: 0 0 10px #00e676; /* 按鈕本身稍微發光提示開啟中 */
     }
+	/* =========================================
+	   [修改] 手機版控制列：縱向佈局
+	   ========================================= */
+	#mobile-controls {
+		/* 強制改為直排 */
+		flex-direction: column-reverse !important; 
+		/* 靠右對齊 */
+		align-items: flex-end !important;
+		
+		/* 位置微調：因為變高了，稍微往上提 */
+		bottom: 140px !important;
+		right: 5px !important;
+		left: auto !important;
+		transform: none !important;
+		
+		width: auto !important;
+		height: auto !important;
+		gap: 8px !important;
+		background: transparent !important; /* 移除整體背景，讓按鈕各自獨立 */
+		border: none !important;
+		box-shadow: none !important;
+		padding: 0 !important;
+	}
+
+	/* 讓原本的圓形按鈕維持背景與陰影 */
+	#mobile-controls .mobile-btn {
+		background: rgba(0, 0, 0, 0.8);
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+		margin: 0 !important; /* 移除舊的邊距 */
+	}
+
+	/* --- 新增：階梯形速度控制 UI (音量條風格) --- */
+	.speed-control-box {
+		display: flex;
+		/* 反轉：讓第1個元素(慢/4.0)在最下面，第7個元素(快/0.25)在最上面 */
+		flex-direction: column-reverse; 
+		align-items: flex-end; /* 靠右對齊 */
+		gap: 3px;
+		padding: 6px;
+		background: rgba(0, 0, 0, 0.8);
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		border-radius: 10px;
+		margin-bottom: 5px;
+	}
+
+	.speed-bar {
+		height: 5px;       /* 每一階的高度 */
+		background: #555;  /* 未啟用顏色 (深灰) */
+		border-radius: 3px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		border: 1px solid #333;
+	}
+
+	/* 設定階梯寬度：Child 1 (最慢) -> Child 7 (最快) 由窄變寬 */
+	.speed-bar:nth-child(1) { width: 12px; } /* 4.0x */
+	.speed-bar:nth-child(2) { width: 16px; }
+	.speed-bar:nth-child(3) { width: 20px; }
+	.speed-bar:nth-child(4) { width: 24px; } /* 1.0x */
+	.speed-bar:nth-child(5) { width: 28px; }
+	.speed-bar:nth-child(6) { width: 32px; }
+	.speed-bar:nth-child(7) { width: 36px; } /* 0.25x */
+
+	/* 啟用狀態：綠色高亮 */
+	.speed-bar.active {
+		background: #0f0 !important; 
+		box-shadow: 0 0 8px #0f0;
+		border-color: #0f0;
+	}
 </style>
 </head>
 <body>
@@ -2794,22 +2864,19 @@
 </div>
 
 <div id="mobile-controls" style="display: none;">
-    <select id="mob-speed-select" onchange="changePlaybackSpeed(this.value)">
-        <option value="4.0">0.25x</option>
-        <option value="2.0">0.5x</option>
-        <option value="1.0" selected>1.0x</option>
-        <option value="0.5">2.0x</option>
-        <option value="0.25">4.0x</option>
-    </select>
     
+    <div id="mob-speed-ui" class="speed-control-box">
+        <div class="speed-bar active" onclick="changePlaybackSpeed(4.0)" title="0.25x (Slow)"></div>
+        <div class="speed-bar active" onclick="changePlaybackSpeed(2.0)" title="0.5x"></div>
+        <div class="speed-bar active" onclick="changePlaybackSpeed(1.33)" title="0.75x"></div>
+        <div class="speed-bar active" onclick="changePlaybackSpeed(1.0)" title="1.0x (Normal)"></div> <div class="speed-bar" onclick="changePlaybackSpeed(0.66)" title="1.5x"></div>
+        <div class="speed-bar" onclick="changePlaybackSpeed(0.5)" title="2.0x"></div>
+        <div class="speed-bar" onclick="changePlaybackSpeed(0.25)" title="4.0x (Fast)"></div>
+    </div>
     <button class="mobile-btn" id="mob-power-btn" onclick="togglePowerSavingMode()" title="節電模式">🍃</button>
-
     <button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()">🔊</button>
-    
     <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)">⏹</button>
-    
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
-
     <button class="mobile-btn" id="mob-collapse-btn" onclick="toggleMobileCollapse()">🔽</button>
 </div>
 
@@ -3974,17 +4041,39 @@
 	// [新增] 播放速度因子 (預設 1.0)
 	let currentSpeedFactor = 1.0;
 
-	// --- [修改] changePlaybackSpeed 函式 --
 	function changePlaybackSpeed(val) {
+		// 1. 更新全域變數
 		currentSpeedFactor = parseFloat(val);
 
-		// [新增] 同步兩個選單的顯示狀態
-		// 這樣無論是用電腦版還是手機版操作，另一邊都會跟著變
+		// 2. 同步電腦版選單 (如果存在)
 		const deskSelect = document.getElementById('speed-select');
-		const mobSelect = document.getElementById('mob-speed-select');
-		
 		if (deskSelect) deskSelect.value = val;
-		if (mobSelect) mobSelect.value = val;
+
+		// 3. 同步手機版階梯 UI (亮燈邏輯)
+		const bars = document.querySelectorAll('#mob-speed-ui .speed-bar');
+		if (bars.length > 0) {
+			// 定義對應的數值陣列 (必須與 HTML 結構順序一致：從 Child 1 到 Child 7)
+			// 這些數值對應 HTML onclick 中的參數
+			const values = [4.0, 2.0, 1.33, 1.0, 0.66, 0.5, 0.25];
+			
+			// 找出目前速度對應的索引
+			// 使用誤差容許 (0.01) 來比對浮點數，解決 1.33 != 1.33333 的問題
+			let activeIndex = values.findIndex(v => Math.abs(v - currentSpeedFactor) < 0.01);
+			
+			// 如果找不到 (例如傳入奇怪的數值)，預設停在 1.0x (Index 3)
+			if (activeIndex === -1) activeIndex = 3;
+
+			// 執行亮燈：
+			// 邏輯：點擊的位置 (activeIndex) 與其「下方」的所有格子都要亮起
+			// 因為是 column-reverse，Index 0 是最下面 (最慢)，Index 6 是最上面 (最快)
+			bars.forEach((bar, index) => {
+				if (index <= activeIndex) {
+					bar.classList.add('active');
+				} else {
+					bar.classList.remove('active');
+				}
+			});
+		}
 	}
 	
 	// --- [補回遺失的函式] 取得與選取卡片有連結關係的所有卡片 ID (家族樹搜尋) ---
