@@ -7284,6 +7284,28 @@
 		// 0. [修正] 先取得當前狀態，供全函式使用
 		// =========================================================
 		const state = getCurrentDisplayState();
+		
+		// --- [修復 Cut In 卡住問題] -------------------------------
+		// 每次重繪介面時，檢查當前步驟是否包含 REALITY_BREAK 特效。
+		// 如果「沒有」特效操作，且「不在編輯特效模式」，就強制關閉遮罩。
+		// 這樣當播放到下一步時，上一步的殘留特效就會被自動清除。
+		if (currentIndex >= 0 && history[currentIndex]) {
+			const currentOps = history[currentIndex].action.operations;
+			const isRbAction = currentOps && currentOps.some(o => o.type === 'REALITY_BREAK');
+			
+			// 檢查全域變數 rbEditorState 是否存在 (避免報錯)
+			const isEditingRb = (typeof rbEditorState !== 'undefined' && rbEditorState.active);
+
+			if (!isRbAction && !isEditingRb) {
+				const rbOverlay = document.getElementById('rb-overlay');
+				// 如果遮罩是開著的，就強制關閉
+				if (rbOverlay && rbOverlay.style.display !== 'none') {
+					rbOverlay.style.display = 'none';
+					document.body.style.overflow = ''; // 解鎖捲軸
+				}
+			}
+		}
+		// ---------------------------------------------------------
 
 		// --- [效能優化] 區域重繪判斷 (ActionLog Mode) ---
 		const zonesToSkip = new Set();
