@@ -1629,7 +1629,7 @@
         padding: 6px 10px;
         
         /* [關鍵] Flex 排版設定 */
-        display: flex;
+        display: flex; /* (JS 會控制這裡的顯示/隱藏) */
         flex-direction: row; /* 強制橫向 */
         align-items: center; /* 垂直置中 */
         justify-content: center;
@@ -2317,7 +2317,8 @@
         display: none !important;
     }
 	
-	#mobile-controls.minimized #mob-collapse-btn {
+	/* 收合時：調整 Collapse 按鈕的大小以填滿圓圈 */
+    #mobile-controls.minimized #mob-collapse-btn {
         width: 100%;
         height: 100%;
         font-size: 24px; /* 圖示放大 */
@@ -2826,7 +2827,7 @@
     </div>
 </div>
 
-<div id="mobile-controls">
+<div id="mobile-controls" style="display: none;">
     <select id="mob-speed-select" onchange="changePlaybackSpeed(this.value)">
         <option value="4.0">0.25x</option>
         <option value="2.0">0.5x</option>
@@ -10105,6 +10106,17 @@
 		} else {
 			// === 播放 ===
 			
+			// --- [新增] 開始播放時，顯示控制面板 ---
+			const mControls = document.getElementById('mobile-controls');
+			if (mControls) {
+				mControls.style.display = 'flex';
+				// 重置收合狀態 (可選，若希望每次播放都展開)
+				mControls.classList.remove('minimized');
+				const collapseBtn = document.getElementById('mob-collapse-btn');
+				if(collapseBtn) collapseBtn.innerHTML = '🔽';
+			}
+			// -------------------------------------
+			
 			// iOS 音樂解鎖
 			if (globalAudioPlayer.paused) {
 				globalAudioPlayer.play().then(() => {
@@ -10198,6 +10210,14 @@
 		if (document.fullscreenElement) {
 			document.exitFullscreen().catch(err => {}); // 防止非全螢幕時報錯
 		}
+		
+		// --- [新增] 停止播放時，隱藏控制面板 ---
+		const mControls = document.getElementById('mobile-controls');
+		// 只有在非手機模式(桌機)才隱藏，或者您希望手機停止後也隱藏？
+		// 根據您的需求「桌機非撥放時不應該顯示」，我們強制隱藏
+		if (mControls) mControls.style.display = 'none';
+		// -------------------------------------
+		
 		// 1. 停止計時器
 		if (playTimeout) {
 			clearTimeout(playTimeout);
@@ -13582,11 +13602,13 @@
         const isMin = controls.classList.contains('minimized');
         
         if (isMin) {
-            // 收合狀態 -> 顯示「展開」圖示
+            // 收合狀態 -> 顯示「展開」圖示 (向上)
             btn.innerHTML = '🔼'; 
+            btn.title = "展開控制列";
         } else {
-            // 展開狀態 -> 顯示「收起」圖示
+            // 展開狀態 -> 顯示「收起」圖示 (向下)
             btn.innerHTML = '🔽'; 
+            btn.title = "收起控制列";
         }
     }
 	
