@@ -13155,7 +13155,7 @@
         originalCards.forEach(c => c.style.opacity = '0');
 
         // 2. 準備假卡片
-        const visualCount = isMobile ? 5 : Math.min(count || 10, 15); // 手機版上限改為5
+        const visualCount = document.body.classList.contains('mobile-mode') ? 5 : Math.min(count || 10, 15); // 手機版上限改為5
         const flyingCards = [];
 
         for (let i = 0; i < visualCount; i++) {
