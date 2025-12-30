@@ -1612,27 +1612,59 @@
 	}
 
     /* Mobile Controls */
+    /* =========================================
+       [修正版] 手機控制列樣式 (更緊湊，防止重疊)
+       ========================================= */
     #mobile-controls {
-        display: none; align-items: center; justify-content: flex-end; gap: 8px;
-        position: fixed; bottom: calc(15px + env(safe-area-inset-bottom)); 
-        right: calc(15px + env(safe-area-inset-right));
-        z-index: 5000; flex-shrink: 0; opacity: 0.95;
+        position: fixed;
+        bottom: 15px; /* 稍微提高一點，避免碰到螢幕底部橫條 */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        
+        /* 容器外觀 */
+        background: rgba(0, 0, 0, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 30px; /* 圓角更圓 */
+        padding: 5px 10px;   /* 內距縮小 */
+        
+        /* 排版設定 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px; /* 按鈕間距極小化 */
+        
+        /* 防止寬度爆掉 */
+        width: max-content;
+        max-width: 98vw; /* 限制最大寬度 */
+        white-space: nowrap; /* 強制不換行 */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        transition: all 0.3s ease; /* 加入平滑過渡動畫 */
     }
     body.mobile-mode #mobile-controls { display: flex; z-index: 2000; }
     
     .mobile-btn {
-        width: 36px; height: 36px; border-radius: 50%; border: 2px solid white;
-        background: rgba(44, 62, 80, 0.9); color: white; font-size: 0.9rem;
-        cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        display: flex; justify-content: center; align-items: center; padding: 0; flex-shrink: 0;
+        background: none;
+        border: 1px solid transparent;
+        color: #fff;
+        font-size: 16px;
+        padding: 4px 8px; /* 減少內距 */
+        cursor: pointer;
+        border-radius: 4px;
+        min-width: 32px; /* 確保按鈕不會太小 */
     }
-    .mobile-btn:active { transform: scale(0.95); }
+    .mobile-btn:active { background: rgba(255,255,255,0.2); }
     #mob-music-btn.active { border-color: #2ecc71; color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
     
     #mob-speed-select {
-        height: 36px; border-radius: 18px; border: 2px solid white;
-        background: rgba(44, 62, 80, 0.9); color: white; font-size: 0.85rem;
-        padding: 0 10px; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.3); text-align: center;
+        background: #333;
+        color: #fff;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 2px 0px;
+        font-size: 12px;
+        max-width: 80px; /* 強制限制選單寬度 */
+        margin-right: 2px;
     }
 
     /* Play Button Highlight Animation */
@@ -2277,17 +2309,39 @@
     #mobile-controls.minimized > *:not(#mob-collapse-btn) {
         display: none !important;
     }
+	
+	#mobile-controls.minimized #mob-collapse-btn {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px; /* 圖示放大 */
+    }
 
     /* 收合模式下的容器樣式：縮小、靠右、半透明 */
+    /* =========================================
+       [修正版] 收合模式 (Minimize)
+       ========================================= */
     #mobile-controls.minimized {
-        width: auto !important;       /* 寬度自動縮小 */
-        min-width: unset !important;  /* 解除最小寬度限制 */
-        left: auto !important;        /* 解除預設的置中/靠左 */
-        right: 10px !important;       /* 固定在右側 */
-        transform: none !important;   /* 解除 translate 置中 */
-        padding: 4px !important;      /* 縮減內距 */
-        background: rgba(0, 0, 0, 0.4) !important; /* 背景變淡，減少遮擋 */
-        border: 1px solid rgba(255,255,255,0.2);
+        /* 收合時的定位：靠右下角 */
+        left: auto !important;
+        transform: none !important;
+        right: 15px !important;
+        bottom: 15px !important;
+        
+        /* 收合時的外觀 */
+        width: 40px !important;  /* 強制固定寬度 */
+        height: 40px !important; /* 強制固定高度 */
+        padding: 0 !important;
+        border-radius: 50% !important; /* 變圓形 */
+        background: rgba(0, 0, 0, 0.6) !important;
+        
+        /* 內容排列 */
+        justify-content: center;
     }
 
     /* 收合按鈕本身的樣式微調 */
@@ -2772,21 +2826,21 @@
 
 <div id="mobile-controls">
     <select id="mob-speed-select" onchange="changePlaybackSpeed(this.value)">
-        <option value="4.0">🐢 0.25x</option>
-        <option value="2.0">🐇 0.5x</option>
-        <option value="1.33">🚶 0.75x</option>
-        <option value="1.0" selected>▶ 1.0x</option>
-        <option value="0.66">🏃 1.5x</option>
-        <option value="0.5">🚀 2.0x</option>
-        <option value="0.25">⚡ 4.0x</option>
+        <option value="4.0">0.25x</option>
+        <option value="2.0">0.5x</option>
+        <option value="1.33">0.75x</option>
+        <option value="1.0" selected>1.0x</option>
+        <option value="0.66">1.5x</option>
+        <option value="0.5">2.0x</option>
+        <option value="0.25">4.0x</option>
     </select>
-	<button class="mobile-btn" id="mob-power-btn" onclick="togglePowerSavingMode()" style="margin-left: 5px;" title="節電模式">🍃</button>
-	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()" style="margin-left: 5px; margin-right: 5px;">🔊</button>
-    <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)" style="margin-right:5px;">⏹</button>
+	<button class="mobile-btn" id="mob-power-btn" onclick="togglePowerSavingMode()" title="節電模式">🍃</button>
+	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()">🔊</button>
+    <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)">⏹</button>
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
 	<div id="mobile-controls">
 		<button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
-		<button class="mobile-btn" id="mob-collapse-btn" onclick="toggleMobileCollapse()" style="margin-left: 10px; opacity: 0.8;" title="收起/展開控制列">🔽</button>
+		<button class="mobile-btn" id="mob-collapse-btn" onclick="toggleMobileCollapse()" style="opacity: 0.8;" title="收起/展開控制列">🔽</button>
 	</div>
 </div>
 
