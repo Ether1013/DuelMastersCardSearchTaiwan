@@ -2071,11 +2071,38 @@
 		display: none !important;
 	}
 
-	/* 3. 確保控制按鈕在右下角顯示 */
-	body.playing-mode #mobile-controls,
+	/* =========================================
+   [新增] 強制覆寫手機版控制列位置
+   ========================================= */
 	body.mobile-mode #mobile-controls {
+		/* 強制設定為彈性直排 */
 		display: flex !important;
-		z-index: 9999;
+		flex-direction: column-reverse !important;
+		align-items: flex-end !important;
+		
+		/* 定位核心修正 */
+		position: fixed !important;
+		top: auto !important;          /* 確保頂部釋放 */
+		bottom: 80px !important;       /* 設定距離底部 80px (避開手指誤觸區) */
+		right: 5px !important;         /* 靠右 */
+		left: auto !important;
+		transform: none !important;    /* 移除任何置中位移 */
+		
+		/* 重置尺寸與外觀 */
+		width: auto !important;
+		height: auto !important;
+		gap: 8px !important;
+		background: transparent !important;
+		border: none !important;
+		padding: 0 !important;
+		z-index: 10000 !important;
+	}
+
+	/* 確保按鈕本身樣式正常 */
+	body.mobile-mode #mobile-controls .mobile-btn {
+		margin: 0 !important;
+		width: 36px !important;        /* 手機按鈕稍微大一點點好按 */
+		height: 36px !important;
 	}
 	
 	/* =========================================
@@ -2360,7 +2387,7 @@
 		align-items: flex-end !important;
 		
 		/* 位置微調：因為變高了，稍微往上提 */
-		bottom: 50px !important;
+		bottom: 120px !important;
 		right: 5px !important;
 		left: auto !important;
 		transform: none !important;
