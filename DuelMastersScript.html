@@ -2281,7 +2281,7 @@
         <option value="jp">日本語</option>
     </select>
 
-    <button onclick="openSetupModal()" data-i18n="btn_setup">Setup / Clear</button>
+    <button onclick="openSetupModal()" data-i18n="btn_setup">NEW GAME</button>
 	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
     <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
     →
@@ -2588,7 +2588,6 @@
             <input type="number" id="setup-p2-hyper" value="0" min="0" max="8">
         </div>
         <div style="margin-top:20px; display:flex; justify-content:space-between;">
-            <button onclick="clearStorage()" style="background:#7f8c8d;" data-i18n="btn_clear_storage">清除存檔</button>
             <button onclick="finishSetup()" class="primary" data-i18n="btn_start_game">開始遊戲 (Start)</button>
         </div>
     </div>
@@ -3157,7 +3156,7 @@
 	// --- 多語言設定 (i18n) ---
     const TRANSLATIONS = {
 		'zh': {
-			'btn_setup': 'Setup / Clear',
+			'btn_setup': 'NEW GAME',
 			'btn_rotate': '🔄 回合結束',
 			'btn_p1_reset': 'P1 重置',
 			'btn_p2_reset': 'P2 重置',
@@ -3204,7 +3203,6 @@
 
 			'title_setup': '開局設定',
 			'msg_setup_warn': '注意：開始新局會清除當前未匯出的進度。',
-            'btn_clear_storage': '清除存檔',
 			'btn_start_game': '開始遊戲 (Start)',
 			'btn_draw': '🎴 抽牌 (Draw)', // [新增]
 
@@ -3418,7 +3416,7 @@
             'opt_effect_direct': 'Instant', 'opt_effect_fade': 'Fade In', 'opt_effect_slide': 'Slide In',
             'opt_exit_direct': 'Instant', 'opt_exit_fade': 'Fade Out', 'opt_exit_slide': 'Slide Out',
             // ... (其餘請保留原樣) ...
-            'btn_setup': 'Setup / Clear', 'btn_rotate': '🔄 Switch Turn', 'btn_reset_current': 'Untap Current','btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
+            'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 Switch Turn', 'btn_reset_current': 'Untap Current','btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
             'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'opt_win_default': '🏆 Declare Win...', 'btn_import': 'Import', 'btn_export': 'Export',
             'zone_battle': 'Battle Zone', 'zone_shield': 'Shields', 'zone_mana': 'Mana', 'zone_hand': 'Hand',
             'zone_hyper': 'Hyper Zone', 'zone_grave': 'Graveyard', 'zone_deck': 'Deck', 'zone_ability': 'Ability (Pending)',
@@ -3427,7 +3425,7 @@
             'act_rename': 'Rename', 'act_note': '📝 Note', 'act_delete': '🗑️ Delete', 'btn_cancel': 'Cancel', 'btn_save_step': '💾 Save Step',
             'lbl_point_mode': '👉 Point Mode: Select Target(s)', 'btn_confirm_point': '✅ Confirm', 'btn_reset_all': '🗑️ Reset',
             'title_setup': 'Setup Game', 'msg_setup_warn': 'Note: Starting new game clears unsaved progress.',
-            'lbl_p1_deck': 'P1 Deck:', 'lbl_p2_deck': 'P2 Deck:', 'btn_clear_storage': 'Clear Storage', 'btn_start_game': 'Start Game','btn_draw': '🎴 Draw', // [新增]
+            'lbl_p1_deck': 'P1 Deck:', 'lbl_p2_deck': 'P2 Deck:','btn_start_game': 'Start Game','btn_draw': '🎴 Draw', // [新增]
             'btn_shuffle_zone': 'Shuffle Zone', 'btn_shuffle_move': 'Shuffle & Move...', 'btn_reveal_sel': '👁️ Reveal', 'btn_move_sel': 'Move Selected...',
             'title_stack': 'Stacking', 'lbl_stack_hint': 'Choose stacking method:', 'opt_stack_top': 'Cover Top', 'opt_stack_btm': 'Underneath',
             'opt_puz_top': 'Puzzle Top', 'opt_puz_btm': 'Puzzle Btm', 'opt_puz_left': 'Puzzle Left', 'opt_puz_right': 'Puzzle Right',
@@ -3571,7 +3569,7 @@
             'opt_effect_direct': '即時', 'opt_effect_fade': 'フェード', 'opt_effect_slide': 'スライド',
             'opt_exit_direct': '即時消失', 'opt_exit_fade': 'フェード', 'opt_exit_slide': 'スライド',
             // ... (其餘請保留原樣) ...
-            'btn_setup': '設定 / クリア', 'btn_rotate': '🔄 ターン交代', 'btn_reset_current': 'アンタップ (Current)', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
+            'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 ターン交代', 'btn_reset_current': 'アンタップ (Current)', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
             'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'opt_win_default': '🏆 勝利宣言...', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
             'zone_battle': 'バトルゾーン', 'zone_shield': 'シールド', 'zone_mana': 'マナゾーン', 'zone_hand': '手札',
             'zone_hyper': '超次元', 'zone_grave': '墓地', 'zone_deck': '山札', 'zone_ability': '効果処理',
@@ -3581,7 +3579,7 @@
             'lbl_draft_ops': ')', 'lbl_draft_ops_prefix': '', 'chk_propagate': '🔗 以降へ反映', 'btn_cancel': 'キャンセル',
             'btn_save_step': '💾 保存', 'lbl_point_mode': '👉 対象を選択してください (カード/領域)', 'btn_confirm_point': '✅ 決定',
             'btn_reset_all': '🗑️ リセット', 'title_setup': 'ゲーム設定', 'msg_setup_warn': '注意：新しいゲームを始めると、未保存の進行状況は消去されます。',
-            'lbl_p1_deck': 'P1 山札数:', 'lbl_p2_deck': 'P2 山札数:', 'btn_clear_storage': 'データ削除', 'btn_start_game': 'ゲーム開始','btn_draw': '🎴 ドロー', // [新增]
+            'lbl_p1_deck': 'P1 山札数:', 'lbl_p2_deck': 'P2 山札数:','btn_start_game': 'ゲーム開始','btn_draw': '🎴 ドロー', // [新增]
             'btn_shuffle_zone': 'シャッフル', 'btn_shuffle_move': 'シャッフルして移動...', 'btn_reveal_sel': '👁️ 公開', 'btn_move_sel': '選択したカードを移動...',
             'title_stack': '重ね方を選択', 'lbl_stack_hint': 'アイコンをクリックしてください：', 'opt_stack_top': '上に重ねる', 'opt_stack_btm': '下に重ねる',
             'opt_puz_top': '上にリンク', 'opt_puz_btm': '下にリンク', 'opt_puz_left': '左にリンク', 'opt_puz_right': '右にリンク',
