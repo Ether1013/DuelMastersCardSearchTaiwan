@@ -2467,7 +2467,7 @@
         <div style="padding: 10px; background: #ecf0f1; border-top:1px solid #bdc3c7;">
             <div style="display: flex; gap:5px; justify-content: center; margin-bottom: 5px;">
                 <button onclick="prevStep()">▲</button>
-                <button onclick="togglePlay()" id="btn-play">▶</button>
+                <button onclick="togglePlay(true)" id="btn-play">▶</button>
 				<button onclick="stopPlayback(true)" id="btn-stop">⏹</button>
                 <button onclick="nextStep()">▼</button>
 				<select id="speed-select" onchange="changePlaybackSpeed(this.value)" style="padding:2px; border-radius:4px; border:1px solid #ccc; background:#fff; font-size:0.85rem; cursor:pointer;">
@@ -9856,9 +9856,12 @@
 	let lastOrientation = null;
 
 	// --- [1] 切換播放/暫停 ---
-	function togglePlay() {
+	function togglePlay( fullScreen ) {
 		// 判斷是否為手機 (手機版不套用 desktop-playing，以免與手機原生樣式衝突)
 		const isMobile = document.body.classList.contains('mobile-mode');
+		if ( !isMobile && fullScreen ){
+			document.documentElement.requestFullscreen();
+		}
 
 		if (playTimeout) {
 			// === 暫停 ===
@@ -9966,6 +9969,9 @@
 
 	// --- [3] 停止播放 (恢復 UI + 停在當下) ---
 	function stopPlayback( closeMusic ) {
+	
+		document.exitFullscreen();
+	
 		// 1. 停止計時器
 		if (playTimeout) {
 			clearTimeout(playTimeout);
