@@ -9598,29 +9598,31 @@
 
 		// 【優化 2】CSS 控制：若結構未變，僅切換 Active 樣式 (避免 innerHTML 暴力重繪)
 		// 條件：不在編輯模式 (編輯模式可能涉及插入/刪除) 且 DOM 數量符合預期
+		// ... (前略)
+		// 【優化 2】CSS 控制：若結構未變，僅切換 Active 樣式
 		if (!isDrafting && list.children.length === expectedCount) {
-			
-			// 1. 移除舊的 active 狀態 (只找這一個 DOM，比遍歷快)
-			const prevActive = list.querySelector('.action-item.active');
+			// 1. 移除舊的樣式 (改為移除 editing)
+			const prevActive = list.querySelector('.action-item.editing'); 
 			if (prevActive) {
-				prevActive.classList.remove('active');
+				prevActive.classList.remove('editing');
 			}
+			// 為了保險起見，也移除可能殘留的 active (如果是第一次切換)
+			const prevOldActive = list.querySelector('.action-item.active');
+			if (prevOldActive) prevOldActive.classList.remove('active');
 
-			// 2. 設定新的 active 狀態
-			// 原理：Item 位於 indices: 1, 3, 5... (公式: stepIndex * 2 + 1)
+			// 2. 設定新的樣式 (改為加入 editing)
 			const newActive = list.children[currentIndex * 2 + 1];
 			if (newActive && newActive.classList.contains('action-item')) {
-				newActive.classList.add('active');
+				newActive.classList.add('editing'); // <--- 關鍵修改：使用虛線樣式
 				
-				// (選用) 確保目前步驟在視野內，但為了效能可略過 behavior: 'smooth'
-				// newActive.scrollIntoView({ block: 'nearest' });
+				// (選用) 確保目前步驟在視野內
+				// newActive.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 			}
 
 			// 3. 更新計數器文字
 			const counter = document.getElementById('step-counter');
 			if (counter) counter.innerText = `${currentIndex}/${history.length-1}`;
-			
-			// 直接結束，跳過下方的重繪邏輯
+
 			return;
 		}
 
@@ -9687,10 +9689,12 @@
 				}
 			}
 
+			// [修改點] 判斷 class 的地方
 			if (isDrafting && editModeType === 'EDIT' && insertIndex === index) {
 				li.className = `action-item editing ${colorClass}`;
 			} else {
-				li.className = `action-item ${index === currentIndex ? 'active' : ''} ${colorClass}`;
+				// 原本是 'active'，改為 'editing' 以套用虛線風格
+				li.className = `action-item ${index === currentIndex ? 'editing' : ''} ${colorClass}`;
 			}
 
 			// 按鈕區塊
