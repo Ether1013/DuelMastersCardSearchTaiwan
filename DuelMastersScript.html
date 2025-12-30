@@ -1617,41 +1617,48 @@
        ========================================= */
     #mobile-controls {
         position: fixed;
-        bottom: 15px; /* 稍微提高一點，避免碰到螢幕底部橫條 */
+        bottom: 15px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 9999;
+        z-index: 10000; /* 確保最上層 */
         
         /* 容器外觀 */
-        background: rgba(0, 0, 0, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 30px; /* 圓角更圓 */
-        padding: 5px 10px;   /* 內距縮小 */
+        background: rgba(0, 0, 0, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50px; /* 膠囊狀圓角 */
+        padding: 6px 10px;
         
-        /* 排版設定 */
+        /* [關鍵] Flex 排版設定 */
         display: flex;
-        align-items: center;
+        flex-direction: row; /* 強制橫向 */
+        align-items: center; /* 垂直置中 */
         justify-content: center;
-        gap: 2px; /* 按鈕間距極小化 */
+        flex-wrap: nowrap;   /* [絕對不換行] */
+        gap: 5px;            /* 按鈕之間的間距 */
         
-        /* 防止寬度爆掉 */
-        width: max-content;
-        max-width: 98vw; /* 限制最大寬度 */
-        white-space: nowrap; /* 強制不換行 */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        transition: all 0.3s ease; /* 加入平滑過渡動畫 */
+        /* 寬度控制 */
+        width: auto;
+        max-width: 95vw;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     body.mobile-mode #mobile-controls { display: flex; z-index: 2000; }
     
     .mobile-btn {
-        background: none;
-        border: 1px solid transparent;
+        background: transparent;
+        border: 1px solid transparent; /* 預留邊框空間 */
         color: #fff;
         font-size: 16px;
-        padding: 4px 8px; /* 減少內距 */
+        padding: 6px;
         cursor: pointer;
-        border-radius: 4px;
-        min-width: 32px; /* 確保按鈕不會太小 */
+        border-radius: 50%; /* 按鈕變圓形 */
+        width: 36px;        /* 固定寬度 */
+        height: 36px;       /* 固定高度 */
+        display: flex;      /* 確保圖示置中 */
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;     /* 防止被壓扁 */
     }
     .mobile-btn:active { background: rgba(255,255,255,0.2); }
     #mob-music-btn.active { border-color: #2ecc71; color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
@@ -1661,9 +1668,9 @@
         color: #fff;
         border: 1px solid #555;
         border-radius: 4px;
-        padding: 2px 0px;
-        font-size: 12px;
-        max-width: 80px; /* 強制限制選單寬度 */
+        padding: 4px;
+        font-size: 14px;
+        height: 36px;
         margin-right: 2px;
     }
 
@@ -2311,37 +2318,32 @@
     }
 	
 	#mobile-controls.minimized #mob-collapse-btn {
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
         width: 100%;
         height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px; /* 圖示放大 */
+        font-size: 24px; /* 圖示放大 */
+        margin: 0;
+        border: none;
     }
 
-    /* 收合模式下的容器樣式：縮小、靠右、半透明 */
-    /* =========================================
-       [修正版] 收合模式 (Minimize)
-       ========================================= */
+    /* -----------------------------------------
+       [收合模式] Minimized State
+       ----------------------------------------- */
     #mobile-controls.minimized {
-        /* 收合時的定位：靠右下角 */
+        /* 定位改變：靠右下 */
         left: auto !important;
         transform: none !important;
         right: 15px !important;
-        bottom: 15px !important;
+        bottom: 20px !important;
         
-        /* 收合時的外觀 */
-        width: 40px !important;  /* 強制固定寬度 */
-        height: 40px !important; /* 強制固定高度 */
+        /* 形狀改變：變回正圓形 */
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 50% !important;
         padding: 0 !important;
-        border-radius: 50% !important; /* 變圓形 */
-        background: rgba(0, 0, 0, 0.6) !important;
+        gap: 0 !important;
         
-        /* 內容排列 */
-        justify-content: center;
+        background: rgba(0, 0, 0, 0.6) !important; /* 變半透明 */
+        border-color: rgba(255,255,255,0.2) !important;
     }
 
     /* 收合按鈕本身的樣式微調 */
@@ -2828,20 +2830,20 @@
     <select id="mob-speed-select" onchange="changePlaybackSpeed(this.value)">
         <option value="4.0">0.25x</option>
         <option value="2.0">0.5x</option>
-        <option value="1.33">0.75x</option>
         <option value="1.0" selected>1.0x</option>
-        <option value="0.66">1.5x</option>
         <option value="0.5">2.0x</option>
         <option value="0.25">4.0x</option>
     </select>
-	<button class="mobile-btn" id="mob-power-btn" onclick="togglePowerSavingMode()" title="節電模式">🍃</button>
-	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()">🔊</button>
+    
+    <button class="mobile-btn" id="mob-power-btn" onclick="togglePowerSavingMode()" title="節電模式">🍃</button>
+
+    <button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()">🔊</button>
+    
     <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)">⏹</button>
+    
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
-	<div id="mobile-controls">
-		<button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
-		<button class="mobile-btn" id="mob-collapse-btn" onclick="toggleMobileCollapse()" style="opacity: 0.8;" title="收起/展開控制列">🔽</button>
-	</div>
+
+    <button class="mobile-btn" id="mob-collapse-btn" onclick="toggleMobileCollapse()">🔽</button>
 </div>
 
 <div id="orientation-overlay">
@@ -13576,20 +13578,15 @@
         const controls = document.getElementById('mobile-controls');
         const btn = document.getElementById('mob-collapse-btn');
         
-        // 切換 minimized class
         controls.classList.toggle('minimized');
-        
-        // 檢查當前狀態並更換圖示
         const isMin = controls.classList.contains('minimized');
         
         if (isMin) {
-            // 變成「展開」圖示 (向上或展開符號)
+            // 收合狀態 -> 顯示「展開」圖示
             btn.innerHTML = '🔼'; 
-            btn.title = "展開控制列";
         } else {
-            // 變成「收合」圖示 (向下或收起符號)
+            // 展開狀態 -> 顯示「收起」圖示
             btn.innerHTML = '🔽'; 
-            btn.title = "收起控制列";
         }
     }
 	
