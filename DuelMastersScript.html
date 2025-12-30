@@ -1611,43 +1611,6 @@
 		object-fit: contain !important;
 	}
 
-    /* =========================================
-       [最終緊湊版] 手機控制列 (靠右 + 極小化)
-       ========================================= */
-    #mobile-controls {
-        position: fixed;
-        /* 定位調整：靠右，並稍微往上提，位於手牌區右側 */
-        right: 2px; 
-        bottom: 110px; /* 依照您的介面，若太高可改為 80px，太低改為 130px */
-        left: auto;    /* 取消置中 */
-        transform: none; /* 取消置中位移 */
-        z-index: 10000;
-        
-        /* 容器外觀：極致緊湊 */
-        background: rgba(0, 0, 0, 0.8); /* 稍微透明一點 */
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 20px; /* 圓角縮小 */
-        padding: 2px 4px;    /* 內距極小化 */
-        
-        /* Flex 排版：緊密排列 */
-        display: flex; /* (JS 控制顯示) */
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: nowrap;
-        gap: 1px; /* 按鈕幾乎貼在一起 */
-        
-        /* 寬度控制：只包覆內容 */
-        width: max-content; 
-        max-width: none;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        
-        /* 整體縮放：如果你覺得還是太大，可以調整這裡的 scale (例如 0.9) */
-        transform-origin: right bottom;
-        /* transform: scale(0.9); */ 
-    }
-    body.mobile-mode #mobile-controls { display: flex; z-index: 2000; }
-    
     .mobile-btn {
         background: transparent;
         border: 1px solid transparent;
@@ -2397,7 +2360,7 @@
 		align-items: flex-end !important;
 		
 		/* 位置微調：因為變高了，稍微往上提 */
-		bottom: 140px !important;
+		bottom: 50px !important;
 		right: 5px !important;
 		left: auto !important;
 		transform: none !important;
