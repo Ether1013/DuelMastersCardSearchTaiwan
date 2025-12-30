@@ -8339,36 +8339,71 @@
 		}
 	}
 	
-	// --- [最終修正版 JS] 戰鬥區自動佈局演算法 ---
-
-	// 1. 計算卡片群組的絕對邊界 (包含子卡片與旋轉模擬)
+	// --- [最終優化版] 計算卡片群組邊界 (基於結構指紋的智慧快取) ---
 	function measureCardGroupBounds(rootCard, allCards, forcedRotation = null) {
-		const CARD_W = 60; const CARD_H = 84;
-		const HW = CARD_W / 2; const HH = CARD_H / 2;
 		const state = getCurrentDisplayState();
 
-		// 建立家族樹
+		// 步驟 A: 建立家族樹 (這是一個輕量操作，只遍歷引用，不進行數學運算)
 		const familyMembers = [];
 		const childMap = {};
 		const queue = [rootCard];
 		const processed = new Set();
+		
+		// 用來產生結構指紋的陣列
+		const signatureParts = []; 
+
 		while(queue.length > 0) {
 			const node = queue.shift();
 			if (processed.has(node.id)) continue;
 			processed.add(node.id);
 			familyMembers.push(node);
+
+			// [修改] 指紋只紀錄 ID，不紀錄 Rotation
+			// 這樣當卡片進行 "橫置/重置" 時，不會導致快取失效
+			// 因為卡片群組的「物理構成」並沒有改變，只是狀態變了
+			signatureParts.push(node.id);
+
 			const children = allCards.filter(c => c.parentId === node.id);
 			if (children.length > 0) childMap[node.id] = children;
 			children.forEach(c => queue.push(c));
 		}
 
+		// 加入無月之門狀態到指紋中 (因為無月狀態改變會影響佈局)
 		const moonlessAce = familyMembers.find(c => state.moonless && state.moonless[c.id]);
+		if (moonlessAce) {
+			signatureParts.push(`moonless:${moonlessAce.id}`);
+		}
 
-		// === 無月之門：計算最大包圍盒 (Union) ===
+		// 生成當前的「結構指紋」字串
+		const currentSignature = signatureParts.sort().join('|');
+
+		// 步驟 B: 檢查指紋是否與上次相同
+		// 如果指紋變了，代表結構有異動，必須清除舊的計算結果
+		if (rootCard._lastSignature !== currentSignature) {
+			rootCard._boundsCache = {}; // 清空快取
+			rootCard._lastSignature = currentSignature; // 更新指紋
+		}
+
+		// 步驟 C: 嘗試讀取快取
+		// cacheKey 區分 "強制轉0度" 與 "強制轉90度" 的不同結果
+		const cacheKey = (forcedRotation !== null) ? forcedRotation : (rootCard.rotation || 0);
+
+		if (rootCard._boundsCache && rootCard._boundsCache[cacheKey] !== undefined) {
+			// [命中快取!] 結構沒變，直接回傳上次算好的幾何大小
+			return rootCard._boundsCache[cacheKey];
+		}
+
+		// =========================================================
+		// 步驟 D: 只有當快取失效(結構異動)時，才執行下方的昂貴幾何運算
+		// =========================================================
+		
+		const CARD_W = 60; const CARD_H = 84;
+		const HW = CARD_W / 2; const HH = CARD_H / 2;
+		let result = null;
+
+		// === 無月之門計算 (維持原邏輯) ===
 		if (moonlessAce) {
 			let minX = 0, maxX = 0, minY = 0, maxY = 0;
-
-			// 1. 素材圈 (不旋轉)
 			const isPuzzle = (c) => c.stackType && c.stackType.includes('puzzle');
 			const subjects = familyMembers.filter(c => c.id !== moonlessAce.id && !isPuzzle(c));
 			
@@ -8377,33 +8412,27 @@
 				const startAngle = -90 + (step / 2); 
 				subjects.forEach((sub, idx) => {
 					const rad = (startAngle + step * idx) * (Math.PI / 180);
-					const offX = 12 * Math.cos(rad);
-					const offY = 12 * Math.sin(rad);
-					// Margin = 40
-					if (offX - 40 < minX) minX = offX - 40;
-					if (offX + 40 > maxX) maxX = offX + 40;
-					if (offY - 40 < minY) minY = offY - 40;
-					if (offY + 40 > maxY) maxY = offY + 40;
+					const offX = 12 * Math.cos(rad); const offY = 12 * Math.sin(rad);
+					if (offX - 40 < minX) minX = offX - 40; if (offX + 40 > maxX) maxX = offX + 40;
+					if (offY - 40 < minY) minY = offY - 40; if (offY + 40 > maxY) maxY = offY + 40;
 				});
 			} else {
 				minX = -30; maxX = 30; minY = -42; maxY = 42;
 			}
 
-			// 2. 主卡與連結卡 (檢查 0度 與 90度 取最大值)
 			const puzzlePartners = familyMembers.filter(c => c.id !== moonlessAce.id && isPuzzle(c));
 			const checkBounds = (simAngle) => {
 				const rotRad = simAngle * (Math.PI / 180);
 				const cos = Math.cos(rotRad), sin = Math.sin(rotRad);
 				const checkCorner = (cx, cy) => {
 					[{x:-HW,y:-HH}, {x:HW,y:-HH}, {x:HW,y:HH}, {x:-HW,y:HH}].forEach(pt => {
-						const rx = pt.x * cos - pt.y * sin;
-						const ry = pt.x * sin + pt.y * cos;
+						const rx = pt.x * cos - pt.y * sin; const ry = pt.x * sin + pt.y * cos;
 						const absX = cx + rx; const absY = cy + ry;
 						if (absX < minX) minX = absX; if (absX > maxX) maxX = absX;
 						if (absY < minY) minY = absY; if (absY > maxY) maxY = absY;
 					});
 				};
-				checkCorner(0, 0); // Check Ace
+				checkCorner(0, 0);
 				const measurePuzzle = (card, px, py) => {
 					const children = puzzlePartners.filter(p => p.parentId === card.id);
 					children.forEach(child => {
@@ -8420,22 +8449,21 @@
 					measurePuzzle(p, ro.x, ro.y);
 				});
 			};
-			checkBounds(0);
-			checkBounds(90);
-			return { width: maxX - minX, height: maxY - minY };
+			checkBounds(0); checkBounds(90);
+			result = { width: maxX - minX, height: maxY - minY };
 		} 
-		// === 普通堆疊：維持原樣 (安全) ===
+		// === 普通堆疊計算 (維持原邏輯) ===
 		else {
 			let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
 			const baseRotation = (forcedRotation !== null) ? forcedRotation : rootCard.rotation;
+			
 			const traverse = (card, ox, oy) => {
 				const rotRad = baseRotation * (Math.PI / 180);
 				const cos = Math.cos(rotRad), sin = Math.sin(rotRad);
 				const fcx = ox * cos - oy * sin;
 				const fcy = ox * sin + oy * cos;
 				[{x:-HW,y:-HH}, {x:HW,y:-HH}, {x:HW,y:HH}, {x:-HW,y:HH}].forEach(pt => {
-					const rx = pt.x * cos - pt.y * sin;
-					const ry = pt.x * sin + pt.y * cos;
+					const rx = pt.x * cos - pt.y * sin; const ry = pt.x * sin + pt.y * cos;
 					const ax = fcx + rx; const ay = fcy + ry;
 					if (ax < minX) minX = ax; if (ax > maxX) maxX = ax;
 					if (ay < minY) minY = ay; if (ay > maxY) maxY = ay;
@@ -8446,9 +8474,16 @@
 				});
 			};
 			traverse(rootCard, 0, 0);
-			if (minX === Infinity) return { width: CARD_W, height: CARD_H };
-			return { width: maxX - minX, height: maxY - minY };
+			
+			if (minX === Infinity) result = { width: CARD_W, height: CARD_H };
+			else result = { width: maxX - minX, height: maxY - minY };
 		}
+
+		// 步驟 E: 存入快取
+		if (!rootCard._boundsCache) rootCard._boundsCache = {};
+		rootCard._boundsCache[cacheKey] = result;
+
+		return result;
 	}
 
 	// --- [最終修正版] 戰鬥區佈局：P1/P2同步 + 最大化 + 後算間距 ---
@@ -8487,14 +8522,21 @@
 			let maxSafeHeight = 0;
 
 			rootCards.forEach(root => {
+				// [優化] 原本呼叫兩次 (0度與90度)，現在只呼叫一次 0 度
+				// 因為 90 度的尺寸只是 0 度寬高互換而已，最大邊界值是一樣的。
 				const b0 = measureCardGroupBounds(root, allCards, 0);
-				const b90 = measureCardGroupBounds(root, allCards, 90);
 				
-				const safeW = Math.max(b0.width, b90.width);
-				const safeH = Math.max(b0.height, b90.height);
+				// 找出該卡群在「任何狀態下」可能佔據的最大維度
+				// 這樣無論卡片是直的還是橫的，佈局都不會跳動
+				const maxDim = Math.max(b0.width, b0.height);
 				
+				// 將這個最大值同時套用到寬與高
+				// (因為原本邏輯是取 b0 與 b90 的最大聯集，結果必然是個正方形概念)
+				const safeW = maxDim;
+				const safeH = maxDim; // 這樣改最安全，等同於原本的 Math.max(b0.h, b90.h)
+
 				// [修正 2] 累加時不包含間距，只計算純內容寬度
-				totalSafeWidth += safeW; 
+				totalSafeWidth += safeW;
 				if (safeH > maxSafeHeight) maxSafeHeight = safeH;
 			});
 
