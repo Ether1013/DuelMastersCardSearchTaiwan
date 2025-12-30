@@ -2269,28 +2269,61 @@
 		text-align: center;
 	}
 	
+	/* =========================================
+       [新增] 手機版控制列 - 收合模式 (Minimize)
+       ========================================= */
+    
+    /* 當處於收合模式時，隱藏除了「收合鈕」以外的所有元素 */
+    #mobile-controls.minimized > *:not(#mob-collapse-btn) {
+        display: none !important;
+    }
+
+    /* 收合模式下的容器樣式：縮小、靠右、半透明 */
+    #mobile-controls.minimized {
+        width: auto !important;       /* 寬度自動縮小 */
+        min-width: unset !important;  /* 解除最小寬度限制 */
+        left: auto !important;        /* 解除預設的置中/靠左 */
+        right: 10px !important;       /* 固定在右側 */
+        transform: none !important;   /* 解除 translate 置中 */
+        padding: 4px !important;      /* 縮減內距 */
+        background: rgba(0, 0, 0, 0.4) !important; /* 背景變淡，減少遮擋 */
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* 收合按鈕本身的樣式微調 */
+    #mob-collapse-btn {
+        margin: 0 !important; /* 收合時不需要邊距 */
+        width: 32px; /* 固定寬度，避免圖示切換時跳動 */
+    }
+	
 	/* ==========================================================================
-       [新增] 節電模式 (Power Saving Mode) - 手機版優化
-       說明：強制移除 box-shadow 與 filter，改用實心 border 以降低 GPU 負載
+       [改良版] 節電模式 (Power Saving Mode)
+       修正：強制隱藏 ::after 偽元素，徹底移除漸層與陰影運算
        ========================================================================== */
+    /* 1. 全域強制移除陰影、濾鏡，並關閉裝飾層 */
     body.power-saving-mode .card,
     body.power-saving-mode .card * {
         box-shadow: none !important;
         filter: none !important;
         text-shadow: none !important;
     }
+    
+    /* [關鍵修正] 隱藏原本用來做底部發光的偽元素 */
+    body.power-saving-mode .card[class*="glow-bottom-"]::after {
+        display: none !important; 
+    }
 
-    /* 定義節電模式下的顏色 (對應原本的發光色) */
+    /* 2. 定義高對比顏色 */
     body.power-saving-mode {
-        --ps-red: #ff4444;
-        --ps-yellow: #ffeb3b;
-        --ps-green: #00e676;
-        --ps-blue: #2979ff;
-        --ps-black: #555;
+        --ps-red: #ff0000;
+        --ps-yellow: #ffd700;
+        --ps-green: #00ff00;
+        --ps-blue: #00bfff;
+        --ps-black: #666;
         --ps-white: #ffffff;
     }
 
-    /* --- 全框發光 (box-shadow) -> 改為 3px 粗框 --- */
+    /* 3. 全框發光 -> 改為 5px 實心框 */
     body.power-saving-mode .card[class*="glow-red"]    { border: 5px solid var(--ps-red) !important; }
     body.power-saving-mode .card[class*="glow-yellow"] { border: 5px solid var(--ps-yellow) !important; }
     body.power-saving-mode .card[class*="glow-green"]  { border: 5px solid var(--ps-green) !important; }
@@ -2298,7 +2331,7 @@
     body.power-saving-mode .card[class*="glow-black"]  { border: 5px solid var(--ps-black) !important; }
     body.power-saving-mode .card[class*="glow-white"]  { border: 5px solid var(--ps-white) !important; }
     
-    /* 彩虹全框：使用漸層邊框模擬 */
+    /* 彩虹全框 */
     body.power-saving-mode .card[class*="glow-rainbow"] {
         border: 5px solid transparent !important;
         background-image: linear-gradient(#fff, #fff), linear-gradient(to right, red, orange, yellow, green, blue, violet);
@@ -2306,8 +2339,8 @@
         background-clip: padding-box, border-box;
     }
 
-    /* --- 底部發光 (box-shadow) -> 改為 6px 底部粗條 --- */
-    /* 先確保原本的邊框不會干擾 (有些卡片原本有細框) */
+    /* 4. 底部發光 -> 改為 8px 底部粗條 (畫在卡片本體上) */
+    /* 先重置邊框 */
     body.power-saving-mode .card[class*="glow-bottom-"] { border: 1px solid #777 !important; }
 
     body.power-saving-mode .card[class*="glow-bottom-red"]    { border-bottom: 8px solid var(--ps-red) !important; }
@@ -2324,12 +2357,12 @@
         border-image-slice: 1;
     }
 
-    /* 按鈕激活狀態 */
+    /* 按鈕樣式 */
     #mob-power-btn.active {
         color: #00e676;
         border-color: #00e676;
         background: rgba(0, 230, 118, 0.1);
-        box-shadow: 0 0 5px #00e676;
+        box-shadow: 0 0 10px #00e676; /* 按鈕本身稍微發光提示開啟中 */
     }
 </style>
 </head>
@@ -2751,6 +2784,10 @@
 	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()" style="margin-left: 5px; margin-right: 5px;">🔊</button>
     <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)" style="margin-right:5px;">⏹</button>
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
+	<div id="mobile-controls">
+		<button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
+		<button class="mobile-btn" id="mob-collapse-btn" onclick="toggleMobileCollapse()" style="margin-left: 10px; opacity: 0.8;" title="收起/展開控制列">🔽</button>
+	</div>
 </div>
 
 <div id="orientation-overlay">
@@ -13478,13 +13515,37 @@
 	}
 	
 	// =========================================
+    // [新增] 手機控制列收合邏輯 (Collapse/Expand)
+    // =========================================
+    
+    function toggleMobileCollapse() {
+        const controls = document.getElementById('mobile-controls');
+        const btn = document.getElementById('mob-collapse-btn');
+        
+        // 切換 minimized class
+        controls.classList.toggle('minimized');
+        
+        // 檢查當前狀態並更換圖示
+        const isMin = controls.classList.contains('minimized');
+        
+        if (isMin) {
+            // 變成「展開」圖示 (向上或展開符號)
+            btn.innerHTML = '🔼'; 
+            btn.title = "展開控制列";
+        } else {
+            // 變成「收合」圖示 (向下或收起符號)
+            btn.innerHTML = '🔽'; 
+            btn.title = "收起控制列";
+        }
+    }
+	
+	// =========================================
     // [新增] 節電模式控制邏輯 (Power Saving Logic)
     // =========================================
     
     // 頁面載入時讀取設定
     document.addEventListener('DOMContentLoaded', () => {
         const savedMode = localStorage.getItem('dm_power_saving');
-        // 預設關閉，只有明確設為 'true' 才開啟
         if (savedMode === 'true') {
             enablePowerSaving(true);
         }
@@ -13501,17 +13562,15 @@
         if (enable) {
             document.body.classList.add('power-saving-mode');
             if (btn) btn.classList.add('active');
-            console.log("節電模式: 開啟 (Box-Shadow 已移除)");
         } else {
             document.body.classList.remove('power-saving-mode');
             if (btn) btn.classList.remove('active');
-            console.log("節電模式: 關閉");
         }
         
         // 記憶使用者選擇
         localStorage.setItem('dm_power_saving', enable);
         
-        // 強制重算佈局 (因為 border 寬度改變可能微幅影響 offsetWidth，雖不常見但保險起見)
+        // 強制重算佈局 (確保 border 變化不影響排版)
         if (typeof applyBattleZoneScaling === 'function') {
             applyBattleZoneScaling(true);
         }
