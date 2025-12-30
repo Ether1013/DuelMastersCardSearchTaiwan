@@ -7319,6 +7319,14 @@
 					if (op.zoneId) markDirty(op.zoneId);
 					if (op.targetZone) markDirty(op.targetZone);
 					if (op.targetType === 'ZONE' && op.targetIds) op.targetIds.forEach(zid => markDirty(zid));
+					
+					// --- [請在此處插入修正代碼] ---
+					// 修正：針對重置動作 (Untap)，強制標記戰鬥區與魔力區為「髒區域」(需要刷新)
+					if (op.type === 'RESET_BOARD') {
+						markDirty(`p${op.playerId}-battle`);
+						markDirty(`p${op.playerId}-mana`);
+					}
+					// ---------------------------
 
 					// B. 標記受影響卡片的「起始」與「結束」區域
 					let affectedCardIds = [];
