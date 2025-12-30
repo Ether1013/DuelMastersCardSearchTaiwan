@@ -7037,6 +7037,10 @@
 	
 	// [新增] 自動檢測並修復面板重疊
     function checkAndFixPanelOverlap() {
+	
+		// [新增] 手機模式直接不計算
+		if (document.body.classList.contains('mobile-mode')) return;
+		
         const panel = document.getElementById('card-action-panel');
         const bar = document.getElementById('multi-select-bar');
         
@@ -12934,7 +12938,7 @@
         originalCards.forEach(c => c.style.opacity = '0');
 
         // 2. 準備假卡片
-        const visualCount = Math.min(count || 10, 15);
+        const visualCount = isMobile ? 5 : Math.min(count || 10, 15); // 手機版上限改為5
         const flyingCards = [];
 
         for (let i = 0; i < visualCount; i++) {
