@@ -2268,6 +2268,69 @@
 		width: 24px;
 		text-align: center;
 	}
+	
+	/* ==========================================================================
+       [新增] 節電模式 (Power Saving Mode) - 手機版優化
+       說明：強制移除 box-shadow 與 filter，改用實心 border 以降低 GPU 負載
+       ========================================================================== */
+    body.power-saving-mode .card,
+    body.power-saving-mode .card * {
+        box-shadow: none !important;
+        filter: none !important;
+        text-shadow: none !important;
+    }
+
+    /* 定義節電模式下的顏色 (對應原本的發光色) */
+    body.power-saving-mode {
+        --ps-red: #ff4444;
+        --ps-yellow: #ffeb3b;
+        --ps-green: #00e676;
+        --ps-blue: #2979ff;
+        --ps-black: #555;
+        --ps-white: #ffffff;
+    }
+
+    /* --- 全框發光 (box-shadow) -> 改為 3px 粗框 --- */
+    body.power-saving-mode .card[class*="glow-red"]    { border: 3px solid var(--ps-red) !important; }
+    body.power-saving-mode .card[class*="glow-yellow"] { border: 3px solid var(--ps-yellow) !important; }
+    body.power-saving-mode .card[class*="glow-green"]  { border: 3px solid var(--ps-green) !important; }
+    body.power-saving-mode .card[class*="glow-blue"]   { border: 3px solid var(--ps-blue) !important; }
+    body.power-saving-mode .card[class*="glow-black"]  { border: 3px solid var(--ps-black) !important; }
+    body.power-saving-mode .card[class*="glow-white"]  { border: 3px solid var(--ps-white) !important; }
+    
+    /* 彩虹全框：使用漸層邊框模擬 */
+    body.power-saving-mode .card[class*="glow-rainbow"] {
+        border: 3px solid transparent !important;
+        background-image: linear-gradient(#fff, #fff), linear-gradient(to right, red, orange, yellow, green, blue, violet);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+    }
+
+    /* --- 底部發光 (box-shadow) -> 改為 6px 底部粗條 --- */
+    /* 先確保原本的邊框不會干擾 (有些卡片原本有細框) */
+    body.power-saving-mode .card[class*="glow-bottom-"] { border: 1px solid #777 !important; }
+
+    body.power-saving-mode .card[class*="glow-bottom-red"]    { border-bottom: 6px solid var(--ps-red) !important; }
+    body.power-saving-mode .card[class*="glow-bottom-yellow"] { border-bottom: 6px solid var(--ps-yellow) !important; }
+    body.power-saving-mode .card[class*="glow-bottom-green"]  { border-bottom: 6px solid var(--ps-green) !important; }
+    body.power-saving-mode .card[class*="glow-bottom-blue"]   { border-bottom: 6px solid var(--ps-blue) !important; }
+    body.power-saving-mode .card[class*="glow-bottom-black"]  { border-bottom: 6px solid var(--ps-black) !important; }
+    body.power-saving-mode .card[class*="glow-bottom-white"]  { border-bottom: 6px solid var(--ps-white) !important; }
+
+    /* 彩虹底部 */
+    body.power-saving-mode .card[class*="glow-bottom-rainbow"] {
+        border-bottom: 6px solid transparent !important;
+        border-image: linear-gradient(to right, red, orange, yellow, green, blue, violet);
+        border-image-slice: 1;
+    }
+
+    /* 按鈕激活狀態 */
+    #mob-power-btn.active {
+        color: #00e676;
+        border-color: #00e676;
+        background: rgba(0, 230, 118, 0.1);
+        box-shadow: 0 0 5px #00e676;
+    }
 </style>
 </head>
 <body>
@@ -2684,6 +2747,7 @@
         <option value="0.5">🚀 2.0x</option>
         <option value="0.25">⚡ 4.0x</option>
     </select>
+	<button class="mobile-btn" id="mob-power-btn" onclick="togglePowerSavingMode()" style="margin-left: 5px;" title="節電模式">🍃</button>
 	<button class="mobile-btn" id="mob-mute-btn" onclick="toggleMute()" style="margin-left: 5px; margin-right: 5px;">🔊</button>
     <button class="mobile-btn" id="mob-stop-btn" onclick="stopPlayback(true)" style="margin-right:5px;">⏹</button>
     <button class="mobile-btn" id="mob-play-btn" onclick="togglePlay()">▶</button>
@@ -13412,6 +13476,46 @@
 		
 		img.src = url;
 	}
+	
+	// =========================================
+    // [新增] 節電模式控制邏輯 (Power Saving Logic)
+    // =========================================
+    
+    // 頁面載入時讀取設定
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedMode = localStorage.getItem('dm_power_saving');
+        // 預設關閉，只有明確設為 'true' 才開啟
+        if (savedMode === 'true') {
+            enablePowerSaving(true);
+        }
+    });
+
+    function togglePowerSavingMode() {
+        const isCurrentlyOn = document.body.classList.contains('power-saving-mode');
+        enablePowerSaving(!isCurrentlyOn);
+    }
+
+    function enablePowerSaving(enable) {
+        const btn = document.getElementById('mob-power-btn');
+        
+        if (enable) {
+            document.body.classList.add('power-saving-mode');
+            if (btn) btn.classList.add('active');
+            console.log("節電模式: 開啟 (Box-Shadow 已移除)");
+        } else {
+            document.body.classList.remove('power-saving-mode');
+            if (btn) btn.classList.remove('active');
+            console.log("節電模式: 關閉");
+        }
+        
+        // 記憶使用者選擇
+        localStorage.setItem('dm_power_saving', enable);
+        
+        // 強制重算佈局 (因為 border 寬度改變可能微幅影響 offsetWidth，雖不常見但保險起見)
+        if (typeof applyBattleZoneScaling === 'function') {
+            applyBattleZoneScaling(true);
+        }
+    }
 	
 </script>
 <div id="visitor-counter" style="display:none"></div>
