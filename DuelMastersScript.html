@@ -12924,7 +12924,6 @@
             // [撕裂版] 鏡頭上移特效：初始位置設定
             // 為了營造鏡頭感，撕裂版我們也保留一點點位移 (+5%)
             let startY = st.y;
-            if (!isPaper) startY = st.y + 5; 
 
             el.style.backgroundPosition = `${st.x}% ${startY}%`;
             el.style.backgroundSize = `${st.scale * 100}%`;
@@ -12965,8 +12964,7 @@
             imgLayer.style.clipPath = endPolyImg;
             paperLayer.style.clipPath = endPolyPaper;
 
-            // 設定鏡頭移動的目標位置 (往上 5%)
-            imgLayer.style.backgroundPosition = `${st.x}% ${st.y - 5}%`;
+            imgLayer.style.backgroundPosition = `${st.x}% ${st.y}%`;
 
         }, 100);
 
