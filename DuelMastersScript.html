@@ -1611,67 +1611,72 @@
 		object-fit: contain !important;
 	}
 
-    /* Mobile Controls */
     /* =========================================
-       [修正版] 手機控制列樣式 (更緊湊，防止重疊)
+       [最終緊湊版] 手機控制列 (靠右 + 極小化)
        ========================================= */
     #mobile-controls {
         position: fixed;
-        bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10000; /* 確保最上層 */
+        /* 定位調整：靠右，並稍微往上提，位於手牌區右側 */
+        right: 2px; 
+        bottom: 110px; /* 依照您的介面，若太高可改為 80px，太低改為 130px */
+        left: auto;    /* 取消置中 */
+        transform: none; /* 取消置中位移 */
+        z-index: 10000;
         
-        /* 容器外觀 */
-        background: rgba(0, 0, 0, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        border-radius: 50px; /* 膠囊狀圓角 */
-        padding: 6px 10px;
+        /* 容器外觀：極致緊湊 */
+        background: rgba(0, 0, 0, 0.8); /* 稍微透明一點 */
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px; /* 圓角縮小 */
+        padding: 2px 4px;    /* 內距極小化 */
         
-        /* [關鍵] Flex 排版設定 */
-        display: flex; /* (JS 會控制這裡的顯示/隱藏) */
-        flex-direction: row; /* 強制橫向 */
-        align-items: center; /* 垂直置中 */
+        /* Flex 排版：緊密排列 */
+        display: flex; /* (JS 控制顯示) */
+        flex-direction: row;
+        align-items: center;
         justify-content: center;
-        flex-wrap: nowrap;   /* [絕對不換行] */
-        gap: 5px;            /* 按鈕之間的間距 */
+        flex-wrap: nowrap;
+        gap: 1px; /* 按鈕幾乎貼在一起 */
         
-        /* 寬度控制 */
-        width: auto;
-        max-width: 95vw;
-        white-space: nowrap;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* 寬度控制：只包覆內容 */
+        width: max-content; 
+        max-width: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        
+        /* 整體縮放：如果你覺得還是太大，可以調整這裡的 scale (例如 0.9) */
+        transform-origin: right bottom;
+        /* transform: scale(0.9); */ 
     }
     body.mobile-mode #mobile-controls { display: flex; z-index: 2000; }
     
     .mobile-btn {
         background: transparent;
-        border: 1px solid transparent; /* 預留邊框空間 */
+        border: 1px solid transparent;
         color: #fff;
-        font-size: 16px;
-        padding: 6px;
+        font-size: 14px; /* 字體縮小 */
+        padding: 0;
         cursor: pointer;
-        border-radius: 50%; /* 按鈕變圓形 */
-        width: 36px;        /* 固定寬度 */
-        height: 36px;       /* 固定高度 */
-        display: flex;      /* 確保圖示置中 */
+        border-radius: 50%;
+        width: 30px;  /* 按鈕寬度縮小 (原36) */
+        height: 30px; /* 按鈕高度縮小 (原36) */
+        display: flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;     /* 防止被壓扁 */
+        flex-shrink: 0;
     }
     .mobile-btn:active { background: rgba(255,255,255,0.2); }
     #mob-music-btn.active { border-color: #2ecc71; color: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
     
+    /* 速度選單 (縮小版) */
     #mob-speed-select {
-        background: #333;
-        color: #fff;
-        border: 1px solid #555;
+        background: #222;
+        color: #eee;
+        border: 1px solid #444;
         border-radius: 4px;
-        padding: 4px;
-        font-size: 14px;
-        height: 36px;
-        margin-right: 2px;
+        padding: 0 2px;
+        font-size: 11px; /* 字體縮小 */
+        height: 28px;    /* 高度縮小 */
+        margin-right: 1px;
+        outline: none;
     }
 
     /* Play Button Highlight Animation */
@@ -2319,32 +2324,26 @@
 	
 	/* 收合時：調整 Collapse 按鈕的大小以填滿圓圈 */
     #mobile-controls.minimized #mob-collapse-btn {
-        width: 100%;
-        height: 100%;
-        font-size: 24px; /* 圖示放大 */
-        margin: 0;
-        border: none;
+        font-size: 18px; /* 收合圖示大小 */
     }
 
     /* -----------------------------------------
-       [收合模式] Minimized State
+       [收合模式] 靠右貼邊
        ----------------------------------------- */
     #mobile-controls.minimized {
-        /* 定位改變：靠右下 */
+        /* 收合時保持在同一個位置 (右側) */
+        right: 2px !important;
+        bottom: 110px !important; /* 跟上面保持一致 */
         left: auto !important;
         transform: none !important;
-        right: 15px !important;
-        bottom: 20px !important;
         
-        /* 形狀改變：變回正圓形 */
-        width: 48px !important;
-        height: 48px !important;
+        /* 變為小圓球 */
+        width: 36px !important;
+        height: 36px !important;
         border-radius: 50% !important;
         padding: 0 !important;
         gap: 0 !important;
-        
-        background: rgba(0, 0, 0, 0.6) !important; /* 變半透明 */
-        border-color: rgba(255,255,255,0.2) !important;
+        background: rgba(0, 0, 0, 0.5) !important;
     }
 
     /* 收合按鈕本身的樣式微調 */
