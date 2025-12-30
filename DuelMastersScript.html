@@ -2023,15 +2023,6 @@
 		display: none !important;
 	}
 
-	/* 3. 強制顯示手機版的控制列 (原本在桌機版是隱藏的) */
-	body.desktop-playing #mobile-controls {
-		display: flex !important;
-		position: fixed;
-		bottom: 20px;
-		right: 20px;
-		z-index: 9999;
-	}
-
 	/* 4. 調整手機版進度條在桌機播放模式下的樣式 (轉為橫向) */
 	/* 這裡我們借用原本手機版的 slider-zone 但調整位置 */
 	body.desktop-playing #slider-zone {
@@ -2145,7 +2136,7 @@
 	body.desktop-playing #mobile-controls {
 		display: flex !important;
 		position: fixed;
-		bottom: 20px;
+		bottom: 120px;
 		right: 20px;
 		z-index: 9999;
 	}
@@ -2324,32 +2315,44 @@
 	
 	/* 收合時：調整 Collapse 按鈕的大小以填滿圓圈 */
     #mobile-controls.minimized #mob-collapse-btn {
-        font-size: 18px; /* 收合圖示大小 */
+        width: 100%;
+        height: 100%;
+        font-size: 24px; /* 圖示放大 */
+        margin: 0;
+        border: none;
     }
 
     /* -----------------------------------------
-       [收合模式] 靠右貼邊
+       [收合模式] Minimized State
        ----------------------------------------- */
     #mobile-controls.minimized {
-        /* 收合時保持在同一個位置 (右側) */
-        right: 2px !important;
-        bottom: 110px !important; /* 跟上面保持一致 */
+        /* 定位改變：靠右下 */
         left: auto !important;
         transform: none !important;
+        right: 15px !important;
+        bottom: 20px !important;
         
-        /* 變為小圓球 */
-        width: 36px !important;
-        height: 36px !important;
+        /* 形狀改變：變回正圓形 */
+        width: 48px !important;
+        height: 48px !important;
         border-radius: 50% !important;
         padding: 0 !important;
         gap: 0 !important;
-        background: rgba(0, 0, 0, 0.5) !important;
+        
+        background: rgba(0, 0, 0, 0.6) !important; /* 變半透明 */
+        border-color: rgba(255,255,255,0.2) !important;
     }
 
     /* 收合按鈕本身的樣式微調 */
     #mob-collapse-btn {
         margin: 0 !important; /* 收合時不需要邊距 */
         width: 32px; /* 固定寬度，避免圖示切換時跳動 */
+    }
+	
+	/* [修正] 桌機版播放模式下，收合時維持原位 (防止位置跳動) */
+    body.desktop-playing #mobile-controls.minimized {
+        bottom: 120px !important;
+        right: 20px !important;
     }
 	
 	/* ==========================================================================
