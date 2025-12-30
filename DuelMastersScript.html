@@ -5960,21 +5960,18 @@
         resetBoard(state.turnPlayer);
     }
 
-    // [修正] 發光：支援 sourceId (效果卡) 的雙向連動
+    // [修正] 發光：僅向上追溯 (Child -> Source)，斷開向下擴散以避免兄弟卡連動
 	function toggleGlow() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		const state = getCurrentDisplayState();
 
-		// --- 1. 尋找整組關聯卡片 (效果卡 sourceId) ---
+		// --- 1. 尋找關聯卡片 (僅向上) ---
 		const getLinkedGroup = (startIds) => {
 			const resultIds = new Set();
 			const queue = [...startIds];
-			
 			// 先將選取的卡片加入結果
 			startIds.forEach(id => resultIds.add(id));
 
-			// 廣度優先搜尋 (BFS) 找出所有關聯
-			// 我們需要不斷往上找 (Parent/Source) 和往下找 (Children/Effects)
 			let idx = 0;
 			while(idx < queue.length){
 				const currId = queue[idx++];
@@ -5982,56 +5979,47 @@
 				if (!currCard) continue;
 
 				// A. 往上找 (Find Parents/Sources)
-				const sourceId = currCard.sourceId; // 效果卡專用連結
-
+				// 這是為了讓效果卡(101)能找到本體(100)
+				const sourceId = currCard.sourceId;
 				if (sourceId && !resultIds.has(sourceId)) {
 					resultIds.add(sourceId);
 					queue.push(sourceId);
 				}
 
-				// B. 往下找 (Find Children/Linked Effects)
-				// 找出所有指認當前卡片為 Parent 或 Source 的卡
-				const relatives = state.cards.filter(c => 
-					(c.sourceId === currId)
-				);
-				
-				relatives.forEach(child => {
-					if (!resultIds.has(child.id)) {
-						resultIds.add(child.id);
-						queue.push(child.id);
-					}
-				});
+				// [修改點] 移除了「B. 往下找」的邏輯
+				// 原本的程式碼會在這裡搜尋所有 sourceId === currId 的卡片 (即兄弟卡)
+				// 移除後，點擊 101 只會找到 100，而 100 不會再回頭去找 102，達成您的需求。
 			}
 			return Array.from(resultIds);
 		};
 
 		const allTargetIds = getLinkedGroup(pendingMove.cardIds);
-		// ----------------------------------------
 
+		// ----------------------------------------
+		// 以下邏輯維持不變 (決定顏色與送出指令)
+		// ----------------------------------------
+		
 		// 2. 決定下一個顏色
-		// 優先以「位於戰鬥區/主要區域」的卡片狀態為主，若無則取第一張
 		const mainCardId = allTargetIds.find(id => {
 			const c = state.cards.find(x => x.id === id);
 			return c && (c.zone.includes('battle') || c.zone.includes('hand') || c.zone.includes('mana'));
 		}) || allTargetIds[0];
-
+		
 		const mainCard = state.cards.find(c => c.id === mainCardId);
-		
 		const colors = ['red', 'yellow', 'green', 'blue', 'black', 'white', 'rainbow', null];
-		let currentGlow = mainCard ? mainCard.glow : null;
 		
-		// 如果目前是底光，切換模式時重置
+		let currentGlow = mainCard ? mainCard.glow : null;
 		if (currentGlow && currentGlow.startsWith('bottom-')) currentGlow = null;
 
 		let idx = colors.indexOf(currentGlow);
 		if (idx === -1) idx = 7; 
 		let nextColor = colors[(idx + 1) % colors.length];
 
-		// 3. 送出指令 (針對整組)
+		// 3. 送出指令
 		const op = { type: 'SET_GLOW', cardIds: allTargetIds, color: nextColor };
-		addOperation(op, true); // skipRender = true
+		addOperation(op, true); 
 
-		// 4. 手動更新 DOM (針對整組)
+		// 4. 手動更新 DOM
 		allTargetIds.forEach(id => {
 			const el = document.querySelector(`.card[data-id="${id}"]`);
 			if (el) {
@@ -6043,12 +6031,12 @@
 		});
 	}
 
-	// [修正] 底光：同上，支援 sourceId
+	// [修正] 底光：僅向上追溯 (Child -> Source)，斷開向下擴散以避免兄弟卡連動
 	function toggleBottomGlow() {
 		if (!pendingMove || pendingMove.cardIds.length === 0) return;
 		const state = getCurrentDisplayState();
 
-		// 1. 尋找整組
+		// 1. 尋找關聯卡片 (僅向上)
 		const getLinkedGroup = (startIds) => {
 			const resultIds = new Set();
 			const queue = [...startIds];
@@ -6060,35 +6048,38 @@
 				const currCard = state.cards.find(c => c.id === currId);
 				if (!currCard) continue;
 
+				// A. 往上找 (Find Parents/Sources)
 				if (currCard.sourceId && !resultIds.has(currCard.sourceId)) {
 					resultIds.add(currCard.sourceId);
 					queue.push(currCard.sourceId);
 				}
-				// Downward
-				const relatives = state.cards.filter(c => 
-					(c.sourceId === currId)
-				);
-				relatives.forEach(child => {
-					if (!resultIds.has(child.id)) {
-						resultIds.add(child.id);
-						queue.push(child.id);
-					}
-				});
+
+				// [修改點] 這裡原本有的「B. 往下找 (Downward)」邏輯已移除
+				// 這樣可以防止透過本體 (Source) 抓到其他的效果卡 (Siblings)
 			}
 			return Array.from(resultIds);
 		};
 
 		const allTargetIds = getLinkedGroup(pendingMove.cardIds);
 
+		// ----------------------------------------
+		// 以下邏輯維持不變 (決定顏色與送出指令)
+		// ----------------------------------------
+
 		// 2. 決定顏色
 		const mainCardId = allTargetIds.find(id => {
 			const c = state.cards.find(x => x.id === id);
 			return c && (c.zone.includes('battle') || c.zone.includes('hand') || c.zone.includes('mana'));
 		}) || allTargetIds[0];
-		const mainCard = state.cards.find(c => c.id === mainCardId);
 
-		const bottomColors = [ 'bottom-red', 'bottom-yellow', 'bottom-green', 'bottom-blue', 'bottom-black', 'bottom-white', 'bottom-rainbow' ];
+		const mainCard = state.cards.find(c => c.id === mainCardId);
+		const bottomColors = [
+			'bottom-red', 'bottom-yellow', 'bottom-green', 'bottom-blue', 'bottom-black', 'bottom-white', 'bottom-rainbow'
+		];
+		
 		let currentGlow = mainCard ? mainCard.glow : null;
+		// 如果目前是普通發光，視為無底光，從頭開始
+		if (currentGlow && !currentGlow.startsWith('bottom-')) currentGlow = null;
 
 		let idx = bottomColors.indexOf(currentGlow);
 		let nextColor;
@@ -6100,7 +6091,7 @@
 
 		// 3. 送出指令
 		const op = { type: 'SET_GLOW', cardIds: allTargetIds, color: nextColor };
-		addOperation(op, true);
+		addOperation(op, true); 
 
 		// 4. 手動更新 DOM
 		allTargetIds.forEach(id => {
