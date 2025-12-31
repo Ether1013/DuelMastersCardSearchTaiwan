@@ -3492,6 +3492,32 @@
 		box-shadow: 0 0 8px #0f0;
 		border-color: #0f0
 	}
+	
+	/* ==================== 呼吸燈/回合條 節能模式修正 ==================== */
+
+	/* 1. 基礎設定：停止動畫、移除原本的模糊光暈 */
+	body.power-saving-mode .turn-bar {
+		animation: none !important;
+		box-shadow: none !important; /* 移除模糊 */
+		width: 15px !important;      /* 固定寬度 */
+		transition: none !important;
+	}
+
+	/* 2. P1 (上方) 回合條：跟隨 var(--p1-main) 變數 */
+	body.power-saving-mode #player1-area.active-turn .turn-bar {
+		background: var(--p1-main) !important;
+		border-right: none !important;
+		/* 重點：使用實心陰影 (Blur=0)，顏色使用變數 */
+		box-shadow: 4px 0 0 0 var(--p1-main) !important; 
+	}
+
+	/* 3. P2 (下方) 回合條：跟隨 var(--p2-main) 變數 */
+	body.power-saving-mode #player2-area.active-turn .turn-bar {
+		background: var(--p2-main) !important;
+		border-right: none !important;
+		/* 重點：使用實心陰影 (Blur=0)，顏色使用變數 */
+		box-shadow: 4px 0 0 0 var(--p2-main) !important;
+	}
 </style>
 </head>
 <body>
