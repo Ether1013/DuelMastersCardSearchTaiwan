@@ -11128,15 +11128,17 @@
 		// 狀態改變時才觸發
 		if (lastOrientation !== isLandscape) {
 			lastOrientation = isLandscape;
-			
 			if (isLandscape) {
 				// [橫式] -> 自動開始播放
 				console.log("Switch to Landscape: Auto Play");
-				if (!playTimeout) togglePlay();
+				// [修正] 只有當劇本長度大於 1 (非初始空狀態) 時，才自動播放
+				if (!playTimeout && history.length > 1) {
+					togglePlay();
+				}
 			} else {
-				// [直式] -> 暫停 (讓使用者選劇本)
+				// [直式] -> 暫停
 				console.log("Switch to Portrait: Pause");
-				if (playTimeout) togglePlay(); // togglePlay 判斷有 playTimeout 會執行暫停
+				if (playTimeout) togglePlay(); 
 			}
 		}
 	}
@@ -11397,7 +11399,12 @@
 
 		} else {
 			stopPlayback( false );
-			setTimeout(() => { triggerEnding(); }, 2000);
+			// [修正] 只有當真的有演過劇情 (history > 1) 才顯示 Ending，避免空劇本誤觸
+			if (history.length > 1) {
+				setTimeout(() => {
+					triggerEnding();
+				}, 2000);
+			}
 		}
 	}
 
