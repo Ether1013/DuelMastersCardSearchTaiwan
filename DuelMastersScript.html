@@ -2081,9 +2081,9 @@
 		align-items: flex-end !important;
 		
 		/* 定位核心修正 */
-		position: fixed !important;
-		top: auto !important;          /* 確保頂部釋放 */
-		bottom: 80px !important;       /* 設定距離底部 80px (避開手指誤觸區) */
+		position: fixed !important;    /* 必須是 fixed，bottom 才會生效 */
+		top: auto !important;          /* 關鍵：釋放 top 定位，解決 bottom 灰色無效的問題 */
+		bottom: 20px !important;       /* [修改這裡] 設定您想要的高度，例如 20px */
 		right: 5px !important;         /* 靠右 */
 		left: auto !important;
 		transform: none !important;    /* 移除任何置中位移 */
@@ -2124,7 +2124,7 @@
 	/* 2. 播放模式下：顯示類似手機版的控制列 */
 	/* 這包含了進度條與停止按鈕 */
 	body.desktop-playing #mobile-controls {
-		display: flex !important;
+		flex-direction: column-reverse !important; 
 		position: fixed;
 		bottom: 160px;
 		right: 20px;
@@ -2381,13 +2381,6 @@
 	   [修改] 手機版控制列：縱向佈局
 	   ========================================= */
 	#mobile-controls {
-		/* 強制改為直排 */
-		flex-direction: column-reverse !important; 
-		/* 靠右對齊 */
-		align-items: flex-end !important;
-		
-		/* 位置微調：因為變高了，稍微往上提 */
-		bottom: 120px !important;
 		right: 5px !important;
 		left: auto !important;
 		transform: none !important;
