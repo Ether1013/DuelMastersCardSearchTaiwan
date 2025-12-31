@@ -14709,11 +14709,16 @@
     
     // 頁面載入時讀取設定
     document.addEventListener('DOMContentLoaded', () => {
-        const savedMode = localStorage.getItem('dm_power_saving');
-        if (savedMode === 'true') {
-            enablePowerSaving(true);
-        }
-    });
+		const savedMode = localStorage.getItem('dm_power_saving');
+		
+		// 修改：如果沒有紀錄 (null) 或是紀錄為 'true'，都預設開啟節能模式
+		// 邏輯：只要不是明確的 'false'，就預設開啟
+		if (savedMode !== 'false') {
+			document.body.classList.add('power-saving-mode');
+			const btn = document.getElementById('mob-power-btn');
+			if (btn) btn.classList.add('active');
+		}
+	});
 
     function togglePowerSavingMode() {
         const isCurrentlyOn = document.body.classList.contains('power-saving-mode');
