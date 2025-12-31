@@ -3518,6 +3518,45 @@
 		/* 重點：使用實心陰影 (Blur=0)，顏色使用變數 */
 		box-shadow: 4px 0 0 0 var(--p2-main) !important;
 	}
+	
+	/* ==================== 虹光特效 (Rainbow) 節能優化補丁 ==================== */
+
+	/* 1. 全域強制停止虹光相關動畫與模糊 */
+	body.power-saving-mode .glow-rainbow,
+	body.power-saving-mode .card.glow-bottom-rainbow::after,
+	body.power-saving-mode .zone.glow-rainbow {
+		animation: none !important;       /* 停止動畫 */
+		box-shadow: none !important;      /* 移除模糊陰影 */
+		transition: none !important;
+	}
+
+	/* 2. 卡片全框虹光：改用靜態漸層邊框 */
+	body.power-saving-mode .card.glow-rainbow {
+		/* 預設 border 寬度 */
+		border: 3px solid transparent !important;
+		/* 使用 border-image 產生銳利的彩虹漸層 */
+		border-image: linear-gradient(to bottom right, red, orange, yellow, green, blue, indigo, violet) 1 !important;
+	}
+
+	/* 3. 卡片底部虹光 (L型)：改用靜態漸層 L 框 */
+	body.power-saving-mode .card.glow-bottom-rainbow::after {
+		/* 覆蓋單色設定，改用透明底以便顯示 border-image */
+		border-color: transparent !important;
+		/* 確保 L 型邊框寬度 */
+		border-width: 0 5px 5px 0 !important; 
+		border-style: solid !important;
+		/* 套用彩虹漸層到邊框上 */
+		border-image: linear-gradient(135deg, red, orange, yellow, green, blue, violet) 1 !important;
+		/* 移除原本的背景，只留邊框 */
+		background: none !important; 
+	}
+
+	/* 4. 區域 (Zone) 虹光：改用靜態邊框 */
+	body.power-saving-mode .zone.glow-rainbow {
+		border: 2px solid transparent !important;
+		border-image: linear-gradient(to right, red, blue) 1 !important;
+		background-color: rgba(255, 255, 255, 0.05) !important; /* 極低負擔的背景色 */
+	}
 </style>
 </head>
 <body>
