@@ -1004,6 +1004,17 @@
 		line-height: 1.1;
 		font-weight: 500
 	}
+	/* [新增] 獨立的背景圖層，負責處理旋轉與縮放 */
+	.ability-bg-layer {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-repeat: no-repeat;
+		z-index: 0;           /* 放在最底層 */
+		pointer-events: none; /* 讓點擊穿透 */
+	}
 	.ability-card {
 		width: 80px;
 		height: 35px;
@@ -1011,12 +1022,13 @@
 		font-size: 8px;
 		transform: none!important;
 		cursor: pointer;
+		position: relative;  /* 確保 absolute 子元素定位正確 */
 		overflow: hidden
 	}
+	/* 確保文字浮在圖片上 */
 	.ability-card .card-text {
-		max-width: 90%;
-		padding-left: 18px!important;
-		text-align: left!important
+		position: relative;
+		z-index: 1;
 	}
 	.ability-card .card-power {
 		display: none
@@ -3823,6 +3835,7 @@
             <button onclick="adjustAbilityCard('panY', 10)">⬇</button>
             <button onclick="adjustAbilityCard('scale', 0.1)">+</button>
             <button onclick="adjustAbilityCard('scale', -0.1)">-</button>
+			<button onclick="adjustAbilityCard('rotate', -90)" title="逆時針轉 90 度">↺</button>
         </div>
 
         <div class="panel-sep"></div>
@@ -6924,14 +6937,35 @@
 			});
 		}
 		else if (op.type === 'ADJUST_STYLE') {
-			const { cardIds, key, val, isDelta } = op;
-			state.cards.forEach(c => {
-				if(cardIds.some(id => id == c.id)) { // [修正]
-					if (isDelta) c[key] += val;
-					else c[key] = val;
-				}
-			});
-		}
+            const { cardIds, key, val, isDelta } = op;
+            state.cards.forEach(c => {
+                if(cardIds.some(id => id == c.id)) {
+                    // 1. 取得正確的 Style Key (優先使用 styleKey，沒有則用 imageKey)
+                    // 這能確保就算兩張卡用同一張圖，也能分開調整
+                    const sKey = c.styleKey || c.imageKey;
+                    
+                    // 2. 確保樣式物件已初始化
+                    if (!globalAbilityStyleRegistry[sKey]) {
+                        // 如果是第一次調整，建立預設值
+                        globalAbilityStyleRegistry[sKey] = { x: 50, y: 50, scale: 1.2, rotate: 0 };
+                    }
+                    const style = globalAbilityStyleRegistry[sKey];
+
+                    // 3. 執行數值更新 (寫入到 style 物件中)
+                    if (key === 'rotate') {
+                        // 旋轉專用邏輯：累加角度
+                        style.rotate = (style.rotate || 0) + val;
+                    } else if (key === 'scale') {
+                        // 縮放邏輯
+                        style.scale = (style.scale || 1.0) + val;
+                    } else {
+                        // 位移邏輯 (panX, panY)
+                        if (style[key] === undefined) style[key] = 50;
+                        style[key] += val;
+                    }
+                }
+            });
+        }
 		else if (op.type === 'SET_BGM') {
             const { filename } = op;
             state.bgm = filename;
@@ -7234,44 +7268,48 @@
 	}
     
     // 1. 調整位置後存檔
-	function adjustAbilityCard(key, val) {
-		if (!pendingMove || pendingMove.cardIds.length === 0) return;
-		
-		const state = getCurrentDisplayState();
-		const targetIds = pendingMove.cardIds;
-		let hasChanges = false;
-
-		targetIds.forEach(id => {
-			const c = state.cards.find(card => card.id === id);
-			if (c) {
-				// 確保 styleKey 存在
-				let keyToUpdate = c.styleKey || ('style_' + c.id);
-				c.styleKey = keyToUpdate;
-
-				let currentStyle = globalAbilityStyleRegistry[keyToUpdate] || { x: 50, y: 50, scale: 1 };
-				let newStyle = { ...currentStyle };
-
-				if (key === 'panX') newStyle.x += val;
-				else if (key === 'panY') newStyle.y += val;
-				else if (key === 'scale') newStyle.scale += val;
-
-				globalAbilityStyleRegistry[keyToUpdate] = newStyle;
-				
-				// 記憶這個樣式供下次生成使用
-				if (c.imageKey) {
-					globalLastUsedStyles[c.imageKey] = { ...newStyle };
-				}
-
-				hasChanges = true;
-			}
-		});
-
-		if (hasChanges) {
-			renderUI();
-			// [修正] 強制存檔，確保刷新後位置還在
-			if(!document.body.classList.contains('mobile-mode')) saveToStorage();
-		}
-	}
+	// 1. 調整位置後存檔
+    function adjustAbilityCard(key, val) {
+        if (!pendingMove || pendingMove.cardIds.length === 0) return;
+        const state = getCurrentDisplayState();
+        const targetIds = pendingMove.cardIds;
+        let hasChanges = false;
+        
+        targetIds.forEach(id => {
+            const c = state.cards.find(card => card.id === id);
+            if (c) {
+                // 確保 styleKey 存在
+                let keyToUpdate = c.styleKey || ('style_' + c.id);
+                c.styleKey = keyToUpdate;
+                
+                // [修正] 預設值加入 rotate: 0
+                let currentStyle = globalAbilityStyleRegistry[keyToUpdate] || { x: 50, y: 50, scale: 1, rotate: 0 };
+                let newStyle = { ...currentStyle };
+                
+                // [新增] 這裡補上了 rotate 的判斷
+                if (key === 'rotate') {
+                    newStyle.rotate = (newStyle.rotate || 0) + val;
+                } 
+                else if (key === 'panX') newStyle.x += val;
+                else if (key === 'panY') newStyle.y += val;
+                else if (key === 'scale') newStyle.scale += val;
+                
+                globalAbilityStyleRegistry[keyToUpdate] = newStyle;
+                
+                // 記憶這個樣式供下次生成使用
+                if (c.imageKey) {
+                    globalLastUsedStyles[c.imageKey] = { ...newStyle };
+                }
+                hasChanges = true;
+            }
+        });
+        
+        if (hasChanges) {
+            renderUI();
+            // [修正] 強制存檔，確保刷新後位置還在
+            if(!document.body.classList.contains('mobile-mode')) saveToStorage();
+        }
+    }
     
     function resetBoard(playerId) {
 //        if(!confirm(playerId === 1 ? t('msg_confirm_p1_reset') : t('msg_confirm_p2_reset'))) return;
@@ -10442,7 +10480,52 @@
         // 4. [樣式修正] 能力卡樣式
         if (card.zone.includes('ability')) {
             el.classList.add('ability-card');
-            if (!card.faceUp) el.className = `card ability-card`; // 強制重置 class 避免干擾
+            if (card.isContinuous) el.classList.add('continuous');
+            
+            // --- [開始修改區塊：背景分離渲染] ---
+            
+            // 1. 取得樣式設定
+            const styleKey = card.styleKey || card.imageKey;
+            // 預設值加入 rotate: 0
+            const style = globalAbilityStyleRegistry[styleKey] || { x: 50, y: 50, scale: 1.2, rotate: 0 };
+
+            // 2. 建立獨立背景圖層 (不再直接設在 el 上)
+            const bgLayer = document.createElement('div');
+            bgLayer.className = 'ability-bg-layer'; // 記得 CSS 要有這個 class
+            
+            const src = globalImageRegistry[card.imageKey];
+            if (src) {
+                bgLayer.style.backgroundImage = `url(${src})`;
+                // 套用位置與縮放
+                bgLayer.style.backgroundPosition = `${style.x}% ${style.y}%`;
+                bgLayer.style.backgroundSize = `${style.scale * 100}%`;
+                
+                // [新增] 套用旋轉 (只轉背景，不轉文字)
+                if (style.rotate) {
+                    bgLayer.style.transform = `rotate(${style.rotate}deg)`;
+                }
+            }
+            // 將背景層插入到卡片最底層
+            el.appendChild(bgLayer);
+
+            // --- [修改區塊結束] ---
+
+            // 處理筆記 (保持在最上層)
+            if (card.note) {
+                const note = document.createElement('div');
+                note.className = 'card-note';
+                note.innerText = card.note;
+                el.appendChild(note);
+            }
+
+            // 處理文字 (保持在最上層)
+            const textEl = document.createElement('div');
+            textEl.className = 'card-text';
+            textEl.innerText = card.text;
+            el.appendChild(textEl);
+            
+            el.title = card.text; // Tooltip
+
         } else {
             // 一般卡片旋轉 (排除 Puzzle 拼圖卡，因為拼圖卡位置由 parent 決定)
             if (!card.stackType || !card.stackType.includes('puzzle')) {
