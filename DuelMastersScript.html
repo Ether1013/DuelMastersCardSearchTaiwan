@@ -6766,15 +6766,42 @@
 				}
 			});
 
-            // 5. 放入目標區域
-			if (insertIndex !== undefined && insertIndex !== -1) {
-				let zoneCards = state.cards.filter(c => c.zone === toZone);
-				let otherCards = state.cards.filter(c => c.zone !== toZone);
-				zoneCards.splice(insertIndex, 0, ...movingCards);
-				state.cards = [...otherCards, ...zoneCards];
-			} else {
-				state.cards.push(...movingCards);
-			}
+            // 3. 將卡片放回陣列 (依照 insertIndex 或預設推到最後)
+            // [修正] 使用 finalInsertIndex 避免修改 const 變數
+            let finalInsertIndex = insertIndex;
+
+            // [新增] 自動索引計算邏輯：如果有指定堆疊目標，但沒有指定插入位置
+            if ((finalInsertIndex === undefined || finalInsertIndex === -1) && stackTargetId) {
+                // 注意：movingCards 已經被移除了，所以這裡的 index 是針對「剩餘卡片」的
+                const targetIndex = state.cards.findIndex(c => c.id === stackTargetId);
+                
+                if (targetIndex !== -1) {
+                    // 定義哪些類型要插在目標「後面」 (Index + 1)
+                    // 規則：(O)的右側、下方、疊在下面 -> Index + 1
+                    const typesAfter = [
+                        'puzzle_right',   // 拼在右邊
+                        'puzzle_bottom',  // 拼在下方
+                        'bottom',         // 疊在下方
+                        'bottom_exposed'  // 下方 (露出底)
+                    ];
+
+                    // 其餘類型插在目標「前面」 (Index + 0) -> 把目標往後擠
+                    // 規則：(O)的左側、上方、疊在上面 -> Index
+                    // 包含: puzzle_left, puzzle_top, top, shift_up, shift_down
+
+                    if (typesAfter.includes(stackType)) {
+                        finalInsertIndex = targetIndex + 1;
+                    } else {
+                        finalInsertIndex = targetIndex;
+                    }
+                }
+            }
+
+            if (finalInsertIndex !== undefined && finalInsertIndex !== -1) {
+                state.cards.splice(finalInsertIndex, 0, ...movingCards);
+            } else {
+                state.cards.push(...movingCards);
+            }
 		} else if (op.type === 'SHUFFLE') {
 			const { zoneId, order } = op; 
 			let zoneCards = state.cards.filter(c => c.zone === zoneId);
@@ -9887,6 +9914,8 @@
 		];
 		
 		// [修正 2] 移除預設 GAP_RATIO，改為動態計算
+		if ( state == null )
+			return;
 		const allCards = state.cards;
 
 		// 1. 計算 Scale
