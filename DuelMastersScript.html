@@ -3569,6 +3569,93 @@
 		border-image: linear-gradient(to right, red, blue) 1 !important;
 		background-color: rgba(255, 255, 255, 0.05) !important; /* 極低負擔的背景色 */
 	}
+	
+	/* --- Import/Export Tabs UI (Desktop) --- */
+	.modal-tabs {
+		display: flex;
+		border-bottom: 2px solid #bdc3c7;
+		margin-bottom: 15px;
+	}
+	.tab-btn {
+		flex: 1;
+		padding: 10px;
+		background: #f8f9fa;
+		border: none;
+		border-bottom: 2px solid transparent;
+		cursor: pointer;
+		font-weight: bold;
+		color: #7f8c8d;
+		transition: all 0.2s;
+		font-size: 1rem;
+	}
+	.tab-btn:hover {
+		background: #e8f6fd;
+		color: #3498db;
+	}
+	.tab-btn.active {
+		border-bottom-color: #3498db;
+		color: #2c3e50;
+		background: #fff;
+	}
+	.deck-import-options {
+		background: #f1f2f6;
+		padding: 10px;
+		border-radius: 6px;
+		margin-bottom: 15px;
+		display: flex;
+		align-items: center;
+		gap: 15px;
+		border: 1px solid #ddd;
+	}
+	.deck-import-options label {
+		cursor: pointer;
+		font-weight: bold;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+	/* Export UI */
+	.export-options {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		margin: 15px 0;
+	}
+	.export-option-label {
+		display: flex;
+		align-items: center;
+		padding: 10px;
+		border: 1px solid #ddd;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+	.export-option-label:hover {
+		background: #f0f8ff;
+		border-color: #3498db;
+	}
+	.export-option-label input {
+		margin-right: 10px;
+	}
+
+	/* --- Mobile Mode Overrides (強制隱藏新功能) --- */
+	body.mobile-mode .modal-tabs {
+		display: none !important; /* 隱藏頁籤 */
+	}
+	body.mobile-mode #tab-content-deck {
+		display: none !important; /* 強制隱藏牌組匯入區塊 */
+	}
+	body.mobile-mode #tab-content-script {
+		display: flex !important; /* 強制顯示劇本區塊 */
+		height: auto !important;
+	}
+	body.mobile-mode #import-selector-modal .modal-content {
+		/* 手機版 Modal 大小調整 */
+		width: 95% !important;
+		max-width: 95% !important;
+		height: 80vh !important;
+	}
 </style>
 </head>
 <body>
@@ -4365,6 +4452,25 @@
     ];
 	// [新增] 用來記錄當前正在運行的劇本設定 (包含 credits)
 	let currentScriptConfig = null;
+	
+	// [新增] 範例牌組清單
+	// 請在此填入您的牌組 JSON 檔案資訊
+	// 建議將牌組檔案放在與 scripts 相同的資料夾，或建立 decks 資料夾
+	var AVAILABLE_DECKS = [
+		// 範例格式：
+		// {
+		//     title: "範例：赤單快攻 (1P)",
+		//     description: "火文明速攻牌組，適合測試護盾觸發。",
+		//     filename: "deck_red_aggro.json", // 您的 json 檔名
+		//     lang: "zh"
+		// },
+		// {
+		//     title: "Example: Blue Control (2P)",
+		//     description: "Water civilization control deck.",
+		//     filename: "deck_blue_control.json",
+		//     lang: "en"
+		// }
+	];
 
 	// --- Dialogue Assets Generation ---
     const EMOTIONS = ['normal', 'blank', 'serious', 'smug', 'furious', 'terrified'];
@@ -4722,6 +4828,20 @@
 			log_blind_move: "[盲移]",
 			log_recall: "[重置] 全卡回牌庫",
 			msg_paste_hint_modal: "💡 提示：點擊卡片選取後，可直接按 Ctrl+V 貼上圖片或網址來更換卡圖。",
+			'tab_import_script': '📜 匯入劇本',
+			'tab_import_deck': '🎴 匯入牌組',
+			'lbl_import_target': '匯入目標:',
+			'chk_import_p1': '覆蓋 1P',
+			'chk_import_p2': '覆蓋 2P',
+			'msg_import_deck_success': '牌組匯入完成！(ActionLog 已重置)',
+			'title_export': '選擇匯出類型',
+			'lbl_export_type': '請問要匯出什麼？',
+			'opt_export_script': '完整劇本 (Full Script)',
+			'opt_export_deck_1p': '僅 1P 牌組 (1P Deck)',
+			'opt_export_deck_2p': '僅 2P 牌組 (2P Deck)',
+			'btn_do_export': '確認匯出',
+			'msg_deck_exported': '牌組已匯出。',
+			'lbl_or_example_decks': '▼ 或選擇範例牌組 ▼',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -4877,6 +4997,20 @@
 			log_blind_move: "[Blind Move]",
 			log_recall: "[Reset] Recall All",
 			msg_paste_hint_modal: "💡 Tip: Select a card and press Ctrl+V to paste an image or URL to update it.",
+			'tab_import_script': '📜 Import Script',
+			'tab_import_deck': '🎴 Import Deck',
+			'lbl_import_target': 'Target:',
+			'chk_import_p1': 'Overwrite 1P',
+			'chk_import_p2': 'Overwrite 2P',
+			'msg_import_deck_success': 'Deck imported! (ActionLog reset)',
+			'title_export': 'Export Options',
+			'lbl_export_type': 'What to export?',
+			'opt_export_script': 'Full Script',
+			'opt_export_deck_1p': '1P Deck Only',
+			'opt_export_deck_2p': '2P Deck Only',
+			'btn_do_export': 'Export',
+			'msg_deck_exported': 'Deck exported.',
+			'lbl_or_example_decks': '▼ Or choose example deck ▼',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -5033,6 +5167,20 @@
 			log_blind_move: "[山札移動]",
 			log_recall: "[リセット] 全回収",
 			msg_paste_hint_modal: "💡 ヒント：カードを選択し、Ctrl+Vで画像やURLを貼り付けてカード画像を変更できます。",
+			'tab_import_script': '📜 シナリオ',
+			'tab_import_deck': '🎴 デッキ',
+			'lbl_import_target': 'インポート先:',
+			'chk_import_p1': '1Pを上書き',
+			'chk_import_p2': '2Pを上書き',
+			'msg_import_deck_success': 'デッキを読み込みました (ログはリセットされます)',
+			'title_export': 'エクスポート選択',
+			'lbl_export_type': '出力タイプを選択:',
+			'opt_export_script': '完全なシナリオ (Script)',
+			'opt_export_deck_1p': '1P デッキのみ',
+			'opt_export_deck_2p': '2P デッキのみ',
+			'btn_do_export': '出力実行',
+			'msg_deck_exported': 'デッキを保存しました。',
+			'lbl_or_example_decks': '▼ またはサンプルデッキを選択 ▼',
 		}
 	};
 	
@@ -11713,48 +11861,6 @@
 		}, 1500);
 	}
 
-    function exportData() {
-        // [新增] 在匯出前執行一次遷移腳本，確保舊資料都被優化
-        optimizeAndMigrateImages(); 
-
-        // 1. 深拷貝歷史紀錄 (移除 state 快照以節省空間)
-        let historyToExport = JSON.parse(JSON.stringify(history));
-        historyToExport.forEach((item, index) => { if (index > 0) delete item.state; });
-
-        // --- [新增] 2. 執行旋轉動作優化 (Rotation Optimization) ---
-        historyToExport = optimizeHistoryForExport(historyToExport);
-        // -------------------------------------------------------
-        
-        // 3. 執行 GC 過濾，只匯出有用的圖片
-        const usedKeys = getUsedImageKeys();
-        const cleanImageRegistry = {};
-        
-        Object.keys(globalImageRegistry).forEach(key => {
-            if (usedKeys.has(key)) {
-                cleanImageRegistry[key] = globalImageRegistry[key];
-            }
-        });
-        
-        const data = {
-            history: historyToExport,
-            initialState: initialState,
-            currentIndex: currentIndex,
-            timestamp: Date.now(),
-            imageRegistry: cleanImageRegistry, 
-            abilityRegistry: globalAbilityStyleRegistry,
-            lastUsedStyles: globalLastUsedStyles,
-            lastDiagSettings: (typeof lastDiagSettings !== 'undefined') ? lastDiagSettings : null,
-            aceRegistry: globalAceRegistry,
-            themeSettings: globalThemeSettings,
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `dm-script-${Date.now()}.txt`;
-        a.click();
-    }
-
     // --- [新增] 旋轉優化輔助函式 ---
     function optimizeHistoryForExport(hist) {
         console.log("正在優化旋轉指令...");
@@ -12063,24 +12169,6 @@
             }
         }
         pendingImportData = null;
-    }
-
-    function importData(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                if(!data.history || !data.initialState) throw new Error("Invalid format");
-                if(confirm(t('msg_confirm_import'))) {
-                    processGameData(data);
-                    alert(t('msg_import_success'));
-                }
-            } catch(err) { alert(t('msg_import_fail')); console.error(err); }
-            input.value = ''; 
-        };
-        reader.readAsText(file);
     }
 
     // --- [修正版] 開啟卡片選單 (視覺化階層排序) ---
@@ -12519,50 +12607,6 @@
 		
 		updateMuteButtonUI();
 	}
-	
-	// --- [新增] 匯入選擇器邏輯 ---
-
-    // 1. 開啟視窗並渲染清單
-    function openImportModal() {
-        const modal = document.getElementById('import-selector-modal');
-        const listEl = document.getElementById('import-script-list');
-        
-        listEl.innerHTML = ''; // 清空舊內容
-
-        // 使用 [...].reverse() 複製並倒序，讓最新的劇本在最上面
-        const reversedScripts = [...AVAILABLE_SCRIPTS].reverse();
-
-        if (reversedScripts.length === 0) {
-            listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#999;">${t('lbl_no_script')}</div>`;
-        } else {
-            reversedScripts.forEach(script => {
-                const item = document.createElement('div');
-                item.className = 'import-script-item';
-                
-                // 語言標籤
-                const lang = script.lang || 'zh';
-                
-                item.innerHTML = `
-                    <div class="import-script-title">${script.title}</div>
-                    <div class="import-script-desc">${script.description}</div>
-                    <div class="import-script-lang">${lang}</div>
-                `;
-                
-                // 點擊載入
-                item.onclick = () => loadInternalScript(script);
-                
-                listEl.appendChild(item);
-            });
-        }
-
-        modal.style.display = 'flex';
-    }
-
-    // 2. 觸發本地檔案選擇 (模擬點擊原本的 input)
-    function triggerLocalImport() {
-        document.getElementById('import-selector-modal').style.display = 'none';
-        document.getElementById('import-input').click();
-    }
 
     // 3. 載入內建劇本 (Fetch & Load)
     function loadInternalScript(scriptData) {
@@ -14976,6 +15020,393 @@
         }
     }
 	
+	// --- Import / Export Logic (Modified for Desktop/Mobile Split) ---
+
+	let currentImportType = 'script'; // 預設模式
+
+	// 開啟匯入視窗
+	function openImportModal() {
+		const modal = document.getElementById('import-selector-modal');
+		if(!modal) return;
+		
+		// 每次開啟前重置狀態
+		currentImportType = 'script'; 
+		switchImportTab('script'); // UI 重置為 script tab
+
+		// 渲染兩個列表 (劇本列表與牌組列表共用來源，但點擊行為不同)
+		renderImportList('import-script-list', 'script');
+		renderImportList('import-deck-list', 'deck');
+
+		modal.style.display = 'flex';
+	}
+
+	// 切換頁籤 (桌機版專用)
+	function switchImportTab(tab) {
+		currentImportType = tab;
+		
+		// 更新頁籤樣式
+		document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+		const activeBtn = document.querySelector(`.tab-btn[onclick="switchImportTab('${tab}')"]`);
+		if(activeBtn) activeBtn.classList.add('active');
+
+		// 切換顯示內容
+		const scriptContent = document.getElementById('tab-content-script');
+		const deckContent = document.getElementById('tab-content-deck');
+		
+		// 即使在手機版，雖然 CSS 隱藏了 Tab 按鈕，但此邏輯仍可運作 (手機版固定為 script)
+		if(scriptContent && deckContent) {
+			scriptContent.style.display = (tab === 'script') ? 'flex' : 'none';
+			deckContent.style.display = (tab === 'deck') ? 'flex' : 'none';
+		}
+	}
+
+	// --- DEBUG 版本 JS (請替換原有的對應函式) ---
+
+	// 1. 觸發選擇檔案
+	function triggerLocalImport(type) {
+		console.log("[Debug] triggerLocalImport called with type:", type);
+		
+		// 設定全域變數
+		currentImportType = type;
+		
+		// 隱藏視窗
+		const modal = document.getElementById('import-selector-modal');
+		if(modal) modal.style.display = 'none';
+
+		// 尋找 input 元素
+		const input = document.getElementById('import-input');
+		if (input) {
+			console.log("[Debug] Found input element, clicking it...");
+			input.value = ''; // 清空
+			input.click();    // 觸發系統檔案視窗
+		} else {
+			alert("[Error] 找不到 id='import-input' 的元素！請檢查 HTML。");
+		}
+	}
+
+	// 2. 接收檔案並處理
+	window.importData = function(input) {
+		console.log("[Debug] File selected");
+		const file = input.files[0];
+		if(!file) {
+			console.log("[Debug] No file selected (User cancelled)");
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = function(e) {
+			try {
+				console.log("[Debug] File read success, parsing JSON...");
+				const data = JSON.parse(e.target.result);
+				console.log("[Debug] Current Import Type:", currentImportType);
+				
+				if (currentImportType === 'deck') {
+					console.log("[Debug] Calling importDeckData...");
+					if (typeof importDeckData === 'function') {
+						importDeckData(data);
+					} else {
+						alert("[Error] importDeckData 函式未定義！");
+					}
+				} else {
+					console.log("[Debug] Processing as Script...");
+					// 劇本邏輯
+					if(!data.history || !data.initialState) throw new Error("無效的劇本檔案格式 (缺少 history/initialState)");
+					if(confirm(t('msg_confirm_import'))) {
+						processGameData(data);
+						alert(t('msg_import_success'));
+					}
+				}
+			} catch(err) {
+				alert("匯入發生錯誤:\n" + err.message);
+				console.error("[Debug Error]", err);
+			}
+			input.value = '';
+		};
+		reader.readAsText(file);
+	};
+
+	// 載入內建牌組 (其實是載入劇本檔並提取其中的牌組)
+	function loadInternalDeck(scriptData) {
+		const path = 'scripts/' + scriptData.filename + '?v=' + Date.now();
+		fetch(path)
+			.then(res => res.json())
+			.then(data => {
+				importDeckData(data);
+			})
+			.catch(err => alert("Load Failed: " + err.message));
+	}
+
+	// --- 修改後的 Import 列表渲染邏輯 ---
+
+	// 列表渲染器 (區分劇本與牌組來源)
+	function renderImportList(containerId, type) {
+		const listEl = document.getElementById(containerId);
+		if(!listEl) return;
+		listEl.innerHTML = '';
+
+		// [修改重點] 根據類型選擇不同的資料來源
+		let sourceList = [];
+		if (type === 'script') {
+			sourceList = (typeof AVAILABLE_SCRIPTS !== 'undefined') ? [...AVAILABLE_SCRIPTS].reverse() : [];
+		} else {
+			// 若尚未定義 AVAILABLE_DECKS，則使用空陣列防呆
+			sourceList = (typeof AVAILABLE_DECKS !== 'undefined') ? [...AVAILABLE_DECKS] : [];
+		}
+		
+		// 如果列表是空的
+		if (sourceList.length === 0) {
+			const msg = (type === 'script') ? 'lbl_no_script' : '暫無範例牌組'; // 簡單的 fallback 文字
+			listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#999;">${t(msg) || msg}</div>`;
+			return;
+		}
+
+		sourceList.forEach(itemData => {
+			const item = document.createElement('div');
+			item.className = 'import-script-item';
+			const lang = itemData.lang || 'zh';
+			item.innerHTML = `
+				<div class="import-script-title">${itemData.title}</div>
+				<div class="import-script-desc">${itemData.description}</div>
+				<div class="import-script-lang">${lang}</div>
+			`;
+			
+			// 點擊行為分流
+			if (type === 'script') {
+				item.onclick = () => loadInternalScript(itemData);
+			} else {
+				// 這裡呼叫新的載入函式
+				item.onclick = () => loadInternalDeckFile(itemData);
+			}
+			listEl.appendChild(item);
+		});
+	}
+
+	// [新增/修改] 載入內部牌組檔案
+	function loadInternalDeckFile(deckData) {
+		// 假設牌組檔案也放在 scripts 資料夾中，或是您可以改為 'decks/'
+		// 這裡預設路徑與 filename 拼接
+		const path = 'scripts/' + deckData.filename + '?v=' + Date.now();
+		
+		fetch(path)
+			.then(res => {
+				if (!res.ok) throw new Error("HTTP " + res.status);
+				return res.json();
+			})
+			.then(data => {
+				importDeckData(data);
+			})
+			.catch(err => alert("Deck Load Failed: " + err.message));
+	}
+
+	// [核心] 匯入牌組邏輯 (針對獨立牌組檔案結構優化)
+	function importDeckData(sourceData) {
+		const targetP1 = document.getElementById('chk-import-p1').checked;
+		const targetP2 = document.getElementById('chk-import-p2').checked;
+		
+		if (!targetP1 && !targetP2) {
+			alert("請至少選擇一個匯入目標 (1P 或 2P)");
+			return;
+		}
+
+		// 1. 驗證資料結構
+		// 預期格式: { cards: [...], imageRegistry: {...} }
+		// 或是舊格式的 cards 陣列直接放在 root
+		let sourceCards = [];
+		
+		if (Array.isArray(sourceData.cards)) {
+			sourceCards = sourceData.cards;
+		} else if (Array.isArray(sourceData)) {
+			// 相容：如果整個檔案就是一個陣列
+			sourceCards = sourceData;
+		} else {
+			// 如果格式不符，這裡不再嘗試去讀取 initialState (因為劇本與牌組已明確分流)
+			alert("匯入失敗：檔案格式錯誤。\n(找不到 'cards' 陣列資料)");
+			return;
+		}
+
+		// 複製當前 initialState
+		const newState = JSON.parse(JSON.stringify(initialState));
+
+		// 輔助函式：處理單一玩家的匯入
+		const processPlayerImport = (targetId) => {
+			const prefix = `p${targetId}`; // 'p1' or 'p2'
+			
+			// A. 清除目標玩家現有的卡片 (保留另一方)
+			newState.cards = newState.cards.filter(c => c.ownerId !== targetId);
+
+			// B. 準備匯入的卡片
+			// 由於您提到「參考劇本的資料儲存模式」，卡片物件應該已經包含了需要的欄位。
+			// 但這裡我們需要處理「Owner 轉換」。
+			// 如果牌組檔案裡原本設定是 1P 的牌，現在要匯入給 2P，我們需要修改 ownerId 與 zone。
+			
+			// 深拷貝來源卡片以免修改到原始資料
+			let cardsToImport = JSON.parse(JSON.stringify(sourceCards));
+			
+			// 取得來源資料中原本的 ownerId (通常取第一張卡來判斷，若無卡片則沒差)
+			const sourceOwnerId = (cardsToImport.length > 0) ? cardsToImport[0].ownerId : 1;
+
+			// 進行轉換
+			cardsToImport.forEach(c => {
+				// 強制覆寫 ownerId 為目標玩家
+				c.ownerId = targetId; 
+				
+				// 如果來源的 ownerId 與目標不同 (例如 1P 牌匯入給 2P)，需要修正 Zone 的前綴
+				// 假設 Zone 格式為 "p1-hand", "p1-deck" ...
+				if (c.zone && typeof c.zone === 'string') {
+					// 簡單暴力的替換：把 sourcePrefix 換成 targetPrefix
+					// 如果 sourceData 裡面的 zone 是 "p1-hand"，而我們要匯入給 p2
+					// 就把 p1 換成 p2
+					const sourcePrefix = `p${sourceOwnerId}`; // e.g., "p1"
+					
+					// 只有當前綴真的不符時才替換 (避免本身就是通用 zone)
+					if (c.zone.startsWith(sourcePrefix)) {
+						c.zone = c.zone.replace(sourcePrefix, prefix);
+					} 
+					// 如果來源檔案沒有 zone (例如只是清單)，則預設放入牌庫或手牌？
+					// 這裡假設您的牌組檔案已經設定好 zone (如 deck/hand/shield)
+				}
+			});
+
+			// C. 重新賦予 ID (Re-ID)
+			// 為了避免與場上既有的 2P 卡片 (若只匯入 1P) 發生 ID 衝突
+			let maxId = newState.cards.reduce((m, c) => Math.max(m, c.id), 0);
+			cardsToImport.forEach(c => {
+				maxId++;
+				c.id = maxId;
+				c.parentId = null; // 重置堆疊關係，確保乾淨匯入
+				newState.cards.push(c);
+			});
+		};
+
+		if (targetP1) processPlayerImport(1);
+		if (targetP2) processPlayerImport(2);
+
+		// 3. 重置 Action Log (只留初始)
+		const newHistory = [{
+			action: { description: "Deck Imported", operations: [] },
+			state: newState,
+			detachedStartState: null
+		}];
+
+		// 4. 套用變更
+		initialState = newState;
+		history = newHistory;
+		currentIndex = 0;
+		
+		// 5. 合併圖片註冊表 (這是關鍵，因為牌組檔會有獨立的圖片路徑)
+		if (sourceData.imageRegistry) {
+			// 將牌組內的圖片設定合併到全域設定
+			Object.assign(globalImageRegistry, sourceData.imageRegistry);
+		}
+
+		// 關閉視窗並重繪
+		const modal = document.getElementById('import-selector-modal');
+		if(modal) modal.style.display = 'none';
+		
+		calculateSeenCards();
+		renderUI();
+		saveToStorage();
+		alert(t('msg_import_deck_success'));
+	}
+
+	// --- Export Functions ---
+
+	// 覆蓋原本按鈕行為
+	window.exportData = function() {
+		// 檢查是否為手機版 (使用既存的 isMobileDevice 函式 或 CSS class 判斷)
+		const isMobile = (typeof isMobileDevice === 'function' && isMobileDevice()) || document.body.classList.contains('mobile-mode');
+
+		if (isMobile) {
+			// 手機版：直接執行舊版匯出 (不跳出選擇視窗，因為手機版 UI 較小且通常只需要完整備份)
+			performExportScript(); 
+		} else {
+			// 桌機版：開啟選擇視窗
+			const modal = document.getElementById('export-selector-modal');
+			if (modal) {
+				modal.style.display = 'flex';
+			} else {
+				performExportScript(); // Fallback
+			}
+		}
+	};
+
+	function confirmExport() {
+		const type = document.querySelector('input[name="export-type"]:checked').value;
+		document.getElementById('export-selector-modal').style.display = 'none';
+
+		if (type === 'script') performExportScript();
+		else if (type === 'deck_1p') performExportDeck(1);
+		else if (type === 'deck_2p') performExportDeck(2);
+	}
+
+	// 這是您原本的匯出邏輯 (改名保留)
+	function performExportScript() {
+		// 確保圖片優化
+		if(typeof optimizeAndMigrateImages === 'function') optimizeAndMigrateImages();
+		
+		let historyToExport = JSON.parse(JSON.stringify(history));
+		
+		// 只保留初始狀態與動作，移除中間計算的 state 減肥
+		historyToExport.forEach((item, index) => { if (index > 0) delete item.state; });
+		
+		// 若有您原本的 optimizeHistoryForExport 函式則呼叫
+		if (typeof optimizeHistoryForExport === 'function') {
+			historyToExport = optimizeHistoryForExport(historyToExport);
+		}
+
+		const cleanImageRegistry = {};
+		// 簡單過濾未使用的圖片 (簡化版)
+		// 注意：這裡假設您已有 getUsedImageKeys 函式，若無則全部匯出
+		if (typeof getUsedImageKeys === 'function') {
+			const usedKeys = getUsedImageKeys();
+			Object.keys(globalImageRegistry).forEach(key => {
+				if (usedKeys.has(key)) cleanImageRegistry[key] = globalImageRegistry[key];
+			});
+		} else {
+			Object.assign(cleanImageRegistry, globalImageRegistry);
+		}
+
+		const data = {
+			history: historyToExport,
+			initialState: initialState,
+			currentIndex: currentIndex,
+			timestamp: Date.now(),
+			imageRegistry: cleanImageRegistry,
+			themeSettings: (typeof globalThemeSettings !== 'undefined') ? globalThemeSettings : {}
+		};
+		downloadJSON(data, `dm-script-${Date.now()}.txt`);
+	}
+
+	// 匯出單一牌組
+	function performExportDeck(playerId) {
+		const deckCards = initialState.cards.filter(c => c.ownerId === playerId);
+		const deckImageRegistry = {};
+		
+		// 只抓取相關圖片
+		deckCards.forEach(c => {
+			if (c.imageKey && globalImageRegistry[c.imageKey]) deckImageRegistry[c.imageKey] = globalImageRegistry[c.imageKey];
+			if (c.backImageKey && globalImageRegistry[c.backImageKey]) deckImageRegistry[c.backImageKey] = globalImageRegistry[c.backImageKey];
+		});
+
+		const data = {
+			type: 'deck',
+			ownerId: playerId,
+			timestamp: Date.now(),
+			cards: deckCards,
+			imageRegistry: deckImageRegistry
+		};
+
+		downloadJSON(data, `dm-deck-p${playerId}-${Date.now()}.json`);
+		alert(t('msg_deck_exported'));
+	}
+
+	function downloadJSON(data, filename) {
+		const blob = new Blob([JSON.stringify(data, null, 2)], {type:"text/plain"});
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = filename;
+		a.click();
+	}
 </script>
 <div id="visitor-counter" style="display:none"></div>
 <div id="ace-flash-layer"></div>
@@ -15059,24 +15490,65 @@
 	</div>
 </div>
 <div id="import-selector-modal" class="modal">
-    <div class="modal-content" style="width: 500px; max-height: 80vh; display:flex; flex-direction:column;">
-        <h3 style="margin-top:0; text-align:center;" data-i18n="title_import_source">選擇匯入來源 (Import Source)</h3>
+    <div class="modal-content" style="width: 500px; height: 600px; max-height: 90vh;">
+        <h3 style="margin-top:0; text-align:center;" data-i18n="title_import_source">匯入來源</h3>
         
-        <div style="padding: 15px; background: #f0f4f7; border-radius: 8px; text-align: center; margin-bottom: 15px;">
-            <button onclick="triggerLocalImport()" style="font-size:1rem; padding:10px 20px; width:100%; background:#3498db; border-color:#2980b9;" data-i18n="btn_local_file">
-                📂 選擇本地檔案 (.txt/.json)
-            </button>
+        <div class="modal-tabs">
+            <button class="tab-btn active" onclick="switchImportTab('script')" data-i18n="tab_import_script">📜 匯入劇本</button>
+            <button class="tab-btn" onclick="switchImportTab('deck')" data-i18n="tab_import_deck">🎴 匯入牌組</button>
         </div>
 
-        <div style="text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px;" data-i18n="lbl_or_examples">
-            ▼ 或選擇範例劇本 (Built-in Scripts) ▼
+        <div id="tab-content-script" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+            <div style="margin-bottom: 10px;">
+                <button onclick="triggerLocalImport('script')" style="width:100%; padding:10px; background:#2c3e50; border:1px dashed #999; color:white;" data-i18n="btn_local_file">📂 選擇本地檔案 (.txt/.json)</button>
+            </div>
+            <div style="font-size:0.8rem; color:#666; margin:5px 0; text-align:center;" data-i18n="lbl_or_examples">▼ 或選擇範例劇本 ▼</div>
+            <div id="import-script-list" style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;"></div>
         </div>
 
-        <div id="import-script-list" style="flex:1; overflow-y:auto; border:1px solid #ddd; border-radius:4px; background:#fff;">
+        <div id="tab-content-deck" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+            <div class="deck-import-options">
+                <span data-i18n="lbl_import_target">目標:</span>
+                <label><input type="checkbox" id="chk-import-p1"> <span style="color:var(--p1-main)">1P</span></label>
+                <label><input type="checkbox" id="chk-import-p2" checked> <span style="color:var(--p2-main)">2P</span></label>
             </div>
 
-        <div style="text-align:right; margin-top:15px;">
-            <button class="danger" onclick="document.getElementById('import-selector-modal').style.display='none'" data-i18n="btn_cancel">取消 (Cancel)</button>
+            <div style="margin-bottom: 10px;">
+                <button onclick="triggerLocalImport('deck')" style="width:100%; padding:10px; background:#8e44ad; border:1px dashed #999; color:white;" data-i18n="btn_local_file">📂 選擇本地檔案 (.txt/.json)</button>
+            </div>
+            <div style="font-size:0.8rem; color:#666; margin:5px 0; text-align:center;" data-i18n="lbl_or_example_decks">▼ 或選擇範例牌組 ▼</div>
+            <div id="import-deck-list" style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;"></div>
+        </div>
+
+        <div style="margin-top:15px; text-align:right;">
+            <button class="danger" onclick="document.getElementById('import-selector-modal').style.display='none'" data-i18n="btn_cancel">取消</button>
+        </div>
+    </div>
+</div>
+
+<div id="export-selector-modal" class="modal">
+    <div class="modal-content" style="width: 350px;">
+        <h3 style="margin-top:0; text-align:center;" data-i18n="title_export">匯出選項</h3>
+        <p style="text-align:center; color:#666; font-size:0.9rem;" data-i18n="lbl_export_type">請問要匯出什麼內容？</p>
+        
+        <div class="export-options">
+            <label class="export-option-label">
+                <input type="radio" name="export-type" value="script" checked>
+                <span data-i18n="opt_export_script">完整劇本 (Full Script)</span>
+            </label>
+            <label class="export-option-label">
+                <input type="radio" name="export-type" value="deck_1p">
+                <span data-i18n="opt_export_deck_1p" style="color:var(--p1-main)">僅 1P 牌組 (1P Deck)</span>
+            </label>
+            <label class="export-option-label">
+                <input type="radio" name="export-type" value="deck_2p">
+                <span data-i18n="opt_export_deck_2p" style="color:var(--p2-main)">僅 2P 牌組 (2P Deck)</span>
+            </label>
+        </div>
+
+        <div style="margin-top:15px; display:flex; justify-content:space-between;">
+            <button class="danger" onclick="document.getElementById('export-selector-modal').style.display='none'" data-i18n="btn_cancel">取消</button>
+            <button class="primary" onclick="confirmExport()" data-i18n="btn_do_export">確認匯出</button>
         </div>
     </div>
 </div>
