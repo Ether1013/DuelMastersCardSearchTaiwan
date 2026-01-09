@@ -4097,45 +4097,6 @@
     <p style="margin: 0 0 5px; font-size: 0.9rem; opacity: 0.8;">最適な表示のために、端末を横向きにしてください。</p>
     <p style="margin: 0; font-size: 0.85rem; color: #f1c40f; font-weight: bold;">⚠️ モバイルは再生専用です。編集はPCをご利用ください。</p>
 </div>
-<!--
-「這是一個遊戲劇本的對話檔 (JSON)。請幫我將其中的 text (台詞) 和 name (名字) 翻譯成 [目標語言，例如：英文]。
-
-重要規則：
-
-嚴格保持 JSON 格式，不要更改 id。
-
-只翻譯 name 和 text 的值，不要動 null。
-
-直接給我修改後的 JSON 程式碼，不需要其他解釋。」
--->
-<div id="trans-modal" class="modal">
-    <div class="modal-content" style="width: 400px; text-align: center;">
-        <h3 style="margin-top:0;"data-i18n="title_trans">🌐 翻譯小幫手 (Translation Tool)</h3>
-        <p style="color:#666; font-size:0.9rem; text-align:left;" data-i18n="msg_trans_desc">
-            此功能可將劇本中的對話提取為輕量級 JSON 檔，方便交給 AI 翻譯，完成後再匯入覆蓋。
-        </p>
-        
-        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="exportDialogueJson()" style="background:#2980b9; padding: 10px;" data-i18n="btn_trans_export">
-                📤 1. 匯出對白檔 (.json)
-            </button>
-            <div style="font-size:0.8rem; color:#888;" data-i18n="msg_trans_hint">
-                (請將此檔案內容貼給 AI，並要求它只翻譯值，保持格式不變)
-            </div>
-        </div>
-
-        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed #ccc; padding-top: 20px;">
-            <button onclick="document.getElementById('trans-input').click()" style="background:#27ae60; padding: 10px;" data-i18n="btn_trans_import">
-                📥 2. 匯入翻譯檔 (.json)
-            </button>
-            <input type="file" id="trans-input" style="display:none" accept=".json" onchange="importDialogueJson(this)">
-        </div>
-
-        <div style="text-align: right; margin-top: 10px;">
-            <button class="danger" onclick="document.getElementById('trans-modal').style.display='none'"data-i18n="btn_close">關閉 (Close)</button>
-        </div>
-    </div>
-</div>
 <div id="bgm-modal" class="modal">
     <div class="modal-content" style="width: 400px;">
         <h3 style="margin-top:0; text-align:center;"data-i18n="title_bgm">🎵 設定背景音樂 (BGM)</h3>
@@ -15611,16 +15572,16 @@
                 <span data-i18n="opt_export_script">完整劇本 (Full Script)</span>
             </label>
             <label class="export-option-label">
+                <input type="radio" name="export-type" value="trans">
+                <span data-i18n="btn_trans_export">僅對白 (Translation JSON)</span>
+            </label>
+            <label class="export-option-label">
                 <input type="radio" name="export-type" value="deck_1p">
                 <span data-i18n="opt_export_deck_1p">僅 1P 牌組 (1P Deck)</span>
             </label>
             <label class="export-option-label">
                 <input type="radio" name="export-type" value="deck_2p">
                 <span data-i18n="opt_export_deck_2p">僅 2P 牌組 (2P Deck)</span>
-            </label>
-            <label class="export-option-label">
-                <input type="radio" name="export-type" value="trans">
-                <span data-i18n="btn_trans_export">僅對白 (Translation JSON)</span>
             </label>
         </div>
 
