@@ -3689,7 +3689,6 @@
 	<button onclick="openImportModal()" data-i18n="btn_import">匯入 (Import)</button>
 	<input type="file" id="import-input" style="display:none" onchange="importData(this)">	
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
-	<button onclick="document.getElementById('trans-modal').style.display='flex'" style="background:#8e44ad; border-color:#8e44ad;" data-i18n="btn_trans">🌐 翻譯 (Trans)</button>
 	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;" data-i18n="btn_about">ℹ️ About</button>
 </div>
 
@@ -15110,20 +15109,19 @@
 	function switchImportTab(tab) {
 		currentImportType = tab;
 		
-		// 更新頁籤樣式
+		// 更新頁籤按鈕樣式
 		document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 		const activeBtn = document.querySelector(`.tab-btn[onclick="switchImportTab('${tab}')"]`);
 		if(activeBtn) activeBtn.classList.add('active');
 
-		// 切換顯示內容
+		// 切換顯示內容區塊
 		const scriptContent = document.getElementById('tab-content-script');
 		const deckContent = document.getElementById('tab-content-deck');
-		
-		// 即使在手機版，雖然 CSS 隱藏了 Tab 按鈕，但此邏輯仍可運作 (手機版固定為 script)
-		if(scriptContent && deckContent) {
-			scriptContent.style.display = (tab === 'script') ? 'flex' : 'none';
-			deckContent.style.display = (tab === 'deck') ? 'flex' : 'none';
-		}
+		const transContent = document.getElementById('tab-content-trans'); // 新增
+
+		if(scriptContent) scriptContent.style.display = (tab === 'script') ? 'flex' : 'none';
+		if(deckContent) deckContent.style.display = (tab === 'deck') ? 'flex' : 'none';
+		if(transContent) transContent.style.display = (tab === 'trans') ? 'flex' : 'none';
 	}
 
 	// --- DEBUG 版本 JS (請替換原有的對應函式) ---
@@ -15403,6 +15401,7 @@
 		if (type === 'script') performExportScript();
 		else if (type === 'deck_1p') performExportDeck(1);
 		else if (type === 'deck_2p') performExportDeck(2);
+		else if (type === 'trans') exportDialogueJson(); // 新增：呼叫匯出對白
 	}
 
 	// 這是您原本的匯出邏輯 (改名保留)
@@ -15556,34 +15555,43 @@
 	</div>
 </div>
 <div id="import-selector-modal" class="modal">
-    <div class="modal-content" style="width: 500px; height: 600px; max-height: 90vh;">
-        <h3 style="margin-top:0; text-align:center;" data-i18n="title_import_source">匯入來源</h3>
+    <div class="modal-content" style="width: 600px; height: 70vh;">
+        <h3 style="margin-top:0; text-align:center;" data-i18n="title_import_source">選擇匯入來源</h3>
         
         <div class="modal-tabs">
             <button class="tab-btn active" onclick="switchImportTab('script')" data-i18n="tab_import_script">📜 匯入劇本</button>
             <button class="tab-btn" onclick="switchImportTab('deck')" data-i18n="tab_import_deck">🎴 匯入牌組</button>
-        </div>
+            <button class="tab-btn" onclick="switchImportTab('trans')" data-i18n="btn_trans">🌐 翻譯</button> </div>
 
-        <div id="tab-content-script" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-            <div style="margin-bottom: 10px;">
-                <button onclick="triggerLocalImport('script')" style="width:100%; padding:10px; background:#2c3e50; border:1px dashed #999; color:white;" data-i18n="btn_local_file">📂 選擇本地檔案 (.txt/.json)</button>
+        <div id="tab-content-script" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+            <div style="margin-bottom:10px; text-align:center;">
+                <button onclick="triggerLocalImport('script')" style="background:#e67e22; width:100%; padding:10px;" data-i18n="btn_local_file">📂 選擇本地檔案 (.txt)</button>
             </div>
-            <div style="font-size:0.8rem; color:#666; margin:5px 0; text-align:center;" data-i18n="lbl_or_examples">▼ 或選擇範例劇本 ▼</div>
-            <div id="import-script-list" style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;"></div>
+            <div style="font-size:0.85rem; color:#7f8c8d; margin-bottom:5px; text-align:center;" data-i18n="lbl_or_examples">▼ 或選擇範例劇本 ▼</div>
+            <div id="import-script-list" style="flex:1; overflow-y:auto; border:1px solid #ddd; border-radius:4px;"></div>
         </div>
 
-        <div id="tab-content-deck" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+        <div id="tab-content-deck" style="display:none; flex-direction:column; flex:1; min-height:0;">
             <div class="deck-import-options">
-                <span data-i18n="lbl_import_target">目標:</span>
-                <label><input type="checkbox" id="chk-import-p2" checked> <span style="color:var(--p2-main)">2P</span></label>
-                <label><input type="checkbox" id="chk-import-p1"> <span style="color:var(--p1-main)">1P</span></label>
+                <span data-i18n="lbl_import_target">匯入目標:</span>
+                <label><input type="checkbox" id="chk-import-p1" checked> <span data-i18n="chk_import_p1">覆蓋 1P</span></label>
+                <label><input type="checkbox" id="chk-import-p2"> <span data-i18n="chk_import_p2">覆蓋 2P</span></label>
             </div>
+            <div style="margin-bottom:10px; text-align:center;">
+                <button onclick="triggerLocalImport('deck')" style="background:#2980b9; width:100%; padding:10px;" data-i18n="btn_local_file">📂 選擇本地檔案 (.json)</button>
+            </div>
+            <div style="font-size:0.85rem; color:#7f8c8d; margin-bottom:5px; text-align:center;" data-i18n="lbl_or_example_decks">▼ 或選擇範例牌組 ▼</div>
+            <div id="import-deck-list" style="flex:1; overflow-y:auto; border:1px solid #ddd; border-radius:4px;"></div>
+        </div>
 
-            <div style="margin-bottom: 10px;">
-                <button onclick="triggerLocalImport('deck')" style="width:100%; padding:10px; background:#8e44ad; border:1px dashed #999; color:white;" data-i18n="btn_local_file">📂 選擇本地檔案 (.txt/.json)</button>
-            </div>
-            <div style="font-size:0.8rem; color:#666; margin:5px 0; text-align:center;" data-i18n="lbl_or_example_decks">▼ 或選擇範例牌組 ▼</div>
-            <div id="import-deck-list" style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;"></div>
+        <div id="tab-content-trans" style="display:none; flex-direction:column; flex:1; min-height:0; align-items:center; justify-content:center; gap:20px;">
+            <p style="color:#666; font-size:0.9rem; text-align:center; padding: 0 20px;" data-i18n="msg_trans_desc">
+                此功能可將劇本中的對話提取為輕量級 JSON 檔，方便交給 AI 翻譯，完成後再匯入覆蓋。
+            </p>
+            <button onclick="document.getElementById('trans-input').click()" style="background:#27ae60; padding: 15px 30px; font-size:1.1rem;" data-i18n="btn_trans_import">
+                📥 匯入翻譯檔 (.json)
+            </button>
+            <input type="file" id="trans-input" style="display:none" accept=".json" onchange="importDialogueJson(this)">
         </div>
 
         <div style="margin-top:15px; text-align:right;">
@@ -15593,9 +15601,9 @@
 </div>
 
 <div id="export-selector-modal" class="modal">
-    <div class="modal-content" style="width: 350px;">
-        <h3 style="margin-top:0; text-align:center;" data-i18n="title_export">匯出選項</h3>
-        <p style="text-align:center; color:#666; font-size:0.9rem;" data-i18n="lbl_export_type">請問要匯出什麼內容？</p>
+    <div class="modal-content" style="width: 400px;">
+        <h3 style="margin-top:0; text-align:center;" data-i18n="title_export">選擇匯出類型</h3>
+        <p style="color:#666; font-size:0.9rem; text-align:center;" data-i18n="lbl_export_type">請問要匯出什麼？</p>
         
         <div class="export-options">
             <label class="export-option-label">
@@ -15603,12 +15611,16 @@
                 <span data-i18n="opt_export_script">完整劇本 (Full Script)</span>
             </label>
             <label class="export-option-label">
-                <input type="radio" name="export-type" value="deck_2p">
-                <span data-i18n="opt_export_deck_2p" style="color:var(--p2-main)">僅 2P 牌組 (2P Deck)</span>
+                <input type="radio" name="export-type" value="deck_1p">
+                <span data-i18n="opt_export_deck_1p">僅 1P 牌組 (1P Deck)</span>
             </label>
             <label class="export-option-label">
-                <input type="radio" name="export-type" value="deck_1p">
-                <span data-i18n="opt_export_deck_1p" style="color:var(--p1-main)">僅 1P 牌組 (1P Deck)</span>
+                <input type="radio" name="export-type" value="deck_2p">
+                <span data-i18n="opt_export_deck_2p">僅 2P 牌組 (2P Deck)</span>
+            </label>
+            <label class="export-option-label">
+                <input type="radio" name="export-type" value="trans">
+                <span data-i18n="btn_trans_export">僅對白 (Translation JSON)</span>
             </label>
         </div>
 
