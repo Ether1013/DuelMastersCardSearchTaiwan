@@ -594,12 +594,19 @@
 		z-index: 999
 	}
 	.arrow-line {
-		stroke: rgba(231, 76, 60, .8);
-		stroke-width: 4;
-		stroke-dasharray: 10, 5;
+		stroke: rgba(231, 76, 60, 0.9); /* 紅色 */
+		stroke-width: 6; /* 加粗 (原為 4) */
+		stroke-dasharray: 15, 10;
 		animation: dash 1s linear infinite;
 		marker-end: url(#arrowhead);
-		fill: none
+		fill: none;
+		pointer-events: none;
+		filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
+	}
+	/* 新增：藍色箭頭樣式 */
+	.arrow-line.blue {
+		stroke: #3498db; /* 藍色 */
+		marker-end: url(#arrowhead-blue);
 	}
 	.player-area {
 		flex: 1;
@@ -3718,12 +3725,15 @@
 <div id="workspace">
 
 	<svg id="svg-layer">
-        <defs>
-            <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
-            </marker>
-        </defs>
-    </svg>
+		<defs>
+			<marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+				<path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+			</marker>
+			<marker id="arrowhead-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+				<path d="M0,0 L12,6 L0,12" fill="#3498db" />
+			</marker>
+		</defs>
+	</svg>
 	
     <div id="ability-stack-zone">
         <div id="ability-zone-p2" class="ability-column">
@@ -3927,7 +3937,8 @@
         <div class="panel-sep"></div>
 
         <button id="btn-reveal" onclick="revealCards()" data-i18n="act_reveal">👁️ 展示</button>
-        <button id="btn-point" style="display:none; background:#8e44ad; border-color:#9b59b6;" onclick="enterPointMode()" data-i18n="act_point">👉 指向</button>
+        <button id="btn-point" style="display:none; background:#c0392b; border-color:#e74c3c;" onclick="enterPointMode('red')" data-i18n="op_ATTACK">⚔️ 攻擊</button>
+		<button id="btn-point-blue" style="display:none; background:#2980b9; border-color:#3498db;" onclick="enterPointMode('blue')" data-i18n="act_point">👉 指向</button>
         <button id="btn-end-point" style="display:none; background:#95a5a6; border-color:#7f8c8d;" onclick="endPoint()" data-i18n="act_end_point">🛑 結束指向</button>
         
         <button id="btn-panel-close" class="danger" style="margin-left:5px;" onclick="cancelSelection()">✕</button>
@@ -8071,19 +8082,33 @@
         cancelSelection();
     }
 
-    // --- Point Mode Logic ---
-    function enterPointMode() {
-        if (!pendingMove || pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_point'));
-        pointerId = pendingMove.cardIds[0];
-        isPointing = true;
-        pointTargets = [];
-        
-        document.getElementById('card-action-panel').style.display = 'none';
-        document.getElementById('point-bar').style.display = 'flex';
-        updatePointInfo();
-        document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
-        renderUI(); 
-    }
+    // [新增] 記錄當前箭頭顏色
+	let currentArrowColor = 'red'; 
+
+	// [修改] 進入指向模式 (支援傳入顏色)
+	function enterPointMode(color = 'red') {
+		if (!pendingMove || pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_point'));
+		
+		pointerId = pendingMove.cardIds[0];
+		isPointing = true;
+		currentArrowColor = color; 
+		pointTargets = [];
+		
+		// 隱藏原本的卡片操作面板
+		document.getElementById('card-action-panel').style.display = 'none';
+		
+		// [修改] 移除這行，不再顯示頂部提示與確認區
+		// document.getElementById('point-bar').style.display = 'flex'; 
+		
+		// 隱藏確認按鈕 (雙重保險)
+		const confirmBtn = document.getElementById('btn-confirm-point');
+		if(confirmBtn) confirmBtn.style.display = 'none';
+
+		// 依然保留高亮效果，讓使用者知道可以點擊區域
+		document.querySelectorAll('.zone').forEach(el => el.classList.add('point-target-highlight'));
+		
+		renderUI();
+	}
 
     function cancelPointMode() {
         isPointing = false;
@@ -8103,35 +8128,22 @@
     }
 
 	function handlePointClick(zoneId, cardId) {
-        if (!isPointing) return;
-        
-        // [修正] 允許指向 牌庫(Deck)、超次元(Hyper)、墓地(Grave)
-		if (!cardId && (zoneId.includes('deck') || zoneId.includes('hyper') || zoneId.includes('grave'))) {
-			let zoneName = t('zone_generic');
-			if(zoneId.includes('deck')) zoneName = t('zone_player_deck');
-			if(zoneId.includes('hyper')) zoneName = t('zone_hyper_area');
-			if(zoneId.includes('grave')) zoneName = t('zone_grave_area');
+		if (!isPointing) return;
 
-			// 使用 replace 處理參數字串
-			const msg = t('msg_confirm_point_zone').replace('{zone}', zoneName);
-			if (confirm(msg)) {
-				// [關鍵修正] 這裡原本傳 null，改成傳入陣列 [zoneId]
-				// 這樣畫箭頭的函式才知道目標是誰
-				finishPoint('ZONE', [zoneId]);
+		// 1. 點擊區域 (Zone)
+		if (!cardId && zoneId) {
+			// 排除無效區域點擊
+			if(zoneId.includes('hand') || zoneId.includes('deck') || zoneId.includes('grave') || zoneId.includes('mana') || zoneId.includes('shield') || zoneId.includes('hyper') || zoneId.includes('abyss')) {
+				 finishPoint('ZONE', [zoneId]);
 			}
 			return;
 		}
-        
-        if (cardId) {
-            if (pointTargets.includes(cardId)) {
-                pointTargets = pointTargets.filter(id => id !== cardId);
-            } else {
-                pointTargets.push(cardId);
-            }
-            updatePointInfo();
-            renderUI(); 
-        }
-    }
+
+		// 2. 點擊卡片 (Card)
+		if (cardId) {
+			finishPoint('CARD', [cardId]);
+		}
+	}
 
     function updatePointInfo() {
         const btn = document.getElementById('btn-confirm-point');
@@ -8150,22 +8162,32 @@
         finishPoint('CARD', pointTargets);
     }
 
-    function finishPoint(type, targetIds) {
-        const state = getCurrentDisplayState();
-        const pointer = state.cards.find(c => c.id === pointerId);
-        let desc = `[指向] ${pointer.text} 指向 `;
-        if (type === 'PLAYER') desc += '玩家/牌庫';
-        else if (type === 'CARD') desc += `${targetIds.length} 個目標`;
+    // [修改] 完成指向 (寫入紀錄)
+	function finishPoint(type, targetIds) {
+		const state = getCurrentDisplayState();
+		const pointer = state.cards.find(c => c.id === pointerId);
+		
+		// 根據顏色決定 Log 文字
+		const actionName = currentArrowColor === 'red' ? "攻擊" : "指向";
+		let desc = `[${actionName}] ${pointer ? pointer.text : 'Unknown'} ${actionName} `;
+		
+		if (type === 'ZONE') desc += '區域';
+		else if (type === 'CARD') {
+			const target = state.cards.find(c => c.id === targetIds[0]);
+			desc += target ? target.text : '目標';
+		}
 
-        addOperation({
-            type: 'POINT',
-            attackerId: pointerId,
-            targetType: type,
-            targetIds: targetIds,
-            desc: desc
-        });
-        cancelPointMode();
-    }
+		addOperation({
+			type: 'POINT', // 內部型態維持 POINT，用顏色區分
+			attackerId: pointerId,
+			targetType: type,
+			targetIds: targetIds,
+			desc: desc,
+			arrowColor: currentArrowColor // [關鍵] 儲存顏色
+		});
+
+		cancelPointMode();
+	}
 
     // --- [取代] handleZoneClick 函式 ---
 	// --- [修正] 區域點擊處理 ---
@@ -8431,6 +8453,7 @@
         const btnMoonless = document.getElementById('btn-moonless'); 
         const btnDelete = document.getElementById('btn-delete-card');
         const btnPoint = document.getElementById('btn-point');
+		const btnPointBlue = document.getElementById('btn-point-blue'); // 新按鈕
         const btnEndPoint = document.getElementById('btn-end-point'); // 修正可能漏掉的按鈕
 		// 【新增這行】取得關閉按鈕
         const btnPanelClose = document.getElementById('btn-panel-close');
@@ -8499,7 +8522,7 @@
                 const allElements = [
                     btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, 
                     btnGlow, btnGlowBottom, btnCopyOne, btnCopyCont, adjustControls, adjustButtons, 
-                    btnPoint, inputRename, inputNote, btnRename, btnNote, btnMoonless,
+                    btnPoint, btnPointBlue, inputRename, inputNote, btnRename, btnNote, btnMoonless,
 					btnPanelClose
                 ];
                 allElements.forEach(el => { if(el) el.style.display = ''; }); // 清空 inline style 回復預設 (block/flex/inline)
@@ -8567,7 +8590,7 @@
                     }
                 } else {
                     // 雖然單選模式不太會進來這(因為這UI只支援單張點擊)，但防呆
-                    [btnAce, btnMoonless, btnPoint].forEach(el => el.style.display = 'none');
+                    [btnAce, btnMoonless, btnPoint, btnPointBlue].forEach(el => el.style.display = 'none');
                     inputRename.value = '';
                     inputNote.value = '';
                 }
@@ -11175,112 +11198,98 @@
 			const svg = document.getElementById('svg-layer');
 			const workspace = document.getElementById('workspace');
 			
-			// 1. 清空 SVG
+			// 1. 重置 SVG 內容 (包含定義紅色與藍色箭頭)
 			svg.innerHTML = `
-				<defs>
-					<marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-						<path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
-					</marker>
-				</defs>
+			<defs>
+				<marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+					<path d="M0,0 L12,6 L0,12" fill="#e74c3c" />
+				</marker>
+				<marker id="arrowhead-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+					<path d="M0,0 L12,6 L0,12" fill="#3498db" />
+				</marker>
+			</defs>
 			`;
-			
+
+			// 2. 取得當前步驟的操作指令
 			let ops = [];
 			if (isDrafting) {
 				ops = draftOperations;
 			} else if (currentIndex >= 0 && history[currentIndex]) {
 				ops = history[currentIndex].action.operations;
 			}
-
 			if (!ops || ops.length === 0) return;
 
-			// --- [核心座標計算修正] ---
-			
+			// 3. 核心座標計算 (相容 CSS scale)
 			const wsRect = workspace.getBoundingClientRect();
-			
-			// [關鍵] 計算 Workspace 本身的全域縮放因子 (Global Scale)
-			// offsetWidth 是元素內部的 CSS 寬度 (例如 1600px)
-			// wsRect.width 是元素在螢幕上實際顯示的寬度 (例如手機上可能縮小成 800px)
-			// 比例 = 螢幕寬 / CSS寬
 			const globalScaleX = wsRect.width / workspace.offsetWidth;
 			const globalScaleY = wsRect.height / workspace.offsetHeight;
 
-			// 輔助函式：取得元素在「SVG 座標系」中的準確中心點
-			// 此方法可以完美相容 CSS transform: scale() 造成的位移
 			const getSvgCenterPoint = (el) => {
-				// 1. 獲取元素的螢幕絕對位置 (BoundingBox 包含縮放後的結果)
 				const rect = el.getBoundingClientRect();
-				
-				// 2. 計算該元素在「螢幕上」的視覺中心點
 				const screenCenterX = rect.left + rect.width / 2;
 				const screenCenterY = rect.top + rect.height / 2;
-				
-				// 3. 將「螢幕座標」轉換為「Workspace 內部座標 (SVG座標)」
-				// 公式：(螢幕絕對座標 - Workspace螢幕起點) / 縮放因子
+				// 轉換為 SVG 內部座標
 				const svgX = (screenCenterX - wsRect.left) / globalScaleX;
 				const svgY = (screenCenterY - wsRect.top) / globalScaleY;
-
 				return { x: svgX, y: svgY };
 			};
 
-			// --- 執行繪圖 ---
-			const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK'); 
+			// 4. 繪製箭頭
+			// 支援 POINT (新版) 與 ATTACK (舊版相容)
+			const pointOps = ops.filter(o => o.type === 'POINT' || o.type === 'ATTACK');
 			
 			pointOps.forEach(op => {
+				// 取得發起者
 				const attacker = document.querySelector(`.card[data-id="${op.attackerId}"]`);
 				if (!attacker) return;
-				
 				const startPoint = getSvgCenterPoint(attacker);
 				if (!startPoint) return;
-				
+
+				// [關鍵] 判斷顏色：讀取 op.arrowColor，如果是 'blue' 則套用藍色樣式
+				const colorClass = (op.arrowColor === 'blue') ? 'blue' : '';
+
+				// 取得所有目標 DOM
 				let targetEls = [];
-				// 目標選取邏輯 (保持不變)
-				if (op.targetType === 'CARD' || op.type === 'CREATURE' || op.type === 'SHIELD') {
-					if (Array.isArray(op.targetIds)) {
-						op.targetIds.forEach(tid => {
-							const el = document.querySelector(`.card[data-id="${tid}"]`);
-							if(el) targetEls.push(el);
-						});
-					}
-				} else if (op.targetType === 'ZONE') {
-					if (Array.isArray(op.targetIds)) {
+				
+				// 判斷目標類型 (ZONE, CARD, PLAYER...)
+				if (op.targetType === 'ZONE') {
+					 if (Array.isArray(op.targetIds)) {
 						op.targetIds.forEach(zid => {
 							const el = document.querySelector(`.zone[data-zone="${zid}"]`);
 							if(el) targetEls.push(el);
 						});
 					}
-				} else if (op.targetType === 'PLAYER') {
-					const attackerOwner = attacker.closest('.player-area').id.includes('player1') ? 1 : 2;
-					const oppId = attackerOwner === 1 ? 2 : 1;
-					const deck = document.querySelector(`.deck-zone[data-zone="p${oppId}-deck"]`);
-					if(deck) targetEls.push(deck);
+				} else { 
+					// 預設視為卡片 (CARD)
+					 if (Array.isArray(op.targetIds)) {
+						op.targetIds.forEach(tid => {
+							const el = document.querySelector(`.card[data-id="${tid}"]`);
+							if(el) targetEls.push(el);
+						});
+					}
 				}
 
+				// 針對每個目標畫線
 				targetEls.forEach(target => {
 					const endPoint = getSvgCenterPoint(target);
-					if (!endPoint) return; 
+					if (!endPoint) return;
 
-					const isSelf = (target === attacker);
+					const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 					
-					if (isSelf) {
-						const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-						const r = 40; 
-						const d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x-r*2},${startPoint.y-r*2} ${startPoint.x},${startPoint.y}`;
-						path.setAttribute("d", d);
-						path.setAttribute("class", "arrow-line");
-						path.setAttribute("fill", "none");
-						svg.appendChild(path);
-					} else {
-						const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-						line.setAttribute("x1", startPoint.x);
-						line.setAttribute("y1", startPoint.y);
-						line.setAttribute("x2", endPoint.x);
-						line.setAttribute("y2", endPoint.y);
-						line.setAttribute("class", "arrow-line");
-						svg.appendChild(line);
+					// 判斷是否指向自己 (畫曲線) 或他人 (畫直線)
+					let d = `M ${startPoint.x},${startPoint.y} L ${endPoint.x},${endPoint.y}`;
+					if (target === attacker) {
+						 const r = 40; // 曲線半徑
+						 d = `M ${startPoint.x},${startPoint.y} C ${startPoint.x+r*2},${startPoint.y-r*2} ${startPoint.x+r*2},${startPoint.y+r*2} ${startPoint.x},${startPoint.y}`;
 					}
+
+					path.setAttribute("d", d);
+					// 套用 class，讓 CSS 決定顏色與粗細
+					path.setAttribute("class", `arrow-line ${colorClass}`); 
+					svg.appendChild(path);
 				});
 			});
-		}); // End requestAnimationFrame
+		});
 	}
 
     function renderTimeline() {
