@@ -9491,16 +9491,25 @@
 		});
 
 		// [新增] 在所有卡片 DOM 生成完畢後，執行縮放計算
+		// [修改後]
 		requestAnimationFrame(() => {
-			// 修改後：
-			// 檢查 p1-battle 或 p2-battle 是否在「不需要重繪 (Skip)」的清單中
-			// 如果它不在 Skip 清單中 (!has)，代表它是「髒」的，需要重新計算
+			// [Fix] 若在編輯模式 (Drafting)，暫時關閉動畫以取得準確的箭頭座標
+			if (isDrafting) {
+				document.body.classList.add('no-transition');
+			}
+
 			const battleZonesDirty = !zonesToSkip.has('p1-battle') || !zonesToSkip.has('p2-battle');
 			applyBattleZoneScaling(battleZonesDirty);
-			
-			// 2. 在縮放計算「之後」的下一幀，才執行畫箭頭
+
 			requestAnimationFrame(() => {
 				renderArrows();
+				
+				// [Fix] 畫完後恢復動畫 (使用 setTimeout 確保渲染已套用)
+				if (isDrafting) {
+					setTimeout(() => {
+						document.body.classList.remove('no-transition');
+					}, 0);
+				}
 			});
 		});
 		renderTimeline();
