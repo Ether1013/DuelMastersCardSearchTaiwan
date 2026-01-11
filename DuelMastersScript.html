@@ -13148,117 +13148,128 @@
     };
 	*/
 	
-	// --- [新增] 對白匯出/匯入系統 ---
+	// [修改] 匯出對白函式 (加入 SHOW_MESSAGE 支援)
+	function exportDialogueJson() {
+		const exports = [];
+		history.forEach((step, index) => {
+			if (!step.action || !step.action.operations) return;
 
-    // 1. 匯出對白為 JSON
-    function exportDialogueJson() {
-        const exports = [];
-        
-        history.forEach((step, index) => {
-            if (!step.action || !step.action.operations) return;
-            
-            // 找出該步驟是否包含 DIALOGUE 操作
-            const op = step.action.operations.find(o => o.type === 'DIALOGUE');
-            if (op && op.data) {
-                const item = {
-                    id: index, // 記住原本的步驟索引
-                    // 只提取需要的欄位
-                    p1: op.data.p1.active ? { name: op.data.p1.name, text: op.data.p1.dataText } : null,
-                    p2: op.data.p2.active ? { name: op.data.p2.name, text: op.data.p2.dataText } : null
-                };
-                exports.push(item);
-            }
-        });
+			// 1. 原本的對話匯出
+			const op = step.action.operations.find(o => o.type === 'DIALOGUE');
+			if (op && op.data) {
+				const item = {
+					id: index,
+					type: 'DIALOGUE', // 標記類型
+					p1: op.data.p1.active ? { name: op.data.p1.name, text: op.data.p1.dataText } : null,
+					p2: op.data.p2.active ? { name: op.data.p2.name, text: op.data.p2.dataText } : null
+				};
+				exports.push(item);
+			}
+			
+			// 2. [新增] 訊息匯出
+			const msgOp = step.action.operations.find(o => o.type === 'SHOW_MESSAGE');
+			if (msgOp) {
+				const item = {
+					id: index,
+					type: 'SHOW_MESSAGE',
+					message: {
+						main: msgOp.text,
+						sub: msgOp.subtext || ""
+					}
+				};
+				exports.push(item);
+			}
+		});
 
-        if (exports.length === 0) {
-            alert(t('msg_no_dialog'));
-            return;
-        }
+		if (exports.length === 0) {
+			alert(t('msg_no_dialog'));
+			return;
+		}
 
-        const jsonStr = JSON.stringify(exports, null, 2);
-        const blob = new Blob([jsonStr], {type: "application/json"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `dialogue_export_${Date.now()}.json`;
-        a.click();
-    }
+		const jsonStr = JSON.stringify(exports, null, 2);
+		const blob = new Blob([jsonStr], {type: "application/json"});
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = `dialogue_export_${Date.now()}.json`;
+		a.click();
+	}
 
-    // 2. 匯入並替換對白
-    function importDialogueJson(input) {
-        const file = input.files[0];
-        if (!file) return;
+    // [修改] 匯入對白函式 (加入 SHOW_MESSAGE 支援)
+	function importDialogueJson(input) {
+		const file = input.files[0];
+		if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imports = JSON.parse(e.target.result);
-                if (!Array.isArray(imports)) throw new Error("格式錯誤：根目錄必須是陣列");
+		const reader = new FileReader();
+		reader.onload = function(e) {
+			try {
+				const imports = JSON.parse(e.target.result);
+				if (!Array.isArray(imports)) throw new Error("格式錯誤");
 
-                let updateCount = 0;
+				let updateCount = 0;
+				imports.forEach(item => {
+					if (item.id === undefined || item.id >= history.length) return;
+					const step = history[item.id];
+					let hasChange = false;
 
-                imports.forEach(item => {
-                    // 1. 檢查索引是否有效
-                    if (item.id === undefined || item.id >= history.length) return;
+					// 1. 處理 DIALOGUE
+					const diagOp = step.action.operations.find(o => o.type === 'DIALOGUE');
+					if (diagOp && diagOp.data) {
+						if (item.p1 && diagOp.data.p1 && diagOp.data.p1.active) {
+							diagOp.data.p1.name = item.p1.name;
+							diagOp.data.p1.dataText = item.p1.text;
+							// 同步更新當前顯示狀態
+							if (step.state.dialogueData?.p1) {
+								step.state.dialogueData.p1.name = item.p1.name;
+								step.state.dialogueData.p1.dataText = item.p1.text;
+							}
+							hasChange = true;
+						}
+						if (item.p2 && diagOp.data.p2 && diagOp.data.p2.active) {
+							diagOp.data.p2.name = item.p2.name;
+							diagOp.data.p2.dataText = item.p2.text;
+							if (step.state.dialogueData?.p2) {
+								step.state.dialogueData.p2.name = item.p2.name;
+								step.state.dialogueData.p2.dataText = item.p2.text;
+							}
+							hasChange = true;
+						}
+					}
 
-                    const step = history[item.id];
-                    const op = step.action.operations.find(o => o.type === 'DIALOGUE');
+					// 2. [新增] 處理 SHOW_MESSAGE
+					const msgOp = step.action.operations.find(o => o.type === 'SHOW_MESSAGE');
+					if (msgOp && item.message) {
+						msgOp.text = item.message.main;
+						msgOp.subtext = item.message.sub;
+						
+						// 更新 Log 描述
+						let desc = `[${t('log_action_msg')}] ${msgOp.text}`;
+						if (msgOp.subtext) desc += ` - ${msgOp.subtext}`;
+						step.action.description = desc;
+						
+						hasChange = true;
+					}
 
-                    // 2. 確保目標步驟真的是對話 (防呆)
-                    if (!op || !op.data) return;
+					if (hasChange) updateCount++;
+				});
 
-                    let hasChange = false;
+				renderTimeline();
+				renderUI();
+				saveToStorage();
+				
+				// 關閉視窗 (假設 ID 是 trans-modal)
+				const modal = document.getElementById('trans-modal'); // 原本程式碼沒看到這個ID，但通常會有
+				if(modal) modal.style.display = 'none';
+				
+				alert(t('msg_trans_result').replace('{n}', updateCount));
 
-                    // 3. 更新 P1
-                    if (item.p1 && op.data.p1 && op.data.p1.active) {
-                        op.data.p1.name = item.p1.name;
-                        op.data.p1.dataText = item.p1.text;
-                        // 同步更新當前狀態快照 (讓畫面立刻變更，不用重跑)
-                        if (step.state.dialogueData && step.state.dialogueData.p1) {
-                            step.state.dialogueData.p1.name = item.p1.name;
-                            step.state.dialogueData.p1.dataText = item.p1.text;
-                        }
-                        hasChange = true;
-                    }
-
-                    // 4. 更新 P2
-                    if (item.p2 && op.data.p2 && op.data.p2.active) {
-                        op.data.p2.name = item.p2.name;
-                        op.data.p2.dataText = item.p2.text;
-                        if (step.state.dialogueData && step.state.dialogueData.p2) {
-                            step.state.dialogueData.p2.name = item.p2.name;
-                            step.state.dialogueData.p2.dataText = item.p2.text;
-                        }
-                        hasChange = true;
-                    }
-
-                    // 5. 更新 Action Log 的描述文字 (Description)
-                    if (hasChange) {
-                        let newDesc = "[對話] "; // 這裡可以根據當前語言變數調整，或保持固定
-                        // 為了讓 log 簡潔，我們只抓前8個字
-                        if (op.data.p2.active) newDesc += `${op.data.p2.name}: ${op.data.p2.dataText.substr(0,8)}... `;
-                        if (op.data.p1.active) newDesc += `${op.data.p1.name}: ${op.data.p1.dataText.substr(0,8)}...`;
-                        
-                        step.action.description = newDesc;
-                        updateCount++;
-                    }
-                });
-
-                // 6. 完成後刷新介面
-                renderTimeline(); // 更新左側列表文字
-                renderUI();       // 更新中央畫面文字
-                saveToStorage();  // 存檔
-                
-                alert(t('msg_trans_result').replace('{n}', updateCount));
-                document.getElementById('trans-modal').style.display = 'none';
-
-            } catch (err) {
-                console.error(err);
-                alert(t('msg_trans_fail_fmt'));
-            }
-            input.value = ''; // 清空 input 方便下次選同一檔
-        };
-        reader.readAsText(file);
-    }
+			} catch (err) {
+				console.error(err);
+				alert(t('msg_trans_fail_fmt'));
+			}
+			input.value = '';
+		};
+		reader.readAsText(file);
+	}
 	
 	// --- [核心] 計算所有已見過的卡片 ---
 	// 觸發時機：Load, Setup, SaveDraft, DeleteAction
