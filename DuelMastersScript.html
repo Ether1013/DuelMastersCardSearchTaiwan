@@ -3683,6 +3683,7 @@
     <button onclick="resetCurrentTurnPlayer()" data-i18n="btn_reset_current">重置當前 (Untap)</button>
     →
 	<button onclick="actionDrawCard()" style="background:#2980b9; border-color:#2471a3;" data-i18n="btn_draw">🎴 抽牌 (Draw)</button>
+	<button onclick="openMessageModal()" class="control-btn" data-i18n="btn_message">💬 訊息</button>
 	<button id="btn-rb-effect" onclick="openRealityBreakEditor()" style="background:#2c3e50; border-color:#fff;" data-i18n="btn_effect">⚡ Cut In</button>
     <select onchange="handleWinSelect(this)" style="background:#f39c12; border-color:#d35400; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer; outline:none;">
         <option value="" data-i18n="opt_win_default">🏆 宣告勝利...</option>
@@ -4119,6 +4120,43 @@
         <div style="margin-top:15px; display:flex; justify-content:space-between;">
             <button class="danger" onclick="closeBGMModal()"data-i18n="btn_cancel">取消 (Cancel)</button>
             <button class="primary" onclick="confirmBGM()" data-i18n="btn_confirm">💾 確認 (Confirm)</button>
+        </div>
+    </div>
+</div>
+<div id="message-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="width: 350px;">
+        <h3 style="margin-top:0; text-align:center;">
+            <span data-i18n="btn_message">💬 訊息</span>
+        </h3>
+        
+        <div class="input-group" style="margin-bottom:10px; display:block;">
+            <label style="display:block; margin-bottom:5px;">
+                <span data-i18n="lbl_main_msg">主訊息</span>:
+            </label>
+            <input type="text" id="msg-main-input" style="width:100%; font-size:1.2rem; padding:8px;">
+        </div>
+
+        <div class="input-group" style="margin-bottom:10px; display:block;">
+            <label style="display:block; margin-bottom:5px;">
+                <span data-i18n="lbl_sub_msg">副訊息</span>:
+            </label>
+            <input type="text" id="msg-sub-input" style="width:100%; padding:8px;">
+        </div>
+
+        <div class="input-group" style="margin-bottom:15px; display:block;">
+            <label style="display:block; margin-bottom:5px;">
+                <span data-i18n="lbl_duration">持續時間 (秒)</span>:
+            </label>
+            <input type="number" id="msg-duration-input" value="1.0" step="0.5" min="0.5" style="width:100%; padding:6px;">
+        </div>
+
+        <div style="text-align:right; margin-top:20px;">
+            <button class="danger" onclick="closeMessageModal()">
+                <span data-i18n="btn_cancel">取消</span>
+            </button>
+            <button id="msg-confirm-btn" class="primary" onclick="confirmMessageAction()">
+                <span id="msg-confirm-text" data-i18n="btn_insert">插入</span>
+            </button>
         </div>
     </div>
 </div>
@@ -4880,6 +4918,15 @@
 			'btn_do_export': '確認匯出',
 			'msg_deck_exported': '牌組已匯出。',
 			'lbl_or_example_decks': '▼ 或選擇範例牌組 ▼',
+			// [新增] 訊息功能
+            'btn_message': '💬 訊息',
+            'lbl_main_msg': '主訊息',
+            'lbl_sub_msg': '副訊息',
+            'lbl_duration': '持續時間 (秒)',
+            'btn_insert': '插入',
+            'btn_update': '更新',
+            'msg_error_no_text': '請輸入主訊息內容',
+            'log_action_msg': '訊息',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -5051,6 +5098,15 @@
 			'btn_do_export': 'Export',
 			'msg_deck_exported': 'Deck exported.',
 			'lbl_or_example_decks': '▼ Or choose example deck ▼',
+			// [New] Message Feature
+            'btn_message': '💬 Message',
+            'lbl_main_msg': 'Main Text',
+            'lbl_sub_msg': 'Sub Text',
+            'lbl_duration': 'Duration (sec)',
+            'btn_insert': 'Insert',
+            'btn_update': 'Update',
+            'msg_error_no_text': 'Please enter the main text',
+            'log_action_msg': 'Message',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -5221,6 +5277,15 @@
 			'btn_do_export': '出力実行',
 			'msg_deck_exported': 'デッキを保存しました。',
 			'lbl_or_example_decks': '▼ またはサンプルデッキを選択 ▼',
+			// [New] Message Feature
+            'btn_message': '💬 メッセージ',
+            'lbl_main_msg': 'メインテキスト',
+            'lbl_sub_msg': 'サブテキスト',
+            'lbl_duration': '表示時間 (秒)',
+            'btn_insert': '挿入',
+            'btn_update': '更新',
+            'msg_error_no_text': 'メインテキストを入力してください',
+            'log_action_msg': 'メッセージ',
 		}
 	};
 	
@@ -9739,6 +9804,29 @@
 			
 			lastRenderedState = cloneState(state);
 			
+			// --- [新增] 檢查並播放 SHOW_MESSAGE ---
+			if (currentIndex >= 0 && history[currentIndex]) {
+				const action = history[currentIndex].action;
+				const isPlaying = document.body.classList.contains('is-playing');
+				const isMobile = document.body.classList.contains('mobile-mode');
+
+				const msgOp = action.operations.find(o => o.type === 'SHOW_MESSAGE');
+				
+				// 條件：有操作 AND (正在播放或手機模式) AND 尚未在此步驟播放過
+				if (msgOp && (isPlaying || isMobile) && currentIndex !== lastTitleStep) {
+					lastTitleStep = currentIndex; // 標記已播放
+					
+					// 這裡傳入 state.activePlayer 或 state.turnPlayer 來決定顏色
+					// 假設 state 物件中有 turnPlayer
+					playFullScreenMessage(
+						msgOp.text,
+						msgOp.subtext,
+						state.turnPlayer, 
+						msgOp.duration
+					);
+				}
+			}
+			
 			// --- [新增] 修正：在播放時觸發次元破裂 (Reality Break) ---
 			if (currentIndex >= 0 && history[currentIndex]) {
 				const action = history[currentIndex].action;
@@ -11833,6 +11921,9 @@
 			delay = 50;
 		} else if (currOp && currOp.type === 'REALITY_BREAK') {
 			delay = 2800;
+		}else if (currOp && currOp.type === 'SHOW_MESSAGE') { 
+			// [新增] 延遲時間 = 設定時間 + 500ms 緩衝
+			delay = (currOp.duration || 1000) + 500;
 		} else if (currOp && currOp.type === 'RPS') {
 			delay = 4000;
 		} else if (currOp && currOp.type === 'DIALOGUE') {
@@ -11877,35 +11968,163 @@
     
     function rotateBoard() { addOperation({type: 'ROTATE'}); }
 
-	// --- [修改] 顯示過場動畫 (不顯示回合數) ---
-	function showTurnTransition(nextPlayerId, callback) {
+	// --- [新增與修改] 訊息與轉場相關邏輯 ---
+
+	let editingStepIndex = -1;
+	let lastTitleStep = -1; 
+
+	/**
+	 * 通用播放函式：顯示全螢幕訊息
+	 * @param {string} mainText 主標題
+	 * @param {string} subText 副標題
+	 * @param {number} activePlayerId 當前玩家 ID (1 或 2)，用於決定顏色
+	 * @param {number} duration 持續時間 (毫秒)
+	 * @param {function} callback 結束回呼
+	 */
+	function playFullScreenMessage(mainText, subText, activePlayerId, duration = 1000, callback) {
 		const overlay = document.getElementById('turn-transition-overlay');
 		const content = document.getElementById('tto-content');
 		
-		// 1. 取得設定顏色與名稱
-		const colorKey = (nextPlayerId === 1) ? globalThemeSettings.p1 : globalThemeSettings.p2;
-		const theme = THEME_PALETTE[colorKey] || (nextPlayerId === 1 ? THEME_PALETTE.blue : THEME_PALETTE.red);
-		const pName = (nextPlayerId === 1) ? "1P" : "2P"; 
-		
-		// 2. 設定文字與顏色 (只替換 player，不需 count)
-		const msg = t('msg_turn_change').replace('{player}', pName);
-			
+		// 自動決定顏色
+		const targetPlayer = (activePlayerId === 2) ? 2 : 1;
+		const colorKey = (targetPlayer === 1) ? globalThemeSettings.p1 : globalThemeSettings.p2;
+		const theme = THEME_PALETTE[colorKey] || (targetPlayer === 1 ? THEME_PALETTE.blue : THEME_PALETTE.red);
+		const mainColor = theme.main;
+
+		const subHtml = subText ? `<div style="font-size: 1.5rem; font-weight:normal; margin-top:-10px; opacity:0.8; letter-spacing:2px;">${subText}</div>` : '';
+
 		content.innerHTML = `
-			<div class="tto-line" style="background:${theme.main}; box-shadow:0 0 15px ${theme.main}"></div>
-			<span style="color:${theme.main}; border-bottom: 3px solid ${theme.main}; padding-bottom:5px;">${msg}</span>
-			<div class="tto-line" style="background:${theme.main}; box-shadow:0 0 15px ${theme.main}"></div>
+			<div class="tto-line" style="background:${mainColor}; box-shadow:0 0 15px ${mainColor}"></div>
+			<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+				<span style="color:${mainColor}; border-bottom: 3px solid ${mainColor}; padding-bottom:5px;">${mainText}</span>
+				${subHtml}
+			</div>
+			<div class="tto-line" style="background:${mainColor}; box-shadow:0 0 15px ${mainColor}"></div>
 		`;
 
-		// 3. 播放動畫
 		overlay.classList.add('active');
 
-		// 4. 停留 1.5 秒後消失並回調
 		setTimeout(() => {
 			overlay.classList.remove('active');
 			setTimeout(() => {
 				if (callback) callback();
-			}, 200); 
-		}, 1500);
+			}, 500); 
+		}, duration);
+	}
+
+	/**
+	 * [修改] 原本的回合切換函式
+	 * 改為呼叫共用的 playFullScreenMessage
+	 */
+	function showTurnTransition(nextPlayerId, callback) {
+		const pName = (nextPlayerId === 1) ? "1P" : "2P";
+		const msg = t('msg_turn_change').replace('{player}', pName);
+		// 保持原本的 1.5 秒
+		playFullScreenMessage(msg, "", nextPlayerId, 1500, callback);
+	}
+
+	/**
+	 * 開啟訊息設定視窗
+	 */
+	function openMessageModal() {
+		const modal = document.getElementById('message-modal');
+		const mainInput = document.getElementById('msg-main-input');
+		const subInput = document.getElementById('msg-sub-input');
+		const durInput = document.getElementById('msg-duration-input');
+		const confirmText = document.getElementById('msg-confirm-text');
+		
+		editingStepIndex = -1; 
+		
+		// 檢查是否為編輯模式
+		if (currentIndex >= 0 && history[currentIndex]) {
+			const action = history[currentIndex].action;
+			const msgOp = action.operations.find(op => op.type === 'SHOW_MESSAGE');
+			
+			if (msgOp) {
+				editingStepIndex = currentIndex;
+				mainInput.value = msgOp.text || "";
+				subInput.value = msgOp.subtext || "";
+				durInput.value = (msgOp.duration / 1000) || 1.0;
+				
+				// 設定為「更新」
+				confirmText.setAttribute('data-i18n', 'btn_update');
+				
+				// [關鍵修正] 使用您現有的函式刷新文字
+				changeLanguage(currentLang); 
+				
+				modal.style.display = 'flex';
+				return;
+			}
+		}
+
+		// 新增模式
+		mainInput.value = '';
+		subInput.value = '';
+		durInput.value = 1.0; 
+		
+		// 設定為「插入」
+		confirmText.setAttribute('data-i18n', 'btn_insert');
+		
+		// [關鍵修正] 使用您現有的函式刷新文字
+		changeLanguage(currentLang); 
+		
+		modal.style.display = 'flex';
+	}
+
+	function closeMessageModal() {
+		document.getElementById('message-modal').style.display = 'none';
+	}
+
+	/**
+	 * 確認並儲存
+	 */
+	function confirmMessageAction() {
+		const main = document.getElementById('msg-main-input').value;
+		const sub = document.getElementById('msg-sub-input').value;
+		const durationSec = parseFloat(document.getElementById('msg-duration-input').value) || 1.0;
+
+		if (!main) {
+			alert(t('msg_error_no_text'));
+			return;
+		}
+
+		const durationMs = durationSec * 1000;
+		// Log 顯示格式: [訊息] 主訊息 - 副訊息
+		let desc = `[${t('log_action_msg')}] ${main}`;
+		if (sub) desc += ` - ${sub}`;
+
+		if (editingStepIndex !== -1 && history[editingStepIndex]) {
+			// 更新現有步驟
+			const step = history[editingStepIndex];
+			const opIndex = step.action.operations.findIndex(op => op.type === 'SHOW_MESSAGE');
+			
+			if (opIndex !== -1) {
+				step.action.operations[opIndex].text = main;
+				step.action.operations[opIndex].subtext = sub;
+				step.action.operations[opIndex].duration = durationMs;
+				
+				step.description = desc; // 更新 Log 描述
+				
+				updateLogDisplay(); // 假設您有這個或類似的函式來刷新 Log，若無則 renderTimeline()
+				if (typeof renderTimeline === 'function') renderTimeline(); 
+				// 若有 toast 函式可使用，否則可省略
+				// showToast(t('msg_updated') || "Updated!"); 
+			}
+		} else {
+			// 新增步驟
+			const op = {
+				type: 'SHOW_MESSAGE',
+				text: main,
+				subtext: sub,
+				duration: durationMs
+			};
+
+			if (!isDrafting) startDraftAtEnd();
+			addOperation(op);
+			saveDraft(desc); 
+		}
+
+		closeMessageModal();
 	}
 
     // --- [新增] 旋轉優化輔助函式 ---
