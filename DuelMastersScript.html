@@ -12161,6 +12161,24 @@
 
 		closeMessageModal();
 	}
+	
+	// [新增] 應用範例文字功能
+	function applyMessageTemplate(type) {
+		const mainInput = document.getElementById('msg-main-input');
+		const subInput = document.getElementById('msg-sub-input');
+		const durInput = document.getElementById('msg-duration-input');
+		
+		// 使用 t() 函式取得當前語言的翻譯文字
+		if (type === 'start') {
+			mainInput.value = t('val_turn_start'); // 自動填入 "回合開始" / "Start of Turn"
+			subInput.value = ''; 
+			durInput.value = 1.0; // 回合開始通常稍微久一點
+		} else if (type === 'end') {
+			mainInput.value = t('val_turn_end');
+			subInput.value = '';
+			durInput.value = 1.0;
+		}
+	}
 
     // --- [新增] 旋轉優化輔助函式 ---
     function optimizeHistoryForExport(hist) {
