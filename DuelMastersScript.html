@@ -4136,6 +4136,16 @@
             <input type="text" id="msg-main-input" style="width:100%; font-size:1.2rem; padding:8px;">
         </div>
 
+        <div class="input-group" style="margin-bottom:15px; background:#f0f0f0; padding:8px; border-radius:4px;">
+            <label style="margin-bottom:5px; font-weight:bold; color:#555;">
+                <span data-i18n="lbl_msg_examples">常用範例:</span>
+            </label>
+            <div style="display:flex; gap:10px;">
+                <button class="mini-btn" onclick="applyMessageTemplate('start')" data-i18n="btn_ex_turn_start">回合開始</button>
+                <button class="mini-btn" onclick="applyMessageTemplate('end')" data-i18n="btn_ex_turn_end">回合結束</button>
+            </div>
+        </div>
+
         <div class="input-group" style="margin-bottom:10px; display:block;">
             <label style="display:block; margin-bottom:5px;">
                 <span data-i18n="lbl_sub_msg">副訊息</span>:
@@ -4147,7 +4157,7 @@
             <label style="display:block; margin-bottom:5px;">
                 <span data-i18n="lbl_duration">持續時間 (秒)</span>:
             </label>
-            <input type="number" id="msg-duration-input" value="1.0" step="0.5" min="0.5" style="width:100%; padding:6px;">
+            <input type="number" id="msg-duration-input" value="1.5" step="0.5" min="0.5" style="width:100%; padding:6px;">
         </div>
 
         <div style="text-align:right; margin-top:20px;">
@@ -4937,6 +4947,11 @@
             'btn_update': '更新',
             'msg_error_no_text': '請輸入主訊息內容',
             'log_action_msg': '訊息',
+			'lbl_msg_examples': '常用範例:',
+			'btn_ex_turn_start': '回合開始',
+			'btn_ex_turn_end': '回合結束',
+			'val_turn_start': '回合開始', // 實際填入的文字
+			'val_turn_end': '回合結束',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -5117,6 +5132,11 @@
             'btn_update': 'Update',
             'msg_error_no_text': 'Please enter the main text',
             'log_action_msg': 'Message',
+			'lbl_msg_examples': 'Examples:',
+			'btn_ex_turn_start': 'Start Turn',
+			'btn_ex_turn_end': 'End Turn',
+			'val_turn_start': 'Start of Turn',
+			'val_turn_end': 'End of Turn',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -5296,6 +5316,12 @@
             'btn_update': '更新',
             'msg_error_no_text': 'メインテキストを入力してください',
             'log_action_msg': 'メッセージ',
+			// --- 日文 (ja) ---
+			'lbl_msg_examples': '定型文:',        // 意為 "Standard Phrases" 或 "Templates"
+			'btn_ex_turn_start': 'ターン開始',    // 按鈕文字
+			'btn_ex_turn_end': 'ターン終了',      // 按鈕文字
+			'val_turn_start': 'ターン開始',       // 實際插入的訊息內容
+			'val_turn_end': 'ターン終了',         // 實際插入的訊息內容
 		}
 	};
 	
@@ -5752,13 +5778,15 @@
 	document.addEventListener('keydown', (e) => {
 		// 1. 處理 Ctrl+Z (復原)
 		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-			e.preventDefault(); // 阻止瀏覽器預設行為
+			e.preventDefault();
+			e.stopImmediatePropagation(); // [新增] 防止事件冒泡導致的重複觸發
 
 			if (isDrafting) {
-				// 情境 A: 正在編輯中 -> 還原編輯的動作 (例如移動卡片、貼圖)
-				undoLastDraftOp();
+				// 如果正在編輯中，撤銷上一個編輯動作
+				// 注意：如果 draftOperations 是空的，這裡不會做任何事，這是正確的行為
+				undoLastDraftOp(); 
 			} else {
-				// 情境 B: 非編輯模式 -> 執行全域復原 (還原刪除步驟、新增步驟)
+				// 如果不在編輯中，執行全域回溯 (這會 pop 一次 snapshot)
 				performGlobalUndo();
 			}
 			return;
@@ -12129,7 +12157,6 @@
 
 			if (!isDrafting) startDraftAtEnd();
 			addOperation(op);
-			saveDraft(desc); 
 		}
 
 		closeMessageModal();
