@@ -7031,76 +7031,93 @@
 		}
 		// ----------------------
 		else if (op.type === 'MOVE') {
-			const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
-			
-            // 1. 先從狀態中找出這些卡片 (此時順序是依照原本 state 中的順序，不一定是我們想要的)
+			// [修改 1] 在解構賦值中加入 'rotation'
+			const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType, rotation } = op;
+
+			// 1. 先從狀態中找出這些卡片
 			let movingCards = state.cards.filter(c => cardIds.some(id => id == c.id));
 			
-            // [關鍵修正] 2. 依照 cardIds (指令中的順序) 對 movingCards 進行重排
-            // 這樣才能確保「左上(第一張)」就是使用者「選的第一張」(或是牌庫的最上方)
-            if (shuffleSelection) {
-                movingCards.sort(() => Math.random() - 0.5); 
-            } else {
-                movingCards.sort((a, b) => {
-                    // 使用 findIndex 確保能比對字串與數字 ID
-                    const idxA = cardIds.findIndex(id => id == a.id);
-                    const idxB = cardIds.findIndex(id => id == b.id);
-                    return idxA - idxB;
-                });
-            }
-			
-            // 3. 從原區域移除
-			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id)); 
-			
-            // 4. 設定新屬性
+			if (shuffleSelection) {
+				movingCards.sort(() => Math.random() - 0.5);
+			} else {
+				movingCards.sort((a, b) => {
+					const idxA = cardIds.findIndex(id => id == a.id);
+					const idxB = cardIds.findIndex(id => id == b.id);
+					return idxA - idxB;
+				});
+			}
+
+			// 2. 從原區域移除
+			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id));
+
+			// 設定新屬性
 			movingCards.forEach(c => {
 				c.zone = toZone;
 				c.parentId = null;
 				c.stackType = null;
 				if (faceUp !== undefined) c.faceUp = faceUp;
-				if (toZone.includes('hand')) c.rotation = 0; 
+				
+				// [修改 2] 取代原本寫死的 if (toZone.includes('hand')) c.rotation = 0;
+				// 改為：如果有傳入 rotation 參數，就套用；否則如果是手牌，預設歸零
+				if (rotation !== undefined) {
+					c.rotation = rotation;
+				} else if (toZone.includes('hand')) {
+					c.rotation = 0;
+				}
+				
 				if (stackTargetId) {
 					c.parentId = stackTargetId;
 					c.stackType = stackType;
 				}
 			});
 
-            // 3. 將卡片放回陣列 (依照 insertIndex 或預設推到最後)
-            // [修正] 使用 finalInsertIndex 避免修改 const 變數
-            let finalInsertIndex = insertIndex;
+			// =========================================================
+			// [DEBUG 修正] 計算正確的插入位置 (Global Index)
+			// =========================================================
+			let globalSpliceIndex = -1;
 
-            // [新增] 自動索引計算邏輯：如果有指定堆疊目標，但沒有指定插入位置
-            if ((finalInsertIndex === undefined || finalInsertIndex === -1) && stackTargetId) {
-                // 注意：movingCards 已經被移除了，所以這裡的 index 是針對「剩餘卡片」的
-                const targetIndex = state.cards.findIndex(c => c.id === stackTargetId);
-                
-                if (targetIndex !== -1) {
-                    // 定義哪些類型要插在目標「後面」 (Index + 1)
-                    // 規則：(O)的右側、下方、疊在下面 -> Index + 1
-                    const typesAfter = [
-                        'puzzle_right',   // 拼在右邊
-                        'puzzle_bottom',  // 拼在下方
-                        'bottom',         // 疊在下方
-                        'bottom_exposed'  // 下方 (露出底)
-                    ];
+			// 情況 A: 指定了插入位置 (來自插入選單) -> 需要將「相對索引」轉為「全域索引」
+			if (insertIndex !== undefined && insertIndex !== -1) {
+				// 取得目標區域目前的卡片 (已按全域順序排列)
+				const currentZoneCards = state.cards.filter(c => c.zone === toZone);
+				
+				if (insertIndex >= currentZoneCards.length) {
+					// 如果插入位置 >= 長度，代表要插在該區域的「最後面」
+					if (currentZoneCards.length > 0) {
+						const lastCard = currentZoneCards[currentZoneCards.length - 1];
+						const lastCardGlobalIdx = state.cards.findIndex(c => c.id === lastCard.id);
+						globalSpliceIndex = lastCardGlobalIdx + 1;
+					} else {
+						// 區域是空的，直接插在全域最後
+						globalSpliceIndex = state.cards.length;
+					}
+				} else {
+					// 插在特定卡片「前面」
+					const targetCard = currentZoneCards[insertIndex];
+					if (targetCard) {
+						globalSpliceIndex = state.cards.findIndex(c => c.id === targetCard.id);
+					}
+				}
+			} 
+			// 情況 B: 指定了堆疊目標 (來自堆疊操作) -> 直接計算目標的全域位置
+			else if (stackTargetId) {
+				const targetIndex = state.cards.findIndex(c => c.id === stackTargetId);
+				if (targetIndex !== -1) {
+					const typesAfter = ['puzzle_right', 'puzzle_bottom', 'bottom', 'bottom_exposed'];
+					if (typesAfter.includes(stackType)) {
+						globalSpliceIndex = targetIndex + 1;
+					} else {
+						globalSpliceIndex = targetIndex;
+					}
+				}
+			}
 
-                    // 其餘類型插在目標「前面」 (Index + 0) -> 把目標往後擠
-                    // 規則：(O)的左側、上方、疊在上面 -> Index
-                    // 包含: puzzle_left, puzzle_top, top, shift_up, shift_down
-
-                    if (typesAfter.includes(stackType)) {
-                        finalInsertIndex = targetIndex + 1;
-                    } else {
-                        finalInsertIndex = targetIndex;
-                    }
-                }
-            }
-
-            if (finalInsertIndex !== undefined && finalInsertIndex !== -1) {
-                state.cards.splice(finalInsertIndex, 0, ...movingCards);
-            } else {
-                state.cards.push(...movingCards);
-            }
+			// 4. 執行插入
+			if (globalSpliceIndex !== -1) {
+				state.cards.splice(globalSpliceIndex, 0, ...movingCards);
+			} else {
+				state.cards.push(...movingCards);
+			}
 		} else if (op.type === 'SHUFFLE') {
 			const { zoneId, order } = op; 
 			let zoneCards = state.cards.filter(c => c.zone === zoneId);
@@ -7336,9 +7353,8 @@
 	// --- [修正版] finishMove (嚴格限制：僅戰鬥區互轉保留狀態) ---
 	function finishMove(toZone, insertIdx, stackTargetId = null, stackType = null) {
 		if (!pendingMove) return;
-
 		const movingIds = [...pendingMove.cardIds];
-		const isShuffling = pendingMove.shuffle; 
+		const isShuffling = pendingMove.shuffle;
 
 		// 1. 隨機順序處理
 		let finalCardIds = [...movingIds];
@@ -7361,92 +7377,83 @@
 			addOperation({ type: 'BREAK_LINKS', cardIds: [...movingIds] });
 		}
 
-		// 3. 同步旋轉角度
+		// 3. [修改] 準備移動參數 (預先計算目標角度)
+		let targetRotation = undefined; // 預設 undefined 代表「維持現狀」或「不指定」
+
 		if (stackTargetId) {
+			// 如果是堆疊在某張卡上，繼承該卡角度
 			const targetCard = state.cards.find(c => c.id === stackTargetId);
 			if (targetCard) {
-				addOperation({ 
-					type: 'ROTATE_CARD', 
-					cardIds: movingIds, 
-					finalRotation: targetCard.rotation 
-				});
+				 targetRotation = targetCard.rotation;
 			}
+		} else if (toZone.includes('mana')) {
+			// 魔力區：強制 180 度 (倒置)
+			targetRotation = 180;
+		} else if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper') || toZone.includes('hand')) {
+			// 牌庫、墓地、超次元、手牌：強制 0 度 (轉正)
+			targetRotation = 0;
 		}
-		
+		// 戰鬥區(Battle) 則維持 undefined，這樣在 applyOperation 中就不會覆蓋 rotation，
+		// 讓卡片保留原本角度 (例如從手牌打出是直的，從場上進化堆疊維持橫置/直立)
+
 		// =========================================================================
 		// [新增] 自動治癒邏輯 (Auto Heal on Move)
 		// =========================================================================
 		// 在移動之前，檢查這些被移動的卡片是否處於「受傷」狀態。
-		// 如果是，先插入一個「解除受傷」的動作，讓它在移動前恢復原狀。
 		const injuredIds = movingIds.filter(id => {
 			const c = state.cards.find(x => x.id === id);
-			return c && c.isInjured; // 檢查狀態中的 isInjured 屬性
+			return c && c.isInjured;
 		});
 
 		if (injuredIds.length > 0) {
-			addOperation({
-				type: 'INJURED',
-				cardIds: injuredIds,
-				setInjured: false // false 代表清除受傷狀態 (治癒)
-			});
+			addOperation({ type: 'INJURED', cardIds: injuredIds, setInjured: false });
 		}
-		// =========================================================================
 
+		// =========================================================================
 		// --- [關鍵修正] 狀態判定邏輯 ---
-		let faceUp = true; // 預設值：大多情況移動後都是表側 (手牌->戰場, 魔力->戰場, 墓地->戰場)
+		let faceUp = true; // 預設值
 
 		// A. 進入隱藏區域 -> 強制蓋牌
 		if (toZone.includes('shield') || toZone.includes('deck')) {
 			faceUp = false;
-		}
+		} 
 		// B. P2 手牌 -> 強制表側 (對操作者可見)
 		else if (toZone.includes('hand') && toZone.includes('p2')) {
 			faceUp = true;
-		}
-		// C. [修正] 只有「戰鬥區 -> 戰鬥區」才保留原本狀態
+		} 
+		// C. 只有「戰鬥區 -> 戰鬥區」才保留原本狀態
 		else if (toZone.includes('battle')) {
 			const firstCard = state.cards.find(c => c.id === movingIds[0]);
-			
 			// 檢查來源是否也是戰鬥區
 			if (firstCard && firstCard.zone.includes('battle')) {
-				// 是場上的卡移動 (例如堆疊進化元)，保留目前的表/裡狀態
 				faceUp = firstCard.faceUp;
 			} else {
 				// 從手牌、魔力區、墓地等其他地方來的 -> 強制翻開
 				faceUp = true;
 			}
-		}
-		// D. 進入魔力區 -> 強制表側 (並在下方轉180度)
+		} 
+		// D. 進入魔力區 -> 強制表側
 		else if (toZone.includes('mana')) {
 			faceUp = true;
 		}
 
-		// 4. 執行移動指令
-		addOperation({
-			type: 'MOVE',
+		// 4. 執行移動指令 (整合了角度參數 rotation)
+		addOperation({ 
+			type: 'MOVE', 
 			cardIds: finalCardIds, 
-			toZone: toZone,
-			faceUp: faceUp, // 套用判定結果
+			toZone: toZone, 
+			faceUp: faceUp, 
 			shuffleSelection: false, 
 			withShuffleAnim: isShuffling, 
-			insertIndex: insertIdx,
-			stackTargetId: stackTargetId,
-			stackType: stackType
+			insertIndex: insertIdx, 
+			stackTargetId: stackTargetId, 
+			stackType: stackType,
+			rotation: targetRotation // <--- [關鍵] 將目標角度傳入，讓移動與旋轉同步完成
 		});
 
-		// 5. 區域特殊處理 (魔力區倒置)
-		if (toZone.includes('mana')) {
-			addOperation({ type: 'ROTATE_CARD', cardIds: movingIds, deg: 180 });
-		}
-		
-		// 進入牌庫/墓地/超次元 -> 轉正 (0度)
-		if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper')) {
-			addOperation({ 
-				type: 'ROTATE_CARD', 
-				cardIds: movingIds, 
-				finalRotation: 0 
-			});
-		}
+		// 5. [已刪除] 移除原本此處所有的 ROTATE_CARD 操作
+		// 因為角度已經在上方計算並透過 MOVE 指令處理了，
+		// 這樣可以避免「先移動，後旋轉」造成的兩段式動畫卡頓。
 
 		cancelSelection();
 		closeSelectorModal();
