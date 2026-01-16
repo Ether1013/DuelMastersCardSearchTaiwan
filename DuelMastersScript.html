@@ -7032,75 +7032,83 @@
 		// ----------------------
 		else if (op.type === 'MOVE') {
 			const { cardIds, toZone, faceUp, shuffleSelection, insertIndex, stackTargetId, stackType } = op;
-			
-            // 1. 先從狀態中找出這些卡片 (此時順序是依照原本 state 中的順序，不一定是我們想要的)
+
+			// 1. 先從狀態中找出這些卡片
 			let movingCards = state.cards.filter(c => cardIds.some(id => id == c.id));
 			
-            // [關鍵修正] 2. 依照 cardIds (指令中的順序) 對 movingCards 進行重排
-            // 這樣才能確保「左上(第一張)」就是使用者「選的第一張」(或是牌庫的最上方)
-            if (shuffleSelection) {
-                movingCards.sort(() => Math.random() - 0.5); 
-            } else {
-                movingCards.sort((a, b) => {
-                    // 使用 findIndex 確保能比對字串與數字 ID
-                    const idxA = cardIds.findIndex(id => id == a.id);
-                    const idxB = cardIds.findIndex(id => id == b.id);
-                    return idxA - idxB;
-                });
-            }
-			
-            // 3. 從原區域移除
-			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id)); 
-			
-            // 4. 設定新屬性
+			if (shuffleSelection) {
+				movingCards.sort(() => Math.random() - 0.5);
+			} else {
+				movingCards.sort((a, b) => {
+					const idxA = cardIds.findIndex(id => id == a.id);
+					const idxB = cardIds.findIndex(id => id == b.id);
+					return idxA - idxB;
+				});
+			}
+
+			// 2. 從原區域移除
+			state.cards = state.cards.filter(c => !cardIds.some(id => id == c.id));
+
+			// 3. 設定新屬性
 			movingCards.forEach(c => {
 				c.zone = toZone;
 				c.parentId = null;
 				c.stackType = null;
 				if (faceUp !== undefined) c.faceUp = faceUp;
-				if (toZone.includes('hand')) c.rotation = 0; 
+				if (toZone.includes('hand')) c.rotation = 0;
 				if (stackTargetId) {
 					c.parentId = stackTargetId;
 					c.stackType = stackType;
 				}
 			});
 
-            // 3. 將卡片放回陣列 (依照 insertIndex 或預設推到最後)
-            // [修正] 使用 finalInsertIndex 避免修改 const 變數
-            let finalInsertIndex = insertIndex;
+			// =========================================================
+			// [DEBUG 修正] 計算正確的插入位置 (Global Index)
+			// =========================================================
+			let globalSpliceIndex = -1;
 
-            // [新增] 自動索引計算邏輯：如果有指定堆疊目標，但沒有指定插入位置
-            if ((finalInsertIndex === undefined || finalInsertIndex === -1) && stackTargetId) {
-                // 注意：movingCards 已經被移除了，所以這裡的 index 是針對「剩餘卡片」的
-                const targetIndex = state.cards.findIndex(c => c.id === stackTargetId);
-                
-                if (targetIndex !== -1) {
-                    // 定義哪些類型要插在目標「後面」 (Index + 1)
-                    // 規則：(O)的右側、下方、疊在下面 -> Index + 1
-                    const typesAfter = [
-                        'puzzle_right',   // 拼在右邊
-                        'puzzle_bottom',  // 拼在下方
-                        'bottom',         // 疊在下方
-                        'bottom_exposed'  // 下方 (露出底)
-                    ];
+			// 情況 A: 指定了插入位置 (來自插入選單) -> 需要將「相對索引」轉為「全域索引」
+			if (insertIndex !== undefined && insertIndex !== -1) {
+				// 取得目標區域目前的卡片 (已按全域順序排列)
+				const currentZoneCards = state.cards.filter(c => c.zone === toZone);
+				
+				if (insertIndex >= currentZoneCards.length) {
+					// 如果插入位置 >= 長度，代表要插在該區域的「最後面」
+					if (currentZoneCards.length > 0) {
+						const lastCard = currentZoneCards[currentZoneCards.length - 1];
+						const lastCardGlobalIdx = state.cards.findIndex(c => c.id === lastCard.id);
+						globalSpliceIndex = lastCardGlobalIdx + 1;
+					} else {
+						// 區域是空的，直接插在全域最後
+						globalSpliceIndex = state.cards.length;
+					}
+				} else {
+					// 插在特定卡片「前面」
+					const targetCard = currentZoneCards[insertIndex];
+					if (targetCard) {
+						globalSpliceIndex = state.cards.findIndex(c => c.id === targetCard.id);
+					}
+				}
+			} 
+			// 情況 B: 指定了堆疊目標 (來自堆疊操作) -> 直接計算目標的全域位置
+			else if (stackTargetId) {
+				const targetIndex = state.cards.findIndex(c => c.id === stackTargetId);
+				if (targetIndex !== -1) {
+					const typesAfter = ['puzzle_right', 'puzzle_bottom', 'bottom', 'bottom_exposed'];
+					if (typesAfter.includes(stackType)) {
+						globalSpliceIndex = targetIndex + 1;
+					} else {
+						globalSpliceIndex = targetIndex;
+					}
+				}
+			}
 
-                    // 其餘類型插在目標「前面」 (Index + 0) -> 把目標往後擠
-                    // 規則：(O)的左側、上方、疊在上面 -> Index
-                    // 包含: puzzle_left, puzzle_top, top, shift_up, shift_down
-
-                    if (typesAfter.includes(stackType)) {
-                        finalInsertIndex = targetIndex + 1;
-                    } else {
-                        finalInsertIndex = targetIndex;
-                    }
-                }
-            }
-
-            if (finalInsertIndex !== undefined && finalInsertIndex !== -1) {
-                state.cards.splice(finalInsertIndex, 0, ...movingCards);
-            } else {
-                state.cards.push(...movingCards);
-            }
+			// 4. 執行插入
+			if (globalSpliceIndex !== -1) {
+				state.cards.splice(globalSpliceIndex, 0, ...movingCards);
+			} else {
+				state.cards.push(...movingCards);
+			}
 		} else if (op.type === 'SHUFFLE') {
 			const { zoneId, order } = op; 
 			let zoneCards = state.cards.filter(c => c.zone === zoneId);
