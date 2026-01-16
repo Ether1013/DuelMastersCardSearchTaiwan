@@ -221,7 +221,7 @@
 				{ Jap : "S・バック",			Eng : "Strike Back",			Chi : "攻擊反彈",			descript : "當自己指定條件的卡從護盾區加到手牌時，你可以將該張卡片直接從護盾區中置入墓地，並以不支付費用的方式、從手牌中召喚此生物/使用此咒文",},
 				{ Jap : "G・ストライク",		Eng : "Guard Strike",			Chi : "守護強襲",			descript : "當此卡從護盾中拿回到手牌時，你可以展示給對手看，那樣的話，就選擇戰鬥場上1隻對手生物，此回合中、該生物不能發動攻擊",	pop:true,},
 				{ Jap : "G・G・G",				Eng : "Gogogo Gangan Galaxy",	Chi : "拉轉衝鋒銀河",		descript : "當我方手牌在1張以下時所發動的能力",},
-				{ Jap : "シンカパワー",			Eng : "Evolution Power",		Chi : "進化之力",			descript : "當此生物進化時，此回合中、獲得以下能力",},
+				{ Jap : "シンカパワー",			Eng : "Evolution Power",		Chi : "進化之力",			descript : "當此元素成為進化元時，此回合中、獲得以下能力",},
 				{ Jap : "シールド化",			Eng : "Shielding",				Chi : "護盾化",				descript : "將指定卡牌作為一個新盾置入其持有者的護盾區中",},
 				{ Jap : "S-MAX進化",			Eng : "S-MAX Evolution",		Chi : "S-MAX進化",			descript : "當我方敗北時，你可以取而代之、破壞此生物或是手牌中的同名卡。(此生物不需要進化種，當戰鬥場上有2隻以上的S-MAX進化生物時，選擇其中1隻、並將其餘的拿回到手牌中)",},
 				{ Jap : "鬼S-MAX進化",			Eng : "Oni S-MAX Evolution",	Chi : "鬼S-MAX進化",		descript : "當我方敗北、或是此生物離場時，你可以取而代之、破壞三張我方表側的卡。(此生物不需要進化種，當戰鬥場上有2隻以上的S-MAX進化生物時，選擇其中1隻、並將其餘的拿回到手牌中)",},
