@@ -8250,14 +8250,23 @@
         cancelSelection(); 
     }
 
+	// [修改] 處理指向點擊 (區分卡片與區域)
 	function handlePointClick(zoneId, cardId) {
 		if (!isPointing) return;
 
-		// 1. 點擊區域 (Zone)
+		// 1. 點擊區域 (Zone) - 當沒有 cardId 但有 zoneId 時觸發
 		if (!cardId && zoneId) {
 			// 排除無效區域點擊
-			if(zoneId.includes('hand') || zoneId.includes('deck') || zoneId.includes('grave') || zoneId.includes('mana') || zoneId.includes('shield') || zoneId.includes('hyper') || zoneId.includes('abyss')) {
-				 finishPoint('ZONE', [zoneId]);
+			// [新增] 確保這裡包含 'shield'，讓護盾區也能被選取
+			if(zoneId.includes('hand') || 
+			   zoneId.includes('deck') || 
+			   zoneId.includes('grave') || 
+			   zoneId.includes('mana') || 
+			   zoneId.includes('shield') ||  // <--- 確保這行存在
+			   zoneId.includes('hyper') || 
+			   zoneId.includes('abyss')) {
+				
+				finishPoint('ZONE', [zoneId]);
 			}
 			return;
 		}
