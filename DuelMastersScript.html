@@ -8257,14 +8257,15 @@
 		// 1. 點擊區域 (Zone) - 當沒有 cardId 但有 zoneId 時觸發
 		if (!cardId && zoneId) {
 			// 排除無效區域點擊
-			// [新增] 確保這裡包含 'shield'，讓護盾區也能被選取
+			// [新增] 加入 battle, hand, mana 讓這些區域的空白處也能被指向
 			if(zoneId.includes('hand') || 
 			   zoneId.includes('deck') || 
 			   zoneId.includes('grave') || 
 			   zoneId.includes('mana') || 
-			   zoneId.includes('shield') ||  // <--- 確保這行存在
+			   zoneId.includes('shield') || 
 			   zoneId.includes('hyper') || 
-			   zoneId.includes('abyss')) {
+			   zoneId.includes('abyss') ||
+			   zoneId.includes('battle')) {  // <--- 新增這一行
 				
 				finishPoint('ZONE', [zoneId]);
 			}
