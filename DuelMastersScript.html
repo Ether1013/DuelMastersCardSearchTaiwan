@@ -4960,6 +4960,7 @@
 			'btn_ex_turn_end': '回合結束',
 			'val_turn_start': '回合開始', // 實際填入的文字
 			'val_turn_end': '回合結束',
+			"ctx_quick_reset": "⚡ 快速重置 (收回+護盾+手牌)", // 新增這行
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -5145,6 +5146,7 @@
 			'btn_ex_turn_end': 'End Turn',
 			'val_turn_start': 'Start of Turn',
 			'val_turn_end': 'End of Turn',
+			"ctx_quick_reset": "⚡ Quick Reset (Recall+Shield+Hand)", // Add this line
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -5330,6 +5332,7 @@
 			'btn_ex_turn_end': 'ターン終了',      // 按鈕文字
 			'val_turn_start': 'ターン開始',       // 實際插入的訊息內容
 			'val_turn_end': 'ターン終了',         // 實際插入的訊息內容
+			"ctx_quick_reset": "⚡ クイックリセット (回収+盾+手札)", // この行を追加
 		}
 	};
 	
@@ -13622,9 +13625,11 @@
 			document.getElementById('deck-move-modal').style.display = 'flex';     
 			resetTapModifier();	
 			resetFaceDownModifier();	
-		}
-        else if (action === 'recall') {
+		} else if (action === 'recall') {
             recallAllCards();
+		} else if (action === 'quick_reset') {
+			// [新增] 呼叫快速重置
+			performQuickReset(contextMenuTargetZone);
         }
     }
 
@@ -13763,6 +13768,112 @@
         renderUI();
         triggerShuffleAnimation(20, contextMenuTargetZone);
     }
+	
+	// [修正版] 快速重置功能實作
+	function performQuickReset(zoneId) {
+		// 1. 確保進入編輯模式
+		if (typeof isDrafting !== 'undefined' && !isDrafting) {
+			startDraftAtEnd();
+		}
+
+		const playerPrefix = zoneId.split('-')[0]; // "p1" or "p2"
+		const pid = playerPrefix === 'p1' ? 1 : 2;
+		// 取得當前暫存狀態
+		const state = typeof getCurrentDisplayState === 'function' ? getCurrentDisplayState() : tempState;
+
+		// --- 步驟 A: 全部收回 (修正邏輯) ---
+		// 我們需要逐張判斷卡片該回哪裡 (Main Deck vs Hyper/Abyss)
+		let ops = [];
+		
+		state.cards.forEach(c => {
+			// 只處理該玩家的卡
+			if (c.ownerId !== pid) return;
+
+			// 決定目標區域：預設為主牌庫
+			let destZone = `${playerPrefix}-deck`;
+
+			// [修正2] 判斷卡片是否屬於特殊區域 (Hyper/GR)
+			// 優先檢查 initialZone (若系統有紀錄)，否則檢查卡片類型或是目前的區域特徵
+			if (c.initialZone && (c.initialZone.includes('hyper') || c.initialZone.includes('abyss'))) {
+				destZone = c.initialZone;
+			} else if (c.type && (c.type.includes('Hyper') || c.type.includes('Dragheart') || c.type.includes('GR'))) {
+				// 若無 initialZone，嘗試從類型判斷 (需視您的資料結構而定，這裡保留彈性)
+				destZone = `${playerPrefix}-hyper`; // 或是 abyss
+			}
+			
+			// 如果卡片已經在目標區域，則略過 (避免無意義的操作)
+			if (c.zone === destZone) return;
+
+			// 加入操作佇列
+			ops.push({
+				type: 'MOVE',
+				cardIds: [c.id],
+				toZone: destZone,
+				faceUp: false, // 回收時蓋牌
+				
+				// [修正1] 強制重置狀態 (解決卡片方向錯誤問題)
+				tapped: false, 
+				rotation: 0,
+				
+				shuffleSelection: true
+			});
+		});
+
+		// 執行批次回收
+		ops.forEach(op => addOperation(op, true)); // true = skipRender
+
+		// --- 步驟 B: 洗牌 ---
+		addOperation({ 
+			type: 'SHUFFLE', 
+			zoneId: `${playerPrefix}-deck` 
+		}, true);
+
+		// --- 步驟 C: 牌庫頂 5 張 -> 護盾區 ---
+		// 重新取得牌庫狀態 (因上方 addOperation 已更新 tempState)
+		let deckCards = state.cards.filter(c => c.zone === `${playerPrefix}-deck`);
+		let shieldCandidates = deckCards.slice(-5).map(c => c.id);
+
+		if (shieldCandidates.length > 0) {
+			addOperation({
+				type: 'MOVE',
+				cardIds: shieldCandidates,
+				toZone: `${playerPrefix}-shield`,
+				faceUp: false, // 護盾蓋牌
+				
+				// [修正1] 確保護盾是直立的
+				tapped: false,
+				rotation: 0,
+				
+				shuffleSelection: false
+			}, true);
+		}
+
+		// --- 步驟 D: 牌庫頂 5 張 -> 手牌 ---
+		// 再次重抓牌庫 (扣除護盾後的)
+		deckCards = state.cards.filter(c => c.zone === `${playerPrefix}-deck`);
+		let handCandidates = deckCards.slice(-5).map(c => c.id);
+
+		if (handCandidates.length > 0) {
+			addOperation({
+				type: 'MOVE',
+				cardIds: handCandidates,
+				toZone: `${playerPrefix}-hand`,
+				faceUp: true, // 手牌翻開
+				
+				// [修正1] 確保手牌是直立的
+				tapped: false,
+				rotation: 0,
+				
+				shuffleSelection: false
+			}, true);
+		}
+
+		// --- 步驟 E: 更新畫面 ---
+		if (typeof updateDraftBar === 'function') updateDraftBar();
+		renderUI();
+		
+		// 不執行存檔動作 (NON-Save)
+	}
 
     // --- Main Entry Point ---
     window.onload = function() {
@@ -15933,6 +16044,7 @@
         <li onclick="runDeckContextAction('shuffle')" data-i18n="ctx_shuffle">🔄 洗牌</li>
         <li onclick="runDeckContextAction('move')" data-i18n="ctx_move">➡️ 移動卡片...</li>
         <li onclick="runDeckContextAction('recall')" data-i18n="ctx_recall">🔙 全部收回</li>
+		<li onclick="runDeckContextAction('quick_reset')" style="border-top:1px solid #eee; color:#d35400; font-weight:bold;" data-i18n="ctx_quick_reset">⚡ 快速重置 (Reset)</li>
         
         <li class="separator" style="height:1px; background:#eee; margin:5px 0; cursor:default;"></li>
         <li onclick="document.getElementById('deck-context-menu').style.display='none'" style="color:#e74c3c;" data-i18n="ctx_close">✖ 關閉選單</li>
