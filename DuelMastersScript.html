@@ -646,6 +646,7 @@ input[type=number], input[type=text] {
 }
 .mana-zone, .shield-zone {
 	height: 100%;
+	min-height: var(--card-height); /* [新增] 防止無卡時高度塌陷 */
 	display: flex;
 	align-items: center;
 	justify-content: flex-start;
@@ -3123,37 +3124,14 @@ body.in-edit-mode #playback-slider {
 		max-width: 60px
 	}
 }
-body.desktop-playing #slider-zone, body.desktop-playing #visitor-counter, body.desktop-playing .unseen-check-btn {
+body.desktop-playing #visitor-counter, body.desktop-playing .unseen-check-btn {
 	display: none!important
 }
-body.desktop-playing #slider-zone {
-	display: flex!important;
-	position: fixed!important;
-	top: auto!important;
-	bottom: 80px!important;
-	right: 20px!important;
-	left: auto!important;
-	width: auto!important;
-	height: 40px!important;
-	background: rgba(44, 62, 80, .8);
-	border: 1px solid rgba(255, 255, 255, .3);
-	border-radius: 20px;
-	padding: 0 15px;
-	transform: none!important;
-	flex-direction: row;
-	align-items: center;
-	z-index: 5000
-}
+
 body.desktop-playing #playback-slider {
 	cursor: pointer
 }
-body.desktop-playing #slider-tooltip {
-	transform: translateX(-50%);
-	font-size: 1rem;
-	background: rgba(241, 196, 15, .9);
-	padding: 2px 8px;
-	border-radius: 4px
-}
+
 body.mobile-mode #playback-slider-container {
 	right: 0!important;
 	left: auto!important;
@@ -3205,7 +3183,7 @@ body.desktop-playing #mobile-controls {
 	flex-direction: column-reverse!important;
 	position: fixed;
 	bottom: 160px;
-	right: 20px;
+	right: 80px!important;
 	z-index: 9999
 }
 body.desktop-playing #playback-slider-container {
@@ -3224,12 +3202,7 @@ body.desktop-playing #playback-slider-container {
 	align-items: center!important;
 	transform: none!important
 }
-body.desktop-playing #playback-slider {
-	width: 100%!important;
-	height: 6px!important;
-	margin: 0 10px;
-	transform: none!important
-}
+
 body.desktop-playing #slider-tooltip {
 	top: -35px!important;
 	right: 0!important;
@@ -3759,6 +3732,14 @@ body.mobile-mode #import-selector-modal .modal-content {
     aspect-ratio: auto !important; /* 解除 5:7 的比例鎖定 */
     flex: none !important;         /* 避免被 Flex 佈局拉伸 */
     object-fit: initial !important;
+}
+/* === 修正手牌飛行時只剩半張的問題 === */
+.hand-zone .card.flying {
+    height: var(--hand-card-h-full) !important; /* 強制全高 70px */
+    overflow: visible !important;               /* 顯示完整內容 */
+    z-index: 5000 !important;                   /* 飛在最上層 */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
+    border-bottom: 1px solid #333 !important;
 }
 </style>
 </head>
@@ -9905,80 +9886,91 @@ body.mobile-mode #import-selector-modal .modal-content {
 		requestAnimationFrame(() => {
 			const lastPositions = getCardPositions(zonesToSkip);
 			
-			Object.keys(lastPositions).forEach(id => {
-				if (id.startsWith('ZONE_')) return;
-				const cardEl = document.querySelector(`.card[data-id="${id}"]`);
-				if (!cardEl) return;
-				
-				let start = firstPositions[id];
-				if (!start && lastRenderedState) {
-					const prevCard = lastRenderedState.cards.find(c => c.id == id);
-					if (prevCard) start = firstPositions['ZONE_' + prevCard.zone];
-				}
-				
-				if (start) {
-					const last = lastPositions[id];
-					const deltaX = start.left - last.left;
-					const deltaY = start.top - last.top;
-					
-					// 只有當位置真的有變動時才執行動畫
-					if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-						const cardData = state.cards.find(c => c.id == id);
-						let rotation = cardData ? cardData.rotation : 0;
-						const isAbility = cardData && cardData.zone.includes('ability');
+			// 修正後的動畫處理迴圈
+            Object.keys(lastPositions).forEach(id => {
+                if (id.startsWith('ZONE_')) return;
+                const cardEl = document.querySelector(`.card[data-id="${id}"]`);
+                if (!cardEl) return;
 
-						// [修正] 如果 DOM 元素上有標記「視覺角度」(來自無月模式)，優先使用它
-						if (cardEl.dataset.visualRot) {
-							rotation = parseFloat(cardEl.dataset.visualRot);
-						}
+                let start = firstPositions[id];
+                
+                // [修正 1] 提早取得「上一幀」的卡片狀態 (這時候 lastRenderedState 還是舊的)
+                let prevCard = null;
+                if (lastRenderedState) {
+                    prevCard = lastRenderedState.cards.find(c => c.id == id);
+                }
 
-						if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
-							 // puzzle 卡片通常是跟隨移動，暫不處理個別動畫
-						} else {
-							// 1. 先瞬間移動回起點 (保持在原區域的位置)
-							cardEl.style.transition = 'none';
-							cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
-							
-							// 2. 下一幀執行移動動畫
-							requestAnimationFrame(() => {
-								const flyTime = 0.5; // 單張飛行時間 0.5秒
-								
-								let duration = `${flyTime}s`;
-								let delay = '0s';
-								let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+                // 如果找不到起始位置，嘗試從舊狀態推算
+                if (!start && prevCard) {
+                    start = firstPositions['ZONE_' + prevCard.zone];
+                }
 
-								// --- [核心修改] 通用序列動畫邏輯 ---
-								// 檢查這張卡片是否在當前的移動清單中
-								// 使用 loose equality (==) 避免字串/數字型別問題
-								const moveIndex = movingCardIds.findIndex(mid => mid == id);
+                if (start) {
+                    const last = lastPositions[id];
+                    const deltaX = start.left - last.left;
+                    const deltaY = start.top - last.top;
 
-								if (moveIndex !== -1) {
-									const totalCards = movingCardIds.length;
-									
-									// 如果只有一張牌，就不需要延遲
-									if (totalCards > 1) {
-										// 演算法：每張牌間隔飛行時間的 20%
-										let interval = flyTime * 0.2;
-										
-										// 防呆：如果一次移動超多張 (如整副牌 40張)，限制總發牌時間不超過 1.5 秒
-										const maxTotalLag = 1.5;
-										if ((interval * totalCards) > maxTotalLag) {
-											interval = maxTotalLag / totalCards;
-										}
-										
-										// 設定延遲：第 N 張牌延遲 N * interval 秒
-										delay = `${moveIndex * interval}s`;
-									}
-								}
-								// -------------------------------
+                    // 只有當位置真的有變動時才執行動畫
+                    if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                        const cardData = state.cards.find(c => c.id == id);
+                        let rotation = cardData ? cardData.rotation : 0;
+                        const isAbility = cardData && cardData.zone.includes('ability');
 
-								cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
-								cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
-							});
-						}
-					}
-				}
-			});
+                        if (cardEl.dataset.visualRot) {
+                            rotation = parseFloat(cardEl.dataset.visualRot);
+                        }
+
+                        if (cardData && cardData.stackType && cardData.stackType.includes('puzzle')) {
+                             // puzzle 跟隨移動，略過
+                        } else {
+                            // 1. 先瞬間移動回起點
+                            cardEl.style.transition = 'none';
+                            cardEl.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${isAbility?0:rotation}deg)`;
+
+                            // [修正 2] 在這裡先判斷來源是否為手牌 (使用外層變數 prevCard)
+                            // 這樣可以確保不會受到 lastRenderedState 更新的影響
+                            const isSourceHand = prevCard && prevCard.zone.includes('hand');
+
+                            // 2. 下一幀執行移動動畫
+                            requestAnimationFrame(() => {
+                                const flyTime = 0.5; 
+                                let duration = `${flyTime}s`;
+                                let delay = '0s';
+                                let easing = 'cubic-bezier(0.25, 0.8, 0.25, 1)';
+
+                                const moveIndex = movingCardIds.findIndex(mid => mid == id);
+                                if (moveIndex !== -1) {
+                                    const totalCards = movingCardIds.length;
+                                    if (totalCards > 1) {
+                                        let interval = flyTime * 0.2;
+                                        const maxTotalLag = 1.5;
+                                        if ((interval * totalCards) > maxTotalLag) {
+                                            interval = maxTotalLag / totalCards;
+                                        }
+                                        delay = `${moveIndex * interval}s`;
+                                    }
+                                }
+
+                                if (cardEl.closest('.hand-zone')) {
+                                    // [修正 3] 使用剛剛存下來的 isSourceHand 來判斷
+                                    // 只有「來源不是手牌」的時候，才加上 flying 特效
+                                    if (!isSourceHand) {
+                                        cardEl.classList.add('flying');
+                                        
+                                        // 動畫結束後移除
+                                        cardEl.addEventListener('transitionend', () => {
+                                            cardEl.classList.remove('flying');
+                                        }, { once: true });
+                                    }
+                                }
+
+                                cardEl.style.transition = `transform ${duration} ${easing} ${delay}`;
+                                cardEl.style.transform = `translate(0, 0) rotate(${isAbility?0:rotation}deg)`;
+                            });
+                        }
+                    }
+                }
+            });
 			
 			lastRenderedState = cloneState(state);
 			
