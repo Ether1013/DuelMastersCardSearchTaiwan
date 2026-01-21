@@ -7476,7 +7476,7 @@
 		} else if (toZone.includes('mana')) {
 			// 魔力區：強制 180 度 (倒置)
 			targetRotation = 180;
-		} else if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper') || toZone.includes('hand')) {
+		} else if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper') || toZone.includes('hand') || toZone.includes('reveal')) {
 			// 牌庫、墓地、超次元、手牌：強制 0 度 (轉正)
 			targetRotation = 0;
 		}
@@ -8817,43 +8817,21 @@
             // [分支 B] 多選模式 (Multi-Select) - [您的需求在這裡]
             // ==========================================
             else {
-                // 檢查條件：所有選取的卡片是否都在 戰場 或 魔力區
-                const validZones = ['p1-battle', 'p2-battle', 'p1-mana', 'p2-mana'];
                 
-                const allValid = pendingMove.cardIds.every(id => {
-                    const c = state.cards.find(x => x.id === id);
-                    // 檢查區域，且必須是「可見」的 (非牌庫/護盾/墓地/超次元)
-                    // 這裡直接用 validZones 白名單最準確
-                    return c && validZones.includes(c.zone);
-                });
-
-                if (allValid) {
-                    panel.style.display = 'flex';
-                    
-                    // 1. 先隱藏面板內「所有」控制項
-                    const allControls = panel.querySelectorAll('button, input, .panel-sep, div');
-                    allControls.forEach(el => {
-                        // 這裡要注意不要隱藏到 panel-row (div)，否則排版會亂掉
-                        if (el.tagName !== 'DIV') {
-                            el.style.display = 'none';
-                        }
-                    });
-
-                    // 2. 顯示必要的 Row (確保 div 容器是開的)
-                    panel.querySelectorAll('.panel-row').forEach(row => row.style.display = 'flex');
-
-                    // 3. 唯獨開啟兩個旋轉按鈕
-                    if(btnRotateL) btnRotateL.style.display = 'block';
-                    if(btnRotateR) btnRotateR.style.display = 'block';
-                    
-                } else {
-                    // 如果包含了其他區域 (如手牌、牌庫)，就不顯示面板
-                    panel.style.display = 'none';
-                }
-				
 				panel.style.display = 'flex';
         
-				// 2. 掃描選取卡片狀態
+				// 1. 隱藏不支援多選的按鈕 (更名、上圖等)
+				btnPaste.style.display = 'none';
+				btnRemoveImg.style.display = 'none';
+				inputRename.style.display = 'none';
+				btnRename.style.display = 'none';
+				inputNote.style.display = 'none';
+				btnNote.style.display = 'none';
+				btnAce.style.display = 'none'; 
+				btnMoonless.style.display = 'none'; 
+				btnDelete.style.display = 'none'; 
+				
+				// 2. 護盾區邏輯 (受傷/治癒) - 這是獨立的判斷
 				let isAllShield = true;
 				let hasAnyInjured = false;
 				let isAllUninjured = true;
@@ -8861,34 +8839,44 @@
 				pendingMove.cardIds.forEach(id => {
 					const c = state.cards.find(x => x.id === id);
 					if (c) {
-						// 檢查是否都在護盾區
-						if (!c.zone.includes('shield')) {
-							isAllShield = false;
-						}
-						
-						// 檢查受傷狀態
-						if (c.isInjured) {
-							hasAnyInjured = true;
-							isAllUninjured = false;
-						}
+						if (!c.zone.includes('shield')) isAllShield = false;
+						if (c.isInjured) { hasAnyInjured = true; isAllUninjured = false; }
 					}
 				});
 
-				// 3. 根據邏輯控制按鈕顯示
-				
-				// 邏輯 A: 全部都是護盾區卡牌 + 全都不是受傷狀態 -> 開放 [受傷]
+				// 控制受傷/治癒按鈕
 				if (isAllShield && isAllUninjured) {
 					btnInjured.style.display = 'block';
 				} else {
 					btnInjured.style.display = 'none';
 				}
 
-				// 邏輯 B: 全部都是護盾區卡牌 + 有任何一張是受傷狀態 -> 開放 [治癒]
 				if (isAllShield && hasAnyInjured) {
 					btnClearInjured.style.display = 'block';
 				} else {
 					btnClearInjured.style.display = 'none';
 				}
+
+				// 3. 通用多選按鈕 (旋轉、翻面、刪除)
+				btnRotateL.style.display = 'block';
+				btnRotateR.style.display = 'block';
+				btnFlip.style.display = 'block';
+				btnDelete.style.display = 'block';
+				
+				// 4. [關鍵修改] 展示按鈕 - 確保這裡無條件顯示 (設為 block)
+				// 不要加任何 if 判斷，讓所有區域的多選都能使用展示
+				btnReveal.style.display = 'block'; 
+
+				// 隱藏其他不相關按鈕
+				btnGlow.style.display = 'none';
+				btnGlowBottom.style.display = 'none';
+				btnUnglow.style.display = 'none';
+				btnCopyOne.style.display = 'none';
+				btnCopyCont.style.display = 'none';
+				btnPoint.style.display = 'none';
+				btnPointBlue.style.display = 'none';
+				btnEndPoint.style.display = 'none';
+				if (btnExLife) btnExLife.style.display = 'none';
             }
             
             // 最後加上高亮
