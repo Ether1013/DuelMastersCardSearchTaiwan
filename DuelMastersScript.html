@@ -8850,6 +8850,45 @@
                     // 如果包含了其他區域 (如手牌、牌庫)，就不顯示面板
                     panel.style.display = 'none';
                 }
+				
+				panel.style.display = 'flex';
+        
+				// 2. 掃描選取卡片狀態
+				let isAllShield = true;
+				let hasAnyInjured = false;
+				let isAllUninjured = true;
+
+				pendingMove.cardIds.forEach(id => {
+					const c = state.cards.find(x => x.id === id);
+					if (c) {
+						// 檢查是否都在護盾區
+						if (!c.zone.includes('shield')) {
+							isAllShield = false;
+						}
+						
+						// 檢查受傷狀態
+						if (c.isInjured) {
+							hasAnyInjured = true;
+							isAllUninjured = false;
+						}
+					}
+				});
+
+				// 3. 根據邏輯控制按鈕顯示
+				
+				// 邏輯 A: 全部都是護盾區卡牌 + 全都不是受傷狀態 -> 開放 [受傷]
+				if (isAllShield && isAllUninjured) {
+					btnInjured.style.display = 'block';
+				} else {
+					btnInjured.style.display = 'none';
+				}
+
+				// 邏輯 B: 全部都是護盾區卡牌 + 有任何一張是受傷狀態 -> 開放 [治癒]
+				if (isAllShield && hasAnyInjured) {
+					btnClearInjured.style.display = 'block';
+				} else {
+					btnClearInjured.style.display = 'none';
+				}
             }
             
             // 最後加上高亮
