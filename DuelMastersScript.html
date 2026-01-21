@@ -530,8 +530,10 @@
 	}
 	#draft-bar .row-controls {
 		display: flex;
-		justify-content: space-between;
-		align-items: center
+		flex-direction: column; /* [修改] 改為垂直排列，讓它們分兩行 */
+		align-items: flex-start; /* [修改] 靠左對齊 (若希望按鈕靠右，可改為 flex-end) */
+		gap: 6px; /* [新增] 增加上下兩行的間距 */
+		width: 100%; /* [新增] 確保佔滿寬度 */
 	}
 	#draft-bar button {
 		padding: 1px 8px;
@@ -759,7 +761,7 @@
 		padding-bottom: 20px;
 		box-sizing: border-box;
 		overflow: visible!important;
-		z-index: 5;
+		z-index: 1005;
 		min-height: 0
 	}
 	.battle-zone .card-group {
@@ -4804,7 +4806,7 @@
 			'lbl_draft_warning': '⚠️ 編輯中... (已累積 ',
 			'lbl_draft_ops': ' 個操作)',
 			'lbl_draft_ops_prefix': '包含', 
-			'chk_propagate': '🔗 連動更新後續',
+			'chk_propagate': '🔗 連動後續',
 			'btn_cancel': '取消',
 			'btn_save_step': '💾 儲存此步',
 			'lbl_point_mode': '👉 指向模式：請選擇目標 (可選擇任意卡片或區域)',
