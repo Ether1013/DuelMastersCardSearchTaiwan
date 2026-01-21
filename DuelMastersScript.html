@@ -12270,6 +12270,7 @@
 	/**
 	 * 確認並儲存
 	 */
+	/* 約在第 2660 行左右 */
 	function confirmMessageAction() {
 		const main = document.getElementById('msg-main-input').value;
 		const sub = document.getElementById('msg-sub-input').value;
@@ -12286,31 +12287,39 @@
 		if (sub) desc += ` - ${sub}`;
 
 		if (editingStepIndex !== -1 && history[editingStepIndex]) {
-			// 更新現有步驟
-			const step = history[editingStepIndex];
-			const opIndex = step.action.operations.findIndex(op => op.type === 'SHOW_MESSAGE');
 			
-			if (opIndex !== -1) {
-				step.action.operations[opIndex].text = main;
-				step.action.operations[opIndex].subtext = sub;
-				step.action.operations[opIndex].duration = durationMs;
-				
-				step.description = desc; // 更新 Log 描述
-				
-				updateLogDisplay(); // 假設您有這個或類似的函式來刷新 Log，若無則 renderTimeline()
-				if (typeof renderTimeline === 'function') renderTimeline(); 
-				// 若有 toast 函式可使用，否則可省略
-				// showToast(t('msg_updated') || "Updated!"); 
+			// 【修正重點】如果是正在編輯的草稿步驟 (Draft Mode)
+			// 必須優先更新 draftOperations，否則 saveDraft 會把舊資料寫回去
+			if (isDrafting && editingStepIndex === currentIndex) {
+				const draftOp = draftOperations.find(op => op.type === 'SHOW_MESSAGE');
+				if (draftOp) {
+					draftOp.text = main;
+					draftOp.subtext = sub;
+					draftOp.duration = durationMs;
+					
+					// 直接呼叫 saveDraft 進行存檔與同步
+					// 這會自動更新 UI 並確保播放時讀取到最新資料
+					saveDraft(desc); 
+				}
+			} 
+			else {
+				// 原本的邏輯 (針對非當前步驟的歷史修改)
+				const step = history[editingStepIndex];
+				const opIndex = step.action.operations.findIndex(op => op.type === 'SHOW_MESSAGE');
+				if (opIndex !== -1) {
+					step.action.operations[opIndex].text = main;
+					step.action.operations[opIndex].subtext = sub;
+					step.action.operations[opIndex].duration = durationMs;
+					step.description = desc;
+					
+					if (typeof updateLogDisplay === 'function') updateLogDisplay();
+					if (typeof renderTimeline === 'function') renderTimeline();
+					saveToStorage(); 
+				}
 			}
 		} else {
-			// 新增步驟
-			const op = {
-				type: 'SHOW_MESSAGE',
-				text: main,
-				subtext: sub,
-				duration: durationMs
-			};
-
+			// 新增步驟 (Insert) - 這部分原本就沒問題
+			const op = { type: 'SHOW_MESSAGE', text: main, subtext: sub, duration: durationMs };
 			if (!isDrafting) startDraftAtEnd();
 			addOperation(op);
 		}
