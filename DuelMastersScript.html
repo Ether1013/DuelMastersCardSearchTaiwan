@@ -12218,6 +12218,7 @@
 	/**
 	 * 開啟訊息設定視窗
 	 */
+	/* 約在第 2620 行左右 */
 	function openMessageModal() {
 		const modal = document.getElementById('message-modal');
 		const mainInput = document.getElementById('msg-main-input');
@@ -12225,42 +12226,44 @@
 		const durInput = document.getElementById('msg-duration-input');
 		const confirmText = document.getElementById('msg-confirm-text');
 		
-		editingStepIndex = -1; 
-		
-		// 檢查是否為編輯模式
-		if (currentIndex >= 0 && history[currentIndex]) {
+		editingStepIndex = -1;
+
+		// 定義填充表單的輔助函式
+		const setupForm = (text, sub, dur, isUpdate) => {
+			mainInput.value = text || "";
+			subInput.value = sub || "";
+			durInput.value = (dur / 1000) || 1.0;
+			confirmText.setAttribute('data-i18n', isUpdate ? 'btn_update' : 'btn_insert');
+			if (typeof changeLanguage === 'function') changeLanguage(currentLang);
+			modal.style.display = 'flex';
+		};
+
+		// 【修正重點】優先檢查是否處於編輯模式 (Draft Mode)
+		if (isDrafting) {
+			// 在編輯模式下，只檢查「當前草稿」是否有訊息操作
+			const draftOp = draftOperations.find(op => op.type === 'SHOW_MESSAGE');
+			
+			if (draftOp) {
+				// 有 -> 視為「修改」當前草稿的訊息
+				editingStepIndex = currentIndex; 
+				setupForm(draftOp.text, draftOp.subtext, draftOp.duration, true);
+				return;
+			}
+			// 無 -> 視為「插入」新訊息到此草稿 (繼續往下執行)
+		} 
+		else if (currentIndex >= 0 && history[currentIndex]) {
+			// 非編輯模式：檢查當前歷史步驟是否有訊息 (這是原本的邏輯)
 			const action = history[currentIndex].action;
 			const msgOp = action.operations.find(op => op.type === 'SHOW_MESSAGE');
-			
 			if (msgOp) {
 				editingStepIndex = currentIndex;
-				mainInput.value = msgOp.text || "";
-				subInput.value = msgOp.subtext || "";
-				durInput.value = (msgOp.duration / 1000) || 1.0;
-				
-				// 設定為「更新」
-				confirmText.setAttribute('data-i18n', 'btn_update');
-				
-				// [關鍵修正] 使用您現有的函式刷新文字
-				changeLanguage(currentLang); 
-				
-				modal.style.display = 'flex';
+				setupForm(msgOp.text, msgOp.subtext, msgOp.duration, true);
 				return;
 			}
 		}
 
-		// 新增模式
-		mainInput.value = '';
-		subInput.value = '';
-		durInput.value = 1.0; 
-		
-		// 設定為「插入」
-		confirmText.setAttribute('data-i18n', 'btn_insert');
-		
-		// [關鍵修正] 使用您現有的函式刷新文字
-		changeLanguage(currentLang); 
-		
-		modal.style.display = 'flex';
+		// 預設：新增模式 (Insert)
+		setupForm('', '', 1000, false);
 	}
 
 	function closeMessageModal() {
