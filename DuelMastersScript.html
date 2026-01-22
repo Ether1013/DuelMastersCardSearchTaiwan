@@ -3755,6 +3755,28 @@
 	.card.peek-out-glow.glow-rainbow {
 		box-shadow: -5px -5px 20px rgba(255, 255, 255, 0.8), 0 0 15px magenta !important;
 	}
+	/* --- [新增] 效果小卡的計數圓點樣式 --- */
+	.ability-count-badge {
+		position: absolute;
+		top: -8px;
+		right: -8px;
+		min-width: 24px;
+		height: 24px;
+		background: #e74c3c;
+		color: #fff;
+		border-radius: 50%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 10px;
+		font-weight: 800;
+		z-index: 500; /* 確保在最上層 */
+		border: 2px solid #fff;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+		pointer-events: none; /* 讓點擊能穿透圓點選到卡片 */
+		padding-top: 3px;
+		padding-right: 2px;
+	}
 </style>
 </head>
 <body>
@@ -4031,6 +4053,8 @@
             <button onclick="adjustAbilityCard('scale', 0.1)">+</button>
             <button onclick="adjustAbilityCard('scale', -0.1)">-</button>
 			<button onclick="adjustAbilityCard('rotate', -90)" title="逆時針轉 90 度">↺</button>
+			<button onclick="adjustAbilityCount(1)" class="mini-btn" style="background:#27ae60; font-weight:bold;" title="計數 +1">+1</button>
+			<button onclick="adjustAbilityCount(-1)" id="btn-count-minus" class="mini-btn" style="background:#c0392b; font-weight:bold;" title="計數 -1">-1</button>
         </div>
 
         <div class="panel-sep"></div>
@@ -7255,6 +7279,12 @@
 				}
 			});
 		}
+		else if (op.type === 'ADJUST_COUNT') {
+			const card = state.cards.find(c => c.id === op.cardId);
+			if (card) {
+				card.count = op.count;
+			}
+		}
 		else if (op.type === 'RENAME_CARD') {
 			const { cardIds, text } = op;
 			const targets = state.cards.filter(c => cardIds.some(id => id == c.id)); // [修正]
@@ -8307,7 +8337,7 @@
 
     function deleteSelectedCard() {
         if (!pendingMove) return;
-        if(!confirm(t('msg_delete_card_confirm'))) return;
+//        if(!confirm(t('msg_delete_card_confirm'))) return;
         
         addOperation({ type: 'DELETE_CARD', cardIds: pendingMove.cardIds });
         cancelSelection();
@@ -11175,6 +11205,15 @@
             if (card.power > 0) contentDiv.innerHTML += `<div class="card-power">${card.power}</div>`;
             el.appendChild(contentDiv);
         }
+		
+		// --- [新增] 效果卡計數圓點 ---
+		// 條件：是能力區的卡片 且 計數大於 1
+		if (card.zone.includes('ability') && card.count && card.count > 1) {
+			const countBadge = document.createElement('div');
+			countBadge.className = 'ability-count-badge';
+			countBadge.innerText = card.count;
+			el.appendChild(countBadge);
+		}
         
         // 長按事件 (手機版多選用)
         let pressTimer = null;
@@ -11237,6 +11276,75 @@
         setTimeout(() => el.classList.add('interactive'), 0);
         return el;
     }
+	
+	// --- [新增] 調整效果卡計數 ---
+	function adjustAbilityCount(delta) {
+		if (!pendingMove || pendingMove.cardIds.length !== 1) return;
+		const cardId = pendingMove.cardIds[0];
+		const state = getCurrentDisplayState();
+		const card = state.cards.find(c => c.id === cardId);
+		
+		if (!card) return;
+		
+		// 取得當前數字
+		let currentCount = card.count || 1;
+		let newCount = currentCount + delta;
+		
+		// 限制最小為 1
+		if (newCount < 1) newCount = 1;
+		if (newCount === currentCount) return; 
+		
+		// 發送操作指令
+		addOperation({
+			type: 'ADJUST_COUNT',
+			cardId: cardId,
+			count: newCount
+		});
+
+		// ★ 關鍵修改：不等待 State 更新，直接用 newCount 強制更新按鈕狀態
+		updateAbilityCountBtnState(newCount);
+	}
+
+	// --- [新增] 更新計數按鈕的狀態 (當 N=1 時禁用 -1) ---
+	function updateAbilityCountBtnState(forceCount) {
+		const btnMinus = document.getElementById('btn-count-minus');
+		if (!btnMinus) return;
+
+		let count = 1;
+
+		// 如果有傳入強制數值 (來自點擊當下)，直接使用
+		if (typeof forceCount === 'number') {
+			count = forceCount;
+		} 
+		// 否則從當前選取的卡片狀態讀取 (來自點擊卡片選取時)
+		else if (pendingMove && pendingMove.cardIds.length === 1) {
+			const state = getCurrentDisplayState();
+			const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+			if (card) {
+				count = card.count || 1;
+			}
+		}
+
+		// 判斷邏輯：只有當數字 > 1 時，[-1] 按鈕才亮起
+		const shouldDisable = (count <= 1);
+
+		btnMinus.disabled = shouldDisable;
+		if (shouldDisable) {
+			btnMinus.classList.add('disabled-gray');
+		} else {
+			btnMinus.classList.remove('disabled-gray');
+		}
+	}
+
+	// --- [新增] 攔截原有的 updateSelectionUI 以整合按鈕狀態更新 ---
+	// 請確保這段程式碼在 updateSelectionUI 定義之後執行
+	if (typeof updateSelectionUI === 'function') {
+		const originalUpdateSelectionUI = updateSelectionUI;
+		updateSelectionUI = function() {
+			originalUpdateSelectionUI(); // 執行原本的選取邏輯
+			updateAbilityCountBtnState(); // 額外執行我們的按鈕檢查
+		};
+	}
 	
 	// [修正] 透過長按卡片進入多選模式
     function enterMultiSelectModeByCard(cardId) {
