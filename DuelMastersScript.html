@@ -3740,6 +3740,21 @@
 		box-shadow: 0 10px 20px rgba(0, 0, 0, .5)!important;
 		border-bottom: 1px solid #333!important
 	}
+	/* --- [新增] 埋沒/蓋牌發光時的探頭特效 --- */
+	.card.peek-out-glow {
+		/* 逆時針旋轉 30 度並向左上偏移 */
+		transform: translate(-35%, -25%) rotate(-30deg) !important; 
+		/* 提高層級，確保浮在牌堆最上方 */
+		z-index: 100 !important; 
+		/* 強制顯示發光邊框 (避免被截斷) */
+		box-shadow: -5px -5px 20px rgba(255, 255, 255, 0.8), 0 0 10px var(--highlight-color) !important;
+		transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	}
+
+	/* 針對不同光色進行微調 (可選) */
+	.card.peek-out-glow.glow-rainbow {
+		box-shadow: -5px -5px 20px rgba(255, 255, 255, 0.8), 0 0 15px magenta !important;
+	}
 </style>
 </head>
 <body>
@@ -9687,23 +9702,29 @@
 			if (!zoneEl) return;
 			if (stackedZones.includes(zoneId) && !zoneId.includes('shield')) {
 				const count = cardsInZone.length;
-				
 				if (count > 0) {
 					// [智慧渲染演算法]
 					const indicesToRender = new Set();
-					indicesToRender.add(0);          // 底
-					indicesToRender.add(count - 1);  // 頂
-					
-					for (let i = 0; i < count - 1; i++) {
+					indicesToRender.add(0); // 底
+					indicesToRender.add(count - 1); // 頂
+					for (let i = 0; i < count; i++) { // 注意：這裡迴圈改為 < count，確保檢查每一張
 						const current = cardsInZone[i];
-						const next = cardsInZone[i+1];
-						// 如果這張跟上面那張角度不一樣，兩張都要畫出來，才能呈現交錯感
-						if (current.rotation !== next.rotation) {
+						
+						// [新增] 如果卡片正在發光，強制加入渲染清單 (避免被隱藏)
+						if (current.glow) {
 							indicesToRender.add(i);
-							indicesToRender.add(i+1);
+						}
+
+						// 檢查角度交錯 (維持原邏輯)
+						if (i < count - 1) {
+							const next = cardsInZone[i+1];
+							if (current.rotation !== next.rotation) {
+								indicesToRender.add(i);
+								indicesToRender.add(i+1);
+							}
 						}
 					}
-					
+
 					// 將 Set 轉為陣列並排序，確保 Z-Index 正確 (由底到頂)
 					const sortedIndices = Array.from(indicesToRender).sort((a,b) => a - b);
 					
@@ -9714,15 +9735,33 @@
 						// 強制堆疊樣式
 						cardEl.style.position = 'absolute';
 						// 居中定位
-						cardEl.style.top = '0';
-						cardEl.style.left = '0';
-						cardEl.style.right = '0';
-						cardEl.style.bottom = '0';
+						cardEl.style.top = '0'; cardEl.style.left = '0'; cardEl.style.right = '0'; cardEl.style.bottom = '0';
 						cardEl.style.margin = 'auto';
 						
-						// 設定層級，確保上面的蓋住下面的
-						cardEl.style.zIndex = index + 1; 
-						
+						// 設定層級
+						cardEl.style.zIndex = index + 1;
+
+						// --- [新增] 探頭邏輯 (Peek Out) ---
+						if (card.glow) {
+							const isTopCard = (index === count - 1);
+							// 觸發條件：(被壓在下面) OR (是頂牌但目前是蓋著的，例如牌庫頂)
+							const isBuried = !isTopCard;
+							const isFaceDownTop = isTopCard && !card.faceUp;
+
+							if (isBuried || isFaceDownTop) {
+								// 1. 加入探頭 CSS Class
+								cardEl.classList.add('peek-out-glow');
+								
+								// 2. 強制顯示圖片 (即便原本是蓋牌或隱藏狀態)
+								if (globalImageRegistry[card.imageKey]) {
+									cardEl.style.backgroundImage = `url(${globalImageRegistry[card.imageKey]})`;
+									cardEl.classList.add('has-image');
+									cardEl.classList.remove('face-down'); // 移除卡背樣式
+								}
+							}
+						}
+						// ----------------------------------
+
 						zoneEl.appendChild(cardEl);
 					});
 				}
