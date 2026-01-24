@@ -16113,15 +16113,25 @@
 	}
 
 	// [新增] 確認選擇後執行匯入
+	// [修正版] 確認選擇後執行匯入，並關閉所有視窗
 	function confirmImportTarget(targetId) {
 		if (!pendingDeckData) return;
 		
-		// 呼叫核心匯入函式，並傳入目標 ID (1 或 2)
+		// 1. 呼叫核心匯入函式
 		importDeckData(pendingDeckData, targetId);
 		
+		// 2. 關閉 "詢問 1P/2P" 的小視窗
 		closeImportTargetModal();
-		// 匯入成功後，也可以選擇是否關閉原本的選擇列表
-		// document.getElementById('import-selector-modal').style.display = 'none'; 
+		
+		// 3. [新增] 關閉 "選擇匯入來源" 的主視窗 (import-modal)
+		// 嘗試呼叫現有的關閉函式 (通常檔案裡會有這個)
+		if (typeof closeImportModal === 'function') {
+			closeImportModal();
+		} else {
+			// 如果找不到函式，直接強制隱藏 DOM
+			const mainModal = document.getElementById('import-modal');
+			if (mainModal) mainModal.style.display = 'none';
+		}
 	}
 
 	// 載入內建牌組 (其實是載入劇本檔並提取其中的牌組)
