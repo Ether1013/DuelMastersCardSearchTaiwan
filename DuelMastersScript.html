@@ -3777,6 +3777,44 @@
 		padding-top: 3px;
 		padding-right: 2px;
 	}
+	/* --- [修改] Zoom Blur Cut-In 特效動畫 (支援變數控制) --- */
+	@keyframes zoom-blur-sequence {
+		0% {
+			/* 2.5倍 * 使用者設定倍率 */
+			transform: scale(calc(2.5 * var(--rb-zoom-scale, 1)));
+			opacity: 0;
+			filter: blur(20px) brightness(2.5);
+		}
+		15% {
+			/* 1.0倍 * 使用者設定倍率 (這是最小狀態，因為基底是 cover，所以保證滿版) */
+			transform: scale(calc(1.0 * var(--rb-zoom-scale, 1)));
+			opacity: 1;
+			filter: blur(0px) brightness(1);
+		}
+		85% {
+			/* 1.1倍 * 使用者設定倍率 */
+			transform: scale(calc(1.1 * var(--rb-zoom-scale, 1)));
+			opacity: 1;
+			filter: blur(0px);
+		}
+		100% {
+			/* 1.8倍 * 使用者設定倍率 */
+			transform: scale(calc(1.8 * var(--rb-zoom-scale, 1)));
+			opacity: 0;
+			filter: blur(10px);
+		}
+	}
+
+	.rb-zoom-blur-anim {
+		animation: zoom-blur-sequence 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+		transform-origin: center center;
+		/* 確保容器本身是滿版的 */
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
 </style>
 </head>
 <body>
@@ -5001,6 +5039,7 @@
 			'opt_rb_br': '📐 右下撕裂 (Btm-Right)',
 			'opt_rb_pan_up': '🔼 緩緩上升 (Pan Up)',
 			'opt_rb_pan_down': '🔽 緩緩下降 (Pan Down)', // [新增]
+			'opt_rb_zoom_blur': '💨 衝擊縮放 (Zoom Blur)',
 			'btn_preview': '▶ 預覽',
 			'btn_save': '💾 儲存 (Save)',
 			'msg_rb_hint': '點擊此處並按下 Ctrl+V 貼上圖片\n(拖曳可移動，滾輪可縮放)',
@@ -5187,6 +5226,7 @@
 			'opt_rb_br': '📐 Btm-Right',
 			'opt_rb_pan_up': '🔼 Pan Up',
 			'opt_rb_pan_down': '🔽 Pan Down', // [新增]
+			'opt_rb_zoom_blur': '💨 Zoom Blur',
 			'btn_preview': '▶ Preview',
 			'btn_save': '💾 Save',
 			'msg_rb_hint': 'Click here & Ctrl+V to paste image\n(Drag to move, Scroll to scale)',
@@ -5371,6 +5411,7 @@
 			'opt_rb_br': '📐 右下から',
 			'opt_rb_pan_up': '🔼 緩やかに上昇 (Pan Up)',
 			'opt_rb_pan_down': '🔽 緩やかに下降 (Pan Down)', // [新增]
+			'opt_rb_zoom_blur': '💨 衝擊縮放 (Zoom Blur)',
 			'btn_preview': '▶ プレビュー',
 			'btn_save': '💾 保存',
 			'msg_rb_hint': 'ここをクリックして Ctrl+V で画像貼り付け\n(ドラッグで移動、ホイールで拡大)',
@@ -15205,9 +15246,57 @@
         }
 
         // ===============================================
-        // [新增] 第四種效果：緩緩上升 (Pan Up) 專用邏輯
-        // ===============================================
-        if (pattern === 'pan_up' || pattern === 'pan_down') {
+		// [最終修正版] Zoom Blur - 強制滿版 (Cover Height)
+		// ===============================================
+		if (pattern === 'zoom_blur') {
+			paperLayer.style.display = 'none';
+
+			// 讀取設定
+			// 如果使用者沒設定，預設為 1 (即 100% Cover)
+			const userScale = (data.scale !== undefined) ? data.scale : 1;
+			const userOx = data.offsetX || 0;
+			const userOy = data.offsetY || 0;
+
+			if (srcImage) {
+				imgLayer.style.backgroundImage = `url(${srcImage})`;
+				imgLayer.style.backgroundColor = 'transparent';
+				
+				// ★ 關鍵修正 1：強制使用 cover
+				// 這保證了圖片的短邊一定會撐滿螢幕 (高度不夠就撐高度，寬度不夠就撐寬度)
+				imgLayer.style.backgroundSize = 'cover';
+				
+				// ★ 關鍵修正 2：位置微調
+				// 在 cover 模式下，calc(50% + px) 依然有效，可以用來移動焦點
+				imgLayer.style.backgroundPosition = `calc(50% + ${userOx}px) calc(50% + ${userOy}px)`;
+				imgLayer.style.backgroundRepeat = 'no-repeat';
+			}
+			
+			imgLayer.style.clipPath = 'none'; 
+			imgLayer.style.opacity = '1';
+
+			// ★ 關鍵修正 3：將使用者的縮放倍率傳給 CSS
+			// 這樣動畫就會在 "Cover" 的基礎上進行縮放
+			imgLayer.style.setProperty('--rb-zoom-scale', userScale);
+
+			// 重置並觸發動畫
+			imgLayer.classList.remove('rb-zoom-blur-anim');
+			void imgLayer.offsetWidth; // Reflow
+			imgLayer.classList.add('rb-zoom-blur-anim');
+
+			setTimeout(() => {
+				imgLayer.classList.remove('rb-zoom-blur-anim');
+				// 清理樣式
+				imgLayer.style.backgroundSize = '';
+				imgLayer.style.backgroundPosition = '';
+				imgLayer.style.removeProperty('--rb-zoom-scale');
+				
+				if (onComplete) onComplete();
+				document.body.style.overflow = '';
+			}, 2500);
+
+			return; 
+		}
+		if (pattern === 'pan_up' || pattern === 'pan_down') {
             // 1. 隱藏不需要的撕裂層
             paperLayer.style.display = 'none';
             
@@ -16284,6 +16373,7 @@
 					<option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
 					<option value="pan_up" data-i18n="opt_rb_pan_up">🔼 緩緩上升 (Pan Up)</option>
 					<option value="pan_down" data-i18n="opt_rb_pan_down">🔽 緩緩下降 (Pan Down)</option>
+					<option value="zoom_blur" data-i18n="opt_rb_zoom_blur">💨 衝擊縮放 (Zoom Blur)</option>
 				</select>
 			</div>
 			<div style="display:flex; flex-direction:column; gap:2px;">
