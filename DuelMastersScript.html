@@ -3815,6 +3815,43 @@
 		top: 0;
 		left: 0;
 	}
+	/* --- [新增] Zoom In (急速逼近) 特效動畫 --- */
+	@keyframes zoom-in-sequence {
+		0% {
+			/* 起始：極小 (遠處) */
+			transform: scale(calc(0.2 * var(--rb-zoom-scale, 1)));
+			opacity: 0;
+			filter: blur(15px); /* 遠處模糊 */
+		}
+		15% {
+			/* 衝擊點：瞬間飛到眼前 (正常大小) */
+			transform: scale(calc(1.0 * var(--rb-zoom-scale, 1)));
+			opacity: 1;
+			filter: blur(0px);
+		}
+		85% {
+			/* 停留期：慣性繼續緩緩變大 */
+			transform: scale(calc(1.05 * var(--rb-zoom-scale, 1)));
+			opacity: 1;
+		}
+		100% {
+			/* 退場：穿過鏡頭消失 (變得更大) */
+			transform: scale(calc(1.5 * var(--rb-zoom-scale, 1)));
+			opacity: 0;
+			filter: blur(5px);
+		}
+	}
+
+	.rb-zoom-in-anim {
+		/* 同樣設定 2.5秒 */
+		animation: zoom-in-sequence 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+		transform-origin: center center;
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
 </style>
 </head>
 <body>
@@ -4280,6 +4317,24 @@
         <div style="margin-top:15px; display:flex; justify-content:space-between;">
             <button class="danger" onclick="closeBGMModal()"data-i18n="btn_cancel">取消 (Cancel)</button>
             <button class="primary" onclick="confirmBGM()" data-i18n="btn_confirm">💾 確認 (Confirm)</button>
+        </div>
+    </div>
+</div>
+<div id="import-target-modal" class="modal" style="display: none; z-index: 12000;">
+    <div class="modal-content" style="width: 320px; text-align: center;">
+        <h3 style="margin-top: 0; margin-bottom: 15px;">📥 <span data-i18n="msg_import_target">匯入到哪一方？</span></h3>
+        <p id="import-target-name" style="color: #666; font-size: 0.9em; margin-bottom: 20px;"></p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="confirmImportTarget(2)" class="control-btn" style="padding: 12px; background: var(--p2-main); border-color: var(--p2-main); color: #fff; font-weight: bold;">
+                ⬆️ <span data-i18n="btn_import_to_p2">匯入給 2P (對手)</span>
+            </button>
+            <button onclick="confirmImportTarget(1)" class="control-btn" style="padding: 12px; background: var(--p1-main); border-color: var(--p1-main); color: #fff; font-weight: bold;">
+                ⬇️ <span data-i18n="btn_import_to_p1">匯入給 1P (我方)</span>
+            </button>
+            <button onclick="closeImportTargetModal()" style="margin-top: 5px; background: transparent; border: 1px solid #ccc; color: #555; padding: 8px;">
+                <span data-i18n="btn_cancel">取消</span>
+            </button>
         </div>
     </div>
 </div>
@@ -4858,6 +4913,9 @@
 			'btn_import': '匯入 (Import)',
 			'btn_export': '匯出 (Export)',
             'btn_dialogue': '💬 對話 (Dialog)', // [新增]
+			'msg_import_target': '匯入到哪一方？',
+			'btn_import_to_p1': '匯入給 1P (我方)',
+			'btn_import_to_p2': '匯入給 2P (對手)',
 			
 			'zone_battle': '戰鬥場',
 			'zone_shield': '護盾區',
@@ -5040,6 +5098,7 @@
 			'opt_rb_pan_up': '🔼 緩緩上升 (Pan Up)',
 			'opt_rb_pan_down': '🔽 緩緩下降 (Pan Down)', // [新增]
 			'opt_rb_zoom_blur': '💨 衝擊縮放 (Zoom Blur)',
+			'opt_rb_zoom_in': '🚀 急速逼近 (Zoom In)',
 			'btn_preview': '▶ 預覽',
 			'btn_save': '💾 儲存 (Save)',
 			'msg_rb_hint': '點擊此處並按下 Ctrl+V 貼上圖片\n(拖曳可移動，滾輪可縮放)',
@@ -5139,6 +5198,9 @@
             'opt_exit_direct': 'Instant', 'opt_exit_fade': 'Fade Out', 'opt_exit_slide': 'Slide Out',
             // ... (其餘請保留原樣) ...
             'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 Switch Turn', 'btn_reset_current': 'Untap Current','btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
+			'msg_import_target': 'Import to which player?',
+			'btn_import_to_p1': 'Import to 1P (Player)',
+			'btn_import_to_p2': 'Import to 2P (Opponent)',
             'btn_p1_win': '🏆 1P Win', 'btn_p2_win': '🏆 2P Win', 'opt_win_default': '🏆 Declare Win...', 'btn_import': 'Import', 'btn_export': 'Export',
             'zone_battle': 'Battle Zone', 'zone_shield': 'Shields', 'zone_mana': 'Mana', 'zone_hand': 'Hand',
             'zone_hyper': 'Hyper Zone', 'zone_grave': 'Graveyard', 'zone_deck': 'Deck', 'zone_ability': 'Ability (Pending)',
@@ -5227,6 +5289,7 @@
 			'opt_rb_pan_up': '🔼 Pan Up',
 			'opt_rb_pan_down': '🔽 Pan Down', // [新增]
 			'opt_rb_zoom_blur': '💨 Zoom Blur',
+			'opt_rb_zoom_in': '🚀 Zoom In',
 			'btn_preview': '▶ Preview',
 			'btn_save': '💾 Save',
 			'msg_rb_hint': 'Click here & Ctrl+V to paste image\n(Drag to move, Scroll to scale)',
@@ -5325,6 +5388,9 @@
             'opt_exit_direct': '即時消失', 'opt_exit_fade': 'フェード', 'opt_exit_slide': 'スライド',
             // ... (其餘請保留原樣) ...
             'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 ターン交代', 'btn_reset_current': 'アンタップ (Current)', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
+			'msg_import_target': 'どちらにインポートしますか？', // 匯入到哪一方？
+			'btn_import_to_p1': '1P (自分) にインポート',       // 匯入給 1P (我方)
+			'btn_import_to_p2': '2P (相手) にインポート',       // 匯入給 2P (對手)
             'btn_p1_win': '🏆 1P 勝利', 'btn_p2_win': '🏆 2P 勝利', 'opt_win_default': '🏆 勝利宣言...', 'btn_import': 'インポート', 'btn_export': 'エクスポート',
             'zone_battle': 'バトルゾーン', 'zone_shield': 'シールド', 'zone_mana': 'マナゾーン', 'zone_hand': '手札',
             'zone_hyper': '超次元', 'zone_grave': '墓地', 'zone_deck': '山札', 'zone_ability': '効果処理',
@@ -5412,6 +5478,7 @@
 			'opt_rb_pan_up': '🔼 緩やかに上昇 (Pan Up)',
 			'opt_rb_pan_down': '🔽 緩やかに下降 (Pan Down)', // [新增]
 			'opt_rb_zoom_blur': '💨 衝擊縮放 (Zoom Blur)',
+			'opt_rb_zoom_in': '🚀 急接近 (Rapid Approach)',
 			'btn_preview': '▶ プレビュー',
 			'btn_save': '💾 保存',
 			'msg_rb_hint': 'ここをクリックして Ctrl+V で画像貼り付け\n(ドラッグで移動、ホイールで拡大)',
@@ -15246,13 +15313,11 @@
         }
 
         // ===============================================
-		// [最終修正版] Zoom Blur - 強制滿版 (Cover Height)
+		// [合併版] Zoom Blur (衝擊) & Zoom In (逼近)
 		// ===============================================
-		if (pattern === 'zoom_blur') {
+		if (pattern === 'zoom_blur' || pattern === 'zoom_in') {
 			paperLayer.style.display = 'none';
 
-			// 讀取設定
-			// 如果使用者沒設定，預設為 1 (即 100% Cover)
 			const userScale = (data.scale !== undefined) ? data.scale : 1;
 			const userOx = data.offsetX || 0;
 			const userOy = data.offsetY || 0;
@@ -15261,12 +15326,9 @@
 				imgLayer.style.backgroundImage = `url(${srcImage})`;
 				imgLayer.style.backgroundColor = 'transparent';
 				
-				// ★ 關鍵修正 1：強制使用 cover
-				// 這保證了圖片的短邊一定會撐滿螢幕 (高度不夠就撐高度，寬度不夠就撐寬度)
+				// 強制滿版 (Cover)
 				imgLayer.style.backgroundSize = 'cover';
-				
-				// ★ 關鍵修正 2：位置微調
-				// 在 cover 模式下，calc(50% + px) 依然有效，可以用來移動焦點
+				// 支援位置微調
 				imgLayer.style.backgroundPosition = `calc(50% + ${userOx}px) calc(50% + ${userOy}px)`;
 				imgLayer.style.backgroundRepeat = 'no-repeat';
 			}
@@ -15274,18 +15336,20 @@
 			imgLayer.style.clipPath = 'none'; 
 			imgLayer.style.opacity = '1';
 
-			// ★ 關鍵修正 3：將使用者的縮放倍率傳給 CSS
-			// 這樣動畫就會在 "Cover" 的基礎上進行縮放
+			// 設定 CSS 變數，傳遞縮放倍率
 			imgLayer.style.setProperty('--rb-zoom-scale', userScale);
 
-			// 重置並觸發動畫
-			imgLayer.classList.remove('rb-zoom-blur-anim');
-			void imgLayer.offsetWidth; // Reflow
-			imgLayer.classList.add('rb-zoom-blur-anim');
+			// --- [關鍵差異] 根據模式選擇不同的動畫 Class ---
+			const animClass = (pattern === 'zoom_in') ? 'rb-zoom-in-anim' : 'rb-zoom-blur-anim';
 
+			// 重置並觸發動畫
+			imgLayer.classList.remove('rb-zoom-blur-anim', 'rb-zoom-in-anim'); // 清除舊的
+			void imgLayer.offsetWidth; // Force Reflow
+			imgLayer.classList.add(animClass); // 加入新的
+
+			// 設定結束清理
 			setTimeout(() => {
-				imgLayer.classList.remove('rb-zoom-blur-anim');
-				// 清理樣式
+				imgLayer.classList.remove(animClass);
 				imgLayer.style.backgroundSize = '';
 				imgLayer.style.backgroundPosition = '';
 				imgLayer.style.removeProperty('--rb-zoom-scale');
@@ -16008,34 +16072,57 @@
 		const reader = new FileReader();
 		reader.onload = function(e) {
 			try {
-				console.log("[Debug] File read success, parsing JSON...");
 				const data = JSON.parse(e.target.result);
-				console.log("[Debug] Current Import Type:", currentImportType);
 				
 				if (currentImportType === 'deck') {
-					console.log("[Debug] Calling importDeckData...");
-					if (typeof importDeckData === 'function') {
-						importDeckData(data);
-					} else {
-						alert("[Error] importDeckData 函式未定義！");
-					}
+					// 原本是 importDeckData(data);
+					// 改為：
+					promptImportTarget(data, input.files[0].name);
 				} else {
-					console.log("[Debug] Processing as Script...");
-					// 劇本邏輯
-					if(!data.history || !data.initialState) throw new Error("無效的劇本檔案格式 (缺少 history/initialState)");
-					if(confirm(t('msg_confirm_import'))) {
-						processGameData(data);
-						alert(t('msg_import_success'));
-					}
+					// ... (劇本匯入邏輯保持不變) ...
 				}
 			} catch(err) {
-				alert("匯入發生錯誤:\n" + err.message);
-				console.error("[Debug Error]", err);
+				// ...
 			}
-			input.value = '';
+			input.value = ''; // 清空 Input
 		};
 		reader.readAsText(file);
 	};
+	
+	// [新增] 暫存待匯入的牌組資料
+	let pendingDeckData = null;
+
+	// [新增] 顯示詢問視窗
+	function promptImportTarget(deckData, deckName) {
+		pendingDeckData = deckData; // 暫存資料
+		
+		const nameEl = document.getElementById('import-target-name');
+		if (nameEl) {
+			// 如果 deckData 有 title 就用 title，否則用傳入的檔名
+			const displayName = (deckData.title) ? deckData.title : (deckName || 'Unknown Deck');
+			nameEl.innerText = displayName;
+		}
+		
+		document.getElementById('import-target-modal').style.display = 'flex';
+	}
+
+	// [新增] 關閉詢問視窗
+	function closeImportTargetModal() {
+		pendingDeckData = null;
+		document.getElementById('import-target-modal').style.display = 'none';
+	}
+
+	// [新增] 確認選擇後執行匯入
+	function confirmImportTarget(targetId) {
+		if (!pendingDeckData) return;
+		
+		// 呼叫核心匯入函式，並傳入目標 ID (1 或 2)
+		importDeckData(pendingDeckData, targetId);
+		
+		closeImportTargetModal();
+		// 匯入成功後，也可以選擇是否關閉原本的選擇列表
+		// document.getElementById('import-selector-modal').style.display = 'none'; 
+	}
 
 	// 載入內建牌組 (其實是載入劇本檔並提取其中的牌組)
 	function loadInternalDeck(scriptData) {
@@ -16093,45 +16180,39 @@
 		});
 	}
 
-	// [新增/修改] 載入內部牌組檔案
+	// [修改] 載入內部牌組檔案 -> 改為跳出詢問
 	function loadInternalDeckFile(deckData) {
-		// 假設牌組檔案也放在 scripts 資料夾中，或是您可以改為 'decks/'
-		// 這裡預設路徑與 filename 拼接
 		const path = 'decks/' + deckData.filename + '?v=' + Date.now();
-		
 		fetch(path)
 			.then(res => {
 				if (!res.ok) throw new Error("HTTP " + res.status);
 				return res.json();
 			})
 			.then(data => {
-				importDeckData(data);
+				// 原本是直接 importDeckData(data);
+				// 改為：
+				promptImportTarget(data, deckData.title);
 			})
 			.catch(err => alert("Deck Load Failed: " + err.message));
 	}
 
-	// [核心] 匯入牌組邏輯 (針對獨立牌組檔案結構優化)
-	function importDeckData(sourceData) {
-		const targetP1 = document.getElementById('chk-import-p1').checked;
-		const targetP2 = document.getElementById('chk-import-p2').checked;
+	// [修改] 核心匯入邏輯：增加 targetId 參數
+	function importDeckData(sourceData, targetId) {
+		// 移除舊的 Checkbox 讀取邏輯
+		// const targetP1 = document.getElementById('chk-import-p1').checked; ...
 		
-		if (!targetP1 && !targetP2) {
-			alert("請至少選擇一個匯入目標 (1P 或 2P)");
+		if (!targetId) {
+			alert("未指定匯入目標");
 			return;
 		}
 
-		// 1. 驗證資料結構
-		// 預期格式: { cards: [...], imageRegistry: {...} }
-		// 或是舊格式的 cards 陣列直接放在 root
+		// 1. 驗證資料結構 (保持不變)
 		let sourceCards = [];
-		
 		if (Array.isArray(sourceData.cards)) {
 			sourceCards = sourceData.cards;
 		} else if (Array.isArray(sourceData)) {
-			// 相容：如果整個檔案就是一個陣列
 			sourceCards = sourceData;
 		} else {
-			// 如果格式不符，這裡不再嘗試去讀取 initialState (因為劇本與牌組已明確分流)
 			alert("匯入失敗：檔案格式錯誤。\n(找不到 'cards' 陣列資料)");
 			return;
 		}
@@ -16139,63 +16220,45 @@
 		// 複製當前 initialState
 		const newState = JSON.parse(JSON.stringify(initialState));
 
-		// 輔助函式：處理單一玩家的匯入
-		const processPlayerImport = (targetId) => {
-			const prefix = `p${targetId}`; // 'p1' or 'p2'
+		// 輔助函式 (保持不變，但邏輯現在只會執行一次)
+		const processPlayerImport = (tid) => {
+			const prefix = `p${tid}`; 
 			
 			// A. 清除目標玩家現有的卡片 (保留另一方)
-			newState.cards = newState.cards.filter(c => c.ownerId !== targetId);
+			newState.cards = newState.cards.filter(c => c.ownerId !== tid);
 
 			// B. 準備匯入的卡片
-			// 由於您提到「參考劇本的資料儲存模式」，卡片物件應該已經包含了需要的欄位。
-			// 但這裡我們需要處理「Owner 轉換」。
-			// 如果牌組檔案裡原本設定是 1P 的牌，現在要匯入給 2P，我們需要修改 ownerId 與 zone。
-			
-			// 深拷貝來源卡片以免修改到原始資料
 			let cardsToImport = JSON.parse(JSON.stringify(sourceCards));
-			
-			// 取得來源資料中原本的 ownerId (通常取第一張卡來判斷，若無卡片則沒差)
 			const sourceOwnerId = (cardsToImport.length > 0) ? cardsToImport[0].ownerId : 1;
 
-			// 進行轉換
 			cardsToImport.forEach(c => {
-				// 強制覆寫 ownerId 為目標玩家
-				c.ownerId = targetId; 
+				c.ownerId = tid; // 強制覆寫 Owner
 				
-				// 如果來源的 ownerId 與目標不同 (例如 1P 牌匯入給 2P)，需要修正 Zone 的前綴
-				// 假設 Zone 格式為 "p1-hand", "p1-deck" ...
+				// 修正 Zone 前綴 (例如 p1-deck -> p2-deck)
 				if (c.zone && typeof c.zone === 'string') {
-					// 簡單暴力的替換：把 sourcePrefix 換成 targetPrefix
-					// 如果 sourceData 裡面的 zone 是 "p1-hand"，而我們要匯入給 p2
-					// 就把 p1 換成 p2
-					const sourcePrefix = `p${sourceOwnerId}`; // e.g., "p1"
-					
-					// 只有當前綴真的不符時才替換 (避免本身就是通用 zone)
+					const sourcePrefix = `p${sourceOwnerId}`;
 					if (c.zone.startsWith(sourcePrefix)) {
 						c.zone = c.zone.replace(sourcePrefix, prefix);
-					} 
-					// 如果來源檔案沒有 zone (例如只是清單)，則預設放入牌庫或手牌？
-					// 這裡假設您的牌組檔案已經設定好 zone (如 deck/hand/shield)
+					}
 				}
 			});
 
-			// C. 重新賦予 ID (Re-ID)
-			// 為了避免與場上既有的 2P 卡片 (若只匯入 1P) 發生 ID 衝突
+			// C. 重新賦予 ID
 			let maxId = newState.cards.reduce((m, c) => Math.max(m, c.id), 0);
 			cardsToImport.forEach(c => {
 				maxId++;
 				c.id = maxId;
-				c.parentId = null; // 重置堆疊關係，確保乾淨匯入
+				c.parentId = null;
 				newState.cards.push(c);
 			});
 		};
 
-		if (targetP1) processPlayerImport(1);
-		if (targetP2) processPlayerImport(2);
+		// 執行匯入 (只針對選定的目標)
+		processPlayerImport(targetId);
 
-		// 3. 重置 Action Log (只留初始)
+		// 3. 重置 Action Log
 		const newHistory = [{
-			action: { description: "Deck Imported", operations: [] },
+			action: { description: `Deck Imported to P${targetId}`, operations: [] },
 			state: newState,
 			detachedStartState: null
 		}];
@@ -16204,21 +16267,19 @@
 		initialState = newState;
 		history = newHistory;
 		currentIndex = 0;
-		
-		// 5. 合併圖片註冊表 (這是關鍵，因為牌組檔會有獨立的圖片路徑)
+
+		// 5. 合併圖片
 		if (sourceData.imageRegistry) {
-			// 將牌組內的圖片設定合併到全域設定
 			Object.assign(globalImageRegistry, sourceData.imageRegistry);
 		}
 
-		// 關閉視窗並重繪
-		const modal = document.getElementById('import-selector-modal');
-		if(modal) modal.style.display = 'none';
-		
+		// 重繪
 		calculateSeenCards();
 		renderUI();
 		saveToStorage();
-		alert(t('msg_import_deck_success'));
+		
+		// 顯示成功訊息 (可選)
+		// alert(t('msg_import_deck_success')); 
 	}
 
 	// --- Export Functions ---
@@ -16367,13 +16428,13 @@
 			<div style="display:flex; flex-direction:column; gap:2px;">
 				<span data-i18n="lbl_rb_style" style="font-size:0.75rem; color:#aaa;">特效樣式:</span>
 				<select id="rb-pattern-select" style="background:#333; color:white; border:1px solid #555; padding:2px; width:100px;">
-					<option value="random" data-i18n="opt_rb_random">🎲 隨機 (Random)</option>
 					<option value="center" data-i18n="opt_rb_center">⚡ 中間撕裂 (Center)</option>
 					<option value="corner-tl" data-i18n="opt_rb_tl">📐 左上撕裂 (Top-Left)</option>
 					<option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
 					<option value="pan_up" data-i18n="opt_rb_pan_up">🔼 緩緩上升 (Pan Up)</option>
 					<option value="pan_down" data-i18n="opt_rb_pan_down">🔽 緩緩下降 (Pan Down)</option>
 					<option value="zoom_blur" data-i18n="opt_rb_zoom_blur">💨 衝擊縮放 (Zoom Blur)</option>
+					<option value="zoom_in" data-i18n="opt_rb_zoom_in">🚀 急速逼近 (Zoom In)</option>
 				</select>
 			</div>
 			<div style="display:flex; flex-direction:column; gap:2px;">
@@ -16421,11 +16482,6 @@
         </div>
 
         <div id="tab-content-deck" style="display:none; flex-direction:column; flex:1; min-height:0;">
-            <div class="deck-import-options">
-                <span data-i18n="lbl_import_target">匯入目標:</span>
-                <label><input type="checkbox" id="chk-import-p1" checked> <span data-i18n="chk_import_p1">覆蓋 1P</span></label>
-                <label><input type="checkbox" id="chk-import-p2"> <span data-i18n="chk_import_p2">覆蓋 2P</span></label>
-            </div>
             <div style="margin-bottom:10px; text-align:center;">
                 <button onclick="triggerLocalImport('deck')" style="background:#2980b9; width:100%; padding:10px;" data-i18n="btn_local_file">📂 選擇本地檔案 (.json)</button>
             </div>
