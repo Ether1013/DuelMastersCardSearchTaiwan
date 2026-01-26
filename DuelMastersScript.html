@@ -4692,6 +4692,7 @@
             description: '大撒幣對決',
 			counter_url: 'https://www.f-counter.net/j/66/1765258081/',
 			speed: 1.0,
+			gialogSpped: 200,
             lang: 'zh',
         },
         {
@@ -4714,6 +4715,7 @@
     ];
 	// [新增] 用來記錄當前正在運行的劇本設定 (包含 credits)
 	let currentScriptConfig = null;
+	let currentDialogSpeed = 100; // 預設對話速度 (ms/字)
 	
 	// [新增] 範例牌組清單
 	// 請在此填入您的牌組 JSON 檔案資訊
@@ -12418,7 +12420,18 @@
 		} else if (currOp && currOp.type === 'RPS') {
 			delay = 4000;
 		} else if (currOp && currOp.type === 'DIALOGUE') {
-			delay = 1500;
+			// 自動計算：基礎 500ms + (字數 * 速度)
+			let totalLen = 0;
+			if (currOp.data) {
+				if (currOp.data.p1 && currOp.data.p1.active) totalLen += (currOp.data.p1.dataText || "").length;
+				if (currOp.data.p2 && currOp.data.p2.active) totalLen += (currOp.data.p2.dataText || "").length;
+			}
+			
+			// 使用 currentDialogSpeed
+			delay = 500 + (totalLen * currentDialogSpeed);
+
+			// 設定最小值，避免短句閃太快
+			if (delay < 1500) delay = 1500;
 		} else if (currOp && currOp.type === 'SHUFFLE') {
 			delay = 2100;
 		} else if (currOp && currOp.type === 'MOVE' && currOp.withShuffleAnim) {
@@ -13354,6 +13367,11 @@
 		initMobileMode(fullPath);
 		
 		const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
+		if (scriptData && scriptData.dialogSpeed !== undefined) {
+			currentDialogSpeed = scriptData.dialogSpeed;
+		} else {
+			currentDialogSpeed = 100; // 恢復預設值
+		}
 		currentScriptConfig = scriptData;
 
 		// --- 語言設定邏輯 ---
@@ -13397,6 +13415,13 @@
     // 3. 載入內建劇本 (Fetch & Load)
     function loadInternalScript(scriptData) {
 		if (!confirm(t('msg_confirm_load_script').replace('{title}', scriptData.title))) return;
+		// --- [新增這段] ---
+		if (scriptData.dialogSpeed !== undefined) {
+			currentDialogSpeed = scriptData.dialogSpeed;
+		} else {
+			currentDialogSpeed = 100;
+		}
+		// -----------------
 		
 		currentScriptConfig = scriptData;
 		document.getElementById('import-selector-modal').style.display = 'none';
