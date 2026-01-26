@@ -2411,21 +2411,7 @@
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: cover;
-		z-index: 10;
-
-		/* --- [修正] 針對 iOS Safari 背景圖縮放模糊的修正 --- */
-		
-		/* 1. 強制開啟硬體加速 (GPU) */
-		transform: translate3d(0, 0, 0);
-		-webkit-transform: translate3d(0, 0, 0);
-
-		/* 2. 隱藏背面可視性，這會改變瀏覽器的渲染策略，通常能解決模糊 */
-		backface-visibility: hidden;
-		-webkit-backface-visibility: hidden;
-
-		/* 3. 重要：將 will-change 設為 auto 或僅指定 opacity
-		   原本的 'clip-path' 或 'transform' 可能導致 Safari 提早鎖定低解析度 */
-		will-change: auto; 
+		z-index: 10
 	}
 	#rb-paper-layer {
 		background-color: #fdfdfd;
@@ -3378,6 +3364,18 @@
 	body.power-saving-mode .card, body.power-saving-mode .card * {
 		filter: none!important;
 		text-shadow: none!important
+	}
+	/* [修正] 確保 CUT IN 特效圖層不受節能模式的 filter: none 影響 */
+	body.power-saving-mode #rb-inner-layer,
+	body.power-saving-mode #rb-paper-layer,
+	body.power-saving-mode #rb-flash-layer {
+		filter: initial !important; /* 恢復元素原始定義的 filter */
+	}
+
+	/* 確保正在執行的 Zoom Blur 等動畫不會被強制關閉濾鏡 */
+	body.power-saving-mode .rb-zoom-blur-anim,
+	body.power-saving-mode .rb-zoom-in-anim {
+		filter: initial !important;
 	}
 	body.power-saving-mode {
 		--ps-red: #ff0000;
@@ -15357,8 +15355,6 @@
 
 			// 設定 CSS 變數，傳遞縮放倍率
 			imgLayer.style.setProperty('--rb-zoom-scale', userScale);
-			
-			imgLayer.style.filter = 'blur(0px)';
 
 			// --- [關鍵差異] 根據模式選擇不同的動畫 Class ---
 			const animClass = (pattern === 'zoom_in') ? 'rb-zoom-in-anim' : 'rb-zoom-blur-anim';
