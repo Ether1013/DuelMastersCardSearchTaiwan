@@ -15351,6 +15351,9 @@
 
 			// 設定結束清理
 			setTimeout(() => {
+				// [修正] 在移除動畫 Class 前，強制將透明度設為 0
+				// 這樣移除 Class 後就不會彈回 opacity: 1
+				imgLayer.style.opacity = '0';
 				imgLayer.classList.remove(animClass);
 				imgLayer.style.backgroundSize = '';
 				imgLayer.style.backgroundPosition = '';
