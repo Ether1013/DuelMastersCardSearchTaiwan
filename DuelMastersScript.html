@@ -2411,7 +2411,21 @@
 		background-position: center;
 		background-repeat: no-repeat;
 		background-size: cover;
-		z-index: 10
+		z-index: 10;
+
+		/* --- [修正] 針對 iOS Safari 背景圖縮放模糊的修正 --- */
+		
+		/* 1. 強制開啟硬體加速 (GPU) */
+		transform: translate3d(0, 0, 0);
+		-webkit-transform: translate3d(0, 0, 0);
+
+		/* 2. 隱藏背面可視性，這會改變瀏覽器的渲染策略，通常能解決模糊 */
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+
+		/* 3. 重要：將 will-change 設為 auto 或僅指定 opacity
+		   原本的 'clip-path' 或 'transform' 可能導致 Safari 提早鎖定低解析度 */
+		will-change: auto; 
 	}
 	#rb-paper-layer {
 		background-color: #fdfdfd;
