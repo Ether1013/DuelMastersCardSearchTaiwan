@@ -12923,6 +12923,12 @@
 		
 		if (data.themeSettings) globalThemeSettings = data.themeSettings;
 		else globalThemeSettings = { p1: 'blue', p2: 'red' };
+		
+		// --- [新增這段] 修正手機版讀取不到效果卡設定的問題 ---
+		if (data.abilityRegistry) {
+			globalAbilityStyleRegistry = data.abilityRegistry;
+		}
+		
 		applyThemeVariables();
 
 		initialState = data.initialState;
