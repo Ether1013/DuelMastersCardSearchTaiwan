@@ -16129,23 +16129,36 @@
 			console.log("[Debug] No file selected (User cancelled)");
 			return;
 		}
-
+		
 		const reader = new FileReader();
 		reader.onload = function(e) {
 			try {
 				const data = JSON.parse(e.target.result);
 				
 				if (currentImportType === 'deck') {
-					// 原本是 importDeckData(data);
-					// 改為：
+					// 匯入牌組
 					promptImportTarget(data, input.files[0].name);
 				} else {
-					// ... (劇本匯入邏輯保持不變) ...
+					// ✅ [Fix] 補回劇本匯入邏輯
+					
+					// 1. 檢查是否有未儲存的本地進度 (防止誤覆蓋)
+					const hasLocalData = (typeof loadFromStorage === 'function') ? loadFromStorage() : false;
+					
+					if (hasLocalData) {
+						// 有衝突 -> 暫存資料並顯示詢問視窗
+						pendingImportData = data;
+						document.getElementById('import-conflict-modal').style.display = 'flex';
+					} else {
+						// 無衝突 -> 直接載入並重置到第一步
+						processGameData(data, true);
+						alert(t('msg_import_success'));
+					}
 				}
 			} catch(err) {
-				// ...
+				console.error(err);
+				alert(t('msg_import_fail'));
 			}
-			input.value = ''; // 清空 Input
+			input.value = ''; // 清空 Input 以便下次能選同個檔案
 		};
 		reader.readAsText(file);
 	};
