@@ -3367,10 +3367,14 @@
 	}
 	/* [修正] 確保 CUT IN 特效圖層不受節能模式的 filter: none 影響 */
 	body.power-saving-mode #rb-inner-layer,
-	body.power-saving-mode #rb-paper-layer,
-	body.power-saving-mode #rb-flash-layer {
-		filter: initial !important; /* 恢復元素原始定義的 filter */
-	}
+    body.power-saving-mode #rb-paper-layer,
+    body.power-saving-mode #rb-flash-layer,
+    /* --- [新增] 王牌特效豁免 --- */
+    body.power-saving-mode #ace-flash-layer,
+    body.power-saving-mode .ace-internal-glow,
+    body.power-saving-mode .animating-ace {
+        filter: initial !important; /* 恢復元素原始定義的 filter */
+    }
 
 	/* 確保正在執行的 Zoom Blur 等動畫不會被強制關閉濾鏡 */
 	body.power-saving-mode .rb-zoom-blur-anim,
