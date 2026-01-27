@@ -8631,6 +8631,25 @@
 				alert(t('msg_ability_cant_move'));
 				return;
 			}
+			
+			// ✅ [Fix] 加入這段：按住 Ctrl 移動時，自動移除關聯的發光能力卡
+			if (e && e.ctrlKey) {
+				// 找出所有符合條件的能力卡：
+				// 1. 位於能力區
+				// 2. 它的來源(Source)是目前正在移動的卡片之一
+				// 3. 它目前是發光狀態 (glow 不為空)
+				const autoDeleteTargets = state.cards.filter(c => 
+					c.zone.includes('ability') && 
+					c.sourceId && 
+					pendingMove.cardIds.some(movingId => movingId == c.sourceId) && 
+					c.glow
+				).map(c => c.id);
+
+				if (autoDeleteTargets.length > 0) {
+					// 執行刪除動作 (這會自動記錄在 Action Log 中)
+					addOperation({ type: 'DELETE_CARD', cardIds: autoDeleteTargets });
+				}
+			}
 
 			// 一般移動邏輯 (維持不變)
 			if (isStackZone(zoneId)) {
