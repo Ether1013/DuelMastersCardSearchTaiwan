@@ -12929,6 +12929,12 @@
 			globalAbilityStyleRegistry = data.abilityRegistry;
 		}
 		
+		// 在剛剛那段下面，建議順便補上：
+		if (data.imageRegistry) {
+			// 合併圖片庫，避免覆蓋掉原本的預設圖
+			globalImageRegistry = { ...globalImageRegistry, ...data.imageRegistry };
+		}
+		
 		applyThemeVariables();
 
 		initialState = data.initialState;
