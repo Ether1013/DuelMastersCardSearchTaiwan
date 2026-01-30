@@ -6436,16 +6436,22 @@
 		// 5. 存檔與重繪
 		renderUI();
 		saveToStorage();
-		
-		// 保持選單狀態 (UX 優化)
+		// A. 取消桌面上的選取 (清除 pendingMove 與綠框)
+		cancelSelection(); 
+
+		// B. 取消選單內的選取記憶 (防止重繪時又選上)
+		if (typeof selectedCardsInModal !== 'undefined') {
+			selectedCardsInModal = [];
+		}
+
+		// C. 重新整理選單視窗 (如果有開)
 		const selectorModal = document.getElementById('card-selector-modal');
 		if (selectorModal && selectorModal.style.display === 'flex') {
 			const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
-			if (zoneId) openSelectorModal(zoneId, true);
-			return;
-		}
-		if (!isDrafting || draftOperations.length === 0) {
-			cancelSelection();
+			if (zoneId) {
+				// 這裡傳入 false (或不傳)，代表「不保留選取狀態」
+				openSelectorModal(zoneId, false);
+			}
 		}
 	}
     
