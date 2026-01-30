@@ -4186,21 +4186,21 @@
             注意：開始新局會清除當前未匯出的進度。
         </div>
         <div class="input-group">
-            <label data-i18n="lbl_p1_deck">P1 牌庫數:</label>
-            <input type="number" id="setup-p1-deck" value="40" min="40" max="60">
-        </div>
-        <div class="input-group">
-            <label>P1 超次元:</label>
-            <input type="number" id="setup-p1-hyper" value="0" min="0" max="8">
-        </div>
-        <hr style="width:100%; border:0; border-top:1px dashed #ccc;">
-        <div class="input-group">
             <label data-i18n="lbl_p2_deck">P2 牌庫數:</label>
             <input type="number" id="setup-p2-deck" value="40" min="40" max="60">
         </div>
         <div class="input-group">
             <label>P2 超次元:</label>
             <input type="number" id="setup-p2-hyper" value="0" min="0" max="8">
+        </div>
+        <hr style="width:100%; border:0; border-top:1px dashed #ccc;">
+        <div class="input-group">
+            <label data-i18n="lbl_p1_deck">P1 牌庫數:</label>
+            <input type="number" id="setup-p1-deck" value="40" min="40" max="60">
+        </div>
+        <div class="input-group">
+            <label>P1 超次元:</label>
+            <input type="number" id="setup-p1-hyper" value="0" min="0" max="8">
         </div>
         <div style="margin-top:20px; display:flex; justify-content:space-between;">
             <button onclick="finishSetup()" class="primary" data-i18n="btn_start_game">開始遊戲 (Start)</button>
@@ -4222,6 +4222,7 @@
         <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
 			<button onclick="actionShuffleZone()" style="background:#8e44ad;" data-i18n="btn_shuffle_zone">洗牌此區</button>
 			<button onclick="prepareMove(true)" style="background:#d35400;" data-i18n="btn_shuffle_move">洗牌選取牌並移動...</button>
+            <button onclick="flipSelectedInModal()" style="background:#f39c12; border-color:#e67e22;" data-i18n="act_flip">🔁 翻面</button>
 			<button onclick="revealFromSelector()" style="background:#3498db;" data-i18n="btn_reveal_sel">👁️ 展示</button>
 			<button onclick="prepareMove(false)" style="background:#2980b9;" data-i18n="btn_move_sel">移動選取牌...</button>
 		</div>
@@ -6308,10 +6309,15 @@
 		const scanState = (s) => {
 			if (!s || !s.cards) return;
 			s.cards.forEach(c => {
-				if (c.imageKey) used.add(c.imageKey);
-				if (c.backImageKey) used.add(c.backImageKey);
-				if (c.styleKey) used.add(c.styleKey); 
-			});
+                if (c.imageKey) used.add(c.imageKey);
+                if (c.backImageKey) used.add(c.backImageKey);
+                if (c.styleKey) used.add(c.styleKey);
+                
+                // [新增] 掃描超次元多面卡的所有圖面
+                if (c.hyperFaces && Array.isArray(c.hyperFaces)) {
+                    c.hyperFaces.forEach(k => { if(k) used.add(k); });
+                }
+            });
 			
 			if (s.dialogueData) {
 				['p1', 'p2'].forEach(p => {
@@ -6363,72 +6369,81 @@
 	}
 
 	// --- [修改] 全域圖片更新 (含去重複化與引用更新) ---
+	// --- [修正版] 全域圖片更新 (具備超次元多面卡意識) ---
 	function updateCardImageGlobal(cardId, base64) {
-		const state = getCurrentDisplayState();
-		const targetCard = state.cards.find(c => c.id === cardId);
-		if(!targetCard) return;
+		// 1. 先取得當前顯示狀態，確認使用者是在哪一面進行編輯
+		const currentState = getCurrentDisplayState();
+		const targetCard = currentState.cards.find(c => c.id === cardId);
+		if (!targetCard) return;
 
-		// 1. [去重複化] 檢查這張圖片是否已經存在於圖庫中
+		// 判斷當前編輯的是哪一面 (預設為 0)
+		const currentFaceIndex = targetCard.faceIndex || 0; 
+		// 判斷是否為超次元卡
+		const isHyper = targetCard.isHyper || (targetCard.initialZone && targetCard.initialZone.includes('hyper'));
+		// 判斷是否正在更新背面 (超次元背面不分面數，統一處理)
+		const isUpdatingBack = (isHyper && !targetCard.faceUp);
+
+		// 2. [去重複化] 檢查圖片 Key
 		let finalKey = null;
-		
-		// 遍歷目前的圖庫尋找相同內容
 		for (const [key, value] of Object.entries(globalImageRegistry)) {
 			if (value === base64) {
-				finalKey = key; // 找到了一模一樣的圖！直接借用它的 Key
+				finalKey = key;
 				break;
 			}
 		}
-
-		// 2. 如果沒找到，生成一個全新的 Key (不再綁定卡片 ID，改用時間戳+亂數)
 		if (!finalKey) {
-			// 使用 img_時間戳_亂數，確保唯一性
 			finalKey = `img_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-			// 寫入圖庫
 			globalImageRegistry[finalKey] = base64;
 		}
 
-		// 3. 更新目標卡片的 Reference (指向 finalKey)
-		// 注意：原本的邏輯是綁定 img_CardID，現在我們改變卡片本身的 imageKey 屬性
-		
-		// 判斷是要更新正面還是背面 (超次元背面)
-		const isUpdatingBack = (targetCard.isHyper && !targetCard.faceUp);
-
-		// 定義更新函式：走訪所有歷史紀錄，把這張卡(ID相同)的 key 更新
+		// 3. 定義更新邏輯
 		const updateCardRef = (s) => {
-			// 找出所有 ID 相同的卡片實例 (包含分身)
 			s.cards.forEach(c => {
 				if (c.id === cardId) {
 					if (isUpdatingBack) {
+						// 更新背面 (維持原樣)
 						c.backImageKey = finalKey;
 					} else {
-						c.imageKey = finalKey;
-						c.image = true; // 標記有圖
+						if (isHyper) {
+							// --- [修正重點] 超次元卡特殊處理 ---
+							if (!c.hyperFaces) c.hyperFaces = [];
+							
+							// A. 無論該狀態處於哪一面，都將圖片 Key 寫入對應的 Slot (確保資料永續)
+							// 這樣即使在 Face 1 的狀態下，Face 4 的圖片資料也會被同步更新
+							c.hyperFaces[currentFaceIndex] = finalKey;
+							
+							// B. 只有當該歷史狀態的 faceIndex 與「當前編輯的面」一致時，才更新顯示圖片
+							// 這樣就不會把 Face 1 的歷史畫面覆蓋成 Face 4 的圖
+							if ((c.faceIndex || 0) === currentFaceIndex) {
+								c.imageKey = finalKey;
+								c.image = true;
+							}
+						} else {
+							// 一般卡片：直接更新所有歷史，保持一致
+							c.imageKey = finalKey;
+							c.image = true;
+						}
 					}
 				}
-				// 同步更新：如果場上有其他卡片原本就跟這張卡共用舊圖片，
-				// 且我們確定要把所有「長得像這張卡」的都換掉，可以在這裡處理。
-				// 但為了安全起見，我們目前只更新 ID 吻合的卡片。
 			});
 		};
-		
+
+		// 4. 執行全面更新
 		updateCardRef(initialState);
 		history.forEach(h => updateCardRef(h.state));
 		if (tempState) updateCardRef(tempState);
-		
-		// 4. 觸發存檔與重繪
-		renderUI();
-		saveToStorage(); // saveToStorage 內會執行垃圾回收 (GC)，自動清理沒人用的舊圖
 
-		// [UI 刷新邏輯維持不變]
+		// 5. 存檔與重繪
+		renderUI();
+		saveToStorage();
+		
+		// 保持選單狀態 (UX 優化)
 		const selectorModal = document.getElementById('card-selector-modal');
 		if (selectorModal && selectorModal.style.display === 'flex') {
 			const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
-			if (zoneId) {
-				openSelectorModal(zoneId);
-				return;
-			}
+			if (zoneId) openSelectorModal(zoneId, true);
+			return;
 		}
-
 		if (!isDrafting || draftOperations.length === 0) {
 			cancelSelection();
 		}
@@ -7405,9 +7420,52 @@
 		else if (op.type === 'FLIP_CARD') {
 			const { cardIds, finalFaceUp } = op;
 			state.cards.forEach(c => {
-				if (cardIds.some(id => id == c.id)) { // [修正]
-					if (finalFaceUp !== undefined) c.faceUp = finalFaceUp;
-					else c.faceUp = !c.faceUp;
+				if (cardIds.some(id => id == c.id)) {
+					// 判斷是否為超次元卡 (包含初始於超次元區的卡)
+					const isHyperUnit = c.isHyper || (c.initialZone && c.initialZone.includes('hyper'));
+
+					if (isHyperUnit) {
+						// --- 超次元卡特殊邏輯：4 面循環 ---
+						
+						// 初始化 hyperFaces 陣列與索引
+						if (!c.hyperFaces) c.hyperFaces = [];
+						if (c.faceIndex === undefined) c.faceIndex = 0;
+
+						// 1. 保存當前圖片 Key 到對應的面 (防止貼圖後翻面遺失)
+						if (c.imageKey) {
+							c.hyperFaces[c.faceIndex] = c.imageKey;
+						}
+
+						// 2. 計算下一面 (0 -> 1 -> 2 -> 3 -> 0)
+						// 如果指定了 finalFaceUp (通常用於重播)，這裡簡化為重置回 0 或保持不變，
+						// 但通常 FLIP_CARD 都是 toggle。這裡主要處理 toggle。
+						if (finalFaceUp !== undefined) {
+							// 如果指定強制翻開/蓋上，超次元卡通常視為「回到正面(0)」或「保持現狀」
+							// 這裡為了相容性，若強制 faceUp=true，不改變 index；若 false，也不改變(因為超次元不蓋牌)
+							c.faceUp = true; 
+						} else {
+							// 正常翻面循環
+							const nextIndex = (c.faceIndex + 1) % 4;
+							c.faceIndex = nextIndex;
+
+							// 3. 讀取下一面的圖片 Key
+							let nextKey = c.hyperFaces[nextIndex];
+							
+							// 如果下一面還沒有圖，生成預設 Key (格式: img_ID_Index)
+							if (!nextKey) {
+								if (nextIndex === 0) nextKey = `img_${c.id}`; // 第0面通常是原圖
+								else nextKey = `img_${c.id}_${nextIndex}`;
+							}
+
+							// 4. 套用變更
+							c.imageKey = nextKey;
+							c.faceUp = true; // 超次元卡翻面後強制保持「表側」
+						}
+					} else {
+						// --- 一般卡片邏輯：正反切換 ---
+						if (finalFaceUp !== undefined) c.faceUp = finalFaceUp;
+						else c.faceUp = !c.faceUp;
+					}
 				}
 			});
 		}
@@ -7614,6 +7672,27 @@
 		}
 	}
 	
+	function flipSelectedInModal() {
+		if (selectedCardsInModal.length === 0) {
+			return; // 未選取則不做事
+		}
+		
+		// 1. 發送翻面指令 (會自動觸發 renderUI 與 applyOperation 的新邏輯)
+		addOperation({ type: 'FLIP_CARD', cardIds: [...selectedCardsInModal] });
+
+		// 2. 重新整理視窗以顯示變化，並保留選取狀態
+		const modalTitle = document.getElementById('modal-title');
+		if (modalTitle) {
+			const zoneId = modalTitle.getAttribute('data-zone-id');
+			if (zoneId) {
+				// 稍微延遲以確保 State 更新完成
+				setTimeout(() => {
+					// 傳入 true 表示「保留選取狀態」(keepSelection)
+					openSelectorModal(zoneId, true); 
+				}, 50);
+			}
+		}
+	}
 	
 	// --- [修改] finishMove (編輯時不播動畫，僅記錄標記) ---
 	// --- [修正版] finishMove (嚴格限制：僅戰鬥區互轉保留狀態) ---
@@ -7844,12 +7923,26 @@
 	}
 
     function flipCard() {
-        if (!pendingMove) return;
-        const state = getCurrentDisplayState();
-        const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
-        const targetFace = !card.faceUp;
-        addOperation({ type: 'FLIP_CARD', cardIds: pendingMove.cardIds, finalFaceUp: targetFace });
-    }
+		if (!pendingMove) return;
+		const state = getCurrentDisplayState();
+		const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+		
+		if (!card) return;
+
+		// [修正] 判斷是否為超次元卡 (邏輯需與 applyOperation 保持一致)
+		// 超次元卡定義：屬性 isHyper 為 true 或 初始區域 (initialZone) 包含 'hyper'
+		const isHyperUnit = card.isHyper || (card.initialZone && card.initialZone.includes('hyper'));
+
+		if (isHyperUnit) {
+			// [修正] 超次元卡：不指定 finalFaceUp
+			// 這樣 applyOperation 才會進入循環邏輯 (Face 1 -> 2 -> 3 -> 4 -> 1...)
+			addOperation({ type: 'FLIP_CARD', cardIds: pendingMove.cardIds });
+		} else {
+			// 一般卡片：維持原本邏輯，計算目標面並強制設定 (統一翻開或蓋牌)
+			const targetFace = !card.faceUp;
+			addOperation({ type: 'FLIP_CARD', cardIds: pendingMove.cardIds, finalFaceUp: targetFace });
+		}
+	}
 
     // [優化] 更名：直接修改 innerText
 	function renameCard() {
@@ -13007,14 +13100,16 @@
     }
 
     // --- [修正版] 開啟卡片選單 (視覺化階層排序) ---
-    function openSelectorModal(zoneId) {
+    function openSelectorModal(zoneId, keepSelection = false) {
         const state = getCurrentDisplayState();
         // 取得該區域所有卡片
         const rawCards = getCardsInZone(state, zoneId);
         
         const body = document.getElementById('modal-body');
         body.innerHTML = '';
-        selectedCardsInModal = [];
+        if (!keepSelection) {
+			selectedCardsInModal = [];
+		}
         
         const title = document.getElementById('modal-title');
 		// [修正] 根據全域變數決定是否加上 active class
@@ -13117,6 +13212,23 @@
             const index = i; 
             const el = document.createElement('div');
             el.className = 'card';
+			
+			if (selectedCardsInModal.includes(card.id)) el.classList.add('selected');
+        
+			// [修改] 確保翻面後的 imageKey 能被正確讀取並顯示
+			// 優先檢查 card.imageKey (當前狀態)，若無則檢查 card.backImageKey (背面)，最後才是一般判斷
+			let bgImage = null;
+			if (card.imageKey && globalImageRegistry[card.imageKey]) {
+				bgImage = globalImageRegistry[card.imageKey];
+			}
+			
+			if (bgImage) {
+				 el.style.backgroundImage = `url(${bgImage})`;
+				 el.classList.add('has-image-icon');
+				 // 如果有圖，隱藏文字
+				 el.style.color = 'transparent'; 
+				 el.style.textShadow = 'none';
+			}
             
 			// --- [新增] Modal 內的未見卡高亮 ---
             if (isUnseenHighlightOn && !globalSeenCardIds.has(card.id)) {
