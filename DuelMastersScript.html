@@ -11103,20 +11103,64 @@
     // --- [數學輔助] 向量旋轉與偏移 ---
 
     // 1. 定義各種堆疊類型的「原始偏移量」
-    function getBaseStackOffset(type) {
-        switch (type) {
-            case 'top':           return { x: 0, y: 0 };
-            case 'bottom':        return { x: 0, y: 0 };
-            case 'shift_up':      return { x: 0, y: -25 };
-            case 'shift_down':    return { x: 0, y: 25 };
-            case 'bottom_exposed':return { x: 0, y: 20 };
-            case 'puzzle_top':    return { x: 0, y: -70 };
-            case 'puzzle_bottom': return { x: 0, y: 70 };
-            case 'puzzle_left':   return { x: -50, y: 0 };
-            case 'puzzle_right':  return { x: 50, y: 0 };
-            default:              return { x: 0, y: 0 };
-        }
-    }
+    // --- [修正版] 堆疊偏移量計算 (自動偵測尺寸版) ---
+	function getBaseStackOffset(stackType) {
+		// 1. 定義預設值 (避免場上完全沒卡時報錯)
+		let w = 60; 
+		let h = 84;
+
+		// 2. [關鍵] 嘗試從 DOM 獲取第一張卡片的實際渲染尺寸
+		// 這樣就不需要知道系統內部的變數名稱 (如 cardWidth 或 scale)
+		const sampleCard = document.querySelector('.battle-zone.card');
+		
+		if (sampleCard) {
+			// offsetWidth 包含 border，這正是我們拼接需要的完整尺寸
+			// 如果您的系統是用 transform: scale() 縮放，且偏移量需要原始數值，
+			// 這裡取得的會是正確的原始像素 (視 CSS 實作而定)
+			w = sampleCard.offsetWidth;
+			h = sampleCard.offsetHeight;
+		} else {
+			// 如果場上一張卡都沒有 (極少見)，嘗試讀取 CSS 變數作為備案
+			// (假設您的 CSS 有設定 --card-width，如果沒有則維持預設 60)
+			const computedStyle = getComputedStyle(document.documentElement);
+			const cssW = computedStyle.getPropertyValue('--card-width');
+			const cssH = computedStyle.getPropertyValue('--card-height');
+			if (cssW) w = parseInt(cssW);
+			if (cssH) h = parseInt(cssH);
+		}
+
+		// 3. 設定一般疊放(進化)的偏移比例 (高度的 20%)
+		const evoOffset = h * 0.2; 
+
+		switch (stackType) {
+			// --- [拼圖模式] 依據測量到的完整寬高進行位移 ---
+			case 'puzzle_top':
+				return { x: 0, y: -h }; // 完整向上
+			
+			case 'puzzle_bottom':
+				return { x: 0, y: h };  // 完整向下
+				
+			case 'puzzle_left':
+				return { x: -w, y: 0 }; // 完整向左
+				
+			case 'puzzle_right':
+				return { x: w, y: 0 };  // 完整向右
+
+			// --- [一般堆疊模式] ---
+			case 'top':       
+			case 'shift_up':  
+				return { x: 0, y: -evoOffset };
+				
+			case 'bottom':          
+			case 'bottom_exposed':  
+			case 'shift_down':      
+				return { x: 0, y: evoOffset };
+
+			// --- [預設] ---
+			default:
+				return { x: 0, y: evoOffset };
+		}
+	}
 
     // 2. 向量旋轉公式
     function rotateVector(x, y, deg) {
