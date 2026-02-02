@@ -240,10 +240,10 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
-	const setCode = "NET-070";
-	const setName = "台灣CS大賽20260201 1st【妖精水晶之王＠ANAGOMAN】";
-	const isDeck = true;
-	const setCardList = [
+	var setCode = "NET-070";
+	var setName = "台灣CS大賽20260201 1st【妖精水晶之王＠ANAGOMAN】";
+	var isDeck = true;
+	var setCardList = [
 		{ name : "奇石 ミクセル/ジャミング・チャフ", count : 2, },
 		{ name : "清浄のカルマ インカ/オキヨメ・水晶チャージャー", count : 3, },
 		{ name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン", count : 3, },
