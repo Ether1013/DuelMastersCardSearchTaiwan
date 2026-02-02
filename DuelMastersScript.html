@@ -16658,11 +16658,30 @@
 	function performExportDeck(playerId) {
 		const deckCards = initialState.cards.filter(c => c.ownerId === playerId);
 		const deckImageRegistry = {};
-		
+
 		// 只抓取相關圖片
 		deckCards.forEach(c => {
-			if (c.imageKey && globalImageRegistry[c.imageKey]) deckImageRegistry[c.imageKey] = globalImageRegistry[c.imageKey];
-			if (c.backImageKey && globalImageRegistry[c.backImageKey]) deckImageRegistry[c.backImageKey] = globalImageRegistry[c.backImageKey];
+			// 1. 基本正反面
+			if (c.imageKey && globalImageRegistry[c.imageKey]) {
+				deckImageRegistry[c.imageKey] = globalImageRegistry[c.imageKey];
+			}
+			if (c.backImageKey && globalImageRegistry[c.backImageKey]) {
+				deckImageRegistry[c.backImageKey] = globalImageRegistry[c.backImageKey];
+			}
+
+			// 2. [修復] 補上超次元多面卡 (Hyper Faces) 的圖片檢查
+			if (c.hyperFaces && Array.isArray(c.hyperFaces)) {
+				c.hyperFaces.forEach(k => {
+					if (k && globalImageRegistry[k]) {
+						deckImageRegistry[k] = globalImageRegistry[k];
+					}
+				});
+			}
+
+			// 3. [修復] 補上 EX-Life 的圖片檢查
+			if (c.exLifeKey && globalImageRegistry[c.exLifeKey]) {
+				deckImageRegistry[c.exLifeKey] = globalImageRegistry[c.exLifeKey];
+			}
 		});
 
 		const data = {
@@ -16673,8 +16692,7 @@
 			imageRegistry: deckImageRegistry
 		};
 
-		downloadJSON(data, `dm-deck-p${playerId}-${Date.now()}.json`);
-		alert(t('msg_deck_exported'));
+		downloadJSON(data, `dm-deck-${playerId}-${Date.now()}.json`);
 	}
 
 	function downloadJSON(data, filename) {
