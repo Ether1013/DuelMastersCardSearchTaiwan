@@ -239,3 +239,24 @@
 		{ name : "轟く邪道 レッドゾーン", count : 4, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	const setCode = "NET-070";
+	const setName = "台灣CS大賽20260201 1st【妖精水晶之王＠ANAGOMAN】";
+	const isDeck = true;
+	const setCardList = [
+		{ name : "奇石 ミクセル/ジャミング・チャフ", count : 2, },
+		{ name : "清浄のカルマ インカ/オキヨメ・水晶チャージャー", count : 3, },
+		{ name : "氷牙レオポル・ディーネ公/エマージェンシー・タイフーン", count : 3, },
+		{ name : "伝達妖精セージ / コンタクト・メッセージ", count : 2, },
+		{ name : "怪盗妖精カサブランカ / 「信じていたのに裏切られるなんて！」", count : 2, },
+		{ name : "同期の妖精/ド浮きの動悸", count : 2, },
+		{ name : "ボン・キゴマイム/♪やせ蛙 ラッキーナンバー ここにあり", count : 2, },
+		{ name : "ハニー＝マーガニー/「こっちは甘いぞー」", count : 4, },
+		{ name : "雪精 サエポヨ＆ユキぴょん/ハンマー・チャージャー", count : 3, },
+		{ name : "オリオティス・ジャッジ", count : 3, },
+		{ name : "水晶の王 ゴスペル", count : 4, },
+		{ name : "虹色妖精ポミリン/レイニー・アトラス", count : 4, },
+		{ name : "理想と平和の決断", count : 2, },
+		{ name : "エンドレス・フローズン・カーニバル", count : 4, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
