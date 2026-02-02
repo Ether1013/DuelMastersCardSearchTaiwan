@@ -1837,6 +1837,28 @@
 		display: block;
 		margin-bottom: 5px
 	}
+	/* --- 新增堆疊圖示樣式 --- */
+	.icon-shift-left-top .child {
+		position: absolute;
+		top: 0;
+		left: -8px; /* 示意向左偏移 */
+		width: 100%;
+		height: 100%;
+		background: #3498db; /* 藍色代表上層 P1/User */
+		border: 1px solid #fff;
+		z-index: 2;
+		opacity: 0.9;
+	}
+	.icon-shift-right-btm .child {
+		position: absolute;
+		top: 0;
+		left: 8px; /* 示意向右偏移 */
+		width: 100%;
+		height: 100%;
+		background: #2c3e50; /* 深色代表下層/底層 */
+		border: 1px solid #fff;
+		z-index: -1;
+	}
 	.icon-bottom .child, .icon-top .child {
 		position: absolute;
 		top: 0;
@@ -4272,6 +4294,14 @@
                 <div class="stack-icon icon-bottom-exp"><div class="child"></div></div>
                 <span data-i18n="opt_btm_exp">下方 (露出底)</span>
             </div>
+			<div class="stack-option" onclick="confirmStackMove('shift_left_top')">
+				<div class="stack-icon icon-shift-left-top"><div class="child"></div></div>
+				<span data-i18n="opt_shift_left_top">上疊(左移)</span>
+			</div>
+			<div class="stack-option" onclick="confirmStackMove('shift_right_bottom')">
+				<div class="stack-icon icon-shift-right-btm"><div class="child"></div></div>
+				<span data-i18n="opt_shift_right_btm">下疊(右移)</span>
+			</div>
         </div>
         <div id="position-list" style="display:none;"></div> 
         <div style="margin-top:15px; text-align:right;">
@@ -5205,6 +5235,8 @@
 			'val_turn_start': '回合開始', // 實際填入的文字
 			'val_turn_end': '回合結束',
 			"ctx_quick_reset": "⚡ 快速重置 (收回+護盾+手牌)", // 新增這行
+			'opt_shift_left_top': '上疊 (左移)',
+			'opt_shift_right_btm': '下疊 (右移)',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -5396,6 +5428,8 @@
 			'val_turn_start': 'Start of Turn',
 			'val_turn_end': 'End of Turn',
 			"ctx_quick_reset": "⚡ Quick Reset (Recall+Shield+Hand)", // Add this line
+			'opt_shift_left_top': 'Top (Shift Left)',
+			'opt_shift_right_btm': 'Btm (Shift Right)',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -5587,6 +5621,8 @@
 			'val_turn_start': 'ターン開始',       // 實際插入的訊息內容
 			'val_turn_end': 'ターン終了',         // 實際插入的訊息內容
 			"ctx_quick_reset": "⚡ クイックリセット (回収+盾+手札)", // この行を追加
+			'opt_shift_left_top': '上に重ねる (左ズレ)',
+			'opt_shift_right_btm': '下に重ねる (右ズレ)',
 		}
 	};
 	
@@ -6302,25 +6338,30 @@
 		img.src = dataUrl;
 	}
     
-	// --- [新增] 垃圾回收輔助：找出所有正在使用的圖片 Key ---
-	// --- [修正版] 垃圾回收輔助：找出所有正在使用的圖片 Key ---
+	// --- [修正版] 垃圾回收輔助：找出所有正在使用的圖片 Key (含多面卡支援) ---
 	function getUsedImageKeys() {
 		const used = new Set();
-		
-		// 1. 掃描狀態 (State) 中的卡片與對話
+
+		// 定義掃描單一狀態的邏輯
 		const scanState = (s) => {
 			if (!s || !s.cards) return;
 			s.cards.forEach(c => {
-                if (c.imageKey) used.add(c.imageKey);
-                if (c.backImageKey) used.add(c.backImageKey);
-                if (c.styleKey) used.add(c.styleKey);
-                
-                // [新增] 掃描超次元多面卡的所有圖面
-                if (c.hyperFaces && Array.isArray(c.hyperFaces)) {
-                    c.hyperFaces.forEach(k => { if(k) used.add(k); });
-                }
-            });
-			
+				// 1. 基本檢查：當前顯示的圖片
+				if (c.imageKey) used.add(c.imageKey);
+				if (c.backImageKey) used.add(c.backImageKey);
+				if (c.styleKey) used.add(c.styleKey);
+				if (c.exLifeKey) used.add(c.exLifeKey); // 支援 EX-Life 圖片
+
+				// 2. [關鍵修正] 強制掃描超次元多面卡的所有圖面 (hyperFaces)
+				// 只要這張卡曾經被貼過多面圖，hyperFaces 裡就會有紀錄
+				if (c.hyperFaces && Array.isArray(c.hyperFaces)) {
+					c.hyperFaces.forEach(k => {
+						if (k) used.add(k); // 把每一面的 Key 都加入保留清單
+					});
+				}
+			});
+
+			// 3. 掃描對話頭像
 			if (s.dialogueData) {
 				['p1', 'p2'].forEach(p => {
 					if (s.dialogueData[p] && s.dialogueData[p].emotion) {
@@ -6330,31 +6371,36 @@
 			}
 		};
 
-		scanState(initialState);
+		// --- 開始掃描所有歷史與狀態 ---
 		
+		// 1. 掃描初始狀態
+		scanState(initialState);
+
 		// 2. 掃描歷史紀錄 (History)
 		history.forEach(h => {
 			scanState(h.state);
 			if (h.detachedStartState) scanState(h.detachedStartState);
 
-			// [新增] 掃描 Action 中的 Cut In (Reality Break) 引用
-			// 這是您貼上的舊版程式碼所缺少的關鍵部分
+			// 3. 掃描 Action 中的 Cut In (Reality Break) 圖片
 			if (h.action && h.action.operations) {
 				h.action.operations.forEach(op => {
-					// 如果操作中有 imgKey，標記為「使用中」
-					if (op.type === 'REALITY_BREAK' && op.data && op.data.imgKey) {
-						used.add(op.data.imgKey);
+					if (op.type === 'REALITY_BREAK' && op.data) {
+						if (op.data.imgKey) used.add(op.data.imgKey);
+						if (op.data.bgImage) used.add(op.data.bgImage); // 背景圖也要留
+					}
+					// 掃描 EX-Life 操作紀錄
+					if (op.type === 'SET_EX_LIFE' && op.imgKey) {
+						used.add(op.imgKey);
 					}
 				});
 			}
 		});
-		
-		// 3. 掃描暫存狀態
+
+		// 4. 掃描暫存狀態 (Drafting)
 		if (tempState) scanState(tempState);
 
-		// 4. [新增] 掃描編輯中的操作 (Draft)
-		// 這是為了防止您正在編輯特效還沒儲存步驟時，觸發存檔導致圖片被清掉
-		if (isDrafting && draftOperations.length > 0) {
+		// 5. 掃描正在編輯中的操作 (避免編輯一半存檔時圖片被清掉)
+		if (typeof isDrafting !== 'undefined' && isDrafting && draftOperations.length > 0) {
 			draftOperations.forEach(op => {
 				if (op.type === 'REALITY_BREAK' && op.data && op.data.imgKey) {
 					used.add(op.data.imgKey);
@@ -6362,9 +6408,9 @@
 			});
 		}
 
-		// 5. 保留預設頭像
+		// 6. 強制保留系統預設圖 (頭像與猜拳)
 		Object.keys(globalImageRegistry).forEach(k => {
-			if (k.startsWith('avatar_')) used.add(k);
+			if (k.startsWith('avatar_') || k.startsWith('rps_')) used.add(k);
 		});
 
 		return used;
@@ -7386,7 +7432,7 @@
 			else if (stackTargetId) {
 				const targetIndex = state.cards.findIndex(c => c.id === stackTargetId);
 				if (targetIndex !== -1) {
-					const typesAfter = ['puzzle_right', 'puzzle_bottom', 'bottom', 'bottom_exposed'];
+					const typesAfter = ['puzzle_right', 'puzzle_bottom', 'bottom', 'bottom_exposed', 'shift_right_bottom'];
 					if (typesAfter.includes(stackType)) {
 						globalSpliceIndex = targetIndex + 1;
 					} else {
@@ -8916,7 +8962,7 @@
 
             // 定義哪些類型屬於「下方堆疊」
             // 包含：疊在下方(bottom)、露出底(bottom_exposed)、拼在下方(puzzle_bottom)
-            const bottomTypes = ['bottom', 'bottom_exposed', 'puzzle_bottom'];
+            const bottomTypes = ['bottom', 'bottom_exposed', 'puzzle_bottom', 'shift_right_bottom'];
 
             // 只有當使用者選擇「往下疊」時，才啟動自動追尾功能
             if (bottomTypes.includes(type)) {
@@ -9975,7 +10021,7 @@
 					children.forEach(child => {
 						let nextZ = zIndex;
 						const type = child.stackType;
-						if (['top','shift_up','puzzle_top','shift_down'].includes(type)) nextZ += 1;
+						if (['top','shift_up','puzzle_top','shift_down', 'shift_left_top'].includes(type)) nextZ += 1;
 						else nextZ -= 1;
 						renderNodeRecursive(child, nextZ);
 					});
@@ -11127,6 +11173,7 @@
 
 		// 3. 設定一般疊放(進化)的偏移比例 (高度的 20%)
 		const evoOffset = h * 0.2;
+		const shiftX = w * 0.20; // [新增] 計算 20% 卡寬
 
 		switch (stackType) {
 			// --- [拼圖模式] 依據測量到的完整寬高進行位移 ---
@@ -11145,6 +11192,13 @@
 			case 'shift_up': return { x: 0, y: -evoOffset };   // 上方 (露出底)
 			case 'shift_down': return { x: 0, y: evoOffset };  // 上方 (露出頂)
 			case 'bottom_exposed': return { x: 0, y: evoOffset }; // 下方 (露出底)
+			// [新增] 左移上疊 (向左移動 10%)
+			case 'shift_left_top':
+				return { x: -shiftX, y: 0 }; 
+
+			// [新增] 右移下疊 (向右移動 10%)
+			case 'shift_right_bottom':
+				return { x: shiftX, y: 0 };
 			
 			default: return { x: 0, y: 0 };
 		}
