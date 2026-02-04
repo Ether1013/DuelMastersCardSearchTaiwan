@@ -3892,6 +3892,39 @@
 		top: 0;
 		left: 0;
 	}
+	/* --- 超次元面數控制按鈕 --- */
+	.card-face-ctrl {
+		position: absolute;
+		width: 20px;
+		height: 20px;
+		color: white;
+		border: 1px solid #fff;
+		border-radius: 50%;
+		text-align: center;
+		line-height: 18px;
+		font-size: 14px;
+		font-weight: 700;
+		cursor: pointer;
+		z-index: 100;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+		transition: transform 0.1s;
+		user-select: none;
+		opacity: 0.8;
+	}
+	.card-face-ctrl:hover {
+		transform: scale(1.2);
+		opacity: 1;
+	}
+	.card-face-ctrl.add {
+		top: 2px;
+		right: 2px;
+		background: #3498db;
+	}
+	.card-face-ctrl.remove {
+		top: 2px;
+		left: 2px;
+		background: #e74c3c;
+	}
 </style>
 </head>
 <body>
@@ -6632,7 +6665,12 @@
         zones.forEach(z => {
             for(let i=0; i<z.count; i++) {
                 let c = new Card(state.cardIdCounter++, z.id.startsWith('p1')?1:2, `${z.prefix}-${i+1}`, z.id);
-                if(z.hyper) { c.isHyper=true; c.faceUp=true; }
+                if(z.hyper) { 
+					c.isHyper=true; 
+					c.faceUp=true;
+					// [新增] 預設初始化為 2 面 (正面圖 + 空背面)
+					c.hyperFaces = [c.imageKey, ""]; 
+				}
                 state.cards.push(c);
             }
         });
@@ -7499,7 +7537,8 @@
 							c.faceUp = true; 
 						} else {
 							// 正常翻面循環
-							const nextIndex = (c.faceIndex + 1) % 4;
+							const len = (c.hyperFaces && c.hyperFaces.length) ? c.hyperFaces.length : 4;
+							const nextIndex = (c.faceIndex + 1) % len;
 							c.faceIndex = nextIndex;
 
 							// 3. 讀取下一面的圖片 Key
@@ -7522,6 +7561,39 @@
 					}
 				}
 			});
+		}
+		// --- [新增] 修改超次元面數操作 ---
+		else if (op.type === 'MODIFY_FACE') {
+			const { cardId, actionType } = op;
+			const c = state.cards.find(x => x.id === cardId);
+			if (c) {
+				// 初始化 (舊存檔相容)
+				if (!c.hyperFaces) {
+					// 如果是舊卡，假設它原本是 4 面邏輯，我們初始化為 4 個空位或當前圖
+					c.hyperFaces = [c.imageKey || "", "", "", ""];
+				}
+				// 確保 faceIndex 存在
+				if (typeof c.faceIndex === 'undefined') c.faceIndex = 0;
+
+				if (actionType === 'add') {
+					if (c.hyperFaces.length < 4) {
+						c.hyperFaces.push(""); // 新增一面 (空)
+						c.faceIndex = c.hyperFaces.length - 1; // 翻到新的一面
+						c.imageKey = ""; // 更新顯示
+						c.faceUp = true; // 確保是翻開狀態
+					}
+				} else if (actionType === 'remove') {
+					if (c.hyperFaces.length > 2) { // 至少保留 2 面
+						c.hyperFaces.splice(c.faceIndex, 1); // 刪除當前這面
+						// 修正索引
+						if (c.faceIndex >= c.hyperFaces.length) {
+							c.faceIndex = c.hyperFaces.length - 1;
+						}
+						// 更新顯示圖片 (從陣列取出新的對應圖)
+						c.imageKey = c.hyperFaces[c.faceIndex] || "";
+					}
+				}
+			}
 		}
 		else if (op.type === 'ADJUST_COUNT') {
 			const card = state.cards.find(c => c.id === op.cardId);
@@ -7974,6 +8046,30 @@
 		// --- 3. 移除舊的手動 DOM 更新代碼 ---
 		// (原本這裡有一大段 allTargets.forEach... 修改 style.transform 的程式碼，請全部刪除)
 		// 因為 renderUI() 已經會產生正確角度的新 DOM 了。
+	}
+	
+	function modifyHyperFace(cardId, action) {
+		// 確保進入編輯模式
+		if (!isDrafting) startDraftAtEnd();
+		
+		// 發送操作
+		addOperation({ 
+			type: 'MODIFY_FACE', 
+			cardId: cardId, 
+			actionType: action 
+		});
+
+		// 為了即時更新 UI (按鈕消失/出現)，我們需要強制重繪並重新開啟 Modal
+		// 稍微延遲以等待 State 更新
+		setTimeout(() => {
+			renderUI(); // 更新盤面狀態
+			// 重新開啟 Modal 以刷新按鈕 (true = 保留選取狀態)
+			const modalTitle = document.getElementById('modal-title');
+			const zoneId = modalTitle ? modalTitle.getAttribute('data-zone-id') : null;
+			if (zoneId) {
+				openSelectorModal(zoneId, true); 
+			}
+		}, 50);
 	}
 
     function flipCard() {
@@ -13343,6 +13439,42 @@
             
             el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:${numColor}; font-weight:bold; z-index:10;">#${index+1}</div>
                             <div class="card-text">${card.text}</div>`;
+							
+			// --- [新增] 超次元面數控制按鈕 ---
+			// 判斷條件：1. 目前開的是超次元區  2. 卡片起源於超次元
+			const isHyperOrigin = card.isHyper || (card.initialZone && card.initialZone.includes('hyper'));
+			
+			if (zoneId.includes('hyper') && isHyperOrigin) {
+				// 取得目前面數 (若無陣列，舊資料視為 4 面，新局預設為 2 面)
+				const currentFaces = card.hyperFaces ? card.hyperFaces.length : 4;
+
+				// [+] 按鈕：小於 4 面時顯示
+				if (currentFaces < 4) {
+					const btnAdd = document.createElement('div');
+					btnAdd.className = 'card-face-ctrl add';
+					btnAdd.innerText = '+';
+					btnAdd.title = '增加一面';
+					btnAdd.onclick = (e) => {
+						e.stopPropagation();
+						modifyHyperFace(card.id, 'add');
+					};
+					el.appendChild(btnAdd);
+				}
+
+				// [-] 按鈕：大於 2 面時顯示 (因為預設至少 2 面)
+				// 注意：需求說 "三面卡或是四面卡時...會有[-]鍵" => length >= 3
+				if (currentFaces >= 3) {
+					const btnRem = document.createElement('div');
+					btnRem.className = 'card-face-ctrl remove';
+					btnRem.innerText = '-';
+					btnRem.title = '刪除當前面';
+					btnRem.onclick = (e) => {
+						e.stopPropagation();
+						modifyHyperFace(card.id, 'remove');
+					};
+					el.appendChild(btnRem);
+				}
+			}
             
             // 點擊選取邏輯
             el.onclick = () => {
