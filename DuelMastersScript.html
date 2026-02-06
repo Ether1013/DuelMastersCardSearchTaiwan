@@ -7967,6 +7967,26 @@
 		if (injuredIds.length > 0) {
 			addOperation({ type: 'INJURED', cardIds: injuredIds, setInjured: false });
 		}
+		
+		// 2. [新增] 清除註記 (Clear Note)
+		const notedIds = movingIds.filter(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && c.note; // 只要有 note 就清除
+		});
+		if (notedIds.length > 0) {
+			// 發送設定為空字串的指令
+			addOperation({ type: 'ADD_NOTE', cardIds: notedIds, note: '' });
+		}
+
+		// 3. [新增] 清除 EX-LIFE (Remove EX-Life)
+		const exLifeIds = movingIds.filter(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && c.exLifeKey; // 檢查是否有 EX-Life 圖片設定
+		});
+		exLifeIds.forEach(id => {
+			// 移除 EX-Life 指令通常一次針對一張 (根據 applyOperation 實作)
+			addOperation({ type: 'REMOVE_EX_LIFE', targetId: id });
+		});
 
 		// =========================================================================
 		// --- [關鍵修正] 狀態判定邏輯 ---
@@ -11568,18 +11588,46 @@
 
         // 受傷爪痕
         if (card.isInjured) {
-            const clawDiv = document.createElement('div');
-            const animClass = isDrafting ? '' : 'claw-anim';
-            clawDiv.className = `claw-overlay ${animClass}`;
-            clawDiv.innerHTML = `
-                <svg class="claw-svg" viewBox="0 0 100 100">
-                    <path class="claw-path p1" d="M20,20 Q50,50 80,80" />
-                    <path class="claw-path p2" d="M30,10 Q60,40 90,70" />
-                    <path class="claw-path p3" d="M10,30 Q40,60 70,90" />
-                </svg>
-            `;
-            el.appendChild(clawDiv);
-        }
+			// [修改] 判斷是否需要播放動畫
+			// 邏輯：只有當「上一個步驟該卡片未受傷」而「現在受傷」時，才加入動畫 class
+			let playAnimation = false;
+
+			// 若正在編輯模式(手動操作)，通常希望看到動畫回饋
+			// 若正在播放模式(Playback)，則檢查歷史紀錄
+			if (isDrafting) {
+				 // 為了避免編輯時重繪一直閃爍，這裡可以設為 false，
+				 // 或者您希望手動點擊按鈕時有動畫？(toggleInjured 函式本身會手動加入帶動畫的 DOM)
+				 // 這裡我們保守設定：如果是重繪(Refresh)，不播動畫(Static)
+				 playAnimation = false; 
+			} else {
+				// 播放模式：檢查上一步
+				// 注意：currentIndex 是當前正在顯示的步驟 index
+				if (currentIndex > 0 && history[currentIndex - 1]) {
+					const prevCard = history[currentIndex - 1].state.cards.find(c => c.id === card.id);
+					// 如果上一步沒這張卡(新登場?) 或 上一步這張卡沒受傷 -> 代表是新傷 -> 播放動畫
+					if (!prevCard || !prevCard.isInjured) {
+						playAnimation = true;
+					}
+				} else {
+					// 第一步就是受傷狀態 -> 播放動畫
+					playAnimation = true;
+				}
+			}
+
+			const clawDiv = document.createElement('div');
+			// 根據判斷結果決定是否加入 'claw-anim'
+			const animClass = playAnimation ? 'claw-anim' : ''; 
+			
+			clawDiv.className = `claw-overlay ${animClass}`;
+			clawDiv.innerHTML = `
+				<svg class="claw-svg" viewBox="0 0 100 100">
+					<path class="claw-path p1" d="M20,20 Q50,50 80,80" />
+					<path class="claw-path p2" d="M30,10 Q60,40 90,70" />
+					<path class="claw-path p3" d="M10,30 Q40,60 70,90" />
+				</svg>
+			`;
+			el.appendChild(clawDiv);
+		}
         
         // 發光特效
         // --- [修正] Glow 邏輯 (包含 Ability 繼承) ---
@@ -16764,6 +16812,7 @@
 				// 原本是直接 importDeckData(data);
 				// 改為：
 				promptImportTarget(data, deckData.title);
+				document.getElementById('import-selector-modal').style.display = 'none';
 			})
 			.catch(err => alert("Deck Load Failed: " + err.message));
 	}
