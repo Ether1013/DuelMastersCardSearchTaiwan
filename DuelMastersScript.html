@@ -3925,6 +3925,59 @@
 		left: 2px;
 		background: #e74c3c;
 	}
+	/* --- [新增] 牌組列表雙欄佈局 --- */
+	#import-deck-list {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr); /* 平分兩欄 */
+		gap: 10px;
+		padding: 5px;
+	}
+	
+	/* 覆寫牌組項目的樣式以適應卡片狀佈局 */
+	#import-deck-list .import-script-item {
+		border: 1px solid #bdc3c7;
+		border-radius: 6px;
+		background: #fff;
+		height: 100%; /* 確保高度一致 */
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between; /* 內容上下撐開 */
+	}
+	
+	#import-deck-list .import-script-item:hover {
+		box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+		border-color: #3498db;
+		background-color: #f0f8ff; /* 淺藍色背景 */
+		transform: translateY(-2px);
+	}
+
+	/* 最後一個空白佔位框的樣式 */
+	.import-script-item.placeholder {
+		border: 2px dashed #eee !important;
+		background: transparent !important;
+		cursor: default !important;
+		pointer-events: none; /* 禁止點擊 */
+		box-shadow: none !important;
+		transform: none !important;
+	}
+	.import-script-item.placeholder * {
+		display: none; /* 隱藏內容 */
+	}
+	/* --- [新增] 文明顏色區塊樣式 --- */
+	.deck-color-container {
+		display: flex;
+		gap: 3px;
+		margin-top: 6px;
+		justify-content: flex-end; /* 靠右對齊，與語言標籤和作者欄位同側 */
+	}
+	.deck-color-block {
+		width: 12px;
+		height: 12px;
+		border-radius: 2px;
+		border: 1px solid rgba(0,0,0,0.1);
+		box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+	}
 </style>
 </head>
 <body>
@@ -4797,6 +4850,7 @@
 			filename: "PieGiant.json",
 			lang: "zh",
 			oAuthor: "派大",
+			colors: 25,
 		},
 		{
 			title: "機械速攻",
@@ -4804,24 +4858,28 @@
 			filename: "SpeedMecha.json",
 			lang: "zh",
 			oAuthor: "大福",
+			colors: 28,
 		},
 		{
 			title: "封殺車邪王門",
 			description: "展開能力很誇張的魔彈封殺+邪王門牌組",
 			filename: "DiazEvilGate.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 31,
 		},
 		{
 			title: "創世龍+俳句爵",
 			description: "魂種戰術",
 			filename: "GenerationJewel.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 29,
 		},
 		{
 			title: "波夏克龍皇神",
 			description: "賽場一等一的波夏克，穩定、速度又快",
 			filename: "Bolshack.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 27,
 		},
 		{
 			title: "烏爾天寶",
@@ -4829,24 +4887,28 @@
 			filename: "UlPhoenix.json",
 			lang: "zh",
 			oAuthor: "Ether",
+			colors: 31,
 		},
 		{
 			title: "俳句爵",
 			description: "現在流行的俳句爵牌組，可以在一回合內大量展開",
 			filename: "PoenDuke.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 25,
 		},
 		{
 			title: "三色深淵",
 			description: "一邊展開一邊控制的三色深淵牌組",
 			filename: "3CAbyss.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 14,
 		},
 		{
 			title: "夢幻夥伴",
 			description: "急速大量展開並取得特殊勝利的初學者好朋友",
 			filename: "DreamMate.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 27,
 		},
 		{
 			title: "甲獸團長",
@@ -4854,6 +4916,7 @@
 			filename: "ArmyDogiragon.json",
 			lang: "zh",
 			oAuthor: "衛君",
+			colors: 19,
 		},
 		{
 			title: "王鬪高麗菜",
@@ -4861,6 +4924,7 @@
 			filename: "EtherCabbage.json",
 			lang: "zh",
 			oAuthor: "Ether",
+			colors: 31,
 		},
 		{
 			title: "軍隊超魂",
@@ -4868,6 +4932,7 @@
 			filename: "JrHyperCross.json",
 			lang: "zh",
 			oAuthor: "Ether",
+			colors: 19,
 		},
 		{
 			title: "封殺車",
@@ -4875,18 +4940,21 @@
 			filename: "DiasZetaMotor.json",
 			lang: "zh",
 			oAuthor: "胃",
+			colors: 7,
 		},
 		{
 			title: "火鳥",
 			description: "長青牌組，混搭了霸霸霸的牌型",
 			filename: "FireBird.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 22,
 		},
 		{
 			title: "忍者",
 			description: "控制變化型光闇忍者",
 			filename: "Shinobi.json",
-			lang: "zh"
+			lang: "zh",
+			colors: 20,
 		},
 		{
 			title: "巨大鯨",
@@ -4894,6 +4962,7 @@
 			filename: "GiantWhale.json",
 			lang: "zh",
 			oAuthor: "Ether",
+			colors: 13,
 		},
 	];
 
@@ -16590,62 +16659,97 @@
 
 	// --- 修改後的 Import 列表渲染邏輯 ---
 
-	// 列表渲染器 (區分劇本與牌組來源)
-	// --- 修改後的 Import 列表渲染邏輯 ---
-	// 列表渲染器 (區分劇本與牌組來源)
+	// --- 修改後的 Import 列表渲染邏輯 (含 Colors 支援) ---
 	function renderImportList(containerId, type) {
 		const listEl = document.getElementById(containerId);
 		if(!listEl) return;
 		listEl.innerHTML = '';
-		// [修改重點] 根據類型選擇不同的資料來源
+		
 		let sourceList = [];
 		if (type === 'script') {
 			sourceList = (typeof AVAILABLE_SCRIPTS !== 'undefined') ? [...AVAILABLE_SCRIPTS].reverse() : [];
 		} else {
-			// 若尚未定義 AVAILABLE_DECKS，則使用空陣列防呆
 			sourceList = (typeof AVAILABLE_DECKS !== 'undefined') ? [...AVAILABLE_DECKS] : [];
 		}
 
-		// 如果列表是空的
 		if (sourceList.length === 0) {
-			const msg = (type === 'script') ? 'lbl_no_script' : '暫無範例牌組'; // 簡單的 fallback 文字
-			listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#999;">${t(msg) || msg}</div>`;
+			const msg = (type === 'script') ? 'lbl_no_script' : '暫無範例牌組'; 
+			listEl.innerHTML = `<div style="padding:20px; text-align:center; color:#999; grid-column: span 2;">${t(msg) || msg}</div>`;
 			return;
 		}
+
+		// [新增] 文明顏色定義 (數值由大到小排序，方便顯示順序，可依喜好調整)
+		// 白色=32/黃色=16/藍色=8/黑色=4/紅色=2/綠色=1
+		const CIV_COLORS = [
+			{ val: 32, color: '#ecf0f1', border: '#bdc3c7', title: '白' }, // 白
+			{ val: 16, color: '#f1c40f', border: '#f39c12', title: '黃' }, // 黃
+			{ val: 8,  color: '#3498db', border: '#2980b9', title: '藍' }, // 藍
+			{ val: 4,  color: '#2c3e50', border: '#34495e', title: '黑' }, // 黑
+			{ val: 2,  color: '#e74c3c', border: '#c0392b', title: '紅' }, // 紅
+			{ val: 1,  color: '#2ecc71', border: '#27ae60', title: '綠' }  // 綠
+		];
 
 		sourceList.forEach(itemData => {
 			const item = document.createElement('div');
 			item.className = 'import-script-item';
 			const lang = itemData.lang || 'zh';
 
-			// [新增] 檢查並顯示原作者 (oAuthor) - 向下相容
+			// 1. 作者顯示邏輯
 			let authorHtml = '';
-			// 只有當 oAuthor 存在且不為空字串時才顯示
 			if (itemData.oAuthor) {
 				authorHtml = `
-					<div style="font-size: 0.85rem; color: #e67e22; font-weight: bold; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+					<div style="font-size: 0.85rem; color: #e67e22; font-weight: bold; margin-top: 4px; display: flex; align-items: center; gap: 4px; justify-content: flex-end;">
 						<span>👤</span>
-						<span>原作者: ${itemData.oAuthor}</span>
+						<span>${itemData.oAuthor}</span>
 					</div>
 				`;
 			}
+
+			// 2. [新增] 顏色顯示邏輯
+			let colorsHtml = '';
+			// 只有當 colors 屬性存在且大於 0 時才處理
+			if (typeof itemData.colors === 'number' && itemData.colors > 0) {
+				let blocks = '';
+				CIV_COLORS.forEach(civ => {
+					// 位元運算：檢查該顏色位元是否為 1
+					if ((itemData.colors & civ.val) === civ.val) {
+						blocks += `<div class="deck-color-block" style="background-color: ${civ.color}; border-color: ${civ.border};" title="${civ.title}"></div>`;
+					}
+				});
+				if (blocks) {
+					colorsHtml = `<div class="deck-color-container">${blocks}</div>`;
+				}
+			}
 			
+			// 3. 組合 HTML
+			// 採用 Flexbox 佈局：左側標題描述，右側 Meta 資訊(語言/作者/顏色)
 			item.innerHTML = `
-				<div class="import-script-title">${itemData.title}</div>
-				<div class="import-script-desc">${itemData.description}</div>
-				${authorHtml} 
-				<div class="import-script-lang">${lang}</div>
+				<div style="flex: 1; padding-right: 5px;">
+					<div class="import-script-title">${itemData.title}</div>
+					<div class="import-script-desc">${itemData.description}</div>
+				</div>
+				<div style="display: flex; flex-direction: column; align-items: flex-end; min-width: 80px;">
+					<div class="import-script-lang" style="position:static; margin-bottom:4px;">${lang}</div>
+					${authorHtml}
+					${colorsHtml}
+				</div>
 			`;
 			
-			// 點擊行為分流
 			if (type === 'script') {
 				item.onclick = () => loadInternalScript(itemData);
 			} else {
-				// 這裡呼叫新的載入函式
 				item.onclick = () => loadInternalDeckFile(itemData);
 			}
 			listEl.appendChild(item);
 		});
+
+		// 奇數補白邏輯
+		if (type === 'deck' && sourceList.length % 2 !== 0) {
+			const dummy = document.createElement('div');
+			dummy.className = 'import-script-item placeholder';
+			dummy.innerHTML = '&nbsp;'; 
+			listEl.appendChild(dummy);
+		}
 	}
 
 	// [修改] 載入內部牌組檔案 -> 改為跳出詢問
