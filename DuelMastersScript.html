@@ -4792,10 +4792,18 @@
 	// 建議將牌組檔案放在與 scripts 相同的資料夾，或建立 decks 資料夾
 	var AVAILABLE_DECKS = [
 		{
+			title: "巨人",
+			description: "派大的招牌牌組",
+			filename: "PieGiant.json",
+			lang: "zh",
+			oAuthor: "派大",
+		},
+		{
 			title: "機械速攻",
-			description: "大福開發、以H17為核心發想的機械速攻",
+			description: "以H17為核心發想的機械速攻",
 			filename: "SpeedMecha.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "大福",
 		},
 		{
 			title: "封殺車邪王門",
@@ -4819,7 +4827,8 @@
 			title: "烏爾天寶",
 			description: "以烏爾天寶跟超愛銀河Combo組成的特殊勝利牌組",
 			filename: "UlPhoenix.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "Ether",
 		},
 		{
 			title: "俳句爵",
@@ -4843,25 +4852,29 @@
 			title: "甲獸團長",
 			description: "甲獸軍隊+三色夢幻團長的組合技展開牌組",
 			filename: "ArmyDogiragon.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "衛君",
 		},
 		{
 			title: "王鬪高麗菜",
 			description: "Ether風格的五色高麗菜",
 			filename: "EtherCabbage.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "Ether",
 		},
 		{
 			title: "軍隊超魂",
 			description: "游擊隊侵略+超魂X的組合技牌組",
 			filename: "JrHyperCross.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "Ether",
 		},
 		{
 			title: "封殺車",
 			description: "賽場頂級的魔彈封殺Z",
 			filename: "DiasZetaMotor.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "胃",
 		},
 		{
 			title: "火鳥",
@@ -4879,7 +4892,8 @@
 			title: "巨大鯨",
 			description: "魂晶海嶺x不死樹",
 			filename: "GiantWhale.json",
-			lang: "zh"
+			lang: "zh",
+			oAuthor: "Ether",
 		},
 	];
 
@@ -16577,11 +16591,12 @@
 	// --- 修改後的 Import 列表渲染邏輯 ---
 
 	// 列表渲染器 (區分劇本與牌組來源)
+	// --- 修改後的 Import 列表渲染邏輯 ---
+	// 列表渲染器 (區分劇本與牌組來源)
 	function renderImportList(containerId, type) {
 		const listEl = document.getElementById(containerId);
 		if(!listEl) return;
 		listEl.innerHTML = '';
-
 		// [修改重點] 根據類型選擇不同的資料來源
 		let sourceList = [];
 		if (type === 'script') {
@@ -16590,7 +16605,7 @@
 			// 若尚未定義 AVAILABLE_DECKS，則使用空陣列防呆
 			sourceList = (typeof AVAILABLE_DECKS !== 'undefined') ? [...AVAILABLE_DECKS] : [];
 		}
-		
+
 		// 如果列表是空的
 		if (sourceList.length === 0) {
 			const msg = (type === 'script') ? 'lbl_no_script' : '暫無範例牌組'; // 簡單的 fallback 文字
@@ -16602,9 +16617,23 @@
 			const item = document.createElement('div');
 			item.className = 'import-script-item';
 			const lang = itemData.lang || 'zh';
+
+			// [新增] 檢查並顯示原作者 (oAuthor) - 向下相容
+			let authorHtml = '';
+			// 只有當 oAuthor 存在且不為空字串時才顯示
+			if (itemData.oAuthor) {
+				authorHtml = `
+					<div style="font-size: 0.85rem; color: #e67e22; font-weight: bold; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+						<span>👤</span>
+						<span>原作者: ${itemData.oAuthor}</span>
+					</div>
+				`;
+			}
+			
 			item.innerHTML = `
 				<div class="import-script-title">${itemData.title}</div>
 				<div class="import-script-desc">${itemData.description}</div>
+				${authorHtml} 
 				<div class="import-script-lang">${lang}</div>
 			`;
 			
