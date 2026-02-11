@@ -7253,6 +7253,12 @@
 	
     // [修改] 增加 skipRender 參數
 	function saveDraft(customDesc, skipRender = false) {
+	
+		// --- [新增] 如果還在指向模式，存檔時自動解除 ---
+		if (typeof isPointing !== 'undefined' && isPointing) {
+			cancelPointMode();
+		}
+		
 		if (draftOperations.length === 0) {
 			cancelDraft();
 			return;
@@ -8927,6 +8933,10 @@
 	// [修改] 處理指向點擊 (區分卡片與區域)
 	function handlePointClick(zoneId, cardId) {
 		if (!isPointing) return;
+		
+		// 1. 偵測是否按住 Ctrl (或 Mac 的 Command 鍵)
+		const e = window.event;
+		const isMulti = e && (e.ctrlKey || e.metaKey);
 
 		// 1. 點擊區域 (Zone) - 當沒有 cardId 但有 zoneId 時觸發
 		if (!cardId && zoneId) {
@@ -8948,7 +8958,7 @@
 
 		// 2. 點擊卡片 (Card)
 		if (cardId) {
-			finishPoint('CARD', [cardId]);
+			finishPoint('CARD', [cardId], isMulti);
 		}
 	}
 
@@ -8970,7 +8980,7 @@
     }
 
     // [修改] 完成指向 (寫入紀錄)
-	function finishPoint(type, targetIds) {
+	function finishPoint(type, targetIds, keepOpen = false) {
 		const state = getCurrentDisplayState();
 		const pointer = state.cards.find(c => c.id === pointerId);
 		
@@ -8992,8 +9002,11 @@
 			desc: desc,
 			arrowColor: currentArrowColor // [關鍵] 儲存顏色
 		});
-
-		cancelPointMode();
+		
+		// 如果沒有要求保持開啟 (keepOpen 為 false)，才執行取消/關閉
+		if (!keepOpen) {
+			cancelPointMode();
+		}
 	}
 
     // [修正版] 區域點擊處理函式 (移除需求 #3，保留 #1 & #2)
