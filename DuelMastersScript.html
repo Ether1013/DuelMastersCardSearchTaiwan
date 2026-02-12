@@ -14655,24 +14655,29 @@
         document.getElementById('deck-context-menu').style.display = 'none';
 
         if (action === 'shuffle') {
-            // 確保處於編輯模式
-            if (!isDrafting) startDraftAtEnd();
-            
-            // 建立操作指令
-            const op = { type: 'SHUFFLE', zoneId: contextMenuTargetZone };
-            
-            // 1. 加入編輯佇列
-            addOperation(op);
-            
-            // 2. 立即應用到當前畫面 (讓使用者看到結果，但不存檔)
-            applyOperation(getCurrentDisplayState(), op);
-            
-            // 3. 重新渲染畫面
-            renderUI();
-            
-            // 視覺特效 (選用)
-            triggerShuffleAnimation(10, contextMenuTargetZone);
-        } 
+			// 確保處於編輯模式
+			if (!isDrafting) startDraftAtEnd();
+
+			// [修改] 先取得當前該區的卡片，並算出隨機順序
+			const state = getCurrentDisplayState();
+			const cards = state.cards.filter(c => c.zone === contextMenuTargetZone);
+			const ids = cards.map(c => c.id);
+			
+			// 在這裡進行隨機排序
+			ids.sort(() => Math.random() - 0.5);
+
+			// 建立指令時，將算好的 ids 放入 order 參數
+			const op = { 
+				type: 'SHUFFLE', 
+				zoneId: contextMenuTargetZone, 
+				order: ids  // <--- 關鍵：將結果記錄下來
+			};
+
+			addOperation(op);
+			applyOperation(state, op); // 立即套用
+			renderUI();
+			triggerShuffleAnimation(10, contextMenuTargetZone);
+		}
         else if (action === 'move') {
 			// 重置數量為 1
 			setMoveQty(1); 
