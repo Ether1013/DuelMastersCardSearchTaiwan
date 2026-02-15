@@ -345,6 +345,12 @@
 				{ Jap : "合体龍解",		Eng : "Combined Dragon Solution",		Chi : "合體龍解",	descript : "當指定條件達成時，將複數張ドラグハート翻面並合併成1隻生物",},
 				{ Jap : "龍魂回避",		Eng : "Dragon Heart Avoidance",		Chi : "龍魂回避",	descript : "當此生物離場時，取而代之、將其中1個ドラグハート・セル放回超次元區。其餘的ドラグハート・セル則翻面留在戰鬥場上",},
 				{ Jap : "龍魂解放",		Eng : "Dragon Soul Release",		Chi : "龍魂解放",	descript : "當達成指定條件時，將此卡翻至另一側",},
+				{ Jap : "S-NEO進化",		Eng : "Special-Neo Evolution",		Chi : "特別新進化",	descript : "你可以將此生物進化在戰鬥場上或是墓地裡1隻指定生物之上。",},
+				{ Jap : "超無限G-NEO進化",		Eng : "Super Infinite G-NEO Evolution",		Chi : "超無限新進化G",	descript : "你可以將此生物進化在戰鬥場上1隻以上指定生物之上。",},
+				{ Jap : "跳次元召喚",		Eng : "Teleport Summon",		Chi : "跳次元召喚",	descript : "你可以從超次元區召喚一隻指定費用以下的生物，但是該生物的文明、我方魔力區都要有",},
+				{ Jap : "ファイナル・ドロン",		Eng : "Final Doron",		Chi : "最終隱遁",	descript : "當覺醒成此生物時、如果我方尚未於這場遊戲中使用過ファイナル・ドロン的話，則發動以下能力",},
+				{ Jap : "デュエリスト",		Eng : "Duelist",		Chi : "決鬥者",	descript : "一回合一次，你可以從我方超次元區實行一個指定種族的決鬥夥伴卡牌。但是該卡牌的費用不能超過我方魔力區中的卡牌張數",},
+				{ Jap : "デュエリスト・リンク",		Eng : "Duelist Link",		Chi : "決鬥者連結",	descript : "當戰鬥場上存在三張不同名的指定種族卡牌時，將他們連結翻面變成生物",},
 			];
 			initialData.forEach(item => this.map.set(item.Jap, item));
 		},

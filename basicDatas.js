@@ -490,7 +490,13 @@
 				{	value : "DHSC",	text : "龍心超級生物",		Jap : "ドラグハート・スーパー・クリーチャー",			Location : "P", horizontal : false,	parents: [ "DHC" ],			main:false,	},
 				{	value : "SEDHSC",	
 									text : "星進化龍心超級生物",	Jap : "スター進化ドラグハート・スーパー・クリーチャー",	Location : "P", horizontal : false,								main:false,	},
-				{					text : "決鬥者",				Jap : "デュエリスト",															descript : "這是甚麼沒人知道，官方至今都沒有做出說明"								},
+				{	value : "DL",	text : "決鬥者",				Jap : "デュエリスト",						Location : "M", horizontal : false,								main:true,	descript : "搭配デュエルメイト的特殊卡種"	},
+				{	value : "DMS",	text : "決鬥夥伴咒文",		Jap : "デュエルメイト呪文",					Location : "P", horizontal : false,	parents: [ "DM","S" ],		main:false,	descript : "搭配デュエリスト的咒文"		},
+				{	value : "DMC",	text : "決鬥夥伴生物",		Jap : "デュエルメイト・クリーチャー",				Location : "P", horizontal : false,	parents: [ "DM","C" ],		main:false,	descript : "搭配デュエリスト的生物"		},
+				{	value : "DMSC",	text : "決鬥夥伴超級生物",		Jap : "デュエルメイト・スーパー・クリーチャー",			Location : "P", horizontal : false,	parents: [ "DMC" ],			main:false,	descript : "搭配デュエリスト的合體生物"		},
+
+
+				{	value : "DM",	text : "決鬥夥伴",			Jap : "デュエルメイト",															descript : "泛指搭配デュエルメイト的所有卡種"										},
 				{	value : "DH",	text : "龍心",				Jap : "ドラグハート",						Location : "P", catagory : true,	descript : "泛指龍心生物、龍心武裝、與龍心要塞"									},
 				{					text : "武裝",				Jap : "ウエポン",																descript : "泛指龍心武裝"														},
 				{					text : "≡V≡",				Jap : "≡V≡",																descript : "指稀有度為Victory以上、卡牌上有≡V≡記號的卡"							},
@@ -604,7 +610,7 @@
 				"ドキンダム", "アメッチ", "ガイアール・カイザー", "ボルバルザーク・紫電・ドラゴン", "アリス", "禁断", "U・S・A", "モモダチ", "罪無", "戯具", 
 				"クイーン・オブ・プロテクション", "ロード・オブ・レジェンドソード", "蒼狼", "創世神", "起源神", "ジョニー", "ブレイン", "蓄積された魔力", "究極神アク", "超絶神ゼン", 
 				"魔光大帝ネロ・グリフィス", "ミステリー", "ナゾ", "謎", "クエスチョン", "モモキング", "グレンオー", "トラップ", "漢（メン）", "アクア・アタック", 
-				"アクア・カスケード", "・", "名人", "タイピング＝タップ", "ドギラゴン", "ジャシン", "ホーリー・スパーク", "ボルメテウス・ホワイト・ドラゴン", "モルト",
+				"アクア・カスケード", "・", "名人", "タイピング＝タップ", "ドギラゴン", "ジャシン", "ホーリー・スパーク", "ボルメテウス・ホワイト・ドラゴン", "モルト","ホール",
 			];
 			initialData.forEach(item => this.map.add(item));
 		},
@@ -796,7 +802,7 @@
 	
 	//最新推薦
 	const newestSets = [
-		"NET-070",
+		"DM25-EX4",
 		"DM25-EX3",
 		"DM25-RP4",
 	];
@@ -825,6 +831,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2026/02/15",
+				log : [ 
+						"新增DM24-EX4【パンドラ・ウォーズ】的資料",
+				],	
+			},
 			{	
 				date : "2026/02/02",
 				log : [ 

@@ -1040,8 +1040,26 @@
 		const img = document.createElement('img');
 		img.src = getImgSrc( dmCard );		
 		img.id = picIdHeader + index;
+		
+		// [新增] 1. 為實際顯示的 img 標籤增加錯誤處理
+		img.onerror = function() {
+			if (this.src.indexOf("/cardimage/") !== -1) {
+				this.src = this.src.replace("/cardimage/", "/cardthumb/");
+				this.onerror = null; // 防止無窮迴圈
+			}
+		};
 
 		const pic = new Image();
+		
+		// [新增] 2. 必須在設定 src 之前或之後立即設定 onerror，確保 resize 邏輯能執行
+		pic.onerror = function() {
+			if (this.src.indexOf("/cardimage/") !== -1) {
+				// 如果原圖失敗，改讀縮圖，這樣讀取成功後才會觸發下方的 onload 進行排版
+				this.src = this.src.replace("/cardimage/", "/cardthumb/");
+				this.onerror = null;
+			}
+		};
+		
 		pic.src = img.src;
 		pic.crossorigin="anonymous";
 		if ( index != null ){
@@ -3513,7 +3531,9 @@
 							isBackReadData = true;
 						}
 					}
-					singleCardHTML += `<img id='pop_pic_${listIndex}_${pc}_${aaIndex}' src='${getImgSrc( loadPic )}' onload='setPicObjSize( this, this.id , ${isHorizontal ? " null , " + picWidth : picWidth + " , null "} , this.title );' title='${popCData.name + ( popCData.id != null ? "( " + ( Array.isArray( popCData.id ) ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" )}' style='float:left;${isBackReadData ? "Opacity: 0.6;" : ""}' >`;
+					// [修改] 在 img 標籤內插入 onerror 屬性
+					singleCardHTML += `<img id='pop_pic_${listIndex}_${pc}_${aaIndex}' src='${getImgSrc( loadPic )}' onerror='if(this.src.indexOf("cardimage")!==-1){this.src=this.src.replace("cardimage","cardthumb");this.onerror=null;}' onload='setPicObjSize( this, this.id , ${isHorizontal ? " null , " + picWidth : picWidth + " , null "} , this.title );' title='${popCData.name + ( popCData.id != null ? "( " + ( Array.isArray( popCData.id ) ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" )}' style='float:left;${isBackReadData ? "Opacity: 0.6;" : ""}' >`;
+//					singleCardHTML += `<img id='pop_pic_${listIndex}_${pc}_${aaIndex}' src='${getImgSrc( loadPic )}' onload='setPicObjSize( this, this.id , ${isHorizontal ? " null , " + picWidth : picWidth + " , null "} , this.title );' title='${popCData.name + ( popCData.id != null ? "( " + ( Array.isArray( popCData.id ) ? popCData.id : [ popCData.id ] )[aaIndex] + " )" : "" )}' style='float:left;${isBackReadData ? "Opacity: 0.6;" : ""}' >`;
 				}
 				singleCardHTML += "</div>";
 			}
