@@ -3978,6 +3978,29 @@
 		border: 1px solid rgba(0,0,0,0.1);
 		box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 	}
+	/* 多面卡群組容器：虛線框 */
+	.hyper-card-group {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 8px;
+		border: 2px dashed #888; /* 灰色虛線 */
+		border-radius: 8px;
+		margin: 4px 0;
+		background: rgba(255, 255, 255, 0.05);
+		align-items: center;
+		position: relative;
+	}
+
+	/* 確保群組內的卡片大小適中，不跑版 */
+	.hyper-card-group .card {
+		margin: 0; /* 移除原本可能的 margin */
+	}
+
+	/* 調整按鈕位置，確保在列表中清楚可見 */
+	.card-face-ctrl {
+		z-index: 10;
+	}
 </style>
 </head>
 <body>
@@ -4851,7 +4874,7 @@
 			filename: "TheWorldIsMine.json",
 			lang: "zh",
 			oAuthor: "Ether",
-			colors: 23,
+			colors: 31,
 		},
 		{
 			title: "團長鳳凰",
@@ -7680,9 +7703,11 @@
 						if (c.faceIndex === undefined) c.faceIndex = 0;
 
 						// 1. 保存當前圖片 Key 到對應的面 (防止貼圖後翻面遺失)
+						/*
 						if (c.imageKey) {
 							c.hyperFaces[c.faceIndex] = c.imageKey;
 						}
+						*/
 
 						// 2. 計算下一面 (0 -> 1 -> 2 -> 3 -> 0)
 						// 如果指定了 finalFaceUp (通常用於重播)，這裡簡化為重置回 0 或保持不變，
@@ -7717,6 +7742,25 @@
 					}
 				}
 			});
+		}
+		// --- [新增] 指定超次元面數 (用於列表點選) ---
+		else if (op.type === 'SET_FACE') {
+			const { cardId, faceIndex } = op;
+			const c = state.cards.find(x => x.id === cardId);
+			// 確保目標存在且有該面的定義
+			if (c && c.hyperFaces && c.hyperFaces[faceIndex] !== undefined) {
+				c.faceIndex = faceIndex;
+				
+				// 嘗試讀取該面的圖片
+				let targetKey = c.hyperFaces[faceIndex];
+				// 若該面沒圖，生成預設 Key (相容舊邏輯)
+				if (!targetKey) {
+					 targetKey = (faceIndex === 0) ? `img_${c.id}` : `img_${c.id}_${faceIndex}`;
+				}
+				
+				c.imageKey = targetKey;
+				c.faceUp = true; // 強制轉為表側
+			}
 		}
 		// --- [新增] 修改超次元面數操作 ---
 		else if (op.type === 'MODIFY_FACE') {
@@ -13523,230 +13567,229 @@
 
     // --- [修正版] 開啟卡片選單 (視覺化階層排序) ---
     function openSelectorModal(zoneId, keepSelection = false) {
-        const state = getCurrentDisplayState();
-        // 取得該區域所有卡片
-        const rawCards = getCardsInZone(state, zoneId);
-        
-        const body = document.getElementById('modal-body');
-        body.innerHTML = '';
-        if (!keepSelection) {
+		const state = getCurrentDisplayState();
+		const rawCards = getCardsInZone(state, zoneId);
+		const body = document.getElementById('modal-body');
+		body.innerHTML = '';
+
+		if (!keepSelection) {
 			selectedCardsInModal = [];
 		}
-        
-        const title = document.getElementById('modal-title');
-		// [修正] 根據全域變數決定是否加上 active class
-		const activeClass = isUnseenHighlightOn ? 'active' : '';
-        title.innerHTML = `
-			${getZoneName(zoneId)} (${rawCards.length})
-			<button class="unseen-check-btn" 
-				style="position:relative; top:0; left:10px; display:inline-block;" 
-				onclick="toggleUnseenHighlight()" 
-				data-i18n="btn_check_unseen">👁️‍🗨️ 未見</button>
+
+		const title = document.getElementById('modal-title');
+		// 檢查是否為超次元區
+		const isHyperZone = zoneId.includes('hyper');
+
+		title.innerHTML = `
+			${getZoneName(zoneId)} (${rawCards.length}) 
+			<button class="unseen-check-btn" style="position:relative; top:0; left:10px; display:inline-block;" onclick="toggleUnseenHighlight()" data-i18n="btn_check_unseen">👁️‍🗨️ 未見</button>
 		`;
 		title.setAttribute('data-zone-id', zoneId);
 
-        // --------------------------------------------------------
-        // [核心演算法] 視覺化排序：左群優先 -> 頂層優先 -> 淺層優先
-        // --------------------------------------------------------
-        
-        let sortedCards = [];
+		// --- 排序邏輯 (維持原狀) ---
+		let sortedCards = [];
+		const roots = rawCards.filter(c => !c.parentId);
+		if (zoneId.includes('deck') || zoneId.includes('grave') || zoneId.includes('hyper')) {
+			roots.reverse();
+		}
+		
+		roots.forEach(root => {
+			const clusterIds = getAllLinkedCardIds(state, [root.id]);
+			const clusterMembers = clusterIds.map(id => rawCards.find(c => c.id === id)).filter(c => c);
+			const surface = [];
+			const buried = [];
+			clusterMembers.forEach(c => {
+				const isUnder = c.stackType && (c.stackType.includes('bottom') || c.stackType.includes('shift'));
+				if (isUnder) buried.push(c);
+				else surface.push(c);
+			});
+			surface.sort((a, b) => {
+				if (a.id === root.id) return -1;
+				if (b.id === root.id) return 1;
+				return 0;
+			});
+			const getDepth = (card) => {
+				let depth = 0;
+				let curr = card;
+				while (curr && curr.parentId) {
+					depth++;
+					curr = rawCards.find(x => x.id === curr.parentId);
+				}
+				return depth;
+			};
+			buried.sort((a, b) => {
+				const depthA = getDepth(a);
+				const depthB = getDepth(b);
+				if (depthA !== depthB) return depthA - depthB;
+				return a.parentId - b.parentId;
+			});
+			sortedCards.push(...surface, ...buried);
+		});
+		const processedIds = new Set(sortedCards.map(c => c.id));
+		const orphans = rawCards.filter(c => !processedIds.has(c.id));
+		sortedCards.push(...orphans);
 
-        // 1. 找出所有的「根卡 (Roots)」
-        // 這些卡片沒有 parentId，且在 rawCards 陣列中的順序通常對應畫面上的由左至右
-        const roots = rawCards.filter(c => !c.parentId);
+		// --- 渲染邏輯 (針對多面卡調整) ---
+		sortedCards.forEach((card) => {
+			// 判斷是否需要群組顯示 (超次元區且有多面定義)
+			if (isHyperZone && card.hyperFaces && card.hyperFaces.length > 0) {
+				
+				// 1. 建立虛線框容器
+				const groupEl = document.createElement('div');
+				groupEl.className = 'hyper-card-group';
 
-        // [修改] 針對「堆疊型區域」(牌庫/墓地/超次元)，進行反向排序
-        // 讓最上面的牌 (Top/Latest) 顯示在列表的最前面 (左上角)
-        if (zoneId.includes('deck') || zoneId.includes('grave') || zoneId.includes('hyper')) {
-            roots.reverse();
-        }
+				// 2. 遍歷每一面
+				card.hyperFaces.forEach((faceKey, idx) => {
+					const el = document.createElement('div');
+					el.className = 'card';
+					
+					// 圖片處理
+					const img = globalImageRegistry[faceKey];
+					if (img) {
+						el.style.backgroundImage = `url(${img})`;
+						el.classList.add('has-image-icon');
+						el.style.backgroundSize = 'cover';
+						el.style.backgroundPosition = 'center';
+					} else {
+						const textDiv = document.createElement('div');
+						textDiv.className = 'card-text';
+						textDiv.innerText = `${card.text} (${idx+1})`;
+						el.appendChild(textDiv);
+					}
 
-        // 2. 針對每一個卡群 (Cluster) 進行內部排序
-        roots.forEach(root => {
-            // A. 找出該家族的所有成員
-            // 使用既有的 getAllLinkedCardIds (若無此函式，這裡使用簡易遞迴查找)
-            const clusterIds = getAllLinkedCardIds(state, [root.id]);
-            const clusterMembers = clusterIds
-                .map(id => rawCards.find(c => c.id === id))
-                .filter(c => c); // 過濾掉找不到的(防呆)
+					// 選取狀態處理：
+					// 只有當 (卡片ID在選取清單中) 且 (該面的索引 == 卡片當前索引) 時才亮起
+					const isSelected = selectedCardsInModal.includes(card.id);
+					if (isSelected && card.faceIndex === idx) {
+						el.classList.add('selected');
+					}
 
-            // B. 將家族成員分為「表層 (Surface)」與「深層 (Buried)」
-            // 表層：根卡、拼圖連結 (Puzzle)
-            // 深層：疊在下方 (Bottom)、位移 (Shift)
-            const surface = [];
-            const buried = [];
-
-            clusterMembers.forEach(c => {
-                const isUnder = c.stackType && (c.stackType.includes('bottom') || c.stackType.includes('shift'));
-                if (isUnder) {
-                    buried.push(c);
-                } else {
-                    surface.push(c);
-                }
-            });
-
-            // C. 排序「表層卡」
-            // 邏輯：根卡 (Root) 永遠放第一個，其他的 (Puzzle) 依 ID 或加入順序排列
-            // 這裡簡單將 Root 置頂，其他維持原樣
-            surface.sort((a, b) => {
-                if (a.id === root.id) return -1;
-                if (b.id === root.id) return 1;
-                return 0; 
-            });
-
-            // D. 排序「深層卡」
-            // 邏輯：越接近表層的越前面 (c 在 d 前面)
-            // 實作：計算每個深層卡與根卡的「代數距離 (Generation Distance)」
-            const getDepth = (card) => {
-                let depth = 0;
-                let curr = card;
-                while (curr && curr.parentId) {
-                    depth++;
-                    curr = rawCards.find(x => x.id === curr.parentId);
-                }
-                return depth;
-            };
-
-            buried.sort((a, b) => {
-                // 深度淺的優先 (數字小的在前)
-                const depthA = getDepth(a);
-                const depthB = getDepth(b);
-                if (depthA !== depthB) return depthA - depthB;
-                // 若深度相同，則依 ParentID 分組
-                return a.parentId - b.parentId;
-            });
-
-            // E. 合併並推入最終清單： [表層] + [深層]
-            // 結果範例： A, B, c, d
-            sortedCards.push(...surface, ...buried);
-        });
-
-        // F. 防呆：如果有卡片沒被歸類到任何 Root (孤兒卡)，補在最後面
-        const processedIds = new Set(sortedCards.map(c => c.id));
-        const orphans = rawCards.filter(c => !processedIds.has(c.id));
-        sortedCards.push(...orphans);
-
-        // --------------------------------------------------------
-        // [渲染] 依照排序後的 sortedCards 產生 DOM
-        // --------------------------------------------------------
-
-        sortedCards.forEach((card, i) => {
-            const index = i; 
-            const el = document.createElement('div');
-            el.className = 'card';
-			
-			if (selectedCardsInModal.includes(card.id)) el.classList.add('selected');
-        
-			// [修改] 確保翻面後的 imageKey 能被正確讀取並顯示
-			// 優先檢查 card.imageKey (當前狀態)，若無則檢查 card.backImageKey (背面)，最後才是一般判斷
-			let bgImage = null;
-			if (card.imageKey && globalImageRegistry[card.imageKey]) {
-				bgImage = globalImageRegistry[card.imageKey];
-			}
-			
-			if (bgImage) {
-				 el.style.backgroundImage = `url(${bgImage})`;
-				 el.classList.add('has-image-icon');
-				 // 如果有圖，隱藏文字
-				 el.style.color = 'transparent'; 
-				 el.style.textShadow = 'none';
-			}
-            
-			// --- [新增] Modal 內的未見卡高亮 ---
-            if (isUnseenHighlightOn && !globalSeenCardIds.has(card.id)) {
-                el.classList.add('glow-unseen');
-            }
-            // ---------------------------------
-			
-            if (card.image && (globalImageRegistry[card.imageKey] || globalImageRegistry[card.backImageKey])) {
-                const imgKey = card.imageKey || card.backImageKey;
-                el.style.backgroundImage = `url(${globalImageRegistry[imgKey]})`;
-                el.classList.add('has-image-icon');
-            }
-
-            if (card.rotation) {
-                el.style.transform = `rotate(${card.rotation}deg) scale(0.9)`;
-                el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
-            }
-
-            // 為了區分群組，若是 Root 卡，可以加個明顯的標記 (選用)
-            // 這裡維持原本樣式，僅透過排列順序表達
-            const isRoot = !card.parentId;
-            const isBuried = card.stackType && (card.stackType.includes('bottom') || card.stackType.includes('shift'));
-            
-            // 視覺優化：深層卡片顯示稍微小一點的編號顏色，表層卡片顯示亮一點
-            const numColor = isRoot ? '#e74c3c' : (isBuried ? '#888' : '#3498db');
-            
-            el.innerHTML += `<div style="position:absolute; top:2px; left:2px; font-size:10px; color:${numColor}; font-weight:bold; z-index:10;">#${index+1}</div>
-                            <div class="card-text">${card.text}</div>`;
-							
-			// --- [新增] 超次元面數控制按鈕 ---
-			// 判斷條件：1. 目前開的是超次元區  2. 卡片起源於超次元
-			const isHyperOrigin = card.isHyper || (card.initialZone && card.initialZone.includes('hyper'));
-			
-			if (zoneId.includes('hyper') && isHyperOrigin) {
-				// 取得目前面數 (若無陣列，舊資料視為 4 面，新局預設為 2 面)
-				const currentFaces = card.hyperFaces ? card.hyperFaces.length : 4;
-
-				// [+] 按鈕：小於 4 面時顯示
-				if (currentFaces < 4) {
-					const btnAdd = document.createElement('div');
-					btnAdd.className = 'card-face-ctrl add';
-					btnAdd.innerText = '+';
-					btnAdd.title = '增加一面';
-					btnAdd.onclick = (e) => {
+					el.onclick = (e) => {
 						e.stopPropagation();
-						modifyHyperFace(card.id, 'add');
+
+						// 1. [關鍵] 在執行操作前，先記錄「修改前」的狀態
+						// 必須在這裡先取值，因為下一行的 addOperation 會同步修改 card 物件
+						const oldFaceIndex = card.faceIndex || 0;
+						const isAlreadySelected = selectedCardsInModal.includes(card.id);
+
+						// 2. 執行操作 (這會立即更新 card 物件的 faceIndex)
+						addOperation({ type: 'SET_FACE', cardId: card.id, faceIndex: idx });
+
+						// 3. 根據「修改前」的狀態來判斷邏輯
+						if (isAlreadySelected) {
+							// 情況 A: 卡片原本已被選取
+							if (oldFaceIndex === idx) {
+								// 且點擊的是「原本正在顯示」的那一面 -> 代表使用者想「取消選取」
+								selectedCardsInModal = selectedCardsInModal.filter(id => id !== card.id);
+							}
+							// 情況 B: 點擊的是「不同面」 (oldFaceIndex !== idx)
+							// -> 代表使用者想「切換面數」但「保持選取」
+							// -> 我們什麼都不做 (保留 ID 在清單內)
+							// -> 因為上面的 addOperation 已經改了面數，等下重繪時就會顯示新面 + 選取框
+						} else {
+							// 情況 C: 卡片原本未選取 -> 加入選取
+							selectedCardsInModal.push(card.id);
+						}
+
+						// 4. 重新渲染列表以更新顯示
+						openSelectorModal(zoneId, true);
 					};
-					el.appendChild(btnAdd);
+
+					// [UI調整] 增減面數按鈕
+					// 邏輯：只在「最後一面」顯示操作按鈕，避免邏輯混淆
+					const isLastFace = (idx === card.hyperFaces.length - 1);
+					
+					if (isLastFace) {
+						// 增加面數 (+) - 右上角
+						if (card.hyperFaces.length < 4) {
+							const btnAdd = document.createElement('div');
+							btnAdd.className = 'card-face-ctrl add';
+							btnAdd.innerText = '+';
+							btnAdd.title = '新增一面';
+							btnAdd.onclick = (e) => {
+								e.stopPropagation();
+								addOperation({ type: 'MODIFY_FACE', cardId: card.id, actionType: 'add' });
+								setTimeout(() => openSelectorModal(zoneId, true), 50);
+							};
+							el.appendChild(btnAdd);
+						}
+
+						// 減少面數 (-) - 左上角
+						if (card.hyperFaces.length > 2) {
+							const btnRem = document.createElement('div');
+							btnRem.className = 'card-face-ctrl remove';
+							btnRem.innerText = '-';
+							btnRem.title = '移除最後一面';
+							btnRem.onclick = (e) => {
+								e.stopPropagation();
+								addOperation({ type: 'MODIFY_FACE', cardId: card.id, actionType: 'remove' });
+								setTimeout(() => openSelectorModal(zoneId, true), 50);
+							};
+							el.appendChild(btnRem);
+						}
+					}
+
+					// 面數指示 (左下角小字)
+					const info = document.createElement('div');
+					info.style.position = 'absolute';
+					info.style.bottom = '2px';
+					info.style.left = '2px';
+					info.style.fontSize = '10px';
+					info.style.color = 'white';
+					info.style.backgroundColor = 'rgba(0,0,0,0.5)';
+					info.style.padding = '0 3px';
+					info.style.borderRadius = '3px';
+					info.style.pointerEvents = 'none';
+					info.innerText = `${idx + 1}`;
+					el.appendChild(info);
+
+					groupEl.appendChild(el);
+				});
+
+				body.appendChild(groupEl);
+
+			} else {
+				// --- 一般卡片渲染 (維持原狀) ---
+				const el = document.createElement('div');
+				el.className = 'card';
+				if (selectedCardsInModal.includes(card.id)) el.classList.add('selected');
+
+				// 圖片邏輯
+				let bgImage = null;
+				if (card.imageKey && globalImageRegistry[card.imageKey]) {
+					bgImage = globalImageRegistry[card.imageKey];
+				} else if (card.backImageKey && globalImageRegistry[card.backImageKey] && !isHyperZone) {
+					bgImage = globalImageRegistry[card.backImageKey];
 				}
 
-				// [-] 按鈕：大於 2 面時顯示 (因為預設至少 2 面)
-				// 注意：需求說 "三面卡或是四面卡時...會有[-]鍵" => length >= 3
-				if (currentFaces >= 3) {
-					const btnRem = document.createElement('div');
-					btnRem.className = 'card-face-ctrl remove';
-					btnRem.innerText = '-';
-					btnRem.title = '刪除當前面';
-					btnRem.onclick = (e) => {
-						e.stopPropagation();
-						modifyHyperFace(card.id, 'remove');
-					};
-					el.appendChild(btnRem);
+				if (bgImage) {
+					el.style.backgroundImage = `url(${bgImage})`;
+					el.classList.add('has-image-icon');
+					el.style.backgroundSize = 'cover';
+					el.style.backgroundPosition = 'center';
+				} else {
+					const textDiv = document.createElement('div');
+					textDiv.className = 'card-text';
+					textDiv.innerText = card.text;
+					el.appendChild(textDiv);
 				}
-			}
-            
-            // 點擊選取邏輯
-            el.onclick = () => {
-                if (selectedCardsInModal.includes(card.id)) {
-                    selectedCardsInModal = selectedCardsInModal.filter(id=>id!==card.id);
-                    el.classList.remove('selected');
-                } else {
-                    selectedCardsInModal.push(card.id);
-                    el.classList.add('selected');
-                }
-            };
-            body.appendChild(el);
-        });
-        
-        // Modal 底部控制項 (維持不變)
-        const modalFooter = document.querySelector('#card-selector-modal .modal-content > div:last-child');
-        let rotControls = document.getElementById('modal-rotate-controls');
-        if (!rotControls && modalFooter) {
-            rotControls = document.createElement('div');
-            rotControls.id = 'modal-rotate-controls';
-            rotControls.style.display = 'inline-flex';
-            rotControls.style.gap = '5px';
-            rotControls.style.marginRight = '10px';
-            rotControls.innerHTML = `
-                <button onclick="rotateSelectedInModal(-90)" style="background:#7f8c8d;">↶</button>
-                <button onclick="rotateSelectedInModal(90)" style="background:#7f8c8d;">↷</button>
-            `;
-            modalFooter.insertBefore(rotControls, modalFooter.firstChild);
-        }
 
-        document.getElementById('card-selector-modal').style.display = 'flex';
-    }
+				el.onclick = (e) => {
+					e.stopPropagation();
+					if (selectedCardsInModal.includes(card.id)) {
+						selectedCardsInModal = selectedCardsInModal.filter(id => id !== card.id);
+						el.classList.remove('selected');
+					} else {
+						selectedCardsInModal.push(card.id);
+						el.classList.add('selected');
+					}
+				};
+				body.appendChild(el);
+			}
+		});
+
+		document.getElementById('card-selector-modal').style.display = 'flex';
+	}
 	
 	// --- [新增] 在清單視窗內旋轉卡片 ---
 	function rotateSelectedInModal(deg) {
