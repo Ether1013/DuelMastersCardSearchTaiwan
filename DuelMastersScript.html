@@ -7952,13 +7952,26 @@
 
                     // 3. 執行數值更新 (寫入到 style 物件中)
                     if (key === 'rotate') {
-                        // 旋轉專用邏輯：累加角度
                         style.rotate = (style.rotate || 0) + val;
                     } else if (key === 'scale') {
-                        // 縮放邏輯
                         style.scale = (style.scale || 1.0) + val;
+                    } else if (key === 'panX' || key === 'panY') {
+                        // 播放器同步支援：視覺位移映射
+                        let currentRotate = style.rotate || 0;
+                        let rad = currentRotate * Math.PI / 180;
+                        
+                        let dxGlobal = (key === 'panX') ? val : 0;
+                        let dyGlobal = (key === 'panY') ? val : 0;
+                        
+                        let dxLocal = dxGlobal * Math.cos(rad) + dyGlobal * Math.sin(rad);
+                        let dyLocal = -dxGlobal * Math.sin(rad) + dyGlobal * Math.cos(rad);
+                        
+                        if (style.x === undefined) style.x = 50;
+                        if (style.y === undefined) style.y = 50;
+                        style.x += dxLocal;
+                        style.y += dyLocal;
                     } else {
-                        // 位移邏輯 (panX, panY)
+                        // 防呆，處理其他未知的 key
                         if (style[key] === undefined) style[key] = 50;
                         style[key] += val;
                     }
@@ -8375,11 +8388,24 @@
                 
                 // [新增] 這裡補上了 rotate 的判斷
                 if (key === 'rotate') {
-                    newStyle.rotate = (newStyle.rotate || 0) + val;
-                } 
-                else if (key === 'panX') newStyle.x += val;
-                else if (key === 'panY') newStyle.y += val;
-                else if (key === 'scale') newStyle.scale += val;
+					newStyle.rotate = (newStyle.rotate || 0) + val;
+				} else if (key === 'panX' || key === 'panY') {
+					// 將視覺操作 (全域方向) 轉換為背景圖的局部方向
+					let currentRotate = newStyle.rotate || 0;
+					let rad = currentRotate * Math.PI / 180;
+					
+					let dxGlobal = (key === 'panX') ? val : 0;
+					let dyGlobal = (key === 'panY') ? val : 0;
+					
+					// 使用反向旋轉矩陣計算 X/Y 的實際位移
+					let dxLocal = dxGlobal * Math.cos(rad) + dyGlobal * Math.sin(rad);
+					let dyLocal = -dxGlobal * Math.sin(rad) + dyGlobal * Math.cos(rad);
+					
+					newStyle.x = (newStyle.x !== undefined ? newStyle.x : 50) + dxLocal;
+					newStyle.y = (newStyle.y !== undefined ? newStyle.y : 50) + dyLocal;
+				} else if (key === 'scale') {
+					newStyle.scale += val;
+				}
                 
                 globalAbilityStyleRegistry[keyToUpdate] = newStyle;
                 
@@ -11820,10 +11846,20 @@
                 bgLayer.style.backgroundPosition = `${style.x}% ${style.y}%`;
                 bgLayer.style.backgroundSize = `${style.scale * 100}%`;
                 
-                // [新增] 套用旋轉 (只轉背景，不轉文字)
+                // --- [開始修改區塊：修復旋轉後被裁切的問題] ---
+                // 將背景層強制設為正方形(取最長邊 80px)並對齊中心
+                bgLayer.style.width = '80px';
+                bgLayer.style.height = '80px';
+                bgLayer.style.top = '50%';
+                bgLayer.style.left = '50%';
+                
+                // 結合置中偏移 (translate) 與 旋轉 (rotate)
+                let transformStr = 'translate(-50%, -50%)';
                 if (style.rotate) {
-                    bgLayer.style.transform = `rotate(${style.rotate}deg)`;
+                    transformStr += ` rotate(${style.rotate}deg)`;
                 }
+                bgLayer.style.transform = transformStr;
+                // --- [修改區塊結束] ---
             }
             // 將背景層插入到卡片最底層
             el.appendChild(bgLayer);
