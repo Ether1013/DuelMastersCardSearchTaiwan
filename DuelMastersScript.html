@@ -4001,6 +4001,41 @@
 	.card-face-ctrl {
 		z-index: 10;
 	}
+	/* 猜拳按鈕基礎樣式設定 */
+	#btn-rps {
+		position: relative;
+		overflow: hidden; /* 確保蓄力條不會超出按鈕圓角 */
+		background-color: #e67e22;
+		border-color: #d35400;
+		color: #fff;
+		z-index: 1;
+		user-select: none;
+		-webkit-user-select: none;
+		transition: background-color 0.2s, box-shadow 0.2s; /* 為了蓄力滿的特效 */
+	}
+
+	/* 蓄力進度條 (預設寬度為 0) */
+	#btn-rps::before {
+		content: "";
+		position: absolute;
+		top: 0; left: 0; bottom: 0;
+		width: 0%;
+		background-color: #c0392b; /* 蓄力時的底色 (更深的紅橘色) */
+		z-index: -1;
+		transition: width 0s linear; /* 中斷時瞬間歸零 */
+	}
+
+	/* 當按鈕加上 charging 類別時，寬度在 1 秒內填滿 100% */
+	#btn-rps.charging::before {
+		width: 100%;
+		transition: width 1s linear; /* 這裡原本是 3s，改為 1s */
+	}
+
+	/* 蓄力完成後的閃爍/高亮特效 */
+	#btn-rps.charged {
+		background-color: #c0392b;
+		box-shadow: 0 0 10px #e74c3c;
+	}
 </style>
 </head>
 <body>
@@ -4015,7 +4050,15 @@
     </select>
 
     <button onclick="openSetupModal()" data-i18n="btn_setup">NEW GAME</button>
-	<button onclick="actionRPS()" style="background:#e67e22; border-color:#d35400;" data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)</button>
+	<button 
+		id="btn-rps"
+		onmousedown="handleRpsPointerDown(event)" 
+		onmouseup="handleRpsPointerUp(event)" 
+		onmouseleave="handleRpsPointerLeave(event)" 
+		ontouchstart="handleRpsPointerDown(event)" 
+		ontouchend="handleRpsPointerUp(event)" 
+		data-i18n="btn_rps">✊✌️🖐️ 猜拳 (RPS)
+	</button>
     <button onclick="rotateBoard()" data-i18n="btn_rotate">🔄 換人 (Switch Turn)</button>
     →
     <button onclick="resetCurrentTurnPlayer()" data-i18n="btn_reset_current">重置當前 (Untap)</button>
@@ -8852,63 +8895,127 @@
     }
 	
 	// --- [新增] 猜拳動作 ---
-    function actionRPS() {
-        // 1. 定義選項 (0:石頭, 1:布, 2:剪刀)
-        // 為了方便判斷勝負： (A - B + 3) % 3
-        // 結果 0=平手, 1=A贏, 2=B贏
-        const CHOICES = ['rock', 'paper', 'scissors'];
-        
-        // 2. 隨機產生結果
-        const p1ChoiceIdx = Math.floor(Math.random() * 3);
-        const p2ChoiceIdx = Math.floor(Math.random() * 3);
-        
-        const p1Val = CHOICES[p1ChoiceIdx];
-        const p2Val = CHOICES[p2ChoiceIdx];
-        
-        // 3. 判斷勝負
-        // 0: Draw, 1: P1 Win, 2: P2 Win
-        const resultCalc = (p1ChoiceIdx - p2ChoiceIdx + 3) % 3;
-        let winner = null;
-        if (resultCalc === 1) winner = 1;
-        if (resultCalc === 2) winner = 2;
+    function actionRPS(autoWin = false) {
+		// 1. 定義選項 (0:石頭, 1:布, 2:剪刀)
+		const CHOICES = ['rock', 'paper', 'scissors'];
+		
+		let p1ChoiceIdx, p2ChoiceIdx, resultCalc;
+		let p1Val, p2Val, winner = null;
 
-        // 4. 如果不在編輯模式，開啟新步驟
-        if (!isDrafting) startDraftAtEnd();
+		if (autoWin) {
+			// 【長按 3 秒模式】不斷循環猜拳，直到非平手才停止
+			while (winner === null) {
+				p1ChoiceIdx = Math.floor(Math.random() * 3);
+				p2ChoiceIdx = Math.floor(Math.random() * 3);
+				resultCalc = (p1ChoiceIdx - p2ChoiceIdx + 3) % 3;
+				if (resultCalc === 1) winner = 1;
+				else if (resultCalc === 2) winner = 2;
+			}
+		} else {
+			// 【一般點擊模式】只猜一次
+			p1ChoiceIdx = Math.floor(Math.random() * 3);
+			p2ChoiceIdx = Math.floor(Math.random() * 3);
+			resultCalc = (p1ChoiceIdx - p2ChoiceIdx + 3) % 3;
+			if (resultCalc === 1) winner = 1;
+			if (resultCalc === 2) winner = 2;
+		}
 
-        // 5. 加入操作指令 (將結果寫死在 data 裡)
-        addOperation({
-            type: 'RPS',
-            data: {
-                p1: p1Val,
-                p2: p2Val,
-                winner: winner
-            }
-        });
+		p1Val = CHOICES[p1ChoiceIdx];
+		p2Val = CHOICES[p2ChoiceIdx];
+		
+		// 4. 如果不在編輯模式，開啟新步驟
+		if (!isDrafting) startDraftAtEnd();
+		
+		// 5. 加入操作指令 (將結果寫入 data)
+		addOperation({
+			type: 'RPS',
+			data: { p1: p1Val, p2: p2Val, winner: winner }
+		});
+		
+		// 6. 產生描述並存檔
+		const p1Label = t('rps_' + p1Val);
+		const p2Label = t('rps_' + p2Val);
+		let resultLabel = "";
+		if (winner === 1) resultLabel = t('rps_p1_win');
+		else if (winner === 2) resultLabel = t('rps_p2_win');
+		else resultLabel = t('rps_draw');
+		
+		// 若為決戰模式，於 Log 中增加提示標記
+		let prefix = autoWin ? '[決戰]' : '';
+		const desc = `[${t('act_rps')}]${prefix} P2: ${p2Label} vs P1: ${p1Label} => ${resultLabel}`;
+		saveDraft(desc);
+	}
+	
+	let rpsPressTimer = null;
+	let rpsLongPressed = false;
 
-        // 6. 產生描述並存檔
-        // 為了讓 Action Log 顯示清楚，我們把結果寫在描述裡
-        const p1Label = t('rps_' + p1Val);
-        const p2Label = t('rps_' + p2Val);
-        let resultLabel = "";
-        
-        if (winner === 1) resultLabel = t('rps_p1_win');
-        else if (winner === 2) resultLabel = t('rps_p2_win');
-        else resultLabel = t('rps_draw');
+	function handleRpsPointerDown(e) {
+		rpsLongPressed = false;
+		if (rpsPressTimer) clearTimeout(rpsPressTimer);
+		
+		// 取得按鈕元素並加上蓄力動畫
+		const btn = e.currentTarget;
+		btn.classList.add('charging');
+		btn.classList.remove('charged');
+		
+		// 設定 1 秒 (1000ms) 的長按計時器
+		rpsPressTimer = setTimeout(() => {
+			rpsLongPressed = true;
+			
+			// 蓄力滿 1 秒，切換為已充能狀態
+			btn.classList.remove('charging');
+			btn.classList.add('charged'); 
+			
+			actionRPS(true); // 觸發必分勝負模式
+		}, 1000); // 這裡原本是 3000，改為 1000
+	}
 
-        saveDraft(`[${t('act_rps')}] P1:${p1Label} vs P2:${p2Label} -> ${resultLabel}`);
-        
-        // 7. 如果平手，自動跳出提示，詢問是否要再來一把
-        if (winner === null) {
-            // 延遲一下讓畫面先畫出來，再跳提示
-            setTimeout(() => {
-                // 如果是在自動播放中，就不跳 confirm，直接繼續 (模擬連續猜拳)
-                // 如果是手動操作，才跳 confirm
-                if (!document.body.classList.contains('is-playing') && confirm(`${t('rps_draw')}\n${t('msg_rps_again')}`)) {
-                    actionRPS(); // 遞迴呼叫，產生下一局
-                }
-            }, 500);
-        }
-    }
+	function handleRpsPointerUp(e) {
+		const btn = e.currentTarget;
+		
+		// 放開時馬上停止蓄力條動畫
+		btn.classList.remove('charging');
+		
+		if (rpsPressTimer) {
+			clearTimeout(rpsPressTimer);
+			rpsPressTimer = null;
+		}
+		
+		// 如果沒有觸發長按 (表示是單點)，則執行一般猜拳
+		if (!rpsLongPressed) {
+			actionRPS(false);
+		} else {
+			// 如果是長按完成，給予短暫延遲再移除發光特效，讓視覺有反饋感
+			setTimeout(() => btn.classList.remove('charged'), 400);
+		}
+		rpsLongPressed = false;
+		
+		// 阻擋手機端 touchend 之後自動觸發的 mousedown/click 行為
+		if (e && e.type === 'touchend') {
+			e.preventDefault();
+		}
+	}
+
+	function handleRpsPointerLeave(e) {
+		const btn = e.currentTarget;
+		
+		// 若中途移開，重置所有視覺狀態
+		btn.classList.remove('charging');
+		btn.classList.remove('charged');
+		
+		if (rpsPressTimer) {
+			clearTimeout(rpsPressTimer);
+			rpsPressTimer = null;
+		}
+	}
+
+	function handleRpsPointerLeave(e) {
+		// 若滑鼠/手指在長按中途移開按鈕，則取消倒數
+		if (rpsPressTimer) {
+			clearTimeout(rpsPressTimer);
+			rpsPressTimer = null;
+		}
+	}
 	
     // [新增] 清除受傷狀態
 	function clearInjured() {
