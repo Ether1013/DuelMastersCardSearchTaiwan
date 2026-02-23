@@ -4036,6 +4036,38 @@
 		background-color: #c0392b;
 		box-shadow: 0 0 10px #e74c3c;
 	}
+	/* NEW GAME 按鈕基礎樣式設定 */
+	#btn-setup {
+		position: relative;
+		overflow: hidden;
+		z-index: 1;
+		user-select: none;
+		-webkit-user-select: none;
+		transition: background-color 0.2s, box-shadow 0.2s;
+	}
+
+	/* 蓄力進度條 (預設寬度為 0) */
+	#btn-setup::before {
+		content: "";
+		position: absolute;
+		top: 0; left: 0; bottom: 0;
+		width: 0%;
+		background-color: #27ae60; /* 蓄力時的底色 (深綠色) */
+		z-index: -1;
+		transition: width 0s linear;
+	}
+
+	/* 當按鈕加上 charging 類別時，寬度在 1 秒內填滿 100% */
+	#btn-setup.charging::before {
+		width: 100%;
+		transition: width 1s linear;
+	}
+
+	/* 蓄力完成後變色發光 */
+	#btn-setup.charged {
+		background-color: #27ae60;
+		box-shadow: 0 0 10px #2ecc71;
+	}
 </style>
 </head>
 <body>
@@ -4049,7 +4081,15 @@
         <option value="jp">日本語</option>
     </select>
 
-    <button onclick="openSetupModal()" data-i18n="btn_setup">NEW GAME</button>
+    <button 
+		id="btn-setup"
+		onmousedown="handleSetupPointerDown(event)" 
+		onmouseup="handleSetupPointerUp(event)" 
+		onmouseleave="handleSetupPointerLeave(event)" 
+		ontouchstart="handleSetupPointerDown(event)" 
+		ontouchend="handleSetupPointerUp(event)" 
+		data-i18n="btn_setup">NEW GAME
+	</button>
 	<button 
 		id="btn-rps"
 		onmousedown="handleRpsPointerDown(event)" 
@@ -9015,6 +9055,163 @@
 			clearTimeout(rpsPressTimer);
 			rpsPressTimer = null;
 		}
+	}
+	
+	// --- NEW GAME 長按偵測邏輯 ---
+	let setupPressTimer = null;
+	let setupLongPressed = false;
+
+	function handleSetupPointerDown(e) {
+		setupLongPressed = false;
+		if (setupPressTimer) clearTimeout(setupPressTimer);
+		
+		const btn = e.currentTarget;
+		btn.classList.add('charging');
+		btn.classList.remove('charged');
+		
+		// 設定 1 秒 (1000ms) 的長按計時器
+		setupPressTimer = setTimeout(() => {
+			setupLongPressed = true;
+			
+			// 蓄力滿 1 秒，切換為已充能狀態
+			btn.classList.remove('charging');
+			btn.classList.add('charged'); 
+			
+			actionQuickStart(); // 觸發一鍵自動開局巨集
+		}, 1000);
+	}
+
+	function handleSetupPointerUp(e) {
+		const btn = e.currentTarget;
+		btn.classList.remove('charging');
+		
+		if (setupPressTimer) {
+			clearTimeout(setupPressTimer);
+			setupPressTimer = null;
+		}
+		
+		// 如果沒有觸發長按 (表示是單點)，則開啟原本的設定視窗
+		if (!setupLongPressed) {
+			openSetupModal();
+		} else {
+			setTimeout(() => btn.classList.remove('charged'), 400);
+		}
+		setupLongPressed = false;
+		
+		if (e && e.type === 'touchend') {
+			e.preventDefault();
+		}
+	}
+
+	function handleSetupPointerLeave(e) {
+		const btn = e.currentTarget;
+		btn.classList.remove('charging');
+		btn.classList.remove('charged');
+		
+		if (setupPressTimer) {
+			clearTimeout(setupPressTimer);
+			setupPressTimer = null;
+		}
+	}
+
+	// --- 一鍵自動開局巨集 (Macro) ---
+	function actionQuickStart() {
+		// 1. 清除所有 ActionLog 直到剩下第一個 (初始盤面狀態)
+		if (history.length > 1) {
+			history = history.slice(0, 1);
+			currentIndex = 0;
+			tempState = cloneState(history[0].state);
+			isDrafting = false;
+			draftOperations = [];
+		}
+		
+		// 2. 雙方牌庫洗牌並儲存 ActionLog
+		startDraftAtEnd();
+		addOperation({ type: 'SHUFFLE', zoneId: 'p1-deck' });
+		addOperation({ type: 'SHUFFLE', zoneId: 'p2-deck' });
+		saveDraft("雙方牌庫洗牌");
+		
+		// 3. 將雙方牌庫前五張牌置入護盾區並儲存 ActionLog
+		let state = getCurrentDisplayState();
+		let p1Deck = state.cards.filter(c => c.zone === 'p1-deck');
+		let p2Deck = state.cards.filter(c => c.zone === 'p2-deck');
+		let p1Shields = p1Deck.slice(-5).map(c => c.id);
+		let p2Shields = p2Deck.slice(-5).map(c => c.id);
+		
+		if (p1Shields.length > 0 || p2Shields.length > 0) {
+			startDraftAtEnd();
+			if (p1Shields.length > 0) {
+				addOperation({ type: 'MOVE', cardIds: p1Shields, toZone: 'p1-shield', faceUp: false, shuffleSelection: false });
+			}
+			if (p2Shields.length > 0) {
+				addOperation({ type: 'MOVE', cardIds: p2Shields, toZone: 'p2-shield', faceUp: false, shuffleSelection: false });
+			}
+			saveDraft("雙方設置護盾");
+		}
+		
+		// 4. 將雙方牌庫前五張牌置入手牌並儲存 ActionLog
+		state = getCurrentDisplayState(); // 重新取得最新狀態
+		p1Deck = state.cards.filter(c => c.zone === 'p1-deck');
+		p2Deck = state.cards.filter(c => c.zone === 'p2-deck');
+		let p1Hand = p1Deck.slice(-5).map(c => c.id);
+		let p2Hand = p2Deck.slice(-5).map(c => c.id);
+		
+		if (p1Hand.length > 0 || p2Hand.length > 0) {
+			startDraftAtEnd();
+			if (p1Hand.length > 0) {
+				addOperation({ type: 'MOVE', cardIds: p1Hand, toZone: 'p1-hand', faceUp: true, shuffleSelection: false });
+			}
+			if (p2Hand.length > 0) {
+				addOperation({ type: 'MOVE', cardIds: p2Hand, toZone: 'p2-hand', faceUp: true, shuffleSelection: false });
+			}
+			saveDraft("雙方抽初始手牌");
+		}
+		
+		// 5. 執行必分出勝負的猜拳並儲存 ActionLog
+		const CHOICES = ['rock', 'paper', 'scissors'];
+		let p1ChoiceIdx, p2ChoiceIdx, resultCalc;
+		let winner = null;
+
+		while (winner === null) {
+			p1ChoiceIdx = Math.floor(Math.random() * 3);
+			p2ChoiceIdx = Math.floor(Math.random() * 3);
+			resultCalc = (p1ChoiceIdx - p2ChoiceIdx + 3) % 3;
+			if (resultCalc === 1) winner = 1;
+			else if (resultCalc === 2) winner = 2;
+		}
+		
+		let p1Val = CHOICES[p1ChoiceIdx];
+		let p2Val = CHOICES[p2ChoiceIdx];
+		
+		startDraftAtEnd();
+		addOperation({
+			type: 'RPS',
+			data: { p1: p1Val, p2: p2Val, winner: winner }
+		});
+		
+		const p1Label = typeof t === 'function' ? t('rps_' + p1Val) : p1Val;
+		const p2Label = typeof t === 'function' ? t('rps_' + p2Val) : p2Val;
+		const actLabel = typeof t === 'function' ? t('act_rps') : 'RPS';
+		let resultLabel = (winner === 1) ? (typeof t === 'function' ? t('rps_p1_win') : 'P1 Wins!') : (typeof t === 'function' ? t('rps_p2_win') : 'P2 Wins!');
+		
+		saveDraft(`[${actLabel}][決戰] P2: ${p2Label} vs P1: ${p1Label} => ${resultLabel}`);
+		
+		// 6. 如果剛剛猜贏的是2p的話，則切換回合、並儲存 ActionLog
+		if (winner === 2) {
+			startDraftAtEnd();
+			addOperation({type: 'ROTATE'});
+			saveDraft("2P先攻 (切換回合)");
+		}
+		
+		// 最後統一更新畫面並存檔
+		renderUI();
+		saveToStorage();
+		
+		// 將 ActionLog 強制捲動到底部
+		setTimeout(() => {
+			const list = document.getElementById('action-list');
+			if (list) list.scrollTop = list.scrollHeight;
+		}, 100);
 	}
 	
     // [新增] 清除受傷狀態
