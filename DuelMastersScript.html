@@ -15256,9 +15256,12 @@
 			let destZone = `${playerPrefix}-deck`;
 
 			// [修正2] 判斷卡片是否屬於特殊區域 (Hyper/GR)
-			// 優先檢查 initialZone (若系統有紀錄)，否則檢查卡片類型或是目前的區域特徵
+			// 優先檢查 initialZone (若系統有紀錄)，否則檢查卡片是否為多面卡、或是目前的區域特徵
 			if (c.initialZone && (c.initialZone.includes('hyper') || c.initialZone.includes('abyss'))) {
 				destZone = c.initialZone;
+			} else if (c.isHyper) {
+				// 確認為多面卡，將其強制放回超次元區
+				destZone = `${playerPrefix}-hyper`;
 			} else if (c.type && (c.type.includes('Hyper') || c.type.includes('Dragheart') || c.type.includes('GR'))) {
 				// 若無 initialZone，嘗試從類型判斷 (需視您的資料結構而定，這裡保留彈性)
 				destZone = `${playerPrefix}-hyper`; // 或是 abyss
