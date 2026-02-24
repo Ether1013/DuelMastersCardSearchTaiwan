@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桶後越嶺古道 (烏來進→礁溪出) 行程規劃器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f4f7f6; }
+        
+        /* 優化：移除顏色的漸變，只保留位移與陰影漸變，讓點擊回饋瞬間完成 */
+        .option-card { transition: transform 0.1s ease, box-shadow 0.1s ease; cursor: pointer; }
+        .option-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        
+        /* 優化：改用 data 屬性來判斷選取狀態，徹底避開 Tailwind CDN 的 class 重新掃描延遲 */
+        .option-card[data-active="true"] { border-color: #10b981; background-color: #ecfdf5; box-shadow: 0 0 0 2px #10b981 inset; }
+        
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased pb-32">
+
+    <!-- Header -->
+    <header class="bg-emerald-700 text-white p-6 shadow-md">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                <i class="fas fa-mountain"></i> 桶後越嶺古道 行程規劃器
+            </h1>
+            <p class="mt-2 text-emerald-100 text-sm md:text-base">專屬 A進B出 (烏來 ➜ 礁溪) 交通與時間評估工具</p>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto p-4 mt-4 space-y-6">
+        
+        <!-- Start Time Settings -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold text-gray-800"><i class="far fa-clock text-emerald-600 mr-2"></i>設定起登時間</h2>
+                <p class="text-sm text-gray-500">請設定您預計抵達「烏來公車總站」的時間</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="time" id="startTimeInput" value="08:00" 
+                       class="text-lg font-bold p-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 text-emerald-700 bg-gray-50">
+            </div>
+        </section>
+
+        <!-- Dynamic Notice Message -->
+        <div id="noticeMsg" class="hidden bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r shadow-sm text-sm transition-opacity duration-300">
+            <i class="fas fa-info-circle mr-1"></i> <span id="noticeText"></span>
+        </div>
+
+        <!-- Timeline / Segments -->
+        <div class="relative border-l-4 border-emerald-400 ml-4 md:ml-6 space-y-8 pl-6 md:pl-8 py-2">
+            
+            <!-- Segment 1: Wulai to Trailhead -->
+            <div class="relative">
+                <div class="absolute -left-[37px] md:-left-[45px] top-1 bg-emerald-500 w-6 h-6 rounded-full border-4 border-white shadow"></div>
+                <h3 class="text-xl font-bold mb-1">第一段：烏來總站 ➜ 烏來端登山口</h3>
+                <p class="text-sm text-gray-500 mb-3">距離約 13 公里 (桶後林道)，建議搭車保留體力。</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-between" onclick="selectOption('s1', 'walk')" id="card-s1-walk">
+                        <div class="font-bold text-gray-700 mb-1"><i class="fas fa-walking text-gray-400 w-5"></i> 徒步踢林道</div>
+                        <div class="text-sm text-gray-600">耗時: 3.5 小時</div>
+                        <div class="text-sm text-gray-600">花費: $0</div>
+                    </div>
+                    <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-between" onclick="selectOption('s1', 'taxi')" id="card-s1-taxi">
+                        <div class="font-bold text-gray-700 mb-1"><i class="fas fa-taxi text-yellow-500 w-5"></i> 當地計程車</div>
+                        <div class="text-sm text-gray-600">耗時: 30 分鐘</div>
+                        <div class="text-sm text-gray-600">花費: 約 $1,200</div>
+                    </div>
+                    <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-between" onclick="selectOption('s1', 'charter')" id="card-s1-charter">
+                        <div class="font-bold text-gray-700 mb-1"><i class="fas fa-shuttle-van text-indigo-500 w-5"></i> 旅遊包車(去程)</div>
+                        <div class="text-sm text-gray-600">耗時: 30 分鐘</div>
+                        <div class="text-sm text-gray-600">花費: 約 $3,000</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segment 2: The Trail -->
+            <div class="relative">
+                <div class="absolute -left-[37px] md:-left-[45px] top-1 bg-emerald-500 w-6 h-6 rounded-full border-4 border-white shadow"></div>
+                <h3 class="text-xl font-bold mb-1">第二段：桶後越嶺古道 (本體)</h3>
+                <p class="text-sm text-gray-500 mb-3">距離 6.8 公里，絕美溪谷與越嶺路段，無其他交通選項。</p>
+                
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="border-2 border-emerald-500 bg-emerald-50 rounded-lg p-3 flex flex-col justify-between relative overflow-hidden">
+                        <div class="absolute right-[-20px] top-[-20px] text-emerald-100 opacity-50"><i class="fas fa-leaf text-8xl"></i></div>
+                        <div class="relative z-10">
+                            <div class="font-bold text-emerald-800 mb-1"><i class="fas fa-hiking text-emerald-600 w-5"></i> 步行越嶺 (固定選項)</div>
+                            <div class="text-sm text-emerald-700">耗時: 4.5 小時 (含休息與地形過渡)</div>
+                            <div class="text-sm text-emerald-700">花費: 體力與汗水無價</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segment 3: Trailhead to Jiaoxi -->
+            <div class="relative">
+                <div class="absolute -left-[37px] md:-left-[45px] top-1 bg-emerald-500 w-6 h-6 rounded-full border-4 border-white shadow"></div>
+                <h3 class="text-xl font-bold mb-1">第三段：礁溪端登山口 ➜ 礁溪車站</h3>
+                <p class="text-sm text-gray-500 mb-3">距離約 7.5 公里 (小礁溪產道)，此處無手機訊號。</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-between" onclick="selectOption('s3', 'walk')" id="card-s3-walk">
+                        <div class="font-bold text-gray-700 mb-1"><i class="fas fa-walking text-gray-400 w-5"></i> 徒步踢產道</div>
+                        <div class="text-sm text-gray-600">耗時: 2 小時</div>
+                        <div class="text-sm text-gray-600">花費: $0</div>
+                    </div>
+                    <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-between" onclick="selectOption('s3', 'charter')" id="card-s3-charter">
+                        <div class="font-bold text-gray-700 mb-1"><i class="fas fa-shuttle-van text-indigo-500 w-5"></i> 旅遊包車(回程)</div>
+                        <div class="text-sm text-gray-600">耗時: 30 分鐘</div>
+                        <div class="text-sm text-gray-600">花費: 約 $3,500</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segment 4: Jiaoxi Activities -->
+            <div class="relative">
+                <div class="absolute -left-[37px] md:-left-[45px] top-1 bg-emerald-500 w-6 h-6 rounded-full border-4 border-white shadow"></div>
+                <h3 class="text-xl font-bold mb-1">第四段：礁溪行程安排 (選填)</h3>
+                <p class="text-sm text-gray-500 mb-3">下山後的放鬆行程（不計入總交通時間與花費估算）。</p>
+                
+                <div class="space-y-5">
+                    <!-- 泡溫泉 -->
+                    <div id="hot-spring-container" class="transition-all duration-300">
+                        <h4 class="font-bold text-gray-700 mb-2"><i class="fas fa-hot-tub text-red-500 w-5 text-center"></i> 是否單純泡溫泉？</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-center text-center py-4" onclick="selectOption('s5', 'yes')" id="card-s5-yes">
+                                <div class="font-bold text-gray-700">是</div>
+                            </div>
+                            <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-center text-center py-4" onclick="selectOption('s5', 'no')" id="card-s5-no">
+                                <div class="font-bold text-gray-700">否</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 吃飯 -->
+                    <div id="dining-container" class="transition-all duration-300">
+                        <h4 class="font-bold text-gray-700 mb-2"><i class="fas fa-utensils text-orange-500 w-5 text-center"></i> 是否吃飯喝酒慶功？</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-center text-center py-4" onclick="selectOption('s4', 'yes')" id="card-s4-yes">
+                                <div class="font-bold text-gray-700">是</div>
+                            </div>
+                            <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-center text-center py-4" onclick="selectOption('s4', 'no')" id="card-s4-no">
+                                <div class="font-bold text-gray-700">否</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 住宿 / 回程 -->
+                    <div>
+                        <h4 class="font-bold text-gray-700 mb-2"><i class="fas fa-bed text-indigo-500 w-5 text-center"></i> 住宿或回程？</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-center text-center py-4" onclick="selectOption('s6', 'stay')" id="card-s6-stay">
+                                <div class="font-bold text-gray-700">溫泉飯店住宿</div>
+                            </div>
+                            <div class="option-card border-2 border-gray-200 rounded-lg p-3 bg-white flex flex-col justify-center text-center py-4" onclick="selectOption('s6', 'return')" id="card-s6-return">
+                                <div class="font-bold text-gray-700">搭車回台北</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- End point dot (Fixed left alignment to perfectly center on the border) -->
+            <div class="absolute -left-[10px] bottom-[-10px] bg-red-500 w-4 h-4 rounded-full shadow"></div>
+        </div>
+    </main>
+
+    <!-- Fixed Bottom Summary Panel -->
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
+        <div class="max-w-3xl mx-auto p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-8 w-full md:w-auto">
+                <!-- Total Time -->
+                <div class="text-center md:text-left">
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">總耗時</p>
+                    <p class="text-lg md:text-xl font-black text-gray-800" id="val-total-time">--</p>
+                </div>
+                <!-- Walk Time -->
+                <div class="text-center md:text-left">
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">其中純步行</p>
+                    <p class="text-lg md:text-xl font-bold text-orange-500" id="val-walk-time">--</p>
+                </div>
+                <!-- Total Cost -->
+                <div class="text-center md:text-left">
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">總花費估算</p>
+                    <p class="text-lg md:text-xl font-bold text-emerald-600" id="val-cost">--</p>
+                </div>
+            </div>
+
+            <!-- End Time (Hero Stat) -->
+            <div class="bg-emerald-600 text-white px-6 py-2 rounded-xl text-center w-full md:w-auto shadow-inner">
+                <p class="text-xs text-emerald-200 font-bold uppercase tracking-wider" id="end-time-label">預估抵達礁溪車站</p>
+                <p class="text-2xl md:text-3xl font-black" id="val-end-time">--:--</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Data Configuration (第 4 段選項均設為 0，純計算交通到礁溪站的體力與金錢)
+        const data = {
+            s1: { walk: { time: 210, walkTime: 210, cost: 0 }, taxi: { time: 30, walkTime: 0, cost: 1200 }, charter: { time: 30, walkTime: 0, cost: 3000 } },
+            s2: { walk: { time: 270, walkTime: 270, cost: 0 } }, // Fixed Trail Time
+            s3: { walk: { time: 120, walkTime: 120, cost: 0 }, charter: { time: 30, walkTime: 0, cost: 3500 } },
+            s4: { yes: { time: 0, walkTime: 0, cost: 0 }, no: { time: 0, walkTime: 0, cost: 0 } },      // Eat
+            s5: { yes: { time: 0, walkTime: 0, cost: 0 }, no: { time: 0, walkTime: 0, cost: 0 } },       // Spring
+            s6: { stay: { time: 0, walkTime: 0, cost: 0 }, return: { time: 0, walkTime: 0, cost: 0 } }   // Stay/Return
+        };
+
+        // Current State
+        let state = {
+            startTime: '08:00',
+            s1: 'taxi',
+            s3: 'walk',
+            s4: 'no',      // Default Eat
+            s5: 'no',      // Default Spring
+            s6: 'return'   // Default Return
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('startTimeInput').addEventListener('change', (e) => {
+                state.startTime = e.target.value;
+                updateUI();
+            });
+            updateUI();
+        });
+
+        function showNotice(msg) {
+            const noticeEl = document.getElementById('noticeMsg');
+            document.getElementById('noticeText').innerText = msg;
+            noticeEl.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            clearTimeout(window.noticeTimeout);
+            window.noticeTimeout = setTimeout(() => {
+                noticeEl.classList.add('hidden');
+            }, 5000);
+        }
+
+        function selectOption(segment, choice) {
+            let previousS1 = state.s1;
+            let previousS3 = state.s3;
+
+            // Apply choice
+            state[segment] = choice;
+
+            let message = "";
+
+            // Enforce constraints: Charter sync
+            if (segment === 's1' && choice === 'charter') {
+                if (state.s3 !== 'charter') {
+                    state.s3 = 'charter';
+                    message = "因選擇了「旅遊包車」，系統已自動將第三段（回程）同步設定為包車接駁。";
+                }
+            } else if (segment === 's3' && choice === 'charter') {
+                if (state.s1 !== 'charter') {
+                    state.s1 = 'charter';
+                    message = "因選擇了「旅遊包車」，系統已自動將第一段（去程）同步設定為包車接駁。";
+                }
+            } else if (segment === 's1' && choice !== 'charter') {
+                if (previousS3 === 'charter') {
+                    state.s3 = 'walk';
+                    message = "已取消第一段包車，第三段自動切換回「徒步」。";
+                }
+            } else if (segment === 's3' && choice !== 'charter') {
+                if (previousS1 === 'charter') {
+                    state.s1 = 'taxi';
+                    message = "已取消第三段包車，第一段自動切換回「當地計程車」。";
+                }
+            }
+
+            // Enforce constraints: Accommodation hides hot spring AND dining
+            if (segment === 's6' && choice === 'stay') {
+                let changed = false;
+                if (state.s5 === 'yes') { state.s5 = 'no'; changed = true; }
+                if (state.s4 === 'yes') { state.s4 = 'no'; changed = true; }
+                
+                if (changed) {
+                    message = "已選擇「溫泉飯店住宿」，系統已自動取消單純泡湯與用餐選項（飯店內即可享受）。";
+                }
+            }
+
+            if (message) showNotice(message);
+
+            updateUI();
+        }
+
+        function formatTime(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            if (h > 0 && m > 0) return `${h} 小時 ${m} 分鐘`;
+            if (h > 0) return `${h} 小時`;
+            return `${m} 分鐘`;
+        }
+
+        function calculateEndTime(timeStr, totalMinutes) {
+            if(!timeStr) return "--:--";
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            let date = new Date();
+            date.setHours(hours, minutes, 0, 0);
+            date.setMinutes(date.getMinutes() + totalMinutes);
+            
+            const endH = String(date.getHours()).padStart(2, '0');
+            const endM = String(date.getMinutes()).padStart(2, '0');
+            return `${endH}:${endM}`;
+        }
+
+        function updateUI() {
+            // 清除所有的 active 狀態
+            document.querySelectorAll('.option-card').forEach(el => {
+                delete el.dataset.active;
+            });
+
+            // 設定當前選擇的卡片樣式
+            const segments = ['s1', 's3', 's4', 's5', 's6'];
+            segments.forEach(seg => {
+                if(state[seg]) {
+                    document.getElementById(`card-${seg}-${state[seg]}`).dataset.active = "true";
+                }
+            });
+
+            // 如果選擇住宿，將「單純泡溫泉」與「吃飯喝酒」選項區塊改為灰階不可點擊
+            const springContainer = document.getElementById('hot-spring-container');
+            const diningContainer = document.getElementById('dining-container');
+            
+            if (state.s6 === 'stay') {
+                springContainer.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
+                diningContainer.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
+            } else {
+                springContainer.classList.remove('opacity-40', 'grayscale', 'pointer-events-none');
+                diningContainer.classList.remove('opacity-40', 'grayscale', 'pointer-events-none');
+            }
+
+            // Calculate totals
+            const s1Data = data.s1[state.s1];
+            const s2Data = data.s2.walk;
+            const s3Data = data.s3[state.s3];
+            const s4Data = data.s4[state.s4];
+            const s5Data = data.s5[state.s5];
+            const s6Data = data.s6[state.s6];
+
+            const totalTimeMins = s1Data.time + s2Data.time + s3Data.time + s4Data.time + s5Data.time + s6Data.time;
+            const totalWalkMins = s1Data.walkTime + s2Data.walkTime + s3Data.walkTime + s4Data.walkTime + s5Data.walkTime + s6Data.walkTime;
+            const totalCost = s1Data.cost + s2Data.cost + s3Data.cost + s4Data.cost + s5Data.cost + s6Data.cost;
+
+            // Update DOM text
+            document.getElementById('val-total-time').innerText = formatTime(totalTimeMins);
+            document.getElementById('val-walk-time').innerText = formatTime(totalWalkMins);
+            document.getElementById('val-cost').innerText = `$${totalCost.toLocaleString()}`;
+            
+            // Update End Time
+            const endTimeStr = calculateEndTime(state.startTime, totalTimeMins);
+            document.getElementById('val-end-time').innerText = endTimeStr;
+            
+            // Warn if total walk is brutal
+            const walkTimeEl = document.getElementById('val-walk-time');
+            if (totalWalkMins > 400) {
+                walkTimeEl.classList.add('text-red-500');
+                walkTimeEl.classList.remove('text-orange-500');
+            } else {
+                walkTimeEl.classList.remove('text-red-500');
+                walkTimeEl.classList.add('text-orange-500');
+            }
+        }
+    </script>
+</body>
+</html>
