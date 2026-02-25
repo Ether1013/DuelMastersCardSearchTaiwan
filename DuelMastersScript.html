@@ -4691,6 +4691,7 @@
                         <option value="direct" data-i18n="opt_exit_direct">直接消失</option>
                         <option value="fade" data-i18n="opt_exit_fade">淡出</option>
                         <option value="slide" data-i18n="opt_exit_slide">抽出</option>
+                        <option value="none" data-i18n="opt_exit_none">不消失</option>
                     </select>
                 </div>
             </div>
@@ -4724,6 +4725,7 @@
                         <option value="direct" data-i18n="opt_exit_direct">直接消失</option>
                         <option value="fade" data-i18n="opt_exit_fade">淡出</option>
                         <option value="slide" data-i18n="opt_exit_slide">抽出</option>
+                        <option value="none" data-i18n="opt_exit_none">不消失</option>
                     </select>
                 </div>
             </div>
@@ -5324,6 +5326,7 @@
             'opt_exit_direct': '直接消失',
             'opt_exit_fade': '淡出',
             'opt_exit_slide': '抽出',
+			'opt_exit_none': '不消失',
             // -----------------------
 
             // ... (保留舊有的其他翻譯，如堆疊操作、訊息等) ...
@@ -5549,6 +5552,7 @@
             'opt_size_s': 'Small', 'opt_size_m': 'Medium', 'opt_size_l': 'Large',
             'opt_effect_direct': 'Instant', 'opt_effect_fade': 'Fade In', 'opt_effect_slide': 'Slide In',
             'opt_exit_direct': 'Instant', 'opt_exit_fade': 'Fade Out', 'opt_exit_slide': 'Slide Out',
+			'opt_exit_none': 'Persist',
             // ... (其餘請保留原樣) ...
             'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 Switch Turn', 'btn_reset_current': 'Untap Current','btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
 			'msg_import_target': 'Import to which player?',
@@ -5741,6 +5745,7 @@
             'opt_size_s': '小', 'opt_size_m': '中', 'opt_size_l': '大',
             'opt_effect_direct': '即時', 'opt_effect_fade': 'フェード', 'opt_effect_slide': 'スライド',
             'opt_exit_direct': '即時消失', 'opt_exit_fade': 'フェード', 'opt_exit_slide': 'スライド',
+			'opt_exit_none': '消えない',
             // ... (其餘請保留原樣) ...
             'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 ターン交代', 'btn_reset_current': 'アンタップ (Current)', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
 			'msg_import_target': 'どちらにインポートしますか？', // 匯入到哪一方？
@@ -7226,8 +7231,8 @@
 		tempState = cloneState(history[baseIndex].state);
 
 		// --- [修改] 清除殘留狀態邏輯 ---
-		// 2. 清除對話狀態 (維持原樣)
-		tempState.dialogueData = null; // 清除對話
+		// 2. 清除對話狀態 (保留設定為不消失的對話)
+		tempState.dialogueData = filterPersistentDialogue(tempState.dialogueData);
 		tempState.rpsResult = null;    // [新增] 清除猜拳結果
 		
 		// ---------------------------
@@ -7274,8 +7279,8 @@
 			}
 		}
         
-        tempState.dialogueData = null; // 清除對話
-		tempState.rpsResult = null;    // [新增] 清除猜拳結果 (除非 Action 本身就是 RPS，那下面 applyOperation 會補回來，但這時 renderUI 的 !isDrafting 會擋住它)
+        tempState.dialogueData = filterPersistentDialogue(tempState.dialogueData); // 清除對話 (保留不消失)
+		tempState.rpsResult = null; // [新增] 清除猜拳結果
         // ---------------------------------------------------
 
         const actionToEdit = history[index].action;
@@ -7606,6 +7611,33 @@
 		// 【關鍵檢查點】確保這裡有呼叫重算
         calculateSeenCards();
     }
+	
+	// --- [新增] 過濾並保留「不消失」的對話資料 ---
+	function filterPersistentDialogue(dialogueData) {
+		if (!dialogueData) return null;
+		let hasPersistent = false;
+		// 深拷貝以避免污染舊狀態
+		const newDiagData = JSON.parse(JSON.stringify(dialogueData));
+		
+		if (newDiagData.p1 && newDiagData.p1.active) {
+			if (newDiagData.p1.exit === 'none') {
+				hasPersistent = true;
+				newDiagData.p1.isPersisted = true; // 標記為延續狀態，避免重複播放進場動畫
+			} else {
+				newDiagData.p1.active = false;
+			}
+		}
+		if (newDiagData.p2 && newDiagData.p2.active) {
+			if (newDiagData.p2.exit === 'none') {
+				hasPersistent = true;
+				newDiagData.p2.isPersisted = true;
+			} else {
+				newDiagData.p2.active = false;
+			}
+		}
+		
+		return hasPersistent ? newDiagData : null;
+	}
 
 	function applyOperation(state, op) {
 	
@@ -7615,9 +7647,9 @@
 			state.rpsResult = null;
 		}
 
-		// [修改] 如果不是對話動作，清除對話資料 (讓畫面消失)
+		// [修改] 如果不是對話動作，清除對話資料 (保留設定為不消失的對話)
 		if (op.type !== 'DIALOGUE') {
-			state.dialogueData = null;
+			state.dialogueData = filterPersistentDialogue(state.dialogueData);
 		}
 		
 		if (op.type === 'PASS') return;
@@ -10848,8 +10880,11 @@
 					};
 
 					// 重置動畫 Class 以觸發重播
-					row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
-					void row.offsetWidth; // 強制重繪 (Reflow)
+					// 重置動畫 Class 以觸發重播 (若為延續顯示的對話則不重播進場動畫)
+					if (!data.isPersisted) {
+						row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
+						void row.offsetWidth; // 強制重繪 (Reflow)
+					}
 					row.classList.add(`fx-${data.effect}`);
 
 					name.innerText = data.name;
