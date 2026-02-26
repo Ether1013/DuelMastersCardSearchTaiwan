@@ -498,7 +498,7 @@
 
 				{	value : "DM",	text : "決鬥夥伴",			Jap : "デュエルメイト",						Location : "P", catagory : true,	descript : "泛指搭配デュエルメイト的所有卡種"											},
 				{	value : "DH",	text : "龍心",				Jap : "ドラグハート",						Location : "P", catagory : true,	descript : "泛指龍心生物、龍心武裝、與龍心要塞"										},
-				{	value : "P",	text : "精神",				Jap : "サイキック",							Location : "P",	catagory : true,	descript : "泛指精神生物與精神武裝"													},
+				{	value : "P",	text : "精神",				Jap : "サイキック",							Location : "P",	catagory : true,	descript : "泛指精神生物、精神武裝、以及精神領域"										},
 				{					text : "武裝",				Jap : "ウエポン",																descript : "泛指龍心武裝"															},
 				{					text : "≡V≡",				Jap : "≡V≡",																descript : "指稀有度為Victory以上、卡牌上有≡V≡記號的卡"								},
 				{					text : "禁斷領域",			Jap : "禁断フィールド",															descript : "等同最終禁断フィールド"													},
