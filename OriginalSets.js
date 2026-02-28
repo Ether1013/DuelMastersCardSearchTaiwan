@@ -260,3 +260,23 @@
 		{ name : "エンドレス・フローズン・カーニバル", count : 4, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-071";
+	var setName = "台灣CS大賽20260228 1st【究極銀河feat.創世龍＠Ether】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "超愛銀河クエーサー・ラブエクスパンジョン", 	count : 4, },
+		{ name : "創世竜 Drache der’Zen", 		count : 4, },
+		{ name : "ウルの天宝", 					count : 4, },
+		{ name : "グレートブルーの海幻", 				count : 4, },
+		{ name : "超魂設計図", 					count : 4, },
+		{ name : "～進封せし大悪魔～", 				count : 4, },
+		{ name : "母なる聖地", 					count : 3, },
+		{ name : "大集合！アカネ&アサギ&コハク", 		count : 3, },
+		{ name : "究極銀河ユニバース", 				count : 3, },
+		{ name : "～世紀末の善悪～", 				count : 3, },
+		{ name : "創世竜 ゴルギーネクスト", 			count : 2, },
+		{ name : "コーライルの海幻", 					count : 1, },
+		{ name : "パーリ騎士の心絵", 				count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
