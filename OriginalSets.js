@@ -41,7 +41,7 @@
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-045"
-	var setName = "睿哥神藝術盃2024 1st【青黑COPMPLEX＠胃】"
+	var setName = "睿哥神藝術盃2024 1st【青黑COPMPLEX＠元丰】"
 	var isDeck = true;
 	var setCardList = [
 		{		name : "DARK MATERIAL COMPLEX",										count : 4,	},
@@ -221,6 +221,29 @@
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-069";
+	var setName = "台灣CS大賽20251206 1st【闇王＠元丰】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "異端流し オニカマス", count : 4, },
+		{ name : "～地獄帰りの騎士～", count : 4, },
+		{ name : "裏斬隠 テンサイ・ハート", count : 2, },
+		{ name : "「大蛇」の鬼 ジャドク丸", count : 2, },
+		{ name : "冥土人形ヴァミリア・バレル", count : 1, },
+		{ name : "魔獣星樹ギガゲドー", count : 1, },
+		{ name : "理想と平和の決断", count : 3, },
+		{ name : "ブレイン・スラッシュ", count : 2, },
+		{ name : "影世界のシクミ", count : 3, },
+		{ name : "飛翔龍 5000VT", count : 2, },
+		{ name : "サイバー・J・イレブン", count : 1, },
+		{ name : "DARK MEMORY CONTAINER", count : 4, },
+		{ name : "真気楼と誠偽感の決断", count : 3, },
+		{ name : "闇王ゼーロ", count : 4, },
+		{ name : "不死鳥縫合 ブラック・ビッグバン", count : 2, },
+		{ name : "戦国接続 ギャラクテスト・シデンシーザー", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-070";
 	var setName = "台灣CS大賽20251214 1st【封殺車＠元丰】";
 	var isDeck = true;
 	var setCardList = [
@@ -240,7 +263,7 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-070";
+	var setCode = "NET-071";
 	var setName = "台灣CS大賽20260201 1st【妖精水晶之王＠ANAGOMAN】";
 	var isDeck = true;
 	var setCardList = [
@@ -261,7 +284,7 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
-	var setCode = "NET-071";
+	var setCode = "NET-072";
 	var setName = "台灣CS大賽20260228 1st【究極銀河feat.創世龍＠Ether】";
 	var isDeck = true;
 	var setCardList = [
