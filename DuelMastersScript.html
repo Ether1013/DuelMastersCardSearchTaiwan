@@ -624,11 +624,31 @@
 		z-index: 100
 	}
 	#player1-area {
-		background-color: var(--p1-bg)
+		background-color: var(--p1-bg);
+		background-image: 
+			/* 第一層：邊緣暗角 (效能高) */
+			radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.7) 120%),
+			/* 第二層：水平網格線 (效能高) */
+			linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+			/* 第三層：垂直網格線 (效能高) */
+			linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+			
+		/* 設定網格的尺寸，暗角層(第一層)不需要設定尺寸所以設為 100% */
+		background-size: 100% 100%, 30px 30px, 30px 30px;
 	}
 	#player2-area {
 		background-color: var(--p2-bg);
-		border-bottom: 2px dashed #999
+		border-bottom: 2px dashed #999;
+		background-image: 
+			/* 第一層：邊緣暗角 (效能高) */
+			radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.7) 120%),
+			/* 第二層：水平網格線 (效能高) */
+			linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+			/* 第三層：垂直網格線 (效能高) */
+			linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+			
+		/* 設定網格的尺寸，暗角層(第一層)不需要設定尺寸所以設為 100% */
+		background-size: 100% 100%, 30px 30px, 30px 30px;
 	}
 	#player2-area .bottom-row {
 		order: -1
