@@ -8470,17 +8470,38 @@
 		}
 	}
 
-    // [優化] 更名：直接修改 innerText
+    // [修改] 將更名改為全域修改，不寫入 ActionLog，且「只針對選中的該張卡片」
 	function renameCard() {
 		if (!pendingMove || pendingMove.cardIds.length !== 1) return;
 		const id = pendingMove.cardIds[0];
 		const val = document.getElementById('rename-input').value;
+
+		// 定義全域更新邏輯：只修改符合指定 ID 的卡片名稱
+		const updateTextRef = (s) => {
+			if (!s || !s.cards) return;
+			s.cards.forEach(c => {
+				if (c.id === id) {
+					c.text = val;
+				}
+			});
+		};
+
+		// 執行全面更新，遍歷起始狀態、所有歷史紀錄與暫存狀態
+		if (initialState) updateTextRef(initialState);
+		history.forEach(h => {
+			if (h.state) updateTextRef(h.state);
+			if (h.detachedStartState) updateTextRef(h.detachedStartState);
+		});
+		if (tempState) updateTextRef(tempState);
+
+		// 重繪畫面並存檔
+		renderUI(); // 這裡執行完後，系統會自動把新名字填回輸入框
+		if (!document.body.classList.contains('mobile-mode')) {
+			saveToStorage();
+		}
 		
-		const op = { type: 'RENAME_CARD', cardIds: [id], text: val };
-		addOperation(op, true);
-		
-		const el = document.querySelector(`.card[data-id="${id}"] .card-text`);
-		if(el) el.innerText = val;
+		// ⚠️ 刪除底下這行，不要手動清空它！
+		// document.getElementById('rename-input').value = '';
 	}
     
     // [修正] 註記：使用正確的 ADD_NOTE 指令
