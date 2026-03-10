@@ -15933,23 +15933,33 @@
             // [情境 A] 對話頭像 (維持 Base64，因為需要裁切)
             const diagModal = document.getElementById('dialogue-modal');
             if (diagModal && diagModal.style.display === 'flex') {
-                // ... (保留原本對話頭像的貼上邏輯，因為它需要 canvas 裁切) ...
-                // 為了節省篇幅，這裡呼叫原本的邏輯，或請您保留原本那段 Canvas 處理代碼
-                // 建議：直接複製您原本程式碼中處理 diagModal 的那一段貼回來這裡
                 const url = URL.createObjectURL(blob);
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const size = 200; 
-                    canvas.width = size; canvas.height = size;
-                    ctx.fillStyle = "#222"; ctx.fillRect(0, 0, size, size);
-                    let sWidth = img.width; let sHeight = img.height;
+                    
+                    // 1. [修改] 將解析度從 200 提升至 480
+                    const size = 480; 
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    // 2. [修改] 移除原本填滿的深色背景 (#222)，改用 clearRect 確保畫布完全透明
+                    ctx.clearRect(0, 0, size, size);
+                    
+                    let sWidth = img.width;
+                    let sHeight = img.height;
                     const ratio = Math.max(size / sWidth, size / sHeight);
-                    const newWidth = sWidth * ratio; const newHeight = sHeight * ratio;
-                    const dx = (size - newWidth) / 2; const dy = (size - newHeight) / 2;
+                    const newWidth = sWidth * ratio;
+                    const newHeight = sHeight * ratio;
+                    const dx = (size - newWidth) / 2;
+                    const dy = (size - newHeight) / 2;
+                    
                     ctx.drawImage(img, dx, dy, newWidth, newHeight);
-                    const base64 = canvas.toDataURL('image/jpeg', 0.85);
+                    
+                    // 3. [修改] 將輸出格式從 'image/jpeg' 改為 'image/png' 以維持去背(Alpha Channel)
+                    const base64 = canvas.toDataURL('image/png');
+                    
                     const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
                     const key = `avatar_${lastFocusPid}_${currentEmo}`;
                     globalImageRegistry[key] = base64;
