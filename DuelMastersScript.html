@@ -4088,6 +4088,82 @@
 		background-color: #27ae60;
 		box-shadow: 0 0 10px #2ecc71;
 	}
+	/* --- [修改] 重點對話 (Key Dialogue) 專用樣式 --- */
+	#dialogue-backdrop {
+		position: absolute;
+		top: 0; left: 0; width: 100%; height: 100%;
+		backdrop-filter: blur(1px); /* 1. 將模糊化程度降到極輕 */
+		-webkit-backdrop-filter: blur(1px);
+		background: rgba(0, 0, 0, 0.05); /* 微調底色，避免過暗 */
+		z-index: 1; /* 圖層 1：全螢幕高斯模糊遮罩 */
+		display: none;
+		pointer-events: none;
+	}
+	
+	/* 2. 範圍調整：右側對齊 timeline 的邊界，完美避開 ActionLogList */
+	#dialogue-layer.key-mode {
+		position: absolute !important;
+		top: 0 !important;
+		left: 0 !important;
+		right: var(--timeline-width) !important; /* 使用變數避開右側 */
+		bottom: 0 !important;
+		width: auto !important;
+		height: 100% !important;
+		padding: 0 !important;
+		z-index: 5000 !important;
+	}
+	
+	/* 手機版沒有時間軸，所以改避開手機原本的右側工具列 */
+	body.mobile-mode #dialogue-layer.key-mode {
+		right: 70px !important; 
+	}
+
+	#dialogue-layer.key-mode #dialogue-backdrop {
+		display: block;
+	}
+
+	#dialogue-layer.key-mode .diag-row {
+		position: absolute;
+		top: 0; left: 0; width: 100%; height: 100%;
+		justify-content: center;
+		align-items: flex-end;
+		z-index: 2; 
+	}
+
+	/* 重點對話：圖像維持 85% 高度與比例，置中 */
+	#dialogue-layer.key-mode .diag-portrait {
+		position: absolute;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		height: 100%;
+		width: auto;
+		aspect-ratio: 1 / 1; 
+		background-color: transparent;
+		border: none;
+		box-shadow: none;
+		z-index: 2; /* 圖層 2：圖像 (在遮罩之上、對話框之下) */
+		margin: 0;
+	}
+
+	/* 重點對話：對話框高度固定，寬度加寬至 95% */
+	#dialogue-layer.key-mode .diag-box {
+		position: absolute;
+		bottom: 20px;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 95%; 
+		max-width: none;
+		height: 180px !important; 
+		min-height: 180px;
+		z-index: 3; /* 圖層 3：對話框 (在最上層) */
+		margin: 0;
+	}
+
+	/* 覆寫出現動畫，避免 translateX 衝突 */
+	#dialogue-layer.key-mode .diag-row.visible.fx-slide {
+		animation: fadeIn 0.4s ease forwards;
+	}
 </style>
 </head>
 <body>
@@ -4187,6 +4263,8 @@
     </div>
 	
 	<div id="dialogue-layer">
+		<!-- 新增這一行：模糊背景層 -->
+        <div id="dialogue-backdrop"></div>
         <div id="diag-row-p2" class="diag-row top">
             <div class="diag-box">
                 <div class="diag-name" id="diag-name-p2">P2</div>
@@ -4678,6 +4756,13 @@
         <p style="font-size:0.8rem; color:#666; text-align:center;" data-i18n="lbl_diag_replace_hint">
             點擊表情圖示後，按下[Ctrl+V]可替換該表情圖片 (全域生效)。
         </p>
+		<!-- 新增這區塊：重點對話選項 -->
+        <div style="text-align:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px dashed #ccc;">
+            <label style="font-weight:bold; color:#f39c12; cursor:pointer; font-size: 1.1rem;">
+                <input type="checkbox" id="edit-key-dialogue" onchange="handleKeyDialogueToggle()" style="transform: scale(1.2); margin-right: 5px;"> 
+                <span data-i18n="lbl_key_dialogue">🌟 重點對話 (單人發言 / 全螢幕特寫)</span>
+            </label>
+        </div>
 		<div style="text-align:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px dashed #ccc;">
             <button onclick="swapAndFlipAllPortraits()" style="background:#e67e22; border-color:#d35400; font-weight:bold;" data-i18n="btn_swap_flip">
                 🔁 P1/P2 圖片交換 & 水平翻轉
@@ -5347,6 +5432,8 @@
             'opt_exit_fade': '淡出',
             'opt_exit_slide': '抽出',
 			'opt_exit_none': '不消失',
+			'lbl_key_dialogue': '🌟 重點對話 (單人發言 / 全螢幕特寫)',
+			'msg_key_diag_single_only': '重點對話模式下，只能由一位玩家發言！',
             // -----------------------
 
             // ... (保留舊有的其他翻譯，如堆疊操作、訊息等) ...
@@ -5573,6 +5660,8 @@
             'opt_effect_direct': 'Instant', 'opt_effect_fade': 'Fade In', 'opt_effect_slide': 'Slide In',
             'opt_exit_direct': 'Instant', 'opt_exit_fade': 'Fade Out', 'opt_exit_slide': 'Slide Out',
 			'opt_exit_none': 'Persist',
+			'lbl_key_dialogue': '🌟 Key Dialogue (Single Speaker / Fullscreen CG)',
+			'msg_key_diag_single_only': 'In Key Dialogue mode, only one player can speak!',
             // ... (其餘請保留原樣) ...
             'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 Switch Turn', 'btn_reset_current': 'Untap Current','btn_p1_reset': 'P1 Untap', 'btn_p2_reset': 'P2 Untap',
 			'msg_import_target': 'Import to which player?',
@@ -5766,6 +5855,8 @@
             'opt_effect_direct': '即時', 'opt_effect_fade': 'フェード', 'opt_effect_slide': 'スライド',
             'opt_exit_direct': '即時消失', 'opt_exit_fade': 'フェード', 'opt_exit_slide': 'スライド',
 			'opt_exit_none': '消えない',
+			'lbl_key_dialogue': '🌟 重要会話 (単独発言 / 全画面カットイン)',
+			'msg_key_diag_single_only': '重要会話モードでは、発言できるのは1人のみです！',
             // ... (其餘請保留原樣) ...
             'btn_setup': 'NEW GAME', 'btn_rotate': '🔄 ターン交代', 'btn_reset_current': 'アンタップ (Current)', 'btn_p1_reset': 'P1 アンタップ', 'btn_p2_reset': 'P2 アンタップ',
 			'msg_import_target': 'どちらにインポートしますか？', // 匯入到哪一方？
@@ -10891,6 +10982,40 @@
 		// --- Dialogue Rendering ---
 		const diagLayer = document.getElementById('dialogue-layer');
 		if (state.dialogueData) {
+		
+			// [新增] 判斷目前是否正在「編輯對話」的狀態
+			const isEditingThisDiag = isDrafting && draftOperations.some(o => o.type === 'DIALOGUE');
+
+			// [修改要求 3] 進入對話編輯模式時，暫停顯示重點對話的畫面呈現 (退回一般顯示)
+			if (state.dialogueData.isKeyDialogue && !isEditingThisDiag) {
+				diagLayer.classList.add('key-mode');
+			} else {
+				diagLayer.classList.remove('key-mode');
+			}
+			
+			// --- [新增] 判斷是否為「連續」的重點對話 ---
+			let isConsecutiveKeyP1 = false;
+			let isConsecutiveKeyP2 = false;
+
+			// 只有在非編輯中，且當前為重點對話時才進行連續性判斷
+			if (state.dialogueData.isKeyDialogue && !isEditingThisDiag) {
+				let prevState = null;
+				if (isDrafting) {
+					// 編輯其他動作時，前一個狀態為 insertIndex - 1
+					let baseIdx = insertIndex - 1;
+					if (baseIdx >= 0 && history[baseIdx]) prevState = history[baseIdx].state;
+				} else {
+					// 播放模式時，前一個狀態為 currentIndex - 1
+					if (currentIndex > 0 && history[currentIndex - 1]) prevState = history[currentIndex - 1].state;
+				}
+
+				// 如果上一步也是重點對話，檢查是否為同一個角色發言
+				if (prevState && prevState.dialogueData && prevState.dialogueData.isKeyDialogue) {
+					if (state.dialogueData.p1?.active && prevState.dialogueData.p1?.active) isConsecutiveKeyP1 = true;
+					if (state.dialogueData.p2?.active && prevState.dialogueData.p2?.active) isConsecutiveKeyP2 = true;
+				}
+			}
+			
 			diagLayer.classList.add('active');
 			['p1', 'p2'].forEach(id => {
 				const data = state.dialogueData[id];
@@ -10920,9 +11045,12 @@
 						}
 					};
 
-					// 重置動畫 Class 以觸發重播
-					// 重置動畫 Class 以觸發重播 (若為延續顯示的對話則不重播進場動畫)
-					if (!data.isPersisted) {
+					// [新增] 連續重點對話判定結果
+					const isConsecutiveKey = (id === 'p1') ? isConsecutiveKeyP1 : isConsecutiveKeyP2;
+
+					// 重置動畫 Class 以觸發重播 
+					// (若為延續顯示的對話，或是同一個人的「連續重點對話」，則不重播進場動畫)
+					if (!data.isPersisted && !isConsecutiveKey) {
 						row.classList.remove('fx-fade', 'fx-slide', 'fx-direct');
 						void row.offsetWidth; // 強制重繪 (Reflow)
 					}
@@ -15655,6 +15783,7 @@
 
         if (!found) {
             // 全新預設
+            document.getElementById('edit-key-dialogue').checked = false; // [新增] 預設不開啟
             document.getElementById('edit-p1-emotion').value = lastDiagSettings.p1.emotion;
             document.getElementById('edit-p2-emotion').value = lastDiagSettings.p2.emotion;
             selectEmotion('p1', lastDiagSettings.p1.emotion);
@@ -15837,7 +15966,12 @@
         });
     }
 
+    // [修改] 載入資料到表單 (加入 isKeyDialogue)
     function loadDiagToForm(data) {
+        // 讀取重點對話標記
+        const cbKey = document.getElementById('edit-key-dialogue');
+        if (cbKey) cbKey.checked = !!data.isKeyDialogue;
+
         ['p1', 'p2'].forEach(id => {
             const d = data[id];
             document.getElementById(`edit-${id}-active`).checked = d.active;
@@ -15846,7 +15980,6 @@
                 document.getElementById(`edit-${id}-text`).value = d.dataText;
                 document.getElementById(`edit-${id}-size`).value = d.size;
                 document.getElementById(`edit-${id}-effect`).value = d.effect;
-                // [新增] 載入退場特效，如果舊存檔沒有這個欄位，預設為 direct
                 document.getElementById(`edit-${id}-exit`).value = d.exit || 'direct';
                 
                 selectEmotion(id, d.emotion);
@@ -15854,9 +15987,45 @@
             toggleDiagEdit(id);
         });
     }
+	
+	// [新增] 切換重點對話時的防呆邏輯
+    function handleKeyDialogueToggle() {
+        const isKey = document.getElementById('edit-key-dialogue').checked;
+        const p1Active = document.getElementById('edit-p1-active');
+        const p2Active = document.getElementById('edit-p2-active');
+        
+        // 如果開啟了重點對話，且兩邊都勾選了，則強制關掉其中一邊
+        if (isKey && p1Active.checked && p2Active.checked) {
+            alert(t('msg_key_diag_single_only'));
+            // 預設保留最後點擊的那一方，或者預設保留 P1
+            if (lastFocusPid === 'p2') {
+                p1Active.checked = false;
+                toggleDiagEdit('p1');
+            } else {
+                p2Active.checked = false;
+                toggleDiagEdit('p2');
+            }
+        }
+    }
 
+    // [修改] 支援重點對話排他鎖定
     function toggleDiagEdit(id) {
-        const active = document.getElementById(`edit-${id}-active`).checked;
+        const isKey = document.getElementById('edit-key-dialogue').checked;
+        const activeCheckbox = document.getElementById(`edit-${id}-active`);
+        
+        // 互斥邏輯：如果是在重點對話模式下打勾，強制關閉另一方
+        if (isKey && activeCheckbox.checked) {
+            const otherId = (id === 'p1') ? 'p2' : 'p1';
+            const otherCheckbox = document.getElementById(`edit-${otherId}-active`);
+            if (otherCheckbox.checked) {
+                otherCheckbox.checked = false;
+                // 遞迴呼叫關閉另一方的 UI
+                const otherEls = document.querySelectorAll(`#edit-${otherId}-name, #edit-${otherId}-text, #edit-${otherId}-size, #edit-${otherId}-effect`);
+                otherEls.forEach(el => el.disabled = true);
+            }
+        }
+
+        const active = activeCheckbox.checked;
         // 簡單的視覺回饋：變灰
         const els = document.querySelectorAll(`#edit-${id}-name, #edit-${id}-text, #edit-${id}-size, #edit-${id}-effect`);
         els.forEach(el => el.disabled = !active);
@@ -15876,6 +16045,7 @@
 
         const p1Data = getData('p1');
         const p2Data = getData('p2');
+		const isKeyDiag = document.getElementById('edit-key-dialogue').checked; // [新增]
         
         if(p1Data.active) lastDiagSettings.p1 = { name: p1Data.name, emotion: p1Data.emotion };
         if(p2Data.active) lastDiagSettings.p2 = { name: p2Data.name, emotion: p2Data.emotion };
@@ -15889,10 +16059,10 @@
 
         addOperation({
             type: 'DIALOGUE',
-            data: { p1: p1Data, p2: p2Data }
+            data: { p1: p1Data, p2: p2Data, isKeyDialogue: isKeyDiag } 
         });
 
-        let desc = t('desc_dialogue') + " ";
+        let desc = t('desc_dialogue') + (isKeyDiag ? "🌟 " : " ");
         if (p2Data.active) desc += `${p2Data.name}: ${p2Data.dataText.substr(0,8)}... `;
         if (p1Data.active) desc += `${p1Data.name}: ${p1Data.dataText.substr(0,8)}...`;
         
