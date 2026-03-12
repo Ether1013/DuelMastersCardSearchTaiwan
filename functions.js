@@ -3262,7 +3262,11 @@
 			w.document.write( "<head>" );
 			w.document.write( "<title>" + ( ( theSet == null ) ? "" : ( "《" + theSet.setName + "》" ) ) + "卡表匯出</title>" );
 			w.document.write( "<"+"script>" );
-			w.document.write( setPicObjSize.toString() + getById.toString().replace(/gobi/g, "gobi") );
+			w.document.write( "const setPicObjSize = " + setPicObjSize.toString() + ";\n" );
+			w.document.write( "const getById = " + getById.toString() + ";\n" );
+			// 順便補上 isMobile 和 mobiles，否則點擊圖片放大時也會因為找不到 isMobile 而報錯
+			w.document.write( "const mobiles = " + JSON.stringify(mobiles) + ";\n" );
+			w.document.write( "const isMobile = " + isMobile.toString() + ";\n" );
 			w.document.write( "</"+"script>" );
 			w.document.write( "</head>" );
 		} else {
