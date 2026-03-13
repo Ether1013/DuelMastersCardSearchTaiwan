@@ -5250,9 +5250,14 @@
 	];
 
 	// --- Dialogue Assets Generation ---
-    const EMOTIONS = ['normal', 'blank', 'serious', 'smug', 'furious', 'terrified'];
-    const EMOTION_LABELS = {normal:'一般', blank:'呆滯', serious:'認真', smug:'得意', furious:'盛怒', terrified:'驚恐'};
-    
+    const EMOTIONS =[
+		'normal', 'blank', 'serious', 'smug', 'furious', 'terrified',
+		'normal_hd', 'blank_hd', 'serious_hd', 'smug_hd', 'furious_hd', 'terrified_hd'
+	];
+	const EMOTION_LABELS = {
+		normal:'一般(200)', blank:'呆滯(200)', serious:'認真(200)', smug:'得意(200)', furious:'盛怒(200)', terrified:'驚恐(200)',
+		normal_hd:'一般(480)', blank_hd:'呆滯(480)', serious_hd:'認真(480)', smug_hd:'得意(480)', furious_hd:'盛怒(480)', terrified_hd:'驚恐(480)'
+	};
     // 生成簡單的 Canvas 頭像
     function generateDefaultPortraits() {
         const drawFace = (color, emotion) => {
@@ -15851,7 +15856,7 @@
     async function swapAndFlipAllPortraits() {
         if (!confirm(t('msg_confirm_swap'))) return;
 
-        const emotions = ['normal', 'blank', 'serious', 'smug', 'furious', 'terrified'];
+        const emotions = EMOTIONS; 
         
         // 為了避免讀取到剛寫入的資料，我們先把所有新圖片算好，再一次寫入
         const newImages = {};
@@ -16100,19 +16105,22 @@
                 return;
             }
             
-            // [情境 A] 對話頭像 (維持 Base64，因為需要裁切)
-            const diagModal = document.getElementById('dialogue-modal');
-            if (diagModal && diagModal.style.display === 'flex') {
-                const url = URL.createObjectURL(blob);
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // 1. [修改] 將解析度從 200 提升至 480
-                    const size = 480; 
-                    canvas.width = size;
-                    canvas.height = size;
+            //[情境 A] 對話頭像 (維持 Base64，因為需要裁切)
+			const diagModal = document.getElementById('dialogue-modal');
+			if (diagModal && diagModal.style.display === 'flex') {
+				const url = URL.createObjectURL(blob);
+				const img = new Image();
+				img.onload = () => {
+					// [新增] 提早取得當前選擇的表情代號
+					const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
+					
+					const canvas = document.createElement('canvas');
+					const ctx = canvas.getContext('2d');
+					
+					// [修改] 判斷名稱是否包含 '_hd'，是的話用 480，否則用 200
+					const size = currentEmo.endsWith('_hd') ? 480 : 200; 
+					canvas.width = size;
+					canvas.height = size;
                     
                     // 2. [修改] 移除原本填滿的深色背景 (#222)，改用 clearRect 確保畫布完全透明
                     ctx.clearRect(0, 0, size, size);
@@ -16130,7 +16138,6 @@
                     // 3. [修改] 將輸出格式從 'image/jpeg' 改為 'image/png' 以維持去背(Alpha Channel)
                     const base64 = canvas.toDataURL('image/png');
                     
-                    const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
                     const key = `avatar_${lastFocusPid}_${currentEmo}`;
                     globalImageRegistry[key] = base64;
                     const activeOpt = document.querySelector(`#emotion-grid-${lastFocusPid} .emotion-opt[data-emo="${currentEmo}"]`);
