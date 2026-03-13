@@ -13484,6 +13484,36 @@
 			}
 		}
 	}
+	
+	// --- [新增] 人類閱讀節奏模擬演算法 ---
+	function calculateDialogueDelay(text, speedFactor) {
+		if (!text || text.trim().length === 0) return 0;
+
+		// 1. 基礎參數 (毫秒)
+		const BASE_DELAY = 600;  // 基礎眼球對焦與動畫過渡時間
+		const CHAR_DELAY = speedFactor || 100; // 每個字的平均閱讀時間
+
+		// 2. 標點符號權重 (利用正則表達式比對)
+		// 遇到短停頓 (逗號、頓號) 加 200ms
+		const shortPauses = (text.match(/[，、,]/g) ||[]).length;
+		// 遇到長停頓 (句號、驚嘆號、問號) 加 400ms
+		const longPauses = (text.match(/[。！？!?]/g) ||[]).length;
+		// 遇到懸疑停頓 (刪節號、波浪號) 加 600ms
+		const ellipsis = (text.match(/[.]{3}|[。]{3}|…|~/g) ||[]).length;
+
+		// 3. 計算總時間
+		let delay = BASE_DELAY + 
+					(text.length * CHAR_DELAY) + 
+					(shortPauses * 200) + 
+					(longPauses * 400) + 
+					(ellipsis * 600);
+
+		// 4. 極值限制 (Clamp)
+		const MIN_DELAY = 1000; // 最短停留 1 秒 (解決短句卡太久，從原先1.5秒下修)
+		const MAX_DELAY = 8500; // 最長不超過 8.5 秒 (避免超長文導致自動播放像當機)
+
+		return Math.max(MIN_DELAY, Math.min(delay, MAX_DELAY));
+	}
 
 	// --- [新增] 抽離出來的步驟執行邏輯 (供上面呼叫) ---
 	function performStepLogic(nextIndex) {
@@ -13531,46 +13561,48 @@
 		} else if (currOp && currOp.type === 'RPS') {
 			delay = 4000;
 		} else if (currOp && currOp.type === 'DIALOGUE') {
-			// 1. 先計算當前這一步的總字數
-			let totalLen = 0;
-			if (currOp.data) {
-				if (currOp.data.p1 && currOp.data.p1.active) totalLen += (currOp.data.p1.dataText || "").length;
-				if (currOp.data.p2 && currOp.data.p2.active) totalLen += (currOp.data.p2.dataText || "").length;
-			}
+			// 1. 取得當前這一步的完整台詞
+			let currP1Text = (currOp.data && currOp.data.p1 && currOp.data.p1.active) ? (currOp.data.p1.dataText || "") : "";
+			let currP2Text = (currOp.data && currOp.data.p2 && currOp.data.p2.active) ? (currOp.data.p2.dataText || "") : "";
 
-			// 2. [新增] 嘗試取得「上一步驟」的字數來做比較
-			let effectiveLen = totalLen; // 預設使用全長 (如果是第一句或是換場景)
-			
-			// 確保有上一步 (currentIndex 已經在函式開頭被更新為當前步數，所以 -1 就是上一步)
+			let newTextToRead = "";
+
+			// 2. 取得上一步驟的台詞來做比對 (處理「文字追加」與「換人說話」的情況)
 			if (currentIndex > 0 && history[currentIndex - 1]) {
 				const prevAction = history[currentIndex - 1].action;
-				// 取出上一步的操作指令
 				const prevOp = (prevAction.operations && prevAction.operations.length > 0) ? prevAction.operations[0] : null;
 				
-				// 只有當上一步也是「對話 (DIALOGUE)」時才進行比較
 				if (prevOp && prevOp.type === 'DIALOGUE' && prevOp.data) {
-					let prevLen = 0;
-					if (prevOp.data.p1 && prevOp.data.p1.active) prevLen += (prevOp.data.p1.dataText || "").length;
-					if (prevOp.data.p2 && prevOp.data.p2.active) prevLen += (prevOp.data.p2.dataText || "").length;
+					let prevP1Text = (prevOp.data.p1 && prevOp.data.p1.active) ? (prevOp.data.p1.dataText || "") : "";
+					let prevP2Text = (prevOp.data.p2 && prevOp.data.p2.active) ? (prevOp.data.p2.dataText || "") : "";
 					
-					// 計算新增的字數
-					const diff = totalLen - prevLen;
-					
-					// 邏輯判斷：
-					// 如果 diff > 0，代表是「追加文字」(打字機效果)，時間只計算新增部分。
-					// 如果 diff <= 0 (例如換了一句較短的話，或刪除文字)，則視為新台詞，維持使用 totalLen 計算閱讀時間。
-					if (diff > 0) {
-						effectiveLen = diff;
+					// 計算 P1 新增的內容 (使用 startsWith 確保是延續的對話)
+					if (currP1Text.startsWith(prevP1Text)) {
+						newTextToRead += currP1Text.substring(prevP1Text.length);
+					} else {
+						newTextToRead += currP1Text; // 換了一句話
 					}
+
+					// 計算 P2 新增的內容
+					if (currP2Text.startsWith(prevP2Text)) {
+						newTextToRead += currP2Text.substring(prevP2Text.length);
+					} else {
+						newTextToRead += currP2Text;
+					}
+				} else {
+					newTextToRead = currP1Text + currP2Text; // 上一步不是對話，直接讀全部
 				}
+			} else {
+				newTextToRead = currP1Text + currP2Text; // 這是第一步
 			}
 
-			// 3. 計算延遲時間：基礎 500ms + (有效字數 * 速度)
-			// 使用 effectiveLen 而非 totalLen
-			delay = 500 + (effectiveLen * currentDialogSpeed);
-			
-			// 設定最小值，確保短句（如「好」、「是」）至少停留 1.5 秒，避免一閃而過
-			if (delay < 1500) delay = 1500;
+			// 3. 使用新的演算法計算時間
+			// 如果比對後發現沒有新字 (例如台詞一模一樣，只是切換表情或換姿勢)
+			if (newTextToRead.trim().length === 0) {
+				delay = 800; // 給予極短的過渡停頓即可
+			} else {
+				delay = calculateDialogueDelay(newTextToRead, currentDialogSpeed);
+			}
 
 		} else if (currOp && currOp.type === 'SHUFFLE') {
 			delay = 2100;
