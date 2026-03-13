@@ -13475,12 +13475,22 @@
 			performStepLogic(nextIndex);
 
 		} else {
-			stopPlayback( false );
-			// [修正] 只有當真的有演過劇情 (history > 1) 才顯示 Ending，避免空劇本誤觸
+			// [修改] 到達最後一步時，先不要立刻呼叫 stopPlayback (保持面板隱藏)
+			// 僅停止自動播放的計時器
+			if (playTimeout) {
+				clearTimeout(playTimeout);
+				playTimeout = null;
+			}
+			
+			// 只有當真的有演過劇情 (history > 1) 才顯示 Ending，避免空劇本誤觸
 			if (history.length > 1) {
+				// 等待 2 秒後開始播放 Ending
 				setTimeout(() => {
 					triggerEnding();
 				}, 2000);
+			} else {
+				// 如果是空劇本，直接停止並展開面板
+				stopPlayback(false);
 			}
 		}
 	}
@@ -17044,10 +17054,9 @@
 			setTimeout(() => { overlay.style.display = 'none'; }, 1000);
 		}
 
-		// [桌機版關鍵]：移除 is-playing，這會讓編輯器介面 (Toolbar, Timeline) 重新出現
-		// 使用者此時會停在最後一個步驟，可以直接開始新增 Action Log
-		document.body.classList.remove('is-playing');
-		updatePlayButtonUI();
+		// [修改] 在 Ending 結束後，統一呼叫 stopPlayback 來恢復介面與操作面板
+		// 這會自動移除 'is-playing' 和 'desktop-playing'，讓 ActionLog 重新滑出
+		stopPlayback(false);
 	}
 	
 	async function exportReversedWithMirror() {
