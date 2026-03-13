@@ -16658,54 +16658,54 @@
 		// [合併版] Zoom Blur (衝擊) & Zoom In (逼近)
 		// ===============================================
 		if (pattern === 'zoom_blur' || pattern === 'zoom_in') {
-			paperLayer.style.display = 'none';
+            paperLayer.style.display = 'none';
 
-			const userScale = (data.scale !== undefined) ? data.scale : 1;
-			const userOx = data.offsetX || 0;
-			const userOy = data.offsetY || 0;
+            // 【修正 1】正確從 st (data.style) 讀取使用者在編輯器調整的參數
+            const userScale = (st.scale !== undefined) ? st.scale : 1;
+            const userX = (st.x !== undefined) ? st.x : 50;
+            const userY = (st.y !== undefined) ? st.y : 50;
 
-			if (srcImage) {
-				imgLayer.style.backgroundImage = `url(${srcImage})`;
-				imgLayer.style.backgroundColor = 'transparent';
-				
-				// 強制滿版 (Cover)
-				imgLayer.style.backgroundSize = 'cover';
-				// 支援位置微調
-				imgLayer.style.backgroundPosition = `calc(50% + ${userOx}px) calc(50% + ${userOy}px)`;
-				imgLayer.style.backgroundRepeat = 'no-repeat';
-			}
-			
-			imgLayer.style.clipPath = 'none'; 
-			imgLayer.style.opacity = '1';
+            if (srcImage) {
+                imgLayer.style.backgroundImage = `url(${srcImage})`;
+                imgLayer.style.backgroundColor = 'transparent';
+                
+                // 【修正 2】捨棄寫死的 cover，套用編輯器算出的百分比大小與位置
+                imgLayer.style.backgroundSize = `auto ${userScale * 100}%`;
+                imgLayer.style.backgroundPosition = `${userX}% ${userY}%`;
+                imgLayer.style.backgroundRepeat = 'no-repeat';
+            }
+            
+            imgLayer.style.clipPath = 'none'; 
+            imgLayer.style.opacity = '1';
 
-			// 設定 CSS 變數，傳遞縮放倍率
-			imgLayer.style.setProperty('--rb-zoom-scale', userScale);
+            // 【修正 3】由於已經將使用者的 scale 應用在 backgroundSize 上了，
+            // 這裡傳給 CSS 動畫的基準倍率固定為 1 即可，讓動畫(2.5x -> 1.0x)能完美吻合編輯器的視覺
+            imgLayer.style.setProperty('--rb-zoom-scale', 1);
 
-			// --- [關鍵差異] 根據模式選擇不同的動畫 Class ---
-			const animClass = (pattern === 'zoom_in') ? 'rb-zoom-in-anim' : 'rb-zoom-blur-anim';
+            // ---[關鍵差異] 根據模式選擇不同的動畫 Class ---
+            const animClass = (pattern === 'zoom_in') ? 'rb-zoom-in-anim' : 'rb-zoom-blur-anim';
 
-			// 重置並觸發動畫
-			imgLayer.classList.remove('rb-zoom-blur-anim', 'rb-zoom-in-anim'); // 清除舊的
-			void imgLayer.offsetWidth; // Force Reflow
-			imgLayer.classList.add(animClass); // 加入新的
+            // 重置並觸發動畫
+            imgLayer.classList.remove('rb-zoom-blur-anim', 'rb-zoom-in-anim'); // 清除舊的
+            void imgLayer.offsetWidth; // Force Reflow
+            imgLayer.classList.add(animClass); // 加入新的
 
-			// 設定結束清理
-			setTimeout(() => {
-				// [修正] 在移除動畫 Class 前，強制將透明度設為 0
-				// 這樣移除 Class 後就不會彈回 opacity: 1
-				imgLayer.style.opacity = '0';
-				imgLayer.classList.remove(animClass);
-				imgLayer.style.backgroundSize = '';
-				imgLayer.style.backgroundPosition = '';
-				imgLayer.style.removeProperty('--rb-zoom-scale');
-				
-				if (onComplete) onComplete();
-				document.body.style.overflow = '';
-			}, 2500);
+            // 設定結束清理
+            setTimeout(() => {
+                imgLayer.style.opacity = '0';
+                imgLayer.classList.remove(animClass);
+                imgLayer.style.backgroundSize = '';
+                imgLayer.style.backgroundPosition = '';
+                imgLayer.style.removeProperty('--rb-zoom-scale');
+                
+                if (onComplete) onComplete();
+                document.body.style.overflow = '';
+            }, 2500);
 
-			return; 
-		}
-		if (pattern === 'pan_up' || pattern === 'pan_down') {
+            return; 
+        }
+        
+        if (pattern === 'pan_up' || pattern === 'pan_down') {
             // 1. 隱藏不需要的撕裂層
             paperLayer.style.display = 'none';
             
@@ -16716,9 +16716,6 @@
             }
             imgLayer.style.clipPath = 'none'; // 不裁切
             
-            // 判斷運鏡方向
-            // Pan Up (鏡頭向上): 內容從低處(Start +) 往 高處(End -) 移動
-            // Pan Down (鏡頭向下): 內容從高處(Start -) 往 低處(End +) 移動
             let startOffset = 15;
             let endOffset = -15;
 
@@ -16731,22 +16728,18 @@
             const endY = st.y + endOffset;
             
             imgLayer.style.backgroundPosition = `${st.x}% ${startY}%`;
-            imgLayer.style.backgroundSize = `${st.scale * 100}%`;
+            // 【修正 4】加上 auto，與編輯器邏輯 (寬度自動、高度縮放) 保持一致
+            imgLayer.style.backgroundSize = `auto ${st.scale * 100}%`;
             imgLayer.style.opacity = '0';      // 初始透明
             imgLayer.style.transition = 'none'; // 瞬間重置
 
-            // 強制重繪
             void imgLayer.offsetWidth;
 
-            // 3. 執行序列動畫
             setTimeout(() => {
-                // 階段一：浮現 + 開始運鏡 (總長 4秒)
                 imgLayer.style.transition = 'opacity 0.8s ease-out, background-position 4s linear';
-                
                 imgLayer.style.opacity = '1';
                 imgLayer.style.backgroundPosition = `${st.x}% ${endY}%`;
 
-                // 階段二：快速消退 (3.5秒處)
                 setTimeout(() => {
                     imgLayer.style.transition = 'opacity 0.5s ease-in'; 
                     imgLayer.style.opacity = '0';
@@ -16754,7 +16747,6 @@
 
             }, 50);
 
-            // 結束回調
             if (onComplete) setTimeout(onComplete, 4000);
             return;
         }
@@ -16775,12 +16767,11 @@
                 el.style.backgroundColor = 'white';
             }
             
-            // [撕裂版] 鏡頭上移特效：初始位置設定
-            // 為了營造鏡頭感，撕裂版我們也保留一點點位移 (+5%)
             let startY = st.y;
 
             el.style.backgroundPosition = `${st.x}% ${startY}%`;
-            el.style.backgroundSize = `${st.scale * 100}%`;
+            // 【修正 5】加上 auto，與編輯器邏輯保持一致
+            el.style.backgroundSize = `auto ${st.scale * 100}%`;
             el.style.opacity = '1';
             el.style.transition = 'none';
         };
