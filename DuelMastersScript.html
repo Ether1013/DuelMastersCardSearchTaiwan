@@ -4164,6 +4164,41 @@
 	#dialogue-layer.key-mode .diag-row.visible.fx-slide {
 		animation: fadeIn 0.4s ease forwards;
 	}
+	
+	/* --- [新增] Swoop-in 弧線俯衝特效 --- */
+	#swoop-wrapper {
+		position: absolute;
+		top: 0; left: 0;
+		width: 100%; height: 100%; /* 【修復 X 偏移】: 改用 100% 完美貼合原始容器 */
+		transform-origin: 50% 50%; 
+		opacity: 0;
+		pointer-events: none;
+		display: none; 
+	}
+	#swoop-image {
+		position: absolute;
+		max-width: none !important; /* 【修復 X 偏移】: 防止圖片被全域 CSS 壓縮變窄 */
+		max-height: none !important;
+		box-shadow: 0 0 50px 15px rgba(241, 196, 15, 0.5), 0 0 20px 5px rgba(255, 255, 255, 0.9); /* 【需求 1】: 圖片周圍金色與白色的強烈發光 */
+		border-radius: 6px; /* 加上一點微圓角讓發光邊緣更自然 */
+	}
+	@keyframes swoop-flight {
+		0%   { opacity: 0; transform: translateY(-50vh) scale(0.01); }
+		10%  { opacity: 1; transform: translateY(-35vh) scale(0.02); }
+		20%  { transform: translateY(-15vh) scale(0.04); }
+		30%  { transform: translateY(5vh)   scale(0.07); }
+		40%  { transform: translateY(20vh)  scale(0.12); }
+		50%  { transform: translateY(32vh)  scale(0.20); }
+		60%  { transform: translateY(35vh)  scale(0.30); }
+		70%  { transform: translateY(30vh)  scale(0.45); }
+		80%  { transform: translateY(18vh)  scale(0.65); }
+		90%  { transform: translateY(5vh)   scale(0.85); }
+		100% { opacity: 1; transform: translateY(0vh)   scale(1); } 
+	}
+	.rb-swoop-anim {
+		animation: swoop-flight 1.2s ease-in forwards;
+		will-change: transform, opacity;
+	}
 </style>
 </head>
 <body>
@@ -5580,6 +5615,7 @@
 			'lbl_no_script': '無可用劇本',
 			'lbl_rb_style': '特效樣式:',
 			'opt_rb_random': '🎲 隨機 (Random)',
+			'opt_rb_swoop': '🦅 弧線俯衝 (Swoop)',
 			'opt_rb_center': '⚡ 中間撕裂 (Center)',
 			'opt_rb_tl': '📐 左上撕裂 (Top-Left)',
 			'opt_rb_br': '📐 右下撕裂 (Btm-Right)',
@@ -5776,6 +5812,7 @@
 			'lbl_no_script': 'No scripts available',
 			'lbl_rb_style': 'Style:',
 			'opt_rb_random': '🎲 Random',
+			'opt_rb_swoop': '🦅 Swoop In',
 			'opt_rb_center': '⚡ Center Tear',
 			'opt_rb_tl': '📐 Top-Left',
 			'opt_rb_br': '📐 Btm-Right',
@@ -5970,6 +6007,7 @@
 			'lbl_no_script': '利用可能なシナリオがありません',
 			'lbl_rb_style': 'スタイル:',
 			'opt_rb_random': '🎲 ランダム',
+			'opt_rb_swoop': '🦅 弧線急降下 (Swoop)',
 			'opt_rb_center': '⚡ 中央引き裂き',
 			'opt_rb_tl': '📐 左上から',
 			'opt_rb_br': '📐 右下から',
@@ -13586,8 +13624,12 @@
 		if (currAction.operations.length === 1 && currOp && currOp.type === 'SET_BGM') {
 			delay = 50;
 		} else if (currOp && currOp.type === 'REALITY_BREAK') {
-			delay = 2800;
-		}else if (currOp && currOp.type === 'SHOW_MESSAGE') { 
+			if (currOp.data && currOp.data.pattern === 'swoop') {
+				delay = 2200; /* 【需求 2】: 1.2s 飛行 + 1.0s 定格展示 */
+			} else {
+				delay = 2800;
+			}
+		} else if (currOp && currOp.type === 'SHOW_MESSAGE') {
 			// [新增] 延遲時間 = 設定時間 + 500ms 緩衝
 			delay = (currOp.duration || 1000) + 500;
 		} else if (currOp && currOp.type === 'RPS') {
@@ -16656,8 +16698,14 @@
         const ENABLE_INNER_SHAKE = (data.shakeInner !== undefined) ? data.shakeInner : true;
         const TEAR_INTENSITY = (data.tearScale !== undefined) ? data.tearScale : 0.7;
 
-        const overlay = document.getElementById('rb-overlay');
+		// --- [新增] 宣告並初始化 Swoop 專屬 DOM ---
+        const swoopWrapper = document.getElementById('swoop-wrapper');
+        const swoopImg = document.getElementById('swoop-image');
         const imgLayer = document.getElementById('rb-inner-layer');
+        if (swoopWrapper) swoopWrapper.style.display = 'none';
+        if (imgLayer) imgLayer.style.display = 'block'; // 確保預設背景層顯示
+
+        const overlay = document.getElementById('rb-overlay');
         const paperLayer = document.getElementById('rb-paper-layer');
         const body = document.body;
 
@@ -16686,6 +16734,46 @@
             pattern = opts[Math.floor(Math.random() * opts.length)];
         }
 
+		// ===============================================
+        // [新增] Swoop-in 弧線俯衝特效 (無裁切版)
+        // ===============================================
+        if (pattern === 'swoop') {
+            paperLayer.style.display = 'none';
+            imgLayer.style.display = 'none'; 
+            swoopWrapper.style.display = 'block'; 
+
+            const userScale = (st.scale !== undefined) ? st.scale : 1;
+            const userX = (st.x !== undefined) ? st.x : 50;
+            const userY = (st.y !== undefined) ? st.y : 50;
+
+            if (srcImage) {
+                swoopImg.src = srcImage;
+            }
+
+            // 精準對齊與縮放
+            swoopImg.style.left = `${userX}vh`;
+            swoopImg.style.top = `${userY}vh`;
+            swoopImg.style.height = `${userScale * 100}vh`; // 【修復 X 偏移】: 改用 % 而非 vh，完全參照編輯器比例
+            swoopImg.style.width = `auto`; 
+            swoopImg.style.transform = `translate(-${userX}%, -${userY}%)`;
+
+            // 重置並觸發動畫
+            swoopWrapper.classList.remove('rb-swoop-anim');
+            void swoopWrapper.offsetWidth; // Force Reflow
+            swoopWrapper.classList.add('rb-swoop-anim');
+
+            // 【需求 2】: 改為 2.2s 後結束清理 (1.2s 動畫 + 1.0s 定格)
+            setTimeout(() => {
+                swoopWrapper.classList.remove('rb-swoop-anim');
+                swoopWrapper.style.display = 'none';
+                imgLayer.style.display = 'block'; 
+                overlay.style.display = 'none';
+                if (onComplete) onComplete();
+                document.body.style.overflow = '';
+            }, 2200);
+
+            return; 
+        }
         // ===============================================
 		// [合併版] Zoom Blur (衝擊) & Zoom In (逼近)
 		// ===============================================
@@ -17883,7 +17971,9 @@
         (拖曳可移動，滾輪可縮放)
     </div>
     <div id="rb-flash-layer"></div>
-    
+    <div id="swoop-wrapper">
+        <img id="swoop-image" src="" alt="swoop-cut-in">
+    </div>
     <div id="rb-controls">
 		<div style="background:rgba(0,0,0,0.85); padding:8px 20px; border-radius:40px; color:white; display:flex; gap:12px; align-items:center;">
 			<div style="display:flex; flex-direction:column; gap:2px;">
@@ -17896,6 +17986,7 @@
 					<option value="pan_down" data-i18n="opt_rb_pan_down">🔽 緩緩下降 (Pan Down)</option>
 					<option value="zoom_blur" data-i18n="opt_rb_zoom_blur">💨 衝擊縮放 (Zoom Blur)</option>
 					<option value="zoom_in" data-i18n="opt_rb_zoom_in">🚀 急速逼近 (Zoom In)</option>
+					<option value="swoop" data-i18n="opt_rb_swoop">🦅 弧線俯衝 (Swoop)</option>
 				</select>
 			</div>
 			<div style="display:flex; flex-direction:column; gap:2px;">
