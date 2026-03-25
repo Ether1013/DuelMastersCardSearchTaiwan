@@ -18005,6 +18005,147 @@
 		a.download = filename;
 		a.click();
 	}
+	
+	function createForbiddenStar(playerNum) {
+		const pid = parseInt(playerNum); // 1 或 2
+		const zoneId = `p${pid}-hyper`;
+		const state = getCurrentDisplayState();
+		
+		// 1. 定義資料結構
+		const cardData = [
+			{ text: 'FSlt', f1: './cardPic/FSlt.png', f2: './cardPic/FXl.png' },
+			{ text: 'FSld', f1: './cardPic/FSld.png', f2: './cardPic/FXr.png' },
+			{ text: 'FSrt', f1: './cardPic/FSrt.png', f2: './cardPic/FXh.png' },
+			{ text: 'FSrd', f1: './cardPic/FSrd.png', f2: './cardPic/FXle.png' },
+			{ text: 'FSmd', f1: './cardPic/FSmd.png', f2: './cardPic/FXb.png' }
+		];
+
+		// 2. 如果不在編輯模式，開啟新步驟
+		if (!isDrafting) startDraftAtEnd();
+
+		cardData.forEach((data) => {
+			// 計算新 ID (取目前最大 ID + 1)
+			const newId = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1;
+			
+			// 建立卡片實例
+			const c = new Card(newId, pid, data.text, zoneId);
+			c.isHyper = true;
+			c.faceUp = true;
+			
+			// 註冊圖片 Key
+			const f1Key = `img_${newId}_f1`;
+			const f2Key = `img_${newId}_f2`;
+			
+			globalImageRegistry[f1Key] = data.f1;
+			globalImageRegistry[f2Key] = data.f2;
+			
+			// 設定多面資料
+			c.hyperFaces = [f1Key, f2Key];
+			c.imageKey = f1Key;
+			c.image = true;
+			
+			// 直接推入當前暫存狀態 (此動作通常視為初始化或特殊指令)
+			state.cards.push(c);
+			
+			// 更新 ID 計數器
+			state.cardIdCounter = newId + 1;
+		});
+
+		// 儲存此步驟描述
+//		saveDraft(`[系統] P${pid} 超次元區新增五張組裝卡`);
+		renderUI();
+	}
+	
+	function settingForbiddenStar(playerNum) {
+		const pid = parseInt(playerNum);
+		const state = getCurrentDisplayState(); // 取得當前顯示狀態
+		const battleZone = `p${pid}-battle`;
+
+		// 1. 取得這五張卡片的最新參照
+		const texts = ['FSld', 'FSlt', 'FSrt', 'FSrd', 'FSmd'];
+		const myCards = {};
+		texts.forEach(t => {
+			myCards[t] = state.cards.find(c => c.ownerId === pid && c.text === t);
+		});
+
+		// 防呆：確保卡片都還在
+		if (!myCards['FSld'] || !myCards['FSmd']) {
+			console.error("組裝卡片遺失，請確認 functionName1 是否執行成功");
+			return;
+		}
+
+		// 2. 開啟編輯模式
+		if (!isDrafting) startDraftAtEnd();
+
+		// --- 關鍵修正：依序移動並建立連結 ---
+		// 第二個參數 true 代表 skipRender，避免連續執行 5 次產生閃爍，最後再統一重繪
+
+		// A. 先移動基底 FSld (Root)
+		addOperation({
+			type: 'MOVE',
+			cardIds: [myCards['FSld'].id],
+			toZone: battleZone,
+			faceUp: true,
+			shuffleSelection: false
+		}, true);
+
+		// B. 將 FSlt 拼在 FSld 的右邊 (Parent: FSld)
+		addOperation({
+			type: 'MOVE',
+			cardIds: [myCards['FSlt'].id],
+			toZone: battleZone,
+			stackTargetId: myCards['FSld'].id,
+			stackType: 'puzzle_right',
+			faceUp: true
+		}, true);
+
+		// C. 將 FSrt 拼在 FSlt 的下面 (Parent: FSlt)
+		addOperation({
+			type: 'MOVE',
+			cardIds: [myCards['FSrt'].id],
+			toZone: battleZone,
+			stackTargetId: myCards['FSlt'].id,
+			stackType: 'puzzle_bottom',
+			faceUp: true
+		}, true);
+
+		// D. 將 FSrd 拼在 FSrt 的左邊 (Parent: FSrt)
+		addOperation({
+			type: 'MOVE',
+			cardIds: [myCards['FSrd'].id],
+			toZone: battleZone,
+			stackTargetId: myCards['FSrt'].id,
+			stackType: 'puzzle_left',
+			faceUp: true
+		}, true);
+
+		// E. 將 FSmd 拼在 FSld 的右下方 (Parent: FSrd)
+		// 使用上一題定義的 corner_tr (1/4面積疊放)
+		addOperation({
+			type: 'MOVE',
+			cardIds: [myCards['FSmd'].id],
+			toZone: battleZone,
+			stackTargetId: myCards['FSld'].id,
+			stackType: 'corner_br',
+			faceUp: true
+		}, true);
+
+		// 3. 全體旋轉指令
+		// 注意：applyOperation 的 ROTATE_CARD 邏輯只修改傳入的 ID
+		// 為了安全，我們將所有組件的 ID 都傳進去
+		const allIds = texts.map(t => myCards[t].id);
+		addOperation({
+			type: 'ROTATE_CARD',
+			cardIds: allIds,
+			deg: -90
+		}, true);
+
+		// 4. 儲存與重繪
+//		saveDraft(`[召喚] P${pid} 五卡合體單位進場 (逆時針轉90度)`);
+		
+		// 執行最後一次重繪，這時 renderUI 會正確讀取所有 parentId 關係
+		renderUI(); 
+	}
 </script>
 <div id="visitor-counter" style="display:none"></div>
 <div id="ace-flash-layer"></div>
