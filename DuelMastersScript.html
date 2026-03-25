@@ -4199,6 +4199,16 @@
 		animation: swoop-flight 1.2s ease-in forwards;
 		will-change: transform, opacity;
 	}
+	/* 角落疊放圖示位移與層級 */
+	.icon-c-tl .child { top: -21px; left: -15px; background: #3498db; z-index: 2; }
+	.icon-c-bl .child { top: 21px; left: -15px; background: #3498db; z-index: 2; }
+	.icon-c-tr .child { top: -21px; left: 15px; background: #3498db; z-index: 2; }
+	.icon-c-br .child { top: 21px; left: 15px; background: #3498db; z-index: 2; }
+
+	/* 隱藏額外選項，點擊其他後才顯示 */
+	.stack-option.extra-option { display: none; }
+	.gui-expanded .extra-option { display: flex; }
+	.gui-expanded #btn-stack-more { display: none; }
 </style>
 </head>
 <body>
@@ -4626,6 +4636,29 @@
 			<div class="stack-option" onclick="confirmStackMove('shift_right_bottom')">
 				<div class="stack-icon icon-shift-right-btm"><div class="child"></div></div>
 				<span data-i18n="opt_shift_right_btm">下疊(右移)</span>
+			</div>
+			<!-- 第 12 格：其他按鈕 -->
+			<div class="stack-option" id="btn-stack-more" onclick="expandStackGui()">
+				<div class="stack-icon" style="background:none; border:2px dashed #ccc; display:flex; align-items:center; justify-content:center; font-size:20px; color:#999;">+</div>
+				<span data-i18n="opt_other">其他...</span>
+			</div>
+
+			<!-- 隱藏的角落選項 (12~15) -->
+			<div class="stack-option extra-option" onclick="confirmStackMove('corner_tl')">
+				<div class="stack-icon icon-c-tl"><div class="child"></div></div>
+				<span data-i18n="opt_corner_tl">左上角疊放</span>
+			</div>
+			<div class="stack-option extra-option" onclick="confirmStackMove('corner_bl')">
+				<div class="stack-icon icon-c-bl"><div class="child"></div></div>
+				<span data-i18n="opt_corner_bl">左下角疊放</span>
+			</div>
+			<div class="stack-option extra-option" onclick="confirmStackMove('corner_tr')">
+				<div class="stack-icon icon-c-tr"><div class="child"></div></div>
+				<span data-i18n="opt_corner_tr">右上角疊放</span>
+			</div>
+			<div class="stack-option extra-option" onclick="confirmStackMove('corner_br')">
+				<div class="stack-icon icon-c-br"><div class="child"></div></div>
+				<span data-i18n="opt_corner_br">右下角疊放</span>
 			</div>
         </div>
         <div id="position-list" style="display:none;"></div> 
@@ -5715,6 +5748,11 @@
 			"ctx_quick_reset": "⚡ 快速重置 (收回+護盾+手牌)", // 新增這行
 			'opt_shift_left_top': '上疊 (左移)',
 			'opt_shift_right_btm': '下疊 (右移)',
+			'opt_other': '其他...',
+			'opt_corner_tl': '左上角疊放',
+			'opt_corner_bl': '左下角疊放',
+			'opt_corner_tr': '右上角疊放',
+			'opt_corner_br': '右下角疊放',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -5912,6 +5950,11 @@
 			"ctx_quick_reset": "⚡ Quick Reset (Recall+Shield+Hand)", // Add this line
 			'opt_shift_left_top': 'Top (Shift Left)',
 			'opt_shift_right_btm': 'Btm (Shift Right)',
+			'opt_other': 'Other...',
+			'opt_corner_tl': 'Top-Left Stack',
+			'opt_corner_bl': 'Bottom-Left Stack',
+			'opt_corner_tr': 'Top-Right Stack',
+			'opt_corner_br': 'Bottom-Right Stack',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -6109,6 +6152,11 @@
 			"ctx_quick_reset": "⚡ クイックリセット (回収+盾+手札)", // この行を追加
 			'opt_shift_left_top': '上に重ねる (左ズレ)',
 			'opt_shift_right_btm': '下に重ねる (右ズレ)',
+			'opt_other': 'その他...',
+			'opt_corner_tl': '左上重ね',
+			'opt_corner_bl': '左下重ね',
+			'opt_corner_tr': '右上重ね',
+			'opt_corner_br': '右下重ね',
 		}
 	};
 	
@@ -9848,11 +9896,17 @@
         const modal = document.getElementById('position-selector-modal');
         const list = document.getElementById('position-list');
         const gui = document.getElementById('stack-gui');
+		
+		// [新增] 每次開啟時重置為收合狀態
+		gui.classList.remove('gui-expanded');
         
         const titleTemplate = t('title_stack_target') || '堆疊操作: 目標 [{target}]';
 		document.getElementById('pos-modal-title').innerText = titleTemplate.replace('{target}', targetCard.text);
         document.getElementById('position-list').style.display = 'none';
         document.getElementById('stack-gui').style.display = 'grid';
+		
+		// [關鍵] 重新執行一次多國語系轉換，確保新產生的按鈕文字正確
+		changeLanguage(currentLang);
         
         // --- [核心修改] 智慧堆疊邏輯 ---
         window.confirmStackMove = (type) => {
@@ -9898,6 +9952,12 @@
 
         modal.style.display = 'flex';
     }
+	
+	// [新增] 展開選單函式
+	function expandStackGui() {
+		const gui = document.getElementById('stack-gui');
+		gui.classList.add('gui-expanded');
+	}
 
     function updateSelectionUI() {
         // 清除舊的選取樣式
@@ -10919,7 +10979,7 @@
 					children.forEach(child => {
 						let nextZ = zIndex;
 						const type = child.stackType;
-						if (['top','shift_up','puzzle_top','shift_down', 'shift_left_top'].includes(type)) nextZ += 1;
+						if (['top','shift_up','puzzle_top','shift_down', 'shift_left_top', 'corner_tl', 'corner_bl', 'corner_tr', 'corner_br'].includes(type)) nextZ += 1;
 						else nextZ -= 1;
 						renderNodeRecursive(child, nextZ);
 					});
@@ -12095,6 +12155,9 @@
 		let w = 60;
 		let h = 84;
 		
+		const halfW = w * 0.5;
+		const halfH = h * 0.5;
+		
 		// 2. [關鍵] 嘗試從 DOM 獲取第一張卡片的實際渲染尺寸
 		const sampleCard = document.querySelector('.battle-zone.card');
 		if (sampleCard) {
@@ -12137,6 +12200,10 @@
 			// [新增] 右移下疊 (向右移動 10%)
 			case 'shift_right_bottom':
 				return { x: shiftX, y: 0 };
+			case 'corner_tl': return { x: -halfW, y: -halfH };
+			case 'corner_bl': return { x: -halfW, y: halfH };
+			case 'corner_tr': return { x: halfW, y: -halfH };
+			case 'corner_br': return { x: halfW, y: halfH };
 			
 			default: return { x: 0, y: 0 };
 		}
