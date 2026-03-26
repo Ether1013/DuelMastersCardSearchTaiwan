@@ -7162,43 +7162,38 @@
 	}
 
     function finishSetup() {
-        try {
-            const getVal = (id, def) => {
-                const el = document.getElementById(id);
-                if(!el) return def;
-                const val = parseInt(el.value);
-                return isNaN(val) ? def : val;
-            };
-			
-			const p1fs = document.getElementById('setup-p1-fs').checked;
-			const p2fs = document.getElementById('setup-p2-fs').checked;
+		try {
+			const getVal = (id, def) => {
+				const el = document.getElementById(id);
+				if(!el) return def;
+				const val = parseInt(el.value);
+				return isNaN(val) ? def : val;
+			};
 
-            const p1d = getVal('setup-p1-deck', 40);
-            const p1h = getVal('setup-p1-hyper', 8);
-            const p2d = getVal('setup-p2-deck', 40);
-            const p2h = getVal('setup-p2-hyper', 8);
-            
-            initGame({p1d, p1h, p2d, p2h});
-            document.getElementById('setup-modal').style.display = 'none';
+			const config = {
+				p1d: getVal('setup-p1-deck', 40),
+				p1h: getVal('setup-p1-hyper', 8),
+				p2d: getVal('setup-p2-deck', 40),
+				p2h: getVal('setup-p2-hyper', 8),
+				// 讀取 Checkbox
+				p1fs: document.getElementById('setup-p1-fs')?.checked || false,
+				p2fs: document.getElementById('setup-p2-fs')?.checked || false
+			};
 			
-			// 如果有勾選禁斷，執行初始化與部署
-			if (p1fs || p2fs) {
+			initGame(config); // 所有的卡片 (包含禁斷) 都會在這裡被建好並存入 initialState
+			document.getElementById('setup-modal').style.display = 'none';
+
+			// 如果有禁斷，在第一步自動執行「部署」動作
+			if (config.p1fs || config.p2fs) {
 				startDraftAtEnd();
-				if (p2fs) {
-					createForbiddenStar(2);
-					settingForbiddenStar(2);
-				}
-				if (p1fs) {
-					createForbiddenStar(1);
-					settingForbiddenStar(1);
-				}
-				saveDraft("終焉の禁断 ドキンダムX / FORBIDDEN STAR 部署");
+				if (config.p2fs) settingForbiddenStar(2);
+				if (config.p1fs) settingForbiddenStar(1);
+				saveDraft("FORBIDDEN STAR 部署");
 			}
-        } catch (e) {
-            console.error(e);
-            alert(t('msg_init_fail') + e.message)
-        }
-    }
+		} catch (e) {
+			alert(t('msg_init_fail') + e.message)
+		}
+	}
 
     function initGame(config) {
         const state = new GameState();
@@ -7229,6 +7224,10 @@
             }
         });
 
+		// --- 【關鍵修復】根據 Checkbox 狀態，直接在 initialState 產生禁斷卡 ---
+		if (config.p1fs) addForbiddenStarToState(state, 1);
+		if (config.p2fs) addForbiddenStarToState(state, 2);
+	
         initialState = cloneState(state);
         history = [];
         let initAct = new Action('遊戲開始');
@@ -9468,23 +9467,13 @@
 			isDrafting = false;
 			draftOperations = [];
 		}
-		
-		// 【關鍵修復 2】如果原本有禁斷，必須重新「創造」卡片到 State 裡
-		// 這樣後面的 settingForbiddenStar 才能找到這幾張卡片
-		if (p1HadFS || p2HadFS) {
-			if (!isDrafting) startDraftAtEnd();
-			if (p1HadFS) createForbiddenStar(1);
-			if (p2HadFS) createForbiddenStar(2);
-			// 此步驟僅為資料重建，不一定要 saveDraft
-		}
 
 		// 2. 雙方牌庫洗牌並儲存 ActionLog
 		if (!isDrafting) startDraftAtEnd();
 		addOperation({ type: 'SHUFFLE', zoneId: 'p1-deck' }, true);
 		addOperation({ type: 'SHUFFLE', zoneId: 'p2-deck' }, true);
 		
-		// 【關鍵修復 3】執行部署與封印 (將牌頂四張壓上去)
-		// 順序必須是：洗牌 -> 部署組件 -> 加上封印 -> 設置護盾
+		// 3. 部署與封印 (如果有的話)
 		if (p1HadFS) {
 			settingForbiddenStar(1);
 			actionApplyForbiddenSeals(1);
@@ -9493,7 +9482,6 @@
 			settingForbiddenStar(2);
 			actionApplyForbiddenSeals(2);
 		}
-		
 		saveDraft("雙方牌庫洗牌與禁斷部署");
 		
 		// 3. 將雙方牌庫前五張牌置入護盾區
@@ -18094,12 +18082,9 @@
 		a.click();
 	}
 	
-	function createForbiddenStar(playerNum) {
-		const pid = parseInt(playerNum); // 1 或 2
+	// 修改：改為純資料處理，傳入 state 物件
+	function addForbiddenStarToState(state, pid) {
 		const zoneId = `p${pid}-hyper`;
-		const state = getCurrentDisplayState();
-		
-		// 1. 定義資料結構
 		const cardData = [
 			{ text: 'FSlt', f1: './cardPic/FSlt.png', f2: './cardPic/FXl.png' },
 			{ text: 'FSld', f1: './cardPic/FSld.png', f2: './cardPic/FXr.png' },
@@ -18108,40 +18093,26 @@
 			{ text: 'FSmd', f1: './cardPic/FSmd.png', f2: './cardPic/FXb.png' }
 		];
 
-		// 2. 如果不在編輯模式，開啟新步驟
-		if (!isDrafting) startDraftAtEnd();
-
 		cardData.forEach((data) => {
-			// 計算新 ID (取目前最大 ID + 1)
-			const newId = state.cards.reduce((max, c) => Math.max(max, c.id), 0) + 1;
-			
-			// 建立卡片實例
+			// 使用 state 內部的計數器確保 ID 唯一
+			const newId = state.cardIdCounter++; 
 			const c = new Card(newId, pid, data.text, zoneId);
 			c.isHyper = true;
 			c.faceUp = true;
-			
-			// 註冊圖片 Key
+			c.initialZone = zoneId; // 記錄初始區域
+
 			const f1Key = `img_${newId}_f1`;
 			const f2Key = `img_${newId}_f2`;
 			
 			globalImageRegistry[f1Key] = data.f1;
 			globalImageRegistry[f2Key] = data.f2;
 			
-			// 設定多面資料
 			c.hyperFaces = [f1Key, f2Key];
 			c.imageKey = f1Key;
 			c.image = true;
 			
-			// 直接推入當前暫存狀態 (此動作通常視為初始化或特殊指令)
 			state.cards.push(c);
-			
-			// 更新 ID 計數器
-			state.cardIdCounter = newId + 1;
 		});
-
-		// 儲存此步驟描述
-//		saveDraft(`[系統] P${pid} 超次元區新增五張組裝卡`);
-		renderUI();
 	}
 	
 	function settingForbiddenStar(playerNum) {
