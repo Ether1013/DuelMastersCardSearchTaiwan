@@ -4548,8 +4548,12 @@
         </div>
         <div class="input-group">
             <label>P2 超次元:</label>
-            <input type="number" id="setup-p2-hyper" value="0" min="0" max="8">
+            <input type="number" id="setup-p2-hyper" value="0" min="0" max="13">
         </div>
+		<div class="input-group">
+			<label style="color:#c0392b; font-weight:bold;">FORBIDDEN STAR:</label>
+			<input type="checkbox" id="setup-p2-fs" style="width:20px; height:20px;">
+		</div>
         <hr style="width:100%; border:0; border-top:1px dashed #ccc;">
         <div class="input-group">
             <label data-i18n="lbl_p1_deck">P1 牌庫數:</label>
@@ -4557,8 +4561,12 @@
         </div>
         <div class="input-group">
             <label>P1 超次元:</label>
-            <input type="number" id="setup-p1-hyper" value="0" min="0" max="8">
+            <input type="number" id="setup-p1-hyper" value="0" min="0" max="13">
         </div>
+		<div class="input-group">
+			<label style="color:#c0392b; font-weight:bold;">FORBIDDEN STAR:</label>
+			<input type="checkbox" id="setup-p1-fs" style="width:20px; height:20px;">
+		</div>
         <div style="margin-top:20px; display:flex; justify-content:space-between;">
             <button onclick="finishSetup()" class="primary" data-i18n="btn_start_game">開始遊戲 (Start)</button>
         </div>
@@ -7124,6 +7132,34 @@
         
         openSetupModal();
     }
+	
+	function actionApplyForbiddenSeals(pid) {
+		const state = getCurrentDisplayState();
+		const playerPrefix = `p${pid}`;
+		const deckCards = state.cards.filter(c => c.zone === `${playerPrefix}-deck`);
+		
+		// 定義要被封印遮蓋的四個組件
+		const pieceTexts = ['FSlt', 'FSld', 'FSrt', 'FSrd'];
+		
+		if (deckCards.length < 4) return;
+
+		pieceTexts.forEach((txt, idx) => {
+			const piece = state.cards.find(c => c.ownerId === pid && c.text === txt && c.zone.includes('battle'));
+			if (piece) {
+				const sealCard = deckCards[deckCards.length - 1 - idx]; 
+				addOperation({
+					type: 'MOVE',
+					cardIds: [sealCard.id],
+					toZone: `${playerPrefix}-battle`,
+					stackTargetId: piece.id,
+					stackType: 'top', // 疊在組件正上方
+					faceUp: false,    // 封印卡裡側表示
+					rotation: piece.rotation, // 跟隨組件角度
+					shuffleSelection: false
+				}, true);
+			}
+		});
+	}
 
     function finishSetup() {
         try {
@@ -7133,6 +7169,9 @@
                 const val = parseInt(el.value);
                 return isNaN(val) ? def : val;
             };
+			
+			const p1fs = document.getElementById('setup-p1-fs').checked;
+			const p2fs = document.getElementById('setup-p2-fs').checked;
 
             const p1d = getVal('setup-p1-deck', 40);
             const p1h = getVal('setup-p1-hyper', 8);
@@ -7141,6 +7180,20 @@
             
             initGame({p1d, p1h, p2d, p2h});
             document.getElementById('setup-modal').style.display = 'none';
+			
+			// 如果有勾選禁斷，執行初始化與部署
+			if (p1fs || p2fs) {
+				startDraftAtEnd();
+				if (p2fs) {
+					createForbiddenStar(2);
+					settingForbiddenStar(2);
+				}
+				if (p1fs) {
+					createForbiddenStar(1);
+					settingForbiddenStar(1);
+				}
+				saveDraft("終焉の禁断 ドキンダムX / FORBIDDEN STAR 部署");
+			}
         } catch (e) {
             console.error(e);
             alert(t('msg_init_fail') + e.message)
@@ -9401,6 +9454,12 @@
 
 	// --- 一鍵自動開局巨集 (Macro) ---
 	function actionQuickStart() {
+		// 【關鍵修復 1】在重置前，先紀錄玩家當前是否擁有禁斷組件
+		// 這是因為 history.slice 會把剛產生的卡片資料也殺掉
+		const preResetState = getCurrentDisplayState();
+		const p1HadFS = preResetState.cards.some(c => c.ownerId === 1 && c.text === 'FSmd');
+		const p2HadFS = preResetState.cards.some(c => c.ownerId === 2 && c.text === 'FSmd');
+
 		// 1. 清除所有 ActionLog 直到剩下第一個 (初始盤面狀態)
 		if (history.length > 1) {
 			history = history.slice(0, 1);
@@ -9410,13 +9469,35 @@
 			draftOperations = [];
 		}
 		
+		// 【關鍵修復 2】如果原本有禁斷，必須重新「創造」卡片到 State 裡
+		// 這樣後面的 settingForbiddenStar 才能找到這幾張卡片
+		if (p1HadFS || p2HadFS) {
+			if (!isDrafting) startDraftAtEnd();
+			if (p1HadFS) createForbiddenStar(1);
+			if (p2HadFS) createForbiddenStar(2);
+			// 此步驟僅為資料重建，不一定要 saveDraft
+		}
+
 		// 2. 雙方牌庫洗牌並儲存 ActionLog
-		startDraftAtEnd();
-		addOperation({ type: 'SHUFFLE', zoneId: 'p1-deck' });
-		addOperation({ type: 'SHUFFLE', zoneId: 'p2-deck' });
-		saveDraft("雙方牌庫洗牌");
+		if (!isDrafting) startDraftAtEnd();
+		addOperation({ type: 'SHUFFLE', zoneId: 'p1-deck' }, true);
+		addOperation({ type: 'SHUFFLE', zoneId: 'p2-deck' }, true);
 		
-		// 3. 將雙方牌庫前五張牌置入護盾區並儲存 ActionLog
+		// 【關鍵修復 3】執行部署與封印 (將牌頂四張壓上去)
+		// 順序必須是：洗牌 -> 部署組件 -> 加上封印 -> 設置護盾
+		if (p1HadFS) {
+			settingForbiddenStar(1);
+			actionApplyForbiddenSeals(1);
+		}
+		if (p2HadFS) {
+			settingForbiddenStar(2);
+			actionApplyForbiddenSeals(2);
+		}
+		
+		saveDraft("雙方牌庫洗牌與禁斷部署");
+		
+		// 3. 將雙方牌庫前五張牌置入護盾區
+		// 注意：此時牌庫頂的 4 張已經被封印拿走了，所以這邊會自動拿接下來的 5 張
 		let state = getCurrentDisplayState();
 		let p1Deck = state.cards.filter(c => c.zone === 'p1-deck');
 		let p2Deck = state.cards.filter(c => c.zone === 'p2-deck');
@@ -9426,16 +9507,16 @@
 		if (p1Shields.length > 0 || p2Shields.length > 0) {
 			startDraftAtEnd();
 			if (p1Shields.length > 0) {
-				addOperation({ type: 'MOVE', cardIds: p1Shields, toZone: 'p1-shield', faceUp: false, shuffleSelection: false });
+				addOperation({ type: 'MOVE', cardIds: p1Shields, toZone: 'p1-shield', faceUp: false, rotation: 0, shuffleSelection: false });
 			}
 			if (p2Shields.length > 0) {
-				addOperation({ type: 'MOVE', cardIds: p2Shields, toZone: 'p2-shield', faceUp: false, shuffleSelection: false });
+				addOperation({ type: 'MOVE', cardIds: p2Shields, toZone: 'p2-shield', faceUp: false, rotation: 0, shuffleSelection: false });
 			}
 			saveDraft("雙方設置護盾");
 		}
 		
-		// 4. 將雙方牌庫前五張牌置入手牌並儲存 ActionLog
-		state = getCurrentDisplayState(); // 重新取得最新狀態
+		// 4. 將雙方牌庫前五張牌置入手牌
+		state = getCurrentDisplayState(); 
 		p1Deck = state.cards.filter(c => c.zone === 'p1-deck');
 		p2Deck = state.cards.filter(c => c.zone === 'p2-deck');
 		let p1Hand = p1Deck.slice(-5).map(c => c.id);
@@ -9444,10 +9525,10 @@
 		if (p1Hand.length > 0 || p2Hand.length > 0) {
 			startDraftAtEnd();
 			if (p1Hand.length > 0) {
-				addOperation({ type: 'MOVE', cardIds: p1Hand, toZone: 'p1-hand', faceUp: true, shuffleSelection: false });
+				addOperation({ type: 'MOVE', cardIds: p1Hand, toZone: 'p1-hand', faceUp: true, rotation: 0, shuffleSelection: false });
 			}
 			if (p2Hand.length > 0) {
-				addOperation({ type: 'MOVE', cardIds: p2Hand, toZone: 'p2-hand', faceUp: true, shuffleSelection: false });
+				addOperation({ type: 'MOVE', cardIds: p2Hand, toZone: 'p2-hand', faceUp: true, rotation: 0, shuffleSelection: false });
 			}
 			saveDraft("雙方抽初始手牌");
 		}
@@ -15683,6 +15764,13 @@
 			type: 'SHUFFLE', 
 			zoneId: `${playerPrefix}-deck` 
 		}, true);
+		
+		// [新增] 步驟 C: 禁斷處理
+		const hasFS = state.cards.some(c => c.ownerId === pid && c.text === 'FSmd');
+		if (hasFS) {
+			settingForbiddenStar(pid);      // 部署組件
+			actionApplyForbiddenSeals(pid); // 加上 4 張封印
+		}
 
 		// --- 步驟 C: 牌庫頂 5 張 -> 護盾區 ---
 		// 重新取得牌庫狀態 (因上方 addOperation 已更新 tempState)
@@ -18058,92 +18146,79 @@
 	
 	function settingForbiddenStar(playerNum) {
 		const pid = parseInt(playerNum);
-		const state = getCurrentDisplayState(); // 取得當前顯示狀態
+		const state = getCurrentDisplayState();
 		const battleZone = `p${pid}-battle`;
 
-		// 1. 取得這五張卡片的最新參照
 		const texts = ['FSld', 'FSlt', 'FSrt', 'FSrd', 'FSmd'];
 		const myCards = {};
 		texts.forEach(t => {
 			myCards[t] = state.cards.find(c => c.ownerId === pid && c.text === t);
 		});
 
-		// 防呆：確保卡片都還在
-		if (!myCards['FSld'] || !myCards['FSmd']) {
-			console.error("組裝卡片遺失，請確認 functionName1 是否執行成功");
-			return;
-		}
+		if (!myCards['FSld'] || !myCards['FSmd']) return;
 
-		// 2. 開啟編輯模式
 		if (!isDrafting) startDraftAtEnd();
 
-		// --- 關鍵修正：依序移動並建立連結 ---
-		// 第二個參數 true 代表 skipRender，避免連續執行 5 次產生閃爍，最後再統一重繪
+		// 定義目標角度 (-90度 = 270度)
+		const targetRot = 270;
 
-		// A. 先移動基底 FSld (Root)
+		// A. 移動基底 FSld (Root) 並直接設定旋轉
 		addOperation({
 			type: 'MOVE',
 			cardIds: [myCards['FSld'].id],
 			toZone: battleZone,
 			faceUp: true,
+			rotation: targetRot, //直接在這裡設定
 			shuffleSelection: false
 		}, true);
 
-		// B. 將 FSlt 拼在 FSld 的右邊 (Parent: FSld)
+		// B. FSlt (右)
 		addOperation({
 			type: 'MOVE',
 			cardIds: [myCards['FSlt'].id],
 			toZone: battleZone,
 			stackTargetId: myCards['FSld'].id,
 			stackType: 'puzzle_right',
-			faceUp: true
+			faceUp: true,
+			rotation: targetRot //同步設定
 		}, true);
 
-		// C. 將 FSrt 拼在 FSlt 的下面 (Parent: FSlt)
+		// C. FSrt (下) - 父卡改為 FSlt 確保鏈結正確
 		addOperation({
 			type: 'MOVE',
 			cardIds: [myCards['FSrt'].id],
 			toZone: battleZone,
 			stackTargetId: myCards['FSlt'].id,
 			stackType: 'puzzle_bottom',
-			faceUp: true
+			faceUp: true,
+			rotation: targetRot
 		}, true);
 
-		// D. 將 FSrd 拼在 FSrt 的左邊 (Parent: FSrt)
+		// D. FSrd (左)
 		addOperation({
 			type: 'MOVE',
 			cardIds: [myCards['FSrd'].id],
 			toZone: battleZone,
 			stackTargetId: myCards['FSrt'].id,
 			stackType: 'puzzle_left',
-			faceUp: true
+			faceUp: true,
+			rotation: targetRot
 		}, true);
 
-		// E. 將 FSmd 拼在 FSld 的右下方 (Parent: FSrd)
-		// 使用上一題定義的 corner_tr (1/4面積疊放)
+		// E. FSmd (右下角疊放)
 		addOperation({
 			type: 'MOVE',
 			cardIds: [myCards['FSmd'].id],
 			toZone: battleZone,
 			stackTargetId: myCards['FSld'].id,
 			stackType: 'corner_br',
-			faceUp: true
+			faceUp: true,
+			rotation: targetRot
 		}, true);
 
-		// 3. 全體旋轉指令
-		// 注意：applyOperation 的 ROTATE_CARD 邏輯只修改傳入的 ID
-		// 為了安全，我們將所有組件的 ID 都傳進去
-		const allIds = texts.map(t => myCards[t].id);
-		addOperation({
-			type: 'ROTATE_CARD',
-			cardIds: allIds,
-			deg: -90
-		}, true);
-
-		// 4. 儲存與重繪
-//		saveDraft(`[召喚] P${pid} 五卡合體單位進場 (逆時針轉90度)`);
+		// 【重要】手動清空優化快取，強制 renderUI 重新計算所有 DOM 元素
+		if (typeof lastZoneHashes !== 'undefined') lastZoneHashes = {};
 		
-		// 執行最後一次重繪，這時 renderUI 會正確讀取所有 parentId 關係
 		renderUI(); 
 	}
 </script>
