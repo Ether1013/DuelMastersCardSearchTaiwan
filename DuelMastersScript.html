@@ -18192,6 +18192,188 @@
 		
 		renderUI(); 
 	}
+	
+	/**
+	 * [複盤] 功能：計算當前狀態與目標步驟狀態的差異，並生成一步新的 ActionLog
+	 * @param {number} backToStep - 欲回溯到的歷史步驟索引 (例如 88)
+	 */
+	function recap(backToStep) {
+		if (isDrafting) {
+			alert("請先儲存或取消目前的編輯動作再執行複盤。");
+			return;
+		}
+
+		if (backToStep < 0 || backToStep >= history.length) {
+			console.error("無效的步驟索引");
+			return;
+		}
+
+		// 1. 取得起始與目標狀態的深拷貝 (確保後續修改 88 步不影響此結果)
+		const currentState = JSON.parse(JSON.stringify(history[history.length - 1].state));
+		const targetState = JSON.parse(JSON.stringify(history[backToStep].state));
+
+		// 2. 開啟新的編輯步驟
+		startDraftAtEnd();
+		
+		// 清空自動生成的 draftOperations，我們要填入精確計算後的指令
+		draftOperations = [];
+
+		const recapOps = [];
+
+		// --- A. 處理卡片增減 (Ability Cards) ---
+		const currentCardIds = currentState.cards.map(c => c.id);
+		const targetCardIds = targetState.cards.map(c => c.id);
+
+		// 刪除：存在於目前但不存在於目標 (通常是後來產生的效果小卡)
+		const cardsToDelete = currentCardIds.filter(id => !targetCardIds.includes(id));
+		if (cardsToDelete.length > 0) {
+			recapOps.push({ type: 'DELETE_CARD', cardIds: cardsToDelete });
+		}
+
+		// 新增：存在於目標但不存在於目前 (補回被刪掉的效果小卡)
+		targetState.cards.forEach(tCard => {
+			if (!currentCardIds.includes(tCard.id)) {
+				recapOps.push({
+					type: 'CREATE_ABILITY',
+					sourceCardId: tCard.sourceId || tCard.id,
+					targetZone: tCard.zone,
+					newId: tCard.id,
+					isContinuous: !!tCard.isContinuous
+				});
+				// 這裡不需要針對新卡算屬性，下一輪會處理
+			}
+		});
+
+		// --- B. 處理卡片物理屬性差異 ---
+		// 為了效能與順序，我們先處理位置移動
+		targetState.cards.forEach(tCard => {
+			const cCard = currentState.cards.find(c => c.id === tCard.id);
+			if (!cCard) return; // 剛剛新增的卡片或異常
+
+			// 1. 位置與堆疊關係 (Zone / Parent / StackType)
+			if (cCard.zone !== tCard.zone || cCard.parentId !== tCard.parentId || cCard.stackType !== tCard.stackType) {
+				recapOps.push({
+					type: 'MOVE',
+					cardIds: [tCard.id],
+					toZone: tCard.zone,
+					stackTargetId: tCard.parentId,
+					stackType: tCard.stackType,
+					faceUp: tCard.faceUp,
+					rotation: tCard.rotation, // 同步移動時校正角度
+					shuffleSelection: false
+				});
+			}
+
+			// 2. 翻面狀態 (如果 MOVE 沒蓋掉的話)
+			if (cCard.faceUp !== tCard.faceUp) {
+				recapOps.push({ 
+					type: 'FLIP_CARD', 
+					cardIds: [tCard.id], 
+					finalFaceUp: tCard.faceUp 
+				});
+			}
+
+			// 3. 旋轉角度 (如果 MOVE 沒蓋掉的話)
+			if (cCard.rotation !== tCard.rotation) {
+				recapOps.push({ 
+					type: 'ROTATE_CARD', 
+					cardIds: [tCard.id], 
+					finalRotation: tCard.rotation 
+				});
+			}
+
+			// 4. 受傷狀態
+			if (!!cCard.isInjured !== !!tCard.isInjured) {
+				recapOps.push({ 
+					type: 'INJURED', 
+					cardIds: [tCard.id], 
+					setInjured: !!tCard.isInjured 
+				});
+			}
+
+			// 5. 註記 (Note)
+			if (cCard.note !== tCard.note) {
+				recapOps.push({
+					type: 'ADD_NOTE',
+					cardIds: [tCard.id],
+					note: tCard.note || ""
+				});
+			}
+			
+			// 6. 效果小卡專用樣式 (位置、縮放、旋轉)
+			if (tCard.zone.includes('ability')) {
+				const tStyle = globalAbilityStyleRegistry[tCard.styleKey || tCard.imageKey];
+				if (tStyle) {
+					// 這裡直接更新全域 Registry，因為樣式不屬於 Action 流程，而是全域呈現
+					// 但為了 ActionLog 的嚴謹，我們補一個微調指令
+					recapOps.push({
+						type: 'ADJUST_STYLE',
+						cardIds: [tCard.id],
+						key: 'reconcile', // 自定義 key 用於辨識
+						val: 0,
+						isDelta: false
+					});
+				}
+			}
+		});
+
+		// --- C. 處理洗牌結果 (以結果論) ---
+		// 檢查所有堆疊區域 (Deck, Grave, Hyper) 的 ID 順序是否一致
+		const zonesToCheck = ['p1-deck', 'p2-deck', 'p1-grave', 'p2-grave', 'p1-hyper', 'p2-hyper', 'p1-abyss', 'p2-abyss'];
+		zonesToCheck.forEach(zid => {
+			const tIds = targetState.cards.filter(c => c.zone === zid).map(c => c.id);
+			const cIds = currentState.cards.filter(c => c.zone === zid).map(c => c.id);
+			
+			// 如果 ID 集合相同但順序不同，發送 SHUFFLE 指令強制修正順序
+			if (tIds.length > 0 && JSON.stringify(tIds) !== JSON.stringify(cIds)) {
+				recapOps.push({
+					type: 'SHUFFLE',
+					zoneId: zid,
+					order: tIds // 這是你的系統支援的 [結果] 模式
+				});
+			}
+		});
+
+		// --- D. 處理全域狀態 ---
+		// 1. 回合玩家
+		if (currentState.turnPlayer !== targetState.turnPlayer) {
+			recapOps.push({ type: 'SWITCH_TURN' });
+		}
+
+		// 2. 無月之門 (Moonless)
+		const tMoon = targetState.moonless || {};
+		const cMoon = currentState.moonless || {};
+		const allMoonIds = new Set([...Object.keys(tMoon), ...Object.keys(cMoon)]);
+		allMoonIds.forEach(id => {
+			if (!!tMoon[id] !== !!cMoon[id]) {
+				recapOps.push({ type: 'TOGGLE_MOONLESS', cardIds: [parseInt(id)] });
+			}
+		});
+
+		// 3. BGM 同步
+		if (currentState.bgm !== targetState.bgm) {
+			recapOps.push({ type: 'SET_BGM', filename: targetState.bgm });
+		}
+
+		// 3. 執行並儲存
+		if (recapOps.length === 0) {
+			cancelDraft();
+			alert("盤面已與目標步驟完全一致，無需複盤。");
+			return;
+		}
+
+		// 將所有計算出的子動作塞入草稿
+		recapOps.forEach(op => {
+			// 使用 applyOperation 確保 tempState 同步更新
+			applyOperation(tempState, op);
+			draftOperations.push(op);
+		});
+
+		// 儲存這一步
+		saveDraft(`[複盤] 回到第 ${backToStep} 步`);
+		
+		console.log(`複盤完成，共執行了 ${recapOps.length} 個子動作來同步盤面。`);
+	}
 </script>
 <div id="visitor-counter" style="display:none"></div>
 <div id="ace-flash-layer"></div>
