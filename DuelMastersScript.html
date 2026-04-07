@@ -4212,6 +4212,23 @@
 	.stack-option.extra-option { display: none; }
 	.gui-expanded .extra-option { display: flex; }
 	.gui-expanded #btn-stack-more { display: none; }
+
+	body.desktop-playing #dialogue-layer.key-mode,
+	body.mobile-mode #dialogue-layer.key-mode {
+		right: 0 !important;
+		left: 0 !important;
+	}
+
+	/* 讓重點對話的對話框在全螢幕下也自動變寬 */
+	body.desktop-playing #dialogue-layer.key-mode .diag-box,
+	body.mobile-mode #dialogue-layer.key-mode .diag-box {
+		width: 96%; /* 留一點點緩衝邊界 */
+	}
+
+	/* 視需求微調：讓全螢幕模式下的重點對話頭像可以稍微放大 */
+	body.desktop-playing #dialogue-layer.key-mode .diag-portrait {
+		height: 90%; 
+	}
 </style>
 </head>
 <body>
