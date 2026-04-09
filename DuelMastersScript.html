@@ -15827,101 +15827,87 @@
 		// 不執行存檔動作 (NON-Save)
 	}
 
-    // --- Main Entry Point ---
-    window.onload = function() {
-	
-		// [新增] 預設套用一次顏色 (避免畫面閃爍)
-        applyThemeVariables();
-		
-        // 1. 基本初始化
-        const urlParams = new URLSearchParams(window.location.search);
-        let scriptUrl = urlParams.get('scriptUrl');
-        if (scriptUrl) {
-            scriptUrl = 'scripts/' + scriptUrl;
-        }
-        const isMobile = isMobileDevice();
+    // --- 修正後的 window.onload ---
+	window.onload = function() {
+		// 1. 基本初始化
+		applyThemeVariables();
+		generateDefaultPortraits();
+		generateRpsPlaceholders();
 
-        // 生成預設頭像
-        generateDefaultPortraits();
-		generateRpsPlaceholders(); // <--- 加入這行，確保有圖
+		const urlParams = new URLSearchParams(window.location.search);
+		const isMobile = isMobileDevice();
 		
-		// ====================================================
-		// [新增] 核心邏輯：從 AVAILABLE_SCRIPTS 讀取劇本配置
-		// ====================================================
+		// --- [關鍵修正] 定義 rawScriptParam 並從 AVAILABLE_SCRIPTS 讀取設定 ---
+		const rawScriptParam = urlParams.get('scriptUrl'); 
 		let scriptConfig = null;
+
 		if (rawScriptParam) {
-			// 比對檔名尋找配置 (忽略路徑前綴)
+			// 比對檔名尋找配置 (忽略路徑前綴，例如 "scripts/test.txt" 只取 "test.txt")
 			const cleanParam = rawScriptParam.replace(/^scripts\//, '');
 			scriptConfig = AVAILABLE_SCRIPTS.find(s => s.filename.replace(/^scripts\//, '') === cleanParam);
 		}
 
-		// 如果找到了劇本設定，優先套用語系與速度
+		// 2. 如果找到了對應劇本配置，優先套用語系與速度
 		if (scriptConfig) {
-			// 1. 處理語系 (含 tw 映射)
+			console.log("偵測到劇本配置:", scriptConfig.title);
+			
+			// 處理語系 (含 tw 映射)
 			let targetLang = scriptConfig.lang || 'zh';
 			if (targetLang === 'tw') targetLang = 'zh';
 			
+			// 切換 UI 語言
 			changeLanguage(targetLang);
 			const langSelect = document.getElementById('lang-select');
 			if (langSelect) langSelect.value = targetLang;
 
-			// 2. 處理播放速度
+			// 套用播放速度
 			if (scriptConfig.speed !== undefined) {
 				changePlaybackSpeed(scriptConfig.speed);
 			}
 
-			// 3. 處理對話速度
+			// 套用對話速度
 			if (scriptConfig.dialogSpeed !== undefined) {
 				currentDialogSpeed = scriptConfig.dialogSpeed;
 			}
 			
-			// 4. 記錄當前配置供 Ending 使用
+			// 儲存配置供 Ending Credits 使用
 			currentScriptConfig = scriptConfig;
+		} else {
+			// 若無劇本配置，則檢查 URL 是否有單獨傳入 lang 參數
+			const urlLang = urlParams.get('lang');
+			if (urlLang && ['zh', 'en', 'jp'].includes(urlLang)) {
+				changeLanguage(urlLang);
+			}
 		}
 
-
-        // 3. 根據裝置載入資料
-        if (isMobile) {
-            // --- [修正] 手機版邏輯 ---
-            
-            // [新增] 立即加入 mobile-mode class 與偵測監聽器
-            document.body.classList.add('mobile-mode');
-            window.addEventListener('resize', handleOrientation);
-            window.addEventListener('orientationchange', handleOrientation);
-            
-            // 立即執行一次檢查 (確保直式進入時馬上跳提示)
-            //handleOrientation();
-
-            // 判斷 URL 參數
-            const rawScriptParam = urlParams.get('scriptUrl');
-
-            if (!rawScriptParam) {
-                showMobileScriptSelector(null);
-            } else {
-                // 手機版直接進入時，也要載入對應劇本
+		// 3. 根據裝置載入資料
+		if (isMobile) {
+			document.body.classList.add('mobile-mode');
+			window.addEventListener('resize', handleOrientation);
+			window.addEventListener('orientationchange', handleOrientation);
+			
+			if (!rawScriptParam) {
+				showMobileScriptSelector(null);
+			} else {
+				// 手機版載入流程
 				const fullPath = 'scripts/' + rawScriptParam;
 				initMobileMode(fullPath);
 				
-				// 如果劇本有計數器網址，順便更新
+				// 若劇本有計數器，則套用
 				if (scriptConfig && scriptConfig.counter_url) {
 					updateVisitorCounter(scriptConfig.counter_url);
 				}
-            }
-            
-            updateMuteButtonUI();
-            
-        } else {
-		
-			// [新增] 桌機版專用計數器 (預設)
+			}
+		} else {
+			// 電腦版載入流程
 			updateVisitorCounter(DEFAULT_COUNTER_URL);
-			
 			const hasLocalData = loadFromStorage();
 
 			if (rawScriptParam) {
-				const fullUrl = 'scripts/' + rawScriptParam + '?v=' + Date.now();
-				console.log("Loading Deep-linked script:", fullUrl);
+				console.log("Found scriptUrl:", rawScriptParam);
+				const noCacheUrl = 'scripts/' + rawScriptParam + '?v=' + Date.now();
 				
-				fetch(fullUrl, { cache: 'no-cache' })
+				fetch(noCacheUrl, { cache: 'no-cache' })
 					.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
 					.then(data => {
 						if(!data.history || !data.initialState) throw new Error("Invalid script");
@@ -15933,7 +15919,7 @@
 							processGameData(data, true);
 						}
 						
-						// 只有桌機載入成功後才隱藏 URL 參數
+						// 清除 URL 參數避免重新整理重複觸發 (選用)
 						window.history.replaceState({}, document.title, window.location.pathname);
 					})
 					.catch(e => {
@@ -15943,8 +15929,8 @@
 			} else {
 				if (!hasLocalData) openSetupModal();
 			}
-        }
-    };
+		}
+	};
 	
 	// --- [新增需求 5 & 6] 全域 ESC 鍵監聽 ---
 	document.addEventListener('keydown', function(e) {
