@@ -15844,27 +15844,40 @@
         // 生成預設頭像
         generateDefaultPortraits();
 		generateRpsPlaceholders(); // <--- 加入這行，確保有圖
+		
+		// ====================================================
+		// [新增] 核心邏輯：從 AVAILABLE_SCRIPTS 讀取劇本配置
+		// ====================================================
+		let scriptConfig = null;
+		if (rawScriptParam) {
+			// 比對檔名尋找配置 (忽略路徑前綴)
+			const cleanParam = rawScriptParam.replace(/^scripts\//, '');
+			scriptConfig = AVAILABLE_SCRIPTS.find(s => s.filename.replace(/^scripts\//, '') === cleanParam);
+		}
 
-        // 啟動面板拖曳功能 (電腦版/手機版皆初始化，雖然手機版主要隱藏面板，但防止報錯)
-        initDraggablePanel();
+		// 如果找到了劇本設定，優先套用語系與速度
+		if (scriptConfig) {
+			// 1. 處理語系 (含 tw 映射)
+			let targetLang = scriptConfig.lang || 'zh';
+			if (targetLang === 'tw') targetLang = 'zh';
+			
+			changeLanguage(targetLang);
+			const langSelect = document.getElementById('lang-select');
+			if (langSelect) langSelect.value = targetLang;
 
-        // ----------------------------------------------------
-        // [修改] 2. 優先處理 URL 參數 (lang & speed) - 通用邏輯
-        // 這樣無論是手機還是電腦，都會吃到設定
-        // ----------------------------------------------------
+			// 2. 處理播放速度
+			if (scriptConfig.speed !== undefined) {
+				changePlaybackSpeed(scriptConfig.speed);
+			}
 
-        // A. 處理語言 (lang)
-        const pLang = getUrlParameter('lang');
-        if (pLang && ['zh', 'en', 'jp'].includes(pLang)) {
-            // 同步下拉選單 (電腦版有選單，手機版雖隱藏但 DOM 存在)
-            const langSelect = document.getElementById('lang-select');
-            if (langSelect) langSelect.value = pLang;
-            
-            // 套用語言設定 (更新全域變數 currentLang 並刷新 UI 文字)
-            changeLanguage(pLang);
-        }
-
-        // ----------------------------------------------------
+			// 3. 處理對話速度
+			if (scriptConfig.dialogSpeed !== undefined) {
+				currentDialogSpeed = scriptConfig.dialogSpeed;
+			}
+			
+			// 4. 記錄當前配置供 Ending 使用
+			currentScriptConfig = scriptConfig;
+		}
 
 
         // 3. 根據裝置載入資料
@@ -15885,43 +15898,51 @@
             if (!rawScriptParam) {
                 showMobileScriptSelector(null);
             } else {
-                showMobileScriptSelector(rawScriptParam);
+                // 手機版直接進入時，也要載入對應劇本
+				const fullPath = 'scripts/' + rawScriptParam;
+				initMobileMode(fullPath);
+				
+				// 如果劇本有計數器網址，順便更新
+				if (scriptConfig && scriptConfig.counter_url) {
+					updateVisitorCounter(scriptConfig.counter_url);
+				}
             }
             
             updateMuteButtonUI();
             
         } else {
 		
-			// [新增] 載入預設計數器 (桌機版專用)
-            updateVisitorCounter(DEFAULT_COUNTER_URL);
+			// [新增] 桌機版專用計數器 (預設)
+			updateVisitorCounter(DEFAULT_COUNTER_URL);
 			
-            // --- 電腦版邏輯 ---
-            const hasLocalData = loadFromStorage();
+			const hasLocalData = loadFromStorage();
 
-            if (scriptUrl) {
-                console.log("Found scriptUrl:", scriptUrl);
-				// [修改] 加上時間戳記參數，強制瀏覽器抓取最新版
-                const noCacheUrl = scriptUrl + '?v=' + Date.now();
-                fetch(noCacheUrl, { cache: 'no-cache' })
-                    .then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
-                    .then(data => {
-                        if(!data.history || !data.initialState) throw new Error("Invalid script");
-                        if (hasLocalData) {
-                            pendingImportData = data;
-                            document.getElementById('import-conflict-modal').style.display = 'flex';
-                        } else {
-                            processGameData(data, true);
-                        }
-                        // 清除 URL 避免重新整理重複觸發 (電腦版行為)
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    })
-                    .catch(e => {
-                        alert(t('msg_load_script_fail') + e.message);
-                        if(!hasLocalData) openSetupModal();
-                    });
-            } else {
-                if (!hasLocalData) openSetupModal();
-            }
+			if (rawScriptParam) {
+				const fullUrl = 'scripts/' + rawScriptParam + '?v=' + Date.now();
+				console.log("Loading Deep-linked script:", fullUrl);
+				
+				fetch(fullUrl, { cache: 'no-cache' })
+					.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
+					.then(data => {
+						if(!data.history || !data.initialState) throw new Error("Invalid script");
+						
+						if (hasLocalData) {
+							pendingImportData = data;
+							document.getElementById('import-conflict-modal').style.display = 'flex';
+						} else {
+							processGameData(data, true);
+						}
+						
+						// 只有桌機載入成功後才隱藏 URL 參數
+						window.history.replaceState({}, document.title, window.location.pathname);
+					})
+					.catch(e => {
+						alert(t('msg_load_script_fail') + e.message);
+						if(!hasLocalData) openSetupModal();
+					});
+			} else {
+				if (!hasLocalData) openSetupModal();
+			}
         }
     };
 	
