@@ -449,6 +449,7 @@
 				{	value : "NGRC",	text : "NEO GR生物",			Jap : "NEO GRクリーチャー",					Location : "G", horizontal : false,	parents: [ "GRC", "NC" ],	main:false,	descript : "當此生物下方有生物卡牌時，則將此生物視為NEO進化生物"														},
 				{	value : "S",	text : "咒文",				Jap : "呪文",							Location : "M", horizontal : false,								main:true,	},
 				{	value : "CA",	text : "城",					Jap : "城",								Location : "M", horizontal : false,								main:false,	},
+				{	value : "GCA",	text : "銀河城",				Jap : "G城",								Location : "M", horizontal : true,	parents: [ "CA" ],			main:false,	},
 				{	value : "HF",	text : "幸福領域",			Jap : "幸せのフィールド",						Location : "M", horizontal : true,	parents: [ "F" ],			main:false,	},
 				{	value : "CG",	text : "交叉武裝",			Jap : "クロスギア",							Location : "M", horizontal : false,								main:false,	descript : "裝備，第一次支付費用時僅出現在戰鬥場上，再次支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"	},
 				{	value : "PCG",	text : "精神交叉武裝",		Jap : "サイキック・クロスギア",					Location : "P", horizontal : false,	parents: [ "P","CG" ],		main:false,	descript : "精神裝備，支付費用即可裝備在生物身上。即便裝備此卡的生物離場時、此卡依然會留在場上"								},
@@ -805,10 +806,10 @@
 	
 	//最新推薦
 	const newestSets = [
+		"DM26-RP1",
 		"DM26-SD1",
 		"NET-072",
 		"DM25-EX4",
-		"DM25-EX3",
 	];
 	
 	//系統更新日誌
@@ -835,6 +836,12 @@
 		},
 		
 		logAndDate : [
+			{	
+				date : "2026/04/10",
+				log : [ 
+						"新增DM26-RP1【逆札篇 第1弾 逆転神vs切札竜】的資料",
+				],	
+			},
 			{	
 				date : "2026/04/04",
 				log : [ 
