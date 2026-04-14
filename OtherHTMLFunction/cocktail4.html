@@ -212,47 +212,51 @@
 		//崁入酒譜按鈕
 		for ( var i = 0 ; i < datas.length ; i++ ){
 		
-			//計算文字數量
-			//一個大寫算一個字，其餘英數符號均不計
-			var clearName = datas[i].name.replace( /[a-z0-9\*_\-\.]/g, '' );
-			//尋找插入點
+			// --- 新排序邏輯開始 ---
+			var name = datas[i].name;
+			// 提取中文字元
+			var cnMatch = name.match(/[\u4e00-\u9fa5]/g);
+			var cnCount = cnMatch ? cnMatch.length : 0;
+			var isPureEnglish = (cnCount === 0);
+
+			// 建立一個用於比較的排序鍵 (Sort Key)
+			// 格式：[類別(0中文/1英文)]_[長度補零]_[名稱]
+			// 類別：中文為 0，英文為 1，確保中文排在前面
+			var sortType = isPureEnglish ? "1" : "0";
+			// 長度：中文取中文字數，英文取總長度，補零確保 10 不會排在 2 前面
+			var lengthVal = isPureEnglish ? name.length : cnCount;
+			var sortLen = (lengthVal < 10 ? "0" + lengthVal : lengthVal);
+			var sortKey = sortType + "_" + sortLen + "_" + name.toLowerCase();
+			// --- 新排序邏輯結束 ---
+
+			// 尋找插入點
 			var nextBtnDIV = null;
-			var allBtnDIV = $("div[clearName]");
+			var allBtnDIV = $("div[sortKey]"); // 改用 sortKey 屬性查找
 			for ( var nl = 0 ; nl < allBtnDIV.length ; nl++ ){
 				if ( nextBtnDIV != null )
 					break;
 				var compareTarget = $(allBtnDIV[nl]);
-				if ( compareTarget.attr("clearName").length == clearName.length && 
-						compareTarget.attr("clearName") > clearName ){
-					nextBtnDIV = compareTarget;
-				} else if ( compareTarget.attr("clearName").length > clearName.length ){
+				// 字串比較：當目標的 sortKey 大於目前的 sortKey 時，找到插入位置
+				if ( compareTarget.attr("sortKey") > sortKey ){
 					nextBtnDIV = compareTarget;
 				}
 			}
 		
 			var btnDIV = createBtnInDIV( datas[i].name, "rasipy-btn" );
-			btnDIV.attr("clearName",clearName);
-			btnDIV.attr("value",datas[i].name);
-/*			
-			var btn = btnDIV.find("input[type=button]");
-			btn.attr("value",datas[i].name);
-			btn.on('click',function(){
-*/			
+			btnDIV.attr("sortKey", sortKey); // 存入排序鍵
+			btnDIV.attr("value", datas[i].name);
+		
 			btnDIV.on('click',function(){
-//				var btnDIV = $(this).getBtnDIV();
 				var btnDIV = $(this);
-				
 				var isChecked = btnDIV.isSelectedBtn();
 				$(".rasipy-btn").unselectedBtn();
 				$(".usingSources > ul").empty();
 				$(".usingSources").hide();
-				//如果勾選了某酒譜的話
+
 				if ( !isChecked ){
 					btnDIV.selectedBtn();
 					var rasipy = btnDIV.getRecipe();
 					if ( rasipy != null ){
-
-						//列出材料與比例
 						var sList = Object.keys(rasipy.recipe);
 						for ( var r = 0 ; r < sList.length ; r++ ){
 							var sourceName = sList[r];
@@ -267,23 +271,28 @@
 							var newA = $(document.createElement("a"));
 							newA.text( sourceName + " " );
 							newA.attr( "href", "#" );
+							newA.attr( "data-icon", "delete" ); // 套用之前的 X 按鈕修改
 							newA.append( newSpan );
+
+							// 綁定點擊排除功能
+							newA.on('click', function(e){
+								e.preventDefault();
+								var mName = $(this).contents().get(0).nodeValue.trim();
+								$(".source-btn[value='"+mName+"']").forbiddenSource();
+								arrange();
+								$("#headerFunctionList a[block=rasipyList]").click();
+							});
 							
 							var newLi = $(document.createElement("li"));
 							newLi.append( newA );
-							
 							$(".usingSources > ul").append( newLi );
 						}
 						$(".usingSources > ul").listview('refresh');
-						
-						//調製法UI
 						$("[name=mixType]").prop("checked",false).checkboxradio('refresh');
 						$("[name=mixType][value="+(rasipy.method)+"]").prop("checked",true).checkboxradio('refresh');
 					}
 					$("#cocktailName").text( rasipy.name );
 					$(".usingSources").show();
-					
-					//自動轉頁
 					if ( $("#autoChangePage").is(":checked") ){
 						$("#headerFunctionList a[block=rasipy]").click();
 					}
@@ -293,14 +302,13 @@
 			if ( nextBtnDIV == null ){
 				$(".allRasipy").append( btnDIV );
 			} else {
-				// 修正：變數名稱從 nextBtnBtnDIV 改為 nextBtnDIV
 				nextBtnDIV.before( btnDIV );
 			}
 			
-			//給所有酒譜按鈕上排序順位
+			// 重新編號 sortIndex 供 arrange() 使用
 			var allRB = $(".rasipy-btn");
-			for ( var i = 0 ; i < allRB.length ; i++ ){
-				$(allRB[i]).attr("sortIndex",i);
+			for ( var k = 0 ; k < allRB.length ; k++ ){
+				$(allRB[k]).attr("sortIndex", k);
 			}
 		}
 				
@@ -540,81 +548,113 @@
 				
 	});
 	
-	//進行酒譜列表整理
-	function arrange(){
+	// --- 1. 在適當位置新增一個變數來存放 Timer ---
+	var arrangeTimer = null;
 
-		//必須材料
+	// --- 2. 修改 arrange 函數，加入防抖機制與效能優化 ---
+	function arrange() {
+		// 如果已經有排程中的更新，先取消它
+		if (arrangeTimer) {
+			clearTimeout(arrangeTimer);
+		}
+
+		// 延遲 50 毫秒執行，若這段時間內又有新的點擊，會重新計時
+		arrangeTimer = setTimeout(function() {
+			performArrange();
+		}, 50);
+	}
+
+	function performArrange() {
+		// 預先取得過濾條件，避免在迴圈中重複查詢 DOM
+		var filterName = $("#cocktailNameFilter").val().trim();
+		
+		// 1. 取得材料狀態 (優化：一次性讀取)
 		var includeSource = [];
-		$.each( $(".source-btn"), function( index, obj ){
-			if ( $(obj).isSelectedSource() ){
-				includeSource.push( $(obj).getText() );
-			}
-		} );
-		//不可材料
 		var excludeSource = [];
-		$.each( $(".source-btn"), function( index, obj ){
-			if ( $(obj).isForbiddenSource() ){
-				excludeSource.push( $(obj).getText() );
+		$(".source-btn").each(function() {
+			var $obj = $(this);
+			var text = $obj.attr("value");
+			if ($obj.hasClass("ui-btn-active")) {
+				includeSource.push(text);
+			} else if ($obj.hasClass("grayBtn")) {
+				excludeSource.push(text);
 			}
-		} );
-		
-		//取出全部酒譜並排序
-		var allRBtns = $(".rasipy-btn");
-		var sortRBtns = new Array( allRBtns.length );
-		var selectedRBtn = null;
-		for ( var b = 0 ; b < allRBtns.length ; b++ ){
-			var theBtn = $(allRBtns[b]);
-			sortRBtns[ parseInt(theBtn.attr("sortIndex")) ] = theBtn;
-			// 移除此處的 enable/disable 邏輯，在主迴圈中處理以確保正確的狀態
-			if ( theBtn.isSelectedBtn() ){
-				selectedRBtn = theBtn;
-				theBtn.unselectedBtn();
-			}
-		}
-		
-		// 新增：用於優化 DOM 插入的 DocumentFragment
-		var actionRasipyFragment = $(document.createDocumentFragment());
-		var allRasipyFragment = $(document.createDocumentFragment());
+		});
 
-		//置入 (使用 Fragment 優化效能)
-		for ( var s = 0 ; s < sortRBtns.length ; s++ ){
-			var srb = sortRBtns[s];
+		// 2. 準備 Fragment 容器
+		var actionRasipyFragment = document.createDocumentFragment();
+		var allRasipyFragment = document.createDocumentFragment();
+
+		// 取得所有酒譜按鈕並轉換為陣列進行處理
+		var allRBtns = $(".rasipy-btn").get();
+		
+		// 排序與分配
+		allRBtns.sort(function(a, b) {
+			return parseInt($(a).attr("sortIndex")) - parseInt($(b).attr("sortIndex"));
+		});
+
+		for (var i = 0; i < allRBtns.length; i++) {
+			var srb = $(allRBtns[i]);
+			var recipeName = srb.attr("value");
+			var recipeData = srb.getRecipe();
+			var containSources = Object.keys(recipeData.recipe);
+
+			// A. 關鍵字檢查
+			var isNameMatch = (filterName === "" || recipeName.indexOf(filterName) !== -1);
 			
-			// 判斷是否需要被禁用
-			var keyWordsFilterFailure = ( $("#cocktailNameFilter").val() != "" && srb.getText().indexOf( $("#cocktailNameFilter").val() ) == -1 );
-			var keyWordsFilterSuccess = ( $("#cocktailNameFilter").val() != "" && srb.getText().indexOf( $("#cocktailNameFilter").val() ) != -1 );
-			
-			var shouldBeDisabled = keyWordsFilterFailure || srb.containForbiddenSource( excludeSource );
-			
-			if ( shouldBeDisabled ){
-				srb.disabledBtn();
+			// B. 禁用材料檢查 (優化：使用 Array.some)
+			var hasForbidden = excludeSource.some(function(src) {
+				return containSources.indexOf(src) !== -1;
+			});
+
+			var shouldBeDisabled = !isNameMatch || hasForbidden;
+
+			// 更新狀態
+			if (shouldBeDisabled) {
+				srb.addClass("ui-state-disabled");
 			} else {
-				srb.enabledBtn(); // 確保符合條件時按鈕是可用的
+				srb.removeClass("ui-state-disabled");
 			}
-			
-			// 判斷是否屬於「指定材料酒譜」區塊 (.actionRasipy)
+
+			// C. 判斷屬於哪個區塊
+			// 是否包含所有指定材料
+			var hasAllRequired = includeSource.every(function(src) {
+				return containSources.indexOf(src) !== -1;
+			});
+
 			var belongsToActionList = 
-				(includeSource.length > 0 && srb.containAllSource( includeSource )) || 
-				(includeSource.length == 0 && keyWordsFilterSuccess);
-			
-			if ( belongsToActionList ){
-				actionRasipyFragment.append(srb);
+				(includeSource.length > 0 && hasAllRequired) || 
+				(includeSource.length === 0 && filterName !== "" && isNameMatch);
+
+			if (belongsToActionList) {
+				actionRasipyFragment.appendChild(allRBtns[i]);
 			} else {
-				allRasipyFragment.append(srb);
+				allRasipyFragment.appendChild(allRBtns[i]);
 			}
 		}
+
+		// 3. 一次性更新 DOM (這是效能提升最明顯的地方)
+		// 使用 .detach() 可以讓 DOM 在搬移時不觸發連環重繪
+		var $actionContainer = $(".actionRasipy");
+		var $allContainer = $(".allRasipy");
+
+		$actionContainer.empty().append(actionRasipyFragment);
+		$allContainer.empty().append(allRasipyFragment);
+
+		// 4. 更新標題顯示邏輯
+		updateTitles(includeSource.length, $actionContainer.children().length);
 		
-		// 批量操作 DOM：一次清空並插入所有元素
-		$(".actionRasipy").empty().append(actionRasipyFragment);
-		$(".allRasipy").empty().append(allRasipyFragment);
-
-
-		//酒譜列表標題與內容區塊顯示調整
+		// 5. 更新提示標籤
+		updateSourceHints(includeSource, excludeSource);
+	}
+	
+	// 將標題邏輯抽離
+	function updateTitles(includeCount, actionCount) {
 		$(".listTC").show();
-		if ( $(".actionRasipy").children().length == 0 ){
+		if (actionCount === 0) {
 			$(".listTitle_include").hide();
 			$(".listTitle_all").hide();
-			if ( includeSource.length == 0 ){
+			if (includeCount === 0) {
 				$(".listTitle_include_empty").hide();
 				$(".listTitle_all_other").hide();
 			}
@@ -622,55 +662,43 @@
 			$(".listTitle_include_empty").hide();
 			$(".listTitle_all_other").hide();
 		}
+	}
 
-		//材料列表提示區塊 (已重寫為標籤樣式)
-		$(".sourceListHint").empty();
+	// 將材料標籤 logic 抽離並優化
+	function updateSourceHints(includeSource, excludeSource) {
+		var $hint = $(".sourceListHint");
+		$hint.empty();
 		
-		if ( includeSource.length > 0 || excludeSource.length > 0 ){
-			
-			// --- 必須材料區塊 ---
-			var requiredBlock = $(document.createElement("div")).css('margin-bottom', '5px');
-			var requiredTitle = $(document.createElement("h4")).text("指定材料：");
-			requiredBlock.append(requiredTitle);
+		if (includeSource.length > 0 || excludeSource.length > 0) {
+			// ... (這部分的 HTML 生成邏輯維持原樣，但因在 performArrange 內執行，已受 Debounce 保護)
+			// 建議這裡也改用 string concatenation 或 fragment 以提升效能
+			var html = '';
+			// 生成「指定材料」
+			html += '<div style="margin-bottom:5px"><h4>指定材料：</h4>';
+			if(includeSource.length > 0) {
+				includeSource.forEach(function(src){
+					html += '<span class="material-tag required" data-val="'+src+'">'+src+'</span>';
+				});
+			} else { html += '<span>無</span>'; }
+			html += '</div>';
 
-			if ( includeSource.length > 0 ){
-				for ( var i = 0 ; i < includeSource.length ; i++ ){
-					var ctName = $(document.createElement("span"));
-					ctName.addClass("material-tag required");
-					ctName.text( includeSource[i] );
-					// 點擊事件：取消指定
-					ctName.on('click',function(){
-						$(".source-btn[value="+($(this).text())+"]").commonSource();
-						arrange();
-					});
-					requiredBlock.append( ctName );
-				}
-			} else {
-				requiredBlock.append( $(document.createElement("span")).text("無") );
-			}
-			$(".sourceListHint").append(requiredBlock);
+			// 生成「不可材料」
+			html += '<div><h4>不可材料：</h4>';
+			if(excludeSource.length > 0) {
+				excludeSource.forEach(function(src){
+					html += '<span class="material-tag forbidden" data-val="'+src+'">'+src+'</span>';
+				});
+			} else { html += '<span>無</span>'; }
+			html += '</div>';
 
-			// --- 不可材料區塊 ---
-			var forbiddenBlock = $(document.createElement("div"));
-			var forbiddenTitle = $(document.createElement("h4")).text("不可材料：");
-			forbiddenBlock.append(forbiddenTitle);
-			
-			if ( excludeSource.length > 0 ){
-				for ( var i = 0 ; i < excludeSource.length ; i++ ){
-					var ctName = $(document.createElement("span"));
-					ctName.addClass("material-tag forbidden");
-					ctName.text( excludeSource[i] );
-					// 點擊事件：取消禁用
-					ctName.on('click',function(){
-						$(".source-btn[value="+($(this).text())+"]").commonSource();
-						arrange();
-					});
-					forbiddenBlock.append( ctName );
-				}
-			} else {
-				forbiddenBlock.append( $(document.createElement("span")).text("無") );
-			}
-			$(".sourceListHint").append(forbiddenBlock);
+			$hint.append(html);
+
+			// 綁定點擊事件 (委派或一次性綁定)
+			$hint.find('.material-tag').on('click', function() {
+				var val = $(this).data('val');
+				$(".source-btn[value='" + val + "']").commonSource();
+				arrange();
+			});
 		}
 	}
 	

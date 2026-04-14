@@ -7,11 +7,6 @@
 			},
 			method : 1,
 		},{	
-			name : "",
-			recipe : {
-			},
-			method : 1,
-		},{	
 			name : "(DM)Adonis",
 			recipe : {
 				"雪莉酒" : 4.5,
@@ -533,15 +528,6 @@
 				"伏特加" : "30ml",
 				"鳳梨汁" : "40ml",
 				"椰奶" : "20ml",
-			},
-			method : 2,
-		},{	
-			name : "大都會",
-			recipe : {
-				"伏特加" : "25ml",
-				"橙酒" : "10ml",
-				"萊姆汁" : "10ml",
-				"蔓越莓汁" : "20ml",
 			},
 			method : 2,
 		},{	
@@ -1295,6 +1281,281 @@
 				"薄荷葉" : "4片",
 			},
 			method : 1,
+		},    
+		{
+			name: "內格羅尼 (Negroni)",
+			recipe: {
+				"琴酒": 1,
+				"甜香艾酒": 1,
+				"金巴利": 1
+			},
+			method: 3
+		},
+		{
+			name: "古典雞尾酒 (Old Fashioned)",
+			recipe: {
+				"波本威士忌": 1.5,
+				"糖漿": "1tsp",
+				"苦精": "2dashes"
+			},
+			method: 3
+		},
+		{
+			name: "湯姆柯林斯 (Tom Collins)",
+			recipe: {
+				"琴酒": 1.5,
+				"檸檬汁": 0.5,
+				"糖漿": 0.5,
+				"蘇打汽水": "八分滿"
+			},
+			method: 1
+		},
+		{
+			name: "白色俄羅斯 (White Russian)",
+			recipe: {
+				"伏特加": 1.5,
+				"咖啡香甜酒": 0.75,
+				"鮮奶油": 0.75
+			},
+			method: 1
+		},
+		{
+			name: "羅伯羅伊 (Rob Roy)",
+			recipe: {
+				"蘇格蘭威士忌": 1.5,
+				"甜香艾酒": 0.75,
+				"苦精": "1dash"
+			},
+			method: 3
+		},
+		{
+			name: "鏽釘 (Rusty Nail)",
+			recipe: {
+				"蘇格蘭威士忌": 1.5,
+				"愛爾蘭之霧": 0.75
+			},
+			method: 1
+		},
+		{
+			name: "綠色蚱蜢 (Grasshopper)",
+			recipe: {
+				"綠薄荷酒": 1,
+				"白可可酒": 1,
+				"鮮奶油": 1
+			},
+			method: 2
+		},
+		{
+			name: "法式75 (French 75)",
+			recipe: {
+				"琴酒": 1,
+				"檸檬汁": 0.5,
+				"糖漿": 0.5,
+				"紅酒": "八分滿" 
+			},
+			method: 2
+		},
+		{
+			name: "蜜蜂膝蓋 (Bee's Knees)",
+			recipe: {
+				"琴酒": 2,
+				"檸檬汁": 0.75,
+				"蜂蜜": 0.75
+			},
+			method: 2
+		},
+		{
+			name: "帕洛瑪 (Paloma)",
+			recipe: {
+				"龍舌蘭": 1.5,
+				"萊姆汁": 0.25,
+				"葡萄柚汁": 2,
+				"蘇打汽水": "加滿"
+			},
+			method: 1
+		},
+		{
+			name: "月黑風高 (Dark 'n' Stormy)",
+			recipe: {
+				"蘭姆酒": 2,
+				"萊姆汁": 0.5,
+				"薑汁汽水": "八分滿"
+			},
+			method: 1
+		},
+		{
+			name: "哈維撞牆 (Harvey Wallbanger)",
+			recipe: {
+				"伏特加": 1.5,
+				"柳橙汁": 3,
+				"加利亞諾": 0.5
+			},
+			method: 1
+		},
+		{
+			name: "藍色夏威夷 (Blue Hawaii)",
+			recipe: {
+				"蘭姆酒": 1,
+				"伏特加": 1,
+				"藍柑橘香甜酒": 0.5,
+				"鳳梨汁": 3,
+				"檸檬汁": 0.5
+			},
+			method: 2
+		},
+		{
+			name: "新加坡司令 (Singapore Sling)",
+			recipe: {
+				"琴酒": 1,
+				"檸檬汁": 0.5,
+				"鳳梨汁": 2,
+				"蘇打汽水": "加滿",
+				"紅石榴糖漿": "1tsp"
+			},
+			method: 1
+		},
+		{
+			name: "含羞草 (Mimosa)",
+			recipe: {
+				"柳橙汁": 2,
+				"紅酒": 2 
+			},
+			method: 1
+		},
+		{
+			name: "貝里尼 (Bellini)",
+			recipe: {
+				"蜜桃香甜酒": 1,
+				"紅酒": 3
+			},
+			method: 1
+		},
+		{
+			name: "基爾 (Kir)",
+			recipe: {
+				"不甜香艾酒": 3,
+				"黑醋栗香甜酒": 0.5
+			},
+			method: 1
+		},
+		{
+			name: "皇家基爾 (Kir Royale)",
+			recipe: {
+				"紅酒": 4,
+				"黑醋栗香甜酒": 0.5
+			},
+			method: 1
+		},
+		{
+			name: "維斯珀 (Vesper)",
+			recipe: {
+				"琴酒": 3,
+				"伏特加": 1,
+				"不甜香艾酒": 0.5
+			},
+			method: 2
+		},
+		{
+			name: "瑪莉畢克馥 (Mary Pickford)",
+			recipe: {
+				"蘭姆酒": 1.5,
+				"鳳梨汁": 1.5,
+				"紅石榴糖漿": "1tsp"
+			},
+			method: 2
+		},
+		{
+			name: "血與沙 (Blood and Sand)",
+			recipe: {
+				"蘇格蘭威士忌": 0.75,
+				"甜香艾酒": 0.75,
+				"柳橙汁": 0.75,
+				"紅酒": 0.75 
+			},
+			method: 2
+		},
+		{
+			name: "吉普森 (Gibson)",
+			recipe: {
+				"琴酒": 2,
+				"不甜香艾酒": 0.5,
+				"櫻桃": "1顆"
+			},
+			method: 3
+		},
+		{
+			name: "髒馬丁尼 (Dirty Martini)",
+			recipe: {
+				"琴酒": 2,
+				"不甜香艾酒": "1tsp",
+				"櫻桃": "2顆"
+			},
+			method: 3
+		},
+		{
+			name: "幸運草俱樂部 (Clover Club)",
+			recipe: {
+				"琴酒": 1.5,
+				"檸檬汁": 0.5,
+				"紅石榴糖漿": 0.5,
+				"蛋白": "1份"
+			},
+			method: 2
+		},
+		{
+			name: "惡魔 (El Diablo)",
+			recipe: {
+				"龍舌蘭": 1.5,
+				"黑醋栗香甜酒": 0.5,
+				"萊姆汁": 0.5,
+				"薑汁汽水": "加滿"
+			},
+			method: 1
+		},
+		{
+			name: "威士忌海波 (Whisky Highball)",
+			recipe: {
+				"蘇格蘭威士忌": 1.5,
+				"蘇打汽水": 4.5
+			},
+			method: 1
+		},
+		{
+			name: "龍舌蘭日落 (Tequila Sunset)",
+			recipe: {
+				"龍舌蘭": 1.5,
+				"柳橙汁": 3,
+				"黑醋栗香甜酒": "1tsp"
+			},
+			method: 1
+		},
+		{
+			name: "金霸克-蘭姆 (Rum Buck)",
+			recipe: {
+				"蘭姆酒": 1.5,
+				"薑汁汽水": "加滿",
+				"萊姆汁": 0.5
+			},
+			method: 1
+		},
+		{
+			name: "亞歷山大-白蘭地",
+			recipe: {
+				"干邑白蘭地": 1,
+				"白可可酒": 1,
+				"鮮奶油": 1
+			},
+			method: 2
+		},
+		{
+			name: "黑刺莓 (Bramble)",
+			recipe: {
+				"琴酒": 1.5,
+				"檸檬汁": 0.75,
+				"糖漿": 0.5,
+				"黑醋栗香甜酒": 0.5
+			},
+			method: 1
 		}/*,{	
 			name : "",
 			recipe : {
