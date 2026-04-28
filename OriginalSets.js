@@ -305,7 +305,7 @@
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-073";
-	var setName = "台灣CS大賽20260418 1st【ADV不死樹＠水燈】";
+	var setName = "睿哥神藝術盃2026 1st【ADV不死樹＠水燈】";
 	var isDeck = true;
 	var setCardList = [
 		{ name : "シェル・アルカザール", count : 2, },
