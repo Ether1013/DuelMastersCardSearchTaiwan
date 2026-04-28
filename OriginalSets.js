@@ -305,7 +305,7 @@
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-073";
-	var setName = "卡咖王國CS 20260418 1st【ADV不死樹＠水燈】";
+	var setName = "台灣CS大賽20260418 1st【ADV不死樹＠水燈】";
 	var isDeck = true;
 	var setCardList = [
 		{ name : "シェル・アルカザール", count : 2, },
@@ -367,7 +367,7 @@
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-076";
-	var setName = "鬧鬧TCG CS 20260426 1st【不死樹＠水燈】";
+	var setName = "台灣CS大賽20260426 1st【不死樹＠水燈】";
 	var isDeck = true;
 	var setCardList = [
 		{ name : "裏斬隠 テンサイ・ハート", 		count : 3, },
