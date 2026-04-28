@@ -303,3 +303,90 @@
 		{ name : "パーリ騎士の心絵", 				count : 1, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-073";
+	var setName = "卡咖王國CS 20260418 1st【ADV不死樹＠水燈】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "シェル・アルカザール", count : 2, },
+		{ name : "裏斬隠 テンサイ・ハート", count : 2, },
+		{ name : "我竜塔第七層 ハッスル・キャッスル", count : 1, },
+		{ name : "大集合！アカネ&アサギ&コハク", count : 4, },
+		{ name : "天災 デドダム", count : 4, },
+		{ name : "刀志猫のプワソン", count : 2, },
+		{ name : "～世紀末の善悪～", count : 3, },
+		{ name : "真気楼と誠偽感の決断", count : 4, },
+		{ name : "宇宙妖精エリンギ", count : 2, },
+		{ name : "プリンセス・パーティ ～シラハの絆～", count : 1, },
+		{ name : "流星の逆転撃", count : 1, },
+		{ name : "忍蛇の聖沌 c0br4", count : 2, },
+		{ name : "聖霊超王 H・アルカディアス", count : 1, },
+		{ name : "流星のガイアッシュ・カイザー", count : 3, },
+		{ name : "CRYMAX ジャオウガ", count : 2, },
+		{ name : "飛翔龍 5000VT", count : 2, },
+		{ name : "逆転の影ガレック", count : 1, },
+		{ name : "ブラキオ龍樹", count : 1, },
+		{ name : "大樹王 ギガンディダノス", count : 2, },
+		{ name : "時空のネビュラ マティーニ", count : 1, },
+		{ name : "新空のネビュラ ユリア・マティーニ", count : 1, },
+		{ name : "時空のコスモ アンタッチャブル", count : 1, },
+		{ name : "新空のコスモ アンタッチャブル・パワード", count : 1, },
+		{ name : "ガガ・アクロアイト", count : 1, },
+		{ name : "GQ 亜空-6110", count : 1, },
+		{ name : "ジオ・ケラサス", count : 1, },
+		{ name : "GQ 笑沙-4", count : 1, },
+		{ name : "時空の吸引ドンドン・クローラー", count : 1, },
+		{ name : "新世界の覚醒者サイバー・NX・ワールド", count : 1, },
+		{ name : "モーニング・ABYFLHA・カイザー", count : 1, },
+		{ name : "ラスト・GOLDEN・ドラゴン", count : 1, },
+		{ name : "時空の停滞シュタイヴァル", count : 1, },
+		{ name : "停滞の覚醒者シュタイヴェルト", count : 1, },
+		{ name : "千両力士 多禍の泥粋", count : 1, },
+		{ name : "大感動！ディス・イズ・大横綱", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-074";
+	var setName = "卡咖王國龍娘爭奪賽20260418 1st【火鳥＠派大】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "マジシャン・ルピア", 		count : 4, },
+		{ name : "ハッター・ルピア", 			count : 4, },
+		{ name : "ハンプティ・ルピア", 			count : 4, },
+		{ name : "宝魂剣と獄門盾の決断", 	count : 4, },
+		{ name : "愛銀河マーズ・シンギュラリティ", count : 4, },
+		{ name : "龍后凰翔クイーン・ルピア", 	count : 4, },
+		{ name : "ルピア&ガ:ナテハ", 		count : 3, },
+		{ name : "ポッピ・冠・ラッキー", 		count : 3, },
+		{ name : "世界のY チャクラ・デル・フィン", count : 3, },
+		{ name : "轟く邪道 レッドゾーン", 		count : 3, },
+		{ name : "ロック・ポロン", 			count : 2, },
+		{ name : "瞬閃と疾駆と双撃の決断", 	count : 1, },
+		{ name : "アリスの突撃インタビュー", 	count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-076";
+	var setName = "鬧鬧TCG CS 20260426 1st【不死樹＠水燈】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "裏斬隠 テンサイ・ハート", 		count : 3, },
+		{ name : "我竜塔第七層 ハッスル・キャッスル", count : 3, },
+		{ name : "大集合！アカネ&アサギ&コハク", 	count : 3, },
+		{ name : "天災 デドダム", 				count : 4, },
+		{ name : "～進封せし大悪魔～", 			count : 1, },
+		{ name : "ソウルスカーレット アカネ", 		count : 1, },
+		{ name : "～世紀末の善悪～", 			count : 3, },
+		{ name : "真気楼と誠偽感の決断", 		count : 4, },
+		{ name : "宇宙妖精エリンギ", 			count : 2, },
+		{ name : "プリンセス・パーティ ～シラハの絆～", count : 2, },
+		{ name : "忍蛇の聖沌 c0br4", 			count : 2, },
+		{ name : "聖霊超王 H・アルカディアス", 		count : 1, },
+		{ name : "流星のガイアッシュ・カイザー", 		count : 3, },
+		{ name : "CRYMAX ジャオウガ", 			count : 2, },
+		{ name : "飛翔龍 5000VT", 			count : 2, },
+		{ name : "逆転の影ガレック", 			count : 1, },
+		{ name : "ブラキオ龍樹", 				count : 1, },
+		{ name : "大樹王 ギガンディダノス", 		count : 2, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
