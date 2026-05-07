@@ -8472,7 +8472,7 @@
 		if (isShuffling) {
 			finalCardIds.sort(() => Math.random() - 0.5);
 		}
-
+		
 		// 2. 切斷舊連結
 		const state = getCurrentDisplayState();
 		const needsBreak = movingIds.some(id => {
@@ -8487,6 +8487,32 @@
 		if (needsBreak) {
 			addOperation({ type: 'BREAK_LINKS', cardIds: [...movingIds] });
 		}
+		
+		// ---------------------------------------------------------
+		// [需求 2] 智慧型墓地移動：多選時若包含雙方卡片，各自進入持有者的墓地
+		// ---------------------------------------------------------
+		if (toZone.includes('grave')) {
+			const p1GraveIds = finalCardIds.filter(id => {
+				const c = state.cards.find(x => x.id == id);
+				return c && c.ownerId === 1;
+			});
+			const p2GraveIds = finalCardIds.filter(id => {
+				const c = state.cards.find(x => x.id == id);
+				return c && c.ownerId === 2;
+			});
+
+			// 如果涉及不同玩家，則拆分成兩個操作
+			if (p1GraveIds.length > 0 && p2GraveIds.length > 0) {
+				if (!isDrafting) startDraftAtEnd();
+				addOperation({ type: 'MOVE', cardIds: p1GraveIds, toZone: 'p1-grave', faceUp: true, rotation: 0 });
+				addOperation({ type: 'MOVE', cardIds: p2GraveIds, toZone: 'p2-grave', faceUp: true, rotation: 0 });
+				
+				cancelSelection();
+				closeSelectorModal();
+				closePositionModal();
+				return; // 提前結束，不執行下方的通用移動邏輯
+			}
+		}
 
 		// 3. [修改] 準備移動參數 (預先計算目標角度)
 		let targetRotation = undefined; // 預設 undefined 代表「維持現狀」或「不指定」
@@ -8500,7 +8526,7 @@
 		} else if (toZone.includes('mana')) {
 			// 魔力區：強制 180 度 (倒置)
 			targetRotation = 180;
-		} else if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper') || toZone.includes('hand') || toZone.includes('reveal')) {
+		} else if (toZone.includes('deck') || toZone.includes('grave') || toZone.includes('hyper') || toZone.includes('hand') || toZone.includes('reveal') || toZone.includes('abyss')) {
 			// 牌庫、墓地、超次元、手牌：強制 0 度 (轉正)
 			targetRotation = 0;
 		}
@@ -8544,10 +8570,14 @@
 		// --- [關鍵修正] 狀態判定邏輯 ---
 		let faceUp = true; // 預設值
 
-		// A. 進入隱藏區域 -> 強制蓋牌
-		if (toZone.includes('shield') || toZone.includes('deck')) {
-			faceUp = false;
+		// --- [需求 3] 進入護盾區時按著 Ctrl 則翻面 (faceUp) ---
+		if (toZone.includes('shield')) {
+			const isCtrlPressed = window.event && (window.event.ctrlKey || window.event.metaKey);
+			faceUp = isCtrlPressed ? true : false; 
 		} 
+		else if (toZone.includes('deck')) {
+			faceUp = false;
+		}  
 		// B. P2 手牌 -> 強制表側 (對操作者可見)
 		else if (toZone.includes('hand') && toZone.includes('p2')) {
 			faceUp = true;
