@@ -366,6 +366,29 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-075";
+	var setName = "台灣CS大賽20260425 1st【蒼頭龍反擊＠17】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "我竜塔第八層 バルザーク", count : 2, },
+		{ name : "虚ト成リシ古ノ蛇神ノ咆哮", count : 4, },
+		{ name : "カクラリコ", count : 3, },
+		{ name : "コッコ・武・ルピア", count : 1, },
+		{ name : "裏斬隠 テンサイ・ハート", count : 4, },
+		{ name : "氷柱と炎弧の決断", count : 4, },
+		{ name : "夜露死苦 キャロル", count : 1, },
+		{ name : "真気楼と誠偽感の決断", count : 3, },
+		{ name : "轟く邪道 レッドゾーン", count : 2, },
+		{ name : "偽りの希望 鬼丸「終斗」", count : 4, },
+		{ name : "斬隠蒼頭龍バイケン", count : 4, },
+		{ name : "斬隠将撃龍ニバイケン", count : 4, },
+		{ name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」", count : 1, },
+		{ name : "紅き団長 ドギラゴン悪", count : 2, },
+		{ name : "時の法皇 ミラダンテⅫ", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	
 	var setCode = "NET-076";
 	var setName = "台灣CS大賽20260426 1st【不死樹＠水燈】";
 	var isDeck = true;
