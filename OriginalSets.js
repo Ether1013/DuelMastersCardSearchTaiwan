@@ -455,7 +455,7 @@
 		{ name : "流星の逆転撃", count : 3, },
 		{ name : "響命龍覇 リンクウッド＆ヒビキ", count : 2, },
 		{ name : "流星のガイアッシュ・カイザー", count : 2, },
-		{ name : "ARC REALITY COMPLEX", count : 2, },
+		{ name : "R・R・R", count : 2, },
 		{ name : "鬼修羅と跳次元の決断", count : 4, },
 		{ name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」", count : 2, },
 		{ name : "夢の変形 デュエランド", count : 2, },
