@@ -390,3 +390,65 @@
 		{ name : "大樹王 ギガンディダノス", 		count : 2, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-077";
+	var setName = "台灣CS大賽20260509 1st【空神Loop＠派大】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "ゾンビポンの助",									count : 4, },
+		{ name : "アクア・ティーチャー", 								count : 4, },
+		{ name : "セイレーン・コンチェルト", 								count : 1, },
+		{ name : "卓球の妖精/回転する開眼", 							count : 2, },
+		{ name : "未来設計図", 									count : 4, },
+		{ name : "空神のD ドッコイ", 								count : 4, },
+		{ name : "♪なぜ離れ どこへ行くのか 君は今",						count : 1, },
+		{ name : "淡いと濃い ケローラ/♪やせガエル 負けるなケローラ スパイラル", 	count : 4, },
+		{ name : "終末の時計 ザ・クロック", 							count : 1, },
+		{ name : "緊急再誕", 										count : 1, },
+		{ name : "大集合！アカネ&アサギ&コハク",						count : 4, },
+		{ name : "♪立ち上がる 悪魔に天使 堕ちるかな", 					count : 1, },
+		{ name : "宇宙妖精エリンギ", 								count : 4, },
+		{ name : "爆藍月 Drache der’Zen",						count : 1, },
+		{ name : "水上第九院 シャコガイル",							count : 2, },
+		{ name : "エンドレス・フローズン・カーニバル", 						count : 2, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
+
+	var setCode = "NET-078";
+	var setName = "台灣CS大賽20260509 1st【決鬥樂園＠派大】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "地龍神の魔陣", count : 4, },
+		{ name : "水晶の記録 ゼノシャーク/クリスタル・メモリー", count : 3, },
+		{ name : "邪眼の魔法陣", count : 4, },
+		{ name : "大集合！アカネ&アサギ&コハク", count : 4, },
+		{ name : "クリスタル・メモリー", count : 1, },
+		{ name : "夢の兵器 デュエロウ / イッツ・ショータイム", count : 1, },
+		{ name : "AQ NETWORK", count : 4, },
+		{ name : "邪悪発動", count : 2, },
+		{ name : "ドンドン火噴くナウ", count : 2, },
+		{ name : "真気楼と誠偽感の決断", count : 4, },
+		{ name : "宇宙妖精エリンギ", count : 4, },
+		{ name : "流星の逆転撃", count : 3, },
+		{ name : "響命龍覇 リンクウッド＆ヒビキ", count : 2, },
+		{ name : "流星のガイアッシュ・カイザー", count : 2, },
+		{ name : "ARC REALITY COMPLEX", count : 2, },
+		{ name : "鬼修羅と跳次元の決断", count : 4, },
+		{ name : "ブルー・インパルス/「真実を見極めよ、ジョニー！」", count : 2, },
+		{ name : "夢の変形 デュエランド", count : 2, },
+		{ name : "13番目の計画", count : 2, },
+		{ name : "サファイア・ミスティ", count : 2, },
+		{ name : "時空のネビュラ マティーニ", count : 1, },
+		{ name : "新空のネビュラ ユリア・マティーニ", count : 1, },
+		{ name : "時空のコスモ アンタッチャブル", count : 1, },
+		{ name : "変幻の覚醒者アンタッチャブル・パワード", count : 1, },
+		{ name : "ジオ・ケラサス", count : 1, },
+		{ name : "GQ 笑沙-4", count : 1, },
+		{ name : "時空の吸引ドンドン・クローラー", count : 1, },
+		{ name : "新世界の覚醒者サイバー・NX・ワールド", count : 1, },
+		{ name : "真理銃 エビデンス", count : 1, },
+		{ name : "龍素王 Q.E.D.", count : 1, },
+		{ name : "時空の化身エボテム", count : 1, },
+		{ name : "飛闘の覚醒者コスモ・セブΘ", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
