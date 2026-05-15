@@ -19,7 +19,7 @@
 				{ Jap : "G・L・ゲート",			Eng : "Galaxy Gate",			Chi : "銀河命門",			descript : "當此生物被破壞時，你可以取代破壞、將任意張指定種族的卡牌從我方墓地裡拿回到手牌中。那樣的話，將此生物置入牌庫底。",},
 				{ Jap : "T・ブレイカー",		Eng : "Triple Breaker",			Chi : "三重擊破者",			descript : "此生物擊破三張護盾",},
 				{ Jap : "メテオバーン",			Eng : "Meteor Burn",			Chi : "隕石爆擊",			descript : "將進化生物下面的種子生物卡置入墓地以發動能力",},
-				{ Jap : "シンパシー",			Eng : "Sympathy",				Chi : "共鳴",				descript : "生物的召喚費用/咒文的使用費用會隨著每一個指定條件的存在而降低1，但是不能降到比0、或是比其文明數少",},
+				{ Jap : "シンパシー",			Eng : "Sympathy",				Chi : "共鳴",				descript : "此卡的實行費用會隨著每一個指定條件的存在而降低1，但是不能降到比0、或是比其文明數少",},
 				{ Jap : "W・ブレイカー",		Eng : "Double Breaker",			Chi : "雙重擊破者",			descript : "此生物擊破兩張護盾",},
 				{ Jap : "ブロッカー",			Eng : "Blocker",				Chi : "阻擋者",				descript : "當對手生物攻擊時，你可以橫置此生物來跟對手生物戰鬥，以保護原本的被攻擊目標",	pop:true,},
 				{ Jap : "G・ゼロ",				Eng : "Gravity Zero",			Chi : "零重力",				descript : "當達成指定條件時，你可以不支付費用召喚此生物或是使用此咒文",},
@@ -157,6 +157,7 @@
 				{ Jap : "S級侵略[不死]",		Eng : "S Rank Invade[Undead]",	Chi : "S級侵略[不死]",		descript : "當指定條件的我方生物發動攻擊時，你可以將我方墓地或是手牌中的此卡進化至該生物之上",},
 				{ Jap : "S級侵略[原始]",		Eng : "S Rank Invade[Original]",		Chi : "S級侵略[原始]",	descript : "當指定條件的我方生物發動攻擊時，你可以將我方魔力區或是手牌中的此卡進化至該生物之上",},
 				{ Jap : "S級侵略[轟速]",		Eng : "S Rank Invade[Speed]",			Chi : "S級侵略[轟速]",	descript : "當指定條件的我方生物發動攻擊時，你可以將我方戰鬥場上、墓地區裡、或是手牌中的此生物進化至該生物之上",},
+				{ Jap : "S級侵略[超轟速]",	Eng : "S Rank Invade[HyperSpeed]",			Chi : "S級侵略[超轟速]",	descript : "當指定條件的我方生物發動攻擊時，你可以將我方超次元區裡、墓地區裡、或是手牌中的此生物進化至該生物之上",},
 				{ Jap : "オレ進化",				Eng : "Self Evolution",			Chi : "玩家進化",			descript : "將玩家的指定部位放置在遊戲台上、並將此生物疊在該部位之上出場，當玩家的指定部位離開桌台、或是當此卡碰觸到遊戲台時，將此卡牌拿回到手牌中",},
 				{ Jap : "パック進化",			Eng : "Pack Evolution",			Chi : "卡包進化",			descript : "將一包指定條件的卡包放到戰鬥場上、並將此生物進化在該卡包之上",},
 				{ Jap : "エイジ・ブレイカー",	Eng : "Age Breaker",			Chi : "年齡擊破者",			descript : "持有玩家的年齡十位數為多少、此生物就擊破幾張護盾",},
@@ -353,6 +354,10 @@
 				{ Jap : "ファイナル・ドロン",		Eng : "Final Doron",		Chi : "最終隱遁",	descript : "當覺醒成此生物時、如果我方尚未於這場遊戲中使用過ファイナル・ドロン的話，則發動以下能力",},
 				{ Jap : "デュエリスト",		Eng : "Duelist",		Chi : "決鬥者",	descript : "一回合一次，你可以從我方超次元區實行一個指定種族的決鬥夥伴卡牌。但是該卡牌的費用不能超過我方魔力區中的卡牌張數",},
 				{ Jap : "デュエリスト・リンク",		Eng : "Duelist Link",		Chi : "決鬥者連結",	descript : "當戰鬥場上存在三張不同名的指定種族卡牌時，將他們連結翻面變成生物",},
+				{ Jap : "虹帝双極∞",		Eng : "Emperor Twinfinity",		Chi : "虹帝雙極∞",	descript : "公開我方牌庫頂3張牌。你可以不支付費用、使用當中雙極卡牌的咒文側。那樣的話，那些咒文唱完之後不會置入墓地、取而代之、打出至戰鬥場上。其餘卡牌則置入我方魔力區中",},
+				{ Jap : "ゴージャス・シンパシー",		Eng : "Gorgeous Sympathy",		Chi : "華麗共鳴",	descript : "此卡的實行費用會隨著每一個指定條件的存在而降低5，但是不能降到比0、或是比其文明數少",},
+				{ Jap : "ドラゴン・ワールド・ブレイカー",		
+												Eng : "Dragon World Breaker",	Chi : "龍世界擊破者",		descript : "此生物擊破所有護盾。在各擊破前，可以將牌庫頂第一張牌以裏側方式置入護盾、或是以表側方式置於1張我方護盾之上。",},
 			];
 			initialData.forEach(item => this.map.set(item.Jap, item));
 		},

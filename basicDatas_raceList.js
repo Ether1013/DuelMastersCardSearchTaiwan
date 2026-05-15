@@ -427,6 +427,8 @@
 				{	Jap : "マシン・イーター・ワード",				Eng : "Machine Eater Word",		Chi : "嗜機者文",			isCategory : false,	},
 				{	Jap : "ジャイアント・ホーン・ビースト",			Eng : "Giant Horn Beast",		Chi : "巨大角獸",			isCategory : false,	},
 				{	Jap : "ジャイアント・アース・ドラゴン",			Eng : "Giant Earth Dragon",		Chi : "巨大大地龍",		isCategory : false,	},
+				{	Jap : "エクスドリーマー",					Eng : "X Dreamer",				Chi : "X織夢師",			isCategory : false,	},
+				{	Jap : "セイント・ペガサス",				Eng : "Saint Pegasus",			Chi : "聖天馬",			isCategory : false,	},
 
 
 				{	Jap : "シュタイン",						Eng : "Stein",					Chi : "修奈達",			isCategory : false,	},
