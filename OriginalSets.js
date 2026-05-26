@@ -475,3 +475,24 @@
 		{ name : "飛闘の覚醒者コスモ・セブΘ", count : 1, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	var setCode = "NET-079";
+	var setName = "台灣CS大賽20260524 1st【火光自然ドギラゴン王道＠念霖】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "皇天闘と炎天華の決断", count : 4, },
+		{ name : "宿禰マロン", count : 4, },
+		{ name : "偽りの希望 鬼丸「終斗」", count : 4, },
+		{ name : "R.S.F.K./オールイン・チャージャー", count : 4, },
+		{ name : "～輝きは奇跡そのもの～", count : 4, },
+		{ name : "頂上連結 ロッド・ゾージア5th", count : 4, },
+		{ name : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」", count : 2, },
+		{ name : "ボルシャック・ドリーム・ドラゴン", count : 4, },
+		{ name : "時の法皇 ミラダンテⅫ", count : 1, },
+		{ name : "剣轟の団長 ドギラゴン王道", count : 4, },
+		{ name : "超竜バジュラズテラ", count : 1, },
+		{ name : "暴龍のT ミリオンベジータ", count : 1, },
+		{ name : "「GG」-001", count : 2, },
+		{ name : "流星のガイアッシュ・カイザー", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
