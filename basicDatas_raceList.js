@@ -429,6 +429,9 @@
 				{	Jap : "ジャイアント・アース・ドラゴン",			Eng : "Giant Earth Dragon",		Chi : "巨大大地龍",		isCategory : false,	},
 				{	Jap : "エクスドリーマー",					Eng : "X Dreamer",				Chi : "X織夢師",			isCategory : false,	},
 				{	Jap : "セイント・ペガサス",				Eng : "Saint Pegasus",			Chi : "聖天馬",			isCategory : false,	},
+				{	Jap : "イニシャルズW",					Eng : "Initials W",				Chi : "字首W",			isCategory : false,	},
+				{	Jap : "アウトレイジ・コマンドMAX",			Eng : "Outrage Command MAX",	Chi : "無法者指揮MAX",	isCategory : false,	},
+				{	Jap : "オラクル・コマンド",					Eng : "Oracle Command",			Chi : "神諭指揮",			isCategory : false,	},
 
 
 				{	Jap : "シュタイン",						Eng : "Stein",					Chi : "修奈達",			isCategory : false,	},
