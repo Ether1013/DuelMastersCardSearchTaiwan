@@ -496,3 +496,26 @@
 		{ name : "流星のガイアッシュ・カイザー", count : 1, },
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
+	
+	
+	var setCode = "NET-082";
+	var setName = "台灣CS大賽20260628 1st【霸王門＠仕霖】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "修羅の死神フミシュナ / 「この先は修羅の道ぞ」", count : 4, },
+		{ name : "凶怖覇王 ブラックXENARCH", count : 4, },
+		{ name : "アーテル・ゴルギーニ", count : 4, },
+		{ name : "忍蛇の聖沌 c0br4", count : 4, },
+		{ name : "百鬼の邪王門", count : 4, },
+		{ name : "Forbidden Sunrise ～禁断の夜明け～", count : 3, },
+		{ name : "漆黒の深淵 ジャシン帝", count : 3, },
+		{ name : "魔誕の覇王アザファウスト", count : 3, },
+		{ name : "覇王ノワールモナーク", count : 3, },
+		{ name : "邪龍 ジャジーブラッド", count : 2, },
+		{ name : "一王二命三眼槍", count : 2, },
+		{ name : "単騎連射 マグナム", count : 1, },
+		{ name : "鬼ヶ伝双 VSジャオウガ", count : 1, },
+		{ name : "死神覇王 ブラックXENARCH", count : 1, },
+		{ name : "悪夢神バロム・ナイトメア", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
