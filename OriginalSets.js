@@ -497,6 +497,26 @@
 	];
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
+	var setCode = "NET-081";
+	var setName = "台灣CS大賽20260627 1st【綠單高麗菜＠國洋】";
+	var isDeck = true;
+	var setCardList = [
+		{ name : "クイーン&かぼちゃうちゃう", count : 4, },
+		{ name : "ジャンボ・ラパダイス", count : 4, },
+		{ name : "ゲイルマッチ・ビートル", count : 2, },
+		{ name : "「K」-9+9+9", count : 2, },
+		{ name : "大虹帝 ミノガミ / 「ミノマルちゃん！わたしがついてるわ！」", count : 2, },
+		{ name : "コレンココ・タンク/ボント・プラントボ", count : 4, },
+		{ name : "超時空罠 デンジャデオン / 「トラップ？ちがうわ、お願いしてるだけ！」", count : 4, },
+		{ name : "大長老 アプル / 「わたしが自然文明のプリンセス？」", count : 4, },
+		{ name : "超球の超人/父なるタッチダウン", count : 1, },
+		{ name : "地封龍 ギャイア", count : 3, },
+		{ name : "キャベッジ・セッションズ/ソイルピンプ・キャベッジ", count : 4, },
+		{ name : "暴龍のT ミリオンベジータ", count : 2, },
+		{ name : "うららかもも＆ミノマル ー献身のヒロインー", count : 3, },
+		{ name : "百族の団長 プチョヘンザ斧", count : 1, },
+	];
+	setDatas.addSet( setCode , setName , isDeck , setCardList );
 	
 	var setCode = "NET-082";
 	var setName = "台灣CS大賽20260628 1st【霸王門＠仕霖】";
