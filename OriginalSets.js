@@ -438,7 +438,7 @@
 	setDatas.addSet( setCode , setName , isDeck , setCardList );
 
 	var setCode = "NET-078";
-	var setName = "台灣CS大賽20260509 1st【決鬥樂園＠派大】";
+	var setName = "台灣CS大賽20260510 1st【決鬥樂園＠派大】";
 	var isDeck = true;
 	var setCardList = [
 		{ name : "地龍神の魔陣", count : 4, },
