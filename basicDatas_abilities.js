@@ -360,6 +360,11 @@
 				{ Jap : "ゴージャス・シンパシー",		Eng : "Gorgeous Sympathy",		Chi : "華麗共鳴",	descript : "此卡的實行費用會隨著每一個指定條件的存在而降低5，但是不能降到比0、或是比其文明數少",},
 				{ Jap : "ドラゴン・ワールド・ブレイカー",		
 												Eng : "Dragon World Breaker",	Chi : "龍世界擊破者",		descript : "此生物擊破所有護盾。在各擊破前，可以將牌庫頂第一張牌以裏側方式置入護盾、或是以表側方式置於1張我方護盾之上。",},
+				{ Jap : "S革命チェンジ",		Eng : "Shield Revolution Change",		Chi : "護盾革命交替",	descript : "當指定條件的我方生物發動攻擊時，你可以將手牌中的此生物與發動攻擊的生物進行交換",},
+				{ Jap : "SSS級侵略[覇道]",		Eng : "SSS Invade Overbearing",	Chi : "SSS級侵略[霸道]",	descript : "當指定生物發動攻擊時，你可以將戰鬥場上、魔力區、或是手牌中的此卡疊放在該生物之上進化",},
+				{ Jap : "CRY-S-MAX進化",			Eng : "CRY-S-MAX Evolution",		Chi : "CRY-S-MAX進化",			descript : "當我方敗北、或是此生物離場時，你可以取而代之、破壞三張我方表側的卡或是1張我方護盾。(此生物不需要進化種，當戰鬥場上有2隻以上的S-MAX進化生物時，選擇其中1隻、並將其餘的拿回到手牌中)",},
+				{ Jap : "左G・リンク・ガルド",		Eng : "Left God Link Garde",		Chi : "左神連結先鋒",			descript : "此生物可以連結在指定生物的左側",},
+				{ Jap : "右G・リンク・ガルド",		Eng : "Right God Link Garde",		Chi : "右神連結先鋒",			descript : "此生物可以連結在指定生物的右側",},
 			];
 			initialData.forEach(item => this.map.set(item.Jap, item));
 		},

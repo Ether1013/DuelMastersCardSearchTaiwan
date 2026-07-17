@@ -432,6 +432,15 @@
 				{	Jap : "イニシャルズW",					Eng : "Initials W",				Chi : "字首W",			isCategory : false,	},
 				{	Jap : "アウトレイジ・コマンドMAX",			Eng : "Outrage Command MAX",	Chi : "無法者指揮MAX",	isCategory : false,	},
 				{	Jap : "オラクル・コマンド",					Eng : "Oracle Command",			Chi : "神諭指揮",			isCategory : false,	},
+				{	Jap : "ゴッド・ガルド",					Eng : "God Garde",				Chi : "神先鋒",			isCategory : false,	},
+				{	Jap : "メカ・アーマード・ドラゴン",				Eng : "Mecha Armored Dragon",	Chi : "機械裝甲龍",		isCategory : false,	},
+				{	Jap : "マジック・アーマード・ドラゴン",			Eng : "Magic Armored Dragon",	Chi : "魔法裝甲龍",		isCategory : false,	},
+				{	Jap : "ジャイアント・アーマード・ドラゴン",		Eng : "Giant Armored Dragon",	Chi : "巨人裝甲龍",		isCategory : false,	},
+				{	Jap : "ロスト・クルセイダー・ワード",			Eng : "Lost Crusader Word",		Chi : "失落的十字軍文",	isCategory : false,	},
+				{	Jap : "アーマード・ドラゴン・ワード",			Eng : "Armored Dragon Word",	Chi : "裝甲龍文",			isCategory : false,	},
+				{	Jap : "ゴッド・ガルド・ワード",				Eng : "God Garde Word",			Chi : "神先鋒文",			isCategory : false,	},
+				{	Jap : "ソニック・コマンド・ワード",				Eng : "Sonic Command Word",		Chi : "音速指揮文",		isCategory : false,	},
+				{	Jap : "デモニオ・ワード",					Eng : "Demonio Word",			Chi : "邪鬼文",			isCategory : false,	},
 
 
 				{	Jap : "シュタイン",						Eng : "Stein",					Chi : "修奈達",			isCategory : false,	},
