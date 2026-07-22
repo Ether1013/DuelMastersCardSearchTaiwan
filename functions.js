@@ -1437,10 +1437,13 @@
 					if ( cardNameUpper.indexOf( filterNameUpper ) === -1 && 
 						clearNameUpper.indexOf( filterNameUpper ) === -1 ) {
 						//找不到的話再去暱稱裡找
-						if ( nickNamesMap.getRealName( filterNameUpper ) == cardNameUpper ){
-							sortCardDatas.push(theCard);
-							//暱稱有找到的話直接跳出去，因為暱稱是唯一的
-							break;
+						var oriName = nickNamesMap.getRealName( filterNameUpper );
+						if ( oriName != null ){
+							if ( insertData.name == oriName ){
+								sortCardDatas.push(theCard);
+								//暱稱有找到的話直接跳出去，因為暱稱是唯一的
+								break;
+							}
 						}
 						continue;
 					}
