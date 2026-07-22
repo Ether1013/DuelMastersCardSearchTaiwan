@@ -751,9 +751,9 @@
 				{ realName : "蒼き団長 ドギラゴン剣", 			nickNames : [ "團長" ]},
 				{ realName : "剣轟の団長 ドギラゴン王道", 			nickNames : [ "劍轟" ]},
 				{ realName : "砕慄接続 グレイトフル・ベン", 			nickNames : [ "大便","偉大便" ]},
+				{ realName : "終焉の禁断 ドルマゲドンX", 			nickNames : [ "大禁斷" ]},
+				{ realName : "伝説の禁断 ドキンダムX", 			nickNames : [ "小禁斷" ]},
 				/*
-				{ realName : "", 				nickNames : [ "" ]},
-				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
