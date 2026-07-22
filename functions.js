@@ -1232,7 +1232,7 @@
 		const customerAbilitiesFilterValue = getById("customerAbilitiesFilter").value.split(/\s/g).filter(s => s !== '');
 		const abilitiesValues = getValuesByName( "abilities" );
 		//指定種族關鍵字
-		const abilitiesRaceValues = getById("ab_race").value;
+		const abilitiesRaceValues = getById("ab_race") == null ? [] : getById("ab_race").value;
 		//指定卡名關鍵字
 		const abilitiesNameValues = getById("ab_name").value;
 		//為求便利，將種族關鍵字跟卡名關鍵字放進能力關鍵字值陣列末
@@ -1436,6 +1436,12 @@
 
 					if ( cardNameUpper.indexOf( filterNameUpper ) === -1 && 
 						clearNameUpper.indexOf( filterNameUpper ) === -1 ) {
+						//找不到的話再去暱稱裡找
+						if ( nickNamesMap.getRealName( filterNameUpper ) == cardNameUpper ){
+							sortCardDatas.push(theCard);
+							//暱稱有找到的話直接跳出去，因為暱稱是唯一的
+							break;
+						}
 						continue;
 					}
 				}
