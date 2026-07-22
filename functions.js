@@ -1227,6 +1227,7 @@
 		const powerValue = getById( "power" ).value;
 		const powerValue2 = getById( "power2" ).value;
 		const cardNameValue = getById( "cardName" ).value.toUpperCase();
+		const cardNameValueFromNickname = nickNamesMap.getRealName( cardNameValue );
 
 		//指定能力關鍵字
 		const customerAbilitiesFilterValue = getById("customerAbilitiesFilter").value.split(/\s/g).filter(s => s !== '');
@@ -1437,13 +1438,10 @@
 					if ( cardNameUpper.indexOf( filterNameUpper ) === -1 && 
 						clearNameUpper.indexOf( filterNameUpper ) === -1 ) {
 						//找不到的話再去暱稱裡找
-						var oriName = nickNamesMap.getRealName( filterNameUpper );
-						if ( oriName != null ){
-							if ( insertData.name == oriName ){
-								sortCardDatas.push(theCard);
-								//暱稱有找到的話直接跳出去，因為暱稱是唯一的
-								break;
-							}
+						if ( cardNameValueFromNickname != null && cardNameValueFromNickname == insertData.name ){
+							sortCardDatas.push(theCard);
+							//暱稱有找到的話直接跳出去，因為暱稱是唯一的
+							break;
 						}
 						continue;
 					}
