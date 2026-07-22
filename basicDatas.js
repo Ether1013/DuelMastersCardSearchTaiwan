@@ -719,7 +719,7 @@
 				{ realName : "悪魔神ドルバロム", 				nickNames : [ "大惡魔神" ]},
 				{ realName : "悪魔神バロム・クエイク", 				nickNames : [ "惡魔神地震","地震" ]},
 				{ realName : "水蜃 フカフチノカミ", 				nickNames : [ "醜醜魚" ]},
-				{ realName : "ボルシャック・栄光・ルピア", 			nickNames : [ "榮光雞" ]},
+				{ realName : "ボルシャック・栄光・ルピア", 			nickNames : [ "榮光雞","榮光鳥" ]},
 				{ realName : "氷柱と炎弧の決断", 				nickNames : [ "完美水火" ]},
 				{ realName : "熱線と照射の決断", 				nickNames : [ "完美光火" ]},
 				{ realName : "理想と平和の決断", 				nickNames : [ "完美光水" ]},
@@ -753,8 +753,8 @@
 				{ realName : "砕慄接続 グレイトフル・ベン", 			nickNames : [ "大便","偉大便" ]},
 				{ realName : "終焉の禁断 ドルマゲドンX", 			nickNames : [ "大禁斷" ]},
 				{ realName : "伝説の禁断 ドキンダムX", 			nickNames : [ "小禁斷" ]},
+				{ realName : "カイザー・ルピア", 					nickNames : [ "凱薩鳥" ]},
 				/*
-				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
