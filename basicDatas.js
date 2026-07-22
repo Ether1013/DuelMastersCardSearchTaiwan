@@ -754,9 +754,9 @@
 				{ realName : "終焉の禁断 ドルマゲドンX", 			nickNames : [ "大禁斷" ]},
 				{ realName : "伝説の禁断 ドキンダムX", 			nickNames : [ "小禁斷" ]},
 				{ realName : "カイザー・ルピア", 					nickNames : [ "凱薩鳥" ]},
+				{ realName : "ラッキー・ダーツ", 					nickNames : [ "飛鏢" ]},
+				{ realName : "オールデリート", 					nickNames : [ "全刪" ]},
 				/*
-				{ realName : "", 				nickNames : [ "" ]},
-				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
