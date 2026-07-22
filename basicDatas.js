@@ -741,7 +741,7 @@
 				{ realName : "CRYMAX ジャオウガ", 				nickNames : [ "哭大哥" ]},
 				{ realName : "音卿の精霊龍 ラフルル・ラブ /「未来から来る、だからミラクル」", 				
 															nickNames : [ "拉芙","母龍" ]},
-				{ realName : "天革の騎令嬢 ミラクルステラ", 		nickNames : [ "C字褲龍","騎令孃" ]},
+				{ realName : "天革の騎令嬢 ミラクルステラ", 		nickNames : [ "C字褲龍","騎令孃","天革妹","妹龍" ]},
 				{ realName : "完璧団長 オーパーツ銃", 			nickNames : [ "完團" ]},
 				{ realName : "時の団長 ミラダンテ槍", 			nickNames : [ "時團" ]},
 				{ realName : "烈しき切札 ドギラゴン逆", 			nickNames : [ "團逆" ]},
