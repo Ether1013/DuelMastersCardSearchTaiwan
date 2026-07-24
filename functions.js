@@ -1571,7 +1571,7 @@
 					}
 					abText = translateText( abText, isTC2C );
 					for (const filterValue of customerAbilitiesFilterValue) {
-						if ( !filterValue.split("|").some(item => abText.includes(item)) ) {
+						if ( !filterValue.split(/[／/|｜＼\\]/g).some(item => abText.includes(item)) ) {
 							absAllow = false;
 							break;
 						}
