@@ -1571,10 +1571,16 @@
 					}
 					abText = translateText( abText, isTC2C );
 					for (const filterValue of customerAbilitiesFilterValue) {
+						if ( !filterValue.split("|").some(item => abText.includes(item)) ) {
+							absAllow = false;
+							break;
+						}
+						/*
 						if ( !abText.includes( filterValue ) ){ 
 							absAllow = false;
 							break;
 						}
+						*/
 					}
 				}
 				if ( !absAllow ){
