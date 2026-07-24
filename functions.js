@@ -1559,6 +1559,68 @@
 				if ( customerAbilitiesFilterValue.length > 0 ){
 					let abText = "";
 					for (const spItem of insertData.sp) {
+						// [修改] 搜尋時：先將 (IG)...(/IG) 整段內容挖空
+						const searchTargetStr = spItem.replace(/\(IG\)[\s\S]*?\(\/IG\)/g, "");
+
+						// [修改] 改用 searchTargetStr
+						const parseTags = keyWords.transTags( searchTargetStr );
+						for (const tag of parseTags) {
+							abText += ( tag.innerText == null ? tag.data : tag.innerText );
+						}
+					}
+					abText = translateText( abText, isTC2C );
+
+					// 1. 預先提取本文中所有的數字
+					const bodyNumbers = (abText.match(/\d+/g) || []).map(Number);
+
+					for (const filterValue of customerAbilitiesFilterValue) {
+						if ( !filterValue.split(/[／/|｜＼\\]/g).some(item => {
+							const trimmedItem = item.trim();
+							
+							// 【關鍵正則】: (前綴)(數字)([+-])(後綴)
+							// Group 1: 前綴文字 (非貪婪匹配)
+							// Group 2: 數字
+							// Group 3: + 或 -
+							// Group 4: 後綴文字
+							const comboMatch = trimmedItem.match(/^(.*?)(\d+)([+-])(.*)$/);
+
+							if (comboMatch) {
+								const prefixText = comboMatch[1]; // 前綴
+								const targetNum = Number(comboMatch[2]);
+								const sign = comboMatch[3];
+								const suffixText = comboMatch[4]; // 後綴
+								const isLargeNum = targetNum >= 500;
+
+								// 判斷 1: 本文是否包含「前綴文字」？
+								if (prefixText && !abText.includes(prefixText)) {
+									return false;
+								}
+
+								// 判斷 2: 本文是否包含「後綴文字」？
+								if (suffixText && !abText.includes(suffixText)) {
+									return false;
+								}
+
+								// 判斷 3: 數值比對 (兼顧大小數字分界)
+								if (sign === '+') {
+									return bodyNumbers.some(num => num >= targetNum && (isLargeNum ? num >= 500 : num < 500));
+								} else if (sign === '-') {
+									return bodyNumbers.some(num => num <= targetNum && (isLargeNum ? num >= 500 : num < 500));
+								}
+							}
+
+							// 沒有 +/- 記號的普通文字比對
+							return abText.includes(trimmedItem);
+						})) {
+							absAllow = false;
+							break;
+						}
+					}
+				}
+/*
+				if ( customerAbilitiesFilterValue.length > 0 ){
+					let abText = "";
+					for (const spItem of insertData.sp) {
 						
 						// [修改] 搜尋時：先將 (IG)...(/IG) 整段內容挖空
 						const searchTargetStr = spItem.replace(/\(IG\)[\s\S]*?\(\/IG\)/g, "");
@@ -1575,14 +1637,9 @@
 							absAllow = false;
 							break;
 						}
-						/*
-						if ( !abText.includes( filterValue ) ){ 
-							absAllow = false;
-							break;
-						}
-						*/
 					}
 				}
+*/
 				if ( !absAllow ){
 					continue;
 				}
