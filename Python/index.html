@@ -508,19 +508,23 @@
         </div>
 
         <!-- E/G. 能力過濾 -->
-        <div class="col" id="section-ability">
-            <h3>能力過濾</h3>
-            <input type="text" id="ability-text" placeholder="自由輸入，空格表示and，|表示or" style="margin-bottom: 10px;">
-            <div id="ability-container">
-                <div class="flex-input-row">
-                    <select class="ability-select"></select>
-                    <button class="btn-icon advanced-only btn-add-ability">+</button>
-                </div>
-            </div>
-            <div class="advanced-only" style="margin-top: 10px; width: 100%;">
-                <select class="race-select-adv"></select>
-            </div>
-        </div>
+		<div class="col" id="section-ability">
+			<h3>能力過濾</h3>
+			<!-- 【新增】自由輸入框 + [使用技巧] 按鈕容器 -->
+			<div class="flex-input-row" style="margin-bottom: 10px;">
+				<input type="text" id="ability-text" placeholder="自由輸入，空格表示AND，/或|表示OR" style="margin-bottom: 0;">
+				<button type="button" id="btn-ability-tips" class="btn-icon" style="white-space: nowrap; padding: 8px 12px; background: #0284c7; color: white; border: none;">使用技巧</button>
+			</div>
+			<div id="ability-container">
+				<div class="flex-input-row">
+					<select class="ability-select"></select>
+					<button class="btn-icon advanced-only btn-add-ability">+</button>
+				</div>
+			</div>
+			<div class="advanced-only" style="margin-top: 10px; width: 100%;">
+				<select class="race-select-adv"></select>
+			</div>
+		</div>
 
         <div class="row-flex">
             <!-- F/H. 卡名指定 -->
@@ -1638,14 +1642,14 @@
 			});
 		}
 
-		// 輔助函式：解析文明字串並轉為排序後的陣列 (例如 "闇自然" -> ["光", "自然"] -> "自然闇")
+		// 輔助函式：解析文明字串並轉為排序後的標準化字串 (例如 "闇自然" -> "自然闇")
 		function parseAndSortCivs(civStr) {
-			// 支援中日文常見文明單字
+			if (!civStr) return null;
 			const civMap = ["光", "水", "闇", "暗", "火", "自然", "自", "ゼロ", "無"];
 			const foundCivs = [];
 			
 			let temp = civStr;
-			// 優先匹配較長的單字（如 "自然" 先於 "自"）
+			// 優先匹配較長的單詞（如 "自然" 先於 "自"）
 			civMap.sort((a, b) => b.length - a.length).forEach(civ => {
 				while (temp.includes(civ)) {
 					foundCivs.push(civ === "暗" ? "闇" : (civ === "自" ? "自然" : civ));
@@ -1653,58 +1657,56 @@
 				}
 			});
 
-			// 如果剩餘字串不為空，說明含有非文明字元，傳回 null 表示非純文明語法
 			if (temp.trim() !== "") return null;
-			
-			// 排序後組合，確保 "闇自然" 與 "自然闇" 產出相同的 key
 			return foundCivs.sort().join("");
 		}
 
 		function checkSingleConditionInSp(spList, cond) {
-			// 【新增】文明 + 數字 + 記號 的無順序組合判斷
-			// 正規表示式拆解：1. 文明部分  2. 數字部分 (可選)  3. 運算符 +/- (可選)
-			const civCondMatch = cond.match(/^([\u4e00-\u9fa5a-zA-Z]+)(\d+)?([+-])?$/);
+			// 1. 解析使用者輸入：必須完全由 "文明(可複數) + 數字(可選) + 運算符(可選)" 組成
+			const userMatch = cond.match(/^([光水闇暗火自然自無ゼロ]+)(\d+)?([+-])?$/);
 
-			if (civCondMatch) {
-				const rawCivs = civCondMatch[1];
-				const targetNum = civCondMatch[2] ? Number(civCondMatch[2]) : null;
-				const op = civCondMatch[3];
+			if (userMatch) {
+				const sortedUserCivs = parseAndSortCivs(userMatch[1]);
+				
+				if (sortedUserCivs !== null) {
+					const targetNum = userMatch[2] ? Number(userMatch[2]) : null;
+					const op = userMatch[3];
 
-				const sortedTargetCivs = parseAndSortCivs(rawCivs);
+					// 構建嚴格的正規表示式：文明字詞必須與數字「完全無縫緊貼」
+					// Group 1: 緊密相連的文明字元 (如 "自然闇" 或 "火水")
+					// Group 2: 緊跟在後面的數字 (如 "7" 或 "6")
+					const numPatternStr = "([光水闇暗火自然自無ゼロ]+)(\\d+)";
 
-				// 如果確認使用者輸入的是「純文明（+數字/記號）」的組合
-				if (sortedTargetCivs !== null) {
-					return spList.some(sp => {
-						// 1. 從卡牌能力文字 (sp) 中尋找所有可能包含文明的片段
-						// 例如尋找 sp 中的文明組合
-						const spCivMatch = sp.match(/[光水闇暗火自然自無]+/g);
-						if (!spCivMatch) return false;
-
-						return spCivMatch.some(spCivStr => {
-							const sortedSpCivs = parseAndSortCivs(spCivStr);
-							if (!sortedSpCivs || sortedSpCivs !== sortedTargetCivs) return false;
-
-							// 情況 A：僅文明組合（例如 EX4: "水自然" -> 匹配 "自然水"）
-							if (targetNum === null) return true;
-
-							// 情況 B：文明 + 數字 (+/-)（例如 EX1~EX3）
-							// 抓出該文明字串附近的數字進行比對
-							const cleanedSp = sp.replace(/1[個張隻枚個]/g, ' ');
-							const numbersInSp = (cleanedSp.match(/\d+/g) || []).map(Number);
-
-							return numbersInSp.some(spNum => {
-								if (op === '+') return spNum >= targetNum;
-								if (op === '-') return spNum <= targetNum;
-								return spNum === targetNum;
+					const isMatch = spList.some(sp => {
+						// A. 若使用者【有輸入數字】(例如: "闇自然7" 或 "火水6-")
+						if (targetNum !== null) {
+							const matches = Array.from(sp.matchAll(new RegExp(numPatternStr, 'g')));
+							return matches.some(match => {
+								const sortedSpCivs = parseAndSortCivs(match[1]);
+								if (sortedSpCivs === sortedUserCivs) {
+									const spNum = Number(match[2]);
+									if (op === '+') return spNum >= targetNum;
+									if (op === '-') return spNum <= targetNum;
+									return spNum === targetNum;
+								}
+								return false;
 							});
-						});
+						}
+
+						// B. 若使用者【沒有輸入數字】(例如: "水自然")
+						const civMatches = sp.match(/[光水闇暗火自然自無ゼロ]+/g);
+						if (!civMatches) return false;
+						return civMatches.some(m => parseAndSortCivs(m) === sortedUserCivs);
 					});
+
+					// 若比對成功，直接回傳 true
+					if (isMatch) return true;
 				}
 			}
 
-			// --- 以下為原本的比對邏輯 ---
+			// --- 以下為原本的備用比對邏輯 (純數字 / 一般字串包含) ---
 
-			// 1. 檢查是否為純數字運算符，例如 "7-"、"2000+"、"5"
+			// 2. 純數字運算符，例如 "7-"、"2000+"、"5"
 			const numMatch = cond.match(/^(\d+)([+-])?$/);
 			if (numMatch) {
 				const targetNum = Number(numMatch[1]);
@@ -1726,27 +1728,8 @@
 				});
 			}
 
-			// 2. 中文量詞數字比對（如 "1+個"）
-			const chineseNumMatch = cond.match(/^(\d+)([+-])?([個張隻枚])$/);
-			if (chineseNumMatch) {
-				const targetNum = Number(chineseNumMatch[1]);
-				const op = chineseNumMatch[2];
-				const unit = chineseNumMatch[3];
-
-				return spList.some(sp => {
-					const regex = new RegExp(`(\\d+)[${unit}]`, 'g');
-					let match;
-					while ((match = regex.exec(sp)) !== null) {
-						const spNum = Number(match[1]);
-						if (op === '+' && spNum >= targetNum) return true;
-						if (op === '-' && spNum <= targetNum) return true;
-						if (!op && spNum === targetNum) return true;
-					}
-					return false;
-				});
-			}
-
-			// 3. 一般文字包含比對
+			// 3. 一般文字包含比對 (Fallback)
+			// 像是 "火或自然7費" 或非緊密貼合的文字，會直接走這裡的原本比對！
 			return spList.some(sp => sp.includes(cond));
 		}
 
@@ -2262,7 +2245,6 @@
         }
 
         // 核心文字標籤化處理函數
-        // 核心文字標籤化處理函數
         function applyEffectTags(text) {
             if (!text) return "";
 
@@ -2362,6 +2344,47 @@
 
             return processedText;
         }
+		
+		// =========================================================================
+		// ⚠️ 【AI 提示規範註解 / DEVELOPER NOTICE】
+		// 當未來修改自由輸入框 (ability-text) 或 checkSingleConditionInSp 的語法解析規則時，
+		// 請務必同步修改下方 SHOW_ABILITY_TIPS_ALERT() 中的說明文字，確保使用者體驗一致！
+		// =========================================================================
+
+		function showAbilityTipsAlert() {
+			const tipsText = 
+		`💡 【能力自由輸入框 - 語法使用技巧】
+
+		1. 基礎邏輯：
+		   • 空格：表示 AND (必須同時滿足)
+			 例：「Speed Attacker 7」
+		   • 符號 [/ / | \\ ,]：表示 OR (滿足其中之一即可)
+			 例：「火/自然」或「ブロッカー|S・トリガー」
+
+		2. 數值與比較運算符 (+ / -)：
+		   • [數字+]：指定數字以上的數值 (>=)
+			 例：「2000+」(攻擊力 2000 以上)
+		   • [數字-]：指定數字以下的數值 (<=)
+			 例：「5-」(費用 5 以下)
+		   • [數字]：完全匹配該數值 (=)
+			 例：「7」(費用或特定效果數字等於 7)
+
+		3. 中文量詞比較：
+		   • 支援「數字 + 運算符 + 量詞」格式 (量詞支援：個/張/隻/枚)
+			 例：「2+隻」(2隻以上)、「1枚」(1張)
+
+		4. 純文明無順序比對 (文明 + 數字/運算符)：
+		   • 當輸入為「純文明(可複數) + 數字(可選) + 記號(可選)」且完全緊貼時，文明順序可任意亂排：
+			 例：「闇自然7」→ 可找出「自然闇7」
+			 例：「火水6-」→ 可找出「水火5」或「水火6」
+			 例：「水自然」→ 可找出「自然水」
+		   ⚠️ 注意：若中間插入其他字眼（如「火或自然7費」），則不適用無順序規則，會轉回精確字串比對。`;
+
+			alert(tipsText);
+		}
+
+		// 綁定 [使用技巧] 按鈕點擊事件
+		document.getElementById('btn-ability-tips')?.addEventListener('click', showAbilityTipsAlert);
 
         // 關閉 Modal 事件
         modalClose.addEventListener('click', () => {
