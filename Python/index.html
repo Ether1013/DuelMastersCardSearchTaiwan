@@ -1638,24 +1638,81 @@
 			});
 		}
 
-		// ==========================================
-		// 3. 更新自由輸入數字比對 (1. 排除文字 1隻/1張/1個 的比對)
-		// ==========================================
-		function checkSingleConditionInSp(spList, cond) {
-			// 檢查是否為純數字運算符，例如 "7-"、"2000+"、"5"
-			const numMatch = cond.match(/^(\d+)([+-])?$/);
+		// 輔助函式：解析文明字串並轉為排序後的陣列 (例如 "闇自然" -> ["光", "自然"] -> "自然闇")
+		function parseAndSortCivs(civStr) {
+			// 支援中日文常見文明單字
+			const civMap = ["光", "水", "闇", "暗", "火", "自然", "自", "ゼロ", "無"];
+			const foundCivs = [];
+			
+			let temp = civStr;
+			// 優先匹配較長的單字（如 "自然" 先於 "自"）
+			civMap.sort((a, b) => b.length - a.length).forEach(civ => {
+				while (temp.includes(civ)) {
+					foundCivs.push(civ === "暗" ? "闇" : (civ === "自" ? "自然" : civ));
+					temp = temp.replace(civ, "");
+				}
+			});
 
+			// 如果剩餘字串不為空，說明含有非文明字元，傳回 null 表示非純文明語法
+			if (temp.trim() !== "") return null;
+			
+			// 排序後組合，確保 "闇自然" 與 "自然闇" 產出相同的 key
+			return foundCivs.sort().join("");
+		}
+
+		function checkSingleConditionInSp(spList, cond) {
+			// 【新增】文明 + 數字 + 記號 的無順序組合判斷
+			// 正規表示式拆解：1. 文明部分  2. 數字部分 (可選)  3. 運算符 +/- (可選)
+			const civCondMatch = cond.match(/^([\u4e00-\u9fa5a-zA-Z]+)(\d+)?([+-])?$/);
+
+			if (civCondMatch) {
+				const rawCivs = civCondMatch[1];
+				const targetNum = civCondMatch[2] ? Number(civCondMatch[2]) : null;
+				const op = civCondMatch[3];
+
+				const sortedTargetCivs = parseAndSortCivs(rawCivs);
+
+				// 如果確認使用者輸入的是「純文明（+數字/記號）」的組合
+				if (sortedTargetCivs !== null) {
+					return spList.some(sp => {
+						// 1. 從卡牌能力文字 (sp) 中尋找所有可能包含文明的片段
+						// 例如尋找 sp 中的文明組合
+						const spCivMatch = sp.match(/[光水闇暗火自然自無]+/g);
+						if (!spCivMatch) return false;
+
+						return spCivMatch.some(spCivStr => {
+							const sortedSpCivs = parseAndSortCivs(spCivStr);
+							if (!sortedSpCivs || sortedSpCivs !== sortedTargetCivs) return false;
+
+							// 情況 A：僅文明組合（例如 EX4: "水自然" -> 匹配 "自然水"）
+							if (targetNum === null) return true;
+
+							// 情況 B：文明 + 數字 (+/-)（例如 EX1~EX3）
+							// 抓出該文明字串附近的數字進行比對
+							const cleanedSp = sp.replace(/1[個張隻枚個]/g, ' ');
+							const numbersInSp = (cleanedSp.match(/\d+/g) || []).map(Number);
+
+							return numbersInSp.some(spNum => {
+								if (op === '+') return spNum >= targetNum;
+								if (op === '-') return spNum <= targetNum;
+								return spNum === targetNum;
+							});
+						});
+					});
+				}
+			}
+
+			// --- 以下為原本的比對邏輯 ---
+
+			// 1. 檢查是否為純數字運算符，例如 "7-"、"2000+"、"5"
+			const numMatch = cond.match(/^(\d+)([+-])?$/);
 			if (numMatch) {
 				const targetNum = Number(numMatch[1]);
-				const op = numMatch[2]; // '+' 或 '-' 或 undefined
-
+				const op = numMatch[2];
 				const isPowerType = targetNum >= 500;
 
 				return spList.some(sp => {
-					// 先過濾掉 "1個"、"1張"、"1隻"、"1枚" 等量詞組合中的 "1"
 					const cleanedSp = sp.replace(/1[個張隻枚個]/g, ' ');
-
-					// 從清洗後的 SP 文字中抓出剩餘的數字
 					const numbersInSp = (cleanedSp.match(/\d+/g) || []).map(Number);
 
 					return numbersInSp.some(spNum => {
@@ -1669,7 +1726,7 @@
 				});
 			}
 
-			// 當使用者輸入包含文字（例如 "1個" 或 "1+個"）時，直接進行字串/正規表示式比對
+			// 2. 中文量詞數字比對（如 "1+個"）
 			const chineseNumMatch = cond.match(/^(\d+)([+-])?([個張隻枚])$/);
 			if (chineseNumMatch) {
 				const targetNum = Number(chineseNumMatch[1]);
@@ -1689,7 +1746,7 @@
 				});
 			}
 
-			// 一般非數值條件，進行包含 (Includes) 比對
+			// 3. 一般文字包含比對
 			return spList.some(sp => sp.includes(cond));
 		}
 
@@ -1824,7 +1881,7 @@
 						hyperBtn.style.borderRadius = '4px';
 						hyperBtn.style.cursor = 'pointer';
 						hyperBtn.style.fontWeight = 'bold';
-						hyperBtn.innerText = '[>>超化模式]';
+						hyperBtn.innerText = '>> 超化模式';
 						
 						block.appendChild(hyperBtn);
 					}
@@ -2046,14 +2103,14 @@
 							isHyperModeActive = !isHyperModeActive;
 
 							if (isHyperModeActive) {
-								hyperBtn.innerText = '[一般模式<<]';
+								hyperBtn.innerText = '一般模式 <<';
 								hyperBtn.style.backgroundColor = '#424242';
 
 								if (w.hypermode.power !== undefined && w.hypermode.power !== null) {
 									renderPowerValue(w.hypermode.power, w.pc);
 								}
 							} else {
-								hyperBtn.innerText = '[>>超化模式]';
+								hyperBtn.innerText = '>> 超化模式';
 								hyperBtn.style.backgroundColor = '#d32f2f';
 
 								if (w.power !== undefined && w.power !== null) {
