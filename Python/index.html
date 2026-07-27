@@ -1340,13 +1340,28 @@
 
 			// 1. 卡種
 			let checkedCardTypes = Array.from(document.querySelectorAll('.chk-cardtype:checked')).map(cb => cb.value);
-
-			// 判斷是否勾選 [查詢衍生卡種]
 			const isDerivedChecked = document.getElementById('chk-derived-cardtype')?.checked;
 
-			// 若有勾選，在後台過濾時自動將所有子孫卡種帶入清單（UI 畫面保持不變）
-			if (isDerivedChecked && checkedCardTypes.length > 0) {
-				checkedCardTypes = getAllDescendantCardTypes(checkedCardTypes);
+			if (checkedCardTypes.length > 0) {
+				let typesToExpand = [];
+				
+				if (isDerivedChecked) {
+					// 情況 A：有勾選 [查詢衍生卡種]，所有打勾的卡種通通都要往下展開
+					typesToExpand = checkedCardTypes;
+				} else {
+					// 情況 B：沒勾選，但必須自動找出 category=true 或 catagory=true 的「類別型卡種」來強制展開
+					typesToExpand = checkedCardTypes.filter(val => {
+						const ctInfo = rawCardTypes.find(ct => ct.value === val);
+						return ctInfo && (ctInfo.category || ctInfo.catagory);
+					});
+				}
+
+				// 如果有需要展開的母卡種，進行遞迴尋找並與原本勾選的陣列聯集
+				if (typesToExpand.length > 0) {
+					const expandedTypes = getAllDescendantCardTypes(typesToExpand);
+					const mergedSet = new Set([...checkedCardTypes, ...expandedTypes]);
+					checkedCardTypes = Array.from(mergedSet);
+				}
 			}
 			
 			// 2. 雙極卡
@@ -1517,6 +1532,9 @@
 
 		// 6. 費用指定 (單一 & 清單)
 		function checkCostMatchSingle(cost, cfg) {
+			// 【修復】如果使用者根本沒有設定費用條件，直接視為符合，直接放行
+			if (cfg.cost1 === "" && cfg.cost2 === "") return true;
+			
 			if (cost === undefined || cost === null) return false;
 			const c = Number(cost);
 			if (!cfg.isAdv) {
@@ -1528,13 +1546,21 @@
 			return true;
 		}
 
+		// 6-2. 費用清單過濾 (修復能力混找)
 		function checkCostMatchList(costs, cfg) {
+			// 如果使用者根本沒設條件，不論這張卡有沒有費用，直接放行！
+			if (cfg.cost1 === "" && cfg.cost2 === "") return true;
+			
+			// 如果使用者有設條件，但這張卡完全沒有費用資料，則不符合
+			if (!costs || costs.length === 0) return false;
+			
 			return costs.some(c => checkCostMatchSingle(c, cfg));
 		}
 
-		// 7. 攻擊力指定 (單一 & 清單)
 		function checkPowerMatchSingle(power, cfg) {
-			if (power === undefined || power === null) return false;
+			if (cfg.power1 === "" && cfg.power2 === "") return true; // <--- 防護 1：沒設條件直接 pass
+			if (power === undefined || power === null) return false; // 防護 2：有設條件但卡片無攻擊力
+			
 			const p = Number(power);
 			if (!cfg.isAdv) {
 				if (cfg.power1 !== "" && p !== Number(cfg.power1)) return false;
@@ -1545,7 +1571,14 @@
 			return true;
 		}
 
+		// 7-2. 攻擊力清單過濾 (修復能力混找)
 		function checkPowerMatchList(powers, cfg) {
+			// 如果使用者根本沒設條件，不論這張卡有沒有攻擊力 (如要塞、咒文)，直接放行！
+			if (cfg.power1 === "" && cfg.power2 === "") return true;
+			
+			// 如果使用者有設攻擊力條件 (例如要找 5000 以上)，但這張卡完全沒有攻擊力，則不符合
+			if (!powers || powers.length === 0) return false;
+			
 			return powers.some(p => checkPowerMatchSingle(p, cfg));
 		}
 
@@ -2021,11 +2054,94 @@
 
 					modalInfoContainer.appendChild(block);
 				});
+				// --- 新增：處理 [翻面] 資訊 (card.back) ---
+				if (card.back && Array.isArray(card.back) && card.back.length > 0) {
+					const backBlock = document.createElement('div');
+					backBlock.className = 'wdata-block';
+					backBlock.style.borderLeft = '4px solid #7c4dff'; // 用紫色邊條做識別
+					backBlock.style.marginTop = '10px';
+
+					const backTitle = document.createElement('div');
+					backTitle.style.fontSize = '14px';
+					backTitle.style.fontWeight = 'bold';
+					backTitle.style.color = '#512da8';
+					backTitle.style.marginBottom = '8px';
+					backTitle.innerText = '翻面/關聯卡牌：';
+					backBlock.appendChild(backTitle);
+
+					const backContainer = document.createElement('div');
+					backContainer.style.display = 'flex';
+					backContainer.style.flexWrap = 'wrap';
+					backContainer.style.gap = '8px';
+
+					card.back.forEach(backCardName => {
+						const backBtn = document.createElement('button');
+						backBtn.className = 'btn-icon';
+						backBtn.style.backgroundColor = '#7c4dff';
+						backBtn.style.color = '#fff';
+						backBtn.style.border = 'none';
+						backBtn.style.padding = '6px 12px';
+						backBtn.style.borderRadius = '4px';
+						backBtn.style.cursor = 'pointer';
+						backBtn.style.fontWeight = 'bold';
+						backBtn.style.fontSize = '13px';
+						backBtn.innerText = `🔄 ${backCardName}`;
+
+						// 綁定點擊事件
+						backBtn.addEventListener('click', () => {
+							// 關閉目前的 Modal
+							cardModal.classList.remove('active');
+							
+							// 執行跳轉搜尋與開啟 Modal 流程
+							navigateToBackCard(backCardName);
+						});
+
+						backContainer.appendChild(backBtn);
+					});
+
+					backBlock.appendChild(backContainer);
+					modalInfoContainer.appendChild(backBlock);
+				}
 			} else {
 				modalInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
 			}
 
 			cardModal.classList.add('active');
+		}
+		
+		// --- 處理翻面卡牌點擊自動搜尋與開啟細節 ---
+		function navigateToBackCard(targetName) {
+			// 1. 將過濾條件初始化 (模擬點擊選項初始化按鈕)
+			document.getElementById('btn-reset').click();
+
+			// 2. 將卡名輸入到卡名過濾欄位裡
+			const cardNameInput = document.getElementById('card-name');
+			if (cardNameInput) {
+				cardNameInput.value = targetName;
+			}
+
+			// 3. 進行搜尋 (模擬點擊開始查詢按鈕)
+			document.getElementById('btn-search').click();
+
+			// 4. 尋找並點擊唯一的一筆資料，顯示 Detail Modal
+			// 透過 setTimeout 確保搜尋結果渲染至 DOM 完成後再點擊
+			setTimeout(() => {
+				const items = document.querySelectorAll('#list-container .card-list-item');
+				if (items.length > 0) {
+					// 優先尋找卡名完全一致的筆數，若無則點擊第一筆
+					let targetItem = Array.from(items).find(item => {
+						const nameEl = item.querySelector('.card-name');
+						return nameEl && nameEl.innerText.trim() === cleanCardName(targetName);
+					});
+
+					if (!targetItem) {
+						targetItem = items[0];
+					}
+
+					// 觸發點擊，打開該卡牌的 detail
+					targetItem.click();
+				}
+			}, 100);
 		}
 
         function createAttrPill(label, value) {
