@@ -2202,35 +2202,40 @@
 
             // 內部輔助：以佔位符進行安全替換
             function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
-                if (keywords.length === 0) return;
+				if (keywords.length === 0) return;
 
-                let pattern;
-                if (requireBracket) {
-                    // 要求關鍵字前後必須包裹《》 (例如: 《神帝アナ》)
-                    const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
-                    pattern = new RegExp(`《(${innerPattern})》`, 'g');
-                } else {
-                    const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
-                    pattern = new RegExp(innerPattern, 'g');
-                }
+				let pattern;
+				if (requireBracket) {
+					// 要求關鍵字前後必須包裹《》 (例如: 《神帝アナ》)
+					const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
+					pattern = new RegExp(`《(${innerPattern})》`, 'g');
+				} else {
+					const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
+					pattern = new RegExp(innerPattern, 'g');
+				}
 
-                processedText = processedText.replace(pattern, (fullMatch, group1) => {
-                    const placeholder = `___TAG_${placeholders.length}___`;
-                    // 若需要括號，matched 取《》內部的文字
-                    const matched = requireBracket ? group1 : fullMatch;
-                    const tooltipText = getTooltipFn ? getTooltipFn(matched) : '';
-                    
-                    placeholders.push({
-                        placeholder,
-                        fullMatch, // 原始匹配包含《》
-                        matched,   // 實際標籤文字
-                        type,
-                        tooltipText,
-                        requireBracket
-                    });
-                    return placeholder;
-                });
-            }
+				processedText = processedText.replace(pattern, (fullMatch, group1, offset) => {
+					const matched = requireBracket ? group1 : fullMatch;
+
+					// 【新增特殊判斷】：「進化」只有在 sp 的起始位置（offset === 0）才做 Tag 化
+					if (matched === "進化" && offset !== 0) {
+						return fullMatch; // 不替換，保持原本純文字
+					}
+
+					const placeholder = `___TAG_${placeholders.length}___`;
+					const tooltipText = getTooltipFn ? getTooltipFn(matched) : '';
+					
+					placeholders.push({
+						placeholder,
+						fullMatch, // 原始匹配包含《》
+						matched,   // 實際標籤文字
+						type,
+						tooltipText,
+						requireBracket
+					});
+					return placeholder;
+				});
+			}
 
             // 順序 1: globalCardData 裡的 carddata.name (必須帶有 《》)
             replaceKeywords(dicts.cardNames, 'card-name', null, true);
