@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM 卡牌查詢器</title>
+    <style>
+        /* ================= 基礎設定與 Header 固定頁籤 ================= */
+        body { 
+            font-family: "微軟正黑體", sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f4f4f9; 
+            padding-bottom: 80px; 
+            transition: padding-bottom 0.2s; 
+        }
+
+        /* 將頁籤改為 Sticky Header，固定在視窗頂部 */
+        .header-tabs { 
+            position: sticky; 
+            top: 0; 
+            z-index: 200; 
+            display: flex; 
+            background: #222; 
+            color: white; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .tab { 
+            padding: 15px 25px; 
+            cursor: pointer; 
+            font-size: 15px;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .tab:hover { background: #444; }
+        .tab.active { background: #d32f2f; font-weight: bold; }
+        
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+
+        h3 { 
+            margin-top: 0; 
+            margin-bottom: 10px; 
+            font-size: 16px; 
+            border-bottom: 2px solid #ddd; 
+            padding-bottom: 5px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+
+        /* ================= 佈局 (桌機版 Grid) ================= */
+        .layout-grid { flex-direction: column; gap: 20px; }
+        .tab-content.layout-grid { display: none; }
+        .tab-content.layout-grid.active { display: flex; }
+
+        .row-flex { display: flex; gap: 20px; width: 100%; }
+        .col { flex: 1; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .col-half { flex: 0.5; }
+
+        /* ================= 進階模式控制 ================= */
+        .advanced-only { display: none !important; }
+        body.advanced-mode div.advanced-only { display: block !important; }
+        body.advanced-mode div.advanced-only-flex { display: flex !important; }
+        body.advanced-mode span.advanced-only, 
+        body.advanced-mode select.advanced-only, 
+        body.advanced-mode button.advanced-only { display: inline-block !important; }
+
+        /* ================= 元件樣式 ================= */
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .checkbox-group label { display: flex; align-items: center; font-size: 14px; cursor: pointer; }
+        
+        /* 文明方塊 UI */
+        .civ-row { display: flex; gap: 2px; margin-bottom: 10px; width: 100%; }
+        .civ-box { 
+            flex: 1; text-align: center; padding: 10px 0; background: #ddd; 
+            cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; 
+            user-select: none; transition: 0.2s; color: #555;
+        }
+        .civ-box[data-val="16"].active { background: #ffeb3b; color: #000; }
+        .civ-box[data-val="8"].active { background: #2196f3; color: #fff; }
+        .civ-box[data-val="4"].active { background: #424242; color: #fff; }
+        .civ-box[data-val="2"].active { background: #f44336; color: #fff; }
+        .civ-box[data-val="1"].active { background: #4caf50; color: #fff; }
+        .civ-box[data-val="32"].active { background: #ffffff; color: #000; box-shadow: inset 0 0 0 2px #aaa; }
+        .civ-box.active { background: #607d8b; color: white; }
+
+        select, input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-bottom: 5px; }
+        .flex-input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .btn-icon { cursor: pointer; padding: 5px 10px; background: #ddd; border: none; border-radius: 4px; font-weight: bold; font-size: 13px;}
+        .btn-icon:hover { background: #ccc; }
+        .divider { border: 0; border-top: 1px solid #eee; margin: 10px 0; }
+
+        /* ================= 查詢結果列表樣式 ================= */
+        #tab-list { display: none; padding: 20px; flex-direction: column; gap: 10px; }
+        #tab-list.active { display: flex; }
+
+        .card-list-item {
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .card-list-item:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .card-list-item:active { transform: scale(0.99); }
+        
+        .card-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #111;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.9), -1px -1px 3px rgba(255,255,255,0.9), 1px -1px 3px rgba(255,255,255,0.9), -1px 1px 3px rgba(255,255,255,0.9);
+            transition: color 0.2s;
+        }
+        /* 點擊後變紅色的狀態 class */
+        .card-list-item.selected .card-name {
+            color: #d32f2f !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 60px 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* ================= Footer (Z區) 排版 ================= */
+        .footer { 
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #222; color: white;
+            display: flex; flex-direction: column; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+        }
+        /* 桌機版預設排版：單行並排 */
+        .footer-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 20px; 
+            gap: 15px; 
+        }
+		.footer-top-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+		/* 桌機版的開始查詢：自動填滿剩餘空間 */
+        #btn-search {
+            background: #d32f2f; 
+            color: white; 
+            flex: 1; 
+            font-size: 16px; 
+            padding: 10px 0; 
+            letter-spacing: 2px;
+        }
+        .footer-summary { display: none; background: #444; padding: 15px 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
+        .footer-summary.open { display: block; }
+        .switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .expand-icon { cursor: pointer; font-size: 20px; padding: 0 10px; user-select: none; }
+
+        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .summary-tag {
+            background: #d32f2f; color: white; padding: 6px 12px; border-radius: 20px;
+            font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: background 0.2s; user-select: none;
+        }
+        .summary-tag:hover { background: #b71c1c; }
+        .summary-tag span { font-weight: bold; font-size: 14px; }
+
+        /* ================= 卡牌資料彈出視窗 (Modal UI) ================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: #fff;
+            width: 90%;
+            max-width: 650px;
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.25s ease;
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            padding: 16px 20px;
+            color: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        .modal-close {
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255,255,255,0.7);
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            display: flex; justify-content: center; align-items: center;
+            transition: 0.2s;
+        }
+        .modal-close:hover { background: #fff; color: #d32f2f; }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-main-content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .modal-img-container {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            /* 桌機版預設：固定在 Modal 頂部 */
+            position: sticky;
+            top: 0;
+            align-self: flex-start;
+        }
+        .modal-img {
+            width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            object-fit: contain;
+        }
+        .no-image-box {
+            height: 250px;
+            background: #e0e0e0;
+            color: #666;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border-radius: 6px;
+            border: 2px dashed #ccc;
+            font-size: 16px;
+        }
+
+        .modal-info-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 單卡 wdata 區塊 UI */
+        .wdata-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-left: 4px solid #333;
+            padding: 12px 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-attr-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .attr-pill {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .attr-label { font-weight: bold; color: #555; margin-right: 4px; }
+        .attr-value { font-weight: bold; color: #111; }
+
+        .sp-ability-list {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #222;
+        }
+        .sp-ability-list li { margin-bottom: 4px; }
+
+        /* ================= 手機版 (RWD) ================= */
+        @media (max-width: 768px) {
+            .row-flex { flex-direction: column; gap: 15px; }
+            .col { width: 100%; box-sizing: border-box; }
+            .civ-box { font-size: 12px; padding: 8px 0; }
+            
+            /* Modal 手機版專用排版 */
+            .modal-main-content { 
+                flex-direction: column; 
+                align-items: center; 
+            }
+            .modal-img-container { 
+                position: static !important; 
+                margin-bottom: 15px; 
+            }
+            .modal-info-container { width: 100%; }
+
+            /* ★ 手機版 Footer 專用排版 (上下雙層) ★ */
+            .footer-bar {
+                flex-direction: column;
+                padding: 10px 15px;
+                gap: 10px;
+            }
+
+            /* 第一層：進階選項 | 選項初始化 | ▲ 均勻列出並滿版 */
+            .footer-top-row {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            /* 第二層：開始查詢 獨立橫跨 100% 寬度 */
+            #btn-search {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+		
+		/* ================= 效果標籤 (Effect Tags) 樣式 ================= */
+        .effect-tag {
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-block;
+        }
+
+        /* 1. 卡名標籤 */
+        .effect-tag.tag-card-name {
+            color: #b91c1c;
+            background-color: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
+        .effect-tag.tag-card-name:hover {
+            background-color: #fca5a5;
+        }
+
+        /* 2. 分類標籤 */
+        .effect-tag.tag-category-name {
+            color: #c2410c;
+            background-color: #ffedd5;
+            border: 1px solid #fed7aa;
+        }
+        .effect-tag.tag-category-name:hover {
+            background-color: #fed7aa;
+        }
+
+        /* 3. 能力標籤 (帶 Tooltip) */
+        .effect-tag.tag-ability {
+            color: #1d4ed8;
+            background-color: #dbeafe;
+            border: 1px solid #93c5fd;
+        }
+        .effect-tag.tag-ability:hover {
+            background-color: #bfdbfe;
+        }
+
+        /* 4. 種族標籤 (帶 Tooltip) */
+        .effect-tag.tag-race {
+            color: #047857;
+            background-color: #d1fae5;
+            border: 1px solid #6ee7b7;
+        }
+        .effect-tag.tag-race:hover {
+            background-color: #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 固定頂部 Header 頁籤 -->
+    <div class="header-tabs">
+        <div class="tab active">條件過濾</div>
+        <div class="tab">查詢結果</div>
+    </div>
+
+    <!-- 第一個頁籤：條件過濾 -->
+    <div id="tab-filter" class="tab-content active layout-grid">
+        
+        <!-- A. 卡種選擇 -->
+        <div class="col" id="section-a">
+            <h3>
+                <span>卡種選擇</span> 
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label style="font-size: 14px; font-weight: normal; cursor: pointer; display: flex; align-items: center;">
+                        <input type="checkbox" id="chk-derived-cardtype"> 查詢衍伸卡種
+                    </label>
+                    <button id="btn-all-cardtype" class="btn-icon">全取消</button>
+                </div>
+            </h3>
+            <div id="cardtype-top" class="checkbox-group"></div>
+            <hr class="divider">
+            <div id="cardtype-bottom" class="checkbox-group"></div>
+        </div>
+
+        <div class="row-flex">
+            <!-- B. 雙極卡設定 -->
+            <div class="col col-half">
+                <h3>雙極卡設定</h3>
+                <div class="checkbox-group" style="margin-bottom: 10px;">
+                    <label><input type="radio" name="twinpect" value="yes"> 雙極</label>
+                    <label><input type="radio" name="twinpect" value="no"> 非雙極</label>
+                    <label><input type="radio" name="twinpect" value="all" checked> 都找</label>
+                </div>
+                <div class="checkbox-group advanced-only advanced-only-flex">
+                    <label><input type="checkbox" name="twin_adv" value="ability" checked> 能力混找</label>
+                    <label><input type="checkbox" name="twin_adv" value="top_big" checked> 上面較大</label>
+                    <label><input type="checkbox" name="twin_adv" value="same" checked> 上下一樣</label>
+                    <label><input type="checkbox" name="twin_adv" value="bot_big" checked> 下面較大</label>
+                </div>
+            </div>
+
+            <!-- C. 文明設定 -->
+            <div class="col">
+                <h3>文明設定</h3>
+                <div class="civ-row" id="civ-permit">
+                    <div class="civ-box active" data-val="16">光</div>
+                    <div class="civ-box active" data-val="8">水</div>
+                    <div class="civ-box active" data-val="4">闇</div>
+                    <div class="civ-box active" data-val="2">火</div>
+                    <div class="civ-box active" data-val="1">自</div>
+                    <div class="civ-box active" data-val="32">無</div>
+                    <div class="civ-box active" data-val="mono">單色</div>
+                    <div class="civ-box active" data-val="multi">多色</div>
+                </div>
+                <div class="civ-row" id="civ-require">
+                    <div class="civ-box" data-val="16">光</div>
+                    <div class="civ-box" data-val="8">水</div>
+                    <div class="civ-box" data-val="4">闇</div>
+                    <div class="civ-box" data-val="2">火</div>
+                    <div class="civ-box" data-val="1">自</div>
+                    <div class="civ-box" data-val="32">無</div>
+                    <div class="civ-box active" data-val="and">AND</div>
+                    <div class="civ-box" data-val="or">OR</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-flex">
+            <!-- C/D. 費用指定 -->
+            <div class="col col-half">
+                <h3>費用指定</h3>
+                <div class="flex-input-row">
+                    <select id="cost-1"></select>
+                    <span class="advanced-only">~</span>
+                    <select id="cost-2" class="advanced-only"></select>
+                </div>
+            </div>
+
+            <!-- C/E. 攻擊力指定 -->
+            <div class="col col-half">
+                <h3>攻擊力指定</h3>
+                <div class="flex-input-row">
+                    <select id="power-1"></select>
+                    <span class="advanced-only">~</span>
+                    <select id="power-2" class="advanced-only"></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- D/F. 種族設定 -->
+        <div class="col" id="section-race">
+            <h3>種族設定</h3>
+            <div id="race-container">
+                <div class="flex-input-row">
+                    <select class="race-select"></select>
+                    <button class="btn-icon advanced-only btn-add-race">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- E/G. 能力過濾 -->
+        <div class="col" id="section-ability">
+            <h3>能力過濾</h3>
+            <input type="text" id="ability-text" placeholder="自由輸入，空格表示and，|表示or" style="margin-bottom: 10px;">
+            <div id="ability-container">
+                <div class="flex-input-row">
+                    <select class="ability-select"></select>
+                    <button class="btn-icon advanced-only btn-add-ability">+</button>
+                </div>
+            </div>
+            <div class="advanced-only" style="margin-top: 10px; width: 100%;">
+                <select class="race-select-adv"></select>
+            </div>
+        </div>
+
+        <div class="row-flex">
+            <!-- F/H. 卡名指定 -->
+            <div class="col">
+                <h3>卡名指定</h3>
+                <input type="text" id="card-name" placeholder="請輸入卡名...">
+            </div>
+
+            <!-- F/I. 系列 -->
+            <div class="col">
+                <h3>系列大編號</h3>
+                <select id="series-big">
+                    <option value="">全部</option>
+                    <option value="DM26-SD1">DM26-SD1</option>
+                    <option value="DM26">DM26</option>
+                    <option value="DM25-">DM25</option>
+                    <option value="DM24-">DM24</option>
+                    <option value="DM23-">DM23</option>
+                    <option value="DM22-">DM22</option>
+                    <option value="DMART">DMART</option>
+                    <option value="DMRP">DMRP</option>
+                    <option value="DMEX">DMEX</option>
+                    <option value="DMBD">DMBD</option>
+                    <option value="DMSD">DMSD</option>
+                    <option value="DMSP">DMSP</option>
+                    <option value="DMPCD">DMPCD</option>
+                    <option value="DMR-">DMR</option>
+                    <option value="DMX">DMX</option>
+                    <option value="DMD">DMD</option>
+                    <option value="DM-">DM-</option>
+                    <option value="OF-">OF-</option>
+                    <option value="TW">台灣大賽</option>
+                </select>
+            </div>
+            <div class="col">
+                <h3>系列編號與商品名稱</h3>
+                <select id="series-small" disabled>
+                    <option value="">(目前暫無資料)</option>
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 第二個頁籤：查詢結果 (列表) -->
+    <div id="tab-list" class="tab-content">
+        <div id="list-container">
+            <div class="empty-state">尚無資料</div>
+        </div>
+    </div>
+
+    <!-- Z. Footer 區 -->
+    <div class="footer">
+        <div class="footer-summary" id="footer-summary">
+            <p style="margin:0; color:#aaa;">(目前過濾條件與預設值相同)</p>
+        </div>
+        <div class="footer-bar">
+            <!-- 上半部容器 (手機版：進階選項 | 選項初始化 | ^) -->
+            <div class="footer-top-row">
+                <label class="switch">
+                    <input type="checkbox" id="toggle-advanced"> 
+                    <span>進階選項</span>
+                </label>
+                <button id="btn-reset" class="btn-icon">選項初始化</button>
+                <div class="expand-icon" id="toggle-summary">▲</div>
+            </div>
+            
+            <!-- 下半部容器 (開始查詢) -->
+            <button id="btn-search" class="btn-icon">開始查詢</button>
+        </div>
+    </div>
+
+    <!-- 卡牌資料浮動視窗 (Modal Window) -->
+    <div class="modal-overlay" id="card-modal">
+        <div class="modal-card">
+            <div class="modal-header" id="modal-header">
+                <div class="modal-title" id="modal-title">卡牌名稱</div>
+                <div class="modal-close" id="modal-close">&times;</div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-main-content">
+                    <div class="modal-img-container" id="modal-img-box">
+                        <!-- 動態填入圖片或 [No Image] -->
+                    </div>
+                    <div class="modal-info-container" id="modal-info-container">
+                        <!-- 動態填入卡牌屬性 details -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JavaScript 邏輯 ================= -->
+    <script>
+        // 全域變數
+        let globalCardData = [];
+        let rawCardTypes = [];
+        let rawRaces = [];
+        let rawAbilities = [];
+        let rawCategoryNames = [];
+        let rawNicknames = [];
+
+        // 極大數值改以無限符號 ∞ 替代之數值判斷
+        const INFINITY_THRESHOLD = 9000000000000000;
+
+        function formatDisplayValue(val) {
+            if (val === null || val === undefined) return '';
+            const num = Number(val);
+            if (!isNaN(num) && num >= INFINITY_THRESHOLD) {
+                return '∞';
+            }
+            return String(val);
+        }
+
+        // --- 動態 Footer 高度偵測 ---
+        const footer = document.querySelector('.footer');
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                document.body.style.paddingBottom = (entry.contentRect.height + 20) + 'px';
+            }
+        });
+        resizeObserver.observe(footer);
+		
+		// 1. 卡種代號轉換為中文 (例如 'C' -> '生物')
+        function getCardTypeText(typeVal) {
+            const match = rawCardTypes.find(ct => ct.value === typeVal);
+            return match ? match.text : typeVal;
+        }
+
+        // 解析包含 HINT: 與 # 的能力字串，並進行效果標籤化
+        function renderAbilityText(spStr) {
+            let formatted = formatDisplayValue(spStr);
+            
+            // 1. 處理 HINT: header
+            if (formatted.startsWith('HINT:')) {
+                const hintContent = formatted.replace(/^HINT:\s*/, '');
+                const taggedHint = applyEffectTags(hintContent);
+                return {
+                    isHint: true,
+                    html: `<div style="color: #666; font-style: italic; font-size: 13px; margin: 4px 0;">（${taggedHint}）</div>`
+                };
+            }
+
+            // 2. 處理 # 子選項階層
+            if (formatted.includes('#')) {
+                const parts = formatted.split(/#+/).map(p => p.trim()).filter(Boolean);
+                if (parts.length > 0) {
+                    let html = `<div style="font-weight: bold; margin-bottom: 2px;">${applyEffectTags(parts[0])}</div>`;
+                    html += `<ul style="margin: 2px 0 6px 18px; padding-left: 0; list-style-type: disc;">`;
+                    for (let i = 1; i < parts.length; i++) {
+                        html += `<li>${applyEffectTags(parts[i])}</li>`;
+                    }
+                    html += `</ul>`;
+                    return { isHint: false, html: html };
+                }
+            }
+
+            return { isHint: false, html: `<div>${applyEffectTags(formatted)}</div>` };
+        }
+
+        // --- Z區與進階功能 ---
+        const btnAdvanced = document.getElementById('toggle-advanced');
+        const btnSummary = document.getElementById('toggle-summary');
+        const summaryBox = document.getElementById('footer-summary');
+        const tabFilter = document.getElementById('tab-filter');
+        const btnReset = document.getElementById('btn-reset');
+
+        btnAdvanced.addEventListener('change', (e) => {
+            if(e.target.checked) document.body.classList.add('advanced-mode');
+            else document.body.classList.remove('advanced-mode');
+            renderCardTypes();
+            updateSummaryText();
+        });
+
+        btnSummary.addEventListener('click', () => {
+            summaryBox.classList.toggle('open');
+            btnSummary.innerText = summaryBox.classList.contains('open') ? '▼' : '▲';
+        });
+
+        tabFilter.addEventListener('change', updateSummaryText);
+        tabFilter.addEventListener('input', updateSummaryText);
+        tabFilter.addEventListener('click', (e) => {
+            if(e.target.classList.contains('civ-box') || e.target.classList.contains('btn-remove') || e.target.id === 'btn-all-cardtype') {
+                setTimeout(updateSummaryText, 0); 
+            }
+        });
+
+        // --- 選項初始化功能 ---
+        btnReset.addEventListener('click', () => {
+            document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+            checkAllStatus();
+
+            document.querySelector('input[name="twinpect"][value="all"]').checked = true;
+            document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
+
+            document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
+            document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
+            document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
+
+            document.querySelectorAll('select').forEach(sel => sel.value = "");
+            document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+
+            document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+            document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+
+            btnAdvanced.checked = false;
+            document.body.classList.remove('advanced-mode');
+
+            updateSummaryText();
+        });
+
+        function updateSummaryText() {
+            let tags = [];
+            const isAdv = document.body.classList.contains('advanced-mode');
+
+            const allCardTypes = document.querySelectorAll('.chk-cardtype');
+            const checkedCT = Array.from(allCardTypes).filter(cb => cb.checked);
+            const uncheckedCT = Array.from(allCardTypes).filter(cb => !cb.checked);
+            
+            if (checkedCT.length > 0 && checkedCT.length < allCardTypes.length) {
+                if (checkedCT.length <= allCardTypes.length / 2) {
+                    checkedCT.forEach(cb => {
+                        tags.push({ 
+                            label: `卡種: ${cb.parentNode.textContent.trim()}`, 
+                            action: () => { cb.checked = false; checkAllStatus(); updateSummaryText(); } 
+                        });
+                    });
+                } else {
+                    uncheckedCT.forEach(cb => {
+                        tags.push({ 
+                            label: `排除卡種: ${cb.parentNode.textContent.trim()}`, 
+                            action: () => { cb.checked = true; checkAllStatus(); updateSummaryText(); } 
+                        });
+                    });
+                }
+            }
+
+            const twinSelected = document.querySelector('input[name="twinpect"]:checked');
+            if (twinSelected && twinSelected.value !== 'all') {
+                tags.push({ 
+                    label: `雙極卡: ${twinSelected.value === 'yes' ? '限定雙極' : '排除雙極'}`, 
+                    action: () => { document.querySelector('input[name="twinpect"][value="all"]').checked = true; updateSummaryText(); } 
+                });
+            }
+            
+            const twinAdvBoxes = document.querySelectorAll('input[name="twin_adv"]');
+            const uncheckedTwinAdv = Array.from(twinAdvBoxes).filter(cb => !cb.checked);
+            if (uncheckedTwinAdv.length > 0) {
+                Array.from(twinAdvBoxes).filter(cb => cb.checked).forEach(cb => {
+                    tags.push({ 
+                        label: `雙極條件包含: ${cb.parentNode.textContent.trim()}`, 
+                        action: () => { cb.checked = false; updateSummaryText(); } 
+                    });
+                });
+            }
+
+            const allPermitBoxes = document.querySelectorAll('#civ-permit .civ-box');
+            const activePermitBoxes = Array.from(document.querySelectorAll('#civ-permit .civ-box.active'));
+            
+            if (activePermitBoxes.length < allPermitBoxes.length) {
+                const names = activePermitBoxes.length > 0 
+                    ? activePermitBoxes.map(box => box.textContent).join(', ') 
+                    : '無';
+                    
+                tags.push({
+                    label: `許可文明: ${names}`,
+                    action: () => {
+                        allPermitBoxes.forEach(box => box.classList.add('active'));
+                        updateSummaryText();
+                    }
+                });
+            }
+
+            const activeRequire = Array.from(document.querySelectorAll('#civ-require .civ-box.active:not([data-val="and"]):not([data-val="or"])'));
+            const andBox = document.querySelector('#civ-require .civ-box[data-val="and"]');
+            const orBox = document.querySelector('#civ-require .civ-box[data-val="or"]');
+            const isOrActive = orBox.classList.contains('active');
+            
+            if (activeRequire.length > 0) {
+                const names = activeRequire.map(box => box.textContent).join(', ');
+                const logicLabel = isOrActive ? 'OR' : 'AND';
+                tags.push({
+                    label: `必須包含: ${names} (${logicLabel})`,
+                    action: () => {
+                        activeRequire.forEach(box => box.classList.remove('active'));
+                        updateSummaryText();
+                    }
+                });
+            } else if (isOrActive) {
+                tags.push({
+                    label: `文明條件: OR`,
+                    action: () => {
+                        orBox.classList.remove('active');
+                        andBox.classList.add('active');
+                        updateSummaryText();
+                    }
+                });
+            }
+
+            const cost1 = document.getElementById('cost-1'); 
+            const cost2 = document.getElementById('cost-2');
+            const c1Val = cost1.value;
+            const c2Val = cost2.value;
+            
+            if (isAdv) {
+                if (c1Val && c2Val) {
+                    tags.push({ label: `費用: ${formatDisplayValue(c1Val)}~${formatDisplayValue(c2Val)}`, action: () => { cost1.value = ""; cost2.value = ""; updateSummaryText(); } });
+                } else if (c1Val) {
+                    tags.push({ label: `費用: ${formatDisplayValue(c1Val)}以上`, action: () => { cost1.value = ""; updateSummaryText(); } });
+                } else if (c2Val) {
+                    tags.push({ label: `費用: ${formatDisplayValue(c2Val)}以下`, action: () => { cost2.value = ""; updateSummaryText(); } });
+                }
+            } else {
+                if (c1Val) {
+                    tags.push({ label: `費用: ${formatDisplayValue(c1Val)}`, action: () => { cost1.value = ""; updateSummaryText(); } });
+                }
+            }
+            
+            const power1 = document.getElementById('power-1'); 
+            const power2 = document.getElementById('power-2'); 
+            const p1Val = power1.value;
+            const p2Val = power2.value;
+            
+            if (isAdv) {
+                if (p1Val && p2Val) {
+                    tags.push({ label: `攻擊力: ${formatDisplayValue(p1Val)}~${formatDisplayValue(p2Val)}`, action: () => { power1.value = ""; power2.value = ""; updateSummaryText(); } });
+                } else if (p1Val) {
+                    tags.push({ label: `攻擊力: ${formatDisplayValue(p1Val)}以上`, action: () => { power1.value = ""; updateSummaryText(); } });
+                } else if (p2Val) {
+                    tags.push({ label: `攻擊力: ${formatDisplayValue(p2Val)}以下`, action: () => { power2.value = ""; updateSummaryText(); } });
+                }
+            } else {
+                if (p1Val) {
+                    tags.push({ label: `攻擊力: ${formatDisplayValue(p1Val)}`, action: () => { power1.value = ""; updateSummaryText(); } });
+                }
+            }
+
+            document.querySelectorAll('.race-select').forEach((sel) => {
+                if(sel.value) tags.push({ label: `種族包含: ${sel.value}`, action: () => { sel.value = ""; updateSummaryText(); } });
+            });
+            const abilText = document.getElementById('ability-text');
+            if(abilText && abilText.value) tags.push({ label: `能力關鍵字: ${abilText.value}`, action: () => { abilText.value = ""; updateSummaryText(); } });
+            
+            document.querySelectorAll('.ability-select').forEach((sel) => {
+                if(sel.value) tags.push({ label: `能力包含: ${sel.value}`, action: () => { sel.value = ""; updateSummaryText(); } });
+            });
+            
+            const raceAdv = document.querySelector('.race-select-adv');
+            if(raceAdv && raceAdv.value) tags.push({ label: `能力裡提到的種族: ${raceAdv.value}`, action: () => { raceAdv.value = ""; updateSummaryText(); } });
+
+            const cardName = document.getElementById('card-name');
+            if(cardName && cardName.value) tags.push({ label: `卡名: ${cardName.value}`, action: () => { cardName.value = ""; updateSummaryText(); } });
+
+            summaryBox.innerHTML = '';
+            if (tags.length === 0) {
+                summaryBox.innerHTML = '<p style="margin:0; color:#aaa;">(目前過濾條件與預設值相同)</p>';
+            } else {
+                const wrap = document.createElement('div');
+                wrap.className = 'tag-container';
+                tags.forEach(t => {
+                    const span = document.createElement('span');
+                    span.className = 'summary-tag';
+                    span.innerHTML = `${t.label} <span>&times;</span>`; 
+                    span.addEventListener('click', (e) => {
+                        e.stopPropagation(); 
+                        t.action();          
+                    });
+                    wrap.appendChild(span);
+                });
+                summaryBox.appendChild(wrap);
+            }
+        }
+
+        // --- 下拉選單產生與無限符號轉化 ---
+        function initStatsSelects(stats) {
+            let costHtml = '<option value="">不限</option>';
+            if (stats && stats.costs && stats.costs.length > 0) {
+                stats.costs.forEach(c => costHtml += `<option value="${c}">${formatDisplayValue(c)}</option>`);
+            } else {
+                for(let i=0; i<=25; i++) costHtml += `<option value="${i}">${i}</option>`;
+            }
+            document.getElementById('cost-1').innerHTML = costHtml;
+            document.getElementById('cost-2').innerHTML = costHtml;
+
+            let powerHtml = '<option value="">不限</option>';
+            if (stats && stats.powers && stats.powers.length > 0) {
+                stats.powers.forEach(p => powerHtml += `<option value="${p}">${formatDisplayValue(p)}</option>`);
+            } else {
+                powerHtml += '<option value="0">0</option>';
+                for(let i=500; i<=16000; i+=500) powerHtml += `<option value="${i}">${i}</option>`;
+            }
+            document.getElementById('power-1').innerHTML = powerHtml;
+            document.getElementById('power-2').innerHTML = powerHtml;
+        }
+        initStatsSelects();
+
+        document.querySelectorAll('.civ-box').forEach(box => {
+            box.addEventListener('click', function() {
+                this.classList.toggle('active');
+                if (this.classList.contains('active')) {
+                    if (this.dataset.val === 'and') {
+                        document.querySelector('.civ-box[data-val="or"]').classList.remove('active');
+                    } else if (this.dataset.val === 'or') {
+                        document.querySelector('.civ-box[data-val="and"]').classList.remove('active');
+                    }
+                }
+            });
+        });
+
+        const CACHE_NAME = 'dm-data-cache-v1';
+
+        async function fetchFirebaseData() {
+            try {
+                const statusRes = await fetch('/api/server_id');
+                const statusData = await statusRes.json();
+                const currentServerId = statusData.server_id;
+
+                const cachedServerId = localStorage.getItem('dm_server_instance_id');
+
+                if (currentServerId !== cachedServerId) {
+                    console.log("伺服器已重啟或首次進入，清空舊快取...");
+                    await caches.delete(CACHE_NAME);
+                    localStorage.setItem('dm_server_instance_id', currentServerId);
+                }
+
+                async function fetchWithCache(url) {
+                    const cache = await caches.open(CACHE_NAME);
+                    let response = await cache.match(url);
+                    if (response) {
+                        return await response.json();
+                    } else {
+                        response = await fetch(url);
+                        cache.put(url, response.clone());
+                        return await response.json();
+                    }
+                }
+
+                const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData] = await Promise.all([
+                    fetchWithCache('/api/carddata'),
+                    fetchWithCache('/api/card_types'),
+                    fetchWithCache('/api/races'),
+                    fetchWithCache('/api/abilities'),
+                    fetchWithCache('/api/card_stats'),
+                    fetchWithCache('/api/categoryname'),
+                    fetchWithCache('/api/nickname')
+                ]);
+
+                globalCardData = cardData;
+                rawCardTypes = ctData;
+                rawRaces = raceData;
+                rawAbilities = abilData;
+                rawCategoryNames = catNameData;
+                rawNicknames = nicknameData;
+
+                console.log(`載入完成: 卡牌 ${globalCardData.length} 筆, 分類 ${rawCategoryNames.length} 筆, 暱稱 ${rawNicknames.length} 筆`);
+                
+                sortCardTypes(); 
+                renderCardTypes();
+                initDropdownData();
+                initStatsSelects(statsData);
+
+            } catch (error) {
+                console.error("資料載入發生錯誤，將使用假資料渲染 UI", error);
+                rawCardTypes = [
+                    { text: '生物', value: 'C', location: 'M', category: true },
+                    { text: '咒文', value: 'S', location: 'M', category: true }
+                ];
+                rawRaces = [{ jap: 'Armored Dragon', pop: true }];
+                rawAbilities = [{ jap: 'Speed Attacker', pop: true }];
+                rawCategoryNames = [];
+                rawNicknames = [];
+                
+                sortCardTypes();
+                renderCardTypes();
+                initDropdownData();
+                initStatsSelects(null);
+            }
+        }
+        
+        function sortCardTypes() {
+            const globalNodeMap = new Map();
+            rawCardTypes.forEach(d => globalNodeMap.set(d.value, d));
+            
+            const groupM = rawCardTypes.filter(d => d.location === 'M');
+            const groupOther = rawCardTypes.filter(d => d.location !== 'M');
+
+            const getRootRank = (d) => {
+                if (d.value === 'C') return 1;
+                if (d.value === 'S') return 2;
+                if (d.value === 'TS') return 3;
+                const isCategory = d.category || d.catagory; 
+                if (isCategory) return 5;
+                return 4;
+            };
+
+            const processGroup = (group) => {
+                group.forEach((d, i) => d._origIdx = i);
+
+                const nodeMap = new Map();
+                group.forEach(d => {
+                    d._children = [];
+                    nodeMap.set(d.value, d);
+                });
+
+                const roots = [];
+                group.forEach(d => {
+                    let validParentValue = null;
+
+                    if (d.parents && d.parents.length > 0) {
+                        for (let pVal of d.parents) {
+                            const pGlobalNode = globalNodeMap.get(pVal);
+                            if (pGlobalNode && pGlobalNode.location === d.location) {
+                                validParentValue = pVal;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (validParentValue) {
+                        const parentNode = nodeMap.get(validParentValue);
+                        if (parentNode) {
+                            parentNode._children.push(d);
+                        } else {
+                            roots.push(d);
+                        }
+                    } else {
+                        roots.push(d); 
+                    }
+                });
+
+                roots.sort((a, b) => {
+                    const rankA = getRootRank(a);
+                    const rankB = getRootRank(b);
+                    if (rankA !== rankB) return rankA - rankB;
+                    return a._origIdx - b._origIdx; 
+                });
+
+                group.forEach(d => {
+                    if (d._children.length > 1) {
+                        d._children.sort((a, b) => a._origIdx - b._origIdx);
+                    }
+                });
+
+                const sortedArray = [];
+                const dfs = (node) => {
+                    sortedArray.push(node);
+                    node._children.forEach(child => dfs(child));
+                };
+                roots.forEach(root => dfs(root));
+
+                sortedArray.forEach(d => {
+                    delete d._origIdx;
+                    delete d._children;
+                });
+
+                return sortedArray;
+            };
+
+            const sortedM = processGroup(groupM);
+            const sortedOther = processGroup(groupOther);
+            
+            rawCardTypes = [...sortedM, ...sortedOther];
+        }
+
+        const btnAllCardType = document.getElementById('btn-all-cardtype');
+        
+        function renderCardTypes() {
+            const topDiv = document.getElementById('cardtype-top');
+            const botDiv = document.getElementById('cardtype-bottom');
+            topDiv.innerHTML = ''; botDiv.innerHTML = '';
+            const isAdv = document.body.classList.contains('advanced-mode');
+
+            rawCardTypes.forEach(data => {
+                if (data.value == null) return;
+                
+                const isCategory = data.catagory || data.category;
+                if (!(isAdv || isCategory || data.main)) return;
+
+                const lbl = document.createElement('label');
+                lbl.innerHTML = `<input type="checkbox" class="chk-cardtype" value="${data.value}" checked> ${data.text}`;
+                
+                const checkbox = lbl.querySelector('input');
+                
+                checkbox.addEventListener('change', (e) => {
+                    if (isCategory) {
+                        const targetState = e.target.checked;
+                        rawCardTypes.forEach(childData => {
+                            if (childData.parents && childData.parents.includes(data.value)) {
+                                const childCheckbox = document.querySelector(`.chk-cardtype[value="${childData.value}"]`);
+                                if (childCheckbox && childCheckbox.checked !== targetState) {
+                                    childCheckbox.checked = targetState;
+                                    childCheckbox.dispatchEvent(new Event('change'));
+                                }
+                            }
+                        });
+                    }
+                    checkAllStatus(); 
+                });
+
+                if(data.location === 'M') topDiv.appendChild(lbl);
+                else botDiv.appendChild(lbl);
+            });
+            
+            checkAllStatus();
+        }
+
+        function checkAllStatus() {
+            const checkboxes = Array.from(document.querySelectorAll('.chk-cardtype'));
+            const allChecked = checkboxes.every(cb => cb.checked);
+            btnAllCardType.innerText = allChecked ? "全取消" : "全選";
+        }
+
+        btnAllCardType.addEventListener('click', () => {
+            const isSelectAll = btnAllCardType.innerText === "全選";
+            document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = isSelectAll);
+            checkAllStatus();
+        });
+
+        function generateOptionsHtml(dataList) {
+            let sorted = [...dataList].sort((a,b) => (a.jap || "").localeCompare(b.jap || ""));
+            let popHtml = '';
+            let normHtml = '';
+            
+            sorted.forEach(d => {
+                if(d.pop) popHtml += `<option value="${d.jap}" style="color:red; font-weight:bold;">${d.jap}</option>`;
+                else normHtml += `<option value="${d.jap}">${d.jap}</option>`;
+            });
+
+            let finalHtml = '<option value="">(請選擇)</option>';
+            if(popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
+            finalHtml += normHtml;
+            return finalHtml;
+        }
+
+        function initDropdownData() {
+            const raceHtml = generateOptionsHtml(rawRaces);
+            const abilHtml = generateOptionsHtml(rawAbilities);
+
+            document.querySelector('.race-select').innerHTML = raceHtml;
+            document.querySelector('.ability-select').innerHTML = abilHtml;
+            document.querySelector('.race-select-adv').innerHTML = raceHtml;
+
+            bindAddRemoveEvents('.btn-add-race', '#race-container', 'race-select', raceHtml);
+            bindAddRemoveEvents('.btn-add-ability', '#ability-container', 'ability-select', abilHtml);
+            
+            updateSummaryText();
+        }
+
+        function bindAddRemoveEvents(btnAddSelector, containerSelector, selectClass, optionsHtml) {
+            const container = document.querySelector(containerSelector);
+            const oldBtn = document.querySelector(btnAddSelector);
+            const newBtn = oldBtn.cloneNode(true);
+            oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+            newBtn.addEventListener('click', () => {
+                const row = document.createElement('div');
+                row.className = 'flex-input-row';
+                row.innerHTML = `
+                    <select class="${selectClass}">${optionsHtml}</select>
+                    <button class="btn-icon btn-remove">-</button>
+                `;
+                row.querySelector('.btn-remove').addEventListener('click', function() {
+                    row.remove();
+                    updateSummaryText(); 
+                });
+                container.appendChild(row);
+            });
+        }
+
+        // --- 頁籤切換邏輯 ---
+        const tabHeaders = document.querySelectorAll('.header-tabs .tab');
+        const tabContentsList = document.querySelectorAll('.tab-content');
+        
+        tabHeaders.forEach((header, index) => {
+            header.addEventListener('click', () => {
+                tabHeaders.forEach(h => h.classList.remove('active'));
+                tabContentsList.forEach(c => c.classList.remove('active'));
+                
+                header.classList.add('active');
+                if(tabContentsList[index]) tabContentsList[index].classList.add('active');
+            });
+        });
+
+        // --- 查詢結果與文明多色背景邏輯 ---
+        const btnSearch = document.getElementById('btn-search');
+        const listContainer = document.getElementById('list-container');
+        let hasSearched = false;
+
+        function cleanCardName(name) {
+            if (!name) return "";
+            return name.replace(/（.*?）|\(.*?\)/g, '').trim();
+        }
+
+        function getCivBackground(totalCiv) {
+            const colors = [];
+            if (totalCiv & 16) colors.push('#FFD54F'); // 光
+            if (totalCiv & 8)  colors.push('#4FC3F7'); // 水
+            if (totalCiv & 4)  colors.push('#9E9E9E'); // 闇
+            if (totalCiv & 2)  colors.push('#E57373'); // 火
+            if (totalCiv & 1)  colors.push('#81C784'); // 自
+            if (totalCiv & 32 || colors.length === 0) colors.push('#FAFAFA'); // 無
+
+            if (colors.length === 1) return colors[0];
+
+            const step = 100 / colors.length;
+            const gradientStops = [];
+            colors.forEach((color, i) => {
+                gradientStops.push(`${color} ${i * step}%`);
+                gradientStops.push(`${color} ${(i + 1) * step}%`);
+            });
+
+            return `linear-gradient(135deg, ${gradientStops.join(', ')})`;
+        }
+
+        // ==========================================
+		// 搜尋過濾核心演算法
+		// ==========================================
+		btnSearch.addEventListener('click', () => {
+			hasSearched = true;
+			tabHeaders[1].click(); // 切換至查詢結果頁
+
+			// 1. 讀取並預處理所有 UI 過濾條件
+			const filterConfig = getFilterConfigFromUI();
+
+			// 2. 進行暱稱解析 (條件 10)
+			let targetRealNameFromNickname = null;
+			if (filterConfig.cardName && isOnlyCardNameFiltered(filterConfig)) {
+				// 檢查是否有直接包含此卡名的卡
+				const directMatches = globalCardData.filter(c => c.name && c.name.includes(filterConfig.cardName));
+				if (directMatches.length === 0 && Array.isArray(rawNicknames)) {
+					// 完全匹配暱稱
+					const matchedNick = rawNicknames.find(n => 
+						Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === filterConfig.cardName)
+					);
+					if (matchedNick) {
+						targetRealNameFromNickname = matchedNick.realname;
+					}
+				}
+			}
+
+			// 3. 開始過濾資料
+			let filterResults = globalCardData.filter(card => {
+				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
+			});
+
+			// 4. 渲染結果清單
+			listContainer.innerHTML = '';
+
+			if (filterResults.length === 0) {
+				listContainer.innerHTML = '<div class="empty-state">查無資料</div>';
+				return;
+			}
+
+			// 依據名稱排序
+			filterResults.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'zh-TW'));
+
+			filterResults.forEach(card => {
+				let combinedCiv = 0;
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+				}
+
+				const itemDiv = document.createElement('div');
+				itemDiv.className = 'card-list-item';
+				itemDiv.style.background = getCivBackground(combinedCiv);
+				
+				const cleanName = cleanCardName(card.name);
+				itemDiv.innerHTML = `<div class="card-name">${cleanName}</div>`;
+				
+				itemDiv.addEventListener('click', () => {
+					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
+					itemDiv.classList.add('selected');
+					openCardModal(card, combinedCiv);
+				});
+
+				listContainer.appendChild(itemDiv);
+			});
+		});
+
+		// --- 讀取 UI 設定的輔助函數 ---
+		function getFilterConfigFromUI() {
+			const isAdv = document.body.classList.contains('advanced-mode');
+
+			// 1. 卡種
+			const checkedCardTypes = Array.from(document.querySelectorAll('.chk-cardtype:checked')).map(cb => cb.value);
+			
+			// 2. 雙極卡
+			const twinpect = document.querySelector('input[name="twinpect"]:checked')?.value || 'all';
+			
+			// 3. 進階雙極選項
+			const twinAdvChecked = Array.from(document.querySelectorAll('input[name="twin_adv"]:checked')).map(cb => cb.value);
+			const isAbilityMix = twinAdvChecked.includes('ability');
+			const allowTopBig = twinAdvChecked.includes('top_big');
+			const allowSameCost = twinAdvChecked.includes('same');
+			const allowBotBig = twinAdvChecked.includes('bot_big');
+
+			// 5. 文明
+			const permitCivs = Array.from(document.querySelectorAll('#civ-permit .civ-box.active')).map(b => b.dataset.val);
+			const requireCivs = Array.from(document.querySelectorAll('#civ-require .civ-box.active')).map(b => b.dataset.val);
+			const isRequireOr = document.querySelector('#civ-require .civ-box[data-val="or"]')?.classList.contains('active');
+
+			// 6 & 7. 費用與攻擊力
+			const cost1 = document.getElementById('cost-1').value;
+			const cost2 = document.getElementById('cost-2').value;
+			const power1 = document.getElementById('power-1').value;
+			const power2 = document.getElementById('power-2').value;
+
+			// 8. 種族
+			const races = Array.from(document.querySelectorAll('.race-select')).map(s => s.value).filter(Boolean);
+
+			// 9. 能力
+			const abilityText = document.getElementById('ability-text').value.trim();
+			const abilities = Array.from(document.querySelectorAll('.ability-select')).map(s => s.value).filter(Boolean);
+			const raceAdv = document.querySelector('.race-select-adv')?.value || '';
+
+			// 10. 卡名
+			const cardName = document.getElementById('card-name').value.trim();
+
+			return {
+				isAdv, checkedCardTypes, twinpect,
+				isAbilityMix, allowTopBig, allowSameCost, allowBotBig,
+				permitCivs, requireCivs, isRequireOr,
+				cost1, cost2, power1, power2,
+				races, abilityText, abilities, raceAdv, cardName
+			};
+		}
+
+		// 檢查是否只有輸入卡名 (其他條件皆為預設/空白)
+		function isOnlyCardNameFiltered(cfg) {
+			if (!cfg.cardName) return false;
+			if (cfg.twinpect !== 'all') return false;
+			if (cfg.cost1 || cfg.cost2 || cfg.power1 || cfg.power2) return false;
+			if (cfg.races.length > 0) return false;
+			if (cfg.abilityText || cfg.abilities.length > 0 || cfg.raceAdv) return false;
+			return true;
+		}
+
+		// --- 核心卡牌比對邏輯 ---
+		function checkCardMatchesFilters(card, cfg, targetRealNameFromNickname) {
+			if (!card.wdata || !Array.isArray(card.wdata) || card.wdata.length === 0) return false;
+
+			// ================= 10. 卡名指定與暱稱比對 =================
+			if (targetRealNameFromNickname) {
+				if (card.name !== targetRealNameFromNickname) return false;
+			} else if (cfg.cardName) {
+				if (!card.name || !card.name.includes(cfg.cardName)) return false;
+			}
+
+			// ================= 2. 雙極卡設定 =================
+			const wLen = card.wdata.length;
+			if (cfg.twinpect === 'yes' && wLen <= 1) return false;
+			if (cfg.twinpect === 'no' && wLen > 1) return false;
+
+			// ================= 4. 上下比較 (費用) =================
+			if (wLen > 1) {
+				const cost0 = Number(card.wdata[0].cost ?? 0);
+				const cost1 = Number(card.wdata[1].cost ?? 0);
+				if (cost0 > cost1 && !cfg.allowTopBig) return false;
+				if (cost0 === cost1 && !cfg.allowSameCost) return false;
+				if (cost0 < cost1 && !cfg.allowBotBig) return false;
+			}
+
+			// ================= 5. 文明判定 =================
+			let totalCiv = 0;
+			card.wdata.forEach(w => totalCiv |= (parseInt(w.civil) || 0));
+
+			// 5-1. 許可文明 (Permit)
+			// 檢查卡牌是否有未獲得許可的文明 bit
+			let allowedBitmask = 0;
+			cfg.permitCivs.forEach(val => {
+				if (!isNaN(parseInt(val))) allowedBitmask |= parseInt(val);
+			});
+			// 無色卡 (civil=0 或 bit 32)
+			const cardCivBits = totalCiv === 0 ? 32 : totalCiv;
+			if ((cardCivBits & ~allowedBitmask) !== 0) return false;
+
+			// 5-2. 單色多色
+			const isMonoPermitted = cfg.permitCivs.includes('mono');
+			const isMultiPermitted = cfg.permitCivs.includes('multi');
+			const isCardMulti = countSetBits(totalCiv & 31) > 1; // 排除無色計算 bit
+			const isCardMono = countSetBits(totalCiv & 31) === 1 || totalCiv === 32 || totalCiv === 0;
+
+			if (!isMonoPermitted && isCardMono) return false;
+			if (!isMultiPermitted && isCardMulti) return false;
+
+			// 5-3. 必須文明 (Require) + AND/OR
+			const reqBits = cfg.requireCivs
+				.filter(v => !isNaN(parseInt(v)))
+				.map(v => parseInt(v));
+
+			if (reqBits.length > 0) {
+				if (cfg.isRequireOr) {
+					// OR: 只要包含任一必須文明
+					const hasAny = reqBits.some(bit => (cardCivBits & bit) !== 0);
+					if (!hasAny) return false;
+				} else {
+					// AND: 必須包含所有指定文明
+					const hasAll = reqBits.every(bit => (cardCivBits & bit) !== 0);
+					if (!hasAll) return false;
+				}
+			}
+
+			// Helper: 彙整區塊能力 (含 hypermode.sp)
+			const getWdataSpList = (w) => {
+				let res = Array.isArray(w.sp) ? [...w.sp] : [];
+				if (w.hypermode && Array.isArray(w.hypermode.sp)) {
+					res = res.concat(w.hypermode.sp);
+				}
+				return res;
+			};
+
+			// ================= 3. 能力混找 vs 單個區塊完全符合 =================
+			if (cfg.isAbilityMix) {
+				// 把所有的 wdata 打平混合做比對
+				const allTypes = card.wdata.flatMap(w => w.type || []);
+				const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
+				const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+				const allRaces = card.wdata.flatMap(w => w.race || []);
+				const allSp = card.wdata.flatMap(w => getWdataSpList(w));
+
+				if (!checkTypeMatch(allTypes, cfg.checkedCardTypes)) return false;
+				if (!checkCostMatchList(allCosts, cfg)) return false;
+				if (!checkPowerMatchList(allPowers, cfg)) return false;
+				if (!checkRaceMatchList(allRaces, cfg.races)) return false;
+				if (!checkAbilityMatchList(allSp, cfg)) return false;
+
+			} else {
+				// 必須至少有一個 wdata 區塊完全符合所有條件
+				const hasMatchedBlock = card.wdata.some(w => {
+					const wSp = getWdataSpList(w);
+					if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes)) return false;
+					if (!checkCostMatchSingle(w.cost, cfg)) return false;
+					if (!checkPowerMatchSingle(w.power, cfg)) return false;
+					if (!checkRaceMatchList(w.race || [], cfg.races)) return false;
+					if (!checkAbilityMatchList(wSp, cfg)) return false;
+					return true;
+				});
+
+				if (!hasMatchedBlock) return false;
+			}
+
+			return true; // 通過所有考驗！
+		}
+
+		// --- 比對細節子函數集 ---
+
+		// 1. 卡種：符合一個即可
+		function checkTypeMatch(cardTypes, checkedTypes) {
+			if (checkedTypes.length === 0) return true;
+			return cardTypes.some(t => checkedTypes.includes(t));
+		}
+
+		// 6. 費用指定 (單一 & 清單)
+		function checkCostMatchSingle(cost, cfg) {
+			if (cost === undefined || cost === null) return false;
+			const c = Number(cost);
+			if (!cfg.isAdv) {
+				if (cfg.cost1 !== "" && c !== Number(cfg.cost1)) return false;
+			} else {
+				if (cfg.cost1 !== "" && c < Number(cfg.cost1)) return false;
+				if (cfg.cost2 !== "" && c > Number(cfg.cost2)) return false;
+			}
+			return true;
+		}
+
+		function checkCostMatchList(costs, cfg) {
+			return costs.some(c => checkCostMatchSingle(c, cfg));
+		}
+
+		// 7. 攻擊力指定 (單一 & 清單)
+		function checkPowerMatchSingle(power, cfg) {
+			if (power === undefined || power === null) return false;
+			const p = Number(power);
+			if (!cfg.isAdv) {
+				if (cfg.power1 !== "" && p !== Number(cfg.power1)) return false;
+			} else {
+				if (cfg.power1 !== "" && p < Number(cfg.power1)) return false;
+				if (cfg.power2 !== "" && p > Number(cfg.power2)) return false;
+			}
+			return true;
+		}
+
+		function checkPowerMatchList(powers, cfg) {
+			return powers.some(p => checkPowerMatchSingle(p, cfg));
+		}
+
+		// 8. 種族指定：必須包含使用者指定的所有種族
+		function checkRaceMatchList(cardRaces, targetRaces) {
+			if (targetRaces.length === 0) return true;
+			return targetRaces.every(r => cardRaces.includes(r));
+		}
+
+		// 9. 能力過濾總合 (9-1 自由輸入, 9-2 關鍵字, 9-3 提及種族)
+		function checkAbilityMatchList(spList, cfg) {
+			// 9-2. 能力關鍵字：必須全符合
+			if (cfg.abilities.length > 0) {
+				const hasAllAbil = cfg.abilities.every(abil => spList.some(sp => sp.includes(abil)));
+				if (!hasAllAbil) return false;
+			}
+
+			// 9-3. 能力提到種族
+			if (cfg.raceAdv) {
+				const hasRaceAdv = spList.some(sp => sp.includes(cfg.raceAdv));
+				if (!hasRaceAdv) return false;
+			}
+
+			// 9-1. 自由輸入解析與比對
+			if (cfg.abilityText) {
+				const isFreeInputMatched = checkFreeInputAbility(spList, cfg.abilityText);
+				if (!isFreeInputMatched) return false;
+			}
+
+			return true;
+		}
+
+		// 9-1 自由輸入解析演算法（含 AND/OR 以及 數字+/- 商業邏輯）
+		function checkFreeInputAbility(spList, inputText) {
+			// 依據 空白 切分出 AND 群組
+			const andTokens = inputText.split(/\s+/).filter(Boolean);
+
+			return andTokens.every(token => {
+				// 依據 / ／ | ＼ \ , 切分出 OR 條件
+				const orConditions = token.split(/[/／|＼\\,]/).filter(Boolean);
+
+				// OR 條件中只要有一個成立即可
+				return orConditions.some(cond => checkSingleConditionInSp(spList, cond));
+			});
+		}
+
+		// ==========================================
+		// 3. 更新自由輸入數字比對 (1. 排除文字 1隻/1張/1個 的比對)
+		// ==========================================
+		function checkSingleConditionInSp(spList, cond) {
+			// 檢查是否為純數字運算符，例如 "7-"、"2000+"、"5"
+			const numMatch = cond.match(/^(\d+)([+-])?$/);
+
+			if (numMatch) {
+				const targetNum = Number(numMatch[1]);
+				const op = numMatch[2]; // '+' 或 '-' 或 undefined
+
+				const isPowerType = targetNum >= 500;
+
+				return spList.some(sp => {
+					// 先過濾掉 "1個"、"1張"、"1隻"、"1枚" 等量詞組合中的 "1"
+					const cleanedSp = sp.replace(/1[個張隻枚個]/g, ' ');
+
+					// 從清洗後的 SP 文字中抓出剩餘的數字
+					const numbersInSp = (cleanedSp.match(/\d+/g) || []).map(Number);
+
+					return numbersInSp.some(spNum => {
+						if (isPowerType && spNum < 500) return false;
+						if (!isPowerType && spNum >= 500) return false;
+
+						if (op === '+') return spNum >= targetNum;
+						if (op === '-') return spNum <= targetNum;
+						return spNum === targetNum;
+					});
+				});
+			}
+
+			// 當使用者輸入包含文字（例如 "1個" 或 "1+個"）時，直接進行字串/正規表示式比對
+			const chineseNumMatch = cond.match(/^(\d+)([+-])?([個張隻枚])$/);
+			if (chineseNumMatch) {
+				const targetNum = Number(chineseNumMatch[1]);
+				const op = chineseNumMatch[2];
+				const unit = chineseNumMatch[3];
+
+				return spList.some(sp => {
+					const regex = new RegExp(`(\\d+)[${unit}]`, 'g');
+					let match;
+					while ((match = regex.exec(sp)) !== null) {
+						const spNum = Number(match[1]);
+						if (op === '+' && spNum >= targetNum) return true;
+						if (op === '-' && spNum <= targetNum) return true;
+						if (!op && spNum === targetNum) return true;
+					}
+					return false;
+				});
+			}
+
+			// 一般非數值條件，進行包含 (Includes) 比對
+			return spList.some(sp => sp.includes(cond));
+		}
+
+		// 輔助函式：計算二進位中 1 的個數（用於文明單色/多色判定）
+		function countSetBits(n) {
+			let count = 0;
+			while (n > 0) {
+				n &= (n - 1);
+				count++;
+			}
+			return count;
+		}
+		
+		// ==========================================
+		// 1. 全域與初始化事件設定 (鍵盤 Enter 查詢 & 標籤點擊 Alert)
+		// ==========================================
+
+		// 桌機版：在條件過濾頁籤按 Enter 自動進行查詢
+		document.getElementById('tab-filter').addEventListener('keydown', (e) => {
+			// 排除在 textarea (若有) 內的換行輸入
+			if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+				e.preventDefault();
+				btnSearch.click();
+			}
+		});
+
+		// 手機版：點擊效果標籤或種族標籤時跳出 Alert 提示
+		document.addEventListener('click', (e) => {
+			const tagEl = e.target.closest('.effect-tag, .wdata-race-tag');
+			if (!tagEl) return;
+
+			// 判斷是否為手機/觸控螢幕裝置或螢幕寬度 <= 768px
+			const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+			
+			if (isMobile) {
+				const tooltipText = tagEl.getAttribute('title') || tagEl.getAttribute('data-tooltip');
+				if (tooltipText && tooltipText.trim() !== '') {
+					alert(tooltipText);
+				}
+			}
+		});
+
+		// Helper: 取得種族 Tooltip 字串 (日文 / 中文 / 英文)
+		function getRaceTooltipText(raceJap) {
+			if (!Array.isArray(rawRaces)) return raceJap;
+			const info = rawRaces.find(r => r.jap === raceJap);
+			if (!info) return raceJap;
+			
+			const parts = [];
+			if (info.jap) parts.push(`日文: ${info.jap}`);
+			const chiVal = info.chi || info.cht;
+			if (chiVal) parts.push(`中文: ${chiVal}`);
+			if (info.eng) parts.push(`英文: ${info.eng}`);
+			return parts.join('\n');
+		}
+
+        // --- 卡牌資料彈出視窗 (Modal Window) 控制與渲染邏輯 ---
+        const cardModal = document.getElementById('card-modal');
+        const modalClose = document.getElementById('modal-close');
+        const modalTitle = document.getElementById('modal-title');
+        const modalHeader = document.getElementById('modal-header');
+        const modalImgBox = document.getElementById('modal-img-box');
+        const modalInfoContainer = document.getElementById('modal-info-container');
+
+        function openCardModal(card, combinedCiv) {
+			modalTitle.innerText = card.name || '未命名卡牌';
+			modalHeader.style.background = getCivBackground(combinedCiv);
+
+			modalImgBox.innerHTML = '';
+
+			let isHorizontal = false;
+			if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
+				const firstTypeVal = card.wdata[0].type[0];
+				const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
+				if (matchedType && matchedType.horizontal === true) {
+					isHorizontal = true;
+				}
+			}
+
+			const boxWidth = isHorizontal ? '250px' : '180px';
+			const boxHeight = isHorizontal ? '180px' : '250px';
+
+			modalImgBox.style.width = boxWidth;
+
+			if (card.pic && card.pic.trim() !== '') {
+				const img = document.createElement('img');
+				img.src = card.pic;
+				img.alt = card.name;
+				img.className = 'modal-img';
+				img.style.width = boxWidth;
+				img.style.height = boxHeight;
+				img.onerror = () => {
+					modalImgBox.innerHTML = `<div class="no-image-box" style="width:${boxWidth}; height:${boxHeight};">No Image</div>`;
+				};
+				modalImgBox.appendChild(img);
+			} else {
+				modalImgBox.innerHTML = `<div class="no-image-box" style="width:${boxWidth}; height:${boxHeight};">No Image</div>`;
+			}
+
+			modalInfoContainer.innerHTML = '';
+			
+			const abilityDictMap = new Map();
+			if (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities)) {
+				rawAbilities.forEach(a => {
+					if (a.jap) {
+						abilityDictMap.set(a.jap, a);
+						if (a.jap === "シールド化") {
+							abilityDictMap.set("護盾化", a);
+						}
+					}
+				});
+			}
+
+			if (card.wdata && Array.isArray(card.wdata) && card.wdata.length > 0) {
+				card.wdata.forEach((w, idx) => {
+					const block = document.createElement('div');
+					block.className = 'wdata-block';
+
+					const hasHyperMode = Boolean(w.hypermode);
+					let isHyperModeActive = false;
+
+					let hyperBtn = null;
+					if (hasHyperMode) {
+						hyperBtn = document.createElement('button');
+						hyperBtn.className = 'btn-icon';
+						hyperBtn.style.alignSelf = 'flex-start';
+						hyperBtn.style.marginBottom = '8px';
+						hyperBtn.style.backgroundColor = '#d32f2f';
+						hyperBtn.style.color = '#fff';
+						hyperBtn.style.border = 'none';
+						hyperBtn.style.padding = '6px 12px';
+						hyperBtn.style.borderRadius = '4px';
+						hyperBtn.style.cursor = 'pointer';
+						hyperBtn.style.fontWeight = 'bold';
+						hyperBtn.innerText = '[>>超化模式]';
+						
+						block.appendChild(hyperBtn);
+					}
+
+					const grid = document.createElement('div');
+					grid.className = 'card-attr-grid';
+
+					if (w.cost !== undefined && w.cost !== null) {
+						grid.appendChild(createAttrPill('費用', formatDisplayValue(w.cost)));
+					}
+
+					const powerPill = document.createElement('div');
+					powerPill.className = 'attr-pill';
+					
+					function renderPowerValue(powerVal, pcVal) {
+						let pVal = powerVal;
+						if (pVal === 0) pVal = '0000';
+						else pVal = formatDisplayValue(pVal);
+
+						if (pcVal === true) pVal += '+';
+						else if (pcVal === false) pVal += '-';
+
+						powerPill.innerHTML = `<span class="attr-label">攻擊力:</span><span class="attr-value">${pVal}</span>`;
+					}
+
+					if (w.power !== undefined && w.power !== null) {
+						renderPowerValue(w.power, w.pc);
+						grid.appendChild(powerPill);
+					}
+
+					if (w.type && Array.isArray(w.type) && w.type.length > 0) {
+						const typeTexts = w.type.map(t => getCardTypeText(t)).join(', ');
+						const typePill = document.createElement('div');
+						typePill.className = 'attr-pill';
+						typePill.innerHTML = `<span class="attr-value">${typeTexts}</span>`;
+						grid.appendChild(typePill);
+					}
+					
+					block.appendChild(grid);
+
+					// 3. 種族 (Race) - 加上 class 與 title Tooltip 屬性
+					if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+						const raceBox = document.createElement('div');
+						raceBox.style.marginTop = '6px';
+						raceBox.style.display = 'flex';
+						raceBox.style.flexWrap = 'wrap';
+						raceBox.style.gap = '4px';
+						
+						w.race.forEach(r => {
+							const rTag = document.createElement('span');
+							rTag.className = 'wdata-race-tag'; // 專用 class 方便點擊事件捕捉
+							rTag.style.background = '#e2e8f0';
+							rTag.style.color = '#334155';
+							rTag.style.padding = '2px 8px';
+							rTag.style.borderRadius = '4px';
+							rTag.style.fontSize = '12px';
+							rTag.style.fontWeight = 'bold';
+							rTag.style.cursor = 'pointer';
+							rTag.innerText = r;
+							
+							// 加入 Tooltip 說明 (日文/中文/英文)
+							const tooltipText = getRaceTooltipText(r);
+							rTag.setAttribute('title', tooltipText);
+							rTag.setAttribute('data-tooltip', tooltipText);
+
+							raceBox.appendChild(rTag);
+						});
+						block.appendChild(raceBox);
+					}
+
+					const spContainer = document.createElement('div');
+					spContainer.style.marginTop = '8px';
+					block.appendChild(spContainer);
+
+					const abilExplainBtn = document.createElement('button');
+					abilExplainBtn.className = 'btn-icon';
+					abilExplainBtn.style.marginTop = '10px';
+					abilExplainBtn.style.alignSelf = 'flex-start';
+					abilExplainBtn.style.backgroundColor = '#2196f3';
+					abilExplainBtn.style.color = '#fff';
+					abilExplainBtn.style.border = 'none';
+					abilExplainBtn.style.padding = '5px 10px';
+					abilExplainBtn.style.borderRadius = '4px';
+					abilExplainBtn.style.cursor = 'pointer';
+					abilExplainBtn.style.fontSize = '12px';
+					abilExplainBtn.style.fontWeight = 'bold';
+					abilExplainBtn.innerText = '[展開能力說明]';
+					abilExplainBtn.style.display = 'none';
+
+					const abilExplainBox = document.createElement('div');
+					abilExplainBox.style.display = 'none';
+					abilExplainBox.style.marginTop = '8px';
+					abilExplainBox.style.padding = '10px';
+					abilExplainBox.style.backgroundColor = '#eef6ff';
+					abilExplainBox.style.border = '1px solid #bbdefb';
+					abilExplainBox.style.borderRadius = '6px';
+					abilExplainBox.style.fontSize = '13px';
+					abilExplainBox.style.lineHeight = '1.5';
+
+					let isExplainOpen = false;
+					abilExplainBtn.addEventListener('click', () => {
+						isExplainOpen = !isExplainOpen;
+						abilExplainBox.style.display = isExplainOpen ? 'block' : 'none';
+						abilExplainBtn.innerText = isExplainOpen ? '[收合能力說明]' : '[展開能力說明]';
+					});
+
+					block.appendChild(abilExplainBtn);
+					block.appendChild(abilExplainBox);
+
+					function renderSpAbilities() {
+						spContainer.innerHTML = '';
+						abilExplainBox.innerHTML = '';
+
+						let currentSpList = [];
+
+						if (w.sp && Array.isArray(w.sp)) {
+							currentSpList = [...w.sp];
+						}
+
+						if (isHyperModeActive && w.hypermode && Array.isArray(w.hypermode.sp)) {
+							currentSpList = currentSpList.concat(w.hypermode.sp);
+						}
+
+						if (currentSpList.length > 0) {
+							const spTitle = document.createElement('div');
+							spTitle.style.fontSize = '13px';
+							spTitle.style.fontWeight = 'bold';
+							spTitle.style.color = '#555';
+							spTitle.innerText = '特殊能力：';
+							spContainer.appendChild(spTitle);
+
+							const ul = document.createElement('ul');
+							ul.className = 'sp-ability-list';
+
+							const hintElements = [];
+
+							currentSpList.forEach(abilityStr => {
+								const result = renderAbilityText(abilityStr);
+								
+								if (result.isHint) {
+									const hintDiv = document.createElement('div');
+									hintDiv.innerHTML = result.html;
+									hintElements.push(hintDiv);
+								} else {
+									const li = document.createElement('li');
+									li.innerHTML = result.html;
+									ul.appendChild(li);
+								}
+							});
+
+							if (ul.children.length > 0) {
+								spContainer.appendChild(ul);
+							}
+
+							hintElements.forEach(hintDiv => {
+								spContainer.appendChild(hintDiv);
+							});
+
+							const abilityTags = spContainer.querySelectorAll('.effect-tag.tag-ability');
+							const detectedAbilityKeys = new Set();
+
+							abilityTags.forEach(tag => {
+								let key = tag.innerText.trim();
+								if (key === '護盾化') key = 'シールド化';
+								if (key) detectedAbilityKeys.add(key);
+							});
+
+							if (detectedAbilityKeys.size > 0) {
+								abilExplainBtn.style.display = 'inline-block';
+
+								detectedAbilityKeys.forEach(key => {
+									const info = abilityDictMap.get(key);
+									if (info) {
+										const itemDiv = document.createElement('div');
+										itemDiv.style.marginBottom = '10px';
+										itemDiv.style.borderBottom = '1px dashed #90caf9';
+										itemDiv.style.paddingBottom = '6px';
+
+										const japStr = info.jap || '';
+										const chiStr = info.chi || info.cht || '';
+										const engStr = info.eng || '';
+										const descStr = info.descript || info.desc || info.text || info.detail || '(無效果說明)';
+
+										const headerLine = [japStr, chiStr, engStr].filter(Boolean).join(' / ');
+
+										itemDiv.innerHTML = `
+											<div style="font-weight: bold; color: #1565c0;">${headerLine}</div>
+											<div style="color: #333; margin-top: 2px;">效果說明：${descStr}</div>
+										`;
+										abilExplainBox.appendChild(itemDiv);
+									}
+								});
+
+								if (abilExplainBox.lastElementChild) {
+									abilExplainBox.lastElementChild.style.borderBottom = 'none';
+									abilExplainBox.lastElementChild.style.marginBottom = '0';
+									abilExplainBox.lastElementChild.style.paddingBottom = '0';
+								}
+
+							} else {
+								abilExplainBtn.style.display = 'none';
+								abilExplainBox.style.display = 'none';
+								isExplainOpen = false;
+								abilExplainBtn.innerText = '[展開能力說明]';
+							}
+
+						} else {
+							abilExplainBtn.style.display = 'none';
+							abilExplainBox.style.display = 'none';
+							isExplainOpen = false;
+							abilExplainBtn.innerText = '[展開能力說明]';
+						}
+					}
+
+					renderSpAbilities();
+
+					if (hyperBtn) {
+						hyperBtn.addEventListener('click', () => {
+							isHyperModeActive = !isHyperModeActive;
+
+							if (isHyperModeActive) {
+								hyperBtn.innerText = '[一般模式<<]';
+								hyperBtn.style.backgroundColor = '#424242';
+
+								if (w.hypermode.power !== undefined && w.hypermode.power !== null) {
+									renderPowerValue(w.hypermode.power, w.pc);
+								}
+							} else {
+								hyperBtn.innerText = '[>>超化模式]';
+								hyperBtn.style.backgroundColor = '#d32f2f';
+
+								if (w.power !== undefined && w.power !== null) {
+									renderPowerValue(w.power, w.pc);
+								}
+							}
+
+							renderSpAbilities();
+						});
+					}
+
+					modalInfoContainer.appendChild(block);
+				});
+			} else {
+				modalInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
+			}
+
+			cardModal.classList.add('active');
+		}
+
+        function createAttrPill(label, value) {
+            const div = document.createElement('div');
+            div.className = 'attr-pill';
+            div.innerHTML = `<span class="attr-label">${label}:</span><span class="attr-value">${value}</span>`;
+            return div;
+        }
+		
+		// --- 效果標籤化 (Effect Tagging) 核心邏輯 ---
+
+        // HTML 轉義防護
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 建立快取字典 (依字串長度降序排序，確保最長優先)
+        function buildTagDictionaries() {
+            // 1. 卡名字典
+            const cardNames = Array.from(new Set(globalCardData.map(c => c.name).filter(Boolean)))
+                .sort((a, b) => b.length - a.length);
+
+            // 2. 分類名稱字典
+            const categoryNames = Array.from(new Set(rawCategoryNames.filter(Boolean)))
+                .sort((a, b) => b.length - a.length);
+
+            // 3. 能力字典 (建立映射對照)
+            const abilityMap = new Map();
+            rawAbilities.forEach(a => {
+                if (a.jap) {
+                    abilityMap.set(a.jap, a);
+                    // 特別需求：若為 シールド化，同時支援 護盾化 的匹配
+                    if (a.jap === "シールド化") {
+                        abilityMap.set("護盾化", a);
+                    }
+                }
+            });
+            const abilityKeys = Array.from(abilityMap.keys()).sort((a, b) => b.length - a.length);
+
+            // 4. 種族字典 (建立映射對照)
+            const raceMap = new Map();
+            rawRaces.forEach(r => {
+                if (r.jap) raceMap.set(r.jap, r);
+            });
+            const raceKeys = Array.from(raceMap.keys()).sort((a, b) => b.length - a.length);
+
+            return { cardNames, categoryNames, abilityKeys, abilityMap, raceKeys, raceMap };
+        }
+
+        // 核心文字標籤化處理函數
+        // 核心文字標籤化處理函數
+        function applyEffectTags(text) {
+            if (!text) return "";
+
+            const dicts = buildTagDictionaries();
+            const placeholders = [];
+            let processedText = text;
+
+            // 內部輔助：以佔位符進行安全替換
+            function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
+                if (keywords.length === 0) return;
+
+                let pattern;
+                if (requireBracket) {
+                    // 要求關鍵字前後必須包裹《》 (例如: 《神帝アナ》)
+                    const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
+                    pattern = new RegExp(`《(${innerPattern})》`, 'g');
+                } else {
+                    const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
+                    pattern = new RegExp(innerPattern, 'g');
+                }
+
+                processedText = processedText.replace(pattern, (fullMatch, group1) => {
+                    const placeholder = `___TAG_${placeholders.length}___`;
+                    // 若需要括號，matched 取《》內部的文字
+                    const matched = requireBracket ? group1 : fullMatch;
+                    const tooltipText = getTooltipFn ? getTooltipFn(matched) : '';
+                    
+                    placeholders.push({
+                        placeholder,
+                        fullMatch, // 原始匹配包含《》
+                        matched,   // 實際標籤文字
+                        type,
+                        tooltipText,
+                        requireBracket
+                    });
+                    return placeholder;
+                });
+            }
+
+            // 順序 1: globalCardData 裡的 carddata.name (必須帶有 《》)
+            replaceKeywords(dicts.cardNames, 'card-name', null, true);
+
+            // 順序 2: rawCategoryNames (必須帶有 《》)
+            replaceKeywords(dicts.categoryNames, 'category-name', null, true);
+
+            // 順序 3: rawAbilities (顯示 日文 / 中文 / 英文 / 效果說明)
+            replaceKeywords(dicts.abilityKeys, 'ability', (matched) => {
+                const targetKey = matched === "護盾化" ? "シールド化" : matched;
+                const info = dicts.abilityMap.get(targetKey);
+                if (!info) return '';
+                const parts = [];
+                if (info.jap) parts.push(`日文: ${info.jap}`);
+                
+                // 相容 chi 或 cht 欄位
+                const chiVal = info.chi || info.cht;
+                if (chiVal) parts.push(`中文: ${chiVal}`);
+                
+                if (info.eng) parts.push(`英文: ${info.eng}`);
+
+                // 正確讀取 descript 欄位 (並保留 desc/text/detail 作為 fallback)
+                const descVal = info.descript;
+                if (descVal) parts.push(`說明: ${descVal}`);
+
+                return parts.join('\n');
+            }, false);
+
+            // 順序 4: rawRaces (顯示 日文 / 中文 / 英文)
+            replaceKeywords(dicts.raceKeys, 'race', (matched) => {
+                const info = dicts.raceMap.get(matched);
+                if (!info) return '';
+                const parts = [];
+                if (info.jap) parts.push(`日文: ${info.jap}`);
+                
+                // 相容 chi 或 cht 欄位
+                const chiVal = info.chi || info.cht;
+                if (chiVal) parts.push(`中文: ${chiVal}`);
+                
+                if (info.eng) parts.push(`英文: ${info.eng}`);
+                return parts.join('\n');
+            }, false);
+
+            // 最後：還原所有佔位符為 HTML 標籤
+            placeholders.forEach(({ placeholder, matched, type, tooltipText, requireBracket }) => {
+                const titleAttr = tooltipText ? `title="${tooltipText.replace(/"/g, '&quot;')}"` : '';
+                
+                // 如果是卡名/分類，保留外層《》並僅對內部文字套用效果標籤
+                const tagContent = `<span class="effect-tag tag-${type}" ${titleAttr} data-type="${type}">${matched}</span>`;
+                const finalHtml = requireBracket ? `《${tagContent}》` : tagContent;
+                
+                processedText = processedText.replace(placeholder, finalHtml);
+            });
+
+            return processedText;
+        }
+
+        // 關閉 Modal 事件
+        modalClose.addEventListener('click', () => {
+            cardModal.classList.remove('active');
+        });
+
+        cardModal.addEventListener('click', (e) => {
+            if (e.target === cardModal) {
+                cardModal.classList.remove('active');
+            }
+        });
+
+        fetchFirebaseData();
+    </script>
+</body>
+</html>
