@@ -3,6 +3,9 @@ import json
 import uuid  # 用來產生唯一 ID
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI()
 
@@ -22,11 +25,12 @@ card_stats_cache = {"powers": [], "costs": []}
 
 def load_json_file(filename: str):
     """輔助函式：從伺服器本機讀取 JSON 檔案"""
-    if os.path.exists(filename):
-        with open(filename, 'r', encoding='utf-8') as f:
+    file_path = BASE_DIR / filename
+    if file_path.exists():
+        with open(file_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     else:
-        print(f"警告: 找不到檔案 {filename}，將回傳空陣列。")
+        print(f"警告: 找不到檔案 {file_path}，將回傳空陣列。")
         return []
 
 # --- 伺服器啟動時執行：一次性載入與預先計算 ---
