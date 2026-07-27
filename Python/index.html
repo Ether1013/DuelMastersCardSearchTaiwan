@@ -1152,20 +1152,28 @@
         });
 
         function generateOptionsHtml(dataList) {
-            let sorted = [...dataList].sort((a,b) => (a.jap || "").localeCompare(b.jap || ""));
-            let popHtml = '';
-            let normHtml = '';
-            
-            sorted.forEach(d => {
-                if(d.pop) popHtml += `<option value="${d.jap}" style="color:red; font-weight:bold;">${d.jap}</option>`;
-                else normHtml += `<option value="${d.jap}">${d.jap}</option>`;
-            });
+			let sorted = [...dataList].sort((a,b) => (a.jap || "").localeCompare(b.jap || ""));
+			let popHtml = '';
+			let normHtml = '';
+			
+			sorted.forEach(d => {
+				// 【新增】：判斷是否有 iscategory === true 或 category === true
+				const isCat = d.iscategory || d.category;
+				const categorySuffix = isCat ? ' (類別種族)' : '';
+				const displayText = `${d.jap}${categorySuffix}`;
 
-            let finalHtml = '<option value="">(請選擇)</option>';
-            if(popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
-            finalHtml += normHtml;
-            return finalHtml;
-        }
+				if (d.pop) {
+					popHtml += `<option value="${d.jap}" style="color:red; font-weight:bold;">${displayText}</option>`;
+				} else {
+					normHtml += `<option value="${d.jap}">${displayText}</option>`;
+				}
+			});
+
+			let finalHtml = '<option value="">(請選擇)</option>';
+			if (popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
+			finalHtml += normHtml;
+			return finalHtml;
+		}
 
         function initDropdownData() {
             const raceHtml = generateOptionsHtml(rawRaces);
@@ -1582,10 +1590,15 @@
 			return powers.some(p => checkPowerMatchSingle(p, cfg));
 		}
 
-		// 8. 種族指定：必須包含使用者指定的所有種族
+		// 8. 種族指定：卡牌種族只需「部分包含」指定的關鍵字即可
 		function checkRaceMatchList(cardRaces, targetRaces) {
 			if (targetRaces.length === 0) return true;
-			return targetRaces.every(r => cardRaces.includes(r));
+			
+			// 對於使用者選擇的每一個目標種族 targetR
+			// 卡牌擁有的種族列表 (cardRaces) 中只要有任意一個種族「包含」了 targetR 即算符合
+			return targetRaces.every(targetR => 
+				cardRaces.some(cardR => cardR.includes(targetR))
+			);
 		}
 
 		// 9. 能力過濾總合 (9-1 自由輸入, 9-2 關鍵字, 9-3 提及種族)
