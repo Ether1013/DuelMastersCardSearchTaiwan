@@ -757,6 +757,18 @@
                     });
                 }
             }
+			
+			// --- 檢查 [查詢衍生卡種] 是否被勾選 ---
+			const chkDerived = document.getElementById('chk-derived-cardtype');
+			if (chkDerived && chkDerived.checked) {
+				tags.push({ 
+					label: `包含衍生卡種`, 
+					action: () => { 
+						chkDerived.checked = false; 
+						updateSummaryText(); 
+					} 
+				});
+			}
 
             const twinSelected = document.querySelector('input[name="twinpect"]:checked');
             if (twinSelected && twinSelected.value !== 'all') {
@@ -1300,12 +1312,42 @@
 			});
 		});
 
+		// --- 遞迴尋找所有衍生（子孫）卡種代號（不影響 UI，純後台過濾用） ---
+		function getAllDescendantCardTypes(selectedTypeValues) {
+			const resultTypes = new Set(selectedTypeValues);
+			const queue = [...selectedTypeValues];
+
+			while (queue.length > 0) {
+				const parentVal = queue.shift();
+				
+				// 尋找 rawCardTypes 中所有 parents 包含 parentVal 的子卡種
+				rawCardTypes.forEach(ct => {
+					if (ct.parents && Array.isArray(ct.parents) && ct.parents.includes(parentVal)) {
+						if (!resultTypes.has(ct.value)) {
+							resultTypes.add(ct.value);
+							queue.push(ct.value); // 繼續向下搜尋孫卡種、曾孫卡種...
+						}
+					}
+				});
+			}
+
+			return Array.from(resultTypes);
+		}
+
 		// --- 讀取 UI 設定的輔助函數 ---
 		function getFilterConfigFromUI() {
 			const isAdv = document.body.classList.contains('advanced-mode');
 
 			// 1. 卡種
-			const checkedCardTypes = Array.from(document.querySelectorAll('.chk-cardtype:checked')).map(cb => cb.value);
+			let checkedCardTypes = Array.from(document.querySelectorAll('.chk-cardtype:checked')).map(cb => cb.value);
+
+			// 判斷是否勾選 [查詢衍生卡種]
+			const isDerivedChecked = document.getElementById('chk-derived-cardtype')?.checked;
+
+			// 若有勾選，在後台過濾時自動將所有子孫卡種帶入清單（UI 畫面保持不變）
+			if (isDerivedChecked && checkedCardTypes.length > 0) {
+				checkedCardTypes = getAllDescendantCardTypes(checkedCardTypes);
+			}
 			
 			// 2. 雙極卡
 			const twinpect = document.querySelector('input[name="twinpect"]:checked')?.value || 'all';
