@@ -516,6 +516,97 @@
 				box-sizing: border-box;
 			}
 		}
+		
+		/* ================= 外部連結區塊樣式 ================= */
+		.ext-links-block {
+			background: #fdfdfd;
+			border: 1px solid #e2e8f0;
+			border-left: 4px solid #3b82f6;
+			padding: 12px 15px;
+			border-radius: 6px;
+			margin-top: 10px;
+		}
+
+		.ext-links-title {
+			font-size: 14px;
+			font-weight: bold;
+			color: #1e40af;
+			cursor: pointer;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			user-select: none;
+		}
+
+		.ext-group-title {
+			font-size: 12px;
+			font-weight: bold;
+			color: #475569;
+			margin: 8px 0 4px 0;
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		.ext-btn-grid {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 6px;
+			margin-bottom: 8px;
+		}
+
+		.ext-link-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 4px;
+			padding: 6px 4px;
+			font-size: 11px;
+			font-weight: bold;
+			border-radius: 4px;
+			border: 1px solid #cbd5e1;
+			background-color: #ffffff;
+			color: #334155;
+			cursor: pointer;
+			text-decoration: none;
+			transition: all 0.15s ease;
+			box-sizing: border-box;
+		}
+
+		.ext-link-btn:hover {
+			background-color: #f1f5f9;
+			border-color: #94a3b8;
+			color: #0f172a;
+		}
+
+		/* 暖色系按鈕：商店與價格 */
+		.ext-link-btn.shop-btn {
+			background-color: #fff7ed;
+			border-color: #ffedd5;
+			color: #c2410c;
+		}
+		.ext-link-btn.shop-btn:hover {
+			background-color: #ffedd5;
+			color: #9a3412;
+		}
+
+		/* 冷色系按鈕：資料庫與 Wiki */
+		.ext-link-btn.wiki-btn {
+			background-color: #f0f9ff;
+			border-color: #e0f2fe;
+			color: #0369a1;
+		}
+		.ext-link-btn.wiki-btn:hover {
+			background-color: #e0f2fe;
+			color: #075985;
+		}
+
+		/* 手機版：轉為 2x2 矩陣 */
+		@media (max-width: 768px) {
+			.ext-btn-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
     </style>
 </head>
 <body>
@@ -2727,6 +2818,154 @@
 
                 modalInfoContainer.appendChild(setBlock);
             }
+			
+			// --- 新增：外部連結輔助工具函數 ---
+            // 全角轉半角
+            const toCDB = (str) => {
+                if (!str) return "";
+                let tmp = "";
+                for (let i = 0; i < str.length; i++) {
+                    if (str.charCodeAt(i) === 12288) {
+                        tmp += String.fromCharCode(str.charCodeAt(i) - 12256);
+                        continue;
+                    }
+                    if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375) {
+                        tmp += String.fromCharCode(str.charCodeAt(i) - 65248);
+                    } else {
+                        tmp += String.fromCharCode(str.charCodeAt(i));
+                    }
+                }
+                return tmp;
+            };
+
+            // 1. 純淨卡名 (去除注音與全半角括號，轉半角)
+            const rawCardName = card.name || "";
+            const cleanNameOnly = cleanCardName(rawCardName);
+            const cleanHalfName = toCDB(cleanNameOnly);
+
+            // 2. 計算商品 ID (供 Torekakaku 與 露天 使用)
+            let cardIdForTrade = null;
+            let twSetCodeForRuten = null;
+            let twIdNumForRuten = null;
+
+            if (matchedItem && typeof matchedItem === 'object' && matchedItem.id) {
+                const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+                if (firstId) {
+                    cardIdForTrade = firstId.replace(/秘/g, "㊙");
+                }
+            }
+
+            // 尋找台版商品 ID（供露天搜尋）
+            if (typeof rawSetlist === 'object' && rawSetlist !== null) {
+                for (const [key, setObj] of Object.entries(rawSetlist)) {
+                    if (setObj.istw === true) {
+                        const cardList = setObj.setcardlist || setObj.cardlist;
+                        if (Array.isArray(cardList)) {
+                            const found = cardList.find(item => {
+                                const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+                                return typeof itemName === 'string' && itemName.trim() === rawCardName.trim();
+                            });
+                            if (found && found.id) {
+                                twSetCodeForRuten = setObj.setcode || setObj.code || key;
+                                const firstId = Array.isArray(found.id) ? found.id[0] : found.id;
+                                const idParts = firstId.split(" ");
+                                twIdNumForRuten = idParts.length > 1 ? idParts[1] : idParts[0];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- 組裝 8 個外部連結 URL ---
+            // 商店組
+            const urlTorekakaku = `https://torekakaku.com/dm/search/?q=${encodeURIComponent(cardIdForTrade || cleanHalfName.replace(/\//g, "／"))}`;
+            const urlCardRush = `https://www.cardrush-dm.jp/product-list?keyword=${encodeURIComponent(cleanNameOnly)}&Submit=%E6%A4%9C%E7%B4%A2`;
+            const urlYuyutei = `https://yuyu-tei.jp/sell/dm/s/search?search_word=${encodeURIComponent(cleanNameOnly)}`;
+            
+            // 露天拍賣：直接使用「決鬥王 + 純淨卡名」搜尋
+            const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanNameOnly)}`;
+
+            // 資料庫與 Wiki 組
+            const urlOfficial = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify({
+                suggest: "on",
+                keyword: cleanNameOnly,
+                keyword_type: ["card_name"],
+                culture_cond: ["單色", "多色"],
+                pagenum: "1",
+                sort: "release_new"
+            }))}`;
+            const urlOfficialQA = `https://dm.takaratomy.co.jp/rule/qa/?qa_w=${encodeURIComponent(cleanNameOnly)}`;
+            const urlWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Admwiki.net`;
+            const urlEnWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Aduelmasters.fandom.com%2Fwiki%2F`;
+
+            // --- 渲染 UI 區塊 ---
+            const extBlock = document.createElement('div');
+            extBlock.className = 'ext-links-block';
+
+            // Title 標頭
+            const extTitle = document.createElement('div');
+            extTitle.className = 'ext-links-title';
+            
+            const extArrow = document.createElement('span');
+            extArrow.innerText = '▼';
+
+            extTitle.innerHTML = '<span>🌐 外部資源與相關連結：</span>';
+            extTitle.appendChild(extArrow);
+            extBlock.appendChild(extTitle);
+
+            // 內容主體 (預設可設為收合或展開)
+            const extBody = document.createElement('div');
+            extBody.style.marginTop = '8px';
+            extBody.style.display = 'none'; // 預設摺疊收起來，維持 Modal 簡潔
+            extBlock.appendChild(extBody);
+
+            extTitle.addEventListener('click', () => {
+                const isHidden = extBody.style.display === 'none';
+                extBody.style.display = isHidden ? 'block' : 'none';
+                extArrow.innerText = isHidden ? '▲' : '▼';
+            });
+
+            // 建立按鈕工廠函數
+            const createExtBtn = (label, url, extraClass = "") => {
+                const a = document.createElement('a');
+                a.className = `ext-link-btn ${extraClass}`;
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.innerHTML = `${label} <span style="font-size:9px; opacity:0.7;">↗</span>`;
+                return a;
+            };
+
+            // 1. 上區：卡價與購物連結
+            const shopGroupTitle = document.createElement('div');
+            shopGroupTitle.className = 'ext-group-title';
+            shopGroupTitle.innerText = '🛒 卡價趨勢與線上商店：';
+            extBody.appendChild(shopGroupTitle);
+
+            const shopGrid = document.createElement('div');
+            shopGrid.className = 'ext-btn-grid';
+            shopGrid.appendChild(createExtBtn('📈 Torekakaku', urlTorekakaku, 'shop-btn'));
+            shopGrid.appendChild(createExtBtn('🛍️ Card Rush', urlCardRush, 'shop-btn'));
+            shopGrid.appendChild(createExtBtn('📦 遊遊亭', urlYuyutei, 'shop-btn'));
+            shopGrid.appendChild(createExtBtn('🛒 露天拍賣', urlRuten, 'shop-btn'));
+            extBody.appendChild(shopGrid);
+
+            // 2. 下區：資料庫與規則
+            const wikiGroupTitle = document.createElement('div');
+            wikiGroupTitle.className = 'ext-group-title';
+            wikiGroupTitle.innerText = '🔍 外部資料庫與規則：';
+            extBody.appendChild(wikiGroupTitle);
+
+            const wikiGrid = document.createElement('div');
+            wikiGrid.className = 'ext-btn-grid';
+            wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
+            wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
+            wikiGrid.appendChild(createExtBtn('🌐 日文 Wiki', urlWiki, 'wiki-btn'));
+            wikiGrid.appendChild(createExtBtn('🌐 英文 Wiki', urlEnWiki, 'wiki-btn'));
+            extBody.appendChild(wikiGrid);
+
+            modalInfoContainer.appendChild(extBlock);
 		}
 
 		function navigateToBackCard(targetName) {
