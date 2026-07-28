@@ -263,13 +263,14 @@
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
+        /* 讓 close 按鈕的大小與相機按鈕一致 */
         .modal-close {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             background: rgba(255,255,255,0.7);
             border-radius: 50%;
-            width: 32px; height: 32px;
+            width: 28px; height: 28px;
             display: flex; justify-content: center; align-items: center;
             transition: 0.2s;
         }
@@ -612,24 +613,28 @@
 				grid-template-columns: repeat(2, 1fr);
 			}
 		}
-		/* 相機按鈕與 Modal 右上角控制項容器 */
-		.modal-controls {
-			display: flex;
-			align-items: center;
+		/* Modal 右上/右下控制項容器 (改為垂直直立排列) */
+        .modal-controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            align-self: stretch; /* 讓容器高度跟 Header BANNER 一樣高 */
+            padding: 4px 0;
 			gap: 8px;
-		}
+        }
 
-		.modal-btn-icon {
-			font-size: 18px;
-			cursor: pointer;
-			background: rgba(255,255,255,0.8);
-			border-radius: 50%;
-			width: 32px; height: 32px;
-			display: flex; justify-content: center; align-items: center;
-			transition: 0.2s;
-			user-select: none;
-		}
-		.modal-btn-icon:hover { background: #fff; color: #1565c0; transform: scale(1.05); }
+        .modal-btn-icon {
+            font-size: 16px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            width: 28px; height: 28px;
+            display: flex; justify-content: center; align-items: center;
+            transition: 0.2s;
+            user-select: none;
+        }
+        .modal-btn-icon:hover { background: #fff; color: #1565c0; transform: scale(1.05); }
 
 		/* 全域 [處理中...] Loading 畫面 */
 		.loading-overlay {
@@ -886,8 +891,10 @@
             <div class="modal-header" id="modal-header">
                 <div class="modal-title" id="modal-title">卡牌名稱</div>
                 <div class="modal-controls" id="modal-controls">
-                    <div class="modal-btn-icon" id="modal-screenshot" title="截圖 DETAIL">📷</div>
+                    <!-- 上：關閉按鈕 [X] -->
                     <div class="modal-close" id="modal-close">&times;</div>
+                    <!-- 下：相機按鈕 [📷] -->
+                    <div class="modal-btn-icon" id="modal-screenshot" title="截圖 DETAIL">📷</div>
                 </div>
             </div>
             <div class="modal-body">
