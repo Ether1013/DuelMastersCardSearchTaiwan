@@ -2071,14 +2071,81 @@
 			let currentVerIdx = 0;
 
 			function updateModalTitle() {
-				const baseName = card.name || '未命名卡牌';
-				if (idList.length > 0 && idList[currentVerIdx]) {
-					modalTitle.innerText = `( DM${idList[currentVerIdx]} ) ${baseName}`;
-				} else {
-					modalTitle.innerText = baseName;
-				}
-			}
-			updateModalTitle();
+                const baseName = card.name || '未命名卡牌';
+                if (idList.length > 0 && idList[currentVerIdx]) {
+                    modalTitle.innerText = `( DM${idList[currentVerIdx]} ) ${baseName}`;
+                } else {
+                    modalTitle.innerText = baseName;
+                }
+            }
+            updateModalTitle();
+
+            // 💡 【新增/升級】：桌機雙擊 + 手機長按/點擊 複製純卡名邏輯
+            modalTitle.style.cursor = 'pointer';
+            modalTitle.title = '點擊/雙擊可複製卡名';
+
+            // 執行複製卡名與回饋提示的核心函數
+            const executeCopyCardName = () => {
+                const cleanName = cleanCardName(card.name || '');
+                if (!cleanName) return;
+
+                // 處理剪貼簿 API (含 iOS/Android 相容 fallback)
+                const doCopy = async () => {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(cleanName);
+                    } else {
+                        // iOS/舊版瀏覽器 Fallback 機制
+                        const textArea = document.createElement("textarea");
+                        textArea.value = cleanName;
+                        textArea.style.position = "fixed";
+                        textArea.style.left = "-999999px";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        document.execCommand('copy');
+                        textArea.remove();
+                    }
+                };
+
+                doCopy().then(() => {
+                    // 視覺回饋：變色並顯示提示文字
+                    const originalText = modalTitle.innerText;
+                    modalTitle.innerText = `已複製：${cleanName}`;
+                    modalTitle.style.color = '#2e7d32'; // 變為綠色
+
+                    setTimeout(() => {
+                        modalTitle.innerText = originalText;
+                        modalTitle.style.color = ''; // 恢復原本顏色
+                    }, 1200);
+                }).catch(err => {
+                    console.error('複製失敗:', err);
+                });
+            };
+
+            // 1. 桌機版：雙擊 (dblclick)
+            modalTitle.ondblclick = executeCopyCardName;
+
+            // 2. 手機/行動版：觸控事件 (長按 400ms 觸發 或 觸控點擊)
+            let touchTimer = null;
+            let isTouchHandled = false;
+
+            modalTitle.ontouchstart = () => {
+                isTouchHandled = false;
+                touchTimer = setTimeout(() => {
+                    isTouchHandled = true;
+                    executeCopyCardName();
+                    // 觸發震動回饋 (若手機支援)
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }, 400); // 長按 0.4 秒觸發
+            };
+
+            modalTitle.ontouchend = () => {
+                if (touchTimer) clearTimeout(touchTimer);
+            };
+
+            modalTitle.ontouchmove = () => {
+                if (touchTimer) clearTimeout(touchTimer); // 滑動時取消長按
+            };
 
 			modalHeader.style.background = getCivBackground(combinedCiv);
 			modalImgBox.innerHTML = '';
