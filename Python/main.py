@@ -17,8 +17,9 @@ carddata_cache = []
 card_types_cache = []
 races_cache = []
 abilities_cache = []
-categoryname_cache = []  # 新增：分類名稱快取
-nickname_cache = []      # 新增：暱稱快取
+categoryname_cache = []  # 分類名稱快取
+nickname_cache = []      # 暱稱快取
+setlist_cache = {}       # 新增：系列清單合併快取 (以 dict 儲存)
 
 # 專門用來存放已計算好的 card_stats 結果
 card_stats_cache = {"powers": [], "costs": []}
@@ -33,10 +34,54 @@ def load_json_file(filename: str):
         print(f"警告: 找不到檔案 {file_path}，將回傳空陣列。")
         return []
 
+def load_all_setlists():
+    """載入 setlist 資料夾下所有 _setlist_xxxxx.json，並將每個商品以 setcode 為 key 放入大字典中"""
+    merged_setlist = {}
+    setlist_dir = BASE_DIR / "setlist"
+    
+    if not setlist_dir.exists() or not setlist_dir.is_dir():
+        print(f"警告: 找不到資料夾 {setlist_dir}，將回傳空物件。")
+        return merged_setlist
+
+    # 尋找所有檔名為 _setlist_*.json 的檔案
+    for file_path in setlist_dir.glob("_setlist_*.json"):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                # 情況 1：JSON 檔本身就是「單一商品物件」
+                # 例如：{"setcode": "DM26-SD1", "setname": "...", "setcardlist": [...]}
+                if isinstance(data, dict) and ("setcode" in data or "code" in data or "id" in data):
+                    set_code = data.get("setcode") or data.get("code") or data.get("id")
+                    if set_code:
+                        merged_setlist[set_code] = data
+                    else:
+                        print(f"警告: 檔案 {file_path.name} 缺少 setcode/code/id 欄位。")
+
+                # 情況 2：JSON 檔本身就是以 setcode 作為 Key 的物件
+                # 例如：{"DM26-SD1": {"setname": "...", "setcardlist": [...]}}
+                elif isinstance(data, dict):
+                    merged_setlist.update(data)
+
+                # 情況 3：JSON 檔是一個包含了多個商品的陣列/清單 (List)
+                # 例如：[{"setcode": "DM26-SD1", ...}, {"setcode": "DM26-SD2", ...}]
+                elif isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict):
+                            set_code = item.get("setcode") or item.get("code") or item.get("id")
+                            if set_code:
+                                merged_setlist[set_code] = item
+
+            print(f"  └─ 已成功載入系列檔: {file_path.name}")
+        except Exception as e:
+            print(f"錯誤: 讀取系列檔案 {file_path.name} 失敗: {e}")
+
+    return merged_setlist
+
 # --- 伺服器啟動時執行：一次性載入與預先計算 ---
 @app.on_event("startup")
 def load_and_process_caches():
-    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache
+    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache
     
     print("正在從本機 JSON 檔案載入所有資料至伺服器記憶體緩存...")
     try:
@@ -48,9 +93,13 @@ def load_and_process_caches():
         card_types_cache = load_json_file("card_type.json")
         races_cache = load_json_file("races.json")
         abilities_cache = load_json_file("abilities.json")
-        # 2.5 載入新增的 JSON
         categoryname_cache = load_json_file("categoryname.json")
         nickname_cache = load_json_file("nickname.json")
+
+        # 2.6 載入所有 setlist 資料庫
+        print("正在載入 setlist 資料夾底下的系列資料庫...")
+        setlist_cache = load_all_setlists()
+        print(f"-> setlist 合併載入完成，共計 {len(setlist_cache)} 個系列項目。")
 
         # 3. 預先計算 card_stats（開機時只算這一次）
         print("正在預先計算 card_stats 結果...")
@@ -120,6 +169,11 @@ async def get_categoryname():
 @app.get("/api/nickname")
 async def get_nickname():
     return nickname_cache
+
+# 新增：回傳合併後的 setlist 快取
+@app.get("/api/setlist")
+async def get_setlist():
+    return setlist_cache
     
 @app.get("/api/card_stats")
 def get_card_stats():

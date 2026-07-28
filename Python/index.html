@@ -25,6 +25,34 @@
             color: white; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
+		/* 修改：讓 Header 使用 margin-left: auto 將計數器推至最右側 */
+		.header-tabs { 
+			position: sticky; 
+			top: 0; 
+			z-index: 200; 
+			display: flex; 
+			align-items: center; /* 讓計數器垂直居中 */
+			background: #222; 
+			color: white; 
+			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+			padding-right: 15px; /* 右側稍微留白 */
+		}
+
+		/* 新增：計數器專用容器樣式 */
+		.header-counter {
+			margin-left: auto; /* 自動推至最右側 */
+			display: flex;
+			align-items: center;
+			user-select: none;
+		}
+
+		.header-counter img {
+			display: block;
+			/* 不設高度與寬度，讓圖片完全呈現原本大小 */
+			max-width: 100%;
+			height: auto;
+		}
+
         .tab { 
             padding: 15px 25px; 
             cursor: pointer; 
@@ -126,12 +154,13 @@
             font-weight: bold;
         }
 
-        /* ================= Footer (Z區) 排版 ================= */
+        /* ================= Footer (Z區) 排版 (需求 4 修改) ================= */
         .footer { 
             position: fixed; bottom: 0; left: 0; width: 100%; background: #222; color: white;
             display: flex; flex-direction: column; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
         }
-        /* 桌機版預設排版：單行並排 */
+        
+        /* 統一桌機與手機版的 Footer 欄位結構 */
         .footer-bar { 
             display: flex; 
             justify-content: space-between; 
@@ -139,19 +168,31 @@
             padding: 10px 20px; 
             gap: 15px; 
         }
-		.footer-top-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-shrink: 0;
-        }
-		/* 桌機版的開始查詢：自動填滿剩餘空間 */
+        
+        /* [進階選項+選項初始化](一上一下) 垂直佈局 */
+        .footer-top-row {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+			align-items: stretch; /* 讓子元素按鈕自動拉伸至等寬 */
+			flex-shrink: 0;
+		}
+		
+		/* 針對 Footer 左側這兩個按鈕進行高度縮減 30% */
+		.footer-top-row .btn-icon {
+			width: 100%;
+			text-align: center;
+			padding: 3px 10px; /* 將原本的 padding: 5px 10px 縮減高度 */
+			font-size: 12px;   /* 稍微調整字體大小讓高度比例更勻稱 */
+		}
+        
+        /* 開始查詢：自動填滿中間空間 */
         #btn-search {
             background: #d32f2f; 
             color: white; 
             flex: 1; 
             font-size: 16px; 
-            padding: 10px 0; 
+            padding: 14px 0; 
             letter-spacing: 2px;
         }
         .footer-summary { display: none; background: #444; padding: 15px 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
@@ -248,7 +289,6 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            /* 桌機版預設：固定在 Modal 頂部 */
             position: sticky;
             top: 0;
             align-self: flex-start;
@@ -322,7 +362,7 @@
             .col { width: 100%; box-sizing: border-box; }
             .civ-box { font-size: 12px; padding: 8px 0; }
             
-            /* Modal 手機版專用排版 */
+            /* Modal 手機版專用排版 (需求 2 修改：圖片置中) */
             .modal-main-content { 
                 flex-direction: column; 
                 align-items: center; 
@@ -330,26 +370,16 @@
             .modal-img-container { 
                 position: static !important; 
                 margin-bottom: 15px; 
+                width: 100% !important; 
+                justify-content: center !important; 
+                align-self: center !important; 
             }
             .modal-info-container { width: 100%; }
 
-            /* ★ 手機版 Footer 專用排版 (上下雙層) ★ */
+            /* 手機版 Footer (需求 4 修改：維持左右並排的結構) */
             .footer-bar {
-                flex-direction: column;
                 padding: 10px 15px;
                 gap: 10px;
-            }
-
-            /* 第一層：進階選項 | 選項初始化 | ▲ 均勻列出並滿版 */
-            .footer-top-row {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            /* 第二層：開始查詢 獨立橫跨 100% 寬度 */
-            #btn-search {
-                width: 100%;
-                box-sizing: border-box;
             }
         }
 		
@@ -402,15 +432,106 @@
         .effect-tag.tag-race:hover {
             background-color: #a7f3d0;
         }
+		
+		/* 切換箭頭樣式 */
+		.modal-img-container {
+			position: relative; 
+		}
+
+		.ver-arrow-btn {
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+			background: rgba(0, 0, 0, 0.6);
+			color: white;
+			border: none;
+			font-size: 24px;
+			font-weight: bold;
+			width: 36px;
+			height: 48px;
+			border-radius: 4px;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			user-select: none;
+			transition: background 0.2s, left 0.2s, right 0.2s;
+			z-index: 10;
+		}
+		.ver-arrow-btn:hover {
+			background: rgba(211, 47, 47, 0.9);
+		}
+
+		.ver-arrow-btn.prev {
+			left: -20px;
+		}
+		.ver-arrow-btn.next {
+			right: -20px;
+		}
+
+		@media (max-width: 768px) {
+			.ver-arrow-btn.prev {
+				left: -10px;
+			}
+			.ver-arrow-btn.next {
+				right: -10px;
+			}
+		}
+		/* ================= 最新商品快捷區域 ================= */
+		#latest-sets-container {
+			display: flex;
+			gap: 10px;
+			width: 100%;
+		}
+
+		.btn-latest-set {
+			flex: 1; /* 讓所有按鈕平均瓜分寬度，長度總和佔滿整個區域 */
+			padding: 10px 5px;
+			background: #1565c0;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-weight: bold;
+			font-size: 13px;
+			cursor: pointer;
+			text-align: center;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			transition: background 0.2s;
+		}
+
+		.btn-latest-set:hover {
+			background: #0d47a1;
+		}
+
+		/* 手機版排版：垂直排開並滿版寬度 */
+		@media (max-width: 768px) {
+			#latest-sets-container {
+				flex-direction: column; /* 改為垂直排列 */
+				width: 100%;
+			}
+			.btn-latest-set {
+				width: 100%; /* 寬度最大 (滿版) */
+				box-sizing: border-box;
+			}
+		}
     </style>
 </head>
 <body>
 
     <!-- 固定頂部 Header 頁籤 -->
-    <div class="header-tabs">
-        <div class="tab active">條件過濾</div>
-        <div class="tab">查詢結果</div>
-    </div>
+	<div class="header-tabs">
+		<div class="tab active">條件過濾</div>
+		<div class="tab">查詢結果</div>
+		
+		<!-- 新增：獨立計數器容器 (無切換功能、置右對齊) -->
+		<div class="header-counter">
+			<a href="https://www.stylemap.co.jp/" target="_blank" rel="noopener">
+				<img src="https://www.f-counter.net/j/67/1785206821/" alt="アクセスカウンター">
+			</a>
+		</div>
+	</div>
 
     <!-- 第一個頁籤：條件過濾 -->
     <div id="tab-filter" class="tab-content active layout-grid">
@@ -510,7 +631,7 @@
         <!-- E/G. 能力過濾 -->
 		<div class="col" id="section-ability">
 			<h3>能力過濾</h3>
-			<!-- 【新增】自由輸入框 + [使用技巧] 按鈕容器 -->
+			<!-- 自由輸入框 + [使用技巧] 按鈕容器 -->
 			<div class="flex-input-row" style="margin-bottom: 10px;">
 				<input type="text" id="ability-text" placeholder="自由輸入，空格表示AND，/或|表示OR" style="margin-bottom: 0;">
 				<button type="button" id="btn-ability-tips" class="btn-icon" style="white-space: nowrap; padding: 8px 12px; background: #0284c7; color: white; border: none;">使用技巧</button>
@@ -556,7 +677,7 @@
                     <option value="DMD">DMD</option>
                     <option value="DM-">DM-</option>
                     <option value="OF-">OF-</option>
-                    <option value="TW">台灣大賽</option>
+                    <option value="NET">台灣大賽</option>
                 </select>
             </div>
             <div class="col">
@@ -566,7 +687,10 @@
                 </select>
             </div>
         </div>
-
+		<!-- 新增：最新商品快捷按鈕區 (無 Title) -->
+        <div class="col" id="section-latest-sets">
+            <div id="latest-sets-container"></div>
+        </div>
     </div>
 
     <!-- 第二個頁籤：查詢結果 (列表) -->
@@ -576,24 +700,23 @@
         </div>
     </div>
 
-    <!-- Z. Footer 區 -->
+    <!-- Z. Footer 區 (需求 4 修改結構) -->
     <div class="footer">
         <div class="footer-summary" id="footer-summary">
             <p style="margin:0; color:#aaa;">(目前過濾條件與預設值相同)</p>
         </div>
         <div class="footer-bar">
-            <!-- 上半部容器 (手機版：進階選項 | 選項初始化 | ^) -->
+            <!-- 左邊：[進階選項+選項初始化](一上一下) -->
             <div class="footer-top-row">
-                <label class="switch">
-                    <input type="checkbox" id="toggle-advanced"> 
-                    <span>進階選項</span>
-                </label>
-                <button id="btn-reset" class="btn-icon">選項初始化</button>
-                <div class="expand-icon" id="toggle-summary">▲</div>
-            </div>
-            
-            <!-- 下半部容器 (開始查詢) -->
+				<button id="toggle-advanced" class="btn-icon">進階選項</button>
+				<button id="btn-reset" class="btn-icon">選項初始化</button>
+			</div>
+				
+            <!-- 中間：開始查詢 -->
             <button id="btn-search" class="btn-icon">開始查詢</button>
+            
+            <!-- 右邊：^ 展開按鈕 -->
+            <div class="expand-icon" id="toggle-summary">▲</div>
         </div>
     </div>
 
@@ -626,6 +749,7 @@
         let rawAbilities = [];
         let rawCategoryNames = [];
         let rawNicknames = [];
+		let rawSetlist = {}; // 系列快取變數
 
         // 極大數值改以無限符號 ∞ 替代之數值判斷
         const INFINITY_THRESHOLD = 9000000000000000;
@@ -648,7 +772,7 @@
         });
         resizeObserver.observe(footer);
 		
-		// 1. 卡種代號轉換為中文 (例如 'C' -> '生物')
+		// 1. 卡種代號轉換為中文
         function getCardTypeText(typeVal) {
             const match = rawCardTypes.find(ct => ct.value === typeVal);
             return match ? match.text : typeVal;
@@ -692,12 +816,16 @@
         const tabFilter = document.getElementById('tab-filter');
         const btnReset = document.getElementById('btn-reset');
 
-        btnAdvanced.addEventListener('change', (e) => {
-            if(e.target.checked) document.body.classList.add('advanced-mode');
-            else document.body.classList.remove('advanced-mode');
-            renderCardTypes();
-            updateSummaryText();
-        });
+        btnAdvanced.addEventListener('click', () => {
+			// 切換 advanced-mode class
+			const isAdv = document.body.classList.toggle('advanced-mode');
+			
+			// 依據狀態切換按鈕文字
+			btnAdvanced.innerText = isAdv ? '基礎過濾' : '進階選項';
+			
+			renderCardTypes();
+			updateSummaryText();
+		});
 
         btnSummary.addEventListener('click', () => {
             summaryBox.classList.toggle('open');
@@ -949,72 +1077,77 @@
         const CACHE_NAME = 'dm-data-cache-v1';
 
         async function fetchFirebaseData() {
-            try {
-                const statusRes = await fetch('/api/server_id');
-                const statusData = await statusRes.json();
-                const currentServerId = statusData.server_id;
+			try {
+				const statusRes = await fetch('/api/server_id');
+				const statusData = await statusRes.json();
+				const currentServerId = statusData.server_id;
 
-                const cachedServerId = localStorage.getItem('dm_server_instance_id');
+				const cachedServerId = localStorage.getItem('dm_server_instance_id');
 
-                if (currentServerId !== cachedServerId) {
-                    console.log("伺服器已重啟或首次進入，清空舊快取...");
-                    await caches.delete(CACHE_NAME);
-                    localStorage.setItem('dm_server_instance_id', currentServerId);
-                }
+				if (currentServerId !== cachedServerId) {
+					console.log("伺服器已重啟或首次進入，清空舊快取...");
+					await caches.delete(CACHE_NAME);
+					localStorage.setItem('dm_server_instance_id', currentServerId);
+				}
 
-                async function fetchWithCache(url) {
-                    const cache = await caches.open(CACHE_NAME);
-                    let response = await cache.match(url);
-                    if (response) {
-                        return await response.json();
-                    } else {
-                        response = await fetch(url);
-                        cache.put(url, response.clone());
-                        return await response.json();
-                    }
-                }
+				async function fetchWithCache(url) {
+					const cache = await caches.open(CACHE_NAME);
+					let response = await cache.match(url);
+					if (response) {
+						return await response.json();
+					} else {
+						response = await fetch(url);
+						cache.put(url, response.clone());
+						return await response.json();
+					}
+				}
 
-                const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData] = await Promise.all([
-                    fetchWithCache('/api/carddata'),
-                    fetchWithCache('/api/card_types'),
-                    fetchWithCache('/api/races'),
-                    fetchWithCache('/api/abilities'),
-                    fetchWithCache('/api/card_stats'),
-                    fetchWithCache('/api/categoryname'),
-                    fetchWithCache('/api/nickname')
-                ]);
+				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData] = await Promise.all([
+					fetchWithCache('/api/carddata'),
+					fetchWithCache('/api/card_types'),
+					fetchWithCache('/api/races'),
+					fetchWithCache('/api/abilities'),
+					fetchWithCache('/api/card_stats'),
+					fetchWithCache('/api/categoryname'),
+					fetchWithCache('/api/nickname'),
+					fetchWithCache('/api/setlist')
+				]);
 
-                globalCardData = cardData;
-                rawCardTypes = ctData;
-                rawRaces = raceData;
-                rawAbilities = abilData;
-                rawCategoryNames = catNameData;
-                rawNicknames = nicknameData;
+				globalCardData = cardData;
+				rawCardTypes = ctData;
+				rawRaces = raceData;
+				rawAbilities = abilData;
+				rawCategoryNames = catNameData;
+				rawNicknames = nicknameData;
+				rawSetlist = setlistData;
 
-                console.log(`載入完成: 卡牌 ${globalCardData.length} 筆, 分類 ${rawCategoryNames.length} 筆, 暱稱 ${rawNicknames.length} 筆`);
-                
-                sortCardTypes(); 
-                renderCardTypes();
-                initDropdownData();
-                initStatsSelects(statsData);
+				console.log(`載入完成: 卡牌 ${globalCardData.length} 筆, 分類 ${rawCategoryNames.length} 筆, 暱稱 ${rawNicknames.length} 筆, 系列 ${Object.keys(rawSetlist).length} 筆`);
 
-            } catch (error) {
-                console.error("資料載入發生錯誤，將使用假資料渲染 UI", error);
-                rawCardTypes = [
-                    { text: '生物', value: 'C', location: 'M', category: true },
-                    { text: '咒文', value: 'S', location: 'M', category: true }
-                ];
-                rawRaces = [{ jap: 'Armored Dragon', pop: true }];
-                rawAbilities = [{ jap: 'Speed Attacker', pop: true }];
-                rawCategoryNames = [];
-                rawNicknames = [];
-                
-                sortCardTypes();
-                renderCardTypes();
-                initDropdownData();
-                initStatsSelects(null);
-            }
-        }
+				sortCardTypes(); 
+				renderCardTypes();
+				initDropdownData();
+				initSeriesDropdown();
+				renderLatestSetButtons();
+				initStatsSelects(statsData);
+
+			} catch (error) {
+				console.error("資料載入發生錯誤，將使用假資料渲染 UI", error);
+				rawCardTypes = [
+					{ text: '生物', value: 'C', location: 'M', category: true },
+					{ text: '咒文', value: 'S', location: 'M', category: true }
+				];
+				rawRaces = [{ jap: 'Armored Dragon', pop: true }];
+				rawAbilities = [{ jap: 'Speed Attacker', pop: true }];
+				rawCategoryNames = [];
+				rawNicknames = [];
+				rawSetlist = {};
+
+				sortCardTypes();
+				renderCardTypes();
+				initDropdownData();
+				initStatsSelects(null);
+			}
+		}
         
         function sortCardTypes() {
             const globalNodeMap = new Map();
@@ -1103,11 +1236,20 @@
 
         const btnAllCardType = document.getElementById('btn-all-cardtype');
         
+        // --- 需求 1 修改：切換進階模式時保留舊有勾選狀態，新增加的預設不勾選 ---
         function renderCardTypes() {
             const topDiv = document.getElementById('cardtype-top');
             const botDiv = document.getElementById('cardtype-bottom');
-            topDiv.innerHTML = ''; botDiv.innerHTML = '';
             const isAdv = document.body.classList.contains('advanced-mode');
+
+            // 1. 紀錄目前 DOM 上已存在的卡種勾選狀態
+            const previousStates = {};
+            document.querySelectorAll('.chk-cardtype').forEach(cb => {
+                previousStates[cb.value] = cb.checked;
+            });
+
+            topDiv.innerHTML = ''; 
+            botDiv.innerHTML = '';
 
             rawCardTypes.forEach(data => {
                 if (data.value == null) return;
@@ -1116,7 +1258,17 @@
                 if (!(isAdv || isCategory || data.main)) return;
 
                 const lbl = document.createElement('label');
-                lbl.innerHTML = `<input type="checkbox" class="chk-cardtype" value="${data.value}" checked> ${data.text}`;
+                
+                // 2. 判斷預設勾選狀態：原本已存在的保留其勾選狀態；新出現的（非 basic 且原本沒有的）預設 false
+                let isChecked = true;
+                if (previousStates.hasOwnProperty(data.value)) {
+                    isChecked = previousStates[data.value];
+                } else {
+                    // 若是切換成進階模式後才新增顯示的卡種，則設為不勾選
+                    isChecked = false;
+                }
+
+                lbl.innerHTML = `<input type="checkbox" class="chk-cardtype" value="${data.value}" ${isChecked ? 'checked' : ''}> ${data.text}`;
                 
                 const checkbox = lbl.querySelector('input');
                 
@@ -1161,7 +1313,6 @@
 			let normHtml = '';
 			
 			sorted.forEach(d => {
-				// 【新增】：判斷是否有 iscategory === true 或 category === true
 				const isCat = d.iscategory || d.category;
 				const categorySuffix = isCat ? ' (類別種族)' : '';
 				const displayText = `${d.jap}${categorySuffix}`;
@@ -1177,6 +1328,111 @@
 			if (popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
 			finalHtml += normHtml;
 			return finalHtml;
+		}
+		
+		// --- 系列選單連動邏輯 ---
+		function initSeriesDropdown() {
+			const bigSelect = document.getElementById('series-big');
+			const smallSelect = document.getElementById('series-small');
+
+			if (!bigSelect || !smallSelect) return;
+
+			function updateSmallDropdown(selectedBigValue) {
+				smallSelect.innerHTML = ''; 
+
+				const defaultOpt = document.createElement('option');
+				defaultOpt.value = '';
+				defaultOpt.textContent = '全部商品';
+				smallSelect.appendChild(defaultOpt);
+
+				let matchCount = 0;
+
+				Object.entries(rawSetlist).forEach(([key, setInfo]) => {
+					const setcode = setInfo.setcode || setInfo.code || setInfo.id || key;
+					const setname = setInfo.setname || setInfo.name || setcode;
+
+					const isMatch = !selectedBigValue || setcode.startsWith(selectedBigValue);
+
+					if (isMatch) {
+						const opt = document.createElement('option');
+						opt.value = key;
+						opt.textContent = `${setcode} - ${setname}`;
+						smallSelect.appendChild(opt);
+						matchCount++;
+					}
+				});
+
+				smallSelect.disabled = (matchCount === 0);
+				if (matchCount === 0) defaultOpt.textContent = '(無對應商品)';
+			}
+
+			bigSelect.addEventListener('change', (e) => {
+				updateSmallDropdown(e.target.value);
+				if (typeof updateSummaryText === 'function') {
+					updateSummaryText();
+				}
+			});
+
+			updateSmallDropdown(bigSelect.value);
+		}
+		
+		// ==========================================
+		// 最新商品快捷陣列 (你可以在這裡手動替換 setcode)
+		// ==========================================
+		const LATEST_SET_CODES = [
+			"DM26-EX2",
+			"DM26-RP2",
+			"DM26-EX1",
+			"DM26-SD1"
+		];
+		// 動態產生最新商品按鈕
+		function renderLatestSetButtons() {
+			const container = document.getElementById('latest-sets-container');
+			if (!container) return;
+			
+			container.innerHTML = '';
+
+			LATEST_SET_CODES.forEach(code => {
+				// 從 rawSetlist 中尋找對應的商品資料
+				const setInfo = rawSetlist[code];
+				
+				// 取得 setname，若無對應名稱則 fallback 顯示 code
+				const setname = setInfo ? (setInfo.setname || setInfo.name || code) : code;
+				
+				const btn = document.createElement('button');
+				btn.className = 'btn-latest-set';
+				btn.value = code;
+				btn.innerText = `${code}【${setname}】`;
+
+				// 點擊觸發連動操作
+				btn.addEventListener('click', () => {
+					// 1. 過濾條件初始化
+					document.getElementById('btn-reset').click();
+
+					// 2. 自動切換大編號，再選擇指定的 setcode 商品
+					const bigSelect = document.getElementById('series-big');
+					const smallSelect = document.getElementById('series-small');
+
+					if (bigSelect && smallSelect) {
+						// 嘗試將大編號自動對應到對應的前綴（或重置為全部）
+						bigSelect.value = ""; 
+						bigSelect.dispatchEvent(new Event('change')); // 觸發小編號選單刷新
+
+						// 選取該商品 value
+						smallSelect.value = code;
+						
+						// 觸發 Z 區條件摘要更新
+						if (typeof updateSummaryText === 'function') {
+							updateSummaryText();
+						}
+					}
+
+					// 3. 按下開始查詢
+					document.getElementById('btn-search').click();
+				});
+
+				container.appendChild(btn);
+			});
 		}
 
         function initDropdownData() {
@@ -1259,23 +1515,19 @@
             return `linear-gradient(135deg, ${gradientStops.join(', ')})`;
         }
 
-        // ==========================================
-		// 搜尋過濾核心演算法
-		// ==========================================
+        // =========================================
+		// 搜尋過濾核心演算法 (需求 3 修改：牌組卡牌加上底線)
+		// =========================================
 		btnSearch.addEventListener('click', () => {
 			hasSearched = true;
-			tabHeaders[1].click(); // 切換至查詢結果頁
+			tabHeaders[1].click();
 
-			// 1. 讀取並預處理所有 UI 過濾條件
 			const filterConfig = getFilterConfigFromUI();
 
-			// 2. 進行暱稱解析 (條件 10)
 			let targetRealNameFromNickname = null;
 			if (filterConfig.cardName && isOnlyCardNameFiltered(filterConfig)) {
-				// 檢查是否有直接包含此卡名的卡
 				const directMatches = globalCardData.filter(c => c.name && c.name.includes(filterConfig.cardName));
 				if (directMatches.length === 0 && Array.isArray(rawNicknames)) {
-					// 完全匹配暱稱
 					const matchedNick = rawNicknames.find(n => 
 						Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === filterConfig.cardName)
 					);
@@ -1285,12 +1537,10 @@
 				}
 			}
 
-			// 3. 開始過濾資料
 			let filterResults = globalCardData.filter(card => {
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
 
-			// 4. 渲染結果清單
 			listContainer.innerHTML = '';
 
 			if (filterResults.length === 0) {
@@ -1298,8 +1548,15 @@
 				return;
 			}
 
-			// 依據名稱排序
 			filterResults.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'zh-TW'));
+
+			let currentSetObj = null;
+			let isDeckSet = false;
+
+			if (filterConfig.seriesSmall && rawSetlist[filterConfig.seriesSmall]) {
+				currentSetObj = rawSetlist[filterConfig.seriesSmall];
+				isDeckSet = (currentSetObj.isdeck === true);
+			}
 
 			filterResults.forEach(card => {
 				let combinedCiv = 0;
@@ -1312,19 +1569,49 @@
 				itemDiv.style.background = getCivBackground(combinedCiv);
 				
 				const cleanName = cleanCardName(card.name);
-				itemDiv.innerHTML = `<div class="card-name">${cleanName}</div>`;
-				
+				let displayName = cleanName;
+				let matchedItem = null;
+
+				if (currentSetObj) {
+					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+					const cleanCardNameTarget = card.name ? card.name.trim() : "";
+					
+					matchedItem = cardList.find(item => {
+						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+						return typeof itemName === 'string' && itemName.trim() === cleanCardNameTarget;
+					});
+
+					if (matchedItem && typeof matchedItem === 'object') {
+						const isMultiVersion = Array.isArray(matchedItem.id) && matchedItem.id.length > 1;
+
+						// 需求 3 修改：無論是不是牌組，只要是多版本 (isMultiVersion)，數量/ID 均加上底線
+						if (isDeckSet) {
+							if (matchedItem.count !== undefined) {
+								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+								displayName = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>${cleanName}`;
+							}
+						} else {
+							const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+							if (firstId) {
+								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+								displayName = `<span style="font-weight: bold; color: #1565c0; margin-right: 6px; ${underlineStyle}">DM${firstId} </span>${cleanName}`;
+							}
+						}
+					}
+				}
+
+				itemDiv.innerHTML = `<div class="card-name">${displayName}</div>`;
+
 				itemDiv.addEventListener('click', () => {
 					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
 					itemDiv.classList.add('selected');
-					openCardModal(card, combinedCiv);
+					openCardModal(card, combinedCiv, matchedItem);
 				});
 
 				listContainer.appendChild(itemDiv);
 			});
 		});
 
-		// --- 遞迴尋找所有衍生（子孫）卡種代號（不影響 UI，純後台過濾用） ---
 		function getAllDescendantCardTypes(selectedTypeValues) {
 			const resultTypes = new Set(selectedTypeValues);
 			const queue = [...selectedTypeValues];
@@ -1332,12 +1619,11 @@
 			while (queue.length > 0) {
 				const parentVal = queue.shift();
 				
-				// 尋找 rawCardTypes 中所有 parents 包含 parentVal 的子卡種
 				rawCardTypes.forEach(ct => {
 					if (ct.parents && Array.isArray(ct.parents) && ct.parents.includes(parentVal)) {
 						if (!resultTypes.has(ct.value)) {
 							resultTypes.add(ct.value);
-							queue.push(ct.value); // 繼續向下搜尋孫卡種、曾孫卡種...
+							queue.push(ct.value);
 						}
 					}
 				});
@@ -1350,7 +1636,6 @@
 		function getFilterConfigFromUI() {
 			const isAdv = document.body.classList.contains('advanced-mode');
 
-			// 1. 卡種
 			let checkedCardTypes = Array.from(document.querySelectorAll('.chk-cardtype:checked')).map(cb => cb.value);
 			const isDerivedChecked = document.getElementById('chk-derived-cardtype')?.checked;
 
@@ -1358,17 +1643,14 @@
 				let typesToExpand = [];
 				
 				if (isDerivedChecked) {
-					// 情況 A：有勾選 [查詢衍生卡種]，所有打勾的卡種通通都要往下展開
 					typesToExpand = checkedCardTypes;
 				} else {
-					// 情況 B：沒勾選，但必須自動找出 category=true 或 catagory=true 的「類別型卡種」來強制展開
 					typesToExpand = checkedCardTypes.filter(val => {
 						const ctInfo = rawCardTypes.find(ct => ct.value === val);
 						return ctInfo && (ctInfo.category || ctInfo.catagory);
 					});
 				}
 
-				// 如果有需要展開的母卡種，進行遞迴尋找並與原本勾選的陣列聯集
 				if (typesToExpand.length > 0) {
 					const expandedTypes = getAllDescendantCardTypes(typesToExpand);
 					const mergedSet = new Set([...checkedCardTypes, ...expandedTypes]);
@@ -1376,48 +1658,44 @@
 				}
 			}
 			
-			// 2. 雙極卡
 			const twinpect = document.querySelector('input[name="twinpect"]:checked')?.value || 'all';
 			
-			// 3. 進階雙極選項
 			const twinAdvChecked = Array.from(document.querySelectorAll('input[name="twin_adv"]:checked')).map(cb => cb.value);
 			const isAbilityMix = twinAdvChecked.includes('ability');
 			const allowTopBig = twinAdvChecked.includes('top_big');
 			const allowSameCost = twinAdvChecked.includes('same');
 			const allowBotBig = twinAdvChecked.includes('bot_big');
 
-			// 5. 文明
 			const permitCivs = Array.from(document.querySelectorAll('#civ-permit .civ-box.active')).map(b => b.dataset.val);
 			const requireCivs = Array.from(document.querySelectorAll('#civ-require .civ-box.active')).map(b => b.dataset.val);
 			const isRequireOr = document.querySelector('#civ-require .civ-box[data-val="or"]')?.classList.contains('active');
 
-			// 6 & 7. 費用與攻擊力
 			const cost1 = document.getElementById('cost-1').value;
 			const cost2 = document.getElementById('cost-2').value;
 			const power1 = document.getElementById('power-1').value;
 			const power2 = document.getElementById('power-2').value;
 
-			// 8. 種族
 			const races = Array.from(document.querySelectorAll('.race-select')).map(s => s.value).filter(Boolean);
 
-			// 9. 能力
 			const abilityText = document.getElementById('ability-text').value.trim();
 			const abilities = Array.from(document.querySelectorAll('.ability-select')).map(s => s.value).filter(Boolean);
 			const raceAdv = document.querySelector('.race-select-adv')?.value || '';
 
-			// 10. 卡名
 			const cardName = document.getElementById('card-name').value.trim();
+
+			const seriesBig = document.getElementById('series-big')?.value || '';
+			const seriesSmall = document.getElementById('series-small')?.value || '';
 
 			return {
 				isAdv, checkedCardTypes, twinpect,
 				isAbilityMix, allowTopBig, allowSameCost, allowBotBig,
 				permitCivs, requireCivs, isRequireOr,
 				cost1, cost2, power1, power2,
-				races, abilityText, abilities, raceAdv, cardName
-			};
+				races, abilityText, abilities, raceAdv, cardName,
+				seriesBig, seriesSmall
+			};			
 		}
 
-		// 檢查是否只有輸入卡名 (其他條件皆為預設/空白)
 		function isOnlyCardNameFiltered(cfg) {
 			if (!cfg.cardName) return false;
 			if (cfg.twinpect !== 'all') return false;
@@ -1431,19 +1709,62 @@
 		function checkCardMatchesFilters(card, cfg, targetRealNameFromNickname) {
 			if (!card.wdata || !Array.isArray(card.wdata) || card.wdata.length === 0) return false;
 
-			// ================= 10. 卡名指定與暱稱比對 =================
+			if (cfg.seriesSmall) {
+				const setObj = rawSetlist[cfg.seriesSmall];
+				
+				if (!setObj) {
+					console.warn(`[Setlist Warning] 找不到 key 為 "${cfg.seriesSmall}" 的商品資料！`);
+					return false;
+				}
+
+				const cardList = setObj.setcardlist || setObj.cardlist;
+
+				if (Array.isArray(cardList)) {
+					const cleanCardName = card.name ? card.name.trim() : "";
+
+					const isMatch = cardList.some(item => {
+						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+						return typeof itemName === 'string' && itemName.trim() === cleanCardName;
+					});
+
+					if (!isMatch) return false;
+				} else {
+					return false;
+				}
+			} else if (cfg.seriesBig) {
+				let isInAnySet = false;
+				const cleanCardName = card.name ? card.name.trim() : "";
+
+				for (const [setcode, setObj] of Object.entries(rawSetlist)) {
+					if (setcode.startsWith(cfg.seriesBig)) {
+						const cardList = setObj?.setcardlist || setObj?.cardlist;
+						if (Array.isArray(cardList)) {
+							const isMatch = cardList.some(item => {
+								const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+								return typeof itemName === 'string' && itemName.trim() === cleanCardName;
+							});
+
+							if (isMatch) {
+								isInAnySet = true;
+								break;
+							}
+						}
+					}
+				}
+
+				if (!isInAnySet) return false;
+			}			
+			
 			if (targetRealNameFromNickname) {
 				if (card.name !== targetRealNameFromNickname) return false;
 			} else if (cfg.cardName) {
 				if (!card.name || !card.name.includes(cfg.cardName)) return false;
 			}
 
-			// ================= 2. 雙極卡設定 =================
 			const wLen = card.wdata.length;
 			if (cfg.twinpect === 'yes' && wLen <= 1) return false;
 			if (cfg.twinpect === 'no' && wLen > 1) return false;
 
-			// ================= 4. 上下比較 (費用) =================
 			if (wLen > 1) {
 				const cost0 = Number(card.wdata[0].cost ?? 0);
 				const cost1 = Number(card.wdata[1].cost ?? 0);
@@ -1452,47 +1773,39 @@
 				if (cost0 < cost1 && !cfg.allowBotBig) return false;
 			}
 
-			// ================= 5. 文明判定 =================
 			let totalCiv = 0;
 			card.wdata.forEach(w => totalCiv |= (parseInt(w.civil) || 0));
 
-			// 5-1. 許可文明 (Permit)
-			// 檢查卡牌是否有未獲得許可的文明 bit
 			let allowedBitmask = 0;
 			cfg.permitCivs.forEach(val => {
 				if (!isNaN(parseInt(val))) allowedBitmask |= parseInt(val);
 			});
-			// 無色卡 (civil=0 或 bit 32)
+
 			const cardCivBits = totalCiv === 0 ? 32 : totalCiv;
 			if ((cardCivBits & ~allowedBitmask) !== 0) return false;
 
-			// 5-2. 單色多色
 			const isMonoPermitted = cfg.permitCivs.includes('mono');
 			const isMultiPermitted = cfg.permitCivs.includes('multi');
-			const isCardMulti = countSetBits(totalCiv & 31) > 1; // 排除無色計算 bit
+			const isCardMulti = countSetBits(totalCiv & 31) > 1;
 			const isCardMono = countSetBits(totalCiv & 31) === 1 || totalCiv === 32 || totalCiv === 0;
 
 			if (!isMonoPermitted && isCardMono) return false;
 			if (!isMultiPermitted && isCardMulti) return false;
 
-			// 5-3. 必須文明 (Require) + AND/OR
 			const reqBits = cfg.requireCivs
 				.filter(v => !isNaN(parseInt(v)))
 				.map(v => parseInt(v));
 
 			if (reqBits.length > 0) {
 				if (cfg.isRequireOr) {
-					// OR: 只要包含任一必須文明
 					const hasAny = reqBits.some(bit => (cardCivBits & bit) !== 0);
 					if (!hasAny) return false;
 				} else {
-					// AND: 必須包含所有指定文明
 					const hasAll = reqBits.every(bit => (cardCivBits & bit) !== 0);
 					if (!hasAll) return false;
 				}
 			}
 
-			// Helper: 彙整區塊能力 (含 hypermode.sp)
 			const getWdataSpList = (w) => {
 				let res = Array.isArray(w.sp) ? [...w.sp] : [];
 				if (w.hypermode && Array.isArray(w.hypermode.sp)) {
@@ -1501,9 +1814,7 @@
 				return res;
 			};
 
-			// ================= 3. 能力混找 vs 單個區塊完全符合 =================
 			if (cfg.isAbilityMix) {
-				// 把所有的 wdata 打平混合做比對
 				const allTypes = card.wdata.flatMap(w => w.type || []);
 				const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
 				const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
@@ -1517,7 +1828,6 @@
 				if (!checkAbilityMatchList(allSp, cfg)) return false;
 
 			} else {
-				// 必須至少有一個 wdata 區塊完全符合所有條件
 				const hasMatchedBlock = card.wdata.some(w => {
 					const wSp = getWdataSpList(w);
 					if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes)) return false;
@@ -1531,22 +1841,16 @@
 				if (!hasMatchedBlock) return false;
 			}
 
-			return true; // 通過所有考驗！
+			return true;
 		}
 
-		// --- 比對細節子函數集 ---
-
-		// 1. 卡種：符合一個即可
 		function checkTypeMatch(cardTypes, checkedTypes) {
 			if (checkedTypes.length === 0) return true;
 			return cardTypes.some(t => checkedTypes.includes(t));
 		}
 
-		// 6. 費用指定 (單一 & 清單)
 		function checkCostMatchSingle(cost, cfg) {
-			// 【修復】如果使用者根本沒有設定費用條件，直接視為符合，直接放行
 			if (cfg.cost1 === "" && cfg.cost2 === "") return true;
-			
 			if (cost === undefined || cost === null) return false;
 			const c = Number(cost);
 			if (!cfg.isAdv) {
@@ -1558,20 +1862,15 @@
 			return true;
 		}
 
-		// 6-2. 費用清單過濾 (修復能力混找)
 		function checkCostMatchList(costs, cfg) {
-			// 如果使用者根本沒設條件，不論這張卡有沒有費用，直接放行！
 			if (cfg.cost1 === "" && cfg.cost2 === "") return true;
-			
-			// 如果使用者有設條件，但這張卡完全沒有費用資料，則不符合
 			if (!costs || costs.length === 0) return false;
-			
 			return costs.some(c => checkCostMatchSingle(c, cfg));
 		}
 
 		function checkPowerMatchSingle(power, cfg) {
-			if (cfg.power1 === "" && cfg.power2 === "") return true; // <--- 防護 1：沒設條件直接 pass
-			if (power === undefined || power === null) return false; // 防護 2：有設條件但卡片無攻擊力
+			if (cfg.power1 === "" && cfg.power2 === "") return true;
+			if (power === undefined || power === null) return false;
 			
 			const p = Number(power);
 			if (!cfg.isAdv) {
@@ -1583,43 +1882,30 @@
 			return true;
 		}
 
-		// 7-2. 攻擊力清單過濾 (修復能力混找)
 		function checkPowerMatchList(powers, cfg) {
-			// 如果使用者根本沒設條件，不論這張卡有沒有攻擊力 (如要塞、咒文)，直接放行！
 			if (cfg.power1 === "" && cfg.power2 === "") return true;
-			
-			// 如果使用者有設攻擊力條件 (例如要找 5000 以上)，但這張卡完全沒有攻擊力，則不符合
 			if (!powers || powers.length === 0) return false;
-			
 			return powers.some(p => checkPowerMatchSingle(p, cfg));
 		}
 
-		// 8. 種族指定：卡牌種族只需「部分包含」指定的關鍵字即可
 		function checkRaceMatchList(cardRaces, targetRaces) {
 			if (targetRaces.length === 0) return true;
-			
-			// 對於使用者選擇的每一個目標種族 targetR
-			// 卡牌擁有的種族列表 (cardRaces) 中只要有任意一個種族「包含」了 targetR 即算符合
 			return targetRaces.every(targetR => 
 				cardRaces.some(cardR => cardR.includes(targetR))
 			);
 		}
 
-		// 9. 能力過濾總合 (9-1 自由輸入, 9-2 關鍵字, 9-3 提及種族)
 		function checkAbilityMatchList(spList, cfg) {
-			// 9-2. 能力關鍵字：必須全符合
 			if (cfg.abilities.length > 0) {
 				const hasAllAbil = cfg.abilities.every(abil => spList.some(sp => sp.includes(abil)));
 				if (!hasAllAbil) return false;
 			}
 
-			// 9-3. 能力提到種族
 			if (cfg.raceAdv) {
 				const hasRaceAdv = spList.some(sp => sp.includes(cfg.raceAdv));
 				if (!hasRaceAdv) return false;
 			}
 
-			// 9-1. 自由輸入解析與比對
 			if (cfg.abilityText) {
 				const isFreeInputMatched = checkFreeInputAbility(spList, cfg.abilityText);
 				if (!isFreeInputMatched) return false;
@@ -1628,28 +1914,21 @@
 			return true;
 		}
 
-		// 9-1 自由輸入解析演算法（含 AND/OR 以及 數字+/- 商業邏輯）
 		function checkFreeInputAbility(spList, inputText) {
-			// 依據 空白 切分出 AND 群組
 			const andTokens = inputText.split(/\s+/).filter(Boolean);
 
 			return andTokens.every(token => {
-				// 依據 / ／ | ＼ \ , 切分出 OR 條件
 				const orConditions = token.split(/[/／|＼\\,]/).filter(Boolean);
-
-				// OR 條件中只要有一個成立即可
 				return orConditions.some(cond => checkSingleConditionInSp(spList, cond));
 			});
 		}
 
-		// 輔助函式：解析文明字串並轉為排序後的標準化字串 (例如 "闇自然" -> "自然闇")
 		function parseAndSortCivs(civStr) {
 			if (!civStr) return null;
 			const civMap = ["光", "水", "闇", "暗", "火", "自然", "自", "ゼロ", "無"];
 			const foundCivs = [];
 			
 			let temp = civStr;
-			// 優先匹配較長的單詞（如 "自然" 先於 "自"）
 			civMap.sort((a, b) => b.length - a.length).forEach(civ => {
 				while (temp.includes(civ)) {
 					foundCivs.push(civ === "暗" ? "闇" : (civ === "自" ? "自然" : civ));
@@ -1662,7 +1941,6 @@
 		}
 
 		function checkSingleConditionInSp(spList, cond) {
-			// 1. 解析使用者輸入：必須完全由 "文明(可複數) + 數字(可選) + 運算符(可選)" 組成
 			const userMatch = cond.match(/^([光水闇暗火自然自無ゼロ]+)(\d+)?([+-])?$/);
 
 			if (userMatch) {
@@ -1672,13 +1950,9 @@
 					const targetNum = userMatch[2] ? Number(userMatch[2]) : null;
 					const op = userMatch[3];
 
-					// 構建嚴格的正規表示式：文明字詞必須與數字「完全無縫緊貼」
-					// Group 1: 緊密相連的文明字元 (如 "自然闇" 或 "火水")
-					// Group 2: 緊跟在後面的數字 (如 "7" 或 "6")
 					const numPatternStr = "([光水闇暗火自然自無ゼロ]+)(\\d+)";
 
 					const isMatch = spList.some(sp => {
-						// A. 若使用者【有輸入數字】(例如: "闇自然7" 或 "火水6-")
 						if (targetNum !== null) {
 							const matches = Array.from(sp.matchAll(new RegExp(numPatternStr, 'g')));
 							return matches.some(match => {
@@ -1693,20 +1967,15 @@
 							});
 						}
 
-						// B. 若使用者【沒有輸入數字】(例如: "水自然")
 						const civMatches = sp.match(/[光水闇暗火自然自無ゼロ]+/g);
 						if (!civMatches) return false;
 						return civMatches.some(m => parseAndSortCivs(m) === sortedUserCivs);
 					});
 
-					// 若比對成功，直接回傳 true
 					if (isMatch) return true;
 				}
 			}
 
-			// --- 以下為原本的備用比對邏輯 (純數字 / 一般字串包含) ---
-
-			// 2. 純數字運算符，例如 "7-"、"2000+"、"5"
 			const numMatch = cond.match(/^(\d+)([+-])?$/);
 			if (numMatch) {
 				const targetNum = Number(numMatch[1]);
@@ -1728,12 +1997,9 @@
 				});
 			}
 
-			// 3. 一般文字包含比對 (Fallback)
-			// 像是 "火或自然7費" 或非緊密貼合的文字，會直接走這裡的原本比對！
 			return spList.some(sp => sp.includes(cond));
 		}
 
-		// 輔助函式：計算二進位中 1 的個數（用於文明單色/多色判定）
 		function countSetBits(n) {
 			let count = 0;
 			while (n > 0) {
@@ -1742,26 +2008,18 @@
 			}
 			return count;
 		}
-		
-		// ==========================================
-		// 1. 全域與初始化事件設定 (鍵盤 Enter 查詢 & 標籤點擊 Alert)
-		// ==========================================
 
-		// 桌機版：在條件過濾頁籤按 Enter 自動進行查詢
 		document.getElementById('tab-filter').addEventListener('keydown', (e) => {
-			// 排除在 textarea (若有) 內的換行輸入
 			if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
 				e.preventDefault();
 				btnSearch.click();
 			}
 		});
 
-		// 手機版：點擊效果標籤或種族標籤時跳出 Alert 提示
 		document.addEventListener('click', (e) => {
 			const tagEl = e.target.closest('.effect-tag, .wdata-race-tag');
 			if (!tagEl) return;
 
-			// 判斷是否為手機/觸控螢幕裝置或螢幕寬度 <= 768px
 			const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
 			
 			if (isMobile) {
@@ -1772,7 +2030,6 @@
 			}
 		});
 
-		// Helper: 取得種族 Tooltip 字串 (日文 / 中文 / 英文)
 		function getRaceTooltipText(raceJap) {
 			if (!Array.isArray(rawRaces)) return raceJap;
 			const info = rawRaces.find(r => r.jap === raceJap);
@@ -1794,10 +2051,36 @@
         const modalImgBox = document.getElementById('modal-img-box');
         const modalInfoContainer = document.getElementById('modal-info-container');
 
-        function openCardModal(card, combinedCiv) {
-			modalTitle.innerText = card.name || '未命名卡牌';
-			modalHeader.style.background = getCivBackground(combinedCiv);
+        function openCardModal(card, combinedCiv, matchedItem = null) {
+			let idList = [];
+			let picList = [];
+			let flavorList = [];
 
+			if (matchedItem && typeof matchedItem === 'object') {
+				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
+				else if (matchedItem.id) idList = [matchedItem.id];
+
+				if (Array.isArray(matchedItem.pic)) picList = matchedItem.pic;
+				else if (matchedItem.pic) picList = [matchedItem.pic];
+
+				if (Array.isArray(matchedItem.flavor)) flavorList = matchedItem.flavor;
+				else if (matchedItem.flavor) flavorList = [matchedItem.flavor];
+			}
+
+			const isMultiVer = idList.length > 1;
+			let currentVerIdx = 0;
+
+			function updateModalTitle() {
+				const baseName = card.name || '未命名卡牌';
+				if (idList.length > 0 && idList[currentVerIdx]) {
+					modalTitle.innerText = `( DM${idList[currentVerIdx]} ) ${baseName}`;
+				} else {
+					modalTitle.innerText = baseName;
+				}
+			}
+			updateModalTitle();
+
+			modalHeader.style.background = getCivBackground(combinedCiv);
 			modalImgBox.innerHTML = '';
 
 			let isHorizontal = false;
@@ -1811,22 +2094,94 @@
 
 			const boxWidth = isHorizontal ? '250px' : '180px';
 			const boxHeight = isHorizontal ? '180px' : '250px';
+			
+            // 需求 2 修改：手機版設定 width 100% 配合 CSS margin auto 置中
+            if (window.innerWidth <= 768) {
+                modalImgBox.style.width = '100%';
+            } else {
+                modalImgBox.style.width = boxWidth;
+            }
 
-			modalImgBox.style.width = boxWidth;
+			const imgEl = document.createElement('img');
+			imgEl.className = 'modal-img';
+			imgEl.style.width = boxWidth;
+			imgEl.style.height = boxHeight;
 
-			if (card.pic && card.pic.trim() !== '') {
-				const img = document.createElement('img');
-				img.src = card.pic;
-				img.alt = card.name;
-				img.className = 'modal-img';
-				img.style.width = boxWidth;
-				img.style.height = boxHeight;
-				img.onerror = () => {
-					modalImgBox.innerHTML = `<div class="no-image-box" style="width:${boxWidth}; height:${boxHeight};">No Image</div>`;
-				};
-				modalImgBox.appendChild(img);
-			} else {
-				modalImgBox.innerHTML = `<div class="no-image-box" style="width:${boxWidth}; height:${boxHeight};">No Image</div>`;
+			function updateImageSrc() {
+				const currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
+				if (currentPic && currentPic.trim() !== '') {
+					imgEl.src = currentPic;
+					imgEl.alt = card.name;
+					imgEl.style.display = 'block';
+					imgEl.onerror = () => {
+						imgEl.style.display = 'none';
+						modalImgBox.querySelector('.no-image-box')?.remove();
+						const noImg = document.createElement('div');
+						noImg.className = 'no-image-box';
+						noImg.style.width = boxWidth;
+						noImg.style.height = boxHeight;
+						noImg.innerText = 'No Image';
+						modalImgBox.appendChild(noImg);
+					};
+				} else {
+					imgEl.style.display = 'none';
+					modalImgBox.querySelector('.no-image-box')?.remove();
+					const noImg = document.createElement('div');
+					noImg.className = 'no-image-box';
+					noImg.style.width = boxWidth;
+					noImg.style.height = boxHeight;
+					noImg.innerText = 'No Image';
+					modalImgBox.appendChild(noImg);
+				}
+			}
+
+			modalImgBox.appendChild(imgEl);
+			updateImageSrc();
+
+			const flavorBlock = document.createElement('div');
+			flavorBlock.style.backgroundColor = '#fffbe6';
+			flavorBlock.style.border = '1px solid #ffe58f';
+			flavorBlock.style.borderRadius = '6px';
+			flavorBlock.style.padding = '8px 12px';
+			flavorBlock.style.fontSize = '13px';
+			flavorBlock.style.color = '#873800';
+			flavorBlock.style.fontStyle = 'italic';
+			flavorBlock.style.lineHeight = '1.4';
+
+			function updateFlavorText(flavor) {
+				if (flavor && flavor.trim() !== '') {
+					flavorBlock.innerHTML = flavor;
+					flavorBlock.style.display = 'block';
+				} else {
+					flavorBlock.style.display = 'none';
+				}
+			}
+
+			if (isMultiVer) {
+				const prevBtn = document.createElement('button');
+				prevBtn.className = 'ver-arrow-btn prev';
+				prevBtn.innerText = '❮';
+				prevBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					currentVerIdx = (currentVerIdx - 1 + idList.length) % idList.length;
+					updateModalTitle();
+					updateImageSrc();
+					updateFlavorText(flavorList[currentVerIdx]); 
+				});
+
+				const nextBtn = document.createElement('button');
+				nextBtn.className = 'ver-arrow-btn next';
+				nextBtn.innerText = '❯';
+				nextBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					currentVerIdx = (currentVerIdx + 1) % idList.length;
+					updateModalTitle();
+					updateImageSrc();
+					updateFlavorText(flavorList[currentVerIdx]); 
+				});
+
+				modalImgBox.appendChild(prevBtn);
+				modalImgBox.appendChild(nextBtn);
 			}
 
 			modalInfoContainer.innerHTML = '';
@@ -1842,16 +2197,16 @@
 					}
 				});
 			}
-
+			
 			if (card.wdata && Array.isArray(card.wdata) && card.wdata.length > 0) {
-				card.wdata.forEach((w, idx) => {
+				card.wdata.forEach((w) => {
 					const block = document.createElement('div');
 					block.className = 'wdata-block';
 
 					const hasHyperMode = Boolean(w.hypermode);
 					let isHyperModeActive = false;
-
 					let hyperBtn = null;
+
 					if (hasHyperMode) {
 						hyperBtn = document.createElement('button');
 						hyperBtn.className = 'btn-icon';
@@ -1865,7 +2220,6 @@
 						hyperBtn.style.cursor = 'pointer';
 						hyperBtn.style.fontWeight = 'bold';
 						hyperBtn.innerText = '>> 超化模式';
-						
 						block.appendChild(hyperBtn);
 					}
 
@@ -1905,7 +2259,6 @@
 					
 					block.appendChild(grid);
 
-					// 3. 種族 (Race) - 加上 class 與 title Tooltip 屬性
 					if (w.race && Array.isArray(w.race) && w.race.length > 0) {
 						const raceBox = document.createElement('div');
 						raceBox.style.marginTop = '6px';
@@ -1915,7 +2268,7 @@
 						
 						w.race.forEach(r => {
 							const rTag = document.createElement('span');
-							rTag.className = 'wdata-race-tag'; // 專用 class 方便點擊事件捕捉
+							rTag.className = 'wdata-race-tag';
 							rTag.style.background = '#e2e8f0';
 							rTag.style.color = '#334155';
 							rTag.style.padding = '2px 8px';
@@ -1925,7 +2278,6 @@
 							rTag.style.cursor = 'pointer';
 							rTag.innerText = r;
 							
-							// 加入 Tooltip 說明 (日文/中文/英文)
 							const tooltipText = getRaceTooltipText(r);
 							rTag.setAttribute('title', tooltipText);
 							rTag.setAttribute('data-tooltip', tooltipText);
@@ -1979,11 +2331,9 @@
 						abilExplainBox.innerHTML = '';
 
 						let currentSpList = [];
-
 						if (w.sp && Array.isArray(w.sp)) {
 							currentSpList = [...w.sp];
 						}
-
 						if (isHyperModeActive && w.hypermode && Array.isArray(w.hypermode.sp)) {
 							currentSpList = currentSpList.concat(w.hypermode.sp);
 						}
@@ -1998,12 +2348,10 @@
 
 							const ul = document.createElement('ul');
 							ul.className = 'sp-ability-list';
-
 							const hintElements = [];
 
 							currentSpList.forEach(abilityStr => {
 								const result = renderAbilityText(abilityStr);
-								
 								if (result.isHint) {
 									const hintDiv = document.createElement('div');
 									hintDiv.innerHTML = result.html;
@@ -2015,13 +2363,8 @@
 								}
 							});
 
-							if (ul.children.length > 0) {
-								spContainer.appendChild(ul);
-							}
-
-							hintElements.forEach(hintDiv => {
-								spContainer.appendChild(hintDiv);
-							});
+							if (ul.children.length > 0) spContainer.appendChild(ul);
+							hintElements.forEach(hintDiv => spContainer.appendChild(hintDiv));
 
 							const abilityTags = spContainer.querySelectorAll('.effect-tag.tag-ability');
 							const detectedAbilityKeys = new Set();
@@ -2034,7 +2377,6 @@
 
 							if (detectedAbilityKeys.size > 0) {
 								abilExplainBtn.style.display = 'inline-block';
-
 								detectedAbilityKeys.forEach(key => {
 									const info = abilityDictMap.get(key);
 									if (info) {
@@ -2063,14 +2405,12 @@
 									abilExplainBox.lastElementChild.style.marginBottom = '0';
 									abilExplainBox.lastElementChild.style.paddingBottom = '0';
 								}
-
 							} else {
 								abilExplainBtn.style.display = 'none';
 								abilExplainBox.style.display = 'none';
 								isExplainOpen = false;
 								abilExplainBtn.innerText = '[展開能力說明]';
 							}
-
 						} else {
 							abilExplainBtn.style.display = 'none';
 							abilExplainBox.style.display = 'none';
@@ -2084,34 +2424,30 @@
 					if (hyperBtn) {
 						hyperBtn.addEventListener('click', () => {
 							isHyperModeActive = !isHyperModeActive;
-
 							if (isHyperModeActive) {
 								hyperBtn.innerText = '一般模式 <<';
 								hyperBtn.style.backgroundColor = '#424242';
-
 								if (w.hypermode.power !== undefined && w.hypermode.power !== null) {
 									renderPowerValue(w.hypermode.power, w.pc);
 								}
 							} else {
 								hyperBtn.innerText = '>> 超化模式';
 								hyperBtn.style.backgroundColor = '#d32f2f';
-
 								if (w.power !== undefined && w.power !== null) {
 									renderPowerValue(w.power, w.pc);
 								}
 							}
-
 							renderSpAbilities();
 						});
 					}
 
 					modalInfoContainer.appendChild(block);
 				});
-				// --- 新增：處理 [翻面] 資訊 (card.back) ---
+
 				if (card.back && Array.isArray(card.back) && card.back.length > 0) {
 					const backBlock = document.createElement('div');
 					backBlock.className = 'wdata-block';
-					backBlock.style.borderLeft = '4px solid #7c4dff'; // 用紫色邊條做識別
+					backBlock.style.borderLeft = '4px solid #7c4dff';
 					backBlock.style.marginTop = '10px';
 
 					const backTitle = document.createElement('div');
@@ -2140,12 +2476,8 @@
 						backBtn.style.fontSize = '13px';
 						backBtn.innerText = `🔄 ${backCardName}`;
 
-						// 綁定點擊事件
 						backBtn.addEventListener('click', () => {
-							// 關閉目前的 Modal
 							cardModal.classList.remove('active');
-							
-							// 執行跳轉搜尋與開啟 Modal 流程
 							navigateToBackCard(backCardName);
 						});
 
@@ -2159,29 +2491,25 @@
 				modalInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
 			}
 
+			modalInfoContainer.appendChild(flavorBlock);
+			updateFlavorText();
+
 			cardModal.classList.add('active');
 		}
-		
-		// --- 處理翻面卡牌點擊自動搜尋與開啟細節 ---
+
 		function navigateToBackCard(targetName) {
-			// 1. 將過濾條件初始化 (模擬點擊選項初始化按鈕)
 			document.getElementById('btn-reset').click();
 
-			// 2. 將卡名輸入到卡名過濾欄位裡
 			const cardNameInput = document.getElementById('card-name');
 			if (cardNameInput) {
 				cardNameInput.value = targetName;
 			}
 
-			// 3. 進行搜尋 (模擬點擊開始查詢按鈕)
 			document.getElementById('btn-search').click();
 
-			// 4. 尋找並點擊唯一的一筆資料，顯示 Detail Modal
-			// 透過 setTimeout 確保搜尋結果渲染至 DOM 完成後再點擊
 			setTimeout(() => {
 				const items = document.querySelectorAll('#list-container .card-list-item');
 				if (items.length > 0) {
-					// 優先尋找卡名完全一致的筆數，若無則點擊第一筆
 					let targetItem = Array.from(items).find(item => {
 						const nameEl = item.querySelector('.card-name');
 						return nameEl && nameEl.innerText.trim() === cleanCardName(targetName);
@@ -2191,7 +2519,6 @@
 						targetItem = items[0];
 					}
 
-					// 觸發點擊，打開該卡牌的 detail
 					targetItem.click();
 				}
 			}, 100);
@@ -2203,30 +2530,22 @@
             div.innerHTML = `<span class="attr-label">${label}:</span><span class="attr-value">${value}</span>`;
             return div;
         }
-		
-		// --- 效果標籤化 (Effect Tagging) 核心邏輯 ---
 
-        // HTML 轉義防護
         function escapeRegExp(string) {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
 
-        // 建立快取字典 (依字串長度降序排序，確保最長優先)
         function buildTagDictionaries() {
-            // 1. 卡名字典
             const cardNames = Array.from(new Set(globalCardData.map(c => c.name).filter(Boolean)))
                 .sort((a, b) => b.length - a.length);
 
-            // 2. 分類名稱字典
             const categoryNames = Array.from(new Set(rawCategoryNames.filter(Boolean)))
                 .sort((a, b) => b.length - a.length);
 
-            // 3. 能力字典 (建立映射對照)
             const abilityMap = new Map();
             rawAbilities.forEach(a => {
                 if (a.jap) {
                     abilityMap.set(a.jap, a);
-                    // 特別需求：若為 シールド化，同時支援 護盾化 的匹配
                     if (a.jap === "シールド化") {
                         abilityMap.set("護盾化", a);
                     }
@@ -2234,7 +2553,6 @@
             });
             const abilityKeys = Array.from(abilityMap.keys()).sort((a, b) => b.length - a.length);
 
-            // 4. 種族字典 (建立映射對照)
             const raceMap = new Map();
             rawRaces.forEach(r => {
                 if (r.jap) raceMap.set(r.jap, r);
@@ -2244,7 +2562,6 @@
             return { cardNames, categoryNames, abilityKeys, abilityMap, raceKeys, raceMap };
         }
 
-        // 核心文字標籤化處理函數
         function applyEffectTags(text) {
             if (!text) return "";
 
@@ -2252,13 +2569,11 @@
             const placeholders = [];
             let processedText = text;
 
-            // 內部輔助：以佔位符進行安全替換
             function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
 				if (keywords.length === 0) return;
 
 				let pattern;
 				if (requireBracket) {
-					// 要求關鍵字前後必須包裹《》 (例如: 《神帝アナ》)
 					const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
 					pattern = new RegExp(`《(${innerPattern})》`, 'g');
 				} else {
@@ -2269,9 +2584,8 @@
 				processedText = processedText.replace(pattern, (fullMatch, group1, offset) => {
 					const matched = requireBracket ? group1 : fullMatch;
 
-					// 【新增特殊判斷】：「進化」只有在 sp 的起始位置（offset === 0）才做 Tag 化
 					if (matched === "進化" && offset !== 0) {
-						return fullMatch; // 不替換，保持原本純文字
+						return fullMatch;
 					}
 
 					const placeholder = `___TAG_${placeholders.length}___`;
@@ -2279,8 +2593,8 @@
 					
 					placeholders.push({
 						placeholder,
-						fullMatch, // 原始匹配包含《》
-						matched,   // 實際標籤文字
+						fullMatch,
+						matched,
 						type,
 						tooltipText,
 						requireBracket
@@ -2289,13 +2603,8 @@
 				});
 			}
 
-            // 順序 1: globalCardData 裡的 carddata.name (必須帶有 《》)
             replaceKeywords(dicts.cardNames, 'card-name', null, true);
-
-            // 順序 2: rawCategoryNames (必須帶有 《》)
             replaceKeywords(dicts.categoryNames, 'category-name', null, true);
-
-            // 順序 3: rawAbilities (顯示 日文 / 中文 / 英文 / 效果說明)
             replaceKeywords(dicts.abilityKeys, 'ability', (matched) => {
                 const targetKey = matched === "護盾化" ? "シールド化" : matched;
                 const info = dicts.abilityMap.get(targetKey);
@@ -2303,27 +2612,23 @@
                 const parts = [];
                 if (info.jap) parts.push(`日文: ${info.jap}`);
                 
-                // 相容 chi 或 cht 欄位
                 const chiVal = info.chi || info.cht;
                 if (chiVal) parts.push(`中文: ${chiVal}`);
                 
                 if (info.eng) parts.push(`英文: ${info.eng}`);
 
-                // 正確讀取 descript 欄位 (並保留 desc/text/detail 作為 fallback)
                 const descVal = info.descript;
                 if (descVal) parts.push(`說明: ${descVal}`);
 
                 return parts.join('\n');
             }, false);
 
-            // 順序 4: rawRaces (顯示 日文 / 中文 / 英文)
             replaceKeywords(dicts.raceKeys, 'race', (matched) => {
                 const info = dicts.raceMap.get(matched);
                 if (!info) return '';
                 const parts = [];
                 if (info.jap) parts.push(`日文: ${info.jap}`);
                 
-                // 相容 chi 或 cht 欄位
                 const chiVal = info.chi || info.cht;
                 if (chiVal) parts.push(`中文: ${chiVal}`);
                 
@@ -2331,11 +2636,9 @@
                 return parts.join('\n');
             }, false);
 
-            // 最後：還原所有佔位符為 HTML 標籤
             placeholders.forEach(({ placeholder, matched, type, tooltipText, requireBracket }) => {
                 const titleAttr = tooltipText ? `title="${tooltipText.replace(/"/g, '&quot;')}"` : '';
                 
-                // 如果是卡名/分類，保留外層《》並僅對內部文字套用效果標籤
                 const tagContent = `<span class="effect-tag tag-${type}" ${titleAttr} data-type="${type}">${matched}</span>`;
                 const finalHtml = requireBracket ? `《${tagContent}》` : tagContent;
                 
@@ -2344,12 +2647,6 @@
 
             return processedText;
         }
-		
-		// =========================================================================
-		// ⚠️ 【AI 提示規範註解 / DEVELOPER NOTICE】
-		// 當未來修改自由輸入框 (ability-text) 或 checkSingleConditionInSp 的語法解析規則時，
-		// 請務必同步修改下方 SHOW_ABILITY_TIPS_ALERT() 中的說明文字，確保使用者體驗一致！
-		// =========================================================================
 
 		function showAbilityTipsAlert() {
 			const tipsText = 
@@ -2383,10 +2680,8 @@
 			alert(tipsText);
 		}
 
-		// 綁定 [使用技巧] 按鈕點擊事件
 		document.getElementById('btn-ability-tips')?.addEventListener('click', showAbilityTipsAlert);
 
-        // 關閉 Modal 事件
         modalClose.addEventListener('click', () => {
             cardModal.classList.remove('active');
         });
