@@ -2525,6 +2525,10 @@
                     }
                 });
             }
+			
+			// 💡 【新增】：將台灣版與日版商品依照 setcode 進行降冪 (desc) 排序
+            twSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
+            nonTwSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
 
             // 若有搜尋到收錄商品，則建立區塊
             if (twSets.length > 0 || nonTwSets.length > 0) {
