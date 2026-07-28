@@ -140,6 +140,11 @@
             color: #111;
             text-shadow: 1px 1px 3px rgba(255,255,255,0.9), -1px -1px 3px rgba(255,255,255,0.9), 1px -1px 3px rgba(255,255,255,0.9), -1px 1px 3px rgba(255,255,255,0.9);
             transition: color 0.2s;
+            
+            /* 新增下面這三行，讓 ID 與卡名能上下成一行，並且靠左對齊 */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
         /* 點擊後變紅色的狀態 class */
         .card-list-item.selected .card-name {
@@ -607,6 +612,7 @@
 				grid-template-columns: repeat(2, 1fr);
 			}
 		}
+		
     </style>
 </head>
 <body>
@@ -1675,19 +1681,20 @@
 					if (matchedItem && typeof matchedItem === 'object') {
 						const isMultiVersion = Array.isArray(matchedItem.id) && matchedItem.id.length > 1;
 
-						// 需求 3 修改：無論是不是牌組，只要是多版本 (isMultiVersion)，數量/ID 均加上底線
 						if (isDeckSet) {
-							if (matchedItem.count !== undefined) {
-								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-								displayName = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>${cleanName}`;
-							}
-						} else {
-							const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
-							if (firstId) {
-								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-								displayName = `<span style="font-weight: bold; color: #1565c0; margin-right: 6px; ${underlineStyle}">DM${firstId} </span>${cleanName}`;
-							}
-						}
+                            // 牌組張數顯示維持原樣（同在一行）
+                            if (matchedItem.count !== undefined) {
+                                const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+                                displayName = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>${cleanName}`;
+                            }
+                        } else {
+                            // 非牌組時，將 ID 設為獨立 span，縮小字型 (font-size: 12px) 並且換行呈上下兩列
+                            const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+                            if (firstId) {
+                                const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+                                displayName = `<span style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">DM${firstId}</span><span>${cleanName}</span>`;
+                            }
+                        }
 					}
 				}
 
