@@ -1539,10 +1539,20 @@
 
 				let matchCount = 0;
 
-				Object.entries(rawSetlist).forEach(([key, setInfo]) => {
+				/* ================= 修改後 ================= */
+				// 1. 將物件轉為陣列並整理 setcode 欄位
+				const setListArray = Object.entries(rawSetlist).map(([key, setInfo]) => {
 					const setcode = setInfo.setcode || setInfo.code || setInfo.id || key;
 					const setname = setInfo.setname || setInfo.name || setcode;
+					return { key, setcode, setname };
+				});
 
+				// 2. 依照 setcode (即 value) 進行降冪排序（字串+數字混合，越新的商品排前面）
+				// 如果希望舊的排前面，可改為: a.setcode.localeCompare(b.setcode, undefined, { numeric: true, sensitivity: 'base' })
+				setListArray.sort((a, b) => a.setcode.localeCompare(b.setcode, undefined, { numeric: true, sensitivity: 'base' }));
+
+				// 3. 依序填入下拉選單
+				setListArray.forEach(({ key, setcode, setname }) => {
 					const isMatch = !selectedBigValue || setcode.startsWith(selectedBigValue);
 
 					if (isMatch) {
