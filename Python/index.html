@@ -3198,29 +3198,60 @@
 
 						const dataUrl = canvas.toDataURL('image/png');
 
-						// 7. 另開視窗呈現截圖結果
-						const newWin = window.open('');
-						if (newWin) {
-							newWin.document.write(`
-								<!DOCTYPE html>
-								<html>
-								<head>
-									<title>截圖預覽 - ${cleanCardName(card.name)}</title>
-									<style>
-										body { margin: 0; padding: 20px; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #fff; }
-										img { max-width: 95%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-										p { margin-top: 15px; font-size: 14px; color: #ccc; }
-									</style>
-								</head>
-								<body>
-									<img src="${dataUrl}" alt="Card Detail Screenshot" />
-									<p>💡 按右鍵（或長按）即可儲存圖片</p>
-								</body>
-								</html>
-							`);
-							newWin.document.close();
+						// 7. 判斷裝置：手機版觸發原生分享/下載，桌機版另開視窗
+						const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+						const fileName = `${cleanCardName(card.name)}_DETAIL.png`;
+
+						if (isMobile) {
+							// 將 Base64 dataUrl 轉為 Blob 物件
+							const response = await fetch(dataUrl);
+							const blob = await response.blob();
+							const file = new File([blob], fileName, { type: 'image/png' });
+
+							// 方案 A：若手機支援 Web Share API (iOS Safari / Android Chrome 均支援)
+							if (navigator.canShare && navigator.canShare({ files: [file] })) {
+								try {
+									await navigator.share({
+										files: [file],
+										title: '卡牌 DETAIL 截圖',
+										text: `${cleanCardName(card.name)} 卡牌詳細`
+									});
+								} catch (shareErr) {
+									// 使用者取消分享不跳錯
+									if (shareErr.name !== 'AbortError') {
+										console.warn('分享失敗，改用直接下載:', shareErr);
+										triggerDirectDownload(dataUrl, fileName);
+									}
+								}
+							} else {
+								// 方案 B：手機不支援 Share API 時，直接觸發瀏覽器下載
+								triggerDirectDownload(dataUrl, fileName);
+							}
 						} else {
-							alert('彈出視窗被瀏覽器阻擋，請允許開啟視窗以檢視截圖！');
+							// 桌機版：維持原本另開新視窗呈現
+							const newWin = window.open('');
+							if (newWin) {
+								newWin.document.write(`
+									<!DOCTYPE html>
+									<html>
+									<head>
+										<title>截圖預覽 - ${cleanCardName(card.name)}</title>
+										<style>
+											body { margin: 0; padding: 20px; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #fff; }
+											img { max-width: 95%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+											p { margin-top: 15px; font-size: 14px; color: #ccc; }
+										</style>
+									</head>
+									<body>
+										<img src="${dataUrl}" alt="Card Detail Screenshot" />
+										<p>💡 按右鍵（或長按）即可儲存圖片</p>
+									</body>
+									</html>
+								`);
+								newWin.document.close();
+							} else {
+								alert('彈出視窗被瀏覽器阻擋，請允許開啟視窗以檢視截圖！');
+							}
 						}
 
 					} catch (e) {
@@ -3238,6 +3269,16 @@
 					}
 				});
 			}
+		}
+		
+		// 強制觸發瀏覽器下載檔案的輔助函數
+		function triggerDirectDownload(dataUrl, fileName) {
+			const a = document.createElement('a');
+			a.href = dataUrl;
+			a.download = fileName;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
 		}
 
 		function navigateToBackCard(targetName) {
