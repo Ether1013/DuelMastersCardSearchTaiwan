@@ -2495,6 +2495,167 @@
 			updateFlavorText();
 
 			cardModal.classList.add('active');
+			
+			// --- 新增/修改：渲染「收錄商品」區塊 (預設收合 + 點擊切換 + 跳轉自動展開) ---
+            const twSets = [];
+            const nonTwSets = [];
+            const cleanTargetName = card.name ? card.name.trim() : "";
+
+            if (typeof rawSetlist === 'object' && rawSetlist !== null) {
+                Object.entries(rawSetlist).forEach(([key, setObj]) => {
+                    const cardList = setObj.setcardlist || setObj.cardlist;
+                    if (Array.isArray(cardList)) {
+                        const hasCard = cardList.some(item => {
+                            const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+                            return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+                        });
+
+                        if (hasCard) {
+                            const setcode = setObj.setcode || setObj.code || setObj.id || key;
+                            const setname = setObj.setname || setObj.name || setcode;
+                            const isTw = setObj.istw === true;
+
+                            const setInfoObj = { key, setcode, setname };
+                            if (isTw) {
+                                twSets.push(setInfoObj);
+                            } else {
+                                nonTwSets.push(setInfoObj);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 若有搜尋到收錄商品，則建立區塊
+            if (twSets.length > 0 || nonTwSets.length > 0) {
+                const setBlock = document.createElement('div');
+                setBlock.className = 'wdata-block';
+                setBlock.style.borderLeft = '4px solid #009688';
+                setBlock.style.marginTop = '10px';
+
+                // 檢查是否為「透過收錄商品按鈕點擊跳轉」開啟的 Modal
+                const autoExpand = window._autoExpandSetBlock === true;
+                // 用完即重置全域標記，避免影響後續正常的點擊
+                window._autoExpandSetBlock = false;
+
+                // Title 標頭 (可點擊切換展開/收合)
+                const setBlockTitle = document.createElement('div');
+                setBlockTitle.style.fontSize = '14px';
+                setBlockTitle.style.fontWeight = 'bold';
+                setBlockTitle.style.color = '#00695c';
+                setBlockTitle.style.cursor = 'pointer';
+                setBlockTitle.style.display = 'flex';
+                setBlockTitle.style.justifyContent = 'space-between';
+                setBlockTitle.style.alignItems = 'center';
+                setBlockTitle.style.userSelect = 'none';
+
+                // 根據狀態設定初始箭頭圖示
+                const arrowSpan = document.createElement('span');
+                arrowSpan.innerText = autoExpand ? '▲' : '▼';
+                
+                setBlockTitle.innerHTML = `<span>收錄商品 (${twSets.length + nonTwSets.length})：</span>`;
+                setBlockTitle.appendChild(arrowSpan);
+                setBlock.appendChild(setBlockTitle);
+
+                // 商品按鈕容器 (受展開/收合控制)
+                const setContentBody = document.createElement('div');
+                setContentBody.style.marginTop = '8px';
+                setContentBody.style.display = autoExpand ? 'block' : 'none'; // 預設隱藏，若跳轉則展開
+                setBlock.appendChild(setContentBody);
+
+                // 點擊 Title 進行展開/收合切換
+                setBlockTitle.addEventListener('click', () => {
+                    const isHidden = setContentBody.style.display === 'none';
+                    setContentBody.style.display = isHidden ? 'block' : 'none';
+                    arrowSpan.innerText = isHidden ? '▲' : '▼';
+                });
+
+                const renderSetGroup = (sets, groupTitle) => {
+                    if (sets.length === 0) return;
+
+                    const groupDiv = document.createElement('div');
+                    groupDiv.style.marginBottom = '6px';
+
+                    if (groupTitle) {
+                        const subTitle = document.createElement('div');
+                        subTitle.style.fontSize = '11px';
+                        subTitle.style.color = '#666';
+                        subTitle.style.fontWeight = 'bold';
+                        subTitle.style.marginBottom = '4px';
+                        subTitle.innerText = groupTitle;
+                        groupDiv.appendChild(subTitle);
+                    }
+
+                    const btnContainer = document.createElement('div');
+                    btnContainer.style.display = 'flex';
+                    btnContainer.style.flexWrap = 'wrap';
+                    btnContainer.style.gap = '6px';
+
+                    sets.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-icon';
+                        btn.style.fontSize = '11px';
+                        btn.style.padding = '3px 8px';
+                        btn.style.backgroundColor = '#e0f2f1';
+                        btn.style.color = '#004d40';
+                        btn.style.border = '1px solid #b2dfdb';
+                        btn.value = item.setcode;
+                        btn.innerText = `${item.setcode}${item.setname}`;
+
+                        // 按鈕點擊事件
+                        btn.addEventListener('click', () => {
+                            // 設定全域標記，指示下一次開啟 Detail 時預設展開收錄商品
+                            window._autoExpandSetBlock = true;
+
+                            cardModal.classList.remove('active'); // 關閉目前 Modal
+
+                            // 1. 過濾條件初始化
+                            document.getElementById('btn-reset').click();
+
+                            // 2. 商品下拉式選單選擇該商品
+                            const bigSelect = document.getElementById('series-big');
+                            const smallSelect = document.getElementById('series-small');
+
+                            if (bigSelect && smallSelect) {
+                                bigSelect.value = ""; // 重置大編號
+                                bigSelect.dispatchEvent(new Event('change')); // 刷新小編號選單
+                                smallSelect.value = item.key; // 設定為該商品
+
+                                if (typeof updateSummaryText === 'function') {
+                                    updateSummaryText();
+                                }
+                            }
+
+                            // 3. 觸發開始查詢，並自動打開同卡名的 detail
+                            document.getElementById('btn-search').click();
+
+                            setTimeout(() => {
+                                const items = document.querySelectorAll('#list-container .card-list-item');
+                                if (items.length > 0) {
+                                    let targetItem = Array.from(items).find(el => {
+                                        const nameEl = el.querySelector('.card-name');
+                                        return nameEl && nameEl.innerText.includes(cleanCardName(card.name));
+                                    });
+                                    if (!targetItem) targetItem = items[0];
+                                    targetItem.click();
+                                }
+                            }, 100);
+                        });
+
+                        btnContainer.appendChild(btn);
+                    });
+
+                    groupDiv.appendChild(btnContainer);
+                    setContentBody.appendChild(groupDiv);
+                };
+
+                // 上區：istw === true
+                renderSetGroup(twSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【台灣中文版】' : '');
+                // 下區：istw === false
+                renderSetGroup(nonTwSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【日版商品】' : '');
+
+                modalInfoContainer.appendChild(setBlock);
+            }
 		}
 
 		function navigateToBackCard(targetName) {
