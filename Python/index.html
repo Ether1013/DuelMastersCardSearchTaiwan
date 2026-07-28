@@ -992,7 +992,8 @@
         const tabFilter = document.getElementById('tab-filter');
         const btnReset = document.getElementById('btn-reset');
 
-        btnAdvanced.addEventListener('click', () => {
+        /* 修改後 */
+		btnAdvanced.addEventListener('click', () => {
 			// 切換 advanced-mode class
 			const isAdv = document.body.classList.toggle('advanced-mode');
 			
@@ -1001,6 +1002,13 @@
 			
 			renderCardTypes();
 			updateSummaryText();
+
+			// 💡 新增：自動切換回第一個頁籤（條件過濾頁面）
+			if (typeof tabHeaders !== 'undefined' && tabHeaders[0]) {
+				tabHeaders[0].click();
+				window.scrollTo(0, 0);
+				if (tabFilter) tabFilter.scrollTop = 0;
+			}
 		});
 
         btnSummary.addEventListener('click', () => {
@@ -1017,28 +1025,36 @@
         });
 
         // --- 選項初始化功能 ---
-        btnReset.addEventListener('click', () => {
-            document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
-            checkAllStatus();
+        /* 修改後 */
+		btnReset.addEventListener('click', () => {
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+			checkAllStatus();
 
-            document.querySelector('input[name="twinpect"][value="all"]').checked = true;
-            document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
+			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
+			document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
 
-            document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
-            document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
-            document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
+			document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
+			document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
+			document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
 
-            document.querySelectorAll('select').forEach(sel => sel.value = "");
-            document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+			document.querySelectorAll('select').forEach(sel => sel.value = "");
+			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
 
-            document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
-            document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
 
-            btnAdvanced.checked = false;
-            document.body.classList.remove('advanced-mode');
+			btnAdvanced.checked = false;
+			document.body.classList.remove('advanced-mode');
 
-            updateSummaryText();
-        });
+			updateSummaryText();
+
+			// 💡 新增：自動切換回第一個頁籤（條件過濾頁面）
+			if (typeof tabHeaders !== 'undefined' && tabHeaders[0]) {
+				tabHeaders[0].click();
+				window.scrollTo(0, 0);
+				if (tabFilter) tabFilter.scrollTop = 0;
+			}
+		});
 
         function updateSummaryText() {
             let tags = [];
@@ -3475,7 +3491,8 @@
 				processedText = processedText.replace(pattern, (fullMatch, group1, offset) => {
 					const matched = requireBracket ? group1 : fullMatch;
 
-					if (matched === "進化" && offset !== 0) {
+					const nonHeaderExcludes = ["進化", "クロスギア", "G城"];
+					if (nonHeaderExcludes.includes(matched) && offset !== 0) {
 						return fullMatch;
 					}
 
