@@ -757,8 +757,8 @@
 				{ realName : "ラッキー・ダーツ", 					nickNames : [ "飛鏢" ]},
 				{ realName : "オールデリート", 					nickNames : [ "全刪" ]},
 				{ realName : "竜皇神 ボルシャック・バクテラス", 		nickNames : [ "龍皇神" ]},
+				{ realName : "“龍装”チュリス", 					nickNames : [ "龍裝鼠" ]},
 				/*
-				{ realName : "", 				nickNames : [ "" ]},
 				{ realName : "", 				nickNames : [ "" ]},
 				*/
 			];
