@@ -323,7 +323,27 @@
 		//預設關閉所有方向鍵
 		processArrows( false, false, false, false);
 	}
-	
+
+	//新站引導
+	{
+		const redSpan = document.createElement("span");
+		redSpan.style.color = "red";
+		redSpan.appendChild( document.createTextNode("NEW!!") );
+		getById("newest").appendChild(redSpan);
+		const theHref = document.createElement("span");
+		const theText = document.createTextNode("新站建好囉！來去看看！");
+		theHref.style.color = "blue";
+		theHref.style.fontWeight = "big";
+		theHref.style.cursor = "pointer";
+		theHref.style.textDecoration = "underline";
+		theHref.onclick = (() => {
+			return function(){
+				location.href = "https://duelmasterscardsearchtaiwan.onrender.com/";
+			}
+		})();
+		theHref.appendChild(theText);
+		getById("newest").appendChild(theHref).appendChild(document.createElement("hr"));
+	}
 	//新增最新SET快速連結
 	if ( getParameter("setCode") == null ){
 		for ( let n = 0 ; n < newestSets.length ; n++ ){
