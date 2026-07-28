@@ -2230,12 +2230,25 @@
 			}
 		});
 
+		// 全域點擊事件監聽
 		document.addEventListener('click', (e) => {
+			// 👈 修改點：同時匹配 .tag-card-name 與 .tag-category-name
+			const targetTag = e.target.closest('.effect-tag.tag-card-name, .effect-tag.tag-category-name');
+			if (targetTag) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				// 取得標籤內的文字 (去除《》等包覆符號)
+				const targetName = targetTag.innerText.trim();
+				handleNameOrCategoryTagClick(targetName);
+				return;
+			}
+
+			// 原有的 Mobile Tooltip 與其他 Tag 處理
 			const tagEl = e.target.closest('.effect-tag, .wdata-race-tag');
 			if (!tagEl) return;
 
 			const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
-			
 			if (isMobile) {
 				const tooltipText = tagEl.getAttribute('title') || tagEl.getAttribute('data-tooltip');
 				if (tooltipText && tooltipText.trim() !== '') {
@@ -2393,8 +2406,46 @@
 			imgEl.style.width = boxWidth;
 			imgEl.style.height = boxHeight;
 
+			// 修改後：支援當基本資料無卡圖時，自動搜尋商品卡表中第一張可用卡圖
 			function updateImageSrc() {
-				const currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
+				let currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
+
+				// 💡 新增：若目前的 currentPic 為空值，嘗試去所有商品卡表中尋找第一張可用的圖片
+				if (!currentPic || currentPic.trim() === '') {
+					const cleanTargetName = card.name ? card.name.trim() : "";
+					
+					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+						// 遍歷所有商品
+						for (const setObj of Object.values(rawSetlist)) {
+							const cardList = setObj.setcardlist || setObj.cardlist;
+							if (Array.isArray(cardList)) {
+								// 尋找卡名相符且有設定 pic 的商品卡牌項目
+								const foundItem = cardList.find(item => {
+									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+									if (typeof itemName === 'string' && itemName.trim() === cleanTargetName) {
+										if (typeof item === 'object' && item !== null) {
+											// 檢查 pic 是否為非空字串或包含元素的陣列
+											if (Array.isArray(item.pic) && item.pic.length > 0 && item.pic[0]) return true;
+											if (typeof item.pic === 'string' && item.pic.trim() !== '') return true;
+										}
+									}
+									return false;
+								});
+
+								if (foundItem) {
+									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) {
+										currentPic = foundItem.pic[0];
+									} else if (typeof foundItem.pic === 'string') {
+										currentPic = foundItem.pic;
+									}
+									break; // 找到第一張後即跳出迴圈
+								}
+							}
+						}
+					}
+				}
+
+				// 渲染圖片或顯示 No Image
 				if (currentPic && currentPic.trim() !== '') {
 					imgEl.src = currentPic;
 					imgEl.alt = card.name;
@@ -3363,41 +3414,53 @@
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
 
-        function buildTagDictionaries() {
-            const cardNames = Array.from(new Set(globalCardData.map(c => c.name).filter(Boolean)))
-                .sort((a, b) => b.length - a.length);
+        // 修改前的 buildTagDictionaries 內卡名部分：
+		// const cardNames = Array.from(new Set(globalCardData.map(c => c.name).filter(Boolean)))
+		//     .sort((a, b) => b.length - a.length);
 
-            const categoryNames = Array.from(new Set(rawCategoryNames.filter(Boolean)))
-                .sort((a, b) => b.length - a.length);
+		// 修改後：
+		function buildTagDictionaries() {
+			// 將卡名中的圓括號與大括號（含全半形）及其內部文字清除
+			const cleanName = (name) => {
+				if (!name) return "";
+				return name.replace(/（.*?）|\(.*?\)|＼\{.*?\}＼|\{.*?\}|｛.*?｝/g, '').trim();
+			};
 
-            const abilityMap = new Map();
-            rawAbilities.forEach(a => {
-                if (a.jap) {
-                    abilityMap.set(a.jap, a);
-                    if (a.jap === "シールド化") {
-                        abilityMap.set("護盾化", a);
-                    }
-                }
-            });
-            const abilityKeys = Array.from(abilityMap.keys()).sort((a, b) => b.length - a.length);
+			const cardNames = Array.from(new Set(
+				globalCardData.map(c => cleanName(c.name)).filter(Boolean)
+			)).sort((a, b) => b.length - a.length);
 
-            const raceMap = new Map();
-            rawRaces.forEach(r => {
-                if (r.jap) raceMap.set(r.jap, r);
-            });
-            const raceKeys = Array.from(raceMap.keys()).sort((a, b) => b.length - a.length);
+			const categoryNames = Array.from(new Set(rawCategoryNames.filter(Boolean)))
+				.sort((a, b) => b.length - a.length);
 
-            return { cardNames, categoryNames, abilityKeys, abilityMap, raceKeys, raceMap };
-        }
+			const abilityMap = new Map();
+			rawAbilities.forEach(a => {
+				if (a.jap) {
+					abilityMap.set(a.jap, a);
+					if (a.jap === "シールド化") {
+						abilityMap.set("護盾化", a);
+					}
+				}
+			});
+			const abilityKeys = Array.from(abilityMap.keys()).sort((a, b) => b.length - a.length);
+
+			const raceMap = new Map();
+			rawRaces.forEach(r => {
+				if (r.jap) raceMap.set(r.jap, r);
+			});
+			const raceKeys = Array.from(raceMap.keys()).sort((a, b) => b.length - a.length);
+
+			return { cardNames, categoryNames, abilityKeys, abilityMap, raceKeys, raceMap };
+		}
 
         function applyEffectTags(text) {
-            if (!text) return "";
+			if (!text) return "";
 
-            const dicts = buildTagDictionaries();
-            const placeholders = [];
-            let processedText = text;
+			const dicts = buildTagDictionaries();
+			const placeholders = [];
+			let processedText = text;
 
-            function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
+			function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
 				if (keywords.length === 0) return;
 
 				let pattern;
@@ -3431,50 +3494,85 @@
 				});
 			}
 
-            replaceKeywords(dicts.cardNames, 'card-name', null, true);
-            replaceKeywords(dicts.categoryNames, 'category-name', null, true);
-            replaceKeywords(dicts.abilityKeys, 'ability', (matched) => {
-                const targetKey = matched === "護盾化" ? "シールド化" : matched;
-                const info = dicts.abilityMap.get(targetKey);
-                if (!info) return '';
-                const parts = [];
-                if (info.jap) parts.push(`日文: ${info.jap}`);
-                
-                const chiVal = info.chi || info.cht;
-                if (chiVal) parts.push(`中文: ${chiVal}`);
-                
-                if (info.eng) parts.push(`英文: ${info.eng}`);
+			// 1. 卡名標籤（比對《》內部去括號後的卡名）
+			replaceKeywords(dicts.cardNames, 'card-name', null, true);
+			
+			// 2. 分類標籤
+			replaceKeywords(dicts.categoryNames, 'category-name', null, true);
+			
+			// 3. 能力標籤
+			replaceKeywords(dicts.abilityKeys, 'ability', (matched) => {
+				const targetKey = matched === "護盾化" ? "シールド化" : matched;
+				const info = dicts.abilityMap.get(targetKey);
+				if (!info) return '';
+				const parts = [];
+				if (info.jap) parts.push(`日文: ${info.jap}`);
+				const chiVal = info.chi || info.cht;
+				if (chiVal) parts.push(`中文: ${chiVal}`);
+				if (info.eng) parts.push(`英文: ${info.eng}`);
+				const descVal = info.descript;
+				if (descVal) parts.push(`說明: ${descVal}`);
+				return parts.join('\n');
+			}, false);
 
-                const descVal = info.descript;
-                if (descVal) parts.push(`說明: ${descVal}`);
+			// 4. 種族標籤
+			replaceKeywords(dicts.raceKeys, 'race', (matched) => {
+				const info = dicts.raceMap.get(matched);
+				if (!info) return '';
+				const parts = [];
+				if (info.jap) parts.push(`日文: ${info.jap}`);
+				const chiVal = info.chi || info.cht;
+				if (chiVal) parts.push(`中文: ${chiVal}`);
+				if (info.eng) parts.push(`英文: ${info.eng}`);
+				return parts.join('\n');
+			}, false);
 
-                return parts.join('\n');
-            }, false);
+			placeholders.forEach(({ placeholder, matched, type, tooltipText, requireBracket }) => {
+				const titleAttr = tooltipText ? `title="${tooltipText.replace(/"/g, '&quot;')}"` : '';
+				
+				const tagContent = `<span class="effect-tag tag-${type}" ${titleAttr} data-type="${type}">${matched}</span>`;
+				const finalHtml = requireBracket ? `《${tagContent}》` : tagContent;
+				
+				processedText = processedText.replace(placeholder, finalHtml);
+			});
 
-            replaceKeywords(dicts.raceKeys, 'race', (matched) => {
-                const info = dicts.raceMap.get(matched);
-                if (!info) return '';
-                const parts = [];
-                if (info.jap) parts.push(`日文: ${info.jap}`);
-                
-                const chiVal = info.chi || info.cht;
-                if (chiVal) parts.push(`中文: ${chiVal}`);
-                
-                if (info.eng) parts.push(`英文: ${info.eng}`);
-                return parts.join('\n');
-            }, false);
+			return processedText;
+		}
+		
+		// 點擊「卡名標籤」與「分類標籤」後的快捷搜尋邏輯
+		function handleNameOrCategoryTagClick(targetName) {
+			if (!targetName) return;
 
-            placeholders.forEach(({ placeholder, matched, type, tooltipText, requireBracket }) => {
-                const titleAttr = tooltipText ? `title="${tooltipText.replace(/"/g, '&quot;')}"` : '';
-                
-                const tagContent = `<span class="effect-tag tag-${type}" ${titleAttr} data-type="${type}">${matched}</span>`;
-                const finalHtml = requireBracket ? `《${tagContent}》` : tagContent;
-                
-                processedText = processedText.replace(placeholder, finalHtml);
-            });
+			// 0. 如果目前 Modal 是開啟狀態，先關閉 Modal
+			if (typeof cardModal !== 'undefined' && cardModal) {
+				cardModal.classList.remove('active');
+			}
 
-            return processedText;
-        }
+			// 1. 將過濾條件初始化
+			const btnReset = document.getElementById('btn-reset');
+			if (btnReset) btnReset.click();
+
+			// 2. 將點擊的卡名/分類名填進卡名過濾欄
+			const inputCardName = document.getElementById('card-name');
+			if (inputCardName) {
+				inputCardName.value = targetName;
+			}
+
+			// 3. 進行查詢
+			const btnSearch = document.getElementById('btn-search');
+			if (btnSearch) btnSearch.click();
+
+			// 4. 判斷搜尋結果數量 (等待 DOM 更新渲染後執行)
+			setTimeout(() => {
+				const items = document.querySelectorAll('#list-container .card-list-item');
+				
+				// 4-1. 如果只有一張的話，點擊唯一的那張、打開 detail
+				if (items.length === 1) {
+					items[0].click();
+				}
+				// 4-2. 如果不只一張（或 0 張），不做事，留在列表頁
+			}, 100);
+		}
 
 		function showAbilityTipsAlert() {
 			const tipsText = 
