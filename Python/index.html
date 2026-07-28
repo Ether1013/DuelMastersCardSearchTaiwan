@@ -612,8 +612,71 @@
 				grid-template-columns: repeat(2, 1fr);
 			}
 		}
-		
+		/* 相機按鈕與 Modal 右上角控制項容器 */
+		.modal-controls {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.modal-btn-icon {
+			font-size: 18px;
+			cursor: pointer;
+			background: rgba(255,255,255,0.8);
+			border-radius: 50%;
+			width: 32px; height: 32px;
+			display: flex; justify-content: center; align-items: center;
+			transition: 0.2s;
+			user-select: none;
+		}
+		.modal-btn-icon:hover { background: #fff; color: #1565c0; transform: scale(1.05); }
+
+		/* 全域 [處理中...] Loading 畫面 */
+		.loading-overlay {
+			position: fixed;
+			top: 0; left: 0; width: 100%; height: 100%;
+			background: rgba(0, 0, 0, 0.75);
+			backdrop-filter: blur(4px);
+			display: none;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999;
+			color: white;
+			font-size: 20px;
+			font-weight: bold;
+		}
+		.loading-spinner {
+			border: 5px solid #f3f3f3;
+			border-top: 5px solid #d32f2f;
+			border-radius: 50%;
+			width: 45px; height: 45px;
+			animation: spin 1s linear infinite;
+			margin-bottom: 15px;
+		}
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+		/* 截圖專用樣式覆蓋 */
+		.modal-card.is-capturing {
+			max-height: none !important; /* 移除視窗高度限制 */
+			height: auto !important;
+			transform: none !important;
+		}
+
+		.modal-card.is-capturing .modal-body {
+			max-height: none !important; /* 移除內部滾動條限制 */
+			overflow: visible !important; /* 讓隱藏的內容完全展現 */
+		}
+
+		/* 截圖時隱藏切換版本的箭頭 */
+		.modal-card.is-capturing .ver-arrow-btn {
+			display: none !important;
+		}
     </style>
+	<!-- 引入 html2canvas 截圖套件 -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -822,7 +885,10 @@
         <div class="modal-card">
             <div class="modal-header" id="modal-header">
                 <div class="modal-title" id="modal-title">卡牌名稱</div>
-                <div class="modal-close" id="modal-close">&times;</div>
+                <div class="modal-controls" id="modal-controls">
+                    <div class="modal-btn-icon" id="modal-screenshot" title="截圖 DETAIL">📷</div>
+                    <div class="modal-close" id="modal-close">&times;</div>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="modal-main-content">
@@ -835,6 +901,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 新增：全域處理中 Loading 畫面 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div id="loading-text">處理中...</div>
     </div>
 
     <!-- ================= JavaScript 邏輯 ================= -->
@@ -2171,9 +2243,14 @@
 			function updateModalTitle() {
                 const baseName = card.name || '未命名卡牌';
                 if (idList.length > 0 && idList[currentVerIdx]) {
-                    modalTitle.innerText = `( DM${idList[currentVerIdx]} ) ${baseName}`;
+                    // 有 ID 時：分成兩行，ID 縮小 (font-size: 13px) 並呈上下排列
+                    modalTitle.innerHTML = `
+                        <div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[currentVerIdx]} )</div>
+                        <div>${baseName}</div>
+                    `;
                 } else {
-                    modalTitle.innerText = baseName;
+                    // 沒有 ID 時：直接顯示卡名，不會產生空的行
+                    modalTitle.innerHTML = `<div>${baseName}</div>`;
                 }
             }
             updateModalTitle();
@@ -2973,6 +3050,194 @@
             extBody.appendChild(wikiGrid);
 
             modalInfoContainer.appendChild(extBlock);
+			
+			// --- 顯隱 Loading 輔助函數 ---
+			function showLoading(text = '處理中...') {
+				const overlay = document.getElementById('loading-overlay');
+				const txt = document.getElementById('loading-text');
+				if (txt) txt.innerText = text;
+				if (overlay) overlay.style.display = 'flex';
+			}
+
+			function hideLoading() {
+				const overlay = document.getElementById('loading-overlay');
+				if (overlay) overlay.style.display = 'none';
+			}
+
+			// 在 openCardModal 裡面建立截圖點擊事件 handler
+			const btnScreenshot = document.getElementById('modal-screenshot');
+
+			if (btnScreenshot) {
+				// 重新綁定事件
+				const newBtnScreenshot = btnScreenshot.cloneNode(true);
+				btnScreenshot.parentNode.replaceChild(newBtnScreenshot, btnScreenshot);
+
+				newBtnScreenshot.addEventListener('click', async () => {
+				
+					// 💡 1. 防連點檢查
+					if (newBtnScreenshot.dataset.cooling === 'true') {
+						alert('截圖處理中或冷卻中，請稍後再試！');
+						return;
+					}
+
+					// 標記為冷卻中、並將按鈕變半透明
+					newBtnScreenshot.dataset.cooling = 'true';
+					newBtnScreenshot.style.opacity = '0.4';
+					newBtnScreenshot.style.pointerEvents = 'none';
+
+					showLoading('產生完整截圖中...');
+					
+					const originalModalCard = document.querySelector('.modal-card');
+					
+					// 建立離屏（Off-screen）複製容器，專門用來排版與截圖
+					const cloneContainer = document.createElement('div');
+					cloneContainer.style.position = 'absolute';
+					cloneContainer.style.left = '-9999px';
+					cloneContainer.style.top = '0px';
+					cloneContainer.style.width = originalModalCard.offsetWidth + 'px';
+					cloneContainer.style.zIndex = '-9999';
+					document.body.appendChild(cloneContainer);
+
+					try {
+						// 1. 深層複製 Modal DOM
+						const clonedModal = originalModalCard.cloneNode(true);
+						clonedModal.classList.add('is-capturing');
+						
+						// 2. 隱藏不必要的元素 ([📷] [X] 控制按鈕、外部資源區塊、切換箭頭)
+						const clonedControls = clonedModal.querySelector('#modal-controls');
+						if (clonedControls) clonedControls.style.display = 'none';
+
+						const clonedExtBlock = clonedModal.querySelector('.ext-links-block');
+						if (clonedExtBlock) clonedExtBlock.style.display = 'none';
+
+						const clonedVerBtns = clonedModal.querySelectorAll('.ver-arrow-btn');
+						clonedVerBtns.forEach(btn => btn.style.display = 'none');
+
+						// 💡 【修改重點】：移除/隱藏所有「[能力說明]」按鈕與說明內容區塊
+						const clonedAbilBtns = clonedModal.querySelectorAll('.wdata-block .btn-icon');
+						clonedAbilBtns.forEach(btn => {
+							if (btn.innerText.includes('能力說明')) {
+								// 隱藏該按鈕
+								btn.style.display = 'none';
+								
+								// 找到緊跟在按鈕後面的能力說明文字方塊並隱藏
+								const explainBox = btn.nextElementSibling;
+								if (explainBox) {
+									explainBox.style.display = 'none';
+								}
+							}
+						});
+
+						// 3. 強制展開 [收錄商品]
+						const clonedWdataBlocks = clonedModal.querySelectorAll('.wdata-block');
+						clonedWdataBlocks.forEach(blk => {
+							if (blk.innerText.includes('收錄商品')) {
+								const setContentBody = blk.children[1];
+								const arrowSpan = blk.querySelector('div[style*="cursor: pointer"] span:last-child');
+								if (setContentBody) setContentBody.style.display = 'block';
+								if (arrowSpan) arrowSpan.innerText = '▲';
+							}
+						});
+
+						// 4. 解除複製體所有的滾動條與高度限制 (展平排版)
+						clonedModal.style.maxHeight = 'none';
+						clonedModal.style.height = 'auto';
+						clonedModal.style.overflow = 'visible';
+						clonedModal.style.transform = 'none';
+						clonedModal.style.boxShadow = 'none';
+
+						const clonedBody = clonedModal.querySelector('.modal-body');
+						if (clonedBody) {
+							clonedBody.style.maxHeight = 'none';
+							clonedBody.style.height = 'auto';
+							clonedBody.style.overflow = 'visible';
+						}
+
+						// 將處理完的節點放進離屏容器內
+						cloneContainer.appendChild(clonedModal);
+
+						// 5. 處理圖片代理（若有圖片）
+						const modalImg = originalModalCard.querySelector('img.modal-img');
+						const clonedImg = clonedModal.querySelector('img.modal-img');
+						
+						if (modalImg && clonedImg && modalImg.style.display !== 'none' && modalImg.src && !modalImg.src.includes('data:')) {
+							const originalImgSrc = modalImg.src;
+							const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(originalImgSrc)}`;
+							
+							try {
+								const resp = await fetch(proxyUrl);
+								if (resp.ok) {
+									const blob = await resp.blob();
+									const blobUrl = URL.createObjectURL(blob);
+									
+									await new Promise((resolve) => {
+										clonedImg.onload = resolve;
+										clonedImg.onerror = resolve;
+										clonedImg.src = blobUrl;
+									});
+								}
+							} catch (err) {
+								console.warn('離屏圖片載入失敗，嘗試直接截圖：', err);
+							}
+						}
+
+						// 給瀏覽器幾毫秒重新計算渲染高度
+						await new Promise(r => setTimeout(r, 200));
+
+						// 6. 使用 html2canvas 擷取離屏 DOM
+						const canvas = await html2canvas(clonedModal, {
+							useCORS: true,
+							allowTaint: true,
+							scale: 2, // 高清畫質
+							backgroundColor: '#ffffff',
+							width: clonedModal.offsetWidth,
+							height: clonedModal.offsetHeight,
+							scrollY: 0,
+							scrollX: 0
+						});
+
+						const dataUrl = canvas.toDataURL('image/png');
+
+						// 7. 另開視窗呈現截圖結果
+						const newWin = window.open('');
+						if (newWin) {
+							newWin.document.write(`
+								<!DOCTYPE html>
+								<html>
+								<head>
+									<title>截圖預覽 - ${cleanCardName(card.name)}</title>
+									<style>
+										body { margin: 0; padding: 20px; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #fff; }
+										img { max-width: 95%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+										p { margin-top: 15px; font-size: 14px; color: #ccc; }
+									</style>
+								</head>
+								<body>
+									<img src="${dataUrl}" alt="Card Detail Screenshot" />
+									<p>💡 按右鍵（或長按）即可儲存圖片</p>
+								</body>
+								</html>
+							`);
+							newWin.document.close();
+						} else {
+							alert('彈出視窗被瀏覽器阻擋，請允許開啟視窗以檢視截圖！');
+						}
+
+					} catch (e) {
+						console.error('截圖失敗:', e);
+						alert('截圖生成失敗：' + e.message);
+					} finally {
+						hideLoading();
+						
+						// 💡 2. 截圖完成後，強制設定 3 秒冷卻時間，結束後才允許下次點擊
+						setTimeout(() => {
+							newBtnScreenshot.dataset.cooling = 'false';
+							newBtnScreenshot.style.opacity = '1';
+							newBtnScreenshot.style.pointerEvents = 'auto';
+						}, 3000); 
+					}
+				});
+			}
 		}
 
 		function navigateToBackCard(targetName) {
