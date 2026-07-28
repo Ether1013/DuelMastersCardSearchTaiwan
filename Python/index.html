@@ -1717,10 +1717,47 @@
 				return;
 			}
 
-			filterResults.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'zh-TW'));
-
 			let currentSetObj = null;
 			let isDeckSet = false;
+
+			if (filterConfig.seriesSmall && rawSetlist[filterConfig.seriesSmall]) {
+				currentSetObj = rawSetlist[filterConfig.seriesSmall];
+				isDeckSet = (currentSetObj.isdeck === true);
+			}
+
+			// 💡 【新增/修改】：排序邏輯
+			if (currentSetObj) {
+				// 有指定商品時：建立卡名 -> 商品卡表 Index 的映射表，按商品卡表內的順序排序
+				const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+				const orderMap = new Map();
+				
+				setCardList.forEach((item, index) => {
+					const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+					if (typeof itemName === 'string') {
+						const cleanItemName = itemName.trim();
+						// 記錄該卡名在商品清單中的最早出現位置
+						if (!orderMap.has(cleanItemName)) {
+							orderMap.set(cleanItemName, index);
+						}
+					}
+				});
+
+				filterResults.sort((a, b) => {
+					const nameA = (a.name || "").trim();
+					const nameB = (b.name || "").trim();
+					
+					const indexA = orderMap.has(nameA) ? orderMap.get(nameA) : 999999;
+					const indexB = orderMap.has(nameB) ? orderMap.get(nameB) : 999999;
+
+					if (indexA !== indexB) {
+						return indexA - indexB; // 數字小的（排在商品前面的）排前面
+					}
+					return nameA.localeCompare(nameB, 'zh-TW'); // fallback 卡名排序
+				});
+			} else {
+				// 未指定特定商品時：維持原本的卡名筆劃/拼音排序
+				filterResults.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'zh-TW'));
+			}
 
 			if (filterConfig.seriesSmall && rawSetlist[filterConfig.seriesSmall]) {
 				currentSetObj = rawSetlist[filterConfig.seriesSmall];
