@@ -3394,6 +3394,51 @@
         const modalImgBox = document.getElementById('modal-img-box');
         const modalInfoContainer = document.getElementById('modal-info-container');
 
+        // --- 💡 優化版：複製文字到剪貼簿與非阻擋式 Toast 提示 ---
+        function showToast(message) {
+            let toast = document.getElementById('toast-msg');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast-msg';
+                toast.style.cssText = `
+                    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.85); color: #fff; padding: 10px 20px;
+                    border-radius: 20px; font-size: 14px; font-weight: bold; z-index: 10000;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: opacity 0.3s; opacity: 0;
+                    pointer-events: none; text-align: center; max-width: 80%;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.innerText = message;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+        }
+
+        async function copyTextToClipboard(text) {
+            if (!text) return;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    // 行動裝置 / 非 HTTPS 備援方式
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+                showToast(`已複製卡名：「${text}」`);
+            } catch (err) {
+                console.error('複製失敗:', err);
+                showToast(`複製失敗，請手動複製`);
+            }
+        }
+
+        // --- 卡牌資料彈出視窗 (Modal Window) 控制與渲染邏輯 ---
         function openCardModal(card, combinedCiv, matchedItem = null) {
 			let idList = [];
 			if (matchedItem && typeof matchedItem === 'object') {
@@ -3401,44 +3446,55 @@
 				else if (matchedItem.id) idList = [matchedItem.id];
 			}
 
+			const baseName = cleanCardName(card.name) || card.name || '未命名卡牌';
+
 			function updateModalTitle() {
-				const baseName = card.name || '未命名卡牌';
-				if (idList.length > 0 && idList[0]) {
-					modalTitle.innerHTML = `
-						<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>
-						<div>${baseName}</div>
-					`;
-				} else {
-					modalTitle.innerHTML = `<div>${baseName}</div>`;
-				}
+				const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
+				
+				modalTitle.innerHTML = `
+					${idTag}
+					<div class="card-title-text" style="cursor: pointer; display: flex; align-items: center; gap: 6px;" title="點擊按鈕或雙擊標題複製卡名">
+						<span>${card.name || '未命名卡牌'}</span>
+						<span class="btn-copy-title" style="font-size: 16px; opacity: 0.7; padding: 2px 4px;" title="複製卡名">📋</span>
+					</div>
+				`;
 			}
 			updateModalTitle();
 
+			// 💡 事件處理：支援點擊📋圖示、雙擊標題觸發複製
+			modalTitle.onclick = (e) => {
+				if (e.target.classList.contains('btn-copy-title') || e.target.parentElement?.classList.contains('btn-copy-title')) {
+					e.stopPropagation();
+					copyTextToClipboard(baseName);
+				}
+			};
+
+			modalTitle.ondblclick = (e) => {
+				e.preventDefault();
+				copyTextToClipboard(baseName);
+			};
+
 			modalHeader.style.background = getCivBackground(combinedCiv);
-			
-			// 💡 幫 Modal 的 modalInfoContainer 加入獨立滾動條 Class
 			modalInfoContainer.className = 'modal-info-container detail-info-scroll-panel';
 
-			// 呼叫共用渲染函式
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, modalImgBox, modalInfoContainer, true);
 
 			cardModal.classList.add('active');
 		}
 		
-		// 💡 Page 3 雙欄模式右側渲染函式 (含相機截圖按鈕)
+		// 💡 Page 3 雙欄模式右側渲染函式
 		function renderSplitDetail(card, combinedCiv, matchedItem = null) {
 			const rightPanel = document.getElementById('detail-panel-split');
 			if (!rightPanel) return;
 
-			rightPanel.innerHTML = ''; // 清空內容
+			rightPanel.innerHTML = '';
 
-			// 1. 頂部標頭與標題 (固定不動)
 			const headerDiv = document.createElement('div');
 			headerDiv.className = 'modal-header';
 			headerDiv.style.borderRadius = '8px';
 			headerDiv.style.marginBottom = '15px';
 			headerDiv.style.background = getCivBackground(combinedCiv);
-			headerDiv.style.flexShrink = '0'; // 防止標頭被壓縮
+			headerDiv.style.flexShrink = '0';
 
 			let idList = [];
 			if (matchedItem && typeof matchedItem === 'object') {
@@ -3448,31 +3504,42 @@
 
 			const titleDiv = document.createElement('div');
 			titleDiv.className = 'modal-title';
-			const baseName = card.name || '未命名卡牌';
-			if (idList.length > 0 && idList[0]) {
-				titleDiv.innerHTML = `
-					<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>
-					<div>${baseName}</div>
-				`;
-			} else {
-				titleDiv.innerHTML = `<div>${baseName}</div>`;
-			}
+			const rawName = card.name || '未命名卡牌';
+			const baseName = cleanCardName(rawName) || rawName;
+			const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
 
-			// 💡 新增：右上角相機按鈕
+			titleDiv.innerHTML = `
+				${idTag}
+				<div class="card-title-text" style="cursor: pointer; display: flex; align-items: center; gap: 6px;" title="點擊按鈕或雙擊標題複製卡名">
+					<span>${rawName}</span>
+					<span class="btn-copy-title" style="font-size: 16px; opacity: 0.7; padding: 2px 4px;" title="複製卡名">📋</span>
+				</div>
+			`;
+
+			// 💡 事件處理：點擊📋或雙擊標題
+			titleDiv.onclick = (e) => {
+				if (e.target.classList.contains('btn-copy-title') || e.target.parentElement?.classList.contains('btn-copy-title')) {
+					e.stopPropagation();
+					copyTextToClipboard(baseName);
+				}
+			};
+
+			titleDiv.ondblclick = (e) => {
+				e.preventDefault();
+				copyTextToClipboard(baseName);
+			};
+
 			const controlsDiv = document.createElement('div');
 			controlsDiv.className = 'modal-controls';
-			controlsDiv.style.justifyContent = 'center'; // 雙欄模式不需要關閉[X]按鈕，因此置中相機按鈕
+			controlsDiv.style.justifyContent = 'center';
 
-			// 💡 修改處：雙欄模式的右上角相機按鈕補上點擊事件
 			const screenshotBtn = document.createElement('div');
 			screenshotBtn.className = 'modal-btn-icon';
 			screenshotBtn.title = '截圖 DETAIL';
 			screenshotBtn.innerText = '📷';
 
-			// 補上這段事件處理：
 			screenshotBtn.addEventListener('click', () => {
 				const rightPanel = document.getElementById('detail-panel-split');
-				const baseName = card.name || 'card';
 				if (rightPanel) {
 					captureDetailPanel(rightPanel, baseName);
 				}
@@ -3484,18 +3551,15 @@
 			headerDiv.appendChild(controlsDiv);
 			rightPanel.appendChild(headerDiv);
 
-			// 2. 主體內容 (包含左圖 + 右文字)
 			const mainContent = document.createElement('div');
 			mainContent.className = 'modal-main-content';
 			mainContent.style.flex = '1';
 			mainContent.style.overflow = 'hidden';
 
-			// 左邊卡圖 (固定不動)
 			const imgBox = document.createElement('div');
 			imgBox.className = 'modal-img-container';
 			imgBox.style.flexShrink = '0';
 
-			// 右邊文字詳細資訊 (獨立 Scrollbar)
 			const infoContainer = document.createElement('div');
 			infoContainer.className = 'modal-info-container detail-info-scroll-panel';
 
@@ -3503,7 +3567,6 @@
 			mainContent.appendChild(infoContainer);
 			rightPanel.appendChild(mainContent);
 
-			// 3. 呼叫共用渲染函式
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
 		}
 		
