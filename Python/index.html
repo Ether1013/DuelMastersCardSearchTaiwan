@@ -233,18 +233,18 @@
         }
 
         .modal-card {
-            background: #fff;
-            width: 90%;
-            max-width: 650px;
-            max-height: 85vh;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transform: scale(0.9);
-            transition: transform 0.25s ease;
-        }
+			background: #fff;
+			width: 90%;
+			max-width: 650px;
+			max-height: 85vh;
+			border-radius: 12px;
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+			display: flex;
+			flex-direction: column;
+			overflow: hidden; /* 💡 禁止外層卡片溢出 */
+			transform: scale(0.9);
+			transition: transform 0.25s ease;
+		}
         .modal-overlay.active .modal-card {
             transform: scale(1);
         }
@@ -276,19 +276,44 @@
         }
         .modal-close:hover { background: #fff; color: #d32f2f; }
 
-        /* Modal Body */
-        .modal-body {
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        /* Modal Body：取消整體 overflow-y: auto，改為內部區域響應式排版 */
+		.modal-body {
+			padding: 20px;
+			overflow: hidden; /* 💡 取消原本整頁的滾動條 */
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+			flex: 1; /* 填滿剩下的剩餘高度 */
+		}
 
         .modal-main-content {
-            display: flex;
-            gap: 20px;
-        }
+			display: flex;
+			gap: 20px;
+			flex: 1;
+			overflow: hidden; /* 💡 避免容器被壓擠 */
+		}
+		
+		/* 💡 新增：通用於 Modal 與雙欄版的「右側文字專用滾動條」 */
+		.detail-info-scroll-panel {
+			flex: 1;
+			overflow-y: auto;
+			padding-right: 5px; /* 留出滾動條空間 */
+			overscroll-behavior: contain;
+		}
+		
+		@media (max-width: 768px) {
+			.modal-body {
+				overflow-y: auto; /* 手機版因圖片上下排列，恢復外層整體滾動 */
+			}
+			.modal-main-content {
+				flex-direction: column;
+				align-items: center;
+				overflow: visible;
+			}
+			.detail-info-scroll-panel {
+				overflow-y: visible; /* 手機版不限制內部獨立滾動條 */
+			}
+		}
 
         .modal-img-container {
             flex-shrink: 0;
@@ -679,6 +704,75 @@
 		.modal-card.is-capturing .ver-arrow-btn {
 			display: none !important;
 		}
+		/* ================= 第三頁籤 (雙欄模式) 專用樣式 ================= */
+		.desktop-only-tab {
+			display: block;
+		}
+		@media (max-width: 768px) {
+			.desktop-only-tab {
+				display: none !important; /* 手機版自動隱藏第三頁籤 */
+			}
+		}
+
+		#tab-list-split {
+			display: none;
+			padding: 20px;
+		}
+		#tab-list-split.active {
+			display: block;
+		}
+
+		.split-layout-container {
+			display: flex;
+			gap: 20px;
+			align-items: flex-start;
+			position: relative; /* 💡 確保 sticky 定位相對於容器 */
+		}
+
+		.split-left-panel {
+			flex: 0 0 calc(40% - 10px);
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			min-width: 0;
+		}
+
+		/* 右側主面板：整體固定不捲動 */
+		.split-right-panel {
+			flex: 0 0 calc(60% - 10px);
+			position: sticky;
+			top: 65px;
+			height: calc(100vh - 150px);
+			overflow: hidden; /* 💡 改為 hidden，禁止外層捲動 */
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+			padding: 15px;
+			border: 1px solid #e2e8f0;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column; /* 讓標頭與主內容垂直排列 */
+		}
+
+		/* 💡 新增：專屬於右側文字 details 區塊的獨立 Scrollbar */
+		.split-detail-info-scroll {
+			flex: 1;
+			overflow-y: auto;
+			padding-right: 5px; /* 給 Scrollbar 一點留白空間 */
+			overscroll-behavior: contain;
+		}
+
+		.split-empty-placeholder {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 300px;
+			color: #888;
+			font-size: 16px;
+			font-weight: bold;
+			border: 2px dashed #cbd5e1;
+			border-radius: 8px;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -689,6 +783,7 @@
 	<div class="header-tabs">
 		<div class="tab active">條件過濾</div>
 		<div class="tab">查詢結果</div>
+		<div class="tab desktop-only-tab">查詢結果(雙欄)</div>
 		
 		<!-- 新增：獨立計數器容器 (無切換功能、置右對齊) -->
 		<div class="header-counter">
@@ -864,6 +959,20 @@
             <div class="empty-state">尚無資料</div>
         </div>
     </div>
+	
+	<!-- 第三個頁籤：查詢結果 (雙欄分割版 - 僅限桌機) -->
+	<div id="tab-list-split" class="tab-content">
+		<div class="split-layout-container">
+			<!-- 左邊列表區域 -->
+			<div class="split-left-panel" id="list-container-split">
+				<div class="empty-state">尚無資料</div>
+			</div>
+			<!-- 右邊 Detail 詳細資訊區域 -->
+			<div class="split-right-panel" id="detail-panel-split">
+				<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>
+			</div>
+		</div>
+	</div>
 
     <!-- Z. Footer 區 (需求 4 修改結構) -->
     <div class="footer">
@@ -1722,18 +1831,38 @@
         }
 
         // --- 頁籤切換邏輯 ---
-        const tabHeaders = document.querySelectorAll('.header-tabs .tab');
-        const tabContentsList = document.querySelectorAll('.tab-content');
-        
-        tabHeaders.forEach((header, index) => {
-            header.addEventListener('click', () => {
-                tabHeaders.forEach(h => h.classList.remove('active'));
-                tabContentsList.forEach(c => c.classList.remove('active'));
-                
-                header.classList.add('active');
-                if(tabContentsList[index]) tabContentsList[index].classList.add('active');
-            });
-        });
+        // --- 頁籤切換邏輯 (支援 localStorage 紀錄偏好) ---
+		const tabHeaders = document.querySelectorAll('.header-tabs .tab');
+		const tabContentsList = document.querySelectorAll('.tab-content');
+
+		tabHeaders.forEach((header, index) => {
+			header.addEventListener('click', () => {
+				tabHeaders.forEach(h => h.classList.remove('active'));
+				tabContentsList.forEach(c => c.classList.remove('active'));
+				
+				header.classList.add('active');
+				if(tabContentsList[index]) tabContentsList[index].classList.add('active');
+
+				// 💡 紀錄檢視偏好 (index 1 為 popup，index 2 為 split)
+				if (index === 1) {
+					localStorage.setItem('dm_preferred_view', 'popup');
+				} else if (index === 2) {
+					localStorage.setItem('dm_preferred_view', 'split');
+				}
+			});
+		});
+
+		// 💡 統一跳頁輔助函式：根據偏好決定跳至 Page 2 或 Page 3
+		function navigateToResultPage() {
+			const preferredView = localStorage.getItem('dm_preferred_view') || 'popup';
+			const isDesktop = window.innerWidth > 768;
+
+			if (preferredView === 'split' && isDesktop && tabHeaders[2]) {
+				tabHeaders[2].click();
+			} else {
+				tabHeaders[1].click(); // ✅ 修正：正解為切換至 Page 2 (Popup 模式頁籤)
+			}
+		}
 
         // --- 查詢結果與文明多色背景邏輯 ---
         const btnSearch = document.getElementById('btn-search');
@@ -1771,7 +1900,9 @@
 		// =========================================
 		btnSearch.addEventListener('click', () => {
 			hasSearched = true;
-			tabHeaders[1].click();
+			
+			// 💡 改用 navigateToResultPage() 依偏好決定跳 Page 2 還是 Page 3
+			navigateToResultPage();
 
 			const filterConfig = getFilterConfigFromUI();
 
@@ -1782,9 +1913,7 @@
 					const matchedNick = rawNicknames.find(n => 
 						Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === filterConfig.cardName)
 					);
-					if (matchedNick) {
-						targetRealNameFromNickname = matchedNick.realname;
-					}
+					if (matchedNick) targetRealNameFromNickname = matchedNick.realname;
 				}
 			}
 
@@ -1792,10 +1921,20 @@
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
 
-			listContainer.innerHTML = '';
+			// 清空 Page 2 與 Page 3 兩邊的容器
+			const listContainerPage2 = document.getElementById('list-container');
+			const listContainerPage3 = document.getElementById('list-container-split');
+			const rightPanelPage3 = document.getElementById('detail-panel-split');
+
+			listContainerPage2.innerHTML = '';
+			listContainerPage3.innerHTML = '';
+			if (rightPanelPage3) {
+				rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
+			}
 
 			if (filterResults.length === 0) {
-				listContainer.innerHTML = '<div class="empty-state">查無資料</div>';
+				listContainerPage2.innerHTML = '<div class="empty-state">查無資料</div>';
+				listContainerPage3.innerHTML = '<div class="empty-state">查無資料</div>';
 				return;
 			}
 
@@ -1807,46 +1946,31 @@
 				isDeckSet = (currentSetObj.isdeck === true);
 			}
 
-			// 💡 【新增/修改】：排序邏輯
 			if (currentSetObj) {
-				// 有指定商品時：建立卡名 -> 商品卡表 Index 的映射表，按商品卡表內的順序排序
 				const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
 				const orderMap = new Map();
-				
 				setCardList.forEach((item, index) => {
 					const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
 					if (typeof itemName === 'string') {
 						const cleanItemName = itemName.trim();
-						// 記錄該卡名在商品清單中的最早出現位置
-						if (!orderMap.has(cleanItemName)) {
-							orderMap.set(cleanItemName, index);
-						}
+						if (!orderMap.has(cleanItemName)) orderMap.set(cleanItemName, index);
 					}
 				});
 
 				filterResults.sort((a, b) => {
 					const nameA = (a.name || "").trim();
 					const nameB = (b.name || "").trim();
-					
 					const indexA = orderMap.has(nameA) ? orderMap.get(nameA) : 999999;
 					const indexB = orderMap.has(nameB) ? orderMap.get(nameB) : 999999;
-
-					if (indexA !== indexB) {
-						return indexA - indexB; // 數字小的（排在商品前面的）排前面
-					}
-					return nameA.localeCompare(nameB, 'zh-TW'); // fallback 卡名排序
+					if (indexA !== indexB) return indexA - indexB;
+					return nameA.localeCompare(nameB, 'zh-TW');
 				});
 			} else {
-				// 未指定特定商品時：維持原本的卡名筆劃/拼音排序
 				filterResults.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'zh-TW'));
 			}
 
-			if (filterConfig.seriesSmall && rawSetlist[filterConfig.seriesSmall]) {
-				currentSetObj = rawSetlist[filterConfig.seriesSmall];
-				isDeckSet = (currentSetObj.isdeck === true);
-			}
-
-			filterResults.forEach(card => {
+			// 渲染卡片 List Item (建立生成 Element 輔助函式)
+			function createCardListItem(card) {
 				let combinedCiv = 0;
 				if (card.wdata && Array.isArray(card.wdata)) {
 					card.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
@@ -1873,31 +1997,44 @@
 						const isMultiVersion = Array.isArray(matchedItem.id) && matchedItem.id.length > 1;
 
 						if (isDeckSet) {
-                            // 牌組張數顯示維持原樣（同在一行）
-                            if (matchedItem.count !== undefined) {
-                                const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-                                displayName = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>${cleanName}`;
-                            }
-                        } else {
-                            // 非牌組時，將 ID 設為獨立 span，縮小字型 (font-size: 12px) 並且換行呈上下兩列
-                            const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
-                            if (firstId) {
-                                const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-                                displayName = `<span style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">DM${firstId}</span><span>${cleanName}</span>`;
-                            }
-                        }
+							if (matchedItem.count !== undefined) {
+								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+								displayName = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>${cleanName}`;
+							}
+						} else {
+							const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+							if (firstId) {
+								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+								displayName = `<span style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">DM${firstId}</span><span>${cleanName}</span>`;
+							}
+						}
 					}
 				}
 
 				itemDiv.innerHTML = `<div class="card-name">${displayName}</div>`;
 
-				itemDiv.addEventListener('click', () => {
-					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
-					itemDiv.classList.add('selected');
-					openCardModal(card, combinedCiv, matchedItem);
-				});
+				return { itemDiv, combinedCiv, matchedItem };
+			}
 
-				listContainer.appendChild(itemDiv);
+			// 將卡牌項目加入兩邊容器，並綁定點擊事件
+			filterResults.forEach(card => {
+				// 1. 生成 Page 2 的 Node
+				const res2 = createCardListItem(card);
+				res2.itemDiv.addEventListener('click', () => {
+					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
+					res2.itemDiv.classList.add('selected');
+					openCardModal(card, res2.combinedCiv, res2.matchedItem);
+				});
+				listContainerPage2.appendChild(res2.itemDiv);
+
+				// 2. 生成 Page 3 的 Node
+				const res3 = createCardListItem(card);
+				res3.itemDiv.addEventListener('click', () => {
+					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
+					res3.itemDiv.classList.add('selected');
+					renderSplitDetail(card, res3.combinedCiv, res3.matchedItem);
+				});
+				listContainerPage3.appendChild(res3.itemDiv);
 			});
 		});
 
@@ -2474,16 +2611,9 @@
 			if (info.eng) parts.push(`英文: ${info.eng}`);
 			return parts.join('\n');
 		}
-
-        // --- 卡牌資料彈出視窗 (Modal Window) 控制與渲染邏輯 ---
-        const cardModal = document.getElementById('card-modal');
-        const modalClose = document.getElementById('modal-close');
-        const modalTitle = document.getElementById('modal-title');
-        const modalHeader = document.getElementById('modal-header');
-        const modalImgBox = document.getElementById('modal-img-box');
-        const modalInfoContainer = document.getElementById('modal-info-container');
-
-        function openCardModal(card, combinedCiv, matchedItem = null) {
+		
+		// 💡 抽離出的共用 Detail 渲染邏輯
+		function renderDetailContentToContainer(card, combinedCiv, matchedItem, targetImgBox, targetInfoContainer, isModal = false) {
 			let idList = [];
 			let picList = [];
 			let flavorList = [];
@@ -2499,185 +2629,80 @@
 				else if (matchedItem.flavor) flavorList = [matchedItem.flavor];
 			}
 
-			const isMultiVer = idList.length > 1;
 			let currentVerIdx = 0;
-
-			function updateModalTitle() {
-                const baseName = card.name || '未命名卡牌';
-                if (idList.length > 0 && idList[currentVerIdx]) {
-                    // 有 ID 時：分成兩行，ID 縮小 (font-size: 13px) 並呈上下排列
-                    modalTitle.innerHTML = `
-                        <div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[currentVerIdx]} )</div>
-                        <div>${baseName}</div>
-                    `;
-                } else {
-                    // 沒有 ID 時：直接顯示卡名，不會產生空的行
-                    modalTitle.innerHTML = `<div>${baseName}</div>`;
-                }
-            }
-            updateModalTitle();
-
-            // 💡 【新增/升級】：桌機雙擊 + 手機長按/點擊 複製純卡名邏輯
-            modalTitle.style.cursor = 'pointer';
-            modalTitle.title = '點擊/雙擊可複製卡名';
-
-            // 執行複製卡名與回饋提示的核心函數
-            const executeCopyCardName = () => {
-                const cleanName = cleanCardName(card.name || '');
-                if (!cleanName) return;
-
-                // 處理剪貼簿 API (含 iOS/Android 相容 fallback)
-                const doCopy = async () => {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(cleanName);
-                    } else {
-                        // iOS/舊版瀏覽器 Fallback 機制
-                        const textArea = document.createElement("textarea");
-                        textArea.value = cleanName;
-                        textArea.style.position = "fixed";
-                        textArea.style.left = "-999999px";
-                        document.body.appendChild(textArea);
-                        textArea.focus();
-                        textArea.select();
-                        document.execCommand('copy');
-                        textArea.remove();
-                    }
-                };
-
-                doCopy().then(() => {
-                    // 視覺回饋：變色並顯示提示文字
-                    const originalText = modalTitle.innerText;
-                    modalTitle.innerText = `已複製：${cleanName}`;
-                    modalTitle.style.color = '#2e7d32'; // 變為綠色
-
-                    setTimeout(() => {
-                        modalTitle.innerText = originalText;
-                        modalTitle.style.color = ''; // 恢復原本顏色
-                    }, 1200);
-                }).catch(err => {
-                    console.error('複製失敗:', err);
-                });
-            };
-
-            // 1. 桌機版：雙擊 (dblclick)
-            modalTitle.ondblclick = executeCopyCardName;
-
-            // 2. 手機/行動版：觸控事件 (長按 400ms 觸發 或 觸控點擊)
-            let touchTimer = null;
-            let isTouchHandled = false;
-
-            modalTitle.ontouchstart = () => {
-                isTouchHandled = false;
-                touchTimer = setTimeout(() => {
-                    isTouchHandled = true;
-                    executeCopyCardName();
-                    // 觸發震動回饋 (若手機支援)
-                    if (navigator.vibrate) navigator.vibrate(50);
-                }, 400); // 長按 0.4 秒觸發
-            };
-
-            modalTitle.ontouchend = () => {
-                if (touchTimer) clearTimeout(touchTimer);
-            };
-
-            modalTitle.ontouchmove = () => {
-                if (touchTimer) clearTimeout(touchTimer); // 滑動時取消長按
-            };
-
-			modalHeader.style.background = getCivBackground(combinedCiv);
-			modalImgBox.innerHTML = '';
+			targetImgBox.innerHTML = '';
+			targetInfoContainer.innerHTML = '';
 
 			let isHorizontal = false;
 			if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
 				const firstTypeVal = card.wdata[0].type[0];
 				const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
-				if (matchedType && matchedType.horizontal === true) {
-					isHorizontal = true;
-				}
+				if (matchedType && matchedType.horizontal === true) isHorizontal = true;
 			}
 
 			const boxWidth = isHorizontal ? '250px' : '180px';
 			const boxHeight = isHorizontal ? '180px' : '250px';
-			
-            // 需求 2 修改：手機版設定 width 100% 配合 CSS margin auto 置中
-            if (window.innerWidth <= 768) {
-                modalImgBox.style.width = '100%';
-            } else {
-                modalImgBox.style.width = boxWidth;
-            }
+
+			if (window.innerWidth <= 768) {
+				targetImgBox.style.width = '100%';
+			} else {
+				targetImgBox.style.width = boxWidth;
+			}
 
 			const imgEl = document.createElement('img');
 			imgEl.className = 'modal-img';
 			imgEl.style.width = boxWidth;
 			imgEl.style.height = boxHeight;
 
-			// 修改後：支援當基本資料無卡圖時，自動搜尋商品卡表中第一張可用卡圖
 			function updateImageSrc() {
 				let currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
-
-				// 💡 新增：若目前的 currentPic 為空值，嘗試去所有商品卡表中尋找第一張可用的圖片
 				if (!currentPic || currentPic.trim() === '') {
 					const cleanTargetName = card.name ? card.name.trim() : "";
-					
 					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-						// 遍歷所有商品
 						for (const setObj of Object.values(rawSetlist)) {
 							const cardList = setObj.setcardlist || setObj.cardlist;
 							if (Array.isArray(cardList)) {
-								// 尋找卡名相符且有設定 pic 的商品卡牌項目
 								const foundItem = cardList.find(item => {
 									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-									if (typeof itemName === 'string' && itemName.trim() === cleanTargetName) {
-										if (typeof item === 'object' && item !== null) {
-											// 檢查 pic 是否為非空字串或包含元素的陣列
-											if (Array.isArray(item.pic) && item.pic.length > 0 && item.pic[0]) return true;
-											if (typeof item.pic === 'string' && item.pic.trim() !== '') return true;
-										}
-									}
-									return false;
+									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
 								});
-
 								if (foundItem) {
-									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) {
-										currentPic = foundItem.pic[0];
-									} else if (typeof foundItem.pic === 'string') {
-										currentPic = foundItem.pic;
-									}
-									break; // 找到第一張後即跳出迴圈
+									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) currentPic = foundItem.pic[0];
+									else if (typeof foundItem.pic === 'string') currentPic = foundItem.pic;
+									break;
 								}
 							}
 						}
 					}
 				}
 
-				// 渲染圖片或顯示 No Image
 				if (currentPic && currentPic.trim() !== '') {
 					imgEl.src = currentPic;
 					imgEl.alt = card.name;
 					imgEl.style.display = 'block';
 					imgEl.onerror = () => {
 						imgEl.style.display = 'none';
-						modalImgBox.querySelector('.no-image-box')?.remove();
+						targetImgBox.querySelector('.no-image-box')?.remove();
 						const noImg = document.createElement('div');
 						noImg.className = 'no-image-box';
 						noImg.style.width = boxWidth;
 						noImg.style.height = boxHeight;
 						noImg.innerText = 'No Image';
-						modalImgBox.appendChild(noImg);
+						targetImgBox.appendChild(noImg);
 					};
 				} else {
 					imgEl.style.display = 'none';
-					modalImgBox.querySelector('.no-image-box')?.remove();
+					targetImgBox.querySelector('.no-image-box')?.remove();
 					const noImg = document.createElement('div');
 					noImg.className = 'no-image-box';
 					noImg.style.width = boxWidth;
 					noImg.style.height = boxHeight;
 					noImg.innerText = 'No Image';
-					modalImgBox.appendChild(noImg);
+					targetImgBox.appendChild(noImg);
 				}
 			}
 
-			modalImgBox.appendChild(imgEl);
+			targetImgBox.appendChild(imgEl);
 			updateImageSrc();
 
 			const flavorBlock = document.createElement('div');
@@ -2699,14 +2724,13 @@
 				}
 			}
 
-			if (isMultiVer) {
+			if (idList.length > 1) {
 				const prevBtn = document.createElement('button');
 				prevBtn.className = 'ver-arrow-btn prev';
 				prevBtn.innerText = '❮';
 				prevBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					currentVerIdx = (currentVerIdx - 1 + idList.length) % idList.length;
-					updateModalTitle();
 					updateImageSrc();
 					updateFlavorText(flavorList[currentVerIdx]); 
 				});
@@ -2717,29 +2741,25 @@
 				nextBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					currentVerIdx = (currentVerIdx + 1) % idList.length;
-					updateModalTitle();
 					updateImageSrc();
 					updateFlavorText(flavorList[currentVerIdx]); 
 				});
 
-				modalImgBox.appendChild(prevBtn);
-				modalImgBox.appendChild(nextBtn);
+				targetImgBox.appendChild(prevBtn);
+				targetImgBox.appendChild(nextBtn);
 			}
 
-			modalInfoContainer.innerHTML = '';
-			
+			// 屬性 wdata 區塊
 			const abilityDictMap = new Map();
 			if (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities)) {
 				rawAbilities.forEach(a => {
 					if (a.jap) {
 						abilityDictMap.set(a.jap, a);
-						if (a.jap === "シールド化") {
-							abilityDictMap.set("護盾化", a);
-						}
+						if (a.jap === "シールド化") abilityDictMap.set("護盾化", a);
 					}
 				});
 			}
-			
+
 			if (card.wdata && Array.isArray(card.wdata) && card.wdata.length > 0) {
 				card.wdata.forEach((w) => {
 					const block = document.createElement('div');
@@ -2768,21 +2788,14 @@
 					const grid = document.createElement('div');
 					grid.className = 'card-attr-grid';
 
-					if (w.cost !== undefined && w.cost !== null) {
-						grid.appendChild(createAttrPill('費用', formatDisplayValue(w.cost)));
-					}
+					if (w.cost !== undefined && w.cost !== null) grid.appendChild(createAttrPill('費用', formatDisplayValue(w.cost)));
 
 					const powerPill = document.createElement('div');
 					powerPill.className = 'attr-pill';
-					
 					function renderPowerValue(powerVal, pcVal) {
-						let pVal = powerVal;
-						if (pVal === 0) pVal = '0000';
-						else pVal = formatDisplayValue(pVal);
-
+						let pVal = powerVal === 0 ? '0000' : formatDisplayValue(powerVal);
 						if (pcVal === true) pVal += '+';
 						else if (pcVal === false) pVal += '-';
-
 						powerPill.innerHTML = `<span class="attr-label">攻擊力:</span><span class="attr-value">${pVal}</span>`;
 					}
 
@@ -2872,10 +2885,7 @@
 						spContainer.innerHTML = '';
 						abilExplainBox.innerHTML = '';
 
-						let currentSpList = [];
-						if (w.sp && Array.isArray(w.sp)) {
-							currentSpList = [...w.sp];
-						}
+						let currentSpList = Array.isArray(w.sp) ? [...w.sp] : [];
 						if (isHyperModeActive && w.hypermode && Array.isArray(w.hypermode.sp)) {
 							currentSpList = currentSpList.concat(w.hypermode.sp);
 						}
@@ -2933,7 +2943,6 @@
 										const descStr = info.descript || info.desc || info.text || info.detail || '(無效果說明)';
 
 										const headerLine = [japStr, chiStr, engStr].filter(Boolean).join(' / ');
-
 										itemDiv.innerHTML = `
 											<div style="font-weight: bold; color: #1565c0;">${headerLine}</div>
 											<div style="color: #333; margin-top: 2px;">效果說明：${descStr}</div>
@@ -2941,7 +2950,6 @@
 										abilExplainBox.appendChild(itemDiv);
 									}
 								});
-
 								if (abilExplainBox.lastElementChild) {
 									abilExplainBox.lastElementChild.style.borderBottom = 'none';
 									abilExplainBox.lastElementChild.style.marginBottom = '0';
@@ -2950,14 +2958,7 @@
 							} else {
 								abilExplainBtn.style.display = 'none';
 								abilExplainBox.style.display = 'none';
-								isExplainOpen = false;
-								abilExplainBtn.innerText = '[展開能力說明]';
 							}
-						} else {
-							abilExplainBtn.style.display = 'none';
-							abilExplainBox.style.display = 'none';
-							isExplainOpen = false;
-							abilExplainBtn.innerText = '[展開能力說明]';
 						}
 					}
 
@@ -2969,21 +2970,17 @@
 							if (isHyperModeActive) {
 								hyperBtn.innerText = '一般模式 <<';
 								hyperBtn.style.backgroundColor = '#424242';
-								if (w.hypermode.power !== undefined && w.hypermode.power !== null) {
-									renderPowerValue(w.hypermode.power, w.pc);
-								}
+								if (w.hypermode.power !== undefined && w.hypermode.power !== null) renderPowerValue(w.hypermode.power, w.pc);
 							} else {
 								hyperBtn.innerText = '>> 超化模式';
 								hyperBtn.style.backgroundColor = '#d32f2f';
-								if (w.power !== undefined && w.power !== null) {
-									renderPowerValue(w.power, w.pc);
-								}
+								if (w.power !== undefined && w.power !== null) renderPowerValue(w.power, w.pc);
 							}
 							renderSpAbilities();
 						});
 					}
 
-					modalInfoContainer.appendChild(block);
+					targetInfoContainer.appendChild(block);
 				});
 
 				if (card.back && Array.isArray(card.back) && card.back.length > 0) {
@@ -3019,7 +3016,7 @@
 						backBtn.innerText = `🔄 ${backCardName}`;
 
 						backBtn.addEventListener('click', () => {
-							cardModal.classList.remove('active');
+							if (isModal) cardModal.classList.remove('active');
 							navigateToBackCard(backCardName);
 						});
 
@@ -3027,558 +3024,358 @@
 					});
 
 					backBlock.appendChild(backContainer);
-					modalInfoContainer.appendChild(backBlock);
+					targetInfoContainer.appendChild(backBlock);
 				}
 			} else {
-				modalInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
+				targetInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
 			}
 
-			modalInfoContainer.appendChild(flavorBlock);
+			targetInfoContainer.appendChild(flavorBlock);
 			updateFlavorText();
 
-			cardModal.classList.add('active');
-			
-			// --- 新增/修改：渲染「收錄商品」區塊 (預設收合 + 點擊切換 + 跳轉自動展開) ---
-            const twSets = [];
-            const nonTwSets = [];
-            const cleanTargetName = card.name ? card.name.trim() : "";
+			// 收錄商品區塊與外部連結
+			renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal);
+		}
+		
+		function renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal) {
+			const twSets = [];
+			const nonTwSets = [];
+			const cleanTargetName = card.name ? card.name.trim() : "";
 
-            if (typeof rawSetlist === 'object' && rawSetlist !== null) {
-                Object.entries(rawSetlist).forEach(([key, setObj]) => {
-                    const cardList = setObj.setcardlist || setObj.cardlist;
-                    if (Array.isArray(cardList)) {
-                        const hasCard = cardList.some(item => {
-                            const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-                            return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-                        });
+			if (typeof rawSetlist === 'object' && rawSetlist !== null) {
+				Object.entries(rawSetlist).forEach(([key, setObj]) => {
+					const cardList = setObj.setcardlist || setObj.cardlist;
+					if (Array.isArray(cardList)) {
+						const hasCard = cardList.some(item => {
+							const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+							return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+						});
 
-                        if (hasCard) {
-                            const setcode = setObj.setcode || setObj.code || setObj.id || key;
-                            const setname = setObj.setname || setObj.name || setcode;
-                            const isTw = setObj.istw === true;
+						if (hasCard) {
+							const setcode = setObj.setcode || setObj.code || setObj.id || key;
+							const setname = setObj.setname || setObj.name || setcode;
+							const isTw = setObj.istw === true;
+							const setInfoObj = { key, setcode, setname };
+							if (isTw) twSets.push(setInfoObj);
+							else nonTwSets.push(setInfoObj);
+						}
+					}
+				});
+			}
 
-                            const setInfoObj = { key, setcode, setname };
-                            if (isTw) {
-                                twSets.push(setInfoObj);
-                            } else {
-                                nonTwSets.push(setInfoObj);
-                            }
-                        }
-                    }
-                });
-            }
-			
-			// 💡 【新增】：將台灣版與日版商品依照 setcode 進行降冪 (desc) 排序
-            twSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
-            nonTwSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
+			twSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
+			nonTwSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
 
-            // 若有搜尋到收錄商品，則建立區塊
-            if (twSets.length > 0 || nonTwSets.length > 0) {
-                const setBlock = document.createElement('div');
-                setBlock.className = 'wdata-block';
-                setBlock.style.borderLeft = '4px solid #009688';
-                setBlock.style.marginTop = '10px';
+			if (twSets.length > 0 || nonTwSets.length > 0) {
+				const setBlock = document.createElement('div');
+				setBlock.className = 'wdata-block';
+				setBlock.style.borderLeft = '4px solid #009688';
+				setBlock.style.marginTop = '10px';
 
-                // 檢查是否為「透過收錄商品按鈕點擊跳轉」開啟的 Modal
-                const autoExpand = window._autoExpandSetBlock === true;
-                // 用完即重置全域標記，避免影響後續正常的點擊
-                window._autoExpandSetBlock = false;
+				const autoExpand = window._autoExpandSetBlock === true;
+				window._autoExpandSetBlock = false;
 
-                // Title 標頭 (可點擊切換展開/收合)
-                const setBlockTitle = document.createElement('div');
-                setBlockTitle.style.fontSize = '14px';
-                setBlockTitle.style.fontWeight = 'bold';
-                setBlockTitle.style.color = '#00695c';
-                setBlockTitle.style.cursor = 'pointer';
-                setBlockTitle.style.display = 'flex';
-                setBlockTitle.style.justifyContent = 'space-between';
-                setBlockTitle.style.alignItems = 'center';
-                setBlockTitle.style.userSelect = 'none';
+				const setBlockTitle = document.createElement('div');
+				setBlockTitle.style.fontSize = '14px';
+				setBlockTitle.style.fontWeight = 'bold';
+				setBlockTitle.style.color = '#00695c';
+				setBlockTitle.style.cursor = 'pointer';
+				setBlockTitle.style.display = 'flex';
+				setBlockTitle.style.justifyContent = 'space-between';
+				setBlockTitle.style.alignItems = 'center';
+				setBlockTitle.style.userSelect = 'none';
 
-                // 根據狀態設定初始箭頭圖示
-                const arrowSpan = document.createElement('span');
-                arrowSpan.innerText = autoExpand ? '▲' : '▼';
-                
-                setBlockTitle.innerHTML = `<span>收錄商品 (${twSets.length + nonTwSets.length})：</span>`;
-                setBlockTitle.appendChild(arrowSpan);
-                setBlock.appendChild(setBlockTitle);
+				const arrowSpan = document.createElement('span');
+				arrowSpan.innerText = autoExpand ? '▲' : '▼';
+				
+				setBlockTitle.innerHTML = `<span>收錄商品 (${twSets.length + nonTwSets.length})：</span>`;
+				setBlockTitle.appendChild(arrowSpan);
+				setBlock.appendChild(setBlockTitle);
 
-                // 商品按鈕容器 (受展開/收合控制)
-                const setContentBody = document.createElement('div');
-                setContentBody.style.marginTop = '8px';
-                setContentBody.style.display = autoExpand ? 'block' : 'none'; // 預設隱藏，若跳轉則展開
-                setBlock.appendChild(setContentBody);
+				const setContentBody = document.createElement('div');
+				setContentBody.style.marginTop = '8px';
+				setContentBody.style.display = autoExpand ? 'block' : 'none';
+				setBlock.appendChild(setContentBody);
 
-                // 點擊 Title 進行展開/收合切換
-                setBlockTitle.addEventListener('click', () => {
-                    const isHidden = setContentBody.style.display === 'none';
-                    setContentBody.style.display = isHidden ? 'block' : 'none';
-                    arrowSpan.innerText = isHidden ? '▲' : '▼';
-                });
+				setBlockTitle.addEventListener('click', () => {
+					const isHidden = setContentBody.style.display === 'none';
+					setContentBody.style.display = isHidden ? 'block' : 'none';
+					arrowSpan.innerText = isHidden ? '▲' : '▼';
+				});
 
-                const renderSetGroup = (sets, groupTitle) => {
-                    if (sets.length === 0) return;
+				const renderSetGroup = (sets, groupTitle) => {
+					if (sets.length === 0) return;
+					const groupDiv = document.createElement('div');
+					groupDiv.style.marginBottom = '6px';
 
-                    const groupDiv = document.createElement('div');
-                    groupDiv.style.marginBottom = '6px';
+					if (groupTitle) {
+						const subTitle = document.createElement('div');
+						subTitle.style.fontSize = '11px';
+						subTitle.style.color = '#666';
+						subTitle.style.fontWeight = 'bold';
+						subTitle.style.marginBottom = '4px';
+						subTitle.innerText = groupTitle;
+						groupDiv.appendChild(subTitle);
+					}
 
-                    if (groupTitle) {
-                        const subTitle = document.createElement('div');
-                        subTitle.style.fontSize = '11px';
-                        subTitle.style.color = '#666';
-                        subTitle.style.fontWeight = 'bold';
-                        subTitle.style.marginBottom = '4px';
-                        subTitle.innerText = groupTitle;
-                        groupDiv.appendChild(subTitle);
-                    }
+					const btnContainer = document.createElement('div');
+					btnContainer.style.display = 'flex';
+					btnContainer.style.flexWrap = 'wrap';
+					btnContainer.style.gap = '6px';
 
-                    const btnContainer = document.createElement('div');
-                    btnContainer.style.display = 'flex';
-                    btnContainer.style.flexWrap = 'wrap';
-                    btnContainer.style.gap = '6px';
+					sets.forEach(item => {
+						const btn = document.createElement('button');
+						btn.className = 'btn-icon';
+						btn.style.fontSize = '11px';
+						btn.style.padding = '3px 8px';
+						btn.style.backgroundColor = '#e0f2f1';
+						btn.style.color = '#004d40';
+						btn.style.border = '1px solid #b2dfdb';
+						btn.value = item.setcode;
+						btn.innerText = `${item.setcode}${item.setname}`;
 
-                    sets.forEach(item => {
-                        const btn = document.createElement('button');
-                        btn.className = 'btn-icon';
-                        btn.style.fontSize = '11px';
-                        btn.style.padding = '3px 8px';
-                        btn.style.backgroundColor = '#e0f2f1';
-                        btn.style.color = '#004d40';
-                        btn.style.border = '1px solid #b2dfdb';
-                        btn.value = item.setcode;
-                        btn.innerText = `${item.setcode}${item.setname}`;
+						btn.addEventListener('click', () => {
+							window._autoExpandSetBlock = true;
+							if (isModal) cardModal.classList.remove('active');
 
-                        // 按鈕點擊事件
-                        btn.addEventListener('click', () => {
-                            // 設定全域標記，指示下一次開啟 Detail 時預設展開收錄商品
-                            window._autoExpandSetBlock = true;
+							document.getElementById('btn-reset').click();
+							const bigSelect = document.getElementById('series-big');
+							const smallSelect = document.getElementById('series-small');
 
-                            cardModal.classList.remove('active'); // 關閉目前 Modal
+							if (bigSelect && smallSelect) {
+								bigSelect.value = "";
+								bigSelect.dispatchEvent(new Event('change'));
+								smallSelect.value = item.key;
+								if (typeof updateSummaryText === 'function') updateSummaryText();
+							}
 
-                            // 1. 過濾條件初始化
-                            document.getElementById('btn-reset').click();
+							document.getElementById('btn-search').click();
 
-                            // 2. 商品下拉式選單選擇該商品
-                            const bigSelect = document.getElementById('series-big');
-                            const smallSelect = document.getElementById('series-small');
+							setTimeout(() => {
+								const items = document.querySelectorAll('#list-container .card-list-item, #list-container-split .card-list-item');
+								if (items.length > 0) {
+									let targetItem = Array.from(items).find(el => {
+										const nameEl = el.querySelector('.card-name');
+										return nameEl && nameEl.innerText.includes(cleanCardName(card.name));
+									});
+									if (!targetItem) targetItem = items[0];
+									targetItem.click();
+								}
+							}, 100);
+						});
 
-                            if (bigSelect && smallSelect) {
-                                bigSelect.value = ""; // 重置大編號
-                                bigSelect.dispatchEvent(new Event('change')); // 刷新小編號選單
-                                smallSelect.value = item.key; // 設定為該商品
+						btnContainer.appendChild(btn);
+					});
 
-                                if (typeof updateSummaryText === 'function') {
-                                    updateSummaryText();
-                                }
-                            }
+					groupDiv.appendChild(btnContainer);
+					setContentBody.appendChild(groupDiv);
+				};
 
-                            // 3. 觸發開始查詢，並自動打開同卡名的 detail
-                            document.getElementById('btn-search').click();
+				renderSetGroup(twSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【台灣代理商品】' : '');
+				renderSetGroup(nonTwSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【日版商品】' : '');
 
-                            setTimeout(() => {
-                                const items = document.querySelectorAll('#list-container .card-list-item');
-                                if (items.length > 0) {
-                                    let targetItem = Array.from(items).find(el => {
-                                        const nameEl = el.querySelector('.card-name');
-                                        return nameEl && nameEl.innerText.includes(cleanCardName(card.name));
-                                    });
-                                    if (!targetItem) targetItem = items[0];
-                                    targetItem.click();
-                                }
-                            }, 100);
-                        });
+				targetInfoContainer.appendChild(setBlock);
+			}
 
-                        btnContainer.appendChild(btn);
-                    });
+			// 外部連結區塊
+			const toCDB = (str) => {
+				if (!str) return "";
+				let tmp = "";
+				for (let i = 0; i < str.length; i++) {
+					if (str.charCodeAt(i) === 12288) { tmp += String.fromCharCode(str.charCodeAt(i) - 12256); continue; }
+					if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375) tmp += String.fromCharCode(str.charCodeAt(i) - 65248);
+					else tmp += String.fromCharCode(str.charCodeAt(i));
+				}
+				return tmp;
+			};
 
-                    groupDiv.appendChild(btnContainer);
-                    setContentBody.appendChild(groupDiv);
-                };
+			const rawCardName = card.name || "";
+			const cleanNameOnly = cleanCardName(rawCardName);
+			const cleanHalfName = toCDB(cleanNameOnly);
 
-                // 上區：istw === true
-                renderSetGroup(twSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【台灣代理商品】' : '');
-                // 下區：istw === false
-                renderSetGroup(nonTwSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【日版商品】' : '');
+			let cardIdForTrade = null;
+			if (matchedItem && typeof matchedItem === 'object' && matchedItem.id) {
+				const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+				if (firstId) cardIdForTrade = firstId.replace(/秘/g, "㊙");
+			}
 
-                modalInfoContainer.appendChild(setBlock);
-            }
-			
-			// --- 新增：外部連結輔助工具函數 ---
-            // 全角轉半角
-            const toCDB = (str) => {
-                if (!str) return "";
-                let tmp = "";
-                for (let i = 0; i < str.length; i++) {
-                    if (str.charCodeAt(i) === 12288) {
-                        tmp += String.fromCharCode(str.charCodeAt(i) - 12256);
-                        continue;
-                    }
-                    if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375) {
-                        tmp += String.fromCharCode(str.charCodeAt(i) - 65248);
-                    } else {
-                        tmp += String.fromCharCode(str.charCodeAt(i));
-                    }
-                }
-                return tmp;
-            };
+			const urlTorekakaku = `https://torekakaku.com/dm/search/?q=${encodeURIComponent(cardIdForTrade || cleanHalfName.replace(/\//g, "／"))}`;
+			const urlCardRush = `https://www.cardrush-dm.jp/product-list?keyword=${encodeURIComponent(cleanNameOnly)}&Submit=%E6%A4%9C%E7%B4%A2`;
+			const urlYuyutei = `https://yuyu-tei.jp/sell/dm/s/search?search_word=${encodeURIComponent(cleanNameOnly)}`;
+			const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanNameOnly)}`;
+			const urlOfficial = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify({
+				suggest: "on", keyword: cleanNameOnly, keyword_type: ["card_name"], culture_cond: ["單色", "多色"], pagenum: "1", sort: "release_new"
+			}))}`;
+			const urlOfficialQA = `https://dm.takaratomy.co.jp/rule/qa/?qa_w=${encodeURIComponent(cleanNameOnly)}`;
+			const urlWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Admwiki.net`;
+			const urlEnWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Aduelmasters.fandom.com%2Fwiki%2F`;
 
-            // 1. 純淨卡名 (去除注音與全半角括號，轉半角)
-            const rawCardName = card.name || "";
-            const cleanNameOnly = cleanCardName(rawCardName);
-            const cleanHalfName = toCDB(cleanNameOnly);
+			const extBlock = document.createElement('div');
+			extBlock.className = 'ext-links-block';
 
-            // 2. 計算商品 ID (供 Torekakaku 與 露天 使用)
-            let cardIdForTrade = null;
-            let twSetCodeForRuten = null;
-            let twIdNumForRuten = null;
+			const extTitle = document.createElement('div');
+			extTitle.className = 'ext-links-title';
+			const extArrow = document.createElement('span');
+			extArrow.innerText = '▼';
+			extTitle.innerHTML = '<span>🌐 外部資源與相關連結：</span>';
+			extTitle.appendChild(extArrow);
+			extBlock.appendChild(extTitle);
 
-            if (matchedItem && typeof matchedItem === 'object' && matchedItem.id) {
-                const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
-                if (firstId) {
-                    cardIdForTrade = firstId.replace(/秘/g, "㊙");
-                }
-            }
+			const extBody = document.createElement('div');
+			extBody.style.marginTop = '8px';
+			extBody.style.display = 'none';
+			extBlock.appendChild(extBody);
 
-            // 尋找台版商品 ID（供露天搜尋）
-            if (typeof rawSetlist === 'object' && rawSetlist !== null) {
-                for (const [key, setObj] of Object.entries(rawSetlist)) {
-                    if (setObj.istw === true) {
-                        const cardList = setObj.setcardlist || setObj.cardlist;
-                        if (Array.isArray(cardList)) {
-                            const found = cardList.find(item => {
-                                const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-                                return typeof itemName === 'string' && itemName.trim() === rawCardName.trim();
-                            });
-                            if (found && found.id) {
-                                twSetCodeForRuten = setObj.setcode || setObj.code || key;
-                                const firstId = Array.isArray(found.id) ? found.id[0] : found.id;
-                                const idParts = firstId.split(" ");
-                                twIdNumForRuten = idParts.length > 1 ? idParts[1] : idParts[0];
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // --- 組裝 8 個外部連結 URL ---
-            // 商店組
-            const urlTorekakaku = `https://torekakaku.com/dm/search/?q=${encodeURIComponent(cardIdForTrade || cleanHalfName.replace(/\//g, "／"))}`;
-            const urlCardRush = `https://www.cardrush-dm.jp/product-list?keyword=${encodeURIComponent(cleanNameOnly)}&Submit=%E6%A4%9C%E7%B4%A2`;
-            const urlYuyutei = `https://yuyu-tei.jp/sell/dm/s/search?search_word=${encodeURIComponent(cleanNameOnly)}`;
-            
-            // 露天拍賣：直接使用「決鬥王 + 純淨卡名」搜尋
-            const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanNameOnly)}`;
-
-            // 資料庫與 Wiki 組
-            const urlOfficial = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify({
-                suggest: "on",
-                keyword: cleanNameOnly,
-                keyword_type: ["card_name"],
-                culture_cond: ["單色", "多色"],
-                pagenum: "1",
-                sort: "release_new"
-            }))}`;
-            const urlOfficialQA = `https://dm.takaratomy.co.jp/rule/qa/?qa_w=${encodeURIComponent(cleanNameOnly)}`;
-            const urlWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Admwiki.net`;
-            const urlEnWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Aduelmasters.fandom.com%2Fwiki%2F`;
-
-            // --- 渲染 UI 區塊 ---
-            const extBlock = document.createElement('div');
-            extBlock.className = 'ext-links-block';
-
-            // Title 標頭
-            const extTitle = document.createElement('div');
-            extTitle.className = 'ext-links-title';
-            
-            const extArrow = document.createElement('span');
-            extArrow.innerText = '▼';
-
-            extTitle.innerHTML = '<span>🌐 外部資源與相關連結：</span>';
-            extTitle.appendChild(extArrow);
-            extBlock.appendChild(extTitle);
-
-            // 內容主體 (預設可設為收合或展開)
-            const extBody = document.createElement('div');
-            extBody.style.marginTop = '8px';
-            extBody.style.display = 'none'; // 預設摺疊收起來，維持 Modal 簡潔
-            extBlock.appendChild(extBody);
-
-            extTitle.addEventListener('click', () => {
+			extTitle.addEventListener('click', () => {
 				const isHidden = extBody.style.display === 'none';
 				extBody.style.display = isHidden ? 'block' : 'none';
 				extArrow.innerText = isHidden ? '▲' : '▼';
 
-				// 💡 需求 1：當展開外部連結區塊時，自動將 modal-body 捲動至最底部
 				if (isHidden) {
-					const modalBody = document.querySelector('.modal-body');
-					if (modalBody) {
-						setTimeout(() => {
-							modalBody.scrollTop = modalBody.scrollHeight;
-						}, 50); // 給予 DOM 渲染展開高度的小延遲
+					// 💡 統一滾動當前文字容器 targetInfoContainer 即可 (不論是 Modal 還是 Split 頁面)
+					if (targetInfoContainer) {
+						setTimeout(() => { 
+							targetInfoContainer.scrollTop = targetInfoContainer.scrollHeight; 
+						}, 50);
 					}
 				}
 			});
 
-            // 建立按鈕工廠函數
-            const createExtBtn = (label, url, extraClass = "") => {
-                const a = document.createElement('a');
-                a.className = `ext-link-btn ${extraClass}`;
-                a.href = url;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                a.innerHTML = `${label} <span style="font-size:9px; opacity:0.7;">↗</span>`;
-                return a;
-            };
+			const createExtBtn = (label, url, extraClass = "") => {
+				const a = document.createElement('a');
+				a.className = `ext-link-btn ${extraClass}`;
+				a.href = url;
+				a.target = '_blank';
+				a.rel = 'noopener noreferrer';
+				a.innerHTML = `${label} <span style="font-size:9px; opacity:0.7;">↗</span>`;
+				return a;
+			};
 
-            // 1. 上區：卡價與購物連結
-            const shopGroupTitle = document.createElement('div');
-            shopGroupTitle.className = 'ext-group-title';
-            shopGroupTitle.innerText = '🛒 卡價趨勢與線上商店：';
-            extBody.appendChild(shopGroupTitle);
+			const shopGroupTitle = document.createElement('div');
+			shopGroupTitle.className = 'ext-group-title';
+			shopGroupTitle.innerText = '🛒 卡價趨勢與線上商店：';
+			extBody.appendChild(shopGroupTitle);
 
-            const shopGrid = document.createElement('div');
-            shopGrid.className = 'ext-btn-grid';
-            shopGrid.appendChild(createExtBtn('📈 Torekakaku', urlTorekakaku, 'shop-btn'));
-            shopGrid.appendChild(createExtBtn('🛍️ Card Rush', urlCardRush, 'shop-btn'));
-            shopGrid.appendChild(createExtBtn('📦 遊遊亭', urlYuyutei, 'shop-btn'));
-            shopGrid.appendChild(createExtBtn('🛒 露天拍賣', urlRuten, 'shop-btn'));
-            extBody.appendChild(shopGrid);
+			const shopGrid = document.createElement('div');
+			shopGrid.className = 'ext-btn-grid';
+			shopGrid.appendChild(createExtBtn('📈 Torekakaku', urlTorekakaku, 'shop-btn'));
+			shopGrid.appendChild(createExtBtn('🛍️ Card Rush', urlCardRush, 'shop-btn'));
+			shopGrid.appendChild(createExtBtn('📦 遊遊亭', urlYuyutei, 'shop-btn'));
+			shopGrid.appendChild(createExtBtn('🛒 露天拍賣', urlRuten, 'shop-btn'));
+			extBody.appendChild(shopGrid);
 
-            // 2. 下區：資料庫與規則
-            const wikiGroupTitle = document.createElement('div');
-            wikiGroupTitle.className = 'ext-group-title';
-            wikiGroupTitle.innerText = '🔍 外部資料庫與規則：';
-            extBody.appendChild(wikiGroupTitle);
+			const wikiGroupTitle = document.createElement('div');
+			wikiGroupTitle.className = 'ext-group-title';
+			wikiGroupTitle.innerText = '🔍 外部資料庫與規則：';
+			extBody.appendChild(wikiGroupTitle);
 
-            const wikiGrid = document.createElement('div');
-            wikiGrid.className = 'ext-btn-grid';
-            wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
-            wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
-            wikiGrid.appendChild(createExtBtn('🌐 日文 Wiki', urlWiki, 'wiki-btn'));
-            wikiGrid.appendChild(createExtBtn('🌐 英文 Wiki', urlEnWiki, 'wiki-btn'));
-            extBody.appendChild(wikiGrid);
+			const wikiGrid = document.createElement('div');
+			wikiGrid.className = 'ext-btn-grid';
+			wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
+			wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
+			wikiGrid.appendChild(createExtBtn('🌐 日文 Wiki', urlWiki, 'wiki-btn'));
+			wikiGrid.appendChild(createExtBtn('🌐 英文 Wiki', urlEnWiki, 'wiki-btn'));
+			extBody.appendChild(wikiGrid);
 
-            modalInfoContainer.appendChild(extBlock);
+			targetInfoContainer.appendChild(extBlock);
+		}
+
+        // --- 卡牌資料彈出視窗 (Modal Window) 控制與渲染邏輯 ---
+        const cardModal = document.getElementById('card-modal');
+        const modalClose = document.getElementById('modal-close');
+        const modalTitle = document.getElementById('modal-title');
+        const modalHeader = document.getElementById('modal-header');
+        const modalImgBox = document.getElementById('modal-img-box');
+        const modalInfoContainer = document.getElementById('modal-info-container');
+
+        function openCardModal(card, combinedCiv, matchedItem = null) {
+			let idList = [];
+			if (matchedItem && typeof matchedItem === 'object') {
+				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
+				else if (matchedItem.id) idList = [matchedItem.id];
+			}
+
+			function updateModalTitle() {
+				const baseName = card.name || '未命名卡牌';
+				if (idList.length > 0 && idList[0]) {
+					modalTitle.innerHTML = `
+						<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>
+						<div>${baseName}</div>
+					`;
+				} else {
+					modalTitle.innerHTML = `<div>${baseName}</div>`;
+				}
+			}
+			updateModalTitle();
+
+			modalHeader.style.background = getCivBackground(combinedCiv);
 			
-			// --- 顯隱 Loading 輔助函數 ---
-			function showLoading(text = '處理中...') {
-				const overlay = document.getElementById('loading-overlay');
-				const txt = document.getElementById('loading-text');
-				if (txt) txt.innerText = text;
-				if (overlay) overlay.style.display = 'flex';
+			// 💡 幫 Modal 的 modalInfoContainer 加入獨立滾動條 Class
+			modalInfoContainer.className = 'modal-info-container detail-info-scroll-panel';
+
+			// 呼叫共用渲染函式
+			renderDetailContentToContainer(card, combinedCiv, matchedItem, modalImgBox, modalInfoContainer, true);
+
+			cardModal.classList.add('active');
+		}
+		
+		// 💡 Page 3 雙欄模式右側渲染函式 (僅文字區塊滑動版)
+		function renderSplitDetail(card, combinedCiv, matchedItem = null) {
+			const rightPanel = document.getElementById('detail-panel-split');
+			if (!rightPanel) return;
+
+			rightPanel.innerHTML = ''; // 清空內容
+
+			// 1. 頂部標頭與標題 (固定不動)
+			const headerDiv = document.createElement('div');
+			headerDiv.className = 'modal-header';
+			headerDiv.style.borderRadius = '8px';
+			headerDiv.style.marginBottom = '15px';
+			headerDiv.style.background = getCivBackground(combinedCiv);
+			headerDiv.style.flexShrink = '0'; // 防止標頭被壓縮
+
+			let idList = [];
+			if (matchedItem && typeof matchedItem === 'object') {
+				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
+				else if (matchedItem.id) idList = [matchedItem.id];
 			}
 
-			function hideLoading() {
-				const overlay = document.getElementById('loading-overlay');
-				if (overlay) overlay.style.display = 'none';
+			const titleDiv = document.createElement('div');
+			titleDiv.className = 'modal-title';
+			const baseName = card.name || '未命名卡牌';
+			if (idList.length > 0 && idList[0]) {
+				titleDiv.innerHTML = `
+					<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>
+					<div>${baseName}</div>
+				`;
+			} else {
+				titleDiv.innerHTML = `<div>${baseName}</div>`;
 			}
 
-			// 在 openCardModal 裡面建立截圖點擊事件 handler
-			const btnScreenshot = document.getElementById('modal-screenshot');
+			headerDiv.appendChild(titleDiv);
+			rightPanel.appendChild(headerDiv);
 
-			if (btnScreenshot) {
-				// 重新綁定事件
-				const newBtnScreenshot = btnScreenshot.cloneNode(true);
-				btnScreenshot.parentNode.replaceChild(newBtnScreenshot, btnScreenshot);
+			// 2. 主體內容 (包含左圖 + 右文字)
+			const mainContent = document.createElement('div');
+			mainContent.className = 'modal-main-content';
+			mainContent.style.flex = '1';
+			mainContent.style.overflow = 'hidden'; // 防止外層溢出
 
-				newBtnScreenshot.addEventListener('click', async () => {
-				
-					// 💡 1. 防連點檢查
-					if (newBtnScreenshot.dataset.cooling === 'true') {
-						alert('截圖處理中或冷卻中，請稍後再試！');
-						return;
-					}
+			// 左邊卡圖 (固定不動)
+			const imgBox = document.createElement('div');
+			imgBox.className = 'modal-img-container';
+			imgBox.style.flexShrink = '0';
 
-					// 標記為冷卻中、並將按鈕變半透明
-					newBtnScreenshot.dataset.cooling = 'true';
-					newBtnScreenshot.style.opacity = '0.4';
-					newBtnScreenshot.style.pointerEvents = 'none';
+			// 💡 右邊文字詳細資訊 (唯獨這裡產生獨立 Scrollbar)
+			const infoContainer = document.createElement('div');
+			infoContainer.className = 'modal-info-container split-detail-info-scroll';
 
-					showLoading('產生完整截圖中...');
-					
-					const originalModalCard = document.querySelector('.modal-card');
-					
-					// 建立離屏（Off-screen）複製容器，專門用來排版與截圖
-					const cloneContainer = document.createElement('div');
-					cloneContainer.style.position = 'absolute';
-					cloneContainer.style.left = '-9999px';
-					cloneContainer.style.top = '0px';
-					cloneContainer.style.width = originalModalCard.offsetWidth + 'px';
-					cloneContainer.style.zIndex = '-9999';
-					document.body.appendChild(cloneContainer);
+			mainContent.appendChild(imgBox);
+			mainContent.appendChild(infoContainer);
+			rightPanel.appendChild(mainContent);
 
-					try {
-						// 1. 深層複製 Modal DOM
-						const clonedModal = originalModalCard.cloneNode(true);
-						clonedModal.classList.add('is-capturing');
-						
-						// 2. 隱藏不必要的元素 ([📷] [X] 控制按鈕、外部資源區塊、切換箭頭)
-						const clonedControls = clonedModal.querySelector('#modal-controls');
-						if (clonedControls) clonedControls.style.display = 'none';
-
-						const clonedExtBlock = clonedModal.querySelector('.ext-links-block');
-						if (clonedExtBlock) clonedExtBlock.style.display = 'none';
-
-						const clonedVerBtns = clonedModal.querySelectorAll('.ver-arrow-btn');
-						clonedVerBtns.forEach(btn => btn.style.display = 'none');
-
-						// 💡 【修改重點】：移除/隱藏所有「[能力說明]」按鈕與說明內容區塊
-						const clonedAbilBtns = clonedModal.querySelectorAll('.wdata-block .btn-icon');
-						clonedAbilBtns.forEach(btn => {
-							if (btn.innerText.includes('能力說明')) {
-								// 隱藏該按鈕
-								btn.style.display = 'none';
-								
-								// 找到緊跟在按鈕後面的能力說明文字方塊並隱藏
-								const explainBox = btn.nextElementSibling;
-								if (explainBox) {
-									explainBox.style.display = 'none';
-								}
-							}
-						});
-
-						// 3. 強制展開 [收錄商品]
-						const clonedWdataBlocks = clonedModal.querySelectorAll('.wdata-block');
-						clonedWdataBlocks.forEach(blk => {
-							if (blk.innerText.includes('收錄商品')) {
-								const setContentBody = blk.children[1];
-								const arrowSpan = blk.querySelector('div[style*="cursor: pointer"] span:last-child');
-								if (setContentBody) setContentBody.style.display = 'block';
-								if (arrowSpan) arrowSpan.innerText = '▲';
-							}
-						});
-
-						// 4. 解除複製體所有的滾動條與高度限制 (展平排版)
-						clonedModal.style.maxHeight = 'none';
-						clonedModal.style.height = 'auto';
-						clonedModal.style.overflow = 'visible';
-						clonedModal.style.transform = 'none';
-						clonedModal.style.boxShadow = 'none';
-
-						const clonedBody = clonedModal.querySelector('.modal-body');
-						if (clonedBody) {
-							clonedBody.style.maxHeight = 'none';
-							clonedBody.style.height = 'auto';
-							clonedBody.style.overflow = 'visible';
-						}
-
-						// 將處理完的節點放進離屏容器內
-						cloneContainer.appendChild(clonedModal);
-
-						// 5. 處理圖片代理（若有圖片）
-						const modalImg = originalModalCard.querySelector('img.modal-img');
-						const clonedImg = clonedModal.querySelector('img.modal-img');
-						
-						if (modalImg && clonedImg && modalImg.style.display !== 'none' && modalImg.src && !modalImg.src.includes('data:')) {
-							const originalImgSrc = modalImg.src;
-							const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(originalImgSrc)}`;
-							
-							try {
-								const resp = await fetch(proxyUrl);
-								if (resp.ok) {
-									const blob = await resp.blob();
-									const blobUrl = URL.createObjectURL(blob);
-									
-									await new Promise((resolve) => {
-										clonedImg.onload = resolve;
-										clonedImg.onerror = resolve;
-										clonedImg.src = blobUrl;
-									});
-								}
-							} catch (err) {
-								console.warn('離屏圖片載入失敗，嘗試直接截圖：', err);
-							}
-						}
-
-						// 給瀏覽器幾毫秒重新計算渲染高度
-						await new Promise(r => setTimeout(r, 200));
-
-						// 6. 使用 html2canvas 擷取離屏 DOM
-						const canvas = await html2canvas(clonedModal, {
-							useCORS: true,
-							allowTaint: true,
-							scale: 2, // 高清畫質
-							backgroundColor: '#ffffff',
-							width: clonedModal.offsetWidth,
-							height: clonedModal.offsetHeight,
-							scrollY: 0,
-							scrollX: 0
-						});
-
-						const dataUrl = canvas.toDataURL('image/png');
-
-						// 7. 判斷裝置：手機版觸發原生分享/下載，桌機版另開視窗
-						const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
-						const fileName = `${cleanCardName(card.name)}_DETAIL.png`;
-
-						if (isMobile) {
-							// 將 Base64 dataUrl 轉為 Blob 物件
-							const response = await fetch(dataUrl);
-							const blob = await response.blob();
-							const file = new File([blob], fileName, { type: 'image/png' });
-
-							// 方案 A：若手機支援 Web Share API (iOS Safari / Android Chrome 均支援)
-							if (navigator.canShare && navigator.canShare({ files: [file] })) {
-								try {
-									await navigator.share({
-										files: [file],
-										title: '卡牌 DETAIL 截圖',
-										text: `${cleanCardName(card.name)} 卡牌詳細`
-									});
-								} catch (shareErr) {
-									// 使用者取消分享不跳錯
-									if (shareErr.name !== 'AbortError') {
-										console.warn('分享失敗，改用直接下載:', shareErr);
-										triggerDirectDownload(dataUrl, fileName);
-									}
-								}
-							} else {
-								// 方案 B：手機不支援 Share API 時，直接觸發瀏覽器下載
-								triggerDirectDownload(dataUrl, fileName);
-							}
-						} else {
-							// 桌機版：維持原本另開新視窗呈現
-							const newWin = window.open('');
-							if (newWin) {
-								newWin.document.write(`
-									<!DOCTYPE html>
-									<html>
-									<head>
-										<title>截圖預覽 - ${cleanCardName(card.name)}</title>
-										<style>
-											body { margin: 0; padding: 20px; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #fff; }
-											img { max-width: 95%; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-											p { margin-top: 15px; font-size: 14px; color: #ccc; }
-										</style>
-									</head>
-									<body>
-										<img src="${dataUrl}" alt="Card Detail Screenshot" />
-										<p>💡 按右鍵（或長按）即可儲存圖片</p>
-									</body>
-									</html>
-								`);
-								newWin.document.close();
-							} else {
-								alert('彈出視窗被瀏覽器阻擋，請允許開啟視窗以檢視截圖！');
-							}
-						}
-
-					} catch (e) {
-						console.error('截圖失敗:', e);
-						alert('截圖生成失敗：' + e.message);
-					} finally {
-						hideLoading();
-						
-						// 💡 2. 截圖完成後，強制設定 3 秒冷卻時間，結束後才允許下次點擊
-						setTimeout(() => {
-							newBtnScreenshot.dataset.cooling = 'false';
-							newBtnScreenshot.style.opacity = '1';
-							newBtnScreenshot.style.pointerEvents = 'auto';
-						}, 3000); 
-					}
-				});
-			}
+			// 3. 呼叫共用渲染函式
+			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
 		}
 		
 		// 強制觸發瀏覽器下載檔案的輔助函數
