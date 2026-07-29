@@ -667,7 +667,7 @@
 			top: 0; left: 0; width: 100%; height: 100%;
 			background: rgba(0, 0, 0, 0.75);
 			backdrop-filter: blur(4px);
-			display: none;
+			display: flex; /* 💡 改為 flex，預設進頁面時顯示 */
 			flex-direction: column;
 			justify-content: center;
 			align-items: center;
@@ -1060,9 +1060,9 @@
 
     <!-- 新增：全域處理中 Loading 畫面 -->
     <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div id="loading-text">處理中...</div>
-    </div>
+		<div class="loading-spinner"></div>
+		<div id="loading-text">資料讀取中……</div>
+	</div>
 	
 	<!-- 更新日誌 Modal -->
 	<div class="modal-overlay" id="diary-modal">
@@ -1451,31 +1451,60 @@
         const CACHE_NAME = 'dm-data-cache-v1';
 
         async function fetchFirebaseData() {
+			const loadingOverlay = document.getElementById('loading-overlay');
+			const loadingText = document.getElementById('loading-text');
+
+			// 確保 Loading 文字正確且呈現顯示狀態
+			if (loadingOverlay) {
+				if (loadingText) loadingText.innerText = '資料讀取中……';
+				loadingOverlay.style.display = 'flex';
+			}
+
 			try {
-				const statusRes = await fetch('/api/server_id');
-				const statusData = await statusRes.json();
-				const currentServerId = statusData.server_id;
-
-				const cachedServerId = localStorage.getItem('dm_server_instance_id');
-
-				if (currentServerId !== cachedServerId) {
-					console.log("伺服器已重啟或首次進入，清空舊快取...");
-					await caches.delete(CACHE_NAME);
-					localStorage.setItem('dm_server_instance_id', currentServerId);
+				let currentServerId = null;
+				try {
+					const statusRes = await fetch('/api/server_id');
+					if (statusRes.ok) {
+						const statusData = await statusRes.json();
+						currentServerId = statusData.server_id;
+					}
+				} catch (e) {
+					console.warn("無法取得 server_id，跳過快取比對:", e);
 				}
 
-				async function fetchWithCache(url) {
-					const cache = await caches.open(CACHE_NAME);
-					let response = await cache.match(url);
-					if (response) {
-						return await response.json();
-					} else {
-						response = await fetch(url);
-						cache.put(url, response.clone());
-						return await response.json();
+				if (currentServerId) {
+					const cachedServerId = localStorage.getItem('dm_server_instance_id');
+					if (currentServerId !== cachedServerId) {
+						console.log("伺服器已重啟或首次進入，清空舊快取...");
+						try {
+							await caches.delete(CACHE_NAME);
+						} catch (e) { console.warn("清空 Cache 失敗:", e); }
+						localStorage.setItem('dm_server_instance_id', currentServerId);
 					}
 				}
 
+				// 獨立的安全 Fetch 快取函式（避免 Cache API 在不支援環境報錯掛掉）
+				async function fetchWithCache(url) {
+					try {
+						if ('caches' in window) {
+							const cache = await caches.open(CACHE_NAME);
+							let response = await cache.match(url);
+							if (response) {
+								return await response.json();
+							} else {
+								response = await fetch(url);
+								if (response.ok) cache.put(url, response.clone());
+								return await response.json();
+							}
+						}
+					} catch (e) {
+						console.warn(`[Cache Miss/Error] 從網路重新抓取 ${url}:`, e);
+					}
+					const directRes = await fetch(url);
+					return await directRes.json();
+				}
+
+				// 並行發送所有請求
 				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData] = await Promise.all([
 					fetchWithCache('/api/carddata'),
 					fetchWithCache('/api/card_types'),
@@ -1485,19 +1514,18 @@
 					fetchWithCache('/api/categoryname'),
 					fetchWithCache('/api/nickname'),
 					fetchWithCache('/api/setlist'),
-					fetchWithCache('/api/diary') // 💡 新增：抓取 diary API
+					fetchWithCache('/api/diary')
 				]);
 
-				globalCardData = cardData;
-				rawCardTypes = ctData;
-				rawRaces = raceData;
-				rawAbilities = abilData;
-				rawCategoryNames = catNameData;
-				rawNicknames = nicknameData;
-				rawSetlist = setlistData;
-				rawDiary = diaryData; // 💡 賦值
+				globalCardData = cardData || [];
+				rawCardTypes = ctData || [];
+				rawRaces = raceData || [];
+				rawAbilities = abilData || [];
+				rawCategoryNames = catNameData || [];
+				rawNicknames = nicknameData || [];
+				rawSetlist = setlistData || {};
+				rawDiary = diaryData || [];
 
-				// 💡 呼叫初始化日記 Icon 與邏輯的函式
 				initDiaryUI();
 
 				console.log(`載入完成: 卡牌 ${globalCardData.length} 筆, 分類 ${rawCategoryNames.length} 筆, 暱稱 ${rawNicknames.length} 筆, 系列 ${Object.keys(rawSetlist).length} 筆`);
@@ -1510,23 +1538,30 @@
 				initStatsSelects(statsData);
 
 			} catch (error) {
-				console.error("資料載入發生錯誤，將使用假資料渲染 UI", error);
-				rawCardTypes = [
+				console.error("資料載入發生錯誤，將使用預設資料渲染 UI:", error);
+				rawCardTypes = rawCardTypes.length > 0 ? rawCardTypes : [
 					{ text: '生物', value: 'C', location: 'M', category: true },
 					{ text: '咒文', value: 'S', location: 'M', category: true }
 				];
-				rawRaces = [{ jap: 'Armored Dragon', pop: true }];
-				rawAbilities = [{ jap: 'Speed Attacker', pop: true }];
-				rawCategoryNames = [];
-				rawNicknames = [];
-				rawSetlist = {};
-				rawDiary = []; // 💡 新增補強預設值
-
+				if (!rawRaces.length) rawRaces = [{ jap: 'Armored Dragon', pop: true }];
+				if (!rawAbilities.length) rawAbilities = [{ jap: 'Speed Attacker', pop: true }];
+				
 				sortCardTypes();
 				renderCardTypes();
 				initDropdownData();
 				initStatsSelects(null);
-				initDiaryUI(); // 💡 確保即使報錯也能順利初始化 UI
+				initDiaryUI();
+			} finally {
+				// 💡 關鍵保險：資料初始化完畢後，一律強制關閉全螢幕遮罩
+				hideInitialLoading();
+			}
+		}
+
+		// 💡 輔助函式：確保關閉遮罩
+		function hideInitialLoading() {
+			const loadingOverlay = document.getElementById('loading-overlay');
+			if (loadingOverlay) {
+				loadingOverlay.style.display = 'none';
 			}
 		}
         
@@ -3273,12 +3308,15 @@
 				extArrow.innerText = isHidden ? '▲' : '▼';
 
 				if (isHidden) {
-					// 💡 統一滾動當前文字容器 targetInfoContainer 即可 (不論是 Modal 還是 Split 頁面)
-					if (targetInfoContainer) {
-						setTimeout(() => { 
-							targetInfoContainer.scrollTop = targetInfoContainer.scrollHeight; 
-						}, 50);
-					}
+					setTimeout(() => {
+						// 💡 判斷手機版 modal-body 或是電腦版 targetInfoContainer/scrollPanel
+						const modalBody = targetInfoContainer.closest('.modal-body');
+						if (modalBody && window.innerWidth <= 768) {
+							modalBody.scrollTop = modalBody.scrollHeight;
+						} else if (targetInfoContainer) {
+							targetInfoContainer.scrollTop = targetInfoContainer.scrollHeight;
+						}
+					}, 80);
 				}
 			});
 
@@ -3442,24 +3480,63 @@
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
 		}
 		
-		// 💡 共用 Detail 面板截圖函式 (支援 Modal 與 Split Panel)
+		// 💡 將 DataURL 轉換為標準 Blob 檔案，以確保手機相簿能正確認為是「圖片」
+		function dataURLtoBlob(dataurl) {
+			const arr = dataurl.split(',');
+			const mime = arr[0].match(/:(.*?);/)[1];
+			const bstr = atob(arr[1]);
+			let n = bstr.length;
+			const u8arr = new Uint8Array(n);
+			while (n--) {
+				u8arr[n] = bstr.charCodeAt(n);
+			}
+			return new Blob([u8arr], { type: mime });
+		}
+
+		// 💡 手機版/桌機版通用圖片下載與儲存處理
+		function triggerImageDownload(dataUrl, fileName) {
+			const blob = dataURLtoBlob(dataUrl);
+			const blobUrl = URL.createObjectURL(blob);
+			const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+
+			const a = document.createElement('a');
+			a.href = blobUrl;
+			a.download = fileName;
+			a.style.display = 'none';
+			document.body.appendChild(a);
+			a.click();
+			
+			setTimeout(() => {
+				document.body.removeChild(a);
+				URL.revokeObjectURL(blobUrl);
+			}, 1000);
+
+			// iOS Safari / 行動裝置 WebView 備援機制：如果無法自動觸發下載，開啟圖片頁供使用者長按「儲存至相簿」
+			if (isMobile) {
+				const nav = window.navigator;
+				if (nav && nav.maxTouchPoints > 0 && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+					const imgWindow = window.open('');
+					if (imgWindow) {
+						imgWindow.document.write(`<img src="${dataUrl}" style="max-width:100%;" alt="點擊長按儲存至相簿"/>`);
+					}
+				}
+			}
+		}
+
 		async function captureDetailPanel(targetElement, cardName) {
 			const loadingOverlay = document.getElementById('loading-overlay');
 			const loadingText = document.getElementById('loading-text');
 
-			// 1. 顯示 Loading 畫面
 			if (loadingOverlay) {
 				if (loadingText) loadingText.innerText = '正在生成卡牌截圖...';
 				loadingOverlay.style.display = 'flex';
 			}
 
-			// 備份滾動條狀態變數
 			const scrollPanel = targetElement.querySelector('.detail-info-scroll-panel');
 			let prevMaxHeight = '';
 			let prevOverflow = '';
 
 			try {
-				// 2. 暫存並解除獨立滾動條狀態
 				if (scrollPanel) {
 					prevMaxHeight = scrollPanel.style.maxHeight;
 					prevOverflow = scrollPanel.style.overflow;
@@ -3467,13 +3544,9 @@
 					scrollPanel.style.overflow = 'visible';
 				}
 
-				// 3. 加上截圖專用 Class (會同時觸發 [收錄商品] 區塊強制展開)
 				targetElement.classList.add('is-capturing');
-
-				// 等待 DOM 重新計算與渲染
 				await new Promise(resolve => setTimeout(resolve, 300));
 
-				// 4. 執行 html2canvas 截圖
 				const canvas = await html2canvas(targetElement, {
 					useCORS: true,
 					allowTaint: false,
@@ -3483,15 +3556,13 @@
 
 				const image = canvas.toDataURL('image/png');
 				const cleanName = cleanCardName(cardName) || 'card';
-
-				// 5. 判斷桌機還是手機
 				const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
 
 				if (isMobile) {
-					// 手機版：直接下載
-					triggerDirectDownload(image, `${cleanName}_detail.png`);
+					// 💡 手機版：轉為 Blob 圖片下載（可直接存入手機相簿）
+					triggerImageDownload(image, `${cleanName}_detail.png`);
 				} else {
-					// 桌機版：先開啟空白視窗，再寫入內容（避免被瀏覽器 Pop-up Blocker 阻擋導致程式掛掉）
+					// 桌機版：開啟新頁面展示圖片
 					const newWindow = window.open('about:blank', '_blank');
 					if (newWindow) {
 						newWindow.document.write(`
@@ -3511,8 +3582,7 @@
 						`);
 						newWindow.document.close();
 					} else {
-						// 若另開視窗仍被阻擋，降級為直接下載檔案
-						triggerDirectDownload(image, `${cleanName}_detail.png`);
+						triggerImageDownload(image, `${cleanName}_detail.png`);
 					}
 				}
 
@@ -3520,7 +3590,6 @@
 				console.error('截圖失敗:', err);
 				alert('截圖過程中發生錯誤，請稍後再試');
 			} finally {
-				// 6. 核心修復：無論成功或失敗，強制移除 Class、還原滾動條、關閉 Loading 遮罩
 				targetElement.classList.remove('is-capturing');
 				
 				if (scrollPanel) {
@@ -3796,7 +3865,13 @@
             }
         });
 
-        fetchFirebaseData();
+        // 執行資料載入
+		fetchFirebaseData();
+
+		// 💡 額外安全機制：若因為任何極端原因 5 秒內資料還沒載入完，強制移除遮罩，避免頁面死鎖
+		setTimeout(() => {
+			hideInitialLoading();
+		}, 5000);
     </script>
 </body>
 </html>
