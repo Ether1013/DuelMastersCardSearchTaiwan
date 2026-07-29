@@ -773,6 +773,41 @@
 			border: 2px dashed #cbd5e1;
 			border-radius: 8px;
 		}
+		
+		/* ================= 截圖專用樣式覆蓋 ================= */
+		.modal-card.is-capturing,
+		.split-right-panel.is-capturing {
+			max-height: none !important;
+			height: auto !important;
+			transform: none !important;
+		}
+
+		.modal-card.is-capturing .modal-body,
+		.split-right-panel.is-capturing .modal-main-content {
+			max-height: none !important;
+			overflow: visible !important;
+		}
+
+		/* 截圖時隱藏切換版本的箭頭與右上角控制項 */
+		.is-capturing .ver-arrow-btn,
+		.is-capturing .modal-controls {
+			display: none !important;
+		}
+
+		/* 💡 截圖時隱藏 [展開/收合能力說明] 按鈕 */
+		.is-capturing .abil-explain-btn {
+			display: none !important;
+		}
+
+		/* 截圖時完全隱藏 [收錄商品] 區塊 (包含 Title 標題與 Block 內容) */
+		.is-capturing .set-list-block {
+			display: none !important;
+		}
+
+		/* 截圖時完全隱藏 [外部資源與相關連結] 區塊 */
+		.is-capturing .ext-links-block {
+			display: none !important;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2654,6 +2689,7 @@
 			imgEl.style.width = boxWidth;
 			imgEl.style.height = boxHeight;
 
+			// 💡 修改處：加上 encodeURIComponent 讓圖片經由 server 的 proxy 轉接，跨過 CORS 限制
 			function updateImageSrc() {
 				let currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
 				if (!currentPic || currentPic.trim() === '') {
@@ -2677,8 +2713,12 @@
 				}
 
 				if (currentPic && currentPic.trim() !== '') {
-					imgEl.src = currentPic;
-					imgEl.alt = card.name;
+					// 關鍵修改：如果是外部 Takara Tomy 的圖片，透過 Python Server Proxy 載入
+					if (currentPic.includes('takaratomy.co.jp')) {
+						imgEl.src = `/api/proxy-image?url=${encodeURIComponent(currentPic)}`;
+					} else {
+						imgEl.src = currentPic;
+					}
 					imgEl.style.display = 'block';
 					imgEl.onerror = () => {
 						imgEl.style.display = 'none';
@@ -2847,7 +2887,7 @@
 					block.appendChild(spContainer);
 
 					const abilExplainBtn = document.createElement('button');
-					abilExplainBtn.className = 'btn-icon';
+					abilExplainBtn.className = 'btn-icon abil-explain-btn'; // 💡 加上 abil-explain-btn class
 					abilExplainBtn.style.marginTop = '10px';
 					abilExplainBtn.style.alignSelf = 'flex-start';
 					abilExplainBtn.style.backgroundColor = '#2196f3';
@@ -3068,7 +3108,7 @@
 
 			if (twSets.length > 0 || nonTwSets.length > 0) {
 				const setBlock = document.createElement('div');
-				setBlock.className = 'wdata-block';
+				setBlock.className = 'wdata-block set-list-block'; // 💡 新增 set-list-block class
 				setBlock.style.borderLeft = '4px solid #009688';
 				setBlock.style.marginTop = '10px';
 
@@ -3093,6 +3133,7 @@
 				setBlock.appendChild(setBlockTitle);
 
 				const setContentBody = document.createElement('div');
+				setContentBody.className = 'set-content-body'; // 💡 新增這行：給予專用 class
 				setContentBody.style.marginTop = '8px';
 				setContentBody.style.display = autoExpand ? 'block' : 'none';
 				setBlock.appendChild(setContentBody);
@@ -3319,7 +3360,7 @@
 			cardModal.classList.add('active');
 		}
 		
-		// 💡 Page 3 雙欄模式右側渲染函式 (僅文字區塊滑動版)
+		// 💡 Page 3 雙欄模式右側渲染函式 (含相機截圖按鈕)
 		function renderSplitDetail(card, combinedCiv, matchedItem = null) {
 			const rightPanel = document.getElementById('detail-panel-split');
 			if (!rightPanel) return;
@@ -3352,23 +3393,46 @@
 				titleDiv.innerHTML = `<div>${baseName}</div>`;
 			}
 
+			// 💡 新增：右上角相機按鈕
+			const controlsDiv = document.createElement('div');
+			controlsDiv.className = 'modal-controls';
+			controlsDiv.style.justifyContent = 'center'; // 雙欄模式不需要關閉[X]按鈕，因此置中相機按鈕
+
+			// 💡 修改處：雙欄模式的右上角相機按鈕補上點擊事件
+			const screenshotBtn = document.createElement('div');
+			screenshotBtn.className = 'modal-btn-icon';
+			screenshotBtn.title = '截圖 DETAIL';
+			screenshotBtn.innerText = '📷';
+
+			// 補上這段事件處理：
+			screenshotBtn.addEventListener('click', () => {
+				const rightPanel = document.getElementById('detail-panel-split');
+				const baseName = card.name || 'card';
+				if (rightPanel) {
+					captureDetailPanel(rightPanel, baseName);
+				}
+			});
+
+			controlsDiv.appendChild(screenshotBtn);
+
 			headerDiv.appendChild(titleDiv);
+			headerDiv.appendChild(controlsDiv);
 			rightPanel.appendChild(headerDiv);
 
 			// 2. 主體內容 (包含左圖 + 右文字)
 			const mainContent = document.createElement('div');
 			mainContent.className = 'modal-main-content';
 			mainContent.style.flex = '1';
-			mainContent.style.overflow = 'hidden'; // 防止外層溢出
+			mainContent.style.overflow = 'hidden';
 
 			// 左邊卡圖 (固定不動)
 			const imgBox = document.createElement('div');
 			imgBox.className = 'modal-img-container';
 			imgBox.style.flexShrink = '0';
 
-			// 💡 右邊文字詳細資訊 (唯獨這裡產生獨立 Scrollbar)
+			// 右邊文字詳細資訊 (獨立 Scrollbar)
 			const infoContainer = document.createElement('div');
-			infoContainer.className = 'modal-info-container split-detail-info-scroll';
+			infoContainer.className = 'modal-info-container detail-info-scroll-panel';
 
 			mainContent.appendChild(imgBox);
 			mainContent.appendChild(infoContainer);
@@ -3376,6 +3440,98 @@
 
 			// 3. 呼叫共用渲染函式
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
+		}
+		
+		// 💡 共用 Detail 面板截圖函式 (支援 Modal 與 Split Panel)
+		async function captureDetailPanel(targetElement, cardName) {
+			const loadingOverlay = document.getElementById('loading-overlay');
+			const loadingText = document.getElementById('loading-text');
+
+			// 1. 顯示 Loading 畫面
+			if (loadingOverlay) {
+				if (loadingText) loadingText.innerText = '正在生成卡牌截圖...';
+				loadingOverlay.style.display = 'flex';
+			}
+
+			// 備份滾動條狀態變數
+			const scrollPanel = targetElement.querySelector('.detail-info-scroll-panel');
+			let prevMaxHeight = '';
+			let prevOverflow = '';
+
+			try {
+				// 2. 暫存並解除獨立滾動條狀態
+				if (scrollPanel) {
+					prevMaxHeight = scrollPanel.style.maxHeight;
+					prevOverflow = scrollPanel.style.overflow;
+					scrollPanel.style.maxHeight = 'none';
+					scrollPanel.style.overflow = 'visible';
+				}
+
+				// 3. 加上截圖專用 Class (會同時觸發 [收錄商品] 區塊強制展開)
+				targetElement.classList.add('is-capturing');
+
+				// 等待 DOM 重新計算與渲染
+				await new Promise(resolve => setTimeout(resolve, 300));
+
+				// 4. 執行 html2canvas 截圖
+				const canvas = await html2canvas(targetElement, {
+					useCORS: true,
+					allowTaint: false,
+					scale: 2,
+					backgroundColor: '#ffffff'
+				});
+
+				const image = canvas.toDataURL('image/png');
+				const cleanName = cleanCardName(cardName) || 'card';
+
+				// 5. 判斷桌機還是手機
+				const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+
+				if (isMobile) {
+					// 手機版：直接下載
+					triggerDirectDownload(image, `${cleanName}_detail.png`);
+				} else {
+					// 桌機版：先開啟空白視窗，再寫入內容（避免被瀏覽器 Pop-up Blocker 阻擋導致程式掛掉）
+					const newWindow = window.open('about:blank', '_blank');
+					if (newWindow) {
+						newWindow.document.write(`
+							<!DOCTYPE html>
+							<html>
+							<head>
+								<title>${cleanName} - Detail 截圖</title>
+								<style>
+									body { margin: 0; display: flex; justify-content: center; align-items: center; background: #333; min-height: 100vh; }
+									img { max-width: 100%; height: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5); background: white; }
+								</style>
+							</head>
+							<body>
+								<img src="${image}" alt="${cleanName}"/>
+							</body>
+							</html>
+						`);
+						newWindow.document.close();
+					} else {
+						// 若另開視窗仍被阻擋，降級為直接下載檔案
+						triggerDirectDownload(image, `${cleanName}_detail.png`);
+					}
+				}
+
+			} catch (err) {
+				console.error('截圖失敗:', err);
+				alert('截圖過程中發生錯誤，請稍後再試');
+			} finally {
+				// 6. 核心修復：無論成功或失敗，強制移除 Class、還原滾動條、關閉 Loading 遮罩
+				targetElement.classList.remove('is-capturing');
+				
+				if (scrollPanel) {
+					scrollPanel.style.maxHeight = prevMaxHeight;
+					scrollPanel.style.overflow = prevOverflow;
+				}
+
+				if (loadingOverlay) {
+					loadingOverlay.style.display = 'none';
+				}
+			}
 		}
 		
 		// 強制觸發瀏覽器下載檔案的輔助函數
@@ -3618,6 +3774,15 @@
 
 			alert(tipsText);
 		}
+		
+		// 💡 原本舊的相機截圖事件改為以下簡化版 (直接呼叫重構後的 captureDetailPanel 共用函式)
+		document.getElementById('modal-screenshot')?.addEventListener('click', () => {
+			const modalCard = document.querySelector('.modal-card');
+			const baseName = modalTitle ? modalTitle.innerText : 'card';
+			if (modalCard) {
+				captureDetailPanel(modalCard, baseName);
+			}
+		});
 
 		document.getElementById('btn-ability-tips')?.addEventListener('click', showAbilityTipsAlert);
 
