@@ -1667,10 +1667,15 @@
 		function getFilterConfigFromUI() {
 			const isAdv = document.body.classList.contains('advanced-mode');
 
-			let checkedCardTypes = Array.from(document.querySelectorAll('.chk-cardtype:checked')).map(cb => cb.value);
+			// 💡 檢查卡種是否為「全選 / 預設狀態」
+			const allCheckboxes = document.querySelectorAll('.chk-cardtype');
+			const checkedCheckboxes = document.querySelectorAll('.chk-cardtype:checked');
+			const isAllCardTypesChecked = (allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length);
+
+			let checkedCardTypes = Array.from(checkedCheckboxes).map(cb => cb.value);
 			const isDerivedChecked = document.getElementById('chk-derived-cardtype')?.checked;
 
-			if (checkedCardTypes.length > 0) {
+			if (!isAllCardTypesChecked && checkedCardTypes.length > 0) {
 				let typesToExpand = [];
 				
 				if (isDerivedChecked) {
@@ -1718,12 +1723,28 @@
 			const seriesSmall = document.getElementById('series-small')?.value || '';
 
 			return {
-				isAdv, checkedCardTypes, twinpect,
-				isAbilityMix, allowTopBig, allowSameCost, allowBotBig,
-				permitCivs, requireCivs, isRequireOr,
-				cost1, cost2, power1, power2,
-				races, abilityText, abilities, raceAdv, cardName,
-				seriesBig, seriesSmall
+				isAdv, 
+				isAllCardTypesChecked, // 💡 回傳全選狀態標記
+				checkedCardTypes, 
+				twinpect,
+				isAbilityMix, 
+				allowTopBig, 
+				allowSameCost, 
+				allowBotBig,
+				permitCivs, 
+				requireCivs, 
+				isRequireOr,
+				cost1, 
+				cost2, 
+				power1, 
+				power2,
+				races, 
+				abilityText, 
+				abilities, 
+				raceAdv, 
+				cardName,
+				seriesBig, 
+				seriesSmall
 			};			
 		}
 
@@ -1934,11 +1955,9 @@
 				return res;
 			};
 
-			// 💡 判斷是否選擇了 [無能力]
 			const hasNoAbilitySelected = cfg.abilities.includes('__NO_ABILITY__');
 
 			if (hasNoAbilitySelected) {
-				// 💡 [無能力] 邏輯：無視 [能力混找]，只要「任一邊/任一區塊」的 sp + hypermode.sp 長度為 0 即可
 				const hasSingleBlockNoAbility = card.wdata.some(w => {
 					const wSp = getWdataSpList(w);
 					return wSp.length === 0;
@@ -1946,20 +1965,19 @@
 
 				if (!hasSingleBlockNoAbility) return false;
 
-				// 檢查非能力的其餘條件 (卡種/費用/攻擊力/種族)
 				if (cfg.isAbilityMix) {
 					const allTypes = card.wdata.flatMap(w => w.type || []);
 					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
 					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
 					const allRaces = card.wdata.flatMap(w => w.race || []);
 
-					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes)) return false;
+					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 					if (!checkCostMatchList(allCosts, cfg)) return false;
 					if (!checkPowerMatchList(allPowers, cfg)) return false;
 					if (!checkRaceMatchList(allRaces, cfg.races)) return false;
 				} else {
 					const hasMatchedBlock = card.wdata.some(w => {
-						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes)) return false;
+						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 						if (!checkCostMatchSingle(w.cost, cfg)) return false;
 						if (!checkPowerMatchSingle(w.power, cfg)) return false;
 						if (!checkRaceMatchList(w.race || [], cfg.races)) return false;
@@ -1970,24 +1988,22 @@
 				}
 
 			} else if (cfg.isAbilityMix) {
-				// 一般能力的 [能力混找] 邏輯
 				const allTypes = card.wdata.flatMap(w => w.type || []);
 				const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
 				const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
 				const allRaces = card.wdata.flatMap(w => w.race || []);
 				const allSp = card.wdata.flatMap(w => getWdataSpList(w));
 
-				if (!checkTypeMatch(allTypes, cfg.checkedCardTypes)) return false;
+				if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 				if (!checkCostMatchList(allCosts, cfg)) return false;
 				if (!checkPowerMatchList(allPowers, cfg)) return false;
 				if (!checkRaceMatchList(allRaces, cfg.races)) return false;
 				if (!checkAbilityMatchList(allSp, cfg)) return false;
 
 			} else {
-				// 一般能力的 [非能力混找] 邏輯
 				const hasMatchedBlock = card.wdata.some(w => {
 					const wSp = getWdataSpList(w);
-					if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes)) return false;
+					if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 					if (!checkCostMatchSingle(w.cost, cfg)) return false;
 					if (!checkPowerMatchSingle(w.power, cfg)) return false;
 					if (!checkRaceMatchList(w.race || [], cfg.races)) return false;
@@ -2001,8 +2017,10 @@
 			return true;
 		}
 
-		function checkTypeMatch(cardTypes, checkedTypes) {
-			if (checkedTypes.length === 0) return true;
+		function checkTypeMatch(cardTypes, checkedTypes, isAllChecked) {
+			// 💡 如果是全選/預設狀態，直接 Skip 卡種過濾，連隱藏卡種也包含進來
+			if (isAllChecked) return true;
+			if (!checkedTypes || checkedTypes.length === 0) return true;
 			return cardTypes.some(t => checkedTypes.includes(t));
 		}
 
