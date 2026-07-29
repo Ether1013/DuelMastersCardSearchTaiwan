@@ -2303,11 +2303,7 @@
 
 				if (currentPic && currentPic.trim() !== '') {
 					// 關鍵修改：如果是外部 Takara Tomy 的圖片，透過 Python Server Proxy 載入
-					if (currentPic.includes('takaratomy.co.jp')) {
-						imgEl.src = `/api/proxy-image?url=${encodeURIComponent(currentPic)}`;
-					} else {
-						imgEl.src = currentPic;
-					}
+					imgEl.src = currentPic;
 					imgEl.style.display = 'block';
 					imgEl.onerror = () => {
 						imgEl.style.display = 'none';
@@ -3248,7 +3244,16 @@
 					scrollPanel.style.overflow = 'visible';
 				}
 
+				// 修正後：只有在截圖前，將圖片暫時轉為 Proxy 網址以繞過 CORS 截圖限制
 				targetElement.classList.add('is-capturing');
+
+				const detailImg = targetElement.querySelector('.modal-img');
+				let originalSrc = '';
+				if (detailImg && detailImg.src && detailImg.src.includes('takaratomy.co.jp')) {
+					originalSrc = detailImg.src;
+					detailImg.src = `/api/proxy-image?url=${encodeURIComponent(originalSrc)}`;
+				}
+
 				await new Promise(resolve => setTimeout(resolve, 300));
 
 				const canvas = await html2canvas(targetElement, {
@@ -3257,6 +3262,11 @@
 					scale: 2,
 					backgroundColor: '#ffffff'
 				});
+
+				// 截圖結束後，還原為原始圖片網址
+				if (detailImg && originalSrc) {
+					detailImg.src = originalSrc;
+				}
 
 				const image = canvas.toDataURL('image/png');
 				const cleanName = cleanCardName(cardName) || 'card';
