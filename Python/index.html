@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易決鬥王卡牌效果搜尋器v2(Author:Ether/Coding:Gemini/Supporter:Sky/Picture Source:takaratomy.co.jp)</title>
     <style>
-        /* ================= 基礎設定與 Header 固定頁籤 ================= */
+        /* ================= 基礎設定與排版 ================= */
         body { 
             font-family: "微軟正黑體", sans-serif; 
             margin: 0; 
@@ -15,43 +15,31 @@
             transition: padding-bottom 0.2s; 
         }
 
-        /* 將頁籤改為 Sticky Header，固定在視窗頂部 */
+        /* Header 與 頁籤 */
         .header-tabs { 
             position: sticky; 
             top: 0; 
             z-index: 200; 
             display: flex; 
+            align-items: center; 
             background: #222; 
             color: white; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            padding-right: 15px; 
         }
-		/* 修改：讓 Header 使用 margin-left: auto 將計數器推至最右側 */
-		.header-tabs { 
-			position: sticky; 
-			top: 0; 
-			z-index: 200; 
-			display: flex; 
-			align-items: center; /* 讓計數器垂直居中 */
-			background: #222; 
-			color: white; 
-			box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-			padding-right: 15px; /* 右側稍微留白 */
-		}
 
-		/* 新增：計數器專用容器樣式 */
-		.header-counter {
-			margin-left: auto; /* 自動推至最右側 */
-			display: flex;
-			align-items: center;
-			user-select: none;
-		}
+        .header-counter {
+            margin-left: auto; 
+            display: flex;
+            align-items: center;
+            user-select: none;
+        }
 
-		.header-counter img {
-			display: block;
-			/* 不設高度與寬度，讓圖片完全呈現原本大小 */
-			max-width: 100%;
-			height: auto;
-		}
+        .header-counter img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
 
         .tab { 
             padding: 15px 25px; 
@@ -65,6 +53,7 @@
         
         .tab-content { display: none; padding: 20px; }
         .tab-content.active { display: block; }
+        .tab-content.layout-grid.active { display: flex; }
 
         h3 { 
             margin-top: 0; 
@@ -77,11 +66,8 @@
             justify-content: space-between; 
         }
 
-        /* ================= 佈局 (桌機版 Grid) ================= */
+        /* 佈局 (桌機版 Grid) */
         .layout-grid { flex-direction: column; gap: 20px; }
-        .tab-content.layout-grid { display: none; }
-        .tab-content.layout-grid.active { display: flex; }
-
         .row-flex { display: flex; gap: 20px; width: 100%; }
         .col { flex: 1; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .col-half { flex: 0.5; }
@@ -140,69 +126,34 @@
             color: #111;
             text-shadow: 1px 1px 3px rgba(255,255,255,0.9), -1px -1px 3px rgba(255,255,255,0.9), 1px -1px 3px rgba(255,255,255,0.9), -1px 1px 3px rgba(255,255,255,0.9);
             transition: color 0.2s;
-            
-            /* 新增下面這三行，讓 ID 與卡名能上下成一行，並且靠左對齊 */
             display: flex;
             flex-direction: column;
             align-items: flex-start;
         }
-        /* 點擊後變紅色的狀態 class */
-        .card-list-item.selected .card-name {
-            color: #d32f2f !important;
-        }
+        .card-list-item.selected .card-name { color: #d32f2f !important; }
 
-        .empty-state {
-            text-align: center;
-            color: #888;
-            padding: 60px 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
+        .empty-state { text-align: center; color: #888; padding: 60px 20px; font-size: 18px; font-weight: bold; }
 
-        /* ================= Footer (Z區) 排版 (需求 4 修改) ================= */
+        /* ================= Footer (Z區) 排版 ================= */
         .footer { 
             position: fixed; bottom: 0; left: 0; width: 100%; background: #222; color: white;
             display: flex; flex-direction: column; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
         }
-        
-        /* 統一桌機與手機版的 Footer 欄位結構 */
         .footer-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 10px 20px; 
-            gap: 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 10px 20px; gap: 15px; 
         }
-        
-        /* [進階選項+選項初始化](一上一下) 垂直佈局 */
         .footer-top-row {
-			display: flex;
-			flex-direction: column;
-			gap: 5px;
-			align-items: stretch; /* 讓子元素按鈕自動拉伸至等寬 */
-			flex-shrink: 0;
-		}
-		
-		/* 針對 Footer 左側這兩個按鈕進行高度縮減 30% */
-		.footer-top-row .btn-icon {
-			width: 100%;
-			text-align: center;
-			padding: 3px 10px; /* 將原本的 padding: 5px 10px 縮減高度 */
-			font-size: 12px;   /* 稍微調整字體大小讓高度比例更勻稱 */
-		}
-        
-        /* 開始查詢：自動填滿中間空間 */
+            display: flex; flex-direction: column; gap: 5px; align-items: stretch; flex-shrink: 0;
+        }
+        .footer-top-row .btn-icon {
+            width: 100%; text-align: center; padding: 3px 10px; font-size: 12px;
+        }
         #btn-search {
-            background: #d32f2f; 
-            color: white; 
-            flex: 1; 
-            font-size: 16px; 
-            padding: 14px 0; 
-            letter-spacing: 2px;
+            background: #d32f2f; color: white; flex: 1; font-size: 16px; padding: 14px 0; letter-spacing: 2px;
         }
         .footer-summary { display: none; background: #444; padding: 15px 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
         .footer-summary.open { display: block; }
-        .switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .expand-icon { cursor: pointer; font-size: 20px; padding: 0 10px; user-select: none; }
 
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -216,598 +167,182 @@
 
         /* ================= 卡牌資料彈出視窗 (Modal UI) ================= */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(3px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.25s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; transition: opacity 0.25s ease;
         }
-        .modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
+        .modal-overlay.active { display: flex; opacity: 1; }
 
         .modal-card {
-			background: #fff;
-			width: 90%;
-			max-width: 650px;
-			max-height: 85vh;
-			border-radius: 12px;
-			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-			display: flex;
-			flex-direction: column;
-			overflow: hidden; /* 💡 禁止外層卡片溢出 */
-			transform: scale(0.9);
-			transition: transform 0.25s ease;
-		}
-        .modal-overlay.active .modal-card {
-            transform: scale(1);
+            background: #fff; width: 90%; max-width: 650px; max-height: 85vh;
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex; flex-direction: column; overflow: hidden;
+            transform: scale(0.9); transition: transform 0.25s ease;
         }
+        .modal-overlay.active .modal-card { transform: scale(1); }
 
-        /* Modal Header */
         .modal-header {
-            padding: 16px 20px;
-            color: #111;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding: 16px 20px; color: #111; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1);
         }
-        .modal-title {
-            font-size: 20px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        }
-        /* 讓 close 按鈕的大小與相機按鈕一致 */
+        .modal-title { font-size: 20px; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
         .modal-close {
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            background: rgba(255,255,255,0.7);
-            border-radius: 50%;
-            width: 28px; height: 28px;
-            display: flex; justify-content: center; align-items: center;
-            transition: 0.2s;
+            font-size: 20px; font-weight: bold; cursor: pointer; background: rgba(255,255,255,0.7);
+            border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; transition: 0.2s;
         }
         .modal-close:hover { background: #fff; color: #d32f2f; }
 
-        /* Modal Body：取消整體 overflow-y: auto，改為內部區域響應式排版 */
-		.modal-body {
-			padding: 20px;
-			overflow: hidden; /* 💡 取消原本整頁的滾動條 */
-			display: flex;
-			flex-direction: column;
-			gap: 20px;
-			flex: 1; /* 填滿剩下的剩餘高度 */
-		}
-
-        .modal-main-content {
-			display: flex;
-			gap: 20px;
-			flex: 1;
-			overflow: hidden; /* 💡 避免容器被壓擠 */
-		}
-		
-		/* 💡 新增：通用於 Modal 與雙欄版的「右側文字專用滾動條」 */
-		.detail-info-scroll-panel {
-			flex: 1;
-			overflow-y: auto;
-			padding-right: 5px; /* 留出滾動條空間 */
-			overscroll-behavior: contain;
-		}
-		
-		@media (max-width: 768px) {
-			.modal-body {
-				overflow-y: auto; /* 手機版因圖片上下排列，恢復外層整體滾動 */
-			}
-			.modal-main-content {
-				flex-direction: column;
-				align-items: center;
-				overflow: visible;
-			}
-			.detail-info-scroll-panel {
-				overflow-y: visible; /* 手機版不限制內部獨立滾動條 */
-			}
-		}
-
+        .modal-body {
+            padding: 20px; overflow: hidden; display: flex; flex-direction: column; gap: 20px; flex: 1;
+        }
+        .modal-main-content { display: flex; gap: 20px; flex: 1; overflow: hidden; }
+        .detail-info-scroll-panel { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
+        
         .modal-img-container {
-            flex-shrink: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            position: sticky;
-            top: 0;
-            align-self: flex-start;
+            flex-shrink: 0; display: flex; justify-content: center; align-items: flex-start;
+            position: sticky; top: 0; align-self: flex-start;
         }
-        .modal-img {
-            width: 100%;
-            border-radius: 6px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-            object-fit: contain;
-        }
+        .modal-img { width: 100%; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); object-fit: contain; }
         .no-image-box {
-            height: 250px;
-            background: #e0e0e0;
-            color: #666;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            border-radius: 6px;
-            border: 2px dashed #ccc;
-            font-size: 16px;
+            height: 250px; background: #e0e0e0; color: #666; display: flex;
+            justify-content: center; align-items: center; font-weight: bold;
+            border-radius: 6px; border: 2px dashed #ccc; font-size: 16px;
         }
 
-        .modal-info-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .modal-info-container { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 
         /* 單卡 wdata 區塊 UI */
         .wdata-block {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-left: 4px solid #333;
-            padding: 12px 15px;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            background: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #333;
+            padding: 12px 15px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px;
         }
-
-        .card-attr-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .attr-pill {
-            background: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
+        .card-attr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 14px; }
+        .attr-pill { background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; }
         .attr-label { font-weight: bold; color: #555; margin-right: 4px; }
         .attr-value { font-weight: bold; color: #111; }
-
-        .sp-ability-list {
-            margin: 6px 0 0 0;
-            padding-left: 20px;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #222;
-        }
+        .sp-ability-list { margin: 6px 0 0 0; padding-left: 20px; font-size: 14px; line-height: 1.5; color: #222; }
         .sp-ability-list li { margin-bottom: 4px; }
 
-        /* ================= 手機版 (RWD) ================= */
+        /* ================= 效果標籤 (Effect Tags) 樣式 ================= */
+        .effect-tag { padding: 1px 4px; border-radius: 3px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; display: inline-block; }
+        .effect-tag.tag-card-name { color: #b91c1c; background-color: #fee2e2; border: 1px solid #fca5a5; }
+        .effect-tag.tag-card-name:hover { background-color: #fca5a5; }
+        .effect-tag.tag-category-name { color: #c2410c; background-color: #ffedd5; border: 1px solid #fed7aa; }
+        .effect-tag.tag-category-name:hover { background-color: #fed7aa; }
+        .effect-tag.tag-ability { color: #1d4ed8; background-color: #dbeafe; border: 1px solid #93c5fd; }
+        .effect-tag.tag-ability:hover { background-color: #bfdbfe; }
+        .effect-tag.tag-race { color: #047857; background-color: #d1fae5; border: 1px solid #6ee7b7; }
+        .effect-tag.tag-race:hover { background-color: #a7f3d0; }
+        
+        /* 切換箭頭樣式 */
+        .modal-img-container { position: relative; }
+        .ver-arrow-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6); color: white; border: none;
+            font-size: 24px; font-weight: bold; width: 36px; height: 48px;
+            border-radius: 4px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; user-select: none; transition: background 0.2s, left 0.2s, right 0.2s; z-index: 10;
+        }
+        .ver-arrow-btn:hover { background: rgba(211, 47, 47, 0.9); }
+        .ver-arrow-btn.prev { left: -20px; }
+        .ver-arrow-btn.next { right: -20px; }
+
+        /* ================= 最新商品快捷區域 ================= */
+        #latest-sets-container { display: flex; gap: 10px; width: 100%; }
+        .btn-latest-set {
+            flex: 1; padding: 10px 5px; background: #1565c0; color: white; border: none;
+            border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;
+            text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.2s;
+        }
+        .btn-latest-set:hover { background: #0d47a1; }
+
+        /* ================= 外部連結區塊樣式 ================= */
+        .ext-links-block {
+            background: #fdfdfd; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6;
+            padding: 12px 15px; border-radius: 6px; margin-top: 10px;
+        }
+        .ext-links-title { font-size: 14px; font-weight: bold; color: #1e40af; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .ext-group-title { font-size: 12px; font-weight: bold; color: #475569; margin: 8px 0 4px 0; display: flex; align-items: center; gap: 4px; }
+        .ext-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+        .ext-link-btn {
+            display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px; font-size: 11px; font-weight: bold;
+            border-radius: 4px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #334155; cursor: pointer; text-decoration: none; transition: all 0.15s ease; box-sizing: border-box;
+        }
+        .ext-link-btn:hover { background-color: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
+        .ext-link-btn.shop-btn { background-color: #fff7ed; border-color: #ffedd5; color: #c2410c; }
+        .ext-link-btn.shop-btn:hover { background-color: #ffedd5; color: #9a3412; }
+        .ext-link-btn.wiki-btn { background-color: #f0f9ff; border-color: #e0f2fe; color: #0369a1; }
+        .ext-link-btn.wiki-btn:hover { background-color: #e0f2fe; color: #075985; }
+
+        .modal-controls {
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            align-self: stretch; padding: 4px 0; gap: 8px;
+        }
+        .modal-btn-icon {
+            font-size: 16px; cursor: pointer; background: rgba(255,255,255,0.8);
+            border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; transition: 0.2s; user-select: none;
+        }
+        .modal-btn-icon:hover { background: #fff; color: #1565c0; transform: scale(1.05); }
+
+        /* 全域 [處理中...] Loading 畫面 */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px); display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999; color: white; font-size: 20px; font-weight: bold;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3; border-top: 5px solid #d32f2f; border-radius: 50%;
+            width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ================= 第三頁籤 (雙欄模式) 專用樣式 ================= */
+        .desktop-only-tab { display: block; }
+        #tab-list-split { display: none; padding: 20px; }
+        #tab-list-split.active { display: block; }
+        .split-layout-container { display: flex; gap: 20px; align-items: flex-start; position: relative; }
+        .split-left-panel { flex: 0 0 calc(40% - 10px); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+        .split-right-panel {
+            flex: 0 0 calc(60% - 10px); position: sticky; top: 65px; height: calc(100vh - 150px);
+            overflow: hidden; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px; border: 1px solid #e2e8f0; box-sizing: border-box; display: flex; flex-direction: column;
+        }
+        .split-detail-info-scroll { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
+        .split-empty-placeholder {
+            display: flex; justify-content: center; align-items: center; height: 300px;
+            color: #888; font-size: 16px; font-weight: bold; border: 2px dashed #cbd5e1; border-radius: 8px;
+        }
+        
+        /* ================= 截圖專用樣式覆蓋 (已集中合併) ================= */
+        .modal-card.is-capturing,
+        .split-right-panel.is-capturing { max-height: none !important; height: auto !important; transform: none !important; }
+        .modal-card.is-capturing .modal-body,
+        .split-right-panel.is-capturing .modal-main-content { max-height: none !important; overflow: visible !important; }
+        .is-capturing .ver-arrow-btn,
+        .is-capturing .modal-controls,
+        .is-capturing .abil-explain-btn,
+        .is-capturing .set-list-block,
+        .is-capturing .ext-links-block { display: none !important; }
+
+        /* ================= 手機版 (RWD) 統一合併區 ================= */
         @media (max-width: 768px) {
             .row-flex { flex-direction: column; gap: 15px; }
             .col { width: 100%; box-sizing: border-box; }
             .civ-box { font-size: 12px; padding: 8px 0; }
-            
-            /* Modal 手機版專用排版 (需求 2 修改：圖片置中) */
-            .modal-main-content { 
-                flex-direction: column; 
-                align-items: center; 
-            }
-            .modal-img-container { 
-                position: static !important; 
-                margin-bottom: 15px; 
-                width: 100% !important; 
-                justify-content: center !important; 
-                align-self: center !important; 
-            }
+            .modal-body { overflow-y: auto; }
+            .modal-main-content { flex-direction: column; align-items: center; overflow: visible; }
+            .detail-info-scroll-panel { overflow-y: visible; }
+            .modal-img-container { position: static !important; margin-bottom: 15px; width: 100% !important; justify-content: center !important; align-self: center !important; }
             .modal-info-container { width: 100%; }
-
-            /* 手機版 Footer (需求 4 修改：維持左右並排的結構) */
-            .footer-bar {
-                padding: 10px 15px;
-                gap: 10px;
-            }
+            .footer-bar { padding: 10px 15px; gap: 10px; }
+            .ver-arrow-btn.prev { left: -10px; }
+            .ver-arrow-btn.next { right: -10px; }
+            #latest-sets-container { flex-direction: column; width: 100%; }
+            .btn-latest-set { width: 100%; box-sizing: border-box; }
+            .ext-btn-grid { grid-template-columns: repeat(2, 1fr); }
+            .desktop-only-tab { display: none !important; }
         }
-		
-		/* ================= 效果標籤 (Effect Tags) 樣式 ================= */
-        .effect-tag {
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: inline-block;
-        }
-
-        /* 1. 卡名標籤 */
-        .effect-tag.tag-card-name {
-            color: #b91c1c;
-            background-color: #fee2e2;
-            border: 1px solid #fca5a5;
-        }
-        .effect-tag.tag-card-name:hover {
-            background-color: #fca5a5;
-        }
-
-        /* 2. 分類標籤 */
-        .effect-tag.tag-category-name {
-            color: #c2410c;
-            background-color: #ffedd5;
-            border: 1px solid #fed7aa;
-        }
-        .effect-tag.tag-category-name:hover {
-            background-color: #fed7aa;
-        }
-
-        /* 3. 能力標籤 (帶 Tooltip) */
-        .effect-tag.tag-ability {
-            color: #1d4ed8;
-            background-color: #dbeafe;
-            border: 1px solid #93c5fd;
-        }
-        .effect-tag.tag-ability:hover {
-            background-color: #bfdbfe;
-        }
-
-        /* 4. 種族標籤 (帶 Tooltip) */
-        .effect-tag.tag-race {
-            color: #047857;
-            background-color: #d1fae5;
-            border: 1px solid #6ee7b7;
-        }
-        .effect-tag.tag-race:hover {
-            background-color: #a7f3d0;
-        }
-		
-		/* 切換箭頭樣式 */
-		.modal-img-container {
-			position: relative; 
-		}
-
-		.ver-arrow-btn {
-			position: absolute;
-			top: 50%;
-			transform: translateY(-50%);
-			background: rgba(0, 0, 0, 0.6);
-			color: white;
-			border: none;
-			font-size: 24px;
-			font-weight: bold;
-			width: 36px;
-			height: 48px;
-			border-radius: 4px;
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			user-select: none;
-			transition: background 0.2s, left 0.2s, right 0.2s;
-			z-index: 10;
-		}
-		.ver-arrow-btn:hover {
-			background: rgba(211, 47, 47, 0.9);
-		}
-
-		.ver-arrow-btn.prev {
-			left: -20px;
-		}
-		.ver-arrow-btn.next {
-			right: -20px;
-		}
-
-		@media (max-width: 768px) {
-			.ver-arrow-btn.prev {
-				left: -10px;
-			}
-			.ver-arrow-btn.next {
-				right: -10px;
-			}
-		}
-		/* ================= 最新商品快捷區域 ================= */
-		#latest-sets-container {
-			display: flex;
-			gap: 10px;
-			width: 100%;
-		}
-
-		.btn-latest-set {
-			flex: 1; /* 讓所有按鈕平均瓜分寬度，長度總和佔滿整個區域 */
-			padding: 10px 5px;
-			background: #1565c0;
-			color: white;
-			border: none;
-			border-radius: 6px;
-			font-weight: bold;
-			font-size: 13px;
-			cursor: pointer;
-			text-align: center;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			transition: background 0.2s;
-		}
-
-		.btn-latest-set:hover {
-			background: #0d47a1;
-		}
-
-		/* 手機版排版：垂直排開並滿版寬度 */
-		@media (max-width: 768px) {
-			#latest-sets-container {
-				flex-direction: column; /* 改為垂直排列 */
-				width: 100%;
-			}
-			.btn-latest-set {
-				width: 100%; /* 寬度最大 (滿版) */
-				box-sizing: border-box;
-			}
-		}
-		
-		/* ================= 外部連結區塊樣式 ================= */
-		.ext-links-block {
-			background: #fdfdfd;
-			border: 1px solid #e2e8f0;
-			border-left: 4px solid #3b82f6;
-			padding: 12px 15px;
-			border-radius: 6px;
-			margin-top: 10px;
-		}
-
-		.ext-links-title {
-			font-size: 14px;
-			font-weight: bold;
-			color: #1e40af;
-			cursor: pointer;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			user-select: none;
-		}
-
-		.ext-group-title {
-			font-size: 12px;
-			font-weight: bold;
-			color: #475569;
-			margin: 8px 0 4px 0;
-			display: flex;
-			align-items: center;
-			gap: 4px;
-		}
-
-		.ext-btn-grid {
-			display: grid;
-			grid-template-columns: repeat(4, 1fr);
-			gap: 6px;
-			margin-bottom: 8px;
-		}
-
-		.ext-link-btn {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 4px;
-			padding: 6px 4px;
-			font-size: 11px;
-			font-weight: bold;
-			border-radius: 4px;
-			border: 1px solid #cbd5e1;
-			background-color: #ffffff;
-			color: #334155;
-			cursor: pointer;
-			text-decoration: none;
-			transition: all 0.15s ease;
-			box-sizing: border-box;
-		}
-
-		.ext-link-btn:hover {
-			background-color: #f1f5f9;
-			border-color: #94a3b8;
-			color: #0f172a;
-		}
-
-		/* 暖色系按鈕：商店與價格 */
-		.ext-link-btn.shop-btn {
-			background-color: #fff7ed;
-			border-color: #ffedd5;
-			color: #c2410c;
-		}
-		.ext-link-btn.shop-btn:hover {
-			background-color: #ffedd5;
-			color: #9a3412;
-		}
-
-		/* 冷色系按鈕：資料庫與 Wiki */
-		.ext-link-btn.wiki-btn {
-			background-color: #f0f9ff;
-			border-color: #e0f2fe;
-			color: #0369a1;
-		}
-		.ext-link-btn.wiki-btn:hover {
-			background-color: #e0f2fe;
-			color: #075985;
-		}
-
-		/* 手機版：轉為 2x2 矩陣 */
-		@media (max-width: 768px) {
-			.ext-btn-grid {
-				grid-template-columns: repeat(2, 1fr);
-			}
-		}
-		/* Modal 右上/右下控制項容器 (改為垂直直立排列) */
-        .modal-controls {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            align-self: stretch; /* 讓容器高度跟 Header BANNER 一樣高 */
-            padding: 4px 0;
-			gap: 8px;
-        }
-
-        .modal-btn-icon {
-            font-size: 16px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.8);
-            border-radius: 50%;
-            width: 28px; height: 28px;
-            display: flex; justify-content: center; align-items: center;
-            transition: 0.2s;
-            user-select: none;
-        }
-        .modal-btn-icon:hover { background: #fff; color: #1565c0; transform: scale(1.05); }
-
-		/* 全域 [處理中...] Loading 畫面 */
-		.loading-overlay {
-			position: fixed;
-			top: 0; left: 0; width: 100%; height: 100%;
-			background: rgba(0, 0, 0, 0.75);
-			backdrop-filter: blur(4px);
-			display: flex; /* 💡 改為 flex，預設進頁面時顯示 */
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			z-index: 9999;
-			color: white;
-			font-size: 20px;
-			font-weight: bold;
-		}
-		.loading-spinner {
-			border: 5px solid #f3f3f3;
-			border-top: 5px solid #d32f2f;
-			border-radius: 50%;
-			width: 45px; height: 45px;
-			animation: spin 1s linear infinite;
-			margin-bottom: 15px;
-		}
-		@keyframes spin {
-			0% { transform: rotate(0deg); }
-			100% { transform: rotate(360deg); }
-		}
-		/* 截圖專用樣式覆蓋 */
-		.modal-card.is-capturing {
-			max-height: none !important; /* 移除視窗高度限制 */
-			height: auto !important;
-			transform: none !important;
-		}
-
-		.modal-card.is-capturing .modal-body {
-			max-height: none !important; /* 移除內部滾動條限制 */
-			overflow: visible !important; /* 讓隱藏的內容完全展現 */
-		}
-
-		/* 截圖時隱藏切換版本的箭頭 */
-		.modal-card.is-capturing .ver-arrow-btn {
-			display: none !important;
-		}
-		/* ================= 第三頁籤 (雙欄模式) 專用樣式 ================= */
-		.desktop-only-tab {
-			display: block;
-		}
-		@media (max-width: 768px) {
-			.desktop-only-tab {
-				display: none !important; /* 手機版自動隱藏第三頁籤 */
-			}
-		}
-
-		#tab-list-split {
-			display: none;
-			padding: 20px;
-		}
-		#tab-list-split.active {
-			display: block;
-		}
-
-		.split-layout-container {
-			display: flex;
-			gap: 20px;
-			align-items: flex-start;
-			position: relative; /* 💡 確保 sticky 定位相對於容器 */
-		}
-
-		.split-left-panel {
-			flex: 0 0 calc(40% - 10px);
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-			min-width: 0;
-		}
-
-		/* 右側主面板：整體固定不捲動 */
-		.split-right-panel {
-			flex: 0 0 calc(60% - 10px);
-			position: sticky;
-			top: 65px;
-			height: calc(100vh - 150px);
-			overflow: hidden; /* 💡 改為 hidden，禁止外層捲動 */
-			background: #fff;
-			border-radius: 12px;
-			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-			padding: 15px;
-			border: 1px solid #e2e8f0;
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: column; /* 讓標頭與主內容垂直排列 */
-		}
-
-		/* 💡 新增：專屬於右側文字 details 區塊的獨立 Scrollbar */
-		.split-detail-info-scroll {
-			flex: 1;
-			overflow-y: auto;
-			padding-right: 5px; /* 給 Scrollbar 一點留白空間 */
-			overscroll-behavior: contain;
-		}
-
-		.split-empty-placeholder {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			height: 300px;
-			color: #888;
-			font-size: 16px;
-			font-weight: bold;
-			border: 2px dashed #cbd5e1;
-			border-radius: 8px;
-		}
-		
-		/* ================= 截圖專用樣式覆蓋 ================= */
-		.modal-card.is-capturing,
-		.split-right-panel.is-capturing {
-			max-height: none !important;
-			height: auto !important;
-			transform: none !important;
-		}
-
-		.modal-card.is-capturing .modal-body,
-		.split-right-panel.is-capturing .modal-main-content {
-			max-height: none !important;
-			overflow: visible !important;
-		}
-
-		/* 截圖時隱藏切換版本的箭頭與右上角控制項 */
-		.is-capturing .ver-arrow-btn,
-		.is-capturing .modal-controls {
-			display: none !important;
-		}
-
-		/* 💡 截圖時隱藏 [展開/收合能力說明] 按鈕 */
-		.is-capturing .abil-explain-btn {
-			display: none !important;
-		}
-
-		/* 截圖時完全隱藏 [收錄商品] 區塊 (包含 Title 標題與 Block 內容) */
-		.is-capturing .set-list-block {
-			display: none !important;
-		}
-
-		/* 截圖時完全隱藏 [外部資源與相關連結] 區塊 */
-		.is-capturing .ext-links-block {
-			display: none !important;
-		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
