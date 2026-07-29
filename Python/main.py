@@ -33,6 +33,7 @@ races_cache = []
 abilities_cache = []
 categoryname_cache = []  # 分類名稱快取
 nickname_cache = []      # 暱稱快取
+diary_cache = []         # 💡 新增：日記快取
 setlist_cache = {}       # 新增：系列清單合併快取 (以 dict 儲存)
 
 # 專門用來存放已計算好的 card_stats 結果
@@ -95,7 +96,8 @@ def load_all_setlists():
 # --- 伺服器啟動時執行：一次性載入與預先計算 ---
 @app.on_event("startup")
 def load_and_process_caches():
-    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache
+    # 💡 記得在 global 後面加上 diary_cache！
+    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, diary_cache
     
     print("正在從本機 JSON 檔案載入所有資料至伺服器記憶體緩存...")
     try:
@@ -109,6 +111,9 @@ def load_and_process_caches():
         abilities_cache = load_json_file("abilities.json")
         categoryname_cache = load_json_file("categoryname.json")
         nickname_cache = load_json_file("nickname.json")
+        # 💡 新增：載入 diary.json
+        diary_cache = load_json_file("diary.json")
+        print(f"-> diary 載入完成，共計 {len(diary_cache)} 筆。")
 
         # 2.6 載入所有 setlist 資料庫
         print("正在載入 setlist 資料夾底下的系列資料庫...")
@@ -273,3 +278,7 @@ async def proxy_image(
     raise HTTPException(
         status_code=500, detail=f"Image proxy error: {str(e)}"
     )
+    
+@app.get("/api/diary")
+async def get_diary():
+    return diary_cache

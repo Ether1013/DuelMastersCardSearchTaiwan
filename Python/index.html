@@ -848,7 +848,7 @@
             <div class="col">
                 <h3>系列編號與商品名稱</h3>
                 <select id="series-small" disabled>
-                    <option value="">(目前暫無資料)</option>
+                    <option value="">資料載入中……</option>
                 </select>
             </div>
         </div>
@@ -880,8 +880,12 @@
             <!-- 中間：開始查詢 -->
             <button id="btn-search" class="btn-icon">開始查詢</button>
             
-            <!-- 右邊：^ 展開按鈕 -->
-            <div class="expand-icon" id="toggle-summary">▲</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+				<!-- 右邊：^ 展開按鈕 -->
+				<div class="expand-icon" id="toggle-summary">▲</div>
+				<!-- 💡 日記 Icon -->
+				<div id="diary-btn" style="cursor: pointer; font-size: 20px; user-select: none;" title="更新日誌">📖</div>
+			</div>
         </div>
     </div>
 
@@ -915,6 +919,19 @@
         <div class="loading-spinner"></div>
         <div id="loading-text">處理中...</div>
     </div>
+	
+	<!-- 更新日誌 Modal -->
+	<div class="modal-overlay" id="diary-modal">
+		<div class="modal-card" style="max-width: 500px;">
+			<div class="modal-header">
+				<div class="modal-title">📖 更新日誌</div>
+				<div class="modal-close" id="diary-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" id="diary-modal-body" style="gap: 15px;">
+				<!-- 日誌內容動態渲染 -->
+			</div>
+		</div>
+	</div>
 
     <!-- ================= JavaScript 邏輯 ================= -->
     <script>
@@ -925,6 +942,7 @@
         let rawAbilities = [];
         let rawCategoryNames = [];
         let rawNicknames = [];
+		let rawDiary = [];   // 💡 新增：日記快取變數
 		let rawSetlist = {}; // 系列快取變數
 
         // 極大數值改以無限符號 ∞ 替代之數值判斷
@@ -1201,14 +1219,33 @@
             if(abilText && abilText.value) tags.push({ label: `能力關鍵字: ${abilText.value}`, action: () => { abilText.value = ""; updateSummaryText(); } });
             
             document.querySelectorAll('.ability-select').forEach((sel) => {
-                if(sel.value) tags.push({ label: `能力包含: ${sel.value}`, action: () => { sel.value = ""; updateSummaryText(); } });
-            });
+				if(sel.value) {
+					const displayText = sel.value === '__NO_ABILITY__' ? '[無能力]' : sel.value;
+					tags.push({ 
+						label: `能力包含: ${displayText}`, 
+						action: () => { sel.value = ""; updateSummaryText(); } 
+					});
+				}
+			});
             
             const raceAdv = document.querySelector('.race-select-adv');
             if(raceAdv && raceAdv.value) tags.push({ label: `能力裡提到的種族: ${raceAdv.value}`, action: () => { raceAdv.value = ""; updateSummaryText(); } });
 
             const cardName = document.getElementById('card-name');
             if(cardName && cardName.value) tags.push({ label: `卡名: ${cardName.value}`, action: () => { cardName.value = ""; updateSummaryText(); } });
+
+			// 💡 需求 2：檢查是否選擇了商品 (series-small)，若有選擇則新增 setcode 標籤
+			const smallSelect = document.getElementById('series-small');
+			if (smallSelect && smallSelect.value) {
+				const selectedSetcode = smallSelect.value;
+				tags.push({ 
+					label: `商品: ${selectedSetcode}`, 
+					action: () => { 
+						smallSelect.value = ""; 
+						updateSummaryText(); 
+					} 
+				});
+			}
 
             summaryBox.innerHTML = '';
             if (tags.length === 0) {
@@ -1228,6 +1265,7 @@
                 });
                 summaryBox.appendChild(wrap);
             }
+			
         }
 
         // --- 下拉選單產生與無限符號轉化 ---
@@ -1294,7 +1332,7 @@
 					}
 				}
 
-				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData] = await Promise.all([
+				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData] = await Promise.all([
 					fetchWithCache('/api/carddata'),
 					fetchWithCache('/api/card_types'),
 					fetchWithCache('/api/races'),
@@ -1302,7 +1340,8 @@
 					fetchWithCache('/api/card_stats'),
 					fetchWithCache('/api/categoryname'),
 					fetchWithCache('/api/nickname'),
-					fetchWithCache('/api/setlist')
+					fetchWithCache('/api/setlist'),
+					fetchWithCache('/api/diary') // 💡 新增：抓取 diary API
 				]);
 
 				globalCardData = cardData;
@@ -1312,6 +1351,10 @@
 				rawCategoryNames = catNameData;
 				rawNicknames = nicknameData;
 				rawSetlist = setlistData;
+				rawDiary = diaryData; // 💡 賦值
+
+				// 💡 呼叫初始化日記 Icon 與邏輯的函式
+				initDiaryUI();
 
 				console.log(`載入完成: 卡牌 ${globalCardData.length} 筆, 分類 ${rawCategoryNames.length} 筆, 暱稱 ${rawNicknames.length} 筆, 系列 ${Object.keys(rawSetlist).length} 筆`);
 
@@ -1333,11 +1376,13 @@
 				rawCategoryNames = [];
 				rawNicknames = [];
 				rawSetlist = {};
+				rawDiary = []; // 💡 新增補強預設值
 
 				sortCardTypes();
 				renderCardTypes();
 				initDropdownData();
 				initStatsSelects(null);
+				initDiaryUI(); // 💡 確保即使報錯也能順利初始化 UI
 			}
 		}
         
@@ -1518,6 +1563,10 @@
 
 			let finalHtml = '<option value="">(請選擇)</option>';
 			if (popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
+			
+			// 💡 新增：在熱門選項與所有選項中間插入 [無能力]
+			finalHtml += '<option value="__NO_ABILITY__" style="font-weight:bold; color:#d32f2f;">[無能力]</option>';
+			
 			finalHtml += normHtml;
 			return finalHtml;
 		}
@@ -1944,6 +1993,95 @@
 			if (cfg.abilityText || cfg.abilities.length > 0 || cfg.raceAdv) return false;
 			return true;
 		}
+		
+		function initDiaryUI() {
+			const diaryBtn = document.getElementById('diary-btn');
+			const diaryModal = document.getElementById('diary-modal');
+			const diaryModalClose = document.getElementById('diary-modal-close');
+			const diaryModalBody = document.getElementById('diary-modal-body');
+
+			if (!diaryBtn || !rawDiary || rawDiary.length === 0) return;
+
+			// 1. 日期降冪排序 (最新的在最上面)
+			const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
+			const latestEntry = sortedDiary[0];
+
+			// 2. 判斷今天是否在最新一筆的「兩天內」
+			if (latestEntry && latestEntry.date) {
+				const today = new Date();
+				today.setHours(0, 0, 0, 0); // 歸零時間部分，只比對日期
+
+				const latestDate = new Date(latestEntry.date);
+				latestDate.setHours(0, 0, 0, 0);
+
+				// 計算天數差
+				const diffTime = today.getTime() - latestDate.getTime();
+				const diffDays = diffTime / (1000 * 3600 * 24);
+
+				// 兩天內 (0天、1天或2天) 則更換 Icon 為帶筆的日記 📝
+				if (diffDays >= 0 && diffDays <= 2) {
+					diaryBtn.innerText = '📝';
+				} else {
+					diaryBtn.innerText = '📖';
+				}
+			}
+
+			// 3. 點擊 Icon 開啟 Modal 並渲染內容
+			diaryBtn.addEventListener('click', () => {
+				diaryModalBody.innerHTML = '';
+
+				sortedDiary.forEach(item => {
+					const entryBlock = document.createElement('div');
+					entryBlock.style.background = '#f8f9fa';
+					entryBlock.style.borderLeft = '4px solid #d32f2f';
+					entryBlock.style.padding = '10px 14px';
+					entryBlock.style.borderRadius = '6px';
+
+					const dateHeader = document.createElement('div');
+					dateHeader.style.fontWeight = 'bold';
+					dateHeader.style.color = '#333';
+					dateHeader.style.marginBottom = '6px';
+					dateHeader.innerText = `📅 ${item.date}`;
+					entryBlock.appendChild(dateHeader);
+
+					const ul = document.createElement('ul');
+					ul.style.margin = '0';
+					ul.style.paddingLeft = '20px';
+					ul.style.fontSize = '14px';
+					ul.style.color = '#555';
+
+					// 💡 修改處：直接讀取 item.content 陣列
+					const listItems = Array.isArray(item.content) ? item.content : [];
+
+					listItems.forEach(text => {
+						const li = document.createElement('li');
+						li.innerText = text;
+						li.style.marginBottom = '3px';
+						ul.appendChild(li);
+					});
+
+					entryBlock.appendChild(ul);
+					diaryModalBody.appendChild(entryBlock);
+				});
+
+				diaryModal.classList.add('active');
+			});
+
+			// 4. 關閉 Modal 邏輯
+			if (diaryModalClose) {
+				diaryModalClose.addEventListener('click', () => {
+					diaryModal.classList.remove('active');
+				});
+			}
+
+			if (diaryModal) {
+				diaryModal.addEventListener('click', (e) => {
+					if (e.target === diaryModal) {
+						diaryModal.classList.remove('active');
+					}
+				});
+			}
+		}
 
 		// --- 核心卡牌比對邏輯 ---
 		function checkCardMatchesFilters(card, cfg, targetRealNameFromNickname) {
@@ -2054,7 +2192,43 @@
 				return res;
 			};
 
-			if (cfg.isAbilityMix) {
+			// 💡 判斷是否選擇了 [無能力]
+			const hasNoAbilitySelected = cfg.abilities.includes('__NO_ABILITY__');
+
+			if (hasNoAbilitySelected) {
+				// 💡 [無能力] 邏輯：無視 [能力混找]，只要「任一邊/任一區塊」的 sp + hypermode.sp 長度為 0 即可
+				const hasSingleBlockNoAbility = card.wdata.some(w => {
+					const wSp = getWdataSpList(w);
+					return wSp.length === 0;
+				});
+
+				if (!hasSingleBlockNoAbility) return false;
+
+				// 檢查非能力的其餘條件 (卡種/費用/攻擊力/種族)
+				if (cfg.isAbilityMix) {
+					const allTypes = card.wdata.flatMap(w => w.type || []);
+					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
+					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+					const allRaces = card.wdata.flatMap(w => w.race || []);
+
+					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes)) return false;
+					if (!checkCostMatchList(allCosts, cfg)) return false;
+					if (!checkPowerMatchList(allPowers, cfg)) return false;
+					if (!checkRaceMatchList(allRaces, cfg.races)) return false;
+				} else {
+					const hasMatchedBlock = card.wdata.some(w => {
+						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes)) return false;
+						if (!checkCostMatchSingle(w.cost, cfg)) return false;
+						if (!checkPowerMatchSingle(w.power, cfg)) return false;
+						if (!checkRaceMatchList(w.race || [], cfg.races)) return false;
+						return true;
+					});
+
+					if (!hasMatchedBlock) return false;
+				}
+
+			} else if (cfg.isAbilityMix) {
+				// 一般能力的 [能力混找] 邏輯
 				const allTypes = card.wdata.flatMap(w => w.type || []);
 				const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
 				const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
@@ -2068,6 +2242,7 @@
 				if (!checkAbilityMatchList(allSp, cfg)) return false;
 
 			} else {
+				// 一般能力的 [非能力混找] 邏輯
 				const hasMatchedBlock = card.wdata.some(w => {
 					const wSp = getWdataSpList(w);
 					if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes)) return false;
@@ -2136,7 +2311,11 @@
 		}
 
 		function checkAbilityMatchList(spList, cfg) {
-			if (cfg.abilities.length > 0) {
+			// 💡 新增：若選擇了 [無能力]
+			if (cfg.abilities.includes('__NO_ABILITY__')) {
+				// 代表要求能力長度必須為 0
+				if (spList.length > 0) return false;
+			} else if (cfg.abilities.length > 0) {
 				const hasAllAbil = cfg.abilities.every(abil => spList.some(sp => sp.includes(abil)));
 				if (!hasAllAbil) return false;
 			}
@@ -3126,10 +3305,20 @@
             extBlock.appendChild(extBody);
 
             extTitle.addEventListener('click', () => {
-                const isHidden = extBody.style.display === 'none';
-                extBody.style.display = isHidden ? 'block' : 'none';
-                extArrow.innerText = isHidden ? '▲' : '▼';
-            });
+				const isHidden = extBody.style.display === 'none';
+				extBody.style.display = isHidden ? 'block' : 'none';
+				extArrow.innerText = isHidden ? '▲' : '▼';
+
+				// 💡 需求 1：當展開外部連結區塊時，自動將 modal-body 捲動至最底部
+				if (isHidden) {
+					const modalBody = document.querySelector('.modal-body');
+					if (modalBody) {
+						setTimeout(() => {
+							modalBody.scrollTop = modalBody.scrollHeight;
+						}, 50); // 給予 DOM 渲染展開高度的小延遲
+					}
+				}
+			});
 
             // 建立按鈕工廠函數
             const createExtBtn = (label, url, extraClass = "") => {
