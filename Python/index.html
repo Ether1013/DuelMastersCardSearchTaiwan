@@ -201,7 +201,7 @@
         
         .modal-img-container {
             flex-shrink: 0; display: flex; justify-content: center; align-items: flex-start;
-            position: sticky; top: 0; align-self: flex-start;
+            position: relative; top: 0; align-self: flex-start; padding: 0 15px;
         }
         .modal-img { width: 100%; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); object-fit: contain; }
         .no-image-box {
@@ -237,16 +237,16 @@
         
         /* 切換箭頭樣式 */
         .modal-img-container { position: relative; }
-        .ver-arrow-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.6); color: white; border: none;
-            font-size: 24px; font-weight: bold; width: 36px; height: 48px;
-            border-radius: 4px; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; user-select: none; transition: background 0.2s, left 0.2s, right 0.2s; z-index: 10;
-        }
-        .ver-arrow-btn:hover { background: rgba(211, 47, 47, 0.9); }
-        .ver-arrow-btn.prev { left: -20px; }
-        .ver-arrow-btn.next { right: -20px; }
+		.ver-arrow-btn {
+			position: absolute; top: 50%; transform: translateY(-50%);
+			background: rgba(0, 0, 0, 0.5); color: white; border: none;
+			font-size: 20px; font-weight: bold; width: 28px; height: 44px;
+			border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+			justify-content: center; user-select: none; transition: all 0.2s ease; z-index: 10;
+		}
+		.ver-arrow-btn:hover { background: rgba(211, 47, 47, 0.9); }
+		.ver-arrow-btn.prev { left: 4px; }
+		.ver-arrow-btn.next { right: 4px; }
 
         /* ================= 最新商品快捷區域 ================= */
         #latest-sets-container { display: flex; gap: 10px; width: 100%; }
@@ -324,6 +324,7 @@
         .is-capturing .abil-explain-btn,
         .is-capturing .set-list-block,
         .is-capturing .ext-links-block { display: none !important; }
+		.is-capturing .btn-copy-title { display: none !important; }
 
         /* ================= 手機版 (RWD) 統一合併區 ================= */
         @media (max-width: 768px) {
