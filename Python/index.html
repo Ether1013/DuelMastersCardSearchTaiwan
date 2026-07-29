@@ -3480,7 +3480,7 @@
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
 		}
 		
-		// 💡 將 DataURL 轉換為標準 Blob 檔案，以確保手機相簿能正確認為是「圖片」
+		// 💡 將 DataURL 轉換為標準 Blob 檔案
 		function dataURLtoBlob(dataurl) {
 			const arr = dataurl.split(',');
 			const mime = arr[0].match(/:(.*?);/)[1];
@@ -3493,12 +3493,75 @@
 			return new Blob([u8arr], { type: mime });
 		}
 
-		// 💡 手機版/桌機版通用圖片下載與儲存處理
-		function triggerImageDownload(dataUrl, fileName) {
+		// 💡 針對 iOS / Safari 優化的圖片儲存邏輯
+		async function triggerImageDownload(dataUrl, fileName) {
 			const blob = dataURLtoBlob(dataUrl);
-			const blobUrl = URL.createObjectURL(blob);
-			const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+			const file = new File([blob], fileName, { type: 'image/png' });
+			const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+			// 1. 優先嘗試 iOS / Safari 原生分享選單 (Web Share API)
+			// 這會在 iPhone 上打開分享面板，裡面包含「儲存影像」可直接存入相簿！
+			if (isIOS && navigator.canShare && navigator.canShare({ files: [file] })) {
+				try {
+					await navigator.share({
+						files: [file],
+						title: fileName,
+						text: '卡牌 Detail 截圖'
+					});
+					return; // 分享成功後直接離開
+				} catch (err) {
+					// 使用者取消分享或不支援時，會繼續往下走備援機制
+					console.log("Web Share 取消或失敗，改用備援方式開啟:", err);
+				}
+			}
+
+			// 2. iOS 備援機制：如果無法開啟 Share API，開啟新分頁讓使用者長按圖片儲存
+			if (isIOS) {
+				const imgWindow = window.open('', '_blank');
+				if (imgWindow) {
+					imgWindow.document.write(`
+						<!DOCTYPE html>
+						<html>
+						<head>
+							<meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<title>${fileName}</title>
+							<style>
+								body { 
+									margin: 0; 
+									background: #111; 
+									color: #fff; 
+									display: flex; 
+									flex-direction: column; 
+									align-items: center; 
+									justify-content: center; 
+									min-height: 100vh;
+									font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+								}
+								.tip { 
+									background: rgba(213, 47, 47, 0.9); 
+									padding: 10px 16px; 
+									border-radius: 20px; 
+									font-size: 14px; 
+									font-weight: bold; 
+									margin-bottom: 15px; 
+									box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+								}
+								img { max-width: 95%; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+							</style>
+						</head>
+						<body>
+							<div class="tip">💡 請長按下方圖片，選擇「加入照片」即可存入相簿</div>
+							<img src="${dataUrl}" alt="${fileName}"/>
+						</body>
+						</html>
+					`);
+					imgWindow.document.close();
+					return;
+				}
+			}
+
+			// 3. 一般 Android / 電腦版瀏覽器，使用 Blob 下載觸發
+			const blobUrl = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = blobUrl;
 			a.download = fileName;
@@ -3510,17 +3573,6 @@
 				document.body.removeChild(a);
 				URL.revokeObjectURL(blobUrl);
 			}, 1000);
-
-			// iOS Safari / 行動裝置 WebView 備援機制：如果無法自動觸發下載，開啟圖片頁供使用者長按「儲存至相簿」
-			if (isMobile) {
-				const nav = window.navigator;
-				if (nav && nav.maxTouchPoints > 0 && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
-					const imgWindow = window.open('');
-					if (imgWindow) {
-						imgWindow.document.write(`<img src="${dataUrl}" style="max-width:100%;" alt="點擊長按儲存至相簿"/>`);
-					}
-				}
-			}
 		}
 
 		async function captureDetailPanel(targetElement, cardName) {
