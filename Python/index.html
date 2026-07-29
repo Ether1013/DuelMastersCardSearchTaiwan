@@ -2780,7 +2780,9 @@
 			targetImgBox.appendChild(imgEl);
 			updateImageSrc();
 
+			// 1. 建立 Flavor 區塊容器
 			const flavorBlock = document.createElement('div');
+			flavorBlock.className = 'flavor-block'; // 💡 加上 class 方便辨識
 			flavorBlock.style.backgroundColor = '#fffbe6';
 			flavorBlock.style.border = '1px solid #ffe58f';
 			flavorBlock.style.borderRadius = '6px';
@@ -2789,15 +2791,41 @@
 			flavorBlock.style.color = '#873800';
 			flavorBlock.style.fontStyle = 'italic';
 			flavorBlock.style.lineHeight = '1.4';
+			flavorBlock.style.marginTop = '10px';
 
+			// 2. 更新 Flavor 文字的 Helper 函式
 			function updateFlavorText(flavor) {
 				if (flavor && flavor.trim() !== '') {
-					flavorBlock.innerHTML = flavor;
+					flavorBlock.innerHTML = `${flavor}`;
 					flavorBlock.style.display = 'block';
 				} else {
 					flavorBlock.style.display = 'none';
 				}
 			}
+
+			// 💡 3. 自動搜尋備援：若未選擇 setcode 但卡牌在系列中有 flavor，自動抓取第一筆
+			if (flavorList.length === 0) {
+				const cleanTargetName = card.name ? card.name.trim() : "";
+				if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+					for (const setObj of Object.values(rawSetlist)) {
+						const cardList = setObj.setcardlist || setObj.cardlist;
+						if (Array.isArray(cardList)) {
+							const foundItem = cardList.find(item => {
+								const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+								return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+							});
+							if (foundItem && foundItem.flavor) {
+								if (Array.isArray(foundItem.flavor)) flavorList = foundItem.flavor;
+								else if (typeof foundItem.flavor === 'string') flavorList = [foundItem.flavor];
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			// 💡 4. 設定初始顯示第一筆 flavor
+			updateFlavorText(flavorList[currentVerIdx] || flavorList[0]);
 
 			if (idList.length > 1) {
 				const prevBtn = document.createElement('button');
@@ -3106,7 +3134,6 @@
 			}
 
 			targetInfoContainer.appendChild(flavorBlock);
-			updateFlavorText();
 
 			// 收錄商品區塊與外部連結
 			renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal);
@@ -3608,13 +3635,16 @@
 
 				const image = canvas.toDataURL('image/png');
 				const cleanName = cleanCardName(cardName) || 'card';
-				const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+				
+				// 💡 修正裝置判斷邏輯：精確判斷是否為手機 (螢幕寬度 <= 768px 或 行動裝置 UserAgent/MaxTouchPoints)
+				const isMobileDevice = window.innerWidth <= 768 || 
+					(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
 
-				if (isMobile) {
-					// 💡 手機版：轉為 Blob 圖片下載（可直接存入手機相簿）
+				if (isMobileDevice) {
+					// 手機版：另存PNG到手機相簿/觸發下載選單
 					triggerImageDownload(image, `${cleanName}_detail.png`);
 				} else {
-					// 桌機版：開啟新頁面展示圖片
+					// 桌機版：另開新視窗顯示截圖
 					const newWindow = window.open('about:blank', '_blank');
 					if (newWindow) {
 						newWindow.document.write(`
@@ -3634,6 +3664,7 @@
 						`);
 						newWindow.document.close();
 					} else {
+						// 若桌機版瀏覽器阻擋彈出視窗(Pop-up block)，則備援下載
 						triggerImageDownload(image, `${cleanName}_detail.png`);
 					}
 				}
