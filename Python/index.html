@@ -2859,7 +2859,9 @@
 			const urlTorekakaku = `https://torekakaku.com/dm/search/?q=${encodeURIComponent(cardIdForTrade || cleanHalfName.replace(/\//g, "／"))}`;
 			const urlCardRush = `https://www.cardrush-dm.jp/product-list?keyword=${encodeURIComponent(cleanNameOnly)}&Submit=%E6%A4%9C%E7%B4%A2`;
 			const urlYuyutei = `https://yuyu-tei.jp/sell/dm/s/search?search_word=${encodeURIComponent(cleanNameOnly)}`;
-			const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanNameOnly)}`;
+			// 修正後的程式碼（將・替換為半形空白）
+			const cleanRutenName = cleanNameOnly.replace(/・/g, ' ');
+			const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanRutenName)}`;
 			const urlOfficial = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify({
 				suggest: "on", keyword: cleanNameOnly, keyword_type: ["card_name"], culture_cond: ["單色", "多色"], pagenum: "1", sort: "release_new"
 			}))}`;
