@@ -4229,6 +4229,48 @@
 	body.desktop-playing #dialogue-layer.key-mode .diag-portrait {
 		height: 90%; 
 	}
+	/* --- 牌組彈窗最大化與自適應樣式 --- */
+	#card-selector-modal .modal-content {
+		transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+	}
+
+	/* 放大狀態：容器擴展至 98vw / 98vh */
+	#card-selector-modal .modal-content.maximized {
+		width: 98vw !important;
+		height: 98vh !important;
+		max-width: none !important;
+		max-height: none !important;
+		padding: 12px 18px !important;
+	}
+
+	/* 放大模式下的網格：10 欄 * 4 列，左右與上下間距皆固定為 12px */
+	#card-selector-modal .modal-content.maximized #modal-body {
+		display: grid !important;
+		grid-template-columns: repeat(10, max-content) !important; /* 使用 max-content 避免格子伸縮拉開欄間距 */
+		grid-template-rows: repeat(4, 1fr) !important;             /* 4 列拉滿容器高度 */
+		gap: 12px !important;                                      /* 上下與左右間距皆固定為 12px */
+		padding: 10px !important;
+		align-items: center;
+		justify-content: center;                                    /* 讓整個 10*4 網格保持置中 */
+		overflow-x: auto;
+		overflow-y: auto;
+	}
+
+	/* 高度放大至極限，寬度按 5:7 等比例放大，圖片絕不拉伸變形 */
+	#card-selector-modal .modal-content.maximized #modal-body .card {
+		height: 100% !important;                  /* 高度放大填滿列高極限 */
+		width: auto !important;                   /* 寬度隨高度等比例拉伸 */
+		aspect-ratio: 5 / 7 !important;           /* 強制維持 5:7 標準卡牌長寬比 */
+		max-width: none !important;
+		font-size: 11px !important;              /* 文字適度加大 */
+		box-sizing: border-box;
+	}
+
+	/* 多面卡群組寬度與高度適應 */
+	#card-selector-modal .modal-content.maximized #modal-body .hyper-card-group {
+		grid-column: span 2;
+		height: 100%;
+	}
 </style>
 </head>
 <body>
@@ -4596,9 +4638,13 @@
 <div id="card-selector-modal" class="modal">
 	<div class="zone-close-btn" onclick="closeSelectorModal()" title="Close (ESC)">✕</div>
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <span id="modal-title" style="font-weight:bold; font-size:1.2rem;">Zone</span>
-            <button onclick="closeSelectorModal()" style="border:none; background:none; font-size:1.5rem;">✕</button>
+            <!-- [新增] 右上角放大 / 還原按鈕與關閉按鈕 -->
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="btn-maximize-selector" onclick="toggleMaximizeSelectorModal()" style="border:none; background:none; font-size:1.3rem; cursor:pointer; color:#333;" title="放大/縮小">↗</button>
+                <button onclick="closeSelectorModal()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">✕</button>
+            </div>
         </div>
 		<div style="background: rgba(52, 152, 219, 0.1); padding: 6px 10px; margin-bottom: 8px; font-size: 0.85rem; color: #2c3e50; border-radius: 4px; text-align: center; border: 1px dashed #3498db;">
             <span data-i18n="msg_paste_hint_modal">💡 提示：點擊卡片選取後，可直接按 Ctrl+V 貼上圖片或網址來更換卡圖。</span>
@@ -14865,7 +14911,43 @@
         doc.write(`</body>`);
         doc.close();
     }
-	
+
+	// --- 牌組視窗最大化切換功能 (↗ <-> ↙) ---
+	function toggleMaximizeSelectorModal() {
+		const modalContent = document.querySelector('#card-selector-modal .modal-content');
+		const btn = document.getElementById('btn-maximize-selector');
+		
+		if (!modalContent) return;
+		
+		modalContent.classList.toggle('maximized');
+		const isMax = modalContent.classList.contains('maximized');
+		
+		// 圖示對應：放大用 ↗，還原用 ↙
+		if (btn) {
+			btn.innerText = isMax ? '↙' : '↗';
+			btn.title = isMax ? '縮小 (Restore)' : '放大 (Maximize)';
+		}
+	}
+
+	// 關閉視窗時自動將圖示重置為 ↗
+	const originalCloseSelectorModal = window.closeSelectorModal;
+	window.closeSelectorModal = function() {
+		const modalContent = document.querySelector('#card-selector-modal .modal-content');
+		const btn = document.getElementById('btn-maximize-selector');
+		
+		if (modalContent) modalContent.classList.remove('maximized');
+		if (btn) {
+			btn.innerText = '↗';
+			btn.title = '放大 (Maximize)';
+		}
+		
+		if (typeof originalCloseSelectorModal === 'function') {
+			originalCloseSelectorModal();
+		} else {
+			document.getElementById('card-selector-modal').style.display = 'none';
+		}
+	};
+
     function confirmMobileScript() {
 		if (!selectedMobileScript) return;
 		document.getElementById('mobile-script-selector').style.display = 'none';
