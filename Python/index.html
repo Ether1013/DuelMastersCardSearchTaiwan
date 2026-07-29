@@ -2986,11 +2986,14 @@
 			function updateModalTitle() {
 				const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
 				
+				// --- 修改後 ---
 				modalTitle.innerHTML = `
 					${idTag}
-					<div class="card-title-text" style="cursor: pointer; display: flex; align-items: center; gap: 6px;" title="點擊按鈕或雙擊標題複製卡名">
-						<span>${card.name || '未命名卡牌'}</span>
-						<span class="btn-copy-title" style="font-size: 16px; opacity: 0.7; padding: 2px 4px;" title="複製卡名">📋</span>
+					<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="點擊按鈕或雙擊標題複製卡名">
+						<span style="display: inline;">
+							${card.name || '未命名卡牌'}
+							<span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; margin-left: 4px; vertical-align: middle; cursor: pointer;" title="複製卡名">📋</span>
+						</span>
 					</div>
 				`;
 			}
@@ -3043,11 +3046,14 @@
 			const baseName = cleanCardName(rawName) || rawName;
 			const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
 
+			// --- 修改後 ---
 			titleDiv.innerHTML = `
 				${idTag}
-				<div class="card-title-text" style="cursor: pointer; display: flex; align-items: center; gap: 6px;" title="點擊按鈕或雙擊標題複製卡名">
-					<span>${rawName}</span>
-					<span class="btn-copy-title" style="font-size: 16px; opacity: 0.7; padding: 2px 4px;" title="複製卡名">📋</span>
+				<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="點擊按鈕或雙擊標題複製卡名">
+					<span style="display: inline;">
+						${rawName}
+						<span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; margin-left: 4px; vertical-align: middle; cursor: pointer;" title="複製卡名">📋</span>
+					</span>
 				</div>
 			`;
 
