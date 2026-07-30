@@ -607,12 +607,11 @@
 
 		.calc-action-row {
 			display: flex;
-			gap: 10px;
 			margin-top: 5px;
 		}
 
 		.btn-calc-action {
-			flex: 1;
+			width: 100%;
 			padding: 10px;
 			border: none;
 			border-radius: 6px;
@@ -621,10 +620,13 @@
 			cursor: pointer;
 			transition: background 0.2s;
 		}
-		.btn-clear { background: #cbd5e1; color: #334155; }
-		.btn-clear:hover { background: #94a3b8; }
-		.btn-submit { background: #d32f2f; color: white; }
-		.btn-submit:hover { background: #b71c1c; }
+		.btn-clear { 
+			background: #cbd5e1; 
+			color: #334155; 
+		}
+		.btn-clear:hover { 
+			background: #94a3b8; 
+		}
 		
 		/* 快搜按鈕點擊高亮狀態 */
 		.btn-calc.active {
@@ -653,6 +655,31 @@
 			background: #0284c7;
 			color: #ffffff;
 			border-color: #0369a1;
+		}
+		
+		/* 💡 計算機面板底部收回拉桿 */
+		.drawer-footer-handle {
+			margin-top: 10px;
+			padding: 6px 0;
+			background: #f1f5f9;
+			border-top: 1px dashed #cbd5e1;
+			border-radius: 0 0 6px 6px;
+			text-align: center;
+			font-size: 12px;
+			font-weight: bold;
+			color: #64748b;
+			cursor: pointer;
+			user-select: none;
+			transition: all 0.15s ease;
+		}
+
+		.drawer-footer-handle:hover {
+			background: #e2e8f0;
+			color: #0284c7;
+		}
+
+		.drawer-footer-handle:active {
+			background: #cbd5e1;
 		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
@@ -728,10 +755,14 @@
 						<button type="button" class="btn-calc btn-enter" id="btn-quick-enter">ENTER ↵</button>
 					</div>
 
-					<!-- 控制列 (清除 / 開始搜尋) -->
+					<!-- 控制列 (僅保留清除條件) -->
 					<div class="calc-action-row">
 						<button type="button" class="btn-calc-action btn-clear" id="btn-quick-clear">🧹 清除條件</button>
-						<button type="button" class="btn-calc-action btn-submit" id="btn-quick-submit">🔍 帶入過濾並搜尋</button>
+					</div>
+					
+					<!-- 💡 底部收回拉桿 -->
+					<div class="drawer-footer-handle" id="btn-quick-close-footer">
+						<span>▲ 收回快速計算機</span>
 					</div>
 				</div>
 			</div>
@@ -4676,17 +4707,15 @@
 			const powerTag = quickTags.find(t => t.type === 'power-range');
 			if (powerTag) applyRangeToSelects(powerTag.val, 'power-1', 'power-2');
 
-			// G. 收合面板並搜尋
 			if (typeof updateSummaryText === 'function') updateSummaryText();
-			const drawer = document.getElementById('drawer-quick-search');
-			if (drawer) {
-				drawer.classList.remove('open');
-				const arrow = drawer.querySelector('.drawer-arrow');
-				if (arrow) arrow.innerText = '▼';
-			}
 
+			// 💡 觸發搜尋（加上標記，防止與 Footer 按鈕觸發死循環）
 			const btnSearch = document.getElementById('btn-search');
-			if (btnSearch) btnSearch.click();
+			if (btnSearch) {
+				const evt = new MouseEvent('click', { bubbles: true, cancelable: true });
+				evt.isQuickSubmitted = true; 
+				btnSearch.dispatchEvent(evt);
+			}
 		}
 
 		// 9. 渲染核心卡種 (main === true)
@@ -4709,7 +4738,7 @@
 			});
 		}
 
-		// 10. 事件綁定 (DOM 載入完成時)
+		// 事件綁定 (DOM 載入完成時)
 		document.addEventListener('DOMContentLoaded', () => {
 			// 文明與單多色
 			document.querySelectorAll('.btn-civ, .btn-civ-spec').forEach(btn => {
@@ -4723,12 +4752,29 @@
 				btn.addEventListener('click', () => handleNumInput(btn.dataset.val));
 			});
 
-			// Enter / 清除 / 提交
+			// Enter / 清除
 			document.getElementById('btn-quick-enter')?.addEventListener('click', commitNumBuffer);
 			document.getElementById('btn-quick-clear')?.addEventListener('click', clearQuickSearch);
-			document.getElementById('btn-quick-submit')?.addEventListener('click', submitQuickSearch);
 
-			// 實體鍵盤監聽
+			// 💡 統一由 Footer 的「開始查詢」接管快搜邏輯
+			const btnSearch = document.getElementById('btn-search');
+			if (btnSearch) {
+				btnSearch.addEventListener('click', (e) => {
+					const drawer = document.getElementById('drawer-quick-search');
+					
+					// 當快搜抽屜開啟，且有輸入 Tag 時，優先執行快搜條件帶入
+					if (drawer && drawer.classList.contains('open') && !e.isQuickSubmitted) {
+						// 若有輸入條件，則執行帶入
+						if (quickTags.length > 0 || numBuffer.length > 0) {
+							e.preventDefault();
+							e.stopImmediatePropagation();
+							submitQuickSearch();
+						}
+					}
+				}, true);
+			}
+
+			// 實體鍵盤監聽...
 			document.addEventListener('keydown', (e) => {
 				const drawer = document.getElementById('drawer-quick-search');
 				if (!drawer || !drawer.classList.contains('open')) return;
@@ -4752,6 +4798,17 @@
 						quickTags.pop();
 						renderQuickTags();
 					}
+				}
+			});
+			
+			// 在 DOMContentLoaded 裡面新增：
+			document.getElementById('btn-quick-close-footer')?.addEventListener('click', () => {
+				const drawer = document.getElementById('drawer-quick-search');
+				if (drawer) {
+					drawer.classList.remove('open');
+					// 同步更新上方標題拉桿的箭頭
+					const arrow = drawer.querySelector('.drawer-arrow');
+					if (arrow) arrow.innerText = '▼';
 				}
 			});
 		});
