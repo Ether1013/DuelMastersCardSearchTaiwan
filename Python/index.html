@@ -4905,8 +4905,13 @@
 					e.preventDefault();
 					handleNumInput('~');
 				} else if (e.key === 'Enter') {
-					e.preventDefault();
-					commitNumBuffer();
+					e.preventDefault();					
+					// 💡 判斷：若數字緩衝區有內容（輸入中），則只打包數字；否則直接觸發搜尋
+					if (numBuffer.length > 0) {
+						commitNumBuffer(); // 僅觸發計算機數字盤確認
+					} else {
+						submitQuickSearch(); // 僅觸發送出查詢
+					}
 				} else if (e.key === 'Backspace' || e.key === 'Delete') {
 					e.preventDefault();
 					if (numBuffer.length > 0) {
