@@ -699,6 +699,12 @@
 			color: #ffffff;
 			border-color: #7e22ce;
 		}
+		/* 雙極按鈕預設與高亮樣式 */
+		.btn-calc.btn-twinpect.active {
+			background: #8b5cf6;
+			color: #ffffff;
+			border-color: #7c3aed;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -739,8 +745,11 @@
 
 				<!-- 按鈕網格 (計算機排版) -->
 				<div class="quick-calc-grid">
-					<!-- 核心卡種按鈕 (動態填入 main=true 的卡種) -->
-					<div id="quick-cardtypes-group" class="calc-btn-group full-width"></div>
+					<!-- 核心卡種按鈕 -->
+					<div id="quick-cardtypes-group" class="calc-btn-group full-width">
+						<!-- JS 動態填入 main=true 的卡種 -->
+						<!-- 💡 在動態卡種之後，尾巴會被掛上 [雙極] 按鈕 -->
+					</div>
 
 					<!-- 文明按鈕 -->
 					<div class="calc-btn-group full-width">
@@ -4676,6 +4685,19 @@
 				});
 				checkAllStatus();
 			}
+			
+			// 💡 B. 帶入雙極卡設定
+			const twinTag = quickTags.find(t => t.type === 'twinpect');
+			const twinRadioYes = document.querySelector('input[name="twinpect"][value="yes"]');
+			const twinRadioAll = document.querySelector('input[name="twinpect"][value="all"]');
+
+			if (twinTag) {
+				// 亮著 ➔ 勾選「雙極」[cite: 1]
+				if (twinRadioYes) twinRadioYes.checked = true;
+			} else {
+				// 未亮 ➔ 勾選「都找 (=預設)」
+				if (twinRadioAll) twinRadioAll.checked = true;
+			}
 
 			// D. 帶入必須文明 (#civ-require)
 			const targetCivs = quickTags.filter(t => t.type === 'civ').map(t => t.val);
@@ -4759,7 +4781,7 @@
 			}
 		}
 
-		// 9. 渲染核心卡種 (main === true)
+		// 9. 渲染核心卡種 (main === true) + 尾巴新增雙極按鈕
 		function initQuickCardTypes() {
 			const container = document.getElementById('quick-cardtypes-group');
 			if (!container || !Array.isArray(rawCardTypes)) return;
@@ -4777,6 +4799,20 @@
 					container.appendChild(btn);
 				}
 			});
+
+			// 💡 在區塊尾巴新增 [雙極] 按鈕
+			const twinBtn = document.createElement('button');
+			twinBtn.type = 'button';
+			twinBtn.className = 'btn-calc btn-twinpect';
+			twinBtn.dataset.type = 'twinpect';
+			twinBtn.dataset.val = 'yes';
+			twinBtn.innerText = '雙極';
+
+			twinBtn.addEventListener('click', () => {
+				toggleQuickTag('twinpect', 'yes', '雙極', twinBtn);
+			});
+
+			container.appendChild(twinBtn);
 		}
 		
 		// 💡 動態繪製 D/O 開頭的最新商品代碼按鈕至文明區塊
