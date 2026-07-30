@@ -4271,6 +4271,73 @@
 		grid-column: span 2;
 		height: 100%;
 	}
+	
+	/* --- 集中線特效 (安全矩形挖空版) --- */
+	.card.fx-focus-lines {
+		overflow: visible !important; 
+		z-index: 3000 !important;     
+	}
+
+	.card.fx-focus-lines::before {
+		content: "";
+		position: absolute;
+		top: 50%; left: 50%;
+		width: 200vw; height: 200vh; /* 覆蓋全螢幕 */
+		transform: translate(-50%, -50%);
+		background: repeating-conic-gradient(
+			transparent 0%, 
+			transparent 0.8%,
+			rgba(0, 0, 0, 0.9) 1%, 
+			rgba(0, 0, 0, 0.9) 1.2%,
+			transparent 4%
+		);
+		pointer-events: none;
+		z-index: -1; 
+		
+		/* 使用 4 塊純黑漸層分別從上下左右向內推，中央自然形成符合卡牌形狀的挖空 */
+		-webkit-mask-image: 
+			linear-gradient(black, black), 
+			linear-gradient(black, black), 
+			linear-gradient(black, black), 
+			linear-gradient(black, black);
+		-webkit-mask-position: top, bottom, left, right;
+		-webkit-mask-size: 
+			100% calc(50% - 47px), /* 上方塊高度 (配合卡高 84px) */
+			100% calc(50% - 47px), /* 下方塊高度 */
+			calc(50% - 35px) 100%, /* 左方塊寬度 (配合卡寬 60px) */
+			calc(50% - 35px) 100%; /* 右方塊寬度 */
+		-webkit-mask-repeat: no-repeat;
+		
+		mask-image: 
+			linear-gradient(black, black), 
+			linear-gradient(black, black), 
+			linear-gradient(black, black), 
+			linear-gradient(black, black);
+		mask-position: top, bottom, left, right;
+		mask-size: 
+			100% calc(50% - 47px),
+			100% calc(50% - 47px),
+			calc(50% - 35px) 100%,
+			calc(50% - 35px) 100%;
+		mask-repeat: no-repeat;
+	}
+	/* 預設狀態：與無月之門一樣黯淡 */
+	#btn-focus-lines {
+		background: #34495e;
+		border-color: #566573;
+		color: #bdc3c7;
+		transition: all .2s;
+	}
+
+	/* 啟用狀態：明亮且發光 */
+	#btn-focus-lines.active {
+		background: #f1c40f !important;
+		border-color: #f39c12 !important;
+		color: #2c3e50 !important;
+		font-weight: 700;
+		box-shadow: 0 0 12px rgba(241, 196, 15, 0.8), inset 0 0 5px rgba(255, 255, 255, 0.5);
+		transform: scale(1.05);
+	}
 </style>
 </head>
 <body>
@@ -4537,7 +4604,7 @@
     <div class="panel-row">
         <button id="btn-rotate-l" onclick="rotateCard(-90)">↶</button>
         <button id="btn-rotate-r" onclick="rotateCard(90)">↷</button>
-        <button id="btn-flip" onclick="flipCard()" data-i18n="act_flip">翻面</button>
+        <button id="btn-focus-lines" onclick="toggleFocusLines()" data-i18n="act_focus_lines">⚡ 集中線</button>
         
         <button id="btn-moonless" onclick="toggleMoonless()" data-i18n="act_moonless">🌑 無月之門</button>
 
@@ -5828,6 +5895,7 @@
 			'opt_corner_bl': '左下角疊放',
 			'opt_corner_tr': '右上角疊放',
 			'opt_corner_br': '右下角疊放',
+			'act_focus_lines': '⚡ 集中線',
 		},
         // 為了節省空間，英文與日文請依照相同邏輯補上對應翻譯 (若無則顯示Key)
 		'en': {
@@ -6030,6 +6098,7 @@
 			'opt_corner_bl': 'Bottom-Left Stack',
 			'opt_corner_tr': 'Top-Right Stack',
 			'opt_corner_br': 'Bottom-Right Stack',
+			'act_focus_lines': '⚡ Focus',
 		},
 		'jp': {
             'btn_dialogue': '💬 会話 (Dialog)',
@@ -6232,6 +6301,7 @@
 			'opt_corner_bl': '左下重ね',
 			'opt_corner_tr': '右上重ね',
 			'opt_corner_br': '右下重ね',
+			'act_focus_lines': '⚡ 集中線',
 		}
 	};
 	
@@ -8483,6 +8553,15 @@
 				card.exLifeKey = null; // 清除屬性
 			}
 		}
+		/* --- 加入這段集中線判定 --- */
+		else if (op.type === 'TOGGLE_FOCUS_LINES') {
+			const { cardIds, setFocus } = op;
+			state.cards.forEach(c => {
+				if (cardIds.some(id => id == c.id)) {
+					c.isFocusLines = setFocus;
+				}
+			});
+		}
 	}
 	
 	function flipSelectedInModal() {
@@ -8960,6 +9039,35 @@
         // 讀取當前是誰的回合 (1 或 2)，並呼叫原本的 resetBoard
         resetBoard(state.turnPlayer);
     }
+	
+	// --- 切換集中線狀態 ---
+	function toggleFocusLines() {
+		if (!pendingMove || pendingMove.cardIds.length === 0) return;
+		const state = getCurrentDisplayState();
+
+		// 計算狀態 (只要有一張已有集中線，就全部改為無；否則全部加上集中線)
+		const hasFocus = pendingMove.cardIds.some(id => {
+			const c = state.cards.find(x => x.id === id);
+			return c && c.isFocusLines;
+		});
+		const nextState = !hasFocus;
+
+		// 送出指令並記錄到 Action Log
+		const op = { type: 'TOGGLE_FOCUS_LINES', cardIds: [...pendingMove.cardIds], setFocus: nextState };
+		addOperation(op, true);
+
+		// 手動即時更新 DOM (提供立即的視覺回饋)
+		pendingMove.cardIds.forEach(id => {
+			const el = document.querySelector(`.card[data-id="${id}"]`);
+			if (el) {
+				if (nextState) el.classList.add('fx-focus-lines');
+				else el.classList.remove('fx-focus-lines');
+			}
+		});
+		
+		// 強制刷新操作面板按鈕狀態 (讓按鈕反白/取消反白)
+		if(typeof updateSelectionUI === 'function') updateSelectionUI();
+	}
 
     // [修正] 發光：僅向上追溯 (Child -> Source)，斷開向下擴散以避免兄弟卡連動
 	// [修正] 發光：支援 Ctrl 反向切換
@@ -10154,6 +10262,7 @@
         const btnRemoveImg = document.getElementById('btn-remove-image');
         const btnGlow = document.getElementById('btn-glow');
         const btnGlowBottom = document.getElementById('btn-glow-bottom');
+		const btnFocusLines = document.getElementById('btn-focus-lines');
         const btnUnglow = document.getElementById('btn-unglow');
         const btnCopyOne = document.getElementById('btn-copy-ability');
         const btnCopyCont = document.getElementById('btn-copy-continuous');
@@ -10232,23 +10341,17 @@
                 // B. 預設將所有「功能類」按鈕重置為顯示
                 const allElements = [
                     btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, 
-                    btnGlow, btnGlowBottom, btnCopyOne, btnCopyCont, adjustControls, adjustButtons, 
+                    btnGlow, btnGlowBottom, btnFocusLines, btnCopyOne, btnCopyCont, adjustControls, adjustButtons, 
                     btnPoint, btnPointBlue, inputRename, inputNote, btnRename, btnNote, btnMoonless,
-					btnPanelClose
+                    btnPanelClose
                 ];
-                allElements.forEach(el => { if(el) el.style.display = ''; }); // 清空 inline style 回復預設 (block/flex/inline)
+                allElements.forEach(el => { if(el) el.style.display = ''; }); 
                 
                 // 修正 flex 排版元件
                 adjustButtons.style.display = 'flex';
-				
-				// -----------------------------------------------------------
-				// 【✅ BUG 修復：強制重置調整按鈕內部的子按鈕】
-				// 原因：多選模式會隱藏面板內「所有」按鈕，包含這些沒有 ID 的箭頭按鈕。
-				// 當切換回單選時，必須手動把這些子按鈕救回來。
-				// -----------------------------------------------------------
-				if (adjustButtons) {
-					adjustButtons.querySelectorAll('button').forEach(b => b.style.display = '');
-				}
+                if (adjustButtons) {
+                    adjustButtons.querySelectorAll('button').forEach(b => b.style.display = '');
+                }
                 
                 // C. 狀態依賴型按鈕先預設隱藏
                 if(btnRemoveImg) btnRemoveImg.style.display = 'none';
@@ -10258,16 +10361,20 @@
                 if(btnDelete) btnDelete.style.display = 'none';
                 if(btnEndPoint) btnEndPoint.style.display = 'none';
 
-                // D. 依據「卡片類型」執行刪去法
+                // D. 依據「卡片類型」執行正確的刪去法 🎯 (修正重點在此)
                 if (allAbility) {
-                    // 效果小卡：隱藏不必要功能
-                    [btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, btnCopyOne, btnCopyCont, btnMoonless].forEach(el => el.style.display = 'none');
+                    // 效果小卡：隱藏所有一般卡片專屬的按鈕（包含集中線、展示、無月之門！）
+                    [btnRotateL, btnRotateR, btnFlip, btnAce, btnReveal, btnPaste, btnCopyOne, btnCopyCont, btnMoonless, btnFocusLines].forEach(el => {
+                        if (el) el.style.display = 'none';
+                    });
                     btnGlow.classList.remove('disabled-gray');
                     btnGlowBottom.classList.remove('disabled-gray');
                     btnDelete.style.display = 'block';
                 } else {
                     // 一般卡片：隱藏發光/微調
-                    [btnGlow, btnGlowBottom, adjustControls, adjustButtons].forEach(el => el.style.display = 'none');
+                    [btnGlow, btnGlowBottom, adjustControls, adjustButtons].forEach(el => {
+                        if (el) el.style.display = 'none';
+                    });
                 }
 
                 // E. 細部顯示
@@ -10292,6 +10399,10 @@
                         }
                         if (state.moonless && state.moonless[cid]) btnMoonless.classList.add('active');
                         else btnMoonless.classList.remove('active');
+                        
+                        // 集中線按鈕狀態
+                        if (firstCard && firstCard.isFocusLines) btnFocusLines.classList.add('active');
+                        else btnFocusLines.classList.remove('active');
                     }
                     
                     // 載入名稱與註記
@@ -10300,13 +10411,12 @@
                         inputNote.value = firstCard.note || "";
                     }
                 } else {
-                    // 雖然單選模式不太會進來這(因為這UI只支援單張點擊)，但防呆
-                    [btnAce, btnMoonless, btnPoint, btnPointBlue].forEach(el => el.style.display = 'none');
+                    [btnAce, btnMoonless, btnPoint, btnPointBlue].forEach(el => { if (el) el.style.display = 'none'; });
                     inputRename.value = '';
                     inputNote.value = '';
                 }
 
-            } 
+            }
             // ==========================================
             // [分支 B] 多選模式 (Multi-Select) - [您的需求在這裡]
             // ==========================================
@@ -12614,7 +12724,7 @@
              const glowingChild = abilityChildren.find(c => c.glow);
              if (glowingChild) activeGlow = glowingChild.glow;
         }
-
+		
         if (activeGlow) el.classList.add(`glow-${activeGlow}`);
         if (card.isContinuous) el.classList.add('continuous');
 
@@ -12810,6 +12920,11 @@
 				overlay.appendChild(closeBtn);
 				el.appendChild(overlay);
 			}
+		}
+		
+		// 在 createCardElement 函式中，找到類似 cardEl.classList.add('card'); 的地方加入：
+		if (card.isFocusLines) {
+			el.classList.add('fx-focus-lines');
 		}
         
         setTimeout(() => el.classList.add('interactive'), 0);
