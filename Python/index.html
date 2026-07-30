@@ -342,10 +342,33 @@
 		.split-layout-container.is-expanded .split-right-panel {
 			flex: 0 0 calc(80% - 10px) !important; /* 擴大右側 Detail */
 		}
+		/* Page 3 (Split 雙欄) 左側面板調整：讓抽屜固定，內部列表可獨立滾動 */
 		.split-left-panel {
 			flex: 0 0 calc(40% - 10px); 
-			display: flex; flex-direction: column; gap: 10px; min-width: 0;
+			display: flex; 
+			flex-direction: column; 
+			gap: 10px; 
+			min-width: 0;
 			transition: flex 0.3s ease;
+			
+			/* 💡 置頂與高度限制 */
+			position: sticky;
+			top: 65px;
+			max-height: calc(100vh - 150px);
+			overflow: visible; /* 允許抽屜正常凸出或貼頂，不使用內部捲軸 */
+		}
+		
+		.split-left-panel .drawer-container {
+			position: static; /* 讓抽屜順應左欄頂部 */
+			margin-bottom: 0;
+			flex-shrink: 0; /* 避免抽屜被壓縮 */
+		}
+
+		/* 💡 新增：將滾動條移至列表本身，抽屜就會固定在最上方不被捲走 */
+		#list-container-split {
+			flex: 1;
+			overflow-y: auto;
+			padding-right: 4px;
 		}
 
 		.split-right-panel {
@@ -395,6 +418,242 @@
             .ext-btn-grid { grid-template-columns: repeat(2, 1fr); }
             .desktop-only-tab { display: none !important; }
         }
+		
+		/* ================= 抽屜式工具列 (Sorting & Export Drawer) ================= */
+		/* ================= 抽屜工具列置頂修正 ================= */
+		.drawer-container {
+			background: #fff;
+			border: 1px solid #e2e8f0;
+			border-radius: 8px;
+			margin-bottom: 12px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+			overflow: hidden;
+			transition: all 0.2s ease;
+			
+			/* 💡 新增置頂效果 */
+			position: sticky;
+			top: 50px; /* 避開頂部黑色 Header (48px~50px) */
+			z-index: 90;
+		}
+
+		/* 極矮手把/拉桿 Header */
+		.drawer-handle {
+			background: #f1f5f9;
+			padding: 4px 12px;
+			font-size: 12px;
+			font-weight: bold;
+			color: #475569;
+			cursor: pointer;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			user-select: none;
+			border-bottom: 1px solid transparent;
+		}
+		.drawer-handle:hover {
+			background: #e2e8f0;
+			color: #0f172a;
+		}
+		.drawer-container.open .drawer-handle {
+			border-bottom-color: #cbd5e1;
+			background: #e2e8f0;
+		}
+
+		/* 抽屜展開區域 */
+		.drawer-content {
+			display: none;
+			padding: 10px 15px;
+			background: #ffffff;
+			flex-direction: column;
+			gap: 10px;
+		}
+		.drawer-container.open .drawer-content {
+			display: flex;
+		}
+
+		.drawer-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-size: 13px;
+			flex-wrap: wrap;
+		}
+		.drawer-row label { font-weight: bold; color: #334155; min-width: 45px; }
+		.drawer-row select { width: auto; margin-bottom: 0; padding: 4px 8px; font-size: 13px; }
+		.btn-drawer-action {
+			padding: 4px 12px;
+			background: #0284c7;
+			color: white;
+			border: none;
+			border-radius: 4px;
+			font-size: 12px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+		.btn-drawer-action:hover { background: #0369a1; }
+		
+		/* ================= 快速搜尋抽屜與計算機 UI ================= */
+		.quick-search-drawer {
+			position: sticky;
+			top: 50px;
+			z-index: 95;
+			background: #ffffff;
+			border: 2px solid #0284c7;
+			border-radius: 8px;
+			margin-bottom: 15px;
+		}
+
+		.quick-tag-container {
+			min-height: 38px;
+			background: #f8fafc;
+			border: 1px dashed #cbd5e1;
+			border-radius: 6px;
+			padding: 6px 10px;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			align-items: center;
+		}
+
+		.quick-placeholder {
+			color: #94a3b8;
+			font-size: 13px;
+			user-select: none;
+		}
+
+		.quick-tag {
+			background: #0284c7;
+			color: #fff;
+			font-size: 13px;
+			font-weight: bold;
+			padding: 3px 10px;
+			border-radius: 16px;
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			transition: background 0.15s;
+			user-select: none;
+		}
+		.quick-tag:hover {
+			background: #0369a1;
+		}
+		.quick-tag::after {
+			content: "×";
+			font-size: 14px;
+			font-weight: normal;
+		}
+
+		.quick-num-buffer {
+			min-height: 20px;
+			font-size: 14px;
+			font-weight: bold;
+			color: #d32f2f;
+			padding-left: 5px;
+			letter-spacing: 1px;
+		}
+
+		/* 計算機按鈕網格排版 */
+		.quick-calc-grid {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+
+		.calc-btn-group {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+		}
+
+		.btn-calc {
+			padding: 8px 12px;
+			background: #f1f5f9;
+			border: 1px solid #cbd5e1;
+			border-radius: 6px;
+			font-size: 13px;
+			font-weight: bold;
+			color: #334155;
+			cursor: pointer;
+			user-select: none;
+			transition: all 0.15s;
+		}
+		.btn-calc:hover {
+			background: #e2e8f0;
+			border-color: #94a3b8;
+		}
+		.btn-calc:active {
+			transform: scale(0.96);
+		}
+
+		.btn-calc.btn-civ[data-val="16"] { background: #fef08a; color: #854d0e; }
+		.btn-calc.btn-civ[data-val="8"] { background: #bae6fd; color: #0369a1; }
+		.btn-calc.btn-civ[data-val="4"] { background: #cbd5e1; color: #1e293b; }
+		.btn-calc.btn-civ[data-val="2"] { background: #fecaca; color: #991b1b; }
+		.btn-calc.btn-civ[data-val="1"] { background: #bbf7d0; color: #166534; }
+		.btn-calc.btn-civ[data-val="32"] { background: #f8fafc; color: #475569; }
+
+		.calc-num-pad {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 6px;
+			max-width: 320px;
+		}
+
+		.btn-num { background: #ffffff; font-size: 16px; }
+		.btn-wave { background: #e0f2fe; color: #0369a1; font-size: 16px; }
+		.btn-enter { background: #16a34a; color: white; font-size: 13px; }
+		.btn-enter:hover { background: #15803d; }
+
+		.calc-action-row {
+			display: flex;
+			gap: 10px;
+			margin-top: 5px;
+		}
+
+		.btn-calc-action {
+			flex: 1;
+			padding: 10px;
+			border: none;
+			border-radius: 6px;
+			font-weight: bold;
+			font-size: 14px;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+		.btn-clear { background: #cbd5e1; color: #334155; }
+		.btn-clear:hover { background: #94a3b8; }
+		.btn-submit { background: #d32f2f; color: white; }
+		.btn-submit:hover { background: #b71c1c; }
+		
+		/* 快搜按鈕點擊高亮狀態 */
+		.btn-calc.active {
+			outline: 2px solid #0284c7;
+			box-shadow: inset 0 0 0 1px #0284c7;
+			font-weight: bold;
+		}
+
+		/* 核心卡種點擊高亮 */
+		.btn-calc.btn-cardtype.active {
+			background: #e0f2fe;
+			color: #0369a1;
+			border-color: #0284c7;
+		}
+
+		/* 文明按鈕高亮（加深背景與加粗） */
+		.btn-calc.btn-civ[data-val="16"].active { background: #fef08a; border-color: #ca8a04; color: #713f12; }
+		.btn-calc.btn-civ[data-val="8"].active  { background: #7dd3fc; border-color: #0284c7; color: #0c4a6e; }
+		.btn-calc.btn-civ[data-val="4"].active  { background: #94a3b8; border-color: #475569; color: #0f172a; }
+		.btn-calc.btn-civ[data-val="2"].active  { background: #fca5a5; border-color: #dc2626; color: #7f1d1d; }
+		.btn-calc.btn-civ[data-val="1"].active  { background: #86efac; border-color: #16a34a; color: #14532d; }
+		.btn-calc.btn-civ[data-val="32"].active { background: #cbd5e1; border-color: #64748b; color: #1e293b; }
+
+		/* 單色/多色高亮 */
+		.btn-calc.btn-civ-spec.active {
+			background: #0284c7;
+			color: #ffffff;
+			border-color: #0369a1;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -418,6 +677,66 @@
     <!-- 第一個頁籤：條件過濾 -->
     <div id="tab-filter" class="tab-content active layout-grid">
         
+		<!-- ⚡ 快速計算機搜尋面板 (方案 A - Sticky Drawer) -->
+		<div class="drawer-container quick-search-drawer" id="drawer-quick-search">
+			<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
+				<span>⚡ 快速計算機搜尋面板</span>
+				<span class="drawer-arrow" style="font-size: 10px;">▼</span>
+			</div>
+			<div class="drawer-content">
+				<!-- 上方標籤顯示區 -->
+				<div id="quick-tag-display" class="quick-tag-container">
+					<span class="quick-placeholder">請點擊下方按鈕或使用鍵盤輸入條件...</span>
+				</div>
+
+				<!-- 暫存未 Enter 的數字緩衝顯示區 -->
+				<div id="quick-num-buffer" class="quick-num-buffer"></div>
+
+				<!-- 按鈕網格 (計算機排版) -->
+				<div class="quick-calc-grid">
+					<!-- 核心卡種按鈕 (動態填入 main=true 的卡種) -->
+					<div id="quick-cardtypes-group" class="calc-btn-group full-width"></div>
+
+					<!-- 文明按鈕 -->
+					<div class="calc-btn-group full-width">
+						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="16">光</button>
+						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="8">水</button>
+						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="4">闇</button>
+						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="2">火</button>
+						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="1">自</button>
+						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="32">無</button>
+						<button type="button" class="btn-calc btn-civ-spec" data-type="civ-spec" data-val="mono">單色</button>
+						<button type="button" class="btn-calc btn-civ-spec" data-type="civ-spec" data-val="multi">多色</button>
+					</div>
+
+					<!-- 數字與運算鍵網格 -->
+					<div class="calc-num-pad">
+						<button type="button" class="btn-calc btn-num" data-val="7">7</button>
+						<button type="button" class="btn-calc btn-num" data-val="8">8</button>
+						<button type="button" class="btn-calc btn-num" data-val="9">9</button>
+
+						<button type="button" class="btn-calc btn-num" data-val="4">4</button>
+						<button type="button" class="btn-calc btn-num" data-val="5">5</button>
+						<button type="button" class="btn-calc btn-num" data-val="6">6</button>
+
+						<button type="button" class="btn-calc btn-num" data-val="1">1</button>
+						<button type="button" class="btn-calc btn-num" data-val="2">2</button>
+						<button type="button" class="btn-calc btn-num" data-val="3">3</button>
+
+						<button type="button" class="btn-calc btn-num" data-val="0">0</button>
+						<button type="button" class="btn-calc btn-wave" data-val="~">~</button>
+						<button type="button" class="btn-calc btn-enter" id="btn-quick-enter">ENTER ↵</button>
+					</div>
+
+					<!-- 控制列 (清除 / 開始搜尋) -->
+					<div class="calc-action-row">
+						<button type="button" class="btn-calc-action btn-clear" id="btn-quick-clear">🧹 清除條件</button>
+						<button type="button" class="btn-calc-action btn-submit" id="btn-quick-submit">🔍 帶入過濾並搜尋</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
         <!-- A. 卡種選擇 -->
         <div class="col" id="section-a">
             <h3>
@@ -576,19 +895,92 @@
     </div>
 
     <!-- 第二個頁籤：查詢結果 (列表) -->
-    <div id="tab-list" class="tab-content">
-        <div id="list-container">
-            <div class="empty-state">尚無資料</div>
-        </div>
-    </div>
+	<div id="tab-list" class="tab-content">
+		
+		<!-- 抽屜工具列 -->
+		<div class="drawer-container" id="drawer-tab2">
+			<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
+				<span>⚙️ 排序與列表匯出工具</span>
+				<span class="drawer-arrow" style="font-size: 10px;">▼</span>
+			</div>
+			<div class="drawer-content">
+				<!-- 1. 排序區塊 -->
+				<div class="drawer-row">
+					<label>排序：</label>
+					<select id="sort-select">
+						<option value="default" selected>預設</option>
+						<option value="name_asc">卡名 (升冪 A→Z)</option>
+						<option value="name_desc">卡名 (降冪 Z→A)</option>
+						<option value="cost_asc">費用 (升冪 低→高)</option>
+						<option value="cost_desc">費用 (降冪 高→低)</option>
+						<option value="power_asc">攻擊力 (升冪 低→高)</option>
+						<option value="power_desc">攻擊力 (降冪 高→低)</option>
+						<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+					</select>
+				</div>
+				<!-- 2. 匯出區塊 -->
+				<div class="drawer-row">
+					<label>匯出：</label>
+					<button type="button" class="btn-drawer-action" id="btn-export-list">📄 匯出文字與圖片至新分頁</button>
+				</div>
+				<!-- 抽屜區塊內新增第 3 行按鈕 -->
+				<div class="drawer-row">
+					<label>歷史：</label>
+					<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="list-container">
+			<div class="empty-state">尚無資料</div>
+		</div>
+	</div>
 	
 	<!-- 第三個頁籤：查詢結果 (雙欄分割版 - 僅限桌機) -->
 	<div id="tab-list-split" class="tab-content">
 		<div class="split-layout-container">
 			<!-- 左邊列表區域 -->
-			<div class="split-left-panel" id="list-container-split">
-				<div class="empty-state">尚無資料</div>
+			<div class="split-left-panel">
+				<!-- 抽屜工具列 (Page 3 專用 ID) -->
+				<div class="drawer-container" id="drawer-tab3">
+					<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
+						<span>⚙️ 排序與列表匯出工具</span>
+						<span class="drawer-arrow" style="font-size: 10px;">▼</span>
+					</div>
+					<div class="drawer-content">
+						<!-- 1. 排序區塊 -->
+						<div class="drawer-row">
+							<label>排序：</label>
+							<select class="sort-select-input" id="sort-select-split">
+								<option value="default" selected>預設</option>
+								<option value="name_asc">卡名 (升冪 A→Z)</option>
+								<option value="name_desc">卡名 (降冪 Z→A)</option>
+								<option value="cost_asc">費用 (升冪 低→高)</option>
+								<option value="cost_desc">費用 (降冪 高→低)</option>
+								<option value="power_asc">攻擊力 (升冪 低→高)</option>
+								<option value="power_desc">攻擊力 (降冪 高→低)</option>
+								<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+							</select>
+						</div>
+						<!-- 2. 匯出區塊 -->
+						<div class="drawer-row">
+							<label>匯出：</label>
+							<button type="button" class="btn-drawer-action btn-export-action">📄 匯出文字與圖片至新分頁</button>
+						</div>
+						<!-- 抽屜區塊內新增第 3 行按鈕 -->
+						<div class="drawer-row">
+							<label>歷史：</label>
+							<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- 卡牌列表容器 -->
+				<div id="list-container-split">
+					<div class="empty-state">尚無資料</div>
+				</div>
 			</div>
+
 			<!-- 右邊 Detail 詳細資訊區域 -->
 			<div class="split-right-panel" id="detail-panel-split">
 				<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>
@@ -675,6 +1067,33 @@
         let rawNicknames = [];
 		let rawDiary = [];   // 💡 新增：日記快取變數
 		let rawSetlist = {}; // 系列快取變數
+		// 全域快取當前過濾後的原始結果
+		let currentFilterResults = [];
+
+		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
+		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
+			selectEl.addEventListener('change', (e) => {
+				// 讓 Page 2 與 Page 3 的下拉選單保持選擇一致
+				document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = e.target.value);
+				renderCurrentResultsWithSort();
+			});
+		});
+
+		// ✅ 修正：同時監聽兩頁的匯出按鈕
+		document.querySelectorAll('#btn-export-list, .btn-export-action').forEach(btn => {
+			btn.addEventListener('click', () => {
+				closeAllDrawers(); // 💡 關閉抽屜
+				exportResultsToNewTab();
+			});
+		});
+		
+		// 監聽兩頁的歷史紀錄按鈕點擊
+		document.querySelectorAll('.btn-history-action').forEach(btn => {
+			btn.addEventListener('click', () => {
+				closeAllDrawers(); // 💡 關閉抽屜
+				searchHistoryCards();
+			});
+		});
 
         // 極大數值改以無限符號 ∞ 替代之數值判斷
         const INFINITY_THRESHOLD = 9000000000000000;
@@ -776,6 +1195,10 @@
         // --- 選項初始化功能 ---
         /* 修改後 */
 		btnReset.addEventListener('click', () => {
+		
+			// ✅ 修正為：
+			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
+
 			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
 			checkAllStatus();
 
@@ -998,6 +1421,38 @@
             }
 			
         }
+		
+		// 全域卡名歷史紀錄 (儲存結構改為物件陣列：[{ name: '卡名', time: 時間戳記 }, ...])
+		let cardClickHistory = JSON.parse(localStorage.getItem('dm_card_click_history') || '[]');
+
+		// 💡 1. 紀錄/更新點擊卡名的輔助函式
+		function recordCardHistory(cardName) {
+			const cleanName = cleanCardName(cardName);
+			if (!cleanName) return;
+
+			const now = Date.now();
+
+			// 格式相容性處理：若舊資料儲存的是純字串，先轉為物件格式
+			cardClickHistory = cardClickHistory.map(item => {
+				return (typeof item === 'string') ? { name: item, time: now } : item;
+			});
+
+			// 剔除已存在的同名卡片 (無論原本在哪個位置)
+			cardClickHistory = cardClickHistory.filter(item => item && item.name !== cleanName);
+
+			// 將最新點擊的卡名與當下時間戳記插入最前面 (位置放到最新)
+			cardClickHistory.unshift({
+				name: cleanName,
+				time: now
+			});
+
+			// 只保留最近 50 筆紀錄
+			if (cardClickHistory.length > 50) {
+				cardClickHistory.pop();
+			}
+
+			localStorage.setItem('dm_card_click_history', JSON.stringify(cardClickHistory));
+		}
 
         // --- 下拉選單產生與無限符號轉化 ---
         function initStatsSelects(stats) {
@@ -1119,6 +1574,7 @@
 
 				sortCardTypes(); 
 				renderCardTypes();
+				initQuickCardTypes(); // 👈 補上這一行！
 				initDropdownData();
 				initSeriesDropdown();
 				renderLatestSetButtons();
@@ -1309,6 +1765,108 @@
             document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = isSelectAll);
             checkAllStatus();
         });
+		
+		function getSortedResults(dataList) {
+			const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
+			const sortSelectEl = isSplitActive 
+				? (document.getElementById('sort-select-split') || document.getElementById('sort-select'))
+				: (document.getElementById('sort-select') || document.getElementById('sort-select-split'));
+			const sortType = sortSelectEl?.value || 'default';
+			
+			// 取得過濾條件，檢查是否有指定商品 (seriesSmall)
+			const filterConfig = getFilterConfigFromUI();
+			const currentSetObj = (filterConfig.seriesSmall && rawSetlist[filterConfig.seriesSmall]) 
+				? rawSetlist[filterConfig.seriesSmall] 
+				: null;
+
+			// 💡 修正後的 [預設] 排序邏輯
+			if (sortType === 'default') {
+				if (currentSetObj) {
+					// A. 有指定商品：依照「商品→卡牌列表的資料順序」進行排序
+					const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+					const orderMap = new Map();
+					setCardList.forEach((item, index) => {
+						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+						if (typeof itemName === 'string') {
+							const cleanItemName = itemName.trim();
+							if (!orderMap.has(cleanItemName)) orderMap.set(cleanItemName, index);
+						}
+					});
+
+					return [...dataList].sort((a, b) => {
+						const nameA = (a.name || "").trim();
+						const nameB = (b.name || "").trim();
+						const indexA = orderMap.has(nameA) ? orderMap.get(nameA) : 999999;
+						const indexB = orderMap.has(nameB) ? orderMap.get(nameB) : 999999;
+						if (indexA !== indexB) return indexA - indexB;
+						return nameA.localeCompare(nameB, 'zh-TW');
+					});
+				} else {
+					// B. 沒有指定商品：預設為「卡名升冪」
+					return [...dataList].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-TW'));
+				}
+			}
+
+			const NEGATIVE_INFINITY = -999999999;
+
+			// 取得卡牌主要數值輔助函式
+			const getCost = (c) => (c.wdata && c.wdata[0] && c.wdata[0].cost !== undefined && c.wdata[0].cost !== null) ? Number(c.wdata[0].cost) : NEGATIVE_INFINITY;
+			const getPower = (c) => (c.wdata && c.wdata[0] && c.wdata[0].power !== undefined && c.wdata[0].power !== null) ? Number(c.wdata[0].power) : NEGATIVE_INFINITY;
+
+			// 計算文明 Bitmask & 顏色總數
+			const getCivInfo = (c) => {
+				let bitmask = 0;
+				if (c.wdata && Array.isArray(c.wdata)) {
+					c.wdata.forEach(w => bitmask |= (parseInt(w.civil) || 0));
+				}
+				const validBits = bitmask & 31; // 光16 水8 闇4 火2 自1
+				let count = 0;
+				for (let i = 0; i < 5; i++) {
+					if ((validBits & (1 << i)) !== 0) count++;
+				}
+				if (count === 0) count = 0; // 無色視為 0 色
+				return { bitmask, count, isZero: bitmask === 32 || count === 0 };
+			};
+
+			return [...dataList].sort((a, b) => {
+				switch (sortType) {
+					case 'name_asc':
+						return (a.name || '').localeCompare(b.name || '', 'zh-TW');
+					case 'name_desc':
+						return (b.name || '').localeCompare(a.name || '', 'zh-TW');
+					case 'cost_asc':
+						return getCost(a) - getCost(b);
+					case 'cost_desc':
+						return getCost(b) - getCost(a);
+					case 'power_asc':
+						return getPower(a) - getPower(b);
+					case 'power_desc':
+						return getPower(b) - getPower(a);
+					case 'civ_custom': {
+						// 文明排序邏輯: 光單(16) -> 水單(8) -> 闇單(4) -> 火單(2) -> 自然單(1) -> 無色 -> 雙色 -> 三色 -> 四色 -> 五色
+						const civA = getCivInfo(a);
+						const civB = getCivInfo(b);
+
+						const groupA = civA.count <= 1 ? 1 : civA.count;
+						const groupB = civB.count <= 1 ? 1 : civB.count;
+
+						if (groupA !== groupB) return groupA - groupB;
+
+						if (groupA === 1) {
+							const orderMap = { 16: 1, 8: 2, 4: 3, 2: 4, 1: 5 };
+							const orderA = orderMap[civA.bitmask] || 6;
+							const orderB = orderMap[civB.bitmask] || 6;
+							if (orderA !== orderB) return orderA - orderB;
+						} else {
+							if (civA.bitmask !== civB.bitmask) return civB.bitmask - civA.bitmask;
+						}
+						return (a.name || '').localeCompare(b.name || '', 'zh-TW');
+					}
+					default:
+						return 0;
+				}
+			});
+		}
 
         function generateOptionsHtml(dataList) {
 			let sorted = [...dataList].sort((a,b) => (a.jap || "").localeCompare(b.jap || ""));
@@ -1553,12 +2111,12 @@
         }
 
         // =========================================
-		// 搜尋過濾核心演算法 (需求 3 修改：牌組卡牌加上底線)
+		// 搜尋過濾核心演算法 (整合後)
 		// =========================================
 		btnSearch.addEventListener('click', () => {
 			hasSearched = true;
 			
-			// 💡 改用 navigateToResultPage() 依偏好決定跳 Page 2 還是 Page 3
+			// 跳轉至結果頁籤
 			navigateToResultPage();
 
 			const filterConfig = getFilterConfigFromUI();
@@ -1574,27 +2132,47 @@
 				}
 			}
 
+			// 1. 執行條件過濾
 			let filterResults = globalCardData.filter(card => {
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
 
-			// 清空 Page 2 與 Page 3 兩邊的容器
+			// 2. 將過濾出來的原始資料存入全域快取
+			currentFilterResults = filterResults;
+
+			// 3. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
+			renderCurrentResultsWithSort();
+		});
+		
+		function renderCurrentResultsWithSort() {
+			// 取得 Page 2 與 Page 3 的清單 DOM 容器
 			const listContainerPage2 = document.getElementById('list-container');
 			const listContainerPage3 = document.getElementById('list-container-split');
 			const rightPanelPage3 = document.getElementById('detail-panel-split');
 
+			if (!listContainerPage2 || !listContainerPage3) return;
+
+			// 清空 Page 2 與 Page 3 兩邊的容器
 			listContainerPage2.innerHTML = '';
 			listContainerPage3.innerHTML = '';
+			
+			// 如果 Page 3 有右側面板，重置其內容
 			if (rightPanelPage3) {
 				rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
 			}
 
-			if (filterResults.length === 0) {
+			// 若無搜尋結果，顯示查無資料
+			if (!currentFilterResults || currentFilterResults.length === 0) {
 				listContainerPage2.innerHTML = '<div class="empty-state">查無資料</div>';
 				listContainerPage3.innerHTML = '<div class="empty-state">查無資料</div>';
 				return;
 			}
 
+			// 1. 取得排序後的資料列表
+			const sortedResults = getSortedResults(currentFilterResults);
+
+			// 2. 取得當前 UI 的商品（Setcode）狀態，以便處理商品卡號/組牌張數與多版本底線標記
+			const filterConfig = getFilterConfigFromUI();
 			let currentSetObj = null;
 			let isDeckSet = false;
 
@@ -1603,30 +2181,7 @@
 				isDeckSet = (currentSetObj.isdeck === true);
 			}
 
-			if (currentSetObj) {
-				const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
-				const orderMap = new Map();
-				setCardList.forEach((item, index) => {
-					const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-					if (typeof itemName === 'string') {
-						const cleanItemName = itemName.trim();
-						if (!orderMap.has(cleanItemName)) orderMap.set(cleanItemName, index);
-					}
-				});
-
-				filterResults.sort((a, b) => {
-					const nameA = (a.name || "").trim();
-					const nameB = (b.name || "").trim();
-					const indexA = orderMap.has(nameA) ? orderMap.get(nameA) : 999999;
-					const indexB = orderMap.has(nameB) ? orderMap.get(nameB) : 999999;
-					if (indexA !== indexB) return indexA - indexB;
-					return nameA.localeCompare(nameB, 'zh-TW');
-				});
-			} else {
-				filterResults.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'zh-TW'));
-			}
-
-			// 渲染卡片 List Item (建立生成 Element 輔助函式)
+			// 3. 建立 Card List Item 生成輔助函式（整合文明背景與商品顯示名稱）
 			function createCardListItem(card) {
 				let combinedCiv = 0;
 				if (card.wdata && Array.isArray(card.wdata)) {
@@ -1673,27 +2228,333 @@
 				return { itemDiv, combinedCiv, matchedItem };
 			}
 
-			// 將卡牌項目加入兩邊容器，並綁定點擊事件
-			filterResults.forEach(card => {
-				// 1. 生成 Page 2 的 Node
+			// 4. 迴圈渲染排序後的卡牌項目並綁定點擊事件
+			sortedResults.forEach(card => {
+				// 生成 Page 2 的 Node 並綁定 Modal 彈窗事件
 				const res2 = createCardListItem(card);
+				// 生成 Page 2 的 Node 並綁定 Modal 彈窗事件
 				res2.itemDiv.addEventListener('click', () => {
+					recordCardHistory(card.name); // 💡 寫入歷史紀錄
 					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
 					res2.itemDiv.classList.add('selected');
 					openCardModal(card, res2.combinedCiv, res2.matchedItem);
 				});
+
 				listContainerPage2.appendChild(res2.itemDiv);
 
-				// 2. 生成 Page 3 的 Node
+				// 生成 Page 3 的 Node 並綁定右側 Split Detail 渲染事件
 				const res3 = createCardListItem(card);
+				// 生成 Page 3 的 Node 並綁定右側 Split Detail 渲染事件
 				res3.itemDiv.addEventListener('click', () => {
+					recordCardHistory(card.name); // 💡 寫入歷史紀錄
 					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
 					res3.itemDiv.classList.add('selected');
 					renderSplitDetail(card, res3.combinedCiv, res3.matchedItem);
 				});
 				listContainerPage3.appendChild(res3.itemDiv);
+
 			});
-		});
+			
+		}
+		
+		// 💡 收合所有功能抽屜的輔助函式
+		function closeAllDrawers() {
+			document.querySelectorAll('.drawer-container').forEach(drawer => {
+				drawer.classList.remove('open');
+				const arrow = drawer.querySelector('.drawer-arrow');
+				if (arrow) arrow.innerText = '▼';
+			});
+		}
+		
+		// 💡 2. 查詢歷史紀錄 (含 24 小時自動過濾與重排)
+		function searchHistoryCards() {
+			if (!cardClickHistory || cardClickHistory.length === 0) {
+				alert("目前尚無瀏覽歷史紀錄！");
+				return;
+			}
+
+			const now = Date.now();
+			const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000; // 24小時的毫秒數
+
+			// 格式相容性處理並清掉 24 小時內未再點擊過的卡牌
+			cardClickHistory = cardClickHistory
+				.map(item => (typeof item === 'string' ? { name: item, time: now } : item))
+				.filter(item => item && item.name && (now - item.time < TWENTY_FOUR_HOURS));
+
+			// 同步更新清理後的資料回 localStorage
+			localStorage.setItem('dm_card_click_history', JSON.stringify(cardClickHistory));
+
+			if (cardClickHistory.length === 0) {
+				alert("24 小時內的歷史紀錄已全數過期！");
+				return;
+			}
+
+			// 建立卡名對應索引 Map 以保持「最後點擊時間降冪」排序
+			const historyNames = cardClickHistory.map(item => item.name);
+			const historyMap = new Map(historyNames.map((name, idx) => [name, idx]));
+
+			// 依據未過期的卡名過濾全域卡牌資料
+			let historyResults = globalCardData.filter(card => {
+				const cName = cleanCardName(card.name);
+				return historyMap.has(cName);
+			});
+
+			// 依照歷史點擊順序排序 (越新點擊的越靠前)
+			historyResults.sort((a, b) => {
+				const orderA = historyMap.get(cleanCardName(a.name));
+				const orderB = historyMap.get(cleanCardName(b.name));
+				return orderA - orderB;
+			});
+
+			// 將過濾結果寫入全域快取並重新繪製列表
+			currentFilterResults = historyResults;
+			renderCurrentResultsWithSort();
+		}
+		
+		function exportResultsToNewTab() {
+			if (!currentFilterResults || currentFilterResults.length === 0) {
+				alert("目前沒有可匯出的卡牌資料！");
+				return;
+			}
+
+			// 1. 詢問使用者是否匯出圖片 (節省流量)
+			const includeImage = confirm("請問是否要載入並匯出卡牌圖片？\n(選擇「取消」可節省網路流量僅匯出效果文字)");
+
+			const sortedList = getSortedResults(currentFilterResults);
+			const filterConfig = getFilterConfigFromUI();
+			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+
+			// 建立全域已出現過的能力關鍵字集合，避免重複註釋
+			const globalAppearedAbilities = new Set();
+
+			let htmlContent = `
+			<!DOCTYPE html>
+			<html lang="zh-TW">
+			<head>
+				<meta charset="UTF-8">
+				<title>卡牌列表匯出結果 (${sortedList.length}張)</title>
+				<style>
+					body { font-family: "微軟正黑體", sans-serif; padding: 20px; background: #fff; color: #111; line-height: 1.5; }
+					h1 { border-bottom: 2px solid #333; padding-bottom: 8px; font-size: 20px; }
+					.card-item { border: 1px solid #ccc; border-radius: 6px; padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; page-break-inside: avoid; }
+					.card-img { width: 140px; height: 196px; object-fit: contain; flex-shrink: 0; background: #f0f0f0; border-radius: 4px; }
+					.card-detail { flex: 1; }
+					.card-title { font-size: 16px; font-weight: bold; color: #d32f2f; margin-bottom: 6px; }
+					.card-flavor { background: #fffbe6; border: 1px solid #ffe58f; padding: 6px 10px; font-style: italic; font-size: 13px; color: #873800; border-radius: 4px; margin-top: 8px; margin-bottom: 8px; }
+					.wdata-box { background: #f8f9fa; border-left: 3px solid #333; padding: 8px; margin-top: 6px; font-size: 13px; }
+					.sp-list { margin: 4px 0 0 18px; padding: 0; }
+					
+					/* 超化模式分隔橫線 */
+					.hyper-divider {
+						display: flex;
+						align-items: center;
+						text-align: center;
+						color: #d32f2f;
+						font-weight: bold;
+						font-size: 12px;
+						margin: 8px 0 4px 0;
+					}
+					.hyper-divider::before, .hyper-divider::after {
+						content: '';
+						flex: 1;
+						border-bottom: 1px dashed #d32f2f;
+					}
+					.hyper-divider:not(:empty)::before { margin-right: .5em; }
+					.hyper-divider:not(:empty)::after { margin-left: .5em; }
+
+					/* 能力關鍵字註釋區塊 */
+					.ability-explain-box {
+						background: #eef6ff;
+						border: 1px solid #bbdefb;
+						border-radius: 4px;
+						padding: 8px 12px;
+						margin-top: 8px;
+						font-size: 12px;
+					}
+					.ability-explain-item { margin-bottom: 6px; }
+					.ability-explain-item:last-child { margin-bottom: 0; }
+					.ability-title { font-weight: bold; color: #1565c0; }
+				</style>
+			</head>
+			<body>
+				<h1>卡牌列表匯出資料 (共 ${sortedList.length} 筆)</h1>
+			`;
+
+			sortedList.forEach((card, idx) => {
+				const cleanName = card.name || '未命名卡牌';
+				let picUrl = '';
+				let flavorText = '';
+				let setCardId = '';
+
+				// 1. 優先嘗試從「指定商品」中抓取圖片、Flavor 與 ID
+				if (currentSetObj) {
+					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+					const matchedItem = cardList.find(item => {
+						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+						return typeof itemName === 'string' && itemName.trim() === cleanName.trim();
+					});
+
+					if (matchedItem && typeof matchedItem === 'object') {
+						if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) picUrl = matchedItem.pic[0];
+						else if (typeof matchedItem.pic === 'string') picUrl = matchedItem.pic;
+
+						if (Array.isArray(matchedItem.flavor) && matchedItem.flavor.length > 0) flavorText = matchedItem.flavor[0];
+						else if (typeof matchedItem.flavor === 'string') flavorText = matchedItem.flavor;
+
+						if (matchedItem.id) setCardId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+					}
+				}
+
+				// 2. 如果指定商品沒抓到圖片，退回讀取卡牌自身的預設 pic
+				if (!picUrl || picUrl.trim() === '') {
+					picUrl = card.pic || '';
+				}
+
+				// 💡 3. 強大備援機制：若圖片依然為空，遍歷所有商品包 (rawSetlist) 尋找該卡名的任何一張有效圖片！
+				if (!picUrl || picUrl.trim() === '') {
+					const cleanTargetName = cleanName.trim();
+					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+						for (const setObj of Object.values(rawSetlist)) {
+							const cardList = setObj.setcardlist || setObj.cardlist;
+							if (Array.isArray(cardList)) {
+								const foundItem = cardList.find(item => {
+									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+								});
+
+								if (foundItem && foundItem.pic) {
+									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0 && foundItem.pic[0]) {
+										picUrl = foundItem.pic[0];
+										break;
+									} else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') {
+										picUrl = foundItem.pic;
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+
+				htmlContent += `<div class="card-item">`;
+				if (includeImage) {
+					htmlContent += picUrl 
+						? `<img class="card-img" src="${picUrl}" alt="${cleanName}" />` 
+						: `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
+				}
+
+				htmlContent += `<div class="card-detail">`;
+				htmlContent += `<div class="card-title">#${idx + 1} ${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
+
+				// 用於紀錄這張卡片新出現的能力關鍵字
+				const newAbilitiesForThisCard = [];
+
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => {
+						// 4. 匯出卡種 (轉換中文)
+						const typeText = (w.type && Array.isArray(w.type)) 
+							? w.type.map(t => getCardTypeText(t)).join(', ') 
+							: '無';
+
+						// 3. 超化獸 Power 處理：寫在原本 Power 後面，用 / 分開
+						let displayPower = w.power ?? '-';
+						if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
+							displayPower = `${displayPower} / ${w.hypermode.power}`;
+						}
+
+						htmlContent += `<div class="wdata-box">`;
+						htmlContent += `<div><b>卡種:</b> ${typeText} | <b>費用:</b> ${w.cost ?? '-'} | <b>攻擊力:</b> ${displayPower} | <b>種族:</b> ${w.race ? w.race.join(', ') : '無'}</div>`;
+
+						// 💡 預先將能力關鍵字字典依據長度「由長到短」排序 (長詞優先)
+						const sortedRawAbilities = (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities))
+							? [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length)
+							: [];
+
+						// 收集 sp 中的能力關鍵字（供註釋使用）
+						const checkAndCollectAbilities = (spList) => {
+							if (!spList || !Array.isArray(spList)) return;
+							
+							spList.forEach(spText => {
+								if (!spText) return;
+								
+								// 複製一份工作字串用於遮蔽已匹配的字段
+								let tempSpText = spText;
+
+								sortedRawAbilities.forEach(abil => {
+									const keyword = abil.jap;
+									
+									// 使用 tempSpText 比對，確保被長詞吃掉的字段不會被短詞重複匹配
+									if (tempSpText.includes(keyword)) {
+										// 1. 若該關鍵字未曾在全域出現過，加入本次卡片的新註釋清單
+										if (!globalAppearedAbilities.has(keyword)) {
+											globalAppearedAbilities.add(keyword);
+											newAbilitiesForThisCard.push(abil);
+										}
+
+										// 2. 關鍵步驟：將匹配到的字串從 tempSpText 中「遮蔽/取代」掉
+										// 這樣短詞 (如 Shield Trigger) 就不會再從 Super Shield Trigger 中被找出來
+										const regex = new RegExp(escapeRegExp(keyword), 'g');
+										tempSpText = tempSpText.replace(regex, '___MATCHED___');
+									}
+								});
+							});
+						};
+
+						// 原本能力 (sp)
+						if (w.sp && w.sp.length > 0) {
+							checkAndCollectAbilities(w.sp);
+							htmlContent += `<ul class="sp-list">`;
+							w.sp.forEach(s => htmlContent += `<li>${s}</li>`);
+							htmlContent += `</ul>`;
+						}
+
+						// 3. 超化模式能力 (hypermode.sp)：中間畫一條寫著 Hyper Mode 的橫線
+						if (w.hypermode && w.hypermode.sp && w.hypermode.sp.length > 0) {
+							checkAndCollectAbilities(w.hypermode.sp);
+							htmlContent += `<div class="hyper-divider">Hyper Mode</div>`;
+							htmlContent += `<ul class="sp-list">`;
+							w.hypermode.sp.forEach(hs => htmlContent += `<li>${hs}</li>`);
+							htmlContent += `</ul>`;
+						}
+
+						htmlContent += `</div>`;
+					});
+				}
+
+				// 1. Flavor 放在能力 (sp) 的下面
+				if (flavorText) {
+					htmlContent += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
+				}
+
+				// 2. 新增能力關鍵字 (abilities) 註釋（前面出現過的就不再出現）
+				if (newAbilitiesForThisCard.length > 0) {
+					htmlContent += `<div class="ability-explain-box">`;
+					newAbilitiesForThisCard.forEach(abil => {
+						const headerLine = [abil.jap, abil.chi || abil.cht, abil.eng].filter(Boolean).join(' / ');
+						const descStr = abil.descript || abil.desc || abil.text || abil.detail || '(無效果說明)';
+						htmlContent += `
+							<div class="ability-explain-item">
+								<span class="ability-title">【${headerLine}】</span>: ${descStr}
+							</div>
+						`;
+					});
+					htmlContent += `</div>`;
+				}
+
+				htmlContent += `</div></div>`;
+			});
+
+			htmlContent += `</body></html>`;
+
+			// 開啟新分頁並寫入內容
+			const newWindow = window.open('', '_blank');
+			if (newWindow) {
+				newWindow.document.write(htmlContent);
+				newWindow.document.close();
+			} else {
+				alert("瀏覽器阻擋了彈出式分頁，請允許本站開啓彈出視窗。");
+			}
+		}
 
 		function getAllDescendantCardTypes(selectedTypeValues) {
 			const resultTypes = new Set(selectedTypeValues);
@@ -3606,6 +4467,297 @@
 
 			return processedText;
 		}
+		
+		// ========================================================
+		// ⚡ 快速計算機搜尋面板 (Quick Search Panel) 完整核心邏輯
+		// ========================================================
+
+		// 快搜狀態資料結構
+		let quickTags = [];        // 已確認的 Tag 陣列: [{ type, val, label, isRange }]
+		let numBuffer = "";        // 暫存未 Enter 的數字/波浪號字串
+
+		// 1. 切換（Toggle）非數值類型的 Tag (卡種, 文明, 單多色)
+		function toggleQuickTag(type, val, label, btnEl) {
+			commitNumBuffer(); // 若前面有未 Enter 的數字先自動打包
+
+			const index = quickTags.findIndex(t => t.type === type && t.val === val);
+
+			if (index !== -1) {
+				// 🔄 若已存在 ➔ 移除 Tag
+				quickTags.splice(index, 1);
+			} else {
+				// ➕ 若不存在 ➔ 新增 Tag
+				quickTags.push({ type, val, label });
+			}
+
+			renderQuickTags();
+		}
+
+		// 2. 處理數字與波浪號輸入
+		function handleNumInput(char) {
+			if (char === '~') {
+				if (numBuffer.endsWith('~')) return; // 限制：不連續輸入波浪號
+			}
+			numBuffer += char;
+			updateNumBufferDisplay();
+		}
+
+		// 3. 更新數字緩衝區顯示
+		function updateNumBufferDisplay() {
+			const bufEl = document.getElementById('quick-num-buffer');
+			if (bufEl) {
+				bufEl.innerText = numBuffer ? `輸入中: ${numBuffer}` : '';
+			}
+		}
+
+		// 4. 按下 ENTER 鍵，將 numBuffer 打包成標籤 (含同類型更新機制)
+		function commitNumBuffer() {
+			if (!numBuffer) return;
+
+			let text = numBuffer.trim();
+			numBuffer = "";
+			updateNumBufferDisplay();
+
+			if (text === "" || text === "~") return;
+
+			// 解析數字類型 (>= 500 為攻擊力，否則為費用)
+			const numbers = (text.match(/\d+/g) || []).map(Number);
+			const isPower = numbers.some(n => n >= 500);
+
+			const tagType = isPower ? 'power-range' : 'cost-range';
+			const tagLabel = isPower ? `攻擊力: ${text}` : `費用: ${text}`;
+
+			const newTag = {
+				type: tagType,
+				val: text,
+				label: tagLabel,
+				isRange: text.includes('~')
+			};
+
+			// 重複輸入時的「更新/覆蓋」邏輯
+			const existingIndex = quickTags.findIndex(t => t.type === tagType);
+			if (existingIndex !== -1) {
+				quickTags[existingIndex] = newTag;
+			} else {
+				quickTags.push(newTag);
+			}
+
+			renderQuickTags();
+		}
+
+		// 5. 繪製 Tag 畫面並同步所有按鈕的高亮狀態
+		function renderQuickTags() {
+			const display = document.getElementById('quick-tag-display');
+			if (!display) return;
+
+			if (quickTags.length === 0) {
+				display.innerHTML = '<span class="quick-placeholder">請點擊下方按鈕或使用鍵盤輸入條件...</span>';
+			} else {
+				display.innerHTML = '';
+				quickTags.forEach((tag, idx) => {
+					const tagEl = document.createElement('div');
+					tagEl.className = 'quick-tag';
+					tagEl.innerText = tag.label;
+					
+					// 點擊 Tag 刪除該條件
+					tagEl.addEventListener('click', () => {
+						quickTags.splice(idx, 1);
+						renderQuickTags();
+					});
+					display.appendChild(tagEl);
+				});
+			}
+
+			// 同步按鈕的「亮起/暗下」版型
+			syncAllButtonsState();
+		}
+
+		// 6. 根據 quickTags 陣列同步所有按鈕的高亮 (active) 狀態
+		function syncAllButtonsState() {
+			document.querySelectorAll('.btn-calc[data-type]').forEach(btn => {
+				const type = btn.dataset.type;
+				const val = btn.dataset.val;
+				const exists = quickTags.some(t => t.type === type && t.val === val);
+				btn.classList.toggle('active', exists);
+			});
+		}
+
+		// 7. 清除所有條件
+		function clearQuickSearch() {
+			quickTags = [];
+			numBuffer = "";
+			updateNumBufferDisplay();
+			renderQuickTags();
+		}
+
+		// 8. 帶入條件並執行搜尋
+		function submitQuickSearch() {
+			commitNumBuffer();
+
+			if (quickTags.length === 0) {
+				alert("請先輸入至少一個過濾條件！");
+				return;
+			}
+
+			// A. 先重設標準 UI 選項
+			const btnReset = document.getElementById('btn-reset');
+			if (btnReset) btnReset.click();
+
+			// B. 自動觸發精密搜尋模式（若包含 ~ 範圍條件）
+			const hasPrecisionRange = quickTags.some(t => t.isRange);
+			if (hasPrecisionRange) {
+				const btnAdv = document.getElementById('toggle-advanced');
+				if (btnAdv && !document.body.classList.contains('advanced-mode')) {
+					btnAdv.click();
+				}
+			}
+
+			// C. 帶入卡種
+			const targetCardTypes = quickTags.filter(t => t.type === 'cardtype').map(t => t.val);
+			if (targetCardTypes.length > 0) {
+				document.querySelectorAll('.chk-cardtype').forEach(cb => {
+					cb.checked = targetCardTypes.includes(cb.value);
+				});
+				checkAllStatus();
+			}
+
+			// D. 帶入必須文明 (#civ-require)
+			const targetCivs = quickTags.filter(t => t.type === 'civ').map(t => t.val);
+			document.querySelectorAll('#civ-require .civ-box:not([data-val="and"]):not([data-val="or"])').forEach(box => {
+				box.classList.remove('active');
+			});
+			if (targetCivs.length > 0) {
+				targetCivs.forEach(val => {
+					const b = document.querySelector(`#civ-require .civ-box[data-val="${val}"]`);
+					if (b) b.classList.add('active');
+				});
+			}
+
+			// E. 帶入單/多色 (自動判斷或依照使用者選擇)
+			const userSpecCivs = quickTags.filter(t => t.type === 'civ-spec').map(t => t.val);
+			const monoBox = document.querySelector('#civ-permit .civ-box[data-val="mono"]');
+			const multiBox = document.querySelector('#civ-permit .civ-box[data-val="multi"]');
+
+			if (userSpecCivs.length > 0) {
+				monoBox?.classList.remove('active');
+				multiBox?.classList.remove('active');
+				userSpecCivs.forEach(val => {
+					document.querySelector(`#civ-permit .civ-box[data-val="${val}"]`)?.classList.add('active');
+				});
+			} else if (targetCivs.length > 0) {
+				if (targetCivs.length === 1) {
+					monoBox?.classList.add('active');
+					multiBox?.classList.remove('active');
+				} else if (targetCivs.length >= 2) {
+					monoBox?.classList.remove('active');
+					multiBox?.classList.add('active');
+				}
+			}
+
+			// Helper: 解析數字並寫入選單
+			const applyRangeToSelects = (valStr, sel1Id, sel2Id) => {
+				const sel1 = document.getElementById(sel1Id);
+				const sel2 = document.getElementById(sel2Id);
+				if (!sel1) return;
+
+				if (valStr.includes('~')) {
+					const parts = valStr.split('~');
+					if (parts[0]) sel1.value = parts[0];
+					if (parts[1] && sel2) sel2.value = parts[1];
+				} else {
+					sel1.value = valStr;
+				}
+			};
+
+			// F. 帶入費用與攻擊力
+			const costTag = quickTags.find(t => t.type === 'cost-range');
+			if (costTag) applyRangeToSelects(costTag.val, 'cost-1', 'cost-2');
+
+			const powerTag = quickTags.find(t => t.type === 'power-range');
+			if (powerTag) applyRangeToSelects(powerTag.val, 'power-1', 'power-2');
+
+			// G. 收合面板並搜尋
+			if (typeof updateSummaryText === 'function') updateSummaryText();
+			const drawer = document.getElementById('drawer-quick-search');
+			if (drawer) {
+				drawer.classList.remove('open');
+				const arrow = drawer.querySelector('.drawer-arrow');
+				if (arrow) arrow.innerText = '▼';
+			}
+
+			const btnSearch = document.getElementById('btn-search');
+			if (btnSearch) btnSearch.click();
+		}
+
+		// 9. 渲染核心卡種 (main === true)
+		function initQuickCardTypes() {
+			const container = document.getElementById('quick-cardtypes-group');
+			if (!container || !Array.isArray(rawCardTypes)) return;
+
+			container.innerHTML = '';
+			rawCardTypes.forEach(ct => {
+				if (ct.main === true && ct.value) {
+					const btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = 'btn-calc btn-cardtype';
+					btn.dataset.type = 'cardtype';
+					btn.dataset.val = ct.value;
+					btn.innerText = ct.text;
+					btn.addEventListener('click', () => toggleQuickTag('cardtype', ct.value, ct.text, btn));
+					container.appendChild(btn);
+				}
+			});
+		}
+
+		// 10. 事件綁定 (DOM 載入完成時)
+		document.addEventListener('DOMContentLoaded', () => {
+			// 文明與單多色
+			document.querySelectorAll('.btn-civ, .btn-civ-spec').forEach(btn => {
+				btn.addEventListener('click', () => {
+					toggleQuickTag(btn.dataset.type, btn.dataset.val, btn.innerText, btn);
+				});
+			});
+
+			// 數字與波浪號
+			document.querySelectorAll('.btn-num, .btn-wave').forEach(btn => {
+				btn.addEventListener('click', () => handleNumInput(btn.dataset.val));
+			});
+
+			// Enter / 清除 / 提交
+			document.getElementById('btn-quick-enter')?.addEventListener('click', commitNumBuffer);
+			document.getElementById('btn-quick-clear')?.addEventListener('click', clearQuickSearch);
+			document.getElementById('btn-quick-submit')?.addEventListener('click', submitQuickSearch);
+
+			// 實體鍵盤監聽
+			document.addEventListener('keydown', (e) => {
+				const drawer = document.getElementById('drawer-quick-search');
+				if (!drawer || !drawer.classList.contains('open')) return;
+				if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+				if (e.key >= '0' && e.key <= '9') {
+					e.preventDefault();
+					handleNumInput(e.key);
+				} else if (e.key === '-' || e.key === '~') {
+					e.preventDefault();
+					handleNumInput('~');
+				} else if (e.key === 'Enter') {
+					e.preventDefault();
+					commitNumBuffer();
+				} else if (e.key === 'Backspace' || e.key === 'Delete') {
+					e.preventDefault();
+					if (numBuffer.length > 0) {
+						numBuffer = numBuffer.slice(0, -1);
+						updateNumBufferDisplay();
+					} else if (quickTags.length > 0) {
+						quickTags.pop();
+						renderQuickTags();
+					}
+				}
+			});
+		});
+
+		// 資料載入完成後初始化快搜卡種按鈕 (寫在 fetchFirebaseData 成功的流程內)
+		// 請確保在 fetchFirebaseData 的 end 或 initDropdownData() 裡加上: initQuickCardTypes();
 		
 		// 點擊「卡名標籤」與「分類標籤」後的快捷搜尋邏輯
 		function handleNameOrCategoryTagClick(targetName) {
