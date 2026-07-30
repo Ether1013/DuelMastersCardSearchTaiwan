@@ -174,12 +174,18 @@
         }
         .modal-overlay.active { display: flex; opacity: 1; }
 
-        .modal-card {
-            background: #fff; width: 90%; max-width: 650px; max-height: 85vh;
-            border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            display: flex; flex-direction: column; overflow: hidden;
-            transform: scale(0.9); transition: transform 0.25s ease;
-        }
+        /* ---------------- Page 2 (Popup 模式) ---------------- */
+		.modal-card {
+			background: #fff; width: 90%; max-width: 650px; max-height: 85vh;
+			border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+			display: flex; flex-direction: column; overflow: hidden;
+			transform: scale(0.9); transition: transform 0.25s ease, max-width 0.3s ease;
+		}
+
+		/* Page 2 撐開 Modal 外框 */
+		.modal-card.card-expanded {
+			max-width: 880px !important;
+		}
         .modal-overlay.active .modal-card { transform: scale(1); }
 
         .modal-header {
@@ -203,7 +209,22 @@
             flex-shrink: 0; display: flex; justify-content: center; align-items: flex-start;
             position: relative; top: 0; align-self: flex-start; padding: 0 15px;
         }
-        .modal-img { width: 100%; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); object-fit: contain; }
+        /* ================= 卡圖點擊放大相關樣式 ================= */
+		/* 卡圖基本樣式與動畫 */
+		.modal-img { 
+			width: 100%; 
+			border-radius: 6px; 
+			box-shadow: 0 3px 8px rgba(0,0,0,0.3); 
+			object-fit: contain; 
+			cursor: pointer; /* 提示可點擊 */
+			transition: all 0.3s ease;
+		}
+
+		/* 點擊放大後的卡圖標準尺寸 */
+		.modal-img.img-expanded {
+			width: 250px !important;
+			height: 350px !important;
+		}
         .no-image-box {
             height: 250px; background: #e0e0e0; color: #666; display: flex;
             justify-content: center; align-items: center; font-weight: bold;
@@ -235,8 +256,16 @@
         .effect-tag.tag-race { color: #047857; background-color: #d1fae5; border: 1px solid #6ee7b7; }
         .effect-tag.tag-race:hover { background-color: #a7f3d0; }
         
-        /* 切換箭頭樣式 */
-        .modal-img-container { position: relative; }
+        /* 卡圖外容器增加平滑動畫 */
+		.modal-img-container {
+			flex-shrink: 0; display: flex; justify-content: center; align-items: flex-start;
+			position: relative; top: 0; align-self: flex-start; padding: 0 15px;
+			transition: width 0.3s ease; /* 讓容器寬度也有動畫效果 */
+		}
+		/* 當卡圖放大時，卡圖外容器寬度增加 100px (從預設約 180px/250px 擴展) */
+		.modal-img-container.container-expanded {
+			width: 280px !important; /* 增加寬度以完美容納 250px 圖片 + padding */
+		}
 		.ver-arrow-btn {
 			position: absolute; top: 50%; transform: translateY(-50%);
 			background: rgba(0, 0, 0, 0.5); color: white; border: none;
@@ -301,14 +330,36 @@
         .desktop-only-tab { display: block; }
         #tab-list-split { display: none; padding: 20px; }
         #tab-list-split.active { display: block; }
-        .split-layout-container { display: flex; gap: 20px; align-items: flex-start; position: relative; }
-        .split-left-panel { flex: 0 0 calc(40% - 10px); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-        .split-right-panel {
-            flex: 0 0 calc(60% - 10px); position: sticky; top: 65px; height: calc(100vh - 150px);
-            overflow: hidden; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            padding: 15px; border: 1px solid #e2e8f0; box-sizing: border-box; display: flex; flex-direction: column;
-        }
+        /* 3. 第三頁 (Split 雙欄式)：擠壓左邊 List 寬度，擴大右邊 Detail */
+		.split-layout-container {
+			display: flex; gap: 20px; align-items: flex-start; position: relative; transition: all 0.3s ease;
+		}
+		/* Page 3：放大時擠壓左側列表，擴大右側 Detail */
+		.split-layout-container.is-expanded .split-left-panel {
+			flex: 0 0 calc(20% - 10px) !important; /* 擠壓左側列表 */
+		}
+
+		.split-layout-container.is-expanded .split-right-panel {
+			flex: 0 0 calc(80% - 10px) !important; /* 擴大右側 Detail */
+		}
+		.split-left-panel {
+			flex: 0 0 calc(40% - 10px); 
+			display: flex; flex-direction: column; gap: 10px; min-width: 0;
+			transition: flex 0.3s ease;
+		}
+
+		.split-right-panel {
+			flex: 0 0 calc(60% - 10px); position: sticky; top: 65px; height: calc(100vh - 150px);
+			overflow: hidden; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+			padding: 15px; border: 1px solid #e2e8f0; box-sizing: border-box; display: flex; flex-direction: column;
+			transition: flex 0.3s ease;
+		}
         .split-detail-info-scroll { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
+		/* Page 3 專用：放大時強制右側資訊欄縮小 flex-basis，讓卡圖容器有充足寬度展開 */
+		.split-layout-container.is-expanded .modal-info-container {
+			flex: 1 1 auto;
+			min-width: 0; /* 擠壓屬性文字區塊，為放大後的卡圖容器留出空間 */
+		}
         .split-empty-placeholder {
             display: flex; justify-content: center; align-items: center; height: 300px;
             color: #888; font-size: 16px; font-weight: bold; border: 2px dashed #cbd5e1; border-radius: 8px;
@@ -2236,8 +2287,9 @@
 			return parts.join('\n');
 		}
 		
-		// 💡 抽離出的共用 Detail 渲染邏輯
+		// 💡 抽離出的共用 Detail 渲染邏輯 (含卡圖點擊放大與跨頁面佈局擠壓控制)
 		function renderDetailContentToContainer(card, combinedCiv, matchedItem, targetImgBox, targetInfoContainer, isModal = false) {
+		
 			let idList = [];
 			let picList = [];
 			let flavorList = [];
@@ -2278,7 +2330,7 @@
 			imgEl.style.width = boxWidth;
 			imgEl.style.height = boxHeight;
 
-			// 💡 修改處：加上 encodeURIComponent 讓圖片經由 server 的 proxy 轉接，跨過 CORS 限制
+			// 💡 載入圖片來源 (包含備援機制)
 			function updateImageSrc() {
 				let currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
 				if (!currentPic || currentPic.trim() === '') {
@@ -2302,7 +2354,6 @@
 				}
 
 				if (currentPic && currentPic.trim() !== '') {
-					// 關鍵修改：如果是外部 Takara Tomy 的圖片，透過 Python Server Proxy 載入
 					imgEl.src = currentPic;
 					imgEl.style.display = 'block';
 					imgEl.onerror = () => {
@@ -2310,8 +2361,9 @@
 						targetImgBox.querySelector('.no-image-box')?.remove();
 						const noImg = document.createElement('div');
 						noImg.className = 'no-image-box';
-						noImg.style.width = boxWidth;
-						noImg.style.height = boxHeight;
+						const isExpandedNow = localStorage.getItem('dm_card_img_state') === 'expanded';
+						noImg.style.width = isExpandedNow ? '250px' : boxWidth;
+						noImg.style.height = isExpandedNow ? '350px' : boxHeight;
 						noImg.innerText = 'No Image';
 						targetImgBox.appendChild(noImg);
 					};
@@ -2320,19 +2372,79 @@
 					targetImgBox.querySelector('.no-image-box')?.remove();
 					const noImg = document.createElement('div');
 					noImg.className = 'no-image-box';
-					noImg.style.width = boxWidth;
-					noImg.style.height = boxHeight;
+					const isExpandedNow = localStorage.getItem('dm_card_img_state') === 'expanded';
+					noImg.style.width = isExpandedNow ? '250px' : boxWidth;
+					noImg.style.height = isExpandedNow ? '350px' : boxHeight;
 					noImg.innerText = 'No Image';
 					targetImgBox.appendChild(noImg);
 				}
 			}
 
+			// 先將 imgEl 加入容器中
 			targetImgBox.appendChild(imgEl);
 			updateImageSrc();
 
+			// 💡 全域儲存的卡圖尺寸狀態 ('normal' 或 'expanded')
+			const savedImgState = localStorage.getItem('dm_card_img_state') || 'normal';
+			const isInitiallyExpanded = savedImgState === 'expanded';
+
+			// 💡 輔助函式：根據狀態套用/移除放大與撐開/擠壓 Class
+			function applyImageExpandState(expanded) {
+				imgEl.classList.toggle('img-expanded', expanded);
+				targetImgBox.classList.toggle('container-expanded', expanded);
+
+				// 同步影響無圖片時的文字區塊尺寸
+				const noImg = targetImgBox.querySelector('.no-image-box');
+				if (noImg) {
+					if (expanded) {
+						noImg.style.width = '250px';
+						noImg.style.height = '350px';
+					} else {
+						noImg.style.width = boxWidth;
+						noImg.style.height = boxHeight;
+					}
+				}
+
+				if (isModal) {
+					// --- Page 2 (Popup 模式) ---
+					const modalCard = targetInfoContainer.closest('.modal-card');
+					if (modalCard) {
+						modalCard.classList.toggle('card-expanded', expanded);
+					}
+				} else {
+					// --- Page 3 (Split 雙欄模式) ---
+					const splitContainer = targetInfoContainer.closest('.split-layout-container');
+					if (splitContainer) {
+						splitContainer.classList.toggle('is-expanded', expanded);
+					}
+				}
+			}
+
+			// 💡 初始化：渲染詳細資料時自動套用使用者記錄的狀態
+			applyImageExpandState(isInitiallyExpanded);
+
+			// 💡 事件觸發切換函式
+			function handleImageToggle(e) {
+				// 避免點擊切換版本箭頭 (❮ ❯) 時觸發縮放
+				if (e.target.classList.contains('ver-arrow-btn')) return;
+
+				const currentState = localStorage.getItem('dm_card_img_state') === 'expanded';
+				const nextState = !currentState;
+				
+				// 儲存偏好至 localStorage
+				localStorage.setItem('dm_card_img_state', nextState ? 'expanded' : 'normal');
+				
+				// 套用狀態
+				applyImageExpandState(nextState);
+			}
+
+			// 💡 綁定點擊事件至 targetImgBox 容器（點擊圖片或文字框皆可放大/縮小）
+			targetImgBox.style.cursor = 'pointer';
+			targetImgBox.onclick = handleImageToggle;
+
 			// 1. 建立 Flavor 區塊容器
 			const flavorBlock = document.createElement('div');
-			flavorBlock.className = 'flavor-block'; // 💡 加上 class 方便辨識
+			flavorBlock.className = 'flavor-block';
 			flavorBlock.style.backgroundColor = '#fffbe6';
 			flavorBlock.style.border = '1px solid #ffe58f';
 			flavorBlock.style.borderRadius = '6px';
@@ -2500,7 +2612,7 @@
 					block.appendChild(spContainer);
 
 					const abilExplainBtn = document.createElement('button');
-					abilExplainBtn.className = 'btn-icon abil-explain-btn'; // 💡 加上 abil-explain-btn class
+					abilExplainBtn.className = 'btn-icon abil-explain-btn';
 					abilExplainBtn.style.marginTop = '10px';
 					abilExplainBtn.style.alignSelf = 'flex-start';
 					abilExplainBtn.style.backgroundColor = '#2196f3';
