@@ -4920,9 +4920,49 @@
 
 			// 實體鍵盤監聽...
 			document.addEventListener('keydown', (e) => {
+				// 1. 防護機制：若正在輸入框 (INPUT / SELECT / TEXTAREA) 內，不觸發快捷鍵
+				if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+				// ==========================================
+				// A. 鍵盤上下鍵 (ArrowUp / ArrowDown) 切換卡牌
+				// ==========================================
+				if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+					// 判斷目前停留在 Page 2 還是 Page 3[cite: 1]
+					const isPage2Active = document.getElementById('tab-list')?.classList.contains('active');
+					const isPage3Active = document.getElementById('tab-list-split')?.classList.contains('active');
+
+					// 若不在 Page 2 或 Page 3 則跳出[cite: 1]
+					if (!isPage2Active && !isPage3Active) return;
+
+					const containerId = isPage2Active ? 'list-container' : 'list-container-split';
+					const cardItems = Array.from(document.querySelectorAll(`#${containerId} .card-list-item`));
+
+					if (cardItems.length > 0) {
+						e.preventDefault(); // 避免畫面被預設上下捲動[cite: 1]
+
+						const currentIndex = cardItems.findIndex(item => item.classList.contains('selected'));
+						let targetIndex = -1;
+
+						if (e.key === 'ArrowDown') {
+							targetIndex = (currentIndex === -1 || currentIndex >= cardItems.length - 1) ? 0 : currentIndex + 1;
+						} else if (e.key === 'ArrowUp') {
+							targetIndex = (currentIndex <= 0) ? cardItems.length - 1 : currentIndex - 1;
+						}
+
+						if (targetIndex !== -1 && cardItems[targetIndex]) {
+							const targetItem = cardItems[targetIndex];
+							targetItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+							targetItem.click(); // 點擊卡牌（Page 2 Modal 開啟時會直接覆蓋，不會關閉）
+						}
+						return;
+					}
+				}
+
+				// ==========================================
+				// B. 快搜計算機抽屜熱鍵邏輯 (原有邏輯)[cite: 1]
+				// ==========================================
 				const drawer = document.getElementById('drawer-quick-search');
 				if (!drawer || !drawer.classList.contains('open')) return;
-				if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
 				if (e.key >= '0' && e.key <= '9') {
 					e.preventDefault();
@@ -4932,11 +4972,11 @@
 					handleNumInput('~');
 				} else if (e.key === 'Enter') {
 					e.preventDefault();					
-					// 💡 判斷：若數字緩衝區有內容（輸入中），則只打包數字；否則直接觸發搜尋
+					// 💡 判斷：若數字緩衝區有內容（輸入中），則只打包數字；否則直接觸發搜尋[cite: 1]
 					if (numBuffer.length > 0) {
-						commitNumBuffer(); // 僅觸發計算機數字盤確認
+						commitNumBuffer(); // 僅觸發計算機數字盤確認[cite: 1]
 					} else {
-						submitQuickSearch(); // 僅觸發送出查詢
+						submitQuickSearch(); // 僅觸發送出查詢[cite: 1]
 					}
 				} else if (e.key === 'Backspace' || e.key === 'Delete') {
 					e.preventDefault();
