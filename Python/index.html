@@ -2276,7 +2276,9 @@
 							const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
 							if (firstId) {
 								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-								displayName = `<span style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">DM${firstId}</span><span>${cleanName}</span>`;
+								// 💡 使用 formatDmId 自動處理前綴
+								const displayId = formatDmId(firstId);
+								displayName = `<span style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">${displayId}</span><span>${cleanName}</span>`;
 							}
 						}
 					}
@@ -3724,6 +3726,7 @@
 		function renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal) {
 			const twSets = [];
 			const nonTwSets = [];
+			const netSets = []; // 💡 新增第三區：台灣大賽使用牌組
 			const cleanTargetName = card.name ? card.name.trim() : "";
 
 			if (typeof rawSetlist === 'object' && rawSetlist !== null) {
@@ -3740,8 +3743,18 @@
 							const setname = setObj.setname || setObj.name || setcode;
 							const isTw = setObj.istw === true;
 							const setInfoObj = { key, setcode, setname };
-							if (isTw) twSets.push(setInfoObj);
-							else nonTwSets.push(setInfoObj);
+							
+							// 💡 1. 判斷 setcode 開頭是否不是 D 且不是 O (忽略大小寫)
+							const upperCode = String(setcode).trim().toUpperCase();
+							const isNet = !upperCode.startsWith('D') && !upperCode.startsWith('O');
+
+							if (isNet) {
+								netSets.push(setInfoObj); // 第三區：台灣大賽使用牌組
+							} else if (isTw) {
+								twSets.push(setInfoObj);  // 第一區：台灣代理
+							} else {
+								nonTwSets.push(setInfoObj); // 第二區：代理前日本商品
+							}
 						}
 					}
 				});
@@ -3749,10 +3762,13 @@
 
 			twSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
 			nonTwSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
+			netSets.sort((a, b) => b.setcode.localeCompare(a.setcode, undefined, { numeric: true, sensitivity: 'base' }));
 
-			if (twSets.length > 0 || nonTwSets.length > 0) {
+			const totalSetsCount = twSets.length + nonTwSets.length + netSets.length;
+
+			if (totalSetsCount > 0) {
 				const setBlock = document.createElement('div');
-				setBlock.className = 'wdata-block set-list-block'; // 💡 新增 set-list-block class
+				setBlock.className = 'wdata-block set-list-block';
 				setBlock.style.borderLeft = '4px solid #009688';
 				setBlock.style.marginTop = '10px';
 
@@ -3772,12 +3788,12 @@
 				const arrowSpan = document.createElement('span');
 				arrowSpan.innerText = autoExpand ? '▲' : '▼';
 				
-				setBlockTitle.innerHTML = `<span>收錄商品 (${twSets.length + nonTwSets.length})：</span>`;
+				setBlockTitle.innerHTML = `<span>收錄商品/大賽牌組 (${totalSetsCount})：</span>`;
 				setBlockTitle.appendChild(arrowSpan);
 				setBlock.appendChild(setBlockTitle);
 
 				const setContentBody = document.createElement('div');
-				setContentBody.className = 'set-content-body'; // 💡 新增這行：給予專用 class
+				setContentBody.className = 'set-content-body';
 				setContentBody.style.marginTop = '8px';
 				setContentBody.style.display = autoExpand ? 'block' : 'none';
 				setBlock.appendChild(setContentBody);
@@ -3856,8 +3872,10 @@
 					setContentBody.appendChild(groupDiv);
 				};
 
-				renderSetGroup(twSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【台灣代理商品】' : '');
-				renderSetGroup(nonTwSets, (twSets.length > 0 && nonTwSets.length > 0) ? '【日版商品】' : '');
+				// 💡 2. 依序繪製三區標題與內容
+				renderSetGroup(twSets, '【台灣代理商品】');
+				renderSetGroup(nonTwSets, '【代理前日本商品】');
+				renderSetGroup(netSets, '【台灣大賽使用牌組】');
 
 				targetInfoContainer.appendChild(setBlock);
 			}
@@ -3997,6 +4015,13 @@
             toast.style.opacity = '1';
             setTimeout(() => { toast.style.opacity = '0'; }, 2000);
         }
+		
+		// 💡 自動為 id 補上 DM 前綴的 Helper 函式
+		function formatDmId(rawId) {
+			if (!rawId) return '';
+			const strId = String(rawId).trim();
+			return strId.toUpperCase().startsWith('DM') ? strId : 'DM' + strId;
+		}
 
         async function copyTextToClipboard(text) {
             if (!text) return;
@@ -4033,9 +4058,10 @@
 			const baseName = cleanCardName(card.name) || card.name || '未命名卡牌';
 
 			function updateModalTitle() {
-				const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
+				// 💡 使用 formatDmId 自動處理前綴
+				const displayId = (idList.length > 0 && idList[0]) ? formatDmId(idList[0]) : '';
+				const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( ${displayId} )</div>` : '';
 				
-				// --- 修改後 ---
 				modalTitle.innerHTML = `
 					${idTag}
 					<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="點擊按鈕或雙擊標題複製卡名">
