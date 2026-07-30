@@ -681,6 +681,24 @@
 		.drawer-footer-handle:active {
 			background: #cbd5e1;
 		}
+		
+		/* 商品代碼按鈕樣式 */
+		.btn-calc.btn-setcode {
+			background: #f3e8ff;
+			color: #6b21a8;
+			border-color: #d8b4fe;
+		}
+
+		.btn-calc.btn-setcode:hover {
+			background: #e9d5ff;
+		}
+
+		/* 點擊高亮狀態 */
+		.btn-calc.btn-setcode.active {
+			background: #9333ea;
+			color: #ffffff;
+			border-color: #7e22ce;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1606,6 +1624,7 @@
 				sortCardTypes(); 
 				renderCardTypes();
 				initQuickCardTypes(); // 👈 補上這一行！
+				initQuickSetCodeButtons(); // 👈 補上這一行！動態生成商品代碼按鈕
 				initDropdownData();
 				initSeriesDropdown();
 				renderLatestSetButtons();
@@ -4507,20 +4526,26 @@
 		let quickTags = [];        // 已確認的 Tag 陣列: [{ type, val, label, isRange }]
 		let numBuffer = "";        // 暫存未 Enter 的數字/波浪號字串
 
-		// 1. 切換（Toggle）非數值類型的 Tag (卡種, 文明, 單多色)
+		// 1. 切換（Toggle）非數值類型的 Tag (卡種, 文明, 單多色, 商品代碼)
 		function toggleQuickTag(type, val, label, btnEl) {
-			commitNumBuffer(); // 若前面有未 Enter 的數字先自動打包
+			commitNumBuffer(); // 若前面有未 Enter 的數字先自動打包[cite: 1]
 
 			const index = quickTags.findIndex(t => t.type === type && t.val === val);
 
 			if (index !== -1) {
-				// 🔄 若已存在 ➔ 移除 Tag
+				// 🔄 若點擊已選中的商品/條件 ➔ 移除 Tag[cite: 1]
 				quickTags.splice(index, 1);
 			} else {
-				// ➕ 若不存在 ➔ 新增 Tag
+				// 💡 互斥邏輯：如果新點擊的是「商品代碼 (setcode)」，先清除舊的商品 Tag
+				if (type === 'setcode') {
+					quickTags = quickTags.filter(t => t.type !== 'setcode');
+				}
+				
+				// ➕ 新增 Tag[cite: 1]
 				quickTags.push({ type, val, label });
 			}
 
+			// 畫面重新渲染 (內部會自動同步按鈕的高亮 active 狀態與總覽標籤)[cite: 1]
 			renderQuickTags();
 		}
 
@@ -4708,6 +4733,22 @@
 			if (powerTag) applyRangeToSelects(powerTag.val, 'power-1', 'power-2');
 
 			if (typeof updateSummaryText === 'function') updateSummaryText();
+			
+			// H. 帶入商品代碼 (SetCode)
+			const targetSetCodes = quickTags.filter(t => t.type === 'setcode').map(t => t.val);
+			if (targetSetCodes.length > 0) {
+				const bigSelect = document.getElementById('series-big');
+				const smallSelect = document.getElementById('series-small');
+
+				if (bigSelect && smallSelect) {
+					// 1. 先將大編號重置為全部，並觸發選單刷新
+					bigSelect.value = "";
+					bigSelect.dispatchEvent(new Event('change'));
+
+					// 2. 寫入目標商品代碼至 series-small
+					smallSelect.value = targetSetCodes[0];
+				}
+			}
 
 			// 💡 觸發搜尋（加上標記，防止與 Footer 按鈕觸發死循環）
 			const btnSearch = document.getElementById('btn-search');
@@ -4735,6 +4776,47 @@
 					btn.addEventListener('click', () => toggleQuickTag('cardtype', ct.value, ct.text, btn));
 					container.appendChild(btn);
 				}
+			});
+		}
+		
+		// 💡 動態繪製 D/O 開頭的最新商品代碼按鈕至文明區塊
+		function initQuickSetCodeButtons() {
+			// 檢查全域陣列是否存在
+			if (typeof LATEST_SET_CODES === 'undefined' || !Array.isArray(LATEST_SET_CODES)) return;
+
+			// 1. 依照 LATEST_SET_CODES 順序，僅過濾出以 'D' 或 'O' 開頭的 setcode (不分大小寫)
+			const filteredCodes = LATEST_SET_CODES.filter(code => {
+				if (!code) return false;
+				const upper = String(code).trim().toUpperCase();
+				return upper.startsWith('D') || upper.startsWith('O');
+			});
+
+			// 2. 最多只取前兩個
+			const targetCodes = filteredCodes.slice(0, 2);
+
+			// 尋找文明按鈕區塊 (位於 second full-width 區塊)
+			const civGroup = document.querySelector('#drawer-quick-search .calc-btn-group:nth-child(2)');
+			if (!civGroup) return;
+
+			// 移除舊有動態產生的 setcode 按鈕 (避免重複生成)
+			civGroup.querySelectorAll('.btn-setcode').forEach(el => el.remove());
+
+			// 3. 建立並掛載按鈕 (setcode 同時作為 value 與 text)
+			targetCodes.forEach(code => {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'btn-calc btn-setcode';
+				btn.dataset.type = 'setcode'; // 標記為 setcode 類型
+				btn.dataset.val = code;
+				btn.innerText = code;
+
+				// 點擊事件：切換 Toggle Tag
+				btn.addEventListener('click', () => {
+					toggleQuickTag('setcode', code, code, btn);
+				});
+
+				// 插入到文明區塊的最末端
+				civGroup.appendChild(btn);
 			});
 		}
 
