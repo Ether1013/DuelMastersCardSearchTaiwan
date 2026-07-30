@@ -331,7 +331,7 @@
 		redSpan.appendChild( document.createTextNode("NEW!!") );
 		getById("newest").appendChild(redSpan);
 		const theHref = document.createElement("span");
-		const theText = document.createTextNode("準備轉移到新站！這邊不會更新8/8的龍娘包喔！");
+		const theText = document.createTextNode("準備轉移到新站！這邊將不會更新8/8的龍娘包喔！");
 		theHref.style.color = "blue";
 		theHref.style.fontWeight = "big";
 		theHref.style.cursor = "pointer";
@@ -381,3 +381,164 @@
 		}
 	}
 	
+	/**
+	 * 舊站關閉與新站引導跳轉邏輯
+	 * @param {boolean} debug - 若傳入 true，則會忽略時間直接觸發跳轉提示（Debug 模式）
+	 */
+	function checkSiteStatus(debug = false) {
+		// 設定關閉時間點：2026/08/09 00:00:00 (相當於 8/8 23:59:59 剛過)
+		const targetDate = new Date("2026-08-09T00:00:00");
+		const currentDate = new Date();
+
+		// 判斷是否超過關閉時間或啟動 Debug 模式
+		if (debug || currentDate >= targetDate) {
+			showRedirectionOverlay();
+		}
+	}
+
+	/**
+	 * 建立並渲染全螢幕跳轉 UI 畫面
+	 */
+	function showRedirectionOverlay() {
+		const targetUrl = "https://duelmasterscardsearchtaiwan.onrender.com/";
+		let countdown = 5;
+
+		// 注入 CSS 樣式 (現代微漸層與 Glassmorphism 風格)
+		const style = document.createElement("style");
+		style.innerHTML = `
+			@keyframes overlayFadeIn {
+				from { opacity: 0; transform: scale(0.95); }
+				to { opacity: 1; transform: scale(1); }
+			}
+			@keyframes pulseGlow {
+				0%, 100% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.4); }
+				50% { box-shadow: 0 0 45px rgba(168, 85, 247, 0.6); }
+			}
+			#redirect-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+				z-index: 999999;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				color: #f8fafc;
+				padding: 20px;
+				box-sizing: border-box;
+			}
+			.redirect-card {
+				background: rgba(30, 41, 59, 0.7);
+				backdrop-filter: blur(16px);
+				-webkit-backdrop-filter: blur(16px);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 24px;
+				padding: 40px 32px;
+				max-width: 480px;
+				width: 100%;
+				text-align: center;
+				animation: overlayFadeIn 0.5s ease-out forwards, pulseGlow 4s infinite ease-in-out;
+			}
+			.redirect-icon {
+				width: 64px;
+				height: 64px;
+				margin: 0 auto 20px;
+				background: linear-gradient(135deg, #6366f1, #a855f7);
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.redirect-icon svg {
+				width: 32px;
+				height: 32px;
+				fill: #ffffff;
+			}
+			.redirect-title {
+				font-size: 24px;
+				font-weight: 700;
+				margin: 0 0 12px 0;
+				background: linear-gradient(to right, #ffffff, #cbd5e1);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+			}
+			.redirect-msg {
+				font-size: 16px;
+				color: #94a3b8;
+				margin: 0 0 28px 0;
+				line-height: 1.6;
+			}
+			.timer-badge {
+				display: inline-block;
+				background: rgba(99, 102, 241, 0.2);
+				color: #818cf8;
+				font-weight: 700;
+				padding: 2px 10px;
+				border-radius: 12px;
+				border: 1px solid rgba(129, 140, 248, 0.3);
+				margin: 0 4px;
+			}
+			.redirect-btn {
+				display: inline-block;
+				width: 100%;
+				padding: 14px 24px;
+				background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+				color: #ffffff !important;
+				font-size: 16px;
+				font-weight: 600;
+				text-decoration: none;
+				border-radius: 12px;
+				transition: all 0.2s ease;
+				box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+				box-sizing: border-box;
+			}
+			.redirect-btn:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+				background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+			}
+		`;
+		document.head.appendChild(style);
+
+		// 建立 HTML 遮罩結構
+		const overlay = document.createElement("div");
+		overlay.id = "redirect-overlay";
+		overlay.innerHTML = `
+			<div class="redirect-card">
+				<div class="redirect-icon">
+					<svg viewBox="0 0 24 24">
+						<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+					</svg>
+				</div>
+				<h2 class="redirect-title">舊站已關閉</h2>
+				<p class="redirect-msg">
+					將於 <span id="redirect-timer" class="timer-badge">${countdown}</span> 秒鐘後轉至新站。<br>
+					若無法跳轉，請點擊下方按鈕以進入新站。
+				</p>
+				<a href="${targetUrl}" class="redirect-btn">點擊此處進入新站</a>
+			</div>
+		`;
+
+		// 蓋住頁面並禁止捲動
+		document.body.appendChild(overlay);
+		document.body.style.overflow = "hidden";
+
+		// 倒數計時與自動跳轉 logic
+		const timerElement = document.getElementById("redirect-timer");
+		const interval = setInterval(() => {
+			countdown--;
+			if (timerElement) {
+				timerElement.textContent = countdown;
+			}
+			if (countdown <= 0) {
+				clearInterval(interval);
+				window.location.href = targetUrl;
+			}
+		}, 1000);
+	}
+
+	// 頁面載入後自動執行判斷
+	checkSiteStatus();
