@@ -705,6 +705,28 @@
 			color: #ffffff;
 			border-color: #7c3aed;
 		}
+		
+		/* 官網搜尋引導按鈕樣式 (寬度同卡牌項目，高度約 1/3) */
+		.official-search-footer-btn {
+			padding: 8px 15px;
+			margin-top: 10px;
+			background: #f8fafc;
+			border: 1px dashed #0284c7;
+			border-radius: 8px;
+			color: #0284c7;
+			font-size: 13px;
+			font-weight: bold;
+			text-align: center;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			user-select: none;
+			box-sizing: border-box;
+		}
+		.official-search-footer-btn:hover {
+			background: #e0f2fe;
+			border-color: #0369a1;
+			color: #0369a1;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1254,6 +1276,11 @@
         /* 修改後 */
 		btnReset.addEventListener('click', () => {
 		
+			// 💡 點擊選項初始化時，同步清空快速計算機面板的條件與緩衝區
+			if (typeof clearQuickSearch === 'function') {
+				clearQuickSearch();
+			}
+			
 			// ✅ 修正為：
 			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
 
@@ -2316,6 +2343,80 @@
 
 			});
 			
+			// 5. 在 Page 2 與 Page 3 列表底部新增【官網搜尋導向按鈕】(完整帶入雙邊共有過濾條件)
+			function createOfficialSearchTag() {
+				const tagDiv = document.createElement('div');
+				tagDiv.className = 'official-search-footer-btn';
+				tagDiv.innerHTML = `🔍 這裡沒有你要的資料嗎？嘗試改去官網找看看 ↗`;
+				
+				tagDiv.addEventListener('click', () => {
+					// 1. 取得我們系統目前的過濾設定
+					const cfg = getFilterConfigFromUI();
+					
+					// 2. 建立官網 JSON 基礎物件
+					const officialParams = {
+						condition: "on",
+						keyword: cfg.cardName || "",
+						keyword_type: ["card_name", "card_text"],
+						pagenum: "1",
+						samename: "show",
+						sort: "release_new"
+					};
+
+					// 3. 轉譯文明與單多色
+					const civMap = { "16": "光", "8": "水", "4": "闇", "2": "火", "1": "自然" };
+					const officialCultures = (cfg.permitCivs || [])
+						.map(val => civMap[val])
+						.filter(Boolean);
+						
+					if (officialCultures.length > 0) {
+						officialParams.culture = officialCultures;
+					}
+
+					const cultureConds = [];
+					if (cfg.permitCivs.includes('mono')) cultureConds.push("単色");
+					if (cfg.permitCivs.includes('multi')) cultureConds.push("多色");
+					if (cultureConds.length > 0) {
+						officialParams.culture_cond = cultureConds;
+					}
+
+					officialParams.culture_match = cfg.isRequireOr ? "any" : "all";
+
+					// 4. 轉譯費用範圍
+					if (cfg.cost1) officialParams.cost_lower = String(cfg.cost1);
+					if (cfg.cost2) officialParams.cost_upper = String(cfg.cost2);
+
+					// 5. 轉譯攻擊力範圍
+					if (cfg.power1) officialParams.power_lower = String(cfg.power1);
+					if (cfg.power2) officialParams.power_upper = String(cfg.power2);
+
+					// 6. 轉譯雙極卡設定
+					if (cfg.twinpect === 'yes') officialParams.twinpact = "only";
+					else if (cfg.twinpect === 'no') officialParams.twinpact = "exclude";
+
+					// 7. 轉譯主要卡種 (若非全選)
+					if (!cfg.isAllCardTypesChecked && cfg.checkedCardTypes && cfg.checkedCardTypes.length > 0) {
+						const cardTypeMap = { 'C': 'クリーチャー', 'S': '呪文' };
+						const firstMatch = cfg.checkedCardTypes.map(t => cardTypeMap[t]).filter(Boolean)[0];
+						if (firstMatch) officialParams.cardtype = firstMatch;
+					}
+
+					// 8. 轉譯種族 (若有選擇)
+					if (cfg.races && cfg.races.length > 0) {
+						officialParams.race = cfg.races[0];
+					}
+
+					// 9. 組裝 URL 並開啟官網
+					const officialUrl = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify(officialParams))}`;
+					window.open(officialUrl, '_blank', 'noopener,noreferrer');
+				});
+
+				return tagDiv;
+			}
+
+			// 當有搜尋結果時，掛載於列表最底部
+			listContainerPage2.appendChild(createOfficialSearchTag());
+			listContainerPage3.appendChild(createOfficialSearchTag());
 		}
 		
 		// 💡 收合所有功能抽屜的輔助函式
@@ -3908,9 +4009,9 @@
 			// 修正後的程式碼（將・替換為半形空白）
 			const cleanRutenName = cleanNameOnly.replace(/・/g, ' ');
 			const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanRutenName)}`;
-			const urlOfficial = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify({
-				suggest: "on", keyword: cleanNameOnly, keyword_type: ["card_name"], culture_cond: ["單色", "多色"], pagenum: "1", sort: "release_new"
-			}))}`;
+			// 修正後的 urlOfficial (包含 condition: "on")
+			// 僅帶入處理後的卡名 (cleanNameOnly)
+			const urlOfficial = `https://www.google.com/search?q=${encodeURIComponent('#' + cleanNameOnly + ' site:https://dm.takaratomy.co.jp/card/')}`;
 			const urlOfficialQA = `https://dm.takaratomy.co.jp/rule/qa/?qa_w=${encodeURIComponent(cleanNameOnly)}`;
 			const urlWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Admwiki.net`;
 			const urlEnWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Aduelmasters.fandom.com%2Fwiki%2F`;
@@ -4601,19 +4702,67 @@
 			}
 		}
 
-		// 4. 按下 ENTER 鍵，將 numBuffer 打包成標籤 (含同類型更新機制)
+		// 4. 按下 ENTER 鍵，將 numBuffer 打包成標籤 (含有效數值檢核機制)
 		function commitNumBuffer() {
 			if (!numBuffer) return;
 
 			let text = numBuffer.trim();
+
+			if (text === "" || text === "~") {
+				numBuffer = "";
+				updateNumBufferDisplay();
+				return;
+			}
+
+			// 取得目前下拉選單中所有有效的 Cost 與 Power 數字清單
+			const validCosts = Array.from(document.querySelectorAll('#cost-1 option'))
+				.map(opt => opt.value)
+				.filter(v => v !== "")
+				.map(Number);
+
+			const validPowers = Array.from(document.querySelectorAll('#power-1 option'))
+				.map(opt => opt.value)
+				.filter(v => v !== "")
+				.map(Number);
+
+			// 提取輸入內容中的所有數字
+			const numbers = (text.match(/\d+/g) || []).map(Number);
+
+			if (numbers.length === 0) {
+				showNumBufferError('⚠️ 無效的數字格式！');
+				return;
+			}
+
+			// 判斷屬於攻擊力還是費用 (只要包含 >= 500 的數字即視為攻擊力)
+			const isPower = numbers.some(n => n >= 500);
+			const validList = isPower ? validPowers : validCosts;
+			const typeName = isPower ? '攻擊力' : '費用';
+
+			// 💡 核心檢核：確認輸入的所有數字是否都在有效清單內
+			const allValid = numbers.every(n => validList.includes(n));
+
+			if (!allValid) {
+				const invalidNums = numbers.filter(n => !validList.includes(n));
+				showNumBufferError(`⚠️ 無效的${typeName}數值: ${invalidNums.join(', ')}`);
+				return;
+			}
+
+			// 若為範圍輸入 (包含 ~)，檢核左邊是否小於等於右邊
+			if (text.includes('~')) {
+				const parts = text.split('~').map(p => p.trim());
+				if (parts[0] !== "" && parts[1] !== "") {
+					const num1 = Number(parts[0]);
+					const num2 = Number(parts[1]);
+					if (num1 > num2) {
+						showNumBufferError(`⚠️ 範圍錯誤: ${num1} 不能大於 ${num2}`);
+						return;
+					}
+				}
+			}
+
+			// --- 檢核通過，成功打包 ---
 			numBuffer = "";
 			updateNumBufferDisplay();
-
-			if (text === "" || text === "~") return;
-
-			// 解析數字類型 (>= 500 為攻擊力，否則為費用)
-			const numbers = (text.match(/\d+/g) || []).map(Number);
-			const isPower = numbers.some(n => n >= 500);
 
 			const tagType = isPower ? 'power-range' : 'cost-range';
 			const tagLabel = isPower ? `攻擊力: ${text}` : `費用: ${text}`;
@@ -4634,6 +4783,19 @@
 			}
 
 			renderQuickTags();
+		}
+
+		// 💡 輔助函式：在 .quick-num-buffer 顯示錯誤訊息並清除輸入中的數字 (Reject)
+		function showNumBufferError(errMsg) {
+			// 1. 清除輸入中的數字緩衝區
+			numBuffer = "";
+
+			// 2. 顯示紅字錯誤訊息
+			const bufEl = document.getElementById('quick-num-buffer');
+			if (bufEl) {
+				bufEl.innerText = errMsg;
+				bufEl.style.color = '#d32f2f'; // 顯示警告紅字
+			}
 		}
 
 		// 5. 繪製 Tag 畫面並同步所有按鈕的高亮狀態
@@ -4681,18 +4843,18 @@
 			renderQuickTags();
 		}
 
-		// 8. 帶入條件並執行搜尋
-		function submitQuickSearch() {
-			commitNumBuffer();
+		// 1. 單純負責將計算機條件填入標準 UI 的輔助函式
+		function applyQuickSearchToUI() {
+			commitNumBuffer(); // 自動打包輸入中的數字
 
-			if (quickTags.length === 0) {
-				alert("請先輸入至少一個過濾條件！");
-				return;
-			}
+			if (quickTags.length === 0) return;
 
-			// A. 先重設標準 UI 選項
-			const btnReset = document.getElementById('btn-reset');
-			if (btnReset) btnReset.click();
+			// A. 手動清空/重設標準 UI 選項 (避免觸發 btnReset 的事件衝突)
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
+			checkAllStatus();
+
+			document.querySelectorAll('select').forEach(sel => sel.value = "");
+			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
 
 			// B. 自動觸發精密搜尋模式（若包含 ~ 範圍條件）
 			const hasPrecisionRange = quickTags.some(t => t.isRange);
@@ -4710,22 +4872,24 @@
 					cb.checked = targetCardTypes.includes(cb.value);
 				});
 				checkAllStatus();
+			} else {
+				// 若計算機沒選卡種，預設全選
+				document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+				checkAllStatus();
 			}
 			
-			// 💡 B. 帶入雙極卡設定
+			// D. 帶入雙極卡設定
 			const twinTag = quickTags.find(t => t.type === 'twinpect');
 			const twinRadioYes = document.querySelector('input[name="twinpect"][value="yes"]');
 			const twinRadioAll = document.querySelector('input[name="twinpect"][value="all"]');
 
 			if (twinTag) {
-				// 亮著 ➔ 勾選「雙極」[cite: 1]
 				if (twinRadioYes) twinRadioYes.checked = true;
 			} else {
-				// 未亮 ➔ 勾選「都找 (=預設)」
 				if (twinRadioAll) twinRadioAll.checked = true;
 			}
 
-			// D. 帶入必須文明 (#civ-require)
+			// E. 帶入必須文明 (#civ-require)
 			const targetCivs = quickTags.filter(t => t.type === 'civ').map(t => t.val);
 			document.querySelectorAll('#civ-require .civ-box:not([data-val="and"]):not([data-val="or"])').forEach(box => {
 				box.classList.remove('active');
@@ -4737,7 +4901,7 @@
 				});
 			}
 
-			// E. 帶入單/多色 (自動判斷或依照使用者選擇)
+			// F. 帶入許可文明與單/多色
 			const userSpecCivs = quickTags.filter(t => t.type === 'civ-spec').map(t => t.val);
 			const monoBox = document.querySelector('#civ-permit .civ-box[data-val="mono"]');
 			const multiBox = document.querySelector('#civ-permit .civ-box[data-val="multi"]');
@@ -4773,15 +4937,13 @@
 				}
 			};
 
-			// F. 帶入費用與攻擊力
+			// G. 帶入費用與攻擊力
 			const costTag = quickTags.find(t => t.type === 'cost-range');
 			if (costTag) applyRangeToSelects(costTag.val, 'cost-1', 'cost-2');
 
 			const powerTag = quickTags.find(t => t.type === 'power-range');
 			if (powerTag) applyRangeToSelects(powerTag.val, 'power-1', 'power-2');
 
-			if (typeof updateSummaryText === 'function') updateSummaryText();
-			
 			// H. 帶入商品代碼 (SetCode)
 			const targetSetCodes = quickTags.filter(t => t.type === 'setcode').map(t => t.val);
 			if (targetSetCodes.length > 0) {
@@ -4789,22 +4951,20 @@
 				const smallSelect = document.getElementById('series-small');
 
 				if (bigSelect && smallSelect) {
-					// 1. 先將大編號重置為全部，並觸發選單刷新
 					bigSelect.value = "";
 					bigSelect.dispatchEvent(new Event('change'));
-
-					// 2. 寫入目標商品代碼至 series-small
 					smallSelect.value = targetSetCodes[0];
 				}
 			}
 
-			// 💡 觸發搜尋（加上標記，防止與 Footer 按鈕觸發死循環）
+			if (typeof updateSummaryText === 'function') updateSummaryText();
+		}
+
+		// 2. 原本的 submitQuickSearch 保持供鍵盤 Enter 鍵呼叫[cite: 1]
+		function submitQuickSearch() {
+			applyQuickSearchToUI();
 			const btnSearch = document.getElementById('btn-search');
-			if (btnSearch) {
-				const evt = new MouseEvent('click', { bubbles: true, cancelable: true });
-				evt.isQuickSubmitted = true; 
-				btnSearch.dispatchEvent(evt);
-			}
+			if (btnSearch) btnSearch.click();
 		}
 
 		// 9. 渲染核心卡種 (main === true) + 尾巴新增雙極按鈕
@@ -4903,19 +5063,17 @@
 			// 💡 統一由 Footer 的「開始查詢」接管快搜邏輯
 			const btnSearch = document.getElementById('btn-search');
 			if (btnSearch) {
-				btnSearch.addEventListener('click', (e) => {
+				// 移除第二個參數中的 true (改為一般的冒泡監聽)
+				btnSearch.addEventListener('click', () => {
 					const drawer = document.getElementById('drawer-quick-search');
 					
-					// 當快搜抽屜開啟，且有輸入 Tag 時，優先執行快搜條件帶入
-					if (drawer && drawer.classList.contains('open') && !e.isQuickSubmitted) {
-						// 若有輸入條件，則執行帶入
+					// 當快搜抽屜開啟，且有輸入 Tag 或 Buffer 時
+					if (drawer && drawer.classList.contains('open')) {
 						if (quickTags.length > 0 || numBuffer.length > 0) {
-							e.preventDefault();
-							e.stopImmediatePropagation();
-							submitQuickSearch();
+							applyQuickSearchToUI();
 						}
 					}
-				}, true);
+				});
 			}
 
 			// 實體鍵盤監聽...
