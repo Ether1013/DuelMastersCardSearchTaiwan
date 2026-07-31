@@ -4702,7 +4702,7 @@
 			}
 		}
 
-		// 4. 按下 ENTER 鍵，將 numBuffer 打包成標籤 (含有效數值檢核機制)
+		// 4. 按下 ENTER 鍵，將 numBuffer 打包成標籤 (含前導零攻擊力判定與有效數值檢核)
 		function commitNumBuffer() {
 			if (!numBuffer) return;
 
@@ -4725,7 +4725,12 @@
 				.filter(v => v !== "")
 				.map(Number);
 
-			// 提取輸入內容中的所有數字
+			// 💡 1. 檢查是否有前導修飾 0 (例如: 00, 000, 0000)
+			// 只要輸入的文字片段包含至少兩個連續的 0 (如 "00")，就強制視為攻擊力
+			const rawSegments = text.split('~');
+			const hasLeadingZeroModifier = rawSegments.some(seg => /^0{2,}$/.test(seg.trim()));
+
+			// 提取輸入內容中的所有數字 (轉為數字型態)
 			const numbers = (text.match(/\d+/g) || []).map(Number);
 
 			if (numbers.length === 0) {
@@ -4733,12 +4738,15 @@
 				return;
 			}
 
-			// 判斷屬於攻擊力還是費用 (只要包含 >= 500 的數字即視為攻擊力)
-			const isPower = numbers.some(n => n >= 500);
+			// 💡 2. 判斷屬於攻擊力還是費用：
+			// 滿足以下任一條件即視為攻擊力：
+			// A. 包含 >= 500 的數字
+			// B. 輸入包含前修飾 0 (如 00, 000)
+			const isPower = numbers.some(n => n >= 500) || hasLeadingZeroModifier;
 			const validList = isPower ? validPowers : validCosts;
 			const typeName = isPower ? '攻擊力' : '費用';
 
-			// 💡 核心檢核：確認輸入的所有數字是否都在有效清單內
+			// 💡 3. 核心檢核：確認輸入的所有數字是否都在有效清單內
 			const allValid = numbers.every(n => validList.includes(n));
 
 			if (!allValid) {
@@ -4765,11 +4773,14 @@
 			updateNumBufferDisplay();
 
 			const tagType = isPower ? 'power-range' : 'cost-range';
-			const tagLabel = isPower ? `攻擊力: ${text}` : `費用: ${text}`;
+			
+			// 💡 顯示標籤文字時，若包含前導零，顯示轉化後的標準數值 (0)
+			const displayValue = hasLeadingZeroModifier ? text.replace(/0{2,}/g, '0') : text;
+			const tagLabel = isPower ? `攻擊力: ${displayValue}` : `費用: ${displayValue}`;
 
 			const newTag = {
 				type: tagType,
-				val: text,
+				val: displayValue,
 				label: tagLabel,
 				isRange: text.includes('~')
 			};
