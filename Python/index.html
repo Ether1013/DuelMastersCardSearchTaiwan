@@ -5281,7 +5281,40 @@
 				if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
 				// ==========================================
-				// A. 鍵盤上下鍵 (ArrowUp / ArrowDown) 切換卡牌
+				// A. 鍵盤左右鍵 (ArrowLeft / ArrowRight) 切換卡圖版本
+				// ==========================================
+				if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+					// 優先尋找目前開啟中的 Modal 或 Split 面板內的切換按鈕
+					const activeModal = document.querySelector('.modal-overlay.active');
+					const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
+
+					let targetImgBox = null;
+					if (activeModal) {
+						targetImgBox = activeModal.querySelector('#modal-img-box');
+					} else if (isSplitActive) {
+						targetImgBox = document.querySelector('#detail-panel-split .modal-img-container');
+					}
+
+					// 檢查當前顯示的容器是否有切換按鈕
+					if (targetImgBox) {
+						const prevBtn = targetImgBox.querySelector('.ver-arrow-btn.prev');
+						const nextBtn = targetImgBox.querySelector('.ver-arrow-btn.next');
+
+						// 如果按鈕存在，代表視覺上有左右切換按鈕
+						if (prevBtn && nextBtn) {
+							e.preventDefault(); // 阻止瀏覽器預設橫向滾動
+							if (e.key === 'ArrowLeft') {
+								prevBtn.click(); // 觸發上一張
+							} else if (e.key === 'ArrowRight') {
+								nextBtn.click(); // 觸發下一張
+							}
+							return;
+						}
+					}
+				}
+
+				// ==========================================
+				// B. 鍵盤上下鍵 (ArrowUp / ArrowDown) 切換卡牌列表
 				// ==========================================
 				if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
 					// 判斷目前停留在 Page 2 還是 Page 3[cite: 1]
