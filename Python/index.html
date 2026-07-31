@@ -206,9 +206,17 @@
         .detail-info-scroll-panel { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
         
         .modal-img-container {
-            flex-shrink: 0; display: flex; justify-content: center; align-items: flex-start;
-            position: relative; top: 0; align-self: flex-start; padding: 0 15px;
-        }
+			flex-shrink: 0; 
+			display: flex; 
+			flex-direction: column; 
+			justify-content: flex-start;
+			align-items: center;     /* 水平對齊置中 */
+			align-self: flex-start;  /* 💡 垂直方向：嚴格靠頂端置頂！ */
+			position: relative; 
+			padding: 0 15px;
+			margin: 0;
+			transition: width 0.3s ease;
+		}
         /* ================= 卡圖點擊放大相關樣式 ================= */
 		/* 卡圖基本樣式與動畫 */
 		.modal-img { 
@@ -256,15 +264,21 @@
         .effect-tag.tag-race { color: #047857; background-color: #d1fae5; border: 1px solid #6ee7b7; }
         .effect-tag.tag-race:hover { background-color: #a7f3d0; }
         
-        /* 卡圖外容器增加平滑動畫 */
-		.modal-img-container {
-			flex-shrink: 0; display: flex; justify-content: center; align-items: flex-start;
-			position: relative; top: 0; align-self: flex-start; padding: 0 15px;
-			transition: width 0.3s ease; /* 讓容器寬度也有動畫效果 */
-		}
-		/* 當卡圖放大時，卡圖外容器寬度增加 100px (從預設約 180px/250px 擴展) */
+		/* 當卡圖放大時的容器展開寬度 */
 		.modal-img-container.container-expanded {
-			width: 280px !important; /* 增加寬度以完美容納 250px 圖片 + padding */
+			width: 280px !important; 
+		}
+
+		/* 💡 修正 2：確保 3D 堆疊卡片容器內部也是絕對置中 */
+		.card-stack-container {
+			position: relative;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			user-select: none;
+			perspective: 1000px;
+			margin: 0 auto;
+			transition: width 0.3s ease, height 0.3s ease; /* 💡 當大圖變大時，容器尺寸同步平滑變大 */
 		}
 		.ver-arrow-btn {
 			position: absolute; top: 50%; transform: translateY(-50%);
@@ -726,6 +740,129 @@
 			background: #e0f2fe;
 			border-color: #0369a1;
 			color: #0369a1;
+		}
+		/* 免責聲明文字樣式 */
+		.disclaimer-note {
+			font-size: 10px;
+			color: #888;
+			text-align: center;
+			margin-top: 8px;
+			opacity: 0;
+			transition: opacity 0.6s ease;
+			user-select: none;
+			width: 100%;
+			white-space: nowrap;
+		}
+
+		/* 當進入視野時淡入顯示 */
+		.disclaimer-note.visible {
+			opacity: 1;
+		}
+		
+		/* ================= 截圖專用卡圖與外框修正 ================= */
+		/* 截圖時，解除卡圖外容器與圖片的溢出裁切與寬度限制 */
+		.is-capturing .modal-img-container {
+			width: auto !important;
+			max-width: none !important;
+			overflow: visible !important;
+		}
+
+		.is-capturing .modal-img {
+			max-width: none !important;
+			max-height: none !important;
+			object-fit: contain !important;
+		}
+
+		/* 橫向卡標準尺寸 (寬 250 / 高 180) */
+		.is-capturing .modal-img.is-horizontal {
+			width: 250px !important;
+			height: 180px !important;
+		}
+
+		/* 橫向卡放大尺寸 (寬 350 / 高 250) */
+		.is-capturing .modal-img.is-horizontal.img-expanded {
+			width: 350px !important;
+			height: 250px !important;
+		}
+		
+		/* ================= 3D 卡片堆疊與抽牌動畫 ================= */
+		.card-stack-container {
+			position: relative;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			user-select: none;
+			perspective: 1000px; /* 增加 3D 景深感 */
+		}
+
+		.modal-img-stack-item {
+			position: absolute;
+			top: 50%;   /* 💡 以中心點定位，解決大圖時擠到右下的問題 */
+			left: 50%;
+			transform-origin: center center;
+			/* 預設中心偏移由 transform 處理 */
+			transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
+						filter 0.35s ease, 
+						opacity 0.35s ease,
+						box-shadow 0.35s ease;
+			box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+			border-radius: 6px;
+			object-fit: contain;
+			cursor: pointer;
+		}
+
+		/* 層級 0：當前第一張（最頂層） */
+		/* 💡 重新校正堆疊 3D 偏移（以 -50%, -50% 置中為基準點） */
+		.modal-img-stack-item.stack-pos-0 {
+			z-index: 10;
+			transform: translate(-50%, -50%) scale(1) rotate(0deg);
+			filter: blur(0px);
+			opacity: 1;
+		}
+
+		.modal-img-stack-item.stack-pos-1 {
+			z-index: 9;
+			transform: translate(calc(-50% + 14px), calc(-50% - 8px)) scale(0.96) rotate(1.5deg);
+			filter: blur(2px) brightness(0.85);
+			opacity: 0.9;
+		}
+
+		.modal-img-stack-item.stack-pos-2 {
+			z-index: 8;
+			transform: translate(calc(-50% + 28px), calc(-50% - 16px)) scale(0.92) rotate(3deg);
+			filter: blur(4px) brightness(0.7);
+			opacity: 0.75;
+		}
+
+		.modal-img-stack-item.stack-pos-hidden {
+			z-index: 5;
+			transform: translate(calc(-50% + 35px), calc(-50% - 20px)) scale(0.88) rotate(4deg);
+			filter: blur(6px);
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		/* --- 動畫軌跡 Class --- */
+		/* 向左抽出放至最後 (Next) */
+		.modal-img-stack-item.anim-slide-out-left {
+			z-index: 20 !important;
+			transform: translate(-140%, -10px) rotate(-12deg) scale(0.95) !important;
+			opacity: 0.4 !important;
+			filter: blur(1px) !important;
+		}
+
+		/* 從最後抽出來壓回第一張 (Prev) */
+		.modal-img-stack-item.anim-slide-in-left {
+			z-index: 20 !important;
+			transform: translate(-140%, -10px) rotate(-12deg) scale(0.95) !important;
+			opacity: 0.4 !important;
+			filter: blur(1px) !important;
+			transition: none !important; /* 快速歸位至左側發射點 */
+		}
+
+		/* 截圖時：僅隱藏非當前顯示的背景堆疊卡片，保留當前第一張 (data-active="true") */
+		.is-capturing .modal-img-stack-item[data-active="false"] {
+			display: none !important;
 		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
@@ -2342,81 +2479,6 @@
 				listContainerPage3.appendChild(res3.itemDiv);
 
 			});
-			
-			// 5. 在 Page 2 與 Page 3 列表底部新增【官網搜尋導向按鈕】(完整帶入雙邊共有過濾條件)
-			function createOfficialSearchTag() {
-				const tagDiv = document.createElement('div');
-				tagDiv.className = 'official-search-footer-btn';
-				tagDiv.innerHTML = `🔍 這裡沒有你要的資料嗎？嘗試改去官網找看看 ↗`;
-				
-				tagDiv.addEventListener('click', () => {
-					// 1. 取得我們系統目前的過濾設定
-					const cfg = getFilterConfigFromUI();
-					
-					// 2. 建立官網 JSON 基礎物件
-					const officialParams = {
-						condition: "on",
-						keyword: cfg.cardName || "",
-						keyword_type: ["card_name", "card_text"],
-						pagenum: "1",
-						samename: "show",
-						sort: "release_new"
-					};
-
-					// 3. 轉譯文明與單多色
-					const civMap = { "16": "光", "8": "水", "4": "闇", "2": "火", "1": "自然" };
-					const officialCultures = (cfg.permitCivs || [])
-						.map(val => civMap[val])
-						.filter(Boolean);
-						
-					if (officialCultures.length > 0) {
-						officialParams.culture = officialCultures;
-					}
-
-					const cultureConds = [];
-					if (cfg.permitCivs.includes('mono')) cultureConds.push("単色");
-					if (cfg.permitCivs.includes('multi')) cultureConds.push("多色");
-					if (cultureConds.length > 0) {
-						officialParams.culture_cond = cultureConds;
-					}
-
-					officialParams.culture_match = cfg.isRequireOr ? "any" : "all";
-
-					// 4. 轉譯費用範圍
-					if (cfg.cost1) officialParams.cost_lower = String(cfg.cost1);
-					if (cfg.cost2) officialParams.cost_upper = String(cfg.cost2);
-
-					// 5. 轉譯攻擊力範圍
-					if (cfg.power1) officialParams.power_lower = String(cfg.power1);
-					if (cfg.power2) officialParams.power_upper = String(cfg.power2);
-
-					// 6. 轉譯雙極卡設定
-					if (cfg.twinpect === 'yes') officialParams.twinpact = "only";
-					else if (cfg.twinpect === 'no') officialParams.twinpact = "exclude";
-
-					// 7. 轉譯主要卡種 (若非全選)
-					if (!cfg.isAllCardTypesChecked && cfg.checkedCardTypes && cfg.checkedCardTypes.length > 0) {
-						const cardTypeMap = { 'C': 'クリーチャー', 'S': '呪文' };
-						const firstMatch = cfg.checkedCardTypes.map(t => cardTypeMap[t]).filter(Boolean)[0];
-						if (firstMatch) officialParams.cardtype = firstMatch;
-					}
-
-					// 8. 轉譯種族 (若有選擇)
-					if (cfg.races && cfg.races.length > 0) {
-						officialParams.race = cfg.races[0];
-					}
-
-					// 9. 組裝 URL 並開啟官網
-					const officialUrl = `https://dm.takaratomy.co.jp/card/?v=${encodeURIComponent(JSON.stringify(officialParams))}`;
-					window.open(officialUrl, '_blank', 'noopener,noreferrer');
-				});
-
-				return tagDiv;
-			}
-
-			// 當有搜尋結果時，掛載於列表最底部
-			listContainerPage2.appendChild(createOfficialSearchTag());
-			listContainerPage3.appendChild(createOfficialSearchTag());
 		}
 		
 		// 💡 收合所有功能抽屜的輔助函式
@@ -2536,10 +2598,19 @@
 					.ability-explain-item { margin-bottom: 6px; }
 					.ability-explain-item:last-child { margin-bottom: 0; }
 					.ability-title { font-weight: bold; color: #1565c0; }
+
+					/* 💡【新增】補上免責聲明的 CSS 樣式 */
+					.export-disclaimer {
+						font-size: 10px;
+						color: #888;
+						text-align: center;
+						margin-top: 4px;
+						user-select: none;
+						white-space: nowrap;
+					}
 				</style>
 			</head>
 			<body>
-				<h1>卡牌列表匯出資料 (共 ${sortedList.length} 筆)</h1>
 			`;
 
 			sortedList.forEach((card, idx) => {
@@ -2600,9 +2671,13 @@
 
 				htmlContent += `<div class="card-item">`;
 				if (includeImage) {
+					// 💡 將圖片與免責聲明打包在一起，確保位置固定在卡圖正下方
+					htmlContent += `<div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">`;
 					htmlContent += picUrl 
 						? `<img class="card-img" src="${picUrl}" alt="${cleanName}" />` 
 						: `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
+					htmlContent += `<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>`;
+					htmlContent += `</div>`;
 				}
 
 				htmlContent += `<div class="card-detail">`;
@@ -2683,10 +2758,20 @@
 					});
 				}
 
-				// 1. Flavor 放在能力 (sp) 的下面
-				if (flavorText) {
-					htmlContent += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
-				}
+				// ==================== 【新增】匯出頁面的 Mana 區塊 ====================
+                if (card.mana !== null && card.mana !== undefined) {
+                    htmlContent += `
+                        <div style="background: #f1f8e9; border-left: 3px solid #4caf50; padding: 6px 10px; font-size: 13px; font-weight: bold; color: #33691e; border-radius: 4px; margin-top: 8px;">
+                            Mana: ${card.mana}
+                        </div>
+                    `;
+                }
+                // =======================================================================
+
+                // 原本程式碼：1. Flavor 放在能力 (sp) 的下面
+                if (flavorText) {
+                    htmlContent += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
+                }
 
 				// 2. 新增能力關鍵字 (abilities) 註釋（前面出現過的就不再出現）
 				if (newAbilitiesForThisCard.length > 0) {
@@ -3310,7 +3395,7 @@
 			return parts.join('\n');
 		}
 		
-		// 💡 抽離出的共用 Detail 渲染邏輯 (含卡圖點擊放大與跨頁面佈局擠壓控制)
+		// 💡 共用 Detail 渲染邏輯 (升級版：支援多卡圖 3D 堆疊與抽牌動畫 + Mana 資料顯示)
 		function renderDetailContentToContainer(card, combinedCiv, matchedItem, targetImgBox, targetInfoContainer, isModal = false) {
 		
 			let idList = [];
@@ -3328,7 +3413,6 @@
 				else if (matchedItem.flavor) flavorList = [matchedItem.flavor];
 			}
 
-			let currentVerIdx = 0;
 			targetImgBox.innerHTML = '';
 			targetInfoContainer.innerHTML = '';
 
@@ -3348,124 +3432,158 @@
 				targetImgBox.style.width = boxWidth;
 			}
 
-			const imgEl = document.createElement('img');
-			imgEl.className = 'modal-img';
-			imgEl.style.width = boxWidth;
-			imgEl.style.height = boxHeight;
+			// 1. 強制設定左側卡圖容器為垂直方向由上往下排
+			targetImgBox.style.display = 'flex';
+			targetImgBox.style.flexDirection = 'column';
+			targetImgBox.style.alignItems = 'center';
 
-			// 💡 載入圖片來源 (包含備援機制)
-			function updateImageSrc() {
-				let currentPic = (picList.length > 0) ? picList[currentVerIdx] : card.pic;
-				if (!currentPic || currentPic.trim() === '') {
-					const cleanTargetName = card.name ? card.name.trim() : "";
-					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-						for (const setObj of Object.values(rawSetlist)) {
-							const cardList = setObj.setcardlist || setObj.cardlist;
-							if (Array.isArray(cardList)) {
-								const foundItem = cardList.find(item => {
-									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-								});
-								if (foundItem) {
-									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) currentPic = foundItem.pic[0];
-									else if (typeof foundItem.pic === 'string') currentPic = foundItem.pic;
-									break;
-								}
+			// 2. 建立卡圖 3D 堆疊外框
+			const imgStackContainer = document.createElement('div');
+			imgStackContainer.className = 'card-stack-container';
+			imgStackContainer.style.width = boxWidth;
+			imgStackContainer.style.height = boxHeight;
+
+			// 彙整所有可用的圖片網址
+			let validPicUrls = picList.filter(p => p && p.trim() !== '');
+			if (validPicUrls.length === 0 && card.pic) {
+				validPicUrls = [card.pic];
+			}
+			// 全域商品備援機制
+			if (validPicUrls.length === 0) {
+				const cleanTargetName = card.name ? card.name.trim() : "";
+				if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+					for (const setObj of Object.values(rawSetlist)) {
+						const cardList = setObj.setcardlist || setObj.cardlist;
+						if (Array.isArray(cardList)) {
+							const foundItem = cardList.find(item => {
+								const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+								return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+							});
+							if (foundItem) {
+								if (Array.isArray(foundItem.pic)) validPicUrls = foundItem.pic.filter(p => p && p.trim() !== '');
+								else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') validPicUrls = [foundItem.pic];
+								if (validPicUrls.length > 0) break;
 							}
 						}
 					}
 				}
-
-				if (currentPic && currentPic.trim() !== '') {
-					imgEl.src = currentPic;
-					imgEl.style.display = 'block';
-					imgEl.onerror = () => {
-						imgEl.style.display = 'none';
-						targetImgBox.querySelector('.no-image-box')?.remove();
-						const noImg = document.createElement('div');
-						noImg.className = 'no-image-box';
-						const isExpandedNow = localStorage.getItem('dm_card_img_state') === 'expanded';
-						noImg.style.width = isExpandedNow ? '250px' : boxWidth;
-						noImg.style.height = isExpandedNow ? '350px' : boxHeight;
-						noImg.innerText = 'No Image';
-						targetImgBox.appendChild(noImg);
-					};
-				} else {
-					imgEl.style.display = 'none';
-					targetImgBox.querySelector('.no-image-box')?.remove();
-					const noImg = document.createElement('div');
-					noImg.className = 'no-image-box';
-					const isExpandedNow = localStorage.getItem('dm_card_img_state') === 'expanded';
-					noImg.style.width = isExpandedNow ? '250px' : boxWidth;
-					noImg.style.height = isExpandedNow ? '350px' : boxHeight;
-					noImg.innerText = 'No Image';
-					targetImgBox.appendChild(noImg);
-				}
 			}
 
-			// 先將 imgEl 加入容器中
-			targetImgBox.appendChild(imgEl);
-			updateImageSrc();
+			// 維護卡片 DOM 陣列順序
+			let cardImgElements = [];
+			let isAnimating = false;
 
-			// 💡 全域儲存的卡圖尺寸狀態 ('normal' 或 'expanded')
+			if (validPicUrls.length > 0) {
+				validPicUrls.forEach((url, idx) => {
+					const img = document.createElement('img');
+					img.className = 'modal-img modal-img-stack-item';
+					img.style.width = boxWidth;
+					img.style.height = boxHeight;
+					img.src = url;
+					img.dataset.versionIndex = idx;
+
+					img.onerror = () => {
+						img.style.display = 'none';
+					};
+
+					imgStackContainer.appendChild(img);
+					cardImgElements.push(img);
+				});
+			} else {
+				const noImg = document.createElement('div');
+				noImg.className = 'no-image-box';
+				noImg.style.width = boxWidth;
+				noImg.style.height = boxHeight;
+				noImg.innerText = 'No Image';
+				imgStackContainer.appendChild(noImg);
+			}
+
+			// 更新堆疊圖層 Class 與當前活動標記 (data-active) 的 Helper 函式
+			function updateStackClasses() {
+				cardImgElements.forEach((img, index) => {
+					img.classList.remove('stack-pos-0', 'stack-pos-1', 'stack-pos-2', 'stack-pos-hidden');
+					
+					if (index === 0) {
+						img.classList.add('stack-pos-0');
+						img.setAttribute('data-active', 'true');  // 💡 精確標記為當前第一張
+					} else {
+						img.setAttribute('data-active', 'false'); // 💡 標記為背景卡牌
+						if (index === 1) {
+							img.classList.add('stack-pos-1');
+						} else if (index === 2) {
+							img.classList.add('stack-pos-2');
+						} else {
+							img.classList.add('stack-pos-hidden');
+						}
+					}
+				});
+			}
+
+			updateStackClasses();
+			targetImgBox.appendChild(imgStackContainer);
+
+			// 免責聲明掛載
+			const sourceNote = document.createElement('div');
+			sourceNote.className = 'disclaimer-note';
+			sourceNote.innerText = "圖片來源：官方/網路公開直鏈 (非營利交流)";
+			targetImgBox.appendChild(sourceNote);
+
+			if ('IntersectionObserver' in window) {
+				const observer = new IntersectionObserver((entries, obs) => {
+					entries.forEach(entry => {
+						if (entry.isIntersecting) {
+							sourceNote.classList.add('visible');
+							obs.unobserve(entry.target);
+						}
+					});
+				}, { threshold: 0.2 });
+				observer.observe(imgStackContainer);
+			} else {
+				sourceNote.classList.add('visible');
+			}
+
+			// 放大與縮小狀態管理
 			const savedImgState = localStorage.getItem('dm_card_img_state') || 'normal';
 			const isInitiallyExpanded = savedImgState === 'expanded';
 
-			// 💡 輔助函式：根據狀態套用/移除放大與撐開/擠壓 Class
 			function applyImageExpandState(expanded) {
-				imgEl.classList.toggle('img-expanded', expanded);
-				targetImgBox.classList.toggle('container-expanded', expanded);
+				const curWidth = expanded ? (isHorizontal ? '350px' : '250px') : boxWidth;
+				const curHeight = expanded ? (isHorizontal ? '250px' : '350px') : boxHeight;
 
-				// 同步影響無圖片時的文字區塊尺寸
-				const noImg = targetImgBox.querySelector('.no-image-box');
-				if (noImg) {
-					if (expanded) {
-						noImg.style.width = '250px';
-						noImg.style.height = '350px';
-					} else {
-						noImg.style.width = boxWidth;
-						noImg.style.height = boxHeight;
-					}
+				// 💡 關鍵：同步讓 3D 堆疊容器尺寸變大，箭頭和圖片就不會錯位
+				if (imgStackContainer) {
+					imgStackContainer.style.width = curWidth;
+					imgStackContainer.style.height = curHeight;
 				}
 
+				cardImgElements.forEach(img => {
+					img.classList.toggle('img-expanded', expanded);
+				});
+				targetImgBox.classList.toggle('container-expanded', expanded);
+
 				if (isModal) {
-					// --- Page 2 (Popup 模式) ---
 					const modalCard = targetInfoContainer.closest('.modal-card');
-					if (modalCard) {
-						modalCard.classList.toggle('card-expanded', expanded);
-					}
+					if (modalCard) modalCard.classList.toggle('card-expanded', expanded);
 				} else {
-					// --- Page 3 (Split 雙欄模式) ---
 					const splitContainer = targetInfoContainer.closest('.split-layout-container');
-					if (splitContainer) {
-						splitContainer.classList.toggle('is-expanded', expanded);
-					}
+					if (splitContainer) splitContainer.classList.toggle('is-expanded', expanded);
 				}
 			}
 
-			// 💡 初始化：渲染詳細資料時自動套用使用者記錄的狀態
 			applyImageExpandState(isInitiallyExpanded);
 
-			// 💡 事件觸發切換函式
 			function handleImageToggle(e) {
-				// 避免點擊切換版本箭頭 (❮ ❯) 時觸發縮放
-				if (e.target.classList.contains('ver-arrow-btn')) return;
-
+				if (e.target.classList.contains('ver-arrow-btn') || isAnimating) return;
 				const currentState = localStorage.getItem('dm_card_img_state') === 'expanded';
 				const nextState = !currentState;
-				
-				// 儲存偏好至 localStorage
 				localStorage.setItem('dm_card_img_state', nextState ? 'expanded' : 'normal');
-				
-				// 套用狀態
 				applyImageExpandState(nextState);
 			}
 
-			// 💡 綁定點擊事件至 targetImgBox 容器（點擊圖片或文字框皆可放大/縮小）
-			targetImgBox.style.cursor = 'pointer';
-			targetImgBox.onclick = handleImageToggle;
+			imgStackContainer.style.cursor = 'pointer';
+			imgStackContainer.onclick = handleImageToggle;
 
-			// 1. 建立 Flavor 區塊容器
+			// Flavor 區塊容器
 			const flavorBlock = document.createElement('div');
 			flavorBlock.className = 'flavor-block';
 			flavorBlock.style.backgroundColor = '#fffbe6';
@@ -3478,7 +3596,6 @@
 			flavorBlock.style.lineHeight = '1.4';
 			flavorBlock.style.marginTop = '10px';
 
-			// 2. 更新 Flavor 文字的 Helper 函式
 			function updateFlavorText(flavor) {
 				if (flavor && flavor.trim() !== '') {
 					flavorBlock.innerHTML = `${flavor}`;
@@ -3488,7 +3605,6 @@
 				}
 			}
 
-			// 💡 3. 自動搜尋備援：若未選擇 setcode 但卡牌在系列中有 flavor，自動抓取第一筆
 			if (flavorList.length === 0) {
 				const cleanTargetName = card.name ? card.name.trim() : "";
 				if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
@@ -3509,35 +3625,71 @@
 				}
 			}
 
-			// 💡 4. 設定初始顯示第一筆 flavor
+			let currentVerIdx = 0;
 			updateFlavorText(flavorList[currentVerIdx] || flavorList[0]);
 
-			if (idList.length > 1) {
-				const prevBtn = document.createElement('button');
-				prevBtn.className = 'ver-arrow-btn prev';
-				prevBtn.innerText = '❮';
-				prevBtn.addEventListener('click', (e) => {
-					e.stopPropagation();
-					currentVerIdx = (currentVerIdx - 1 + idList.length) % idList.length;
-					updateImageSrc();
-					updateFlavorText(flavorList[currentVerIdx]); 
-				});
-
+			// 3. 切換版本按鈕與 3D 抽牌動畫邏輯
+			if (cardImgElements.length > 1) {
+				// 下一張 (右箭頭)
 				const nextBtn = document.createElement('button');
 				nextBtn.className = 'ver-arrow-btn next';
 				nextBtn.innerText = '❯';
 				nextBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
-					currentVerIdx = (currentVerIdx + 1) % idList.length;
-					updateImageSrc();
-					updateFlavorText(flavorList[currentVerIdx]); 
+					if (isAnimating) return;
+					isAnimating = true;
+
+					const topCard = cardImgElements[0];
+					topCard.classList.add('anim-slide-out-left');
+
+					setTimeout(() => {
+						topCard.classList.remove('anim-slide-out-left');
+						// 第一張拿去最後面
+						const shifted = cardImgElements.shift();
+						cardImgElements.push(shifted);
+
+						updateStackClasses();
+
+						currentVerIdx = (currentVerIdx + 1) % cardImgElements.length;
+						updateFlavorText(flavorList[currentVerIdx]);
+
+						isAnimating = false;
+					}, 300);
+				});
+
+				// 上一張 (左箭頭)
+				const prevBtn = document.createElement('button');
+				prevBtn.className = 'ver-arrow-btn prev';
+				prevBtn.innerText = '❮';
+				prevBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if (isAnimating) return;
+					isAnimating = true;
+
+					const lastCard = cardImgElements[cardImgElements.length - 1];
+					lastCard.classList.add('anim-slide-in-left');
+
+					// 將最後一張搬到陣列最前面
+					const popped = cardImgElements.pop();
+					cardImgElements.unshift(popped);
+
+					updateStackClasses();
+
+					setTimeout(() => {
+						// 讓剛進來的卡片平滑壓入第一張
+						lastCard.classList.remove('anim-slide-in-left');
+						currentVerIdx = (currentVerIdx - 1 + cardImgElements.length) % cardImgElements.length;
+						updateFlavorText(flavorList[currentVerIdx]);
+
+						setTimeout(() => { isAnimating = false; }, 300);
+					}, 20);
 				});
 
 				targetImgBox.appendChild(prevBtn);
 				targetImgBox.appendChild(nextBtn);
 			}
 
-			// 屬性 wdata 區塊
+			// 屬性 wdata 區塊渲染
 			const abilityDictMap = new Map();
 			if (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities)) {
 				rawAbilities.forEach(a => {
@@ -3818,6 +3970,23 @@
 				targetInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
 			}
 
+			// ==================== 【Mana 區塊】：放在 wdata[last] 後面 ====================
+			if (card.mana !== null && card.mana !== undefined) {
+				const manaBlock = document.createElement('div');
+				manaBlock.className = 'wdata-block mana-block';
+				manaBlock.style.borderLeft = '4px solid #4caf50';
+				manaBlock.style.padding = '8px 12px';
+				manaBlock.style.fontSize = '14px';
+				manaBlock.style.fontWeight = 'bold';
+				manaBlock.style.color = '#2e7d32';
+				manaBlock.style.marginTop = '10px';
+
+				manaBlock.innerHTML = `<div><span class="attr-label">Mana:</span> <span class="attr-value">${card.mana}</span></div>`;
+
+				targetInfoContainer.appendChild(manaBlock);
+			}
+
+			// ==================== 【Flavor 區塊】：放在 Mana / wdata 後面 ====================
 			targetInfoContainer.appendChild(flavorBlock);
 
 			// 收錄商品區塊與外部連結
@@ -4395,6 +4564,12 @@
 			let prevMaxHeight = '';
 			let prevOverflow = '';
 
+			// 💡 關鍵修正：精確鎖定「當前第一張」卡圖 (data-active="true" 或 .stack-pos-0)
+			const activeImg = targetElement.querySelector('.modal-img[data-active="true"]') 
+							|| targetElement.querySelector('.modal-img.stack-pos-0') 
+							|| targetElement.querySelector('.modal-img');
+			let originalSrc = '';
+
 			try {
 				if (scrollPanel) {
 					prevMaxHeight = scrollPanel.style.maxHeight;
@@ -4403,16 +4578,25 @@
 					scrollPanel.style.overflow = 'visible';
 				}
 
-				// 修正後：只有在截圖前，將圖片暫時轉為 Proxy 網址以繞過 CORS 截圖限制
-				targetElement.classList.add('is-capturing');
+				if (activeImg) {
+					// 1. 判斷橫向卡
+					const naturalW = activeImg.naturalWidth || activeImg.clientWidth || 180;
+					const naturalH = activeImg.naturalHeight || activeImg.clientHeight || 250;
+					if (naturalW > naturalH) {
+						activeImg.classList.add('is-horizontal');
+					}
 
-				const detailImg = targetElement.querySelector('.modal-img');
-				let originalSrc = '';
-				if (detailImg && detailImg.src && detailImg.src.includes('takaratomy.co.jp')) {
-					originalSrc = detailImg.src;
-					detailImg.src = `/api/proxy-image?url=${encodeURIComponent(originalSrc)}`;
+					// 2. 只針對這唯一一張第一張卡圖換 Proxy 網址解決 CORS
+					if (activeImg.src && activeImg.src.includes('takaratomy.co.jp')) {
+						originalSrc = activeImg.src;
+						activeImg.src = `/api/proxy-image?url=${encodeURIComponent(originalSrc)}`;
+					}
 				}
 
+				// 3. 開啟截圖模式 (觸發 CSS 隱藏其他背景卡片)
+				targetElement.classList.add('is-capturing');
+
+				// 預留 300ms 確保 Proxy 圖片讀取完畢
 				await new Promise(resolve => setTimeout(resolve, 300));
 
 				const canvas = await html2canvas(targetElement, {
@@ -4422,23 +4606,20 @@
 					backgroundColor: '#ffffff'
 				});
 
-				// 截圖結束後，還原為原始圖片網址
-				if (detailImg && originalSrc) {
-					detailImg.src = originalSrc;
+				// 4. 還原當前第一張圖片的原始網址
+				if (activeImg && originalSrc) {
+					activeImg.src = originalSrc;
 				}
 
 				const image = canvas.toDataURL('image/png');
 				const cleanName = cleanCardName(cardName) || 'card';
 				
-				// 💡 修正裝置判斷邏輯：精確判斷是否為手機 (螢幕寬度 <= 768px 或 行動裝置 UserAgent/MaxTouchPoints)
 				const isMobileDevice = window.innerWidth <= 768 || 
 					(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
 
 				if (isMobileDevice) {
-					// 手機版：另存PNG到手機相簿/觸發下載選單
 					triggerImageDownload(image, `${cleanName}_detail.png`);
 				} else {
-					// 桌機版：另開新視窗顯示截圖
 					const newWindow = window.open('about:blank', '_blank');
 					if (newWindow) {
 						newWindow.document.write(`
@@ -4458,7 +4639,6 @@
 						`);
 						newWindow.document.close();
 					} else {
-						// 若桌機版瀏覽器阻擋彈出視窗(Pop-up block)，則備援下載
 						triggerImageDownload(image, `${cleanName}_detail.png`);
 					}
 				}
@@ -4467,7 +4647,11 @@
 				console.error('截圖失敗:', err);
 				alert('截圖過程中發生錯誤，請稍後再試');
 			} finally {
+				// 5. 恢復原本狀態，移除 Class
 				targetElement.classList.remove('is-capturing');
+				if (activeImg) {
+					activeImg.classList.remove('is-horizontal');
+				}
 				
 				if (scrollPanel) {
 					scrollPanel.style.maxHeight = prevMaxHeight;
@@ -5071,20 +5255,24 @@
 			document.getElementById('btn-quick-enter')?.addEventListener('click', commitNumBuffer);
 			document.getElementById('btn-quick-clear')?.addEventListener('click', clearQuickSearch);
 
-			// 💡 統一由 Footer 的「開始查詢」接管快搜邏輯
+			// 💡 修正：使用 Event Capture (true) 確保 applyQuickSearchToUI 先於搜尋邏輯執行
 			const btnSearch = document.getElementById('btn-search');
 			if (btnSearch) {
-				// 移除第二個參數中的 true (改為一般的冒泡監聽)
 				btnSearch.addEventListener('click', () => {
 					const drawer = document.getElementById('drawer-quick-search');
 					
-					// 當快搜抽屜開啟，且有輸入 Tag 或 Buffer 時
+					// 1. 如果輸入區還有未按 Enter 的數字，強制先打包進 quickTags
+					if (numBuffer.length > 0) {
+						commitNumBuffer();
+					}
+
+					// 2. 當快搜抽屜開啟且有條件時，先套用至 UI[cite: 1]
 					if (drawer && drawer.classList.contains('open')) {
-						if (quickTags.length > 0 || numBuffer.length > 0) {
+						if (quickTags.length > 0) {
 							applyQuickSearchToUI();
 						}
 					}
-				});
+				}, true); // 👈 關鍵在於這個 true (Capture Phase)，強行提早觸發優先權！
 			}
 
 			// 實體鍵盤監聽...
