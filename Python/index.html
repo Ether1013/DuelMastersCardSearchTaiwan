@@ -144,13 +144,28 @@
             padding: 10px 20px; gap: 15px; 
         }
         .footer-top-row {
-            display: flex; flex-direction: column; gap: 5px; align-items: stretch; flex-shrink: 0;
-        }
-        .footer-top-row .btn-icon {
-            width: 100%; text-align: center; padding: 3px 10px; font-size: 12px;
-        }
+			display: flex; 
+			flex-direction: row; 
+			gap: 6px; 
+			align-items: stretch; /* 確保兩個按鈕高度一致 */
+			flex-shrink: 0;
+			min-width: 130px;    /* 設定適合雙行文字的整體最小寬度 */
+		}
+
+		.footer-top-row .btn-icon {
+			flex: 1;             /* 💡 關鍵：強制兩個按鈕平分寬度（1:1 等寬） */
+			width: 0;            /* 防止文字內容撐開不同寬度 */
+			text-align: center; 
+			padding: 6px 8px; 
+			font-size: 12px;
+			line-height: 1.25; 
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-sizing: border-box;
+		}
         #btn-search {
-            background: #d32f2f; color: white; flex: 1; font-size: 16px; padding: 14px 0; letter-spacing: 2px;
+            background: #d32f2f; color: white; flex: 1; font-size: 16px; padding: 10px 0; letter-spacing: 2px;
         }
         .footer-summary { display: none; background: #444; padding: 15px 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
         .footer-summary.open { display: block; }
@@ -615,9 +630,29 @@
 		}
 
 		.btn-num { background: #ffffff; font-size: 16px; }
-		.btn-wave { background: #e0f2fe; color: #0369a1; font-size: 16px; }
-		.btn-enter { background: #16a34a; color: white; font-size: 13px; }
-		.btn-enter:hover { background: #15803d; }
+		.btn-wave { 
+			background: #e0f2fe; 
+			color: #0369a1; 
+			font-size: 16px; 
+		}
+		/* 💡 新增退格鍵樣式 */
+		.btn-backspace {
+			background: #fef3c7;
+			color: #b45309;
+			font-size: 16px;
+			font-weight: bold;
+		}
+		.btn-backspace:hover {
+			background: #fde68a;
+		}
+		.btn-enter { 
+			background: #16a34a; 
+			color: white; 
+			font-size: 13px; 
+		}
+		.btn-enter:hover { 
+			background: #15803d; 
+		}
 
 		.calc-action-row {
 			display: flex;
@@ -937,7 +972,11 @@
 						<button type="button" class="btn-calc btn-num" data-val="3">3</button>
 
 						<button type="button" class="btn-calc btn-num" data-val="0">0</button>
+						<button type="button" class="btn-calc btn-num" data-val="00">00</button>
+						<button type="button" class="btn-calc btn-num" data-val="000">000</button>
+
 						<button type="button" class="btn-calc btn-wave" data-val="~">~</button>
+						<button type="button" class="btn-calc btn-backspace" id="btn-quick-backspace">←</button>
 						<button type="button" class="btn-calc btn-enter" id="btn-quick-enter">ENTER ↵</button>
 					</div>
 
@@ -1213,8 +1252,8 @@
         <div class="footer-bar">
             <!-- 左邊：[進階選項+選項初始化](一上一下) -->
             <div class="footer-top-row">
-				<button id="toggle-advanced" class="btn-icon">進階選項</button>
-				<button id="btn-reset" class="btn-icon">選項初始化</button>
+				<button id="toggle-advanced" class="btn-icon">進階<br>選項</button>
+				<button id="btn-reset" class="btn-icon">選項<br>初始化</button>
 			</div>
 				
             <!-- 中間：開始查詢 -->
@@ -1377,18 +1416,18 @@
         const tabFilter = document.getElementById('tab-filter');
         const btnReset = document.getElementById('btn-reset');
 
-        /* 修改後 */
+		/* 修改後：保持兩行文字格式 */
 		btnAdvanced.addEventListener('click', () => {
 			// 切換 advanced-mode class
 			const isAdv = document.body.classList.toggle('advanced-mode');
 			
-			// 依據狀態切換按鈕文字
-			btnAdvanced.innerText = isAdv ? '基礎過濾' : '進階選項';
+			// 依據狀態切換兩行按鈕文字
+			btnAdvanced.innerHTML = isAdv ? '基礎<br>過濾' : '進階<br>選項';
 			
 			renderCardTypes();
 			updateSummaryText();
 
-			// 💡 新增：自動切換回第一個頁籤（條件過濾頁面）
+			// 自動切換回第一個頁籤（條件過濾頁面）
 			if (typeof tabHeaders !== 'undefined' && tabHeaders[0]) {
 				tabHeaders[0].click();
 				window.scrollTo(0, 0);
@@ -5388,6 +5427,18 @@
 					// 同步更新上方標題拉桿的箭頭
 					const arrow = drawer.querySelector('.drawer-arrow');
 					if (arrow) arrow.innerText = '▼';
+				}
+			});
+			
+			// 💡 退格鍵 (←) 點擊事件：刪除輸入中的尾數字/符號
+			document.getElementById('btn-quick-backspace')?.addEventListener('click', () => {
+				if (numBuffer.length > 0) {
+					numBuffer = numBuffer.slice(0, -1);
+					updateNumBufferDisplay();
+				} else if (quickTags.length > 0) {
+					// 如果當前緩衝區沒數字，再按退格可以順便刪除最後一個已確認的標籤 (可選)
+					quickTags.pop();
+					renderQuickTags();
 				}
 			});
 		});
