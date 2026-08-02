@@ -652,8 +652,6 @@
 			background: #16a34a; 
 			color: white; 
 			font-size: 13px; 
-			grid-column: span 3; /* 💡 核心新增：讓 ENTER 鍵占滿整行三倍寬 */
-			padding: 8px 0;      /* 稍微加高點擊視覺感 */
 		}
 		.btn-enter:hover { 
 			background: #15803d; 
@@ -972,22 +970,28 @@
 
 					<!-- 數字與運算鍵網格 -->
 					<div class="calc-num-pad">
+						<!-- 第 1 行：左邊兩格留空，[←] 放在 9 的正上方 -->
+						<div class="num-pad-empty" style="grid-column: span 2;"></div>
+						<button type="button" class="btn-calc btn-backspace" id="btn-quick-backspace">←</button>
+
+						<!-- 第 2 行 -->
 						<button type="button" class="btn-calc btn-num" data-val="7">7</button>
 						<button type="button" class="btn-calc btn-num" data-val="8">8</button>
 						<button type="button" class="btn-calc btn-num" data-val="9">9</button>
 
+						<!-- 第 3 行 -->
 						<button type="button" class="btn-calc btn-num" data-val="4">4</button>
 						<button type="button" class="btn-calc btn-num" data-val="5">5</button>
 						<button type="button" class="btn-calc btn-num" data-val="6">6</button>
 
+						<!-- 第 4 行 -->
 						<button type="button" class="btn-calc btn-num" data-val="1">1</button>
 						<button type="button" class="btn-calc btn-num" data-val="2">2</button>
 						<button type="button" class="btn-calc btn-num" data-val="3">3</button>
 
+						<!-- 第 5 行：原先 [←] 的位置改放 [ENTER ↵] -->
 						<button type="button" class="btn-calc btn-num" data-val="0">0</button>
 						<button type="button" class="btn-calc btn-wave" data-val="~">~</button>
-						<button type="button" class="btn-calc btn-backspace" id="btn-quick-backspace">←</button>
-
 						<button type="button" class="btn-calc btn-enter" id="btn-quick-enter">ENTER ↵</button>
 					</div>
 
