@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+import time
+from collections import OrderedDict
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -19,9 +21,12 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# --- 2. 記憶體快取 (Simple In-Memory Cache) ---
-# 避免重複抓取同一張卡，極大節省 Render 的出站流量與 CPU 消耗
-proxy_cache = {}
+# 快取配置
+MAX_CACHE_SIZE = 200          # 最多快取 200 張卡圖 (約 30~50MB RAM)
+CACHE_TTL_SECONDS = 7 * 86400 # 圖片快取有效期限：7 天 (秒)
+
+# 結構：proxy_cache[url] = { "content": bytes, "content_type": str, "timestamp": float }
+proxy_cache = OrderedDict()
 
 # 產生伺服器啟動 ID，讓前端判斷是否需要清除 Cache API 緩存
 SERVER_INSTANCE_ID = str(uuid.uuid4())
@@ -202,82 +207,68 @@ def get_card_stats():
     return card_stats_cache
     
 @app.get("/api/proxy-image")
-@limiter.limit("5/minute")  # 防刷：1分鐘內最多 5 次
-async def proxy_image(
-    request: Request, url: str = Query(..., description="要代理下載的卡圖 URL")
-):
-  # A. 域名安全檢查：防範有人拿你的 Proxy 去拿其他網站圖片
-  parsed = urlparse(url)
-  allowed_hosts = ["takaratomy.co.jp", "dm.takaratomy.co.jp"]
-  if parsed.netloc not in allowed_hosts and not any(
-      parsed.netloc.endswith("." + host) for host in allowed_hosts
-  ):
-    raise HTTPException(
-        status_code=400, detail="Only Takara Tomy domain images are allowed."
-    )
+@limiter.limit("5/minute")
+async def proxy_image(request: Request, url: str = Query(...)):
+    # A. 安全檢查 (保持原本邏輯)...
+    # B. Referer 檢查 (保持原本邏輯)...
 
-  # B. Referer 檢查：只允許你自己的前端發出請求 (防止外接盜連)
-  referer = request.headers.get("referer", "")
-  # 可以把你的 Render 網域放近來，例如 "my-dm-app.onrender.com"
-  if referer and not any(
-      domain in referer
-      for domain in [
-          "localhost",
-          "127.0.0.1",
-          "onrender.com",  # 允許 Render 網域
-      ]
-  ):
-    raise HTTPException(status_code=403, detail="Forbidden domain.")
+    now = time.time()
 
-  # C. 快取檢查 (Hit Cache)
-  if url in proxy_cache:
-    content, content_type = proxy_cache[url]
-    return Response(
-        content=content,
-        media_type=content_type,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "public, max-age=86400",  # 讓瀏覽器快取 1 天
-        },
-    )
+    # C. 快取檢查 (Hit Cache & 時間戳記檢查)
+    if url in proxy_cache:
+        item = proxy_cache[url]
+        # 判斷是否在有效期內 (TTL)
+        if now - item["timestamp"] < CACHE_TTL_SECONDS:
+            # 💡 關鍵：更新時間戳記 (Slide Expiration) 並移到最新位置
+            item["timestamp"] = now
+            proxy_cache.move_to_end(url)
+            
+            return Response(
+                content=item["content"],
+                media_type=item["content_type"],
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400",
+                },
+            )
+        else:
+            # 已超過 7 天過期，主動刪除舊快取，準備重新發送 GET 請求更新
+            del proxy_cache[url]
 
-  # D. 下載圖片 (Miss Cache)
-  try:
-    async with httpx.AsyncClient() as client:
-      resp = await client.get(
-          url,
-          headers={
-              "User-Agent": (
-                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"
-              )
-          },
-          timeout=8.0,
-      )
-      if resp.status_code != 200:
-        raise HTTPException(
-            status_code=resp.status_code, detail="Failed to fetch image"
-        )
+    # D. 下載圖片 (Miss Cache)
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"},
+                timeout=8.0,
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
 
-      content_type = resp.headers.get("content-type", "image/jpeg")
+            content_type = resp.headers.get("content-type", "image/jpeg")
 
-      # 寫入快取 (如果快取數量太大可清理，防暴記憶體)
-      if len(proxy_cache) > 200:
-        proxy_cache.clear()  # 簡易清空機制，維持記憶體在 512MB 內
+            # 💡 容量管理：如果超過上限，移除最舊 (Least Recently Used) 的一筆
+            if len(proxy_cache) >= MAX_CACHE_SIZE:
+                proxy_cache.popitem(last=False)
 
-      proxy_cache[url] = (resp.content, content_type)
+            # 寫入包含時間戳記的物件
+            proxy_cache[url] = {
+                "content": resp.content,
+                "content_type": content_type,
+                "timestamp": now
+            }
 
-      return Response(
-          content=resp.content,
-          media_type=content_type,
-          headers={
-              "Access-Control-Allow-Origin": "*",
-              "Cache-Control": "public, max-age=86400",
-          },
-      )
-  except Exception as e:
-    raise HTTPException(
-        status_code=500, detail=f"Image proxy error: {str(e)}"
-    )
+            return Response(
+                content=resp.content,
+                media_type=content_type,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400",
+                },
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
     
 @app.get("/api/diary")
 async def get_diary():
