@@ -4590,6 +4590,11 @@
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, modalImgBox, modalInfoContainer, true);
 
 			cardModal.classList.add('active');
+
+			// 💡 新增：開啟新卡片 Modal 時，將右側資訊欄與 Mobile Modal 身軀的捲軸歸零
+			if (modalInfoContainer) modalInfoContainer.scrollTop = 0;
+			const modalBody = cardModal.querySelector('.modal-body');
+			if (modalBody) modalBody.scrollTop = 0;
 		}
 		
 		// 💡 Page 3 雙欄模式右側渲染函式
@@ -4681,6 +4686,9 @@
 			rightPanel.appendChild(mainContent);
 
 			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
+			
+			// 💡 新增：點擊左側新卡片時，強制將右側 Detail 捲軸歸零
+			if (infoContainer) infoContainer.scrollTop = 0;
 		}
 		
 		// 💡 將 DataURL 轉換為標準 Blob 檔案
