@@ -910,6 +910,102 @@
 		.is-capturing .modal-img-stack-item[data-active="false"] {
 			display: none !important;
 		}
+		/* ================= 卡號搜尋偽頁籤與 Modal 樣式 ================= */
+
+		/* 偽頁籤懸停效果 (樣式繼承 .tab，不取得 .active) */
+		.btn-id-search {
+			cursor: pointer;
+			background: transparent;
+			border: none;
+			outline: none;
+			color: white;
+		}
+		.btn-id-search:hover {
+			background-color: rgba(255, 255, 255, 0.15);
+		}
+
+		/* Modal 背景遮罩 */
+		.id-search-modal-backdrop {
+			position: fixed;
+			top: 0; left: 0; right: 0; bottom: 0;
+			background: rgba(0, 0, 0, 0.6);
+			z-index: 9999;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 15px;
+		}
+
+		/* Modal 視窗主體 */
+		.id-search-modal-content {
+			background: #ffffff;
+			width: 100%;
+			max-width: 400px;
+			border-radius: 12px;
+			box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+			overflow: hidden;
+			animation: fadeInModal 0.2s ease-out;
+		}
+
+		@keyframes fadeInModal {
+			from { opacity: 0; transform: translateY(-10px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+
+		.id-search-modal-header {
+			background: #1e293b;
+			color: #ffffff;
+			padding: 12px 16px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.id-search-modal-header h3 { margin: 0; font-size: 16px; }
+		.btn-close-modal { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
+
+		.id-search-modal-body { padding: 16px; }
+		.id-search-desc { font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 8px; }
+
+		#input-card-id {
+			width: 100%;
+			padding: 10px 12px;
+			font-size: 15px;
+			border: 2px solid #cbd5e1;
+			border-radius: 6px;
+			box-sizing: border-box;
+			outline: none;
+			transition: border-color 0.2s;
+			touch-action: manipulation;
+		}
+		#input-card-id:focus { border-color: #0284c7; }
+
+		.id-search-error-msg {
+			color: #ef4444;
+			font-size: 13px;
+			font-weight: bold;
+			margin-top: 8px;
+		}
+
+		.id-search-modal-footer {
+			padding: 12px 16px;
+			background: #f8fafc;
+			border-top: 1px solid #e2e8f0;
+			display: flex;
+			justify-content: flex-end;
+			gap: 8px;
+		}
+
+		.btn-submit-search {
+			background: #0284c7; color: white; border: none;
+			padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;
+		}
+		.btn-submit-search:hover { background: #0369a1; }
+
+		.btn-cancel-search {
+			background: #94a3b8; color: white; border: none;
+			padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;
+		}
+		.btn-cancel-search:hover { background: #64748b; }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -921,6 +1017,8 @@
 		<div class="tab active">條件過濾</div>
 		<div class="tab">查詢結果</div>
 		<div class="tab desktop-only-tab">查詢結果(雙欄)</div>
+		<!-- 請在 header-tabs 內找到 .tab 區域加入這行 -->
+		<button type="button" class="tab btn-id-search" id="btn-open-id-search">輸入ID找卡</button>
 		
 		<!-- 新增：獨立計數器容器 (無切換功能、置右對齊) -->
 		<div class="header-counter">
@@ -1326,6 +1424,26 @@
 			</div>
 			<div class="modal-body" id="diary-modal-body" style="gap: 15px;">
 				<!-- 日誌內容動態渲染 -->
+			</div>
+		</div>
+	</div>
+	
+	<!-- 卡號搜尋彈窗 Modal -->
+	<div id="id-search-modal" class="id-search-modal-backdrop" style="display: none;">
+		<div class="id-search-modal-content">
+			<div class="id-search-modal-header">
+				<h3>🔍 輸入ID找卡</h3>
+				<button type="button" id="btn-close-id-modal" class="btn-close-modal">✕</button>
+			</div>
+			<div class="id-search-modal-body">
+				<!-- 💡 調整：口語化強調不分大小寫與自動忽略符號 -->
+				<p class="id-search-desc">請輸入卡號<br>無需區分大小寫，符號可省略，如：打 <b>dm35</b> 即可找 <b>DM3-5</b></p>
+				<input type="text" id="input-card-id" placeholder="例：DM3-5、dm35、kdm351..." autocomplete="off">
+				<div id="id-search-error" class="id-search-error-msg" style="display: none;"></div>
+			</div>
+			<div class="id-search-modal-footer">
+				<button type="button" id="btn-id-search-submit" class="btn-submit-search">搜尋</button>
+				<button type="button" id="btn-id-search-cancel" class="btn-cancel-search">取消</button>
 			</div>
 		</div>
 	</div>
@@ -4425,7 +4543,7 @@
         }
 
         // --- 卡牌資料彈出視窗 (Modal Window) 控制與渲染邏輯 ---
-        function openCardModal(card, combinedCiv, matchedItem = null) {
+        function openCardModal(card, combinedCiv, matchedItem = null, targetIdIndex = 0) {
 			let idList = [];
 			if (matchedItem && typeof matchedItem === 'object') {
 				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
@@ -4435,8 +4553,9 @@
 			const baseName = cleanCardName(card.name) || card.name || '未命名卡牌';
 
 			function updateModalTitle() {
-				// 💡 使用 formatDmId 自動處理前綴
-				const displayId = (idList.length > 0 && idList[0]) ? formatDmId(idList[0]) : '';
+				// 💡 優先使用比對到的 targetIdIndex (例如 id[2])
+				const selectedId = (idList.length > 0) ? (idList[targetIdIndex] || idList[0]) : '';
+				const displayId = selectedId ? formatDmId(selectedId) : '';
 				const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( ${displayId} )</div>` : '';
 				
 				modalTitle.innerHTML = `
@@ -5507,6 +5626,164 @@
 					// 如果當前緩衝區沒數字，再按退格可以順便刪除最後一個已確認的標籤 (可選)
 					quickTags.pop();
 					renderQuickTags();
+				}
+			});
+		});
+		
+		// ================= 英數字過濾與正規化函式 =================
+		function normalizeIdString(str) {
+			if (str === null || str === undefined) return '';
+			return String(str)
+				// 1. 全形轉半形（確保全形英數字能正確轉為半形）
+				.replace(/[\uFF01-\uFF5E]/g, function (ch) {
+					return String.fromCharCode(ch.charCodeAt(0) - 0xfee0);
+				})
+				// 2. 轉大寫（無視大小寫）
+				.toUpperCase()
+				// 3. 💡 關鍵：過濾掉所有非英數字 (A-Z, 0-9) 的字元（符號、橫線、斜線、空白等全部剔除）
+				.replace(/[^A-Z0-9]/g, '');
+		}
+
+		// ================= 卡號搜尋邏輯 (已修正過濾與去重 Bug) =================
+		function executeCardIdSearch() {
+			const inputEl = document.getElementById('input-card-id');
+			const errorEl = document.getElementById('id-search-error');
+			const rawQuery = inputEl.value;
+			const query = normalizeIdString(rawQuery);
+
+			errorEl.style.display = 'none';
+			errorEl.innerText = '';
+
+			if (!query) {
+				errorEl.innerText = '⚠️ 請輸入要搜尋的卡號';
+				errorEl.style.display = 'block';
+				return;
+			}
+
+			// 儲存符合的結果：{ cardData, matchedItem, matchedIdIndex, matchedIdValue }
+			const matchedResults = [];
+			// 💡 防重鍵值：改以「卡名 + 匹配到的卡號」為 key，避免同一張卡在不同商品重複算成多筆
+			const matchedCardKeys = new Set();
+
+			if (typeof rawSetlist === 'object' && rawSetlist !== null) {
+				Object.values(rawSetlist).forEach(product => {
+					const cardList = product.setcardlist || product.cardlist;
+					
+					if (Array.isArray(cardList)) {
+						cardList.forEach(item => {
+							if (item && item.id) {
+								const idArray = Array.isArray(item.id) ? item.id : [item.id];
+								
+								idArray.forEach((idVal, index) => {
+									const normalizedId = normalizeIdString(idVal);
+									
+									if (normalizedId.includes(query)) {
+										const cardNameTarget = item.name ? item.name.trim() : '';
+										// 💡 關鍵修正：以「卡名 + 正規化後的 ID」作為唯一的 key
+										const uniqueKey = `${cardNameTarget}_${normalizedId}`;
+										
+										if (!matchedCardKeys.has(uniqueKey)) {
+											matchedCardKeys.add(uniqueKey);
+											
+											const fullCard = globalCardData.find(c => (c.name || '').trim() === cardNameTarget);
+											
+											matchedResults.push({
+												cardData: fullCard || { name: cardNameTarget },
+												matchedItem: item,
+												matchedIdIndex: index,
+												matchedIdValue: idVal
+											});
+										}
+									}
+								});
+							}
+						});
+					}
+				});
+			}
+
+			// ❌ 情況 0：找不到卡片
+			if (matchedResults.length === 0) {
+				errorEl.innerText = `⚠️ 找不到符合「${rawQuery}」的卡號`;
+				errorEl.style.display = 'block';
+				return;
+			}
+
+			// 💡 1. 檢查是否有「英數字完全符合 (Exact Match)」的卡牌結果
+			const exactMatches = matchedResults.filter(res => normalizeIdString(res.matchedIdValue) === query);
+			
+			// 若有「完全符合」的資料，優先捨棄僅「模糊匹配」的資料
+			let candidates = (exactMatches.length > 0) ? exactMatches : matchedResults;
+
+			// 💡 2. 對候選卡牌以「卡名」再次去重（避免同一張卡即使完全符合仍因為不同包而有多筆資料）
+			const uniqueCardsMap = new Map();
+			candidates.forEach(res => {
+				const cName = res.cardData.name || '';
+				if (!uniqueCardsMap.has(cName)) {
+					uniqueCardsMap.set(cName, res);
+				}
+			});
+			const finalResults = Array.from(uniqueCardsMap.values());
+
+			// 關閉 Modal
+			closeIdSearchModal();
+
+			// 將最終結果快取至全域並切換渲染列表
+			currentFilterResults = finalResults.map(res => res.cardData);
+			navigateToResultPage();
+			renderCurrentResultsWithSort();
+
+			// 🎯 情況 1：去重與完全符合過濾後，最終恰好只有 1 張卡片 ➔ 自動開啟 Detail Modal！
+			if (finalResults.length === 1) {
+				const single = finalResults[0];
+				
+				let combinedCiv = 0;
+				if (single.cardData.wdata && Array.isArray(single.cardData.wdata)) {
+					single.cardData.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+				}
+
+				setTimeout(() => {
+					recordCardHistory(single.cardData.name);
+					openCardModal(single.cardData, combinedCiv, single.matchedItem, single.matchedIdIndex);
+				}, 100);
+			}
+		}
+
+		// ================= Modal 開關與事件綁定 =================
+		function openIdSearchModal() {
+			const modal = document.getElementById('id-search-modal');
+			const input = document.getElementById('input-card-id');
+			const errorEl = document.getElementById('id-search-error');
+			
+			input.value = '';
+			errorEl.style.display = 'none';
+			modal.style.display = 'flex';
+			
+			// 自動 focus 輸入框（延遲 100ms 確保彈窗已完全渲染）
+			setTimeout(() => input.focus(), 100);
+		}
+
+		function closeIdSearchModal() {
+			document.getElementById('id-search-modal').style.display = 'none';
+		}
+
+		// 初始化事件監聽
+		document.addEventListener('DOMContentLoaded', () => {
+			// 點擊「輸入ID找卡」偽頁籤
+			const btnOpen = document.getElementById('btn-open-id-search');
+			if (btnOpen) btnOpen.addEventListener('click', openIdSearchModal);
+
+			// 關閉與取消按鈕
+			document.getElementById('btn-close-id-modal').addEventListener('click', closeIdSearchModal);
+			document.getElementById('btn-id-search-cancel').addEventListener('click', closeIdSearchModal);
+
+			// 提交搜尋
+			document.getElementById('btn-id-search-submit').addEventListener('click', executeCardIdSearch);
+
+			// Enter 鍵觸發搜尋
+			document.getElementById('input-card-id').addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					executeCardIdSearch();
 				}
 			});
 		});
