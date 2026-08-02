@@ -531,6 +531,8 @@
 			margin-bottom: 15px;
 			padding: 8px 12px; /* 原本是 10px 15px */
 			gap: 6px;           /* 原本是 10px，縮減區塊之間的垂直間距 */
+			/* 💡 核心新增：封鎖 iOS Safari 雙擊放大，同時消除 300ms 點擊延遲 */
+			touch-action: manipulation;
 		}
 
 		.quick-tag-container {
@@ -605,6 +607,8 @@
 			cursor: pointer;
 			user-select: none;
 			transition: all 0.15s;
+			/* 💡 確保連按按鈕時不會觸發 Safari 原生 zoom-in */
+			touch-action: manipulation;
 		}
 		.btn-calc:hover {
 			background: #e2e8f0;
@@ -648,6 +652,8 @@
 			background: #16a34a; 
 			color: white; 
 			font-size: 13px; 
+			grid-column: span 3; /* 💡 核心新增：讓 ENTER 鍵占滿整行三倍寬 */
+			padding: 8px 0;      /* 稍微加高點擊視覺感 */
 		}
 		.btn-enter:hover { 
 			background: #15803d; 
@@ -748,8 +754,16 @@
 			border-color: #7e22ce;
 		}
 		/* 雙極按鈕預設與高亮樣式 */
+		.btn-calc.btn-twinpect {
+			background: #f3e8ff;  /* 淺紫色背景 (同商品代碼預設淺紫色) */
+			color: #6b21a8;        /* 深紫色文字 */
+			border-color: #d8b4fe; /* 邊框淡紫色 */
+		}
+		.btn-calc.btn-twinpect:hover {
+			background: #e9d5ff;  /* 滑鼠懸停時稍深的淺紫色 */
+		}
 		.btn-calc.btn-twinpect.active {
-			background: #8b5cf6;
+			background: #8b5cf6;  /* 點擊高亮時的鮮艷紫色 */
 			color: #ffffff;
 			border-color: #7c3aed;
 		}
@@ -971,11 +985,9 @@
 						<button type="button" class="btn-calc btn-num" data-val="3">3</button>
 
 						<button type="button" class="btn-calc btn-num" data-val="0">0</button>
-						<button type="button" class="btn-calc btn-num" data-val="00">00</button>
-						<button type="button" class="btn-calc btn-num" data-val="000">000</button>
-
 						<button type="button" class="btn-calc btn-wave" data-val="~">~</button>
 						<button type="button" class="btn-calc btn-backspace" id="btn-quick-backspace">←</button>
+
 						<button type="button" class="btn-calc btn-enter" id="btn-quick-enter">ENTER ↵</button>
 					</div>
 
