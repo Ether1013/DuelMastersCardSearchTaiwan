@@ -1415,15 +1415,29 @@
         const tabFilter = document.getElementById('tab-filter');
         const btnReset = document.getElementById('btn-reset');
 
-		/* 修改後：保持兩行文字格式 */
 		btnAdvanced.addEventListener('click', () => {
+		
+				// 💡 新增：如果「快速計算機面板」目前是展開狀態，點擊時將其收起來
+			const quickDrawer = document.getElementById('drawer-quick-search');
+			if (quickDrawer && quickDrawer.classList.contains('open')) {
+				quickDrawer.classList.remove('open');
+				const arrow = quickDrawer.querySelector('.drawer-arrow');
+				if (arrow) arrow.innerText = '▼';
+			}
+			
+			// 在切換模式前，先判斷目前畫面上「可見」的卡種是否達到 UI 全選
+			const currentCheckboxes = document.querySelectorAll('.chk-cardtype');
+			const isCurrentlyAllChecked = currentCheckboxes.length > 0 && 
+				Array.from(currentCheckboxes).every(cb => cb.checked);
+
 			// 切換 advanced-mode class
 			const isAdv = document.body.classList.toggle('advanced-mode');
 			
-			// 依據狀態切換兩行按鈕文字
+			// 依據狀態切換按鈕文字
 			btnAdvanced.innerHTML = isAdv ? '基礎<br>過濾' : '進階<br>選項';
 			
-			renderCardTypes();
+			// 傳入切換前是否全選的狀態給 renderCardTypes
+			renderCardTypes(isCurrentlyAllChecked);
 			updateSummaryText();
 
 			// 自動切換回第一個頁籤（條件過濾頁面）
@@ -1957,63 +1971,67 @@
         const btnAllCardType = document.getElementById('btn-all-cardtype');
         
         // --- 需求 1 修改：切換進階模式時保留舊有勾選狀態，新增加的預設不勾選 ---
-        function renderCardTypes() {
-            const topDiv = document.getElementById('cardtype-top');
-            const botDiv = document.getElementById('cardtype-bottom');
-            const isAdv = document.body.classList.contains('advanced-mode');
+        // --- 調整後的 renderCardTypes 函式 ---
+		function renderCardTypes(wasAllChecked = false) {
+			const topDiv = document.getElementById('cardtype-top');
+			const botDiv = document.getElementById('cardtype-bottom');
+			const isAdv = document.body.classList.contains('advanced-mode');
 
-            // 1. 紀錄目前 DOM 上已存在的卡種勾選狀態
-            const previousStates = {};
-            document.querySelectorAll('.chk-cardtype').forEach(cb => {
-                previousStates[cb.value] = cb.checked;
-            });
+			// 1. 紀錄目前 DOM 上已存在的卡種勾選狀態
+			const previousStates = {};
+			document.querySelectorAll('.chk-cardtype').forEach(cb => {
+				previousStates[cb.value] = cb.checked;
+			});
 
-            topDiv.innerHTML = ''; 
-            botDiv.innerHTML = '';
+			topDiv.innerHTML = ''; 
+			botDiv.innerHTML = '';
 
-            rawCardTypes.forEach(data => {
-                if (data.value == null) return;
-                
-                const isCategory = data.catagory || data.category;
-                if (!(isAdv || isCategory || data.main)) return;
+			rawCardTypes.forEach(data => {
+				if (data.value == null) return;
+				
+				const isCategory = data.catagory || data.category;
+				if (!(isAdv || isCategory || data.main)) return;
 
-                const lbl = document.createElement('label');
-                
-                // 2. 判斷預設勾選狀態：原本已存在的保留其勾選狀態；新出現的（非 basic 且原本沒有的）預設 false
-                let isChecked = true;
-                if (previousStates.hasOwnProperty(data.value)) {
-                    isChecked = previousStates[data.value];
-                } else {
-                    // 若是切換成進階模式後才新增顯示的卡種，則設為不勾選
-                    isChecked = false;
-                }
+				const lbl = document.createElement('label');
+				
+				// 2. 勾選狀態判斷邏輯：
+				// - 規則 3：原本已存在於畫面的卡種（如基礎過濾項），完全保留原本的勾選狀態 (previousStates)
+				// - 規則 1 & 2：若是新增出現的卡種（切換到進階才出來的）：
+				//   - 若切換前 UI 為全勾選 (wasAllChecked == true) ➔ 新增的全勾選
+				//   - 若切換前 UI 不是全勾選 (wasAllChecked == false) ➔ 新增的全數不勾選
+				let isChecked = false;
+				if (previousStates.hasOwnProperty(data.value)) {
+					isChecked = previousStates[data.value];
+				} else {
+					isChecked = wasAllChecked;
+				}
 
-                lbl.innerHTML = `<input type="checkbox" class="chk-cardtype" value="${data.value}" ${isChecked ? 'checked' : ''}> ${data.text}`;
-                
-                const checkbox = lbl.querySelector('input');
-                
-                checkbox.addEventListener('change', (e) => {
-                    if (isCategory) {
-                        const targetState = e.target.checked;
-                        rawCardTypes.forEach(childData => {
-                            if (childData.parents && childData.parents.includes(data.value)) {
-                                const childCheckbox = document.querySelector(`.chk-cardtype[value="${childData.value}"]`);
-                                if (childCheckbox && childCheckbox.checked !== targetState) {
-                                    childCheckbox.checked = targetState;
-                                    childCheckbox.dispatchEvent(new Event('change'));
-                                }
-                            }
-                        });
-                    }
-                    checkAllStatus(); 
-                });
+				lbl.innerHTML = `<input type="checkbox" class="chk-cardtype" value="${data.value}" ${isChecked ? 'checked' : ''}> ${data.text}`;
+				
+				const checkbox = lbl.querySelector('input');
+				
+				checkbox.addEventListener('change', (e) => {
+					if (isCategory) {
+						const targetState = e.target.checked;
+						rawCardTypes.forEach(childData => {
+							if (childData.parents && childData.parents.includes(data.value)) {
+								const childCheckbox = document.querySelector(`.chk-cardtype[value="${childData.value}"]`);
+								if (childCheckbox && childCheckbox.checked !== targetState) {
+									childCheckbox.checked = targetState;
+									childCheckbox.dispatchEvent(new Event('change'));
+								}
+							}
+						});
+					}
+					checkAllStatus(); 
+				});
 
-                if(data.location === 'M') topDiv.appendChild(lbl);
-                else botDiv.appendChild(lbl);
-            });
-            
-            checkAllStatus();
-        }
+				if(data.location === 'M') topDiv.appendChild(lbl);
+				else botDiv.appendChild(lbl);
+			});
+			
+			checkAllStatus();
+		}
 
         function checkAllStatus() {
             const checkboxes = Array.from(document.querySelectorAll('.chk-cardtype'));
@@ -2865,14 +2883,17 @@
 		function getFilterConfigFromUI() {
 			const isAdv = document.body.classList.contains('advanced-mode');
 
-			// 💡 檢查卡種是否為「全選 / 預設狀態」
+			// 💡 規則 4：精確檢查當前 UI 上呈現的所有卡種方框是否全被勾選
 			const allCheckboxes = document.querySelectorAll('.chk-cardtype');
 			const checkedCheckboxes = document.querySelectorAll('.chk-cardtype:checked');
+			
+			// 只要有顯示的核取方框且數量等於被勾選的數量，即判定為 UI 全勾選
 			const isAllCardTypesChecked = (allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length);
 
 			let checkedCardTypes = Array.from(checkedCheckboxes).map(cb => cb.value);
 			const isDerivedChecked = document.getElementById('chk-derived-cardtype')?.checked;
 
+			// 如果 UI 不是全勾選，才需要整理並擴展被勾選的卡種
 			if (!isAllCardTypesChecked && checkedCardTypes.length > 0) {
 				let typesToExpand = [];
 				
@@ -3216,7 +3237,7 @@
 		}
 
 		function checkTypeMatch(cardTypes, checkedTypes, isAllChecked) {
-			// 💡 如果是全選/預設狀態，直接 Skip 卡種過濾，連隱藏卡種也包含進來
+			// 💡 如果是全選狀態 (isAllChecked === true)，直接 Skip 卡種過濾，放行所有卡種（含隱藏卡種）
 			if (isAllChecked) return true;
 			if (!checkedTypes || checkedTypes.length === 0) return true;
 			return cardTypes.some(t => checkedTypes.includes(t));
