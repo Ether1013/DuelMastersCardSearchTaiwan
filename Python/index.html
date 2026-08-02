@@ -4145,32 +4145,61 @@
 
 						btn.addEventListener('click', () => {
 							window._autoExpandSetBlock = true;
-							if (isModal) cardModal.classList.remove('active');
 
-							document.getElementById('btn-reset').click();
+							// 1. 取得目標商品 key
+							const targetSetKey = item.key; 
+
+							// 2. 靜默更新第一頁的 UI 選單狀態（不觸發頁面切換）
 							const bigSelect = document.getElementById('series-big');
 							const smallSelect = document.getElementById('series-small');
-
 							if (bigSelect && smallSelect) {
+								// 先重置其他過濾欄位 (如只清空卡名、文明等，但不切換頁籤)
+								document.querySelectorAll('#tab-filter input[type="text"]').forEach(input => input.value = "");
+								
 								bigSelect.value = "";
 								bigSelect.dispatchEvent(new Event('change'));
-								smallSelect.value = item.key;
+								smallSelect.value = targetSetKey;
+								
 								if (typeof updateSummaryText === 'function') updateSummaryText();
 							}
 
-							document.getElementById('btn-search').click();
+							// 3. 直接在背景執行資料過濾演算法 (不呼叫 btnSearch.click())
+							const filterConfig = getFilterConfigFromUI();
+							currentFilterResults = globalCardData.filter(c => {
+								return checkCardMatchesFilters(c, filterConfig, null);
+							});
 
-							setTimeout(() => {
-								const items = document.querySelectorAll('#list-container .card-list-item, #list-container-split .card-list-item');
-								if (items.length > 0) {
-									let targetItem = Array.from(items).find(el => {
-										const nameEl = el.querySelector('.card-name');
-										return nameEl && nameEl.innerText.includes(cleanCardName(card.name));
-									});
-									if (!targetItem) targetItem = items[0];
-									targetItem.click();
-								}
-							}, 100);
+							// 4. 重新渲染當前視圖的卡牌列表 (Page 2 或 Page 3)
+							renderCurrentResultsWithSort();
+
+							// 5. 找出當前這張卡片並直接重新渲染 Detail / 更新 Modal 內容
+							const targetCleanName = cleanCardName(card.name);
+							let matchedCard = currentFilterResults.find(c => cleanCardName(c.name) === targetCleanName) || card;
+							
+							// 重新取得該卡片在指定商品中的 matchedItem (包含 count, id, pic 等)
+							let newMatchedItem = null;
+							const currentSetObj = rawSetlist[targetSetKey];
+							if (currentSetObj) {
+								const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+								newMatchedItem = cardList.find(i => {
+									const itemName = (typeof i === 'object' && i !== null) ? i.name : i;
+									return typeof itemName === 'string' && itemName.trim() === (matchedCard.name || '').trim();
+								});
+							}
+
+							let combinedCiv = 0;
+							if (matchedCard.wdata && Array.isArray(matchedCard.wdata)) {
+								matchedCard.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+							}
+
+							// 6. 依據當前開啟的模式，直接原地更新內容 (完全無縫跳轉)
+							if (isModal) {
+								// 若在 Modal (Page 2)，直接原地重新載入 Detail 內容
+								openCardModal(matchedCard, combinedCiv, newMatchedItem);
+							} else {
+								// 若在雙欄模式 (Page 3)，直接原地渲染右側面板
+								renderSplitDetail(matchedCard, combinedCiv, newMatchedItem);
+							}
 						});
 
 						btnContainer.appendChild(btn);
