@@ -1047,6 +1047,27 @@
 		.btn-report-error:hover {
 			background-color: #dc2626;
 		}
+		/* ================= 快捷種族按鈕樣式 (ドラゴン/コマンド/ディスペクター) ================= */
+		.btn-calc.btn-quick-race {
+			background: #ecfdf5;  /* 預設為淺綠色背景 */
+			color: #047857;        /* 深綠色文字 */
+			border-color: #a7f3d0; /* 淡綠色邊框 */
+		}
+
+		/* 滑鼠 Hover (懸停) 狀態：顏色加深 */
+		.btn-calc.btn-quick-race:hover {
+			background: #d1fae5;
+			color: #065f46;
+			border-color: #6ee7b7;
+		}
+
+		/* 點擊「按下去/選取」高亮狀態 (Active) */
+		.btn-calc.btn-quick-race.active {
+			background: #10b981;   /* 鮮豔綠色背景 */
+			color: #ffffff;        /* 白字 */
+			border-color: #059669;
+			font-weight: bold;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1095,7 +1116,7 @@
 						<!-- 💡 在動態卡種之後，尾巴會被掛上 [雙極] 按鈕 -->
 					</div>
 
-					<!-- 文明按鈕 -->
+					<!-- 文明與三個快捷互斥種族 -->
 					<div class="calc-btn-group full-width">
 						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="16">光</button>
 						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="8">水</button>
@@ -1105,7 +1126,14 @@
 						<button type="button" class="btn-calc btn-civ" data-type="civ" data-val="32">無</button>
 						<button type="button" class="btn-calc btn-civ-spec" data-type="civ-spec" data-val="mono">單色</button>
 						<button type="button" class="btn-calc btn-civ-spec" data-type="civ-spec" data-val="multi">多色</button>
+						<!-- 寫死的三個互斥種族按鈕 -->
+						<button type="button" class="btn-calc btn-quick-race" data-type="quick-race" data-val="ドラゴン">ドラゴン</button>
+						<button type="button" class="btn-calc btn-quick-race" data-type="quick-race" data-val="コマンド">コマンド</button>
+						<button type="button" class="btn-calc btn-quick-race" data-type="quick-race" data-val="ディスペクター">ディスペクター</button>
 					</div>
+
+					<!-- 新增：最新商品按鈕移至下一行獨立容器 -->
+					<div id="quick-sets-group" class="calc-btn-group full-width"></div>
 
 					<!-- 數字與運算鍵網格 -->
 					<div class="calc-num-pad">
@@ -5184,6 +5212,10 @@
 				if (type === 'setcode') {
 					quickTags = quickTags.filter(t => t.type !== 'setcode');
 				}
+				// 💡 新增：三個快捷種族互斥（ドラゴン / コマンド / ディスペクター）
+				if (type === 'quick-race') {
+					quickTags = quickTags.filter(t => t.type !== 'quick-race');
+				}
 				
 				// ➕ 新增 Tag[cite: 1]
 				quickTags.push({ type, val, label });
@@ -5441,6 +5473,14 @@
 				}
 			}
 
+			const raceTag = quickTags.find(t => t.type === 'quick-race');
+			const firstRaceSelect = document.querySelector('.race-select');
+			if (firstRaceSelect) {
+				if (raceTag) {
+					firstRaceSelect.value = raceTag.val;
+				}
+			}
+
 			// Helper: 解析數字並寫入選單
 			const applyRangeToSelects = (valStr, sel1Id, sel2Id) => {
 				const sel1 = document.getElementById(sel1Id);
@@ -5475,7 +5515,7 @@
 					smallSelect.value = targetSetCodes[0];
 				}
 			}
-
+			
 			if (typeof updateSummaryText === 'function') updateSummaryText();
 		}
 
@@ -5522,42 +5562,35 @@
 		
 		// 💡 動態繪製 D/O 開頭的最新商品代碼按鈕至文明區塊
 		function initQuickSetCodeButtons() {
-			// 檢查全域陣列是否存在
 			if (typeof LATEST_SET_CODES === 'undefined' || !Array.isArray(LATEST_SET_CODES)) return;
 
-			// 1. 依照 LATEST_SET_CODES 順序，僅過濾出以 'D' 或 'O' 開頭的 setcode (不分大小寫)
 			const filteredCodes = LATEST_SET_CODES.filter(code => {
 				if (!code) return false;
 				const upper = String(code).trim().toUpperCase();
 				return upper.startsWith('D') || upper.startsWith('O');
 			});
 
-			// 2. 最多只取前兩個
 			const targetCodes = filteredCodes.slice(0, 2);
 
-			// 尋找文明按鈕區塊 (位於 second full-width 區塊)
-			const civGroup = document.querySelector('#drawer-quick-search .calc-btn-group:nth-child(2)');
-			if (!civGroup) return;
+			// 💡 改為抓取新的獨立容器 #quick-sets-group
+			const setsGroup = document.getElementById('quick-sets-group');
+			if (!setsGroup) return;
 
-			// 移除舊有動態產生的 setcode 按鈕 (避免重複生成)
-			civGroup.querySelectorAll('.btn-setcode').forEach(el => el.remove());
+			setsGroup.innerHTML = '';
 
-			// 3. 建立並掛載按鈕 (setcode 同時作為 value 與 text)
 			targetCodes.forEach(code => {
 				const btn = document.createElement('button');
 				btn.type = 'button';
 				btn.className = 'btn-calc btn-setcode';
-				btn.dataset.type = 'setcode'; // 標記為 setcode 類型
+				btn.dataset.type = 'setcode';
 				btn.dataset.val = code;
 				btn.innerText = code;
 
-				// 點擊事件：切換 Toggle Tag
 				btn.addEventListener('click', () => {
 					toggleQuickTag('setcode', code, code, btn);
 				});
 
-				// 插入到文明區塊的最末端
-				civGroup.appendChild(btn);
+				setsGroup.appendChild(btn);
 			});
 		}
 
@@ -5725,6 +5758,12 @@
 					quickTags.pop();
 					renderQuickTags();
 				}
+			});
+			
+			document.querySelectorAll('.btn-quick-race').forEach(btn => {
+				btn.addEventListener('click', () => {
+					toggleQuickTag('quick-race', btn.dataset.val, btn.dataset.val, btn);
+				});
 			});
 		});
 		
