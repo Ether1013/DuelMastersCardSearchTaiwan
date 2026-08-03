@@ -2936,9 +2936,33 @@
 						border-radius: 4px;
 						box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
 						position: relative;
+						transition: all 0.2s ease;
 					}
+					/* 從第二張開始向上滑入覆蓋，形成垂直階梯重疊感 */
 					.stacked-card-img:not(:first-child) {
 						margin-top: -165px; 
+						transition: all 0.2s ease;
+					}
+					/* ===================================================
+					   💡 新增：行動裝置 + 直立螢幕 (Portrait) 尺寸縮小 40% 響應式設定
+					   =================================================== */
+					@media (max-width: 768px) and (orientation: portrait) {
+						/* 1. 單張卡圖縮小 40% (140px*0.6 = 84px / 196px*0.6 = 118px) */
+						.card-img {
+							width: 84px !important;
+							height: 118px !important;
+						}
+
+						/* 2. 重疊卡圖縮小 40% */
+						.stacked-card-img {
+							width: 84px !important;
+							height: 118px !important;
+						}
+
+						/* 3. 重疊位移量同步縮小 40% (-165px * 0.6 = -99px) */
+						.stacked-card-img:not(:first-child) {
+							margin-top: -99px !important;
+						}
 					}
 				</style>
 			</head>

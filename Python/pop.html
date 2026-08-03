@@ -33,12 +33,13 @@
             flex-shrink: 0;
         }
         .card-img { 
-            width: 140px; 
-            height: 196px; 
-            object-fit: contain; 
-            background: #f0f0f0; 
-            border-radius: 4px; 
-        }
+			width: 140px; 
+			height: 196px; 
+			object-fit: contain; 
+			background: #f0f0f0; 
+			border-radius: 4px; 
+			transition: all 0.2s ease; /* 旋轉螢幕時有平滑過渡 */
+		}
         .card-detail { 
             flex: 1; 
         }
@@ -137,9 +138,35 @@
 			border-radius: 4px;
 			box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
 			position: relative;
+			transition: all 0.2s ease;
 		}
+
+		/* 從第二張開始向上滑入覆蓋 */
 		.stacked-card-img:not(:first-child) {
-			margin-top: -165px; 
+			margin-top: -165px; /* 預設重疊偏移量 */
+			transition: all 0.2s ease;
+		}
+		
+		/* ===================================================
+		   💡 行動裝置 + 直立螢幕 (Portrait) 尺寸縮小 40% 響應式設定
+		   =================================================== */
+		@media max-width: 768px and (orientation: portrait) {
+			/* 1. 單張卡圖：原本寬 140px / 高 196px 縮小 40% (變為 60%) ➔ 寬 84px / 高 117.6px */
+			.card-img {
+				width: 84px;
+				height: 118px;
+			}
+
+			/* 2. 重疊卡圖：縮小 40% */
+			.stacked-card-img {
+				width: 84px;
+				height: 118px;
+			}
+
+			/* 3. 關鍵：重疊偏移量同步縮小 40% (-165px * 0.6 = -99px) */
+			.stacked-card-img:not(:first-child) {
+				margin-top: -99px;
+			}
 		}
     </style>
 </head>
