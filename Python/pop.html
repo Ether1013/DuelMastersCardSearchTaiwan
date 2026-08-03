@@ -31,6 +31,8 @@
             flex-direction: column;
             align-items: center;
             flex-shrink: 0;
+            max-width: 140px; /* 💡 新增：限制容器最大寬度 */
+            width: auto;
         }
         .card-img { 
 			width: 140px; 
@@ -150,21 +152,25 @@
 		/* ===================================================
 		   💡 行動裝置 + 直立螢幕 (Portrait) 尺寸縮小 40% 響應式設定
 		   =================================================== */
-		/* 💡 修正：補上 (max-width: 768px) 的小括號，並加上 !important 確保樣式覆蓋 */
 		@media (max-width: 768px) and (orientation: portrait) {
-			/* 1. 單張卡圖：原本寬 140px / 高 196px 縮小 40% (變為 60%) ➔ 寬 84px / 高 118px */
+			/* 💡 新增：卡圖外容器最大寬度同步縮小為 84px */
+			.card-img-container {
+				max-width: 84px !important;
+			}
+
+			/* 1. 單張卡圖：寬 84px / 高 118px */
 			.card-img {
 				width: 84px !important;
 				height: 118px !important;
 			}
 
-			/* 2. 重疊卡圖：縮小 40% */
+			/* 2. 重疊卡圖：寬 84px / 高 118px */
 			.stacked-card-img {
 				width: 84px !important;
 				height: 118px !important;
 			}
 
-			/* 3. 關鍵：重疊偏移量同步縮小 40% (-165px * 0.6 = -99px) */
+			/* 3. 重疊偏移量：-99px */
 			.stacked-card-img:not(:first-child) {
 				margin-top: -99px !important;
 			}
