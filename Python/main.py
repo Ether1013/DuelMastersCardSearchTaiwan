@@ -266,6 +266,41 @@ async def get_nickname():
 async def get_setlist():
     return setlist_cache
     
+# 💡 新增：POP 頁面專用 API，直接回傳商品資料 + 該商品所屬卡牌詳細資料
+@app.get("/api/pop/{set_code}")
+async def get_pop_data(set_code: str):
+    # 1. 檢查商品是否存在
+    current_set = setlist_cache.get(set_code)
+    if not current_set:
+        raise HTTPException(status_code=404, detail=f"找不到代碼為 '{set_code}' 的商品資料")
+
+    set_card_list = current_set.get("setcardlist") or current_set.get("cardlist") or []
+
+    # 2. 建立該商品卡名的 Quick Map 順序索引
+    order_map = {}
+    for index, item in enumerate(set_card_list):
+        item_name = item.get("name") if isinstance(item, dict) else item
+        if isinstance(item_name, str):
+            clean_name = item_name.strip()
+            if clean_name not in order_map:
+                order_map[clean_name] = index
+
+    # 3. 從記憶體中的 9000 筆 carddata 篩選出屬於該商品的卡片 (只抓需要的幾十張)
+    matched_cards = []
+    for card in carddata_cache:
+        c_name = card.get("name")
+        if c_name and c_name.strip() in order_map:
+            matched_cards.append(card)
+
+    # 4. 依照商品原本的順序排序
+    matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
+
+    # 5. 回傳精簡後的完整資料包
+    return {
+        "set_info": current_set,
+        "cards": matched_cards
+    }
+    
 @app.get("/api/card_stats")
 def get_card_stats():
     """

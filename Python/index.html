@@ -2943,6 +2943,19 @@
 						margin-top: -165px; 
 						transition: all 0.2s ease;
 					}
+					.stack-img-container.is-horizontal {
+						max-width: 196px;
+					}
+
+					.stacked-card-img.is-horizontal {
+						width: 196px !important;
+						height: 140px !important;
+					}
+
+					/* 修正橫向卡片的重疊偏移量 */
+					.stacked-card-img.is-horizontal:not(:first-child) {
+						margin-top: -110px !important; 
+					}
 					/* ===================================================
 					   💡 新增：行動裝置 + 直立螢幕 (Portrait) 尺寸縮小 40% 響應式設定
 					   =================================================== */
@@ -2963,6 +2976,13 @@
 						.stacked-card-img:not(:first-child) {
 							margin-top: -99px !important;
 						}
+						.stacked-card-img.is-horizontal {
+							width: 118px !important;
+							height: 84px !important;
+						}
+						.stacked-card-img.is-horizontal:not(:first-child) {
+							margin-top: -66px !important;
+						}
 					}
 				</style>
 			</head>
@@ -2975,6 +2995,9 @@
 				let flavorText = '';
 				let setCardId = '';
 				let cardCount = 1; // 預設張數為 1
+
+				// 💡 1. 關鍵修正：必須先宣告 isDeckSet，後面的程式碼才能使用它！
+				const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
 
 				// 1. 優先嘗試從「指定商品」中抓取圖片、Flavor、ID 與 Count
 				if (currentSetObj) {
@@ -2999,74 +3022,58 @@
 					}
 				}
 
-				// 2. 如果指定商品沒抓到圖片，退回讀取卡牌自身的預設 pic
+				// 💡 2. 備援圖片機制：若指定商品沒抓到圖片，退回讀取卡牌自身的預設 pic
 				if (!picUrl || picUrl.trim() === '') {
 					picUrl = card.pic || '';
 				}
 
-				// 3. 全域備援機制：若圖片依然為空，遍歷所有商品包尋找圖片
-				if (!picUrl || picUrl.trim() === '') {
-					const cleanTargetName = cleanName.trim();
-					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-						for (const setObj of Object.values(rawSetlist)) {
-							const cardList = setObj.setcardlist || setObj.cardlist;
-							if (Array.isArray(cardList)) {
-								const foundItem = cardList.find(item => {
-									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-								});
-
-								if (foundItem && foundItem.pic) {
-									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0 && foundItem.pic[0]) {
-										picUrl = foundItem.pic[0];
-										break;
-									} else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') {
-										picUrl = foundItem.pic;
-										break;
-									}
-								}
-							}
-						}
+				// 💡 3. 判斷是否為橫向卡
+				let isHorizontal = false;
+				if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
+					const firstTypeVal = card.wdata[0].type[0];
+					const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
+					if (matchedType && matchedType.horizontal === true) {
+						isHorizontal = true;
 					}
 				}
 
-				const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
+				const horizClass = isHorizontal ? ' is-horizontal' : '';
 
-				htmlContent += `<div class="card-item">`;
+				// 💡 2. 正確的 HTML 雙欄結構
+				htmlContent += `<div class="card-item">`; // 最外層 (Flex 左右雙欄)
 
-				// ------------------- A. 圖片顯示區塊 -------------------
+				// === 左欄：圖片顯示區塊 ===
 				if (includeImage) {
-					htmlContent += `<div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">`;
+					const containerMaxWidth = isHorizontal ? '196px' : '140px';
+					htmlContent += `<div class="card-img-container" style="display:flex; flex-direction:column; align-items:center; flex-shrink:0; max-width:${containerMaxWidth};">`;
 					
-					if (picUrl) {
+					if (picUrl && picUrl.trim() !== '') {
 						if (isDeckSet && cardCount > 1) {
-							htmlContent += `<div class="stack-img-container">`;
+							htmlContent += `<div class="stack-img-container${horizClass}">`;
 							for (let c = 0; c < cardCount; c++) {
-								htmlContent += `<img class="stacked-card-img" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" />`;
+								htmlContent += `<img class="stacked-card-img${horizClass}" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" />`;
 							}
 							htmlContent += `</div>`;
 						} else {
-							htmlContent += `<img class="card-img" src="${picUrl}" alt="${cleanName}" />`;
+							htmlContent += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" />`;
 						}
 					} else {
-						htmlContent += `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
+						htmlContent += `<div class="card-img${horizClass}" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
 					}
 					
 					htmlContent += `<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>`;
-					htmlContent += `</div>`;
+					htmlContent += `</div>`; // 關閉左欄圖片容器
 				}
 
-				// ------------------- B. 卡名與標題區塊 -------------------
-				htmlContent += `<div class="card-detail">`;
+				// === 右欄：卡名與詳細資料區塊 ===
+				htmlContent += `<div class="card-detail">`; // 開啟右欄
 
 				let countPrefix = '';
-				if (isDeckSet && (!includeImage || !picUrl) && cardCount > 1) {
+				if (isDeckSet && (!includeImage || !picUrl)) {
 					countPrefix = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px;">${cardCount} ⅹ </span>`;
 				}
 
-				// 💡 如果是套牌 (isDeckSet)，就不顯示 #(index) 序號
 				const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
-
 				htmlContent += `<div class="card-title">${indexPrefix}${countPrefix}${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
 
 				// 用於紀錄這張卡片新出現的能力關鍵字
