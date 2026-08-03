@@ -150,22 +150,23 @@
 		/* ===================================================
 		   💡 行動裝置 + 直立螢幕 (Portrait) 尺寸縮小 40% 響應式設定
 		   =================================================== */
-		@media max-width: 768px and (orientation: portrait) {
-			/* 1. 單張卡圖：原本寬 140px / 高 196px 縮小 40% (變為 60%) ➔ 寬 84px / 高 117.6px */
+		/* 💡 修正：補上 (max-width: 768px) 的小括號，並加上 !important 確保樣式覆蓋 */
+		@media (max-width: 768px) and (orientation: portrait) {
+			/* 1. 單張卡圖：原本寬 140px / 高 196px 縮小 40% (變為 60%) ➔ 寬 84px / 高 118px */
 			.card-img {
-				width: 84px;
-				height: 118px;
+				width: 84px !important;
+				height: 118px !important;
 			}
 
 			/* 2. 重疊卡圖：縮小 40% */
 			.stacked-card-img {
-				width: 84px;
-				height: 118px;
+				width: 84px !important;
+				height: 118px !important;
 			}
 
 			/* 3. 關鍵：重疊偏移量同步縮小 40% (-165px * 0.6 = -99px) */
 			.stacked-card-img:not(:first-child) {
-				margin-top: -99px;
+				margin-top: -99px !important;
 			}
 		}
     </style>
