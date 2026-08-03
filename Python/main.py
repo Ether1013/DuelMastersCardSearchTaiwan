@@ -225,6 +225,11 @@ def send_line_notification(report: ReportModel):
 @app.get("/")
 async def serve_index():
     return FileResponse("index.html")
+    
+# 1. 新增 pop.html 的路由
+@app.get("/pop.html")
+async def get_pop_page():
+    return FileResponse("pop.html") # 請確認 pop.html 與 index.html 放在同一個目錄下
 
 # 讓前端確認伺服器是否有重啟過的輕量級 API
 @app.get("/api/server_id")

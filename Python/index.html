@@ -1068,6 +1068,27 @@
 			border-color: #059669;
 			font-weight: bold;
 		}
+		/* 💡 新增：套牌卡圖多張重疊 CSS */
+		.stack-img-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			position: relative;
+			margin-bottom: 10px;
+		}
+		.stacked-card-img {
+			width: 140px;
+			height: 196px;
+			object-fit: contain;
+			background: #f0f0f0;
+			border-radius: 4px;
+			box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
+			position: relative;
+		}
+		/* 從第二張開始向上滑入覆蓋，形成垂直階梯重疊感 */
+		.stacked-card-img:not(:first-child) {
+			margin-top: -165px; 
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2890,7 +2911,6 @@
 					.ability-explain-item:last-child { margin-bottom: 0; }
 					.ability-title { font-weight: bold; color: #1565c0; }
 
-					/* 💡【新增】補上免責聲明的 CSS 樣式 */
 					.export-disclaimer {
 						font-size: 10px;
 						color: #888;
@@ -2898,6 +2918,27 @@
 						margin-top: 4px;
 						user-select: none;
 						white-space: nowrap;
+					}
+
+					/* 💡 套牌卡圖多張重疊 CSS */
+					.stack-img-container {
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+						position: relative;
+						margin-bottom: 10px;
+					}
+					.stacked-card-img {
+						width: 140px;
+						height: 196px;
+						object-fit: contain;
+						background: #f0f0f0;
+						border-radius: 4px;
+						box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
+						position: relative;
+					}
+					.stacked-card-img:not(:first-child) {
+						margin-top: -165px; 
 					}
 				</style>
 			</head>
@@ -2909,8 +2950,9 @@
 				let picUrl = '';
 				let flavorText = '';
 				let setCardId = '';
+				let cardCount = 1; // 預設張數為 1
 
-				// 1. 優先嘗試從「指定商品」中抓取圖片、Flavor 與 ID
+				// 1. 優先嘗試從「指定商品」中抓取圖片、Flavor、ID 與 Count
 				if (currentSetObj) {
 					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
 					const matchedItem = cardList.find(item => {
@@ -2926,6 +2968,10 @@
 						else if (typeof matchedItem.flavor === 'string') flavorText = matchedItem.flavor;
 
 						if (matchedItem.id) setCardId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+
+						if (matchedItem.count !== undefined && matchedItem.count !== null) {
+							cardCount = Number(matchedItem.count);
+						}
 					}
 				}
 
@@ -2934,7 +2980,7 @@
 					picUrl = card.pic || '';
 				}
 
-				// 💡 3. 強大備援機制：若圖片依然為空，遍歷所有商品包 (rawSetlist) 尋找該卡名的任何一張有效圖片！
+				// 3. 全域備援機制：若圖片依然為空，遍歷所有商品包尋找圖片
 				if (!picUrl || picUrl.trim() === '') {
 					const cleanTargetName = cleanName.trim();
 					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
@@ -2960,31 +3006,54 @@
 					}
 				}
 
+				const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
+
 				htmlContent += `<div class="card-item">`;
+
+				// ------------------- A. 圖片顯示區塊 -------------------
 				if (includeImage) {
-					// 💡 將圖片與免責聲明打包在一起，確保位置固定在卡圖正下方
 					htmlContent += `<div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">`;
-					htmlContent += picUrl 
-						? `<img class="card-img" src="${picUrl}" alt="${cleanName}" />` 
-						: `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
+					
+					if (picUrl) {
+						if (isDeckSet && cardCount > 1) {
+							htmlContent += `<div class="stack-img-container">`;
+							for (let c = 0; c < cardCount; c++) {
+								htmlContent += `<img class="stacked-card-img" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" />`;
+							}
+							htmlContent += `</div>`;
+						} else {
+							htmlContent += `<img class="card-img" src="${picUrl}" alt="${cleanName}" />`;
+						}
+					} else {
+						htmlContent += `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
+					}
+					
 					htmlContent += `<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>`;
 					htmlContent += `</div>`;
 				}
 
+				// ------------------- B. 卡名與標題區塊 -------------------
 				htmlContent += `<div class="card-detail">`;
-				htmlContent += `<div class="card-title">#${idx + 1} ${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
+
+				let countPrefix = '';
+				if (isDeckSet && (!includeImage || !picUrl) && cardCount > 1) {
+					countPrefix = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px;">${cardCount} ⅹ </span>`;
+				}
+
+				// 💡 如果是套牌 (isDeckSet)，就不顯示 #(index) 序號
+				const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
+
+				htmlContent += `<div class="card-title">${indexPrefix}${countPrefix}${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
 
 				// 用於紀錄這張卡片新出現的能力關鍵字
 				const newAbilitiesForThisCard = [];
 
 				if (card.wdata && Array.isArray(card.wdata)) {
 					card.wdata.forEach(w => {
-						// 4. 匯出卡種 (轉換中文)
 						const typeText = (w.type && Array.isArray(w.type)) 
 							? w.type.map(t => getCardTypeText(t)).join(', ') 
 							: '無';
 
-						// 3. 超化獸 Power 處理：寫在原本 Power 後面，用 / 分開
 						let displayPower = w.power ?? '-';
 						if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
 							displayPower = `${displayPower} / ${w.hypermode.power}`;
@@ -2993,34 +3062,26 @@
 						htmlContent += `<div class="wdata-box">`;
 						htmlContent += `<div><b>卡種:</b> ${typeText} | <b>費用:</b> ${w.cost ?? '-'} | <b>攻擊力:</b> ${displayPower} | <b>種族:</b> ${w.race ? w.race.join(', ') : '無'}</div>`;
 
-						// 💡 預先將能力關鍵字字典依據長度「由長到短」排序 (長詞優先)
 						const sortedRawAbilities = (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities))
 							? [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length)
 							: [];
 
-						// 收集 sp 中的能力關鍵字（供註釋使用）
 						const checkAndCollectAbilities = (spList) => {
 							if (!spList || !Array.isArray(spList)) return;
 							
 							spList.forEach(spText => {
 								if (!spText) return;
-								
-								// 複製一份工作字串用於遮蔽已匹配的字段
 								let tempSpText = spText;
 
 								sortedRawAbilities.forEach(abil => {
 									const keyword = abil.jap;
 									
-									// 使用 tempSpText 比對，確保被長詞吃掉的字段不會被短詞重複匹配
 									if (tempSpText.includes(keyword)) {
-										// 1. 若該關鍵字未曾在全域出現過，加入本次卡片的新註釋清單
 										if (!globalAppearedAbilities.has(keyword)) {
 											globalAppearedAbilities.add(keyword);
 											newAbilitiesForThisCard.push(abil);
 										}
 
-										// 2. 關鍵步驟：將匹配到的字串從 tempSpText 中「遮蔽/取代」掉
-										// 這樣短詞 (如 Shield Trigger) 就不會再從 Super Shield Trigger 中被找出來
 										const regex = new RegExp(escapeRegExp(keyword), 'g');
 										tempSpText = tempSpText.replace(regex, '___MATCHED___');
 									}
@@ -3028,7 +3089,6 @@
 							});
 						};
 
-						// 原本能力 (sp)
 						if (w.sp && w.sp.length > 0) {
 							checkAndCollectAbilities(w.sp);
 							htmlContent += `<ul class="sp-list">`;
@@ -3036,7 +3096,6 @@
 							htmlContent += `</ul>`;
 						}
 
-						// 3. 超化模式能力 (hypermode.sp)：中間畫一條寫著 Hyper Mode 的橫線
 						if (w.hypermode && w.hypermode.sp && w.hypermode.sp.length > 0) {
 							checkAndCollectAbilities(w.hypermode.sp);
 							htmlContent += `<div class="hyper-divider">Hyper Mode</div>`;
@@ -3049,7 +3108,6 @@
 					});
 				}
 
-				// ==================== 【新增】匯出頁面的 Mana 區塊 ====================
                 if (card.mana !== null && card.mana !== undefined) {
                     htmlContent += `
                         <div style="background: #f1f8e9; border-left: 3px solid #4caf50; padding: 6px 10px; font-size: 13px; font-weight: bold; color: #33691e; border-radius: 4px; margin-top: 8px;">
@@ -3057,14 +3115,11 @@
                         </div>
                     `;
                 }
-                // =======================================================================
 
-                // 原本程式碼：1. Flavor 放在能力 (sp) 的下面
                 if (flavorText) {
                     htmlContent += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
                 }
 
-				// 2. 新增能力關鍵字 (abilities) 註釋（前面出現過的就不再出現）
 				if (newAbilitiesForThisCard.length > 0) {
 					htmlContent += `<div class="ability-explain-box">`;
 					newAbilitiesForThisCard.forEach(abil => {
@@ -3084,7 +3139,6 @@
 
 			htmlContent += `</body></html>`;
 
-			// 開啟新分頁並寫入內容
 			const newWindow = window.open('', '_blank');
 			if (newWindow) {
 				newWindow.document.write(htmlContent);
