@@ -426,9 +426,11 @@
         .is-capturing .ver-arrow-btn,
         .is-capturing .modal-controls,
         .is-capturing .abil-explain-btn,
+		.is-capturing .btn-report-error, /* 👈 新增這行：截圖時隱藏錯誤回報按鈕 */
         .is-capturing .set-list-block,
         .is-capturing .ext-links-block { display: none !important; }
 		.is-capturing .btn-copy-title { display: none !important; }
+
 
         /* ================= 手機版 (RWD) 統一合併區 ================= */
         @media (max-width: 768px) {
@@ -1007,6 +1009,44 @@
 			padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;
 		}
 		.btn-cancel-search:hover { background: #64748b; }
+		/* ================= 按鈕橫列與錯誤回報按鈕樣式 ================= */
+		.wdata-btn-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 100%;
+			margin-top: 10px;
+		}
+
+		/* 共用按鈕基礎樣式 (繼承/擴充原有的 .btn-icon) */
+		.btn-abil-explain,
+		.btn-report-error {
+			border: none;
+			padding: 5px 10px;
+			border-radius: 4px;
+			font-size: 12px;
+			font-weight: bold;
+			cursor: pointer;
+			color: #ffffff;
+			transition: background-color 0.15s ease;
+		}
+
+		/* 展開能力說明按鈕 (藍色) */
+		.btn-abil-explain {
+			background-color: #2196f3;
+		}
+		.btn-abil-explain:hover {
+			background-color: #1976d2;
+		}
+
+		/* 錯誤回報按鈕 (紅色，靠右推開) */
+		.btn-report-error {
+			background-color: #ef4444;
+			margin-left: auto; /* 💡 關鍵：若沒有能力說明按鈕時，依然自動貼齊最右邊 */
+		}
+		.btn-report-error:hover {
+			background-color: #dc2626;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1445,6 +1485,35 @@
 			<div class="id-search-modal-footer">
 				<button type="button" id="btn-id-search-submit" class="btn-submit-search">搜尋</button>
 				<button type="button" id="btn-id-search-cancel" class="btn-cancel-search">取消</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 卡牌翻譯錯誤回報 Modal 彈窗 -->
+	<div class="modal-overlay" id="report-modal">
+		<div class="modal-card" style="max-width: 440px;">
+			<div class="modal-header">
+				<div class="modal-title">🚨 回報卡牌翻譯錯誤</div>
+				<div class="modal-close" id="report-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" style="gap: 12px; padding: 16px;">
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">卡牌名稱：</label>
+					<input type="text" id="report-card-name" readonly style="background: #f1f5f9; cursor: not-allowed; color: #475569; font-weight: bold;">
+				</div>
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">商品卡號 / ID：</label>
+					<input type="text" id="report-card-id" readonly style="background: #f1f5f9; cursor: not-allowed; color: #0284c7; font-weight: bold;" placeholder="(無對應卡號)">
+				</div>
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">回報者名字：</label>
+					<input type="text" id="report-author-name" value="熱情的決鬥者" placeholder="請輸入名字">
+				</div>
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">錯誤內容簡答 (選填)：</label>
+					<textarea id="report-desc" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical;" placeholder="請簡述翻譯錯誤之處..."></textarea>
+				</div>
+				<button type="button" id="btn-submit-report" style="width: 100%; padding: 10px; background: #d32f2f; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px;">送出回報</button>
 			</div>
 		</div>
 	</div>
@@ -3983,10 +4052,17 @@
 					spContainer.style.marginTop = '8px';
 					block.appendChild(spContainer);
 
+					// 1. 建立按鈕橫列容器
+					const btnRow = document.createElement('div');
+					btnRow.className = 'wdata-btn-row';
+					btnRow.style.display = 'flex';
+					btnRow.style.justifyContent = 'space-between';
+					btnRow.style.alignItems = 'center';
+					btnRow.style.marginTop = '10px';
+
+					// 2. 建立能力說明按鈕 (注意：保留原本的 abil-explain-btn class 以確保截圖時能被 CSS 隱藏)
 					const abilExplainBtn = document.createElement('button');
-					abilExplainBtn.className = 'btn-icon abil-explain-btn';
-					abilExplainBtn.style.marginTop = '10px';
-					abilExplainBtn.style.alignSelf = 'flex-start';
+					abilExplainBtn.className = 'btn-icon abil-explain-btn btn-abil-explain';
 					abilExplainBtn.style.backgroundColor = '#2196f3';
 					abilExplainBtn.style.color = '#fff';
 					abilExplainBtn.style.border = 'none';
@@ -3996,8 +4072,21 @@
 					abilExplainBtn.style.fontSize = '12px';
 					abilExplainBtn.style.fontWeight = 'bold';
 					abilExplainBtn.innerText = '[展開能力說明]';
-					abilExplainBtn.style.display = 'none';
+					abilExplainBtn.style.display = 'none'; // 預設隱藏，由 renderSpAbilities 動態開啟
 
+					// 3. 建立錯誤回報按鈕
+					const reportErrorBtn = document.createElement('button');
+					reportErrorBtn.className = 'btn-icon btn-report-error';
+					reportErrorBtn.style.marginLeft = 'auto'; // 無能力說明時自動靠右對齊
+					reportErrorBtn.innerText = '🚨 [錯誤回報]';
+					reportErrorBtn.addEventListener('click', () => {
+						openReportModal(card, matchedItem);
+					});
+
+					btnRow.appendChild(abilExplainBtn);
+					btnRow.appendChild(reportErrorBtn);
+
+					// 4. 能力說明展開區塊
 					const abilExplainBox = document.createElement('div');
 					abilExplainBox.style.display = 'none';
 					abilExplainBox.style.marginTop = '8px';
@@ -4015,7 +4104,7 @@
 						abilExplainBtn.innerText = isExplainOpen ? '[收合能力說明]' : '[展開能力說明]';
 					});
 
-					block.appendChild(abilExplainBtn);
+					block.appendChild(btnRow);
 					block.appendChild(abilExplainBox);
 
 					function renderSpAbilities() {
@@ -5637,6 +5726,93 @@
 					renderQuickTags();
 				}
 			});
+		});
+		
+		// 全域變數或輔助函式：開啟錯誤回報 Modal 並帶入卡片資料
+		function openReportModal(card, matchedItem) {
+			const reportModal = document.getElementById('report-modal');
+			if (!reportModal) return;
+
+			// 1. 取得卡名
+			const cardName = card.name || '未命名卡牌';
+
+			// 2. 取得卡號 ID（若有選擇特定商品且對應 item 含有 id 欄位）
+			let displayId = '';
+			if (matchedItem && matchedItem.id) {
+				const rawId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+				if (rawId) displayId = formatDmId(rawId);
+			}
+
+			// 3. 填入 Input 表單預設值
+			document.getElementById('report-card-name').value = cardName;
+			document.getElementById('report-card-id').value = displayId || '(無對應卡號)';
+			document.getElementById('report-author-name').value = "熱情的決鬥者";
+			document.getElementById('report-desc').value = "";
+
+			// 4. 開啟 Modal
+			reportModal.classList.add('active');
+		}
+
+		// 關閉回報 Modal 事件綁定
+		document.getElementById('report-modal-close')?.addEventListener('click', () => {
+			document.getElementById('report-modal')?.classList.remove('active');
+		});
+
+		// 點擊背景遮罩關閉 Modal
+		document.getElementById('report-modal')?.addEventListener('click', (e) => {
+			if (e.target.id === 'report-modal') {
+				e.target.classList.remove('active');
+			}
+		});
+
+		// 💡 修改前端按鈕點擊事件裡的 response 處理邏輯：
+		document.getElementById('btn-submit-report')?.addEventListener('click', async () => {
+			const btnSubmit = document.getElementById('btn-submit-report');
+			const cardName = document.getElementById('report-card-name').value;
+			const cardId = document.getElementById('report-card-id').value;
+			const reporterName = document.getElementById('report-author-name').value.trim() || "熱情的決鬥者";
+			const errorDesc = document.getElementById('report-desc').value.trim();
+
+			if (!cardName) {
+				alert("找不到卡牌名稱！");
+				return;
+			}
+
+			btnSubmit.disabled = true;
+			btnSubmit.innerText = "傳送中...";
+
+			try {
+				const resp = await fetch('/api/report_error', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						card_name: cardName,
+						card_id: cardId === '(無對應卡號)' ? '' : cardId,
+						reporter_name: reporterName,
+						error_desc: errorDesc
+					})
+				});
+
+				if (resp.ok) {
+					if (typeof showToast === 'function') {
+						showToast("感謝回報！訊息已成功傳送至 LINE。");
+					} else {
+						alert("感謝回報！訊息已成功傳送至 LINE。");
+					}
+					document.getElementById('report-modal')?.classList.remove('active');
+				} else if (resp.status === 429) {
+					// 🛡️ 觸發連擊防禦時的提示
+					alert("⚠️ 您的回報頻率過高，請稍等 1 分鐘後再試，謝謝！");
+				} else {
+					alert("傳送失敗，請稍後再試。");
+				}
+			} catch (e) {
+				console.error("回報失敗:", e);
+				alert("網路請求發生錯誤，請重試");
+			} finally {
+				btnSubmit.disabled = false;
+				btnSubmit.innerText = "送出回報";
+			}
 		});
 		
 		// ================= 英數字過濾與正規化函式 =================

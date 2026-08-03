@@ -1,7 +1,7 @@
 import os
 import json
 import uuid  # 用來產生唯一 ID
-from fastapi import FastAPI, HTTPException, Query, Request, Response
+from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks
 from fastapi.responses import FileResponse
 import httpx
 from pathlib import Path
@@ -11,10 +11,18 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 import time
 from collections import OrderedDict
+from pydantic import BaseModel
+from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI()
+
+# 自動讀取同目錄下的 .env 檔案
+load_dotenv()
+LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN", "你的_LINE_ACCESS_TOKEN")
+LINE_USER_ID = os.getenv("LINE_USER_ID", "你的_LINE_USER_ID")
 
 # --- 1. Rate Limiter 設定 (每個 IP 1 分鐘最多呼叫 12 次截圖 Proxy) ---
 limiter = Limiter(key_func=get_remote_address)
@@ -157,6 +165,60 @@ def load_and_process_caches():
     except Exception as e:
         print(f"載入緩存失敗: {e}")
 
+class ReportModel(BaseModel):
+    card_name: str
+    card_id: str = ""
+    reporter_name: str = "熱情的決鬥者"
+    error_desc: str = ""
+
+def send_line_notification(report: ReportModel):
+    """背景任務：將回報訊息發送至你的個人 LINE 帳號"""
+    # 💡 1. 清除金鑰字串頭尾可能誤貼的空白字元
+    token = LINE_ACCESS_TOKEN.strip() if LINE_ACCESS_TOKEN else ""
+    user_id = LINE_USER_ID.strip() if LINE_USER_ID else ""
+
+    if not token or not user_id or "你的_" in token:
+        print("[LINE Alert] 未設定正確的 LINE 金鑰，跳過訊息發送")
+        return
+
+    url = "https://api.line.me/v2/bot/message/push"
+    
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": f"Bearer {token}"
+    }
+
+    # 💡 2. 組裝內文
+    msg_text = (
+        f"🚨 【卡牌翻譯錯誤回報】\n\n"
+        f"📌 卡名：{report.card_name}\n"
+        f"🆔 卡號：{report.card_id or '未提供'}\n"
+        f"👤 回報者：{report.reporter_name}\n"
+        f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}"
+    )
+
+    payload = {
+        "to": user_id,
+        "messages": [
+            {
+                "type": "text", 
+                "text": msg_text
+            }
+        ]
+    }
+
+    try:
+        # 💡 使用 json 參數讓 httpx 自動處理 UTF-8 序列化
+        with httpx.Client() as client:
+            response = client.post(url, headers=headers, json=payload, timeout=5.0)
+            
+            if response.status_code == 200:
+                print(f"[LINE Push 成功] 訊息已順利推送到 User ID: {user_id[:6]}...")
+            else:
+                print(f"[LINE Push 失敗] 狀態碼 {response.status_code}: {response.text}")
+    except Exception as e:
+        print(f"[LINE Push 網路錯誤]: {e}")
+
 
 # --- 路由區 ---
 
@@ -273,3 +335,21 @@ async def proxy_image(request: Request, url: str = Query(...)):
 @app.get("/api/diary")
 async def get_diary():
     return diary_cache
+    
+# 💡 在 main.py 的 report_error 路由進行以下修改：
+@app.post("/api/report_error")
+@limiter.limit("3/minute")
+async def report_error(request: Request, report: ReportModel, background_tasks: BackgroundTasks):
+    if not report.card_name:
+        raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
+    
+    # 透過 BackgroundTasks 進行非同步發送
+    background_tasks.add_task(send_line_notification, report)
+    
+    # 💡 確保回報者名稱有預設值，並動態組裝回應訊息
+    name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
+    
+    return {
+        "status": "success", 
+        "message": f"回報成功！感謝{name}！"
+    }
