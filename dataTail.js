@@ -331,7 +331,7 @@
 		redSpan.appendChild( document.createTextNode("NEW!!") );
 		getById("newest").appendChild(redSpan);
 		const theHref = document.createElement("span");
-		const theText = document.createTextNode("準備轉移到新站！這邊將不會更新8/8的龍娘包喔！");
+		const theText = document.createTextNode("舊站將自動於星期六關閉！這邊也不會更新8/8的龍娘包喔！");
 		theHref.style.color = "blue";
 		theHref.style.fontWeight = "big";
 		theHref.style.cursor = "pointer";
