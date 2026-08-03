@@ -13004,27 +13004,25 @@
     function enterMultiSelectModeByCard(cardId) {
         if (isMultiSelectMode) return;
         
-        // 切換模式標記
+        // 1. 切換模式標記
         isMultiSelectMode = true;
         multiSelectedIds = [cardId];
         
-        // 設定 pendingMove
+        // 2. 設定 pendingMove
         pendingMove = { cardIds: [...multiSelectedIds], shuffle: false };
         
-        // 更新 UI
-        const el = document.querySelector(`.card[data-id="${cardId}"]`);
-        if (el) el.classList.add('multi-selected');
-        
-        updateSelectionUI();
-
-        // --- [新增] 防呆邏輯 ---
-        // 記錄這張卡片的 ID，告訴 handleCardSingleClick 忽略它接下來的「放開」點擊事件
+        // 3. 防呆邏輯 (放在重繪前設定)
         ignoreClickId = cardId;
         
-        // 設定 2 秒後自動清除 (以防使用者長按後一直不放開，或拖曳到別處沒觸發點擊)
+        // 設定 2 秒後自動清除防呆
         setTimeout(() => {
             if (ignoreClickId === cardId) ignoreClickId = null;
         }, 2000);
+
+        // 4. 【關鍵修復】直接觸發全盤重繪！
+        // 刪除原本的 `const el = ... el.classList.add('multi-selected');`
+        // 讓 renderUI 根據 multiSelectedIds 正確將卡片印上勾勾 class，並連同 updateSelectionUI 一起處理
+        renderUI();
     }
 
     // --- [修改] 點擊卡片處理 ---
