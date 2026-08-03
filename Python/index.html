@@ -6049,6 +6049,96 @@
 				// 4-2. 如果不只一張（或 0 張），不做事，留在列表頁
 			}, 100);
 		}
+		
+		/**
+		 * 🛠️ Console 開發者隱藏工具：訂正卡表 JSON 名稱
+		 * 使用方式：在 F12 Console 輸入 loadDeckJson(你的JSON資料或字串)
+		 */
+		window.loadDeckJson = function(inputData) {
+			let deckList = [];
+
+			// 1. 自動解析輸入（支援傳入 Array 物件 或 複製貼上的 JSON 字串）
+			try {
+				if (typeof inputData === 'string') {
+					deckList = JSON.parse(inputData);
+				} else if (Array.isArray(inputData)) {
+					deckList = inputData;
+				} else {
+					console.error("❌ 輸入格式不正確，請傳入 JSON 字串或 Array 物件！");
+					return;
+				}
+			} catch (e) {
+				console.error("❌ JSON 解析失敗，請檢查格式是否正確：", e);
+				return;
+			}
+
+			if (!globalCardData || globalCardData.length === 0) {
+				console.warn("⚠️ 警告：全域卡牌資料 (globalCardData) 尚未載入完成，請稍後再試！");
+				return;
+			}
+
+			// 2. 建立去符號與去空白的標準化比對字典 Map
+			// 關鍵：將半形/全形空白、標點符號全數移除，只保留純粹的字元
+			const normalizeKey = (str) => {
+				if (!str) return "";
+				return str
+					.replace(/（.*?）|\(.*?\)/g, '') // 移除全半形括號內容
+					.replace(/[\s\t\n\r\u180e\u2000-\u200b\u202f\u205f\u3000]/g, '') // 移除所有空格（含全形）
+					.replace(/[「」『』""''・／\/\\\-_~〜!！?？]/g, '') // 移除常見對比符號
+					.toLowerCase(); // 統一轉小寫比對
+			};
+
+			// 建立卡牌標準字典
+			const cardMap = new Map();
+			globalCardData.forEach(card => {
+				if (card.name) {
+					const normKey = normalizeKey(card.name);
+					if (!cardMap.has(normKey)) {
+						cardMap.set(normKey, card.name); // 對應回資料庫的「標準卡名」
+					}
+				}
+			});
+
+			let correctedCount = 0;
+			let notFoundCount = 0;
+
+			// 3. 逐筆進行比對與修復
+			const correctedDeckList = deckList.map(item => {
+				const rawName = item.name || "";
+				const targetCount = item.count ?? 1;
+				const normInput = normalizeKey(rawName);
+
+				if (cardMap.has(normInput)) {
+					const officialName = cardMap.get(normInput);
+					if (officialName !== rawName) {
+						console.log(`✅ [修正卡名] 原文：「${rawName}」 ➔ 正名：「${officialName}」`);
+						correctedCount++;
+					}
+					return { name: officialName, count: targetCount };
+				} else {
+					console.warn(`❓ [未找到卡片] 無法對應卡名：「${rawName}」，保留原樣。`);
+					notFoundCount++;
+					return { name: rawName, count: targetCount };
+				}
+			});
+
+			// 4. 印出處理結果摘要與 JSON 字串
+			const resultJsonString = JSON.stringify(correctedDeckList, null, 2);
+
+			console.log(`\n================ 🎯 卡名訂正完成 ================`);
+			console.log(`📊 統計：總共 ${deckList.length} 項 | 修正 ${correctedCount} 項 | 查無 ${notFoundCount} 項`);
+			console.log(`📋 請複製下方 JSON 結果：\n\n` + resultJsonString);
+			console.log(`=================================================\n`);
+
+			// 自動複製到剪貼簿（若瀏覽器支援）
+			if (navigator.clipboard && window.isSecureContext) {
+				navigator.clipboard.writeText(resultJsonString)
+					.then(() => console.log("✨ 已自動將訂正後的 JSON 複製至剪貼簿！"))
+					.catch(() => {});
+			}
+
+			return resultJsonString;
+		};
 
 		function showAbilityTipsAlert() {
 			const tipsText = 
