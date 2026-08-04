@@ -396,17 +396,44 @@
 
 					if (card.wdata && Array.isArray(card.wdata)) {
 						card.wdata.forEach(w => {
-							const typeText = (w.type && Array.isArray(w.type)) 
-								? w.type.map(t => getCardTypeText(t)).join(', ') 
-								: '無';
+							htmlContent += `<div class="wdata-box">`;
+							
+							// 💡 動態收集存在且有效的屬性欄位
+							const metaFields = [];
 
-							let displayPower = w.power !== undefined && w.power !== null ? formatDisplayValue(w.power) : '-';
-							if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
-								displayPower = `${displayPower} / ${formatDisplayValue(w.hypermode.power)}`;
+							// 1. 卡種
+							if (w.type && Array.isArray(w.type) && w.type.length > 0) {
+								const typeText = w.type.map(t => getCardTypeText(t)).join(', ');
+								metaFields.push(`<b>卡種:</b> ${typeText}`);
 							}
 
-							htmlContent += `<div class="wdata-box">`;
-							htmlContent += `<div><b>卡種:</b> ${typeText} | <b>費用:</b> ${w.cost !== undefined && w.cost !== null ? formatDisplayValue(w.cost) : '-'} | <b>攻擊力:</b> ${displayPower} | <b>種族:</b> ${w.race ? w.race.join(', ') : '無'}</div>`;
+							// 2. 費用
+							if (w.cost !== undefined && w.cost !== null) {
+								metaFields.push(`<b>費用:</b> ${formatDisplayValue(w.cost)}`);
+							}
+
+							// 3. 攻擊力 (需處理 Hypermode)
+							let powerText = '';
+							if (w.power !== undefined && w.power !== null) {
+								powerText = formatDisplayValue(w.power);
+							}
+							if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
+								const hyperPower = formatDisplayValue(w.hypermode.power);
+								powerText = powerText ? `${powerText} / ${hyperPower}` : hyperPower;
+							}
+							if (powerText) {
+								metaFields.push(`<b>攻擊力:</b> ${powerText}`);
+							}
+
+							// 4. 種族
+							if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+								metaFields.push(`<b>種族:</b> ${w.race.join(', ')}`);
+							}
+
+							// 💡 只有在至少有一個屬性存在時，才印出這個 <div> 欄位
+							if (metaFields.length > 0) {
+								htmlContent += `<div>${metaFields.join(' | ')}</div>`;
+							}
 
 							const sortedRawAbilities = [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length);
 
