@@ -5527,30 +5527,71 @@
 		}
 
 		function navigateToBackCard(targetName) {
-			document.getElementById('btn-reset').click();
+			if (!targetName) return;
 
+			// 1. 靜默重置過濾 UI 欄位（不觸發 DOM 重新繪製或頁面閃爍）
+			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+			checkAllStatus();
+
+			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
+			document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
+
+			document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
+			document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
+			document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
+
+			document.querySelectorAll('select').forEach(sel => sel.value = "");
+			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+
+			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+
+			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
+				btn.classList.remove('active');
+				btn.dataset.native = 'false';
+			});
+
+			// 2. 靜默填入目標關聯卡名
 			const cardNameInput = document.getElementById('card-name');
 			if (cardNameInput) {
 				cardNameInput.value = targetName;
 			}
 
-			document.getElementById('btn-search').click();
+			if (typeof updateSummaryText === 'function') updateSummaryText();
 
-			setTimeout(() => {
-				const items = document.querySelectorAll('#list-container .card-list-item');
-				if (items.length > 0) {
-					let targetItem = Array.from(items).find(item => {
-						const nameEl = item.querySelector('.card-name');
-						return nameEl && nameEl.innerText.trim() === cleanCardName(targetName);
-					});
+			// 3. 在背景直接計算過濾結果（不觸發 btnSearch.click() 的跳頁與捲軸動畫）
+			const filterConfig = getFilterConfigFromUI();
+			currentFilterResults = globalCardData.filter(c => {
+				return checkCardMatchesFilters(c, filterConfig, null);
+			});
 
-					if (!targetItem) {
-						targetItem = items[0];
-					}
+			// 4. 重新繪製列表（此時頁面在背景完成渲染，不會有二次刷新閃爍）
+			renderCurrentResultsWithSort();
 
-					targetItem.click();
-				}
-			}, 100);
+			// 5. 原地無縫開啟目標卡片的 Detail
+			const cleanTarget = cleanCardName(targetName);
+			let targetCard = currentFilterResults.find(c => cleanCardName(c.name) === cleanTarget);
+
+			if (!targetCard) {
+				// 保底：若精確搜尋沒找到，嘗試模糊比對
+				targetCard = globalCardData.find(c => cleanCardName(c.name) === cleanTarget) || { name: targetName };
+			}
+
+			let combinedCiv = 0;
+			if (targetCard.wdata && Array.isArray(targetCard.wdata)) {
+				targetCard.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+			}
+
+			// 判斷目前使用的模式並原地更新
+			const isModalActive = document.getElementById('card-modal')?.classList.contains('active');
+			const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
+
+			if (isSplitActive && !isModalActive) {
+				renderSplitDetail(targetCard, combinedCiv, null);
+			} else {
+				openCardModal(targetCard, combinedCiv, null);
+			}
 		}
 
         function createAttrPill(label, value) {
