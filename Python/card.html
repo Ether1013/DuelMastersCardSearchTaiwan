@@ -207,6 +207,7 @@
         let rawAbilities = [];
         let rawCardData = [];
 		let rawCardTypes = [];
+		const specialIcons = ["✪", "⌂", "✚", "✡"];
 
         function formatDisplayValue(val) {
             if (val === null || val === undefined) return '';
@@ -578,8 +579,16 @@
                             const result = renderAbilityText(abilityStr);
                             if (!result.isHint) {
                                 const li = document.createElement('li');
-                                li.innerHTML = result.html;
-                                ul.appendChild(li);
+								li.innerHTML = result.html;
+
+								// 判斷原字串是否以特殊符號開頭
+								if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
+									li.style.listStyleType = 'none';
+									// 如果移除圓點後你覺得文字太靠右，可以解開下方註解將它往左拉
+									li.style.marginLeft = '-1.2em'; 
+								}
+
+								ul.appendChild(li);
                             }
                         });
                         spContainer.appendChild(ul);

@@ -1787,6 +1787,7 @@
 		let rawSetlist = {}; // 系列快取變數
 		// 全域快取當前過濾後的原始結果
 		let currentFilterResults = [];
+		const specialIcons = ["✪", "⌂", "✚", "✡"];
 
 		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
 		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
@@ -3467,10 +3468,44 @@
 							});
 						};
 
+						// 匯出頁面專用的能力解析 Helper (包含 applyEffectTags 效果標籤)
+						const renderExportSpItemHtml = (spRaw) => {
+							let formatted = formatDisplayValue(spRaw);
+							if (!formatted) return '';
+
+							// 處理 HINT: 格式
+							if (formatted.startsWith('HINT:')) {
+								const hintContent = formatted.replace(/^HINT:\s*/, '');
+								return `<li style="list-style-type: none;"><div style="color: #666; font-style: italic; font-size: 13px; margin: 4px 0;">（${applyEffectTags(hintContent)}）</div></li>`;
+							}
+
+							// 處理帶有 # 的階層格式
+							if (formatted.includes('#')) {
+								const parts = formatted.split(/#+/).map(p => p.trim()).filter(Boolean);
+								if (parts.length > 0) {
+									const isSpecial = specialIcons.some(icon => parts[0].startsWith(icon));
+									const mainStyle = isSpecial ? ' style="list-style-type: none; margin-left: -1.2em;"' : '';
+
+									let html = `<li${mainStyle}><div style="font-weight: bold; margin-bottom: 2px;">${applyEffectTags(parts[0])}</div>`;
+									html += `<ul style="margin: 2px 0 6px 18px; padding-left: 0;">`;
+									for (let i = 1; i < parts.length; i++) {
+										html += `<li>${applyEffectTags(parts[i])}</li>`;
+									}
+									html += `</ul></li>`;
+									return html;
+								}
+							}
+
+							// 一般單行格式
+							const isSpecial = specialIcons.some(icon => formatted.startsWith(icon));
+							const hideStyle = isSpecial ? ' style="list-style-type: none; margin-left: -1.2em;"' : '';
+							return `<li${hideStyle}>${applyEffectTags(formatted)}</li>`;
+						};
+
 						if (w.sp && w.sp.length > 0) {
 							checkAndCollectAbilities(w.sp);
 							htmlContent += `<ul class="sp-list">`;
-							w.sp.forEach(s => htmlContent += `<li>${s}</li>`);
+							w.sp.forEach(s => htmlContent += renderExportSpItemHtml(s));
 							htmlContent += `</ul>`;
 						}
 
@@ -3478,7 +3513,7 @@
 							checkAndCollectAbilities(w.hypermode.sp);
 							htmlContent += `<div class="hyper-divider">Hyper Mode</div>`;
 							htmlContent += `<ul class="sp-list">`;
-							w.hypermode.sp.forEach(hs => htmlContent += `<li>${hs}</li>`);
+							w.hypermode.sp.forEach(hs => htmlContent += renderExportSpItemHtml(hs));
 							htmlContent += `</ul>`;
 						}
 
@@ -3714,8 +3749,14 @@
 
 					listItems.forEach(text => {
 						const li = document.createElement('li');
-						li.innerText = text;
 						li.style.marginBottom = '3px';
+						li.innerHTML = result.html;
+						
+						if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
+							li.style.listStyleType = 'none';
+							li.style.marginLeft = '-1.2em';
+						}
+						
 						ul.appendChild(li);
 					});
 
@@ -4747,6 +4788,12 @@
 								} else {
 									const li = document.createElement('li');
 									li.innerHTML = result.html;
+									
+									if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
+										li.style.listStyleType = 'none';
+										li.style.marginLeft = '-1.2em';
+									}
+									
 									ul.appendChild(li);
 								}
 							});

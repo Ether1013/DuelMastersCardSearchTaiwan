@@ -217,6 +217,7 @@
 
     <script>
 		const INFINITY_THRESHOLD = 9000000000000000;
+		const specialIcons = ["✪", "⌂", "✚", "✡"];
 
 		function formatDisplayValue(val) {
 			if (val === null || val === undefined) return '';
@@ -233,6 +234,33 @@
 			if (!rawId) return '';
 			const strId = String(rawId).trim();
 			return strId.toUpperCase().startsWith('DM') ? strId : 'DM' + strId;
+		}
+		
+		function renderSpItemHtml(spRaw) {
+			let formatted = formatDisplayValue(spRaw);
+			if (!formatted) return '';
+
+			// 處理帶有 # 的階層格式
+			if (formatted.includes('#')) {
+				const parts = formatted.split(/#+/).map(p => p.trim()).filter(Boolean);
+				if (parts.length > 0) {
+					const isSpecial = specialIcons.some(icon => parts[0].startsWith(icon));
+					const mainStyle = isSpecial ? ' style="list-style-type: none; margin-left: -1.2em;"' : '';
+					
+					let html = `<li${mainStyle}><div style="font-weight: bold; margin-bottom: 2px;">${parts[0]}</div>`;
+					html += `<ul style="margin: 2px 0 6px 18px; padding-left: 0;">`;
+					for (let i = 1; i < parts.length; i++) {
+						html += `<li>${parts[i]}</li>`;
+					}
+					html += `</ul></li>`;
+					return html;
+				}
+			}
+
+			// 一般單行格式
+			const isSpecial = specialIcons.some(icon => formatted.startsWith(icon));
+			const hideStyle = isSpecial ? ' style="list-style-type: none; margin-left: -1.2em;"' : '';
+			return `<li${hideStyle}>${formatted}</li>`;
 		}
 
 		async function initPopPage() {
@@ -459,7 +487,7 @@
 							if (w.sp && w.sp.length > 0) {
 								checkAndCollectAbilities(w.sp);
 								htmlContent += `<ul class="sp-list">`;
-								w.sp.forEach(s => htmlContent += `<li>${formatDisplayValue(s)}</li>`);
+								w.sp.forEach(s => htmlContent += renderSpItemHtml(s));
 								htmlContent += `</ul>`;
 							}
 
@@ -467,7 +495,7 @@
 								checkAndCollectAbilities(w.hypermode.sp);
 								htmlContent += `<div class="hyper-divider">Hyper Mode</div>`;
 								htmlContent += `<ul class="sp-list">`;
-								w.hypermode.sp.forEach(hs => htmlContent += `<li>${formatDisplayValue(hs)}</li>`);
+								w.hypermode.sp.forEach(hs => htmlContent += renderSpItemHtml(hs));
 								htmlContent += `</ul>`;
 							}
 
