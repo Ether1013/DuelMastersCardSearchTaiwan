@@ -1186,6 +1186,31 @@
 		.is-capturing .share-btn-overlay {
 			display: none !important;
 		}
+		/* 原生能力切換按鈕 (高度與尺寸跟使用技巧對齊) */
+		.btn-native-ability {
+			cursor: pointer;
+			padding: 8px 12px;       /* 💡 與「使用技巧」一樣的內邊距 */
+			background: #ddd;        /* 預設灰底 */
+			color: #333;
+			border: none;
+			border-radius: 4px;
+			font-weight: bold;
+			font-size: 13px;         /* 💡 與「使用技巧」一樣的字級 */
+			white-space: nowrap;     /* 💡 保障文字單行不折行 */
+			transition: all 0.15s ease;
+			touch-action: manipulation;
+			box-sizing: border-box;
+		}
+
+		.btn-native-ability:hover {
+			background-color: #ccc;
+		}
+
+		/* 按下去 / 選取高亮狀態 (亮藍色 + 白字) */
+		.btn-native-ability.active {
+			background-color: #0284c7 !important;
+			color: #ffffff !important;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1398,6 +1423,7 @@
 				<div id="ability-container">
 					<div class="flex-input-row">
 						<select class="ability-select"></select>
+						<button type="button" class="btn-native-ability" data-native="false">原生能力</button>
 						<button class="btn-icon advanced-only btn-add-ability">+</button>
 					</div>
 				</div>
@@ -1843,9 +1869,14 @@
 			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
 			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
 
+			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
+				btn.classList.remove('active');
+				btn.dataset.native = 'false';
+			});
+
 			btnAdvanced.checked = false;
 			document.body.classList.remove('advanced-mode');
-
+			
 			updateSummaryText();
 
 			// 💡 切換回第一個頁籤（條件過濾頁面），但不將捲軸歸零
@@ -1998,12 +2029,25 @@
             const abilText = document.getElementById('ability-text');
             if(abilText && abilText.value) tags.push({ label: `能力關鍵字: ${abilText.value}`, action: () => { abilText.value = ""; updateSummaryText(); } });
             
-            document.querySelectorAll('.ability-select').forEach((sel) => {
-				if(sel.value) {
+            // 尋找處理 .ability-select 的區塊並替換為：
+			document.querySelectorAll('#ability-container .flex-input-row').forEach(row => {
+				const sel = row.querySelector('.ability-select');
+				const btnNative = row.querySelector('.btn-native-ability');
+				if (sel && sel.value) {
+					const isNative = btnNative && btnNative.classList.contains('active');
 					const displayText = sel.value === '__NO_ABILITY__' ? '[無能力]' : sel.value;
+					const nativeSuffix = isNative ? '(原生)' : '';
+					
 					tags.push({ 
-						label: `能力包含: ${displayText}`, 
-						action: () => { sel.value = ""; updateSummaryText(); } 
+						label: `能力包含: ${displayText}${nativeSuffix}`, 
+						action: () => { 
+							sel.value = ""; 
+							if (btnNative) {
+								btnNative.classList.remove('active');
+								btnNative.dataset.native = 'false';
+							}
+							updateSummaryText(); 
+						} 
 					});
 				}
 			});
@@ -2653,28 +2697,58 @@
             bindAddRemoveEvents('.btn-add-ability', '#ability-container', 'ability-select', abilHtml);
             
             updateSummaryText();
+			
+			// 在 initDropdownData() 結尾處加上：
+			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
+				btn.onclick = function() {
+					this.classList.toggle('active');
+					this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
+					updateSummaryText();
+				};
+			});
         }
 
-        function bindAddRemoveEvents(btnAddSelector, containerSelector, selectClass, optionsHtml) {
-            const container = document.querySelector(containerSelector);
-            const oldBtn = document.querySelector(btnAddSelector);
-            const newBtn = oldBtn.cloneNode(true);
-            oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+        // 在 initDropdownData 處將 bindAddRemoveEvents 對能力選單的綁定調整，或直接修改 bindAddRemoveEvents 內部邏輯：
+		function bindAddRemoveEvents(btnAddSelector, containerSelector, selectClass, optionsHtml) {
+			const container = document.querySelector(containerSelector);
+			const oldBtn = document.querySelector(btnAddSelector);
+			const newBtn = oldBtn.cloneNode(true);
+			oldBtn.parentNode.replaceChild(newBtn, oldBtn);
 
-            newBtn.addEventListener('click', () => {
-                const row = document.createElement('div');
-                row.className = 'flex-input-row';
-                row.innerHTML = `
-                    <select class="${selectClass}">${optionsHtml}</select>
-                    <button class="btn-icon btn-remove">-</button>
-                `;
-                row.querySelector('.btn-remove').addEventListener('click', function() {
-                    row.remove();
-                    updateSummaryText(); 
-                });
-                container.appendChild(row);
-            });
-        }
+			newBtn.addEventListener('click', () => {
+				const row = document.createElement('div');
+				row.className = 'flex-input-row';
+				
+				// 判斷是否為能力過濾容器
+				const isAbility = containerSelector === '#ability-container';
+				// 動態生成能力橫列時
+				const nativeBtnHtml = isAbility ? `<button type="button" class="btn-native-ability" data-native="false">原生能力</button>` : '';
+
+				row.innerHTML = `
+					<select class="${selectClass}">${optionsHtml}</select>
+					${nativeBtnHtml}
+					<button class="btn-icon btn-remove">-</button>
+				`;
+
+				// 綁定動態新增項目的移除事件
+				row.querySelector('.btn-remove').addEventListener('click', function() {
+					row.remove();
+					updateSummaryText(); 
+				});
+
+				// 若為能力過濾，為動態新增的原生能力按鈕綁定切換事件
+				if (isAbility) {
+					const btnNative = row.querySelector('.btn-native-ability');
+					btnNative.addEventListener('click', function() {
+						this.classList.toggle('active');
+						this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
+						updateSummaryText();
+					});
+				}
+
+				container.appendChild(row);
+			});
+		}
 
         // --- 頁籤切換邏輯 ---
         // --- 頁籤切換邏輯 (支援 localStorage 紀錄偏好) ---
@@ -3349,7 +3423,13 @@
 			const races = Array.from(document.querySelectorAll('.race-select')).map(s => s.value).filter(Boolean);
 
 			const abilityText = document.getElementById('ability-text').value.trim();
-			const abilities = Array.from(document.querySelectorAll('.ability-select')).map(s => s.value).filter(Boolean);
+			const abilities = Array.from(document.querySelectorAll('#ability-container .flex-input-row')).map(row => {
+				const select = row.querySelector('.ability-select');
+				const nativeBtn = row.querySelector('.btn-native-ability');
+				const val = select ? select.value : '';
+				const isNative = nativeBtn ? nativeBtn.classList.contains('active') : false;
+				return { value: val, isNative: isNative };
+			}).filter(item => item.value !== '');
 			const raceAdv = document.querySelector('.race-select-adv')?.value || '';
 
 			const cardName = document.getElementById('card-name').value.trim();
@@ -3706,12 +3786,27 @@
 		}
 
 		function checkAbilityMatchList(spList, cfg) {
-			// 💡 新增：若選擇了 [無能力]
-			if (cfg.abilities.includes('__NO_ABILITY__')) {
-				// 代表要求能力長度必須為 0
+			// 💡 檢查 abilities 是否選擇了 [無能力]
+			const hasNoAbility = cfg.abilities.some(a => a.value === '__NO_ABILITY__');
+			
+			if (hasNoAbility) {
 				if (spList.length > 0) return false;
 			} else if (cfg.abilities.length > 0) {
-				const hasAllAbil = cfg.abilities.every(abil => spList.some(sp => sp.includes(abil)));
+				// 每一個選擇的能力都要比對成功
+				const hasAllAbil = cfg.abilities.every(abilObj => {
+					const targetAbil = abilObj.value;
+					const isNative = abilObj.isNative;
+
+					return spList.some(sp => {
+						if (isNative) {
+							// 原生能力：必須由該能力名稱開頭 (e.g. sp[].startsWith(能力))
+							return sp.startsWith(targetAbil);
+						} else {
+							// 一般過濾：包含即可
+							return sp.includes(targetAbil);
+						}
+					});
+				});
 				if (!hasAllAbil) return false;
 			}
 
