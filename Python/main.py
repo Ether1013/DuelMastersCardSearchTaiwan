@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, Response, Background
 from fastapi.responses import FileResponse
 import httpx
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -13,6 +13,7 @@ import time
 from collections import OrderedDict
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import re
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -171,9 +172,8 @@ class ReportModel(BaseModel):
     reporter_name: str = "熱情的決鬥者"
     error_desc: str = ""
 
-def send_line_notification(report: ReportModel):
+def send_line_notification(report: ReportModel, base_url: str = ""):
     """背景任務：將回報訊息發送至你的個人 LINE 帳號"""
-    # 💡 1. 清除金鑰字串頭尾可能誤貼的空白字元
     token = LINE_ACCESS_TOKEN.strip() if LINE_ACCESS_TOKEN else ""
     user_id = LINE_USER_ID.strip() if LINE_USER_ID else ""
 
@@ -188,11 +188,72 @@ def send_line_notification(report: ReportModel):
         "Authorization": f"Bearer {token}"
     }
 
-    # 💡 2. 組裝內文
+    # 正規化剔除非英數字（用於比對）
+    def normalize_id(s: str) -> str:
+        if not s:
+            return ""
+        res = []
+        for ch in str(s):
+            code = ord(ch)
+            if 0xFF01 <= code <= 0xFF5E:
+                res.append(chr(code - 0xfee0))
+            else:
+                res.append(ch)
+        return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
+
+    # 💡 1. 判斷傳進來的 ID 是否有效
+    raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
+    target_param = ""
+
+    if raw_id:
+        clean_user_id = normalize_id(raw_id)
+        found_native_id = None
+
+        # 🔍 在 setlist_cache 裡面周遊尋找對應的商品與原生 ID
+        if isinstance(setlist_cache, dict):
+            for set_info in setlist_cache.values():
+                card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+                if isinstance(card_list, list):
+                    for item in card_list:
+                        if isinstance(item, dict) and "id" in item:
+                            ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                            for single_id in ids:
+                                # 比對去除符號後的 ID 是否相同
+                                if normalize_id(single_id) == clean_user_id:
+                                    found_native_id = str(single_id).strip()
+                                    break
+                        if found_native_id:
+                            break
+                if found_native_id:
+                    break
+
+        # 💡 判斷原生 ID 是否有 DM 前綴
+        if found_native_id:
+            target_param = found_native_id
+        else:
+            # 若周遊找不到，但前端傳來的 ID 是以 DM 開頭，嘗試把開頭的 DM 拿掉作為備援
+            if raw_id.upper().startswith("DM"):
+                target_param = raw_id[2:].strip()
+            else:
+                target_param = raw_id
+    else:
+        # 無卡號時，退回使用卡名
+        target_param = report.card_name.strip()
+
+    encoded_param = quote(target_param)
+
+    # 💡 2. 拼成可點擊的完整網址
+    if base_url:
+        card_link = f"{base_url.rstrip('/')}/card.html?p={encoded_param}"
+    else:
+        card_link = f"https://your-site.com/card.html?p={encoded_param}"
+
+    # 💡 3. 組裝推播內文
     msg_text = (
         f"🚨 【卡牌翻譯錯誤回報】\n\n"
         f"📌 卡名：{report.card_name}\n"
         f"🆔 卡號：{report.card_id or '未提供'}\n"
+        f"🔗 連結：\n{card_link}\n\n"
         f"👤 回報者：{report.reporter_name}\n"
         f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}"
     )
@@ -208,7 +269,6 @@ def send_line_notification(report: ReportModel):
     }
 
     try:
-        # 💡 使用 json 參數讓 httpx 自動處理 UTF-8 序列化
         with httpx.Client() as client:
             response = client.post(url, headers=headers, json=payload, timeout=5.0)
             
@@ -388,10 +448,12 @@ async def report_error(request: Request, report: ReportModel, background_tasks: 
     if not report.card_name:
         raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
     
-    # 透過 BackgroundTasks 進行非同步發送
-    background_tasks.add_task(send_line_notification, report)
+    # 💡 自動抓取當前發起請求的網站完整 Base URL (例: https://example.com)
+    base_url = str(request.base_url)
+
+    # 透過 BackgroundTasks 進行非同步發送，並帶入站台網址
+    background_tasks.add_task(send_line_notification, report, base_url)
     
-    # 💡 確保回報者名稱有預設值，並動態組裝回應訊息
     name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
     
     return {
