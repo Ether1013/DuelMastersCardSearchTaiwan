@@ -3337,9 +3337,41 @@
 					}
 				}
 
-				// 💡 2. 備援圖片機制：若指定商品沒抓到圖片，退回讀取卡牌自身的預設 pic
-				if (!picUrl || picUrl.trim() === '') {
-					picUrl = card.pic || '';
+				// 💡 檢查當前 setCode
+				const currentSetCode = currentSetObj ? (currentSetObj.setcode || currentSetObj.code || currentSetObj.id || filterConfig.seriesSmall) : '';
+				const upperSetCode = String(currentSetCode).trim().toUpperCase();
+				const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
+
+				// 💡 備援圖片機制：若指定商品沒抓到圖片，或屬於非 D/O 開頭的商品，退回讀取基本/其他商品卡圖
+				if (!picUrl || picUrl.trim() === '' || isNonStandardSet) {
+					// 1. 優先讀取卡牌基本卡圖
+					if (card.pic && card.pic.trim() !== '') {
+						picUrl = card.pic;
+					} else {
+						// 2. 全域尋找同名卡圖備援
+						const cleanTargetName = card.name ? card.name.trim() : "";
+						if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+							for (const setObj of Object.values(rawSetlist)) {
+								const cardList = setObj.setcardlist || setObj.cardlist;
+								if (Array.isArray(cardList)) {
+									const foundItem = cardList.find(item => {
+										const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+										return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+									});
+									if (foundItem) {
+										let foundPic = '';
+										if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) foundPic = foundItem.pic[0];
+										else if (typeof foundItem.pic === 'string') foundPic = foundItem.pic;
+										
+										if (foundPic && foundPic.trim() !== '') {
+											picUrl = foundPic;
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 
 				// 💡 3. 判斷是否為橫向卡
@@ -4210,14 +4242,47 @@
 			const filterConfig = typeof getFilterConfigFromUI === 'function' ? getFilterConfigFromUI() : {};
 			const hasSelectedSet = Boolean(filterConfig.seriesSmall || filterConfig.seriesBig);
 
-			// 若有指定商品但該商品沒有圖片，標記為 Fallback 狀況
-			if (hasSelectedSet && validPicUrls.length === 0) {
+			// 💡 1. 判斷當前商品的 setCode 是否不是 D 開頭且不是 O 開頭 (例如 NET 大賽牌組)
+			const currentSetCode = filterConfig.seriesSmall || filterConfig.seriesBig || (matchedItem ? (matchedItem.setcode || matchedItem.code) : '');
+			const upperSetCode = String(currentSetCode).trim().toUpperCase();
+			const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
+
+			// 💡 2. 只有在「標準 D/O 商品」且「該商品沒設定 pic」的情況下，才被算作無圖 Fallback 狀態！
+			if (hasSelectedSet && !isNonStandardSet && validPicUrls.length === 0) {
 				isFallbackPic = true;
 			}
 
-			// 備援 1：嘗試讀取卡牌本身的預設圖片
-			if (validPicUrls.length === 0 && card.pic && card.pic.trim() !== '') {
-				validPicUrls = [card.pic];
+			// 💡 3. 如果是非 D/O 開頭的商品（如 NET 大賽牌組）「或者」商品本身沒有卡圖，自動降級抓取基本/全域卡圖
+			if (validPicUrls.length === 0 || isNonStandardSet) {
+				// A. 優先嘗試讀取卡牌的基本（原生）預設圖片
+				if (card.pic && card.pic.trim() !== '') {
+					validPicUrls = [card.pic];
+				}
+
+				// B. 備援：若原生也沒有圖片，搜尋其他商品資料庫中該卡名有設定的卡圖
+				if (validPicUrls.length === 0) {
+					const cleanTargetName = card.name ? card.name.trim() : "";
+					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+						for (const setObj of Object.values(rawSetlist)) {
+							const cardList = setObj.setcardlist || setObj.cardlist;
+							if (Array.isArray(cardList)) {
+								const foundItem = cardList.find(item => {
+									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+								});
+								if (foundItem) {
+									if (Array.isArray(foundItem.pic)) validPicUrls = foundItem.pic.filter(p => p && p.trim() !== '');
+									else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') validPicUrls = [foundItem.pic];
+									if (validPicUrls.length > 0) {
+										// 只有真正的 D/O 商品拿別包圖片時才標記 fallback
+										if (!isNonStandardSet) isFallbackPic = true; 
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 
 			// 備援 2：若仍無圖片，搜尋其他商品的同名卡圖
