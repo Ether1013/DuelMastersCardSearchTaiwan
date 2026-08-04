@@ -181,13 +181,52 @@
         .expand-icon { cursor: pointer; font-size: 20px; padding: 0 10px; user-select: none; }
 
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; }
-        .summary-tag {
-            background: #d32f2f; color: white; padding: 6px 12px; border-radius: 20px;
-            font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;
-            transition: background 0.2s; user-select: none;
-        }
-        .summary-tag:hover { background: #b71c1c; }
-        .summary-tag span { font-weight: bold; font-size: 14px; }
+		.summary-tag {
+			background-color: #d32f2f !important;
+			color: #ffffff !important;
+			
+			/* 💡 1. 限制標籤最大寬度為螢幕扣除 margin 的寬度，絕不爆出螢幕 */
+			max-width: calc(100vw - 60px) !important;
+			
+			/* 💡 2. 文字過長時，標籤內部允許滑動 */
+			overflow-x: auto !important;
+			white-space: nowrap !important;
+			
+			font-size: 12px !important;            /* 💡 使用清晰穩定的固定字級 */
+			line-height: 1.2;
+			padding: 6px 12px;
+			border-radius: 20px;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			box-sizing: border-box;
+			flex-shrink: 0;
+			cursor: pointer;
+			
+			/* 💡 隱藏內部滾動條，保持視覺美觀 */
+			scrollbar-width: none;               /* Firefox */
+			-ms-overflow-style: none;             /* IE / Edge */
+		}
+
+		/* Chrome / Safari 隱藏標籤內部滾動條 */
+		.summary-tag::-webkit-scrollbar {
+			display: none;
+		}
+
+		/* 確保標籤內文字與打叉按鈕都不會折行 */
+		.summary-tag span.tag-text {
+			white-space: nowrap !important;
+		}
+
+		.summary-tag span {
+			font-weight: bold;
+			font-size: 14px;
+			flex-shrink: 0;
+		}
+
+		.summary-tag:hover { 
+			background-color: #b71c1c !important; 
+		}
 
         /* ================= 卡牌資料彈出視窗 (Modal UI) ================= */
         .modal-overlay {
@@ -1211,6 +1250,43 @@
 			background-color: #0284c7 !important;
 			color: #ffffff !important;
 		}
+		
+		/* 種族邏輯按鈕群組容器 */
+		.race-logic-group {
+			display: none; /* 預設交由 CSS 的 .advanced-only 類別控制顯示 */
+			gap: 4px;
+			align-items: center;
+		}
+
+		/* 邏輯按鈕基礎樣式 (預設/未選取：淺色較淡) */
+		.btn-race-logic {
+			cursor: pointer;
+			padding: 3px 8px;
+			border: 1px solid #cbd5e1;
+			border-radius: 4px;
+			font-size: 12px;
+			font-weight: bold;
+			color: #64748b;             /* 淡灰色文字 */
+			background-color: #f1f5f9;  /* 淡灰色背景 */
+			transition: all 0.15s ease;
+			touch-action: manipulation;
+			white-space: nowrap;
+			opacity: 0.7;                /* 未被選到時調淡透明度 */
+		}
+
+		.btn-race-logic:hover {
+			opacity: 0.9;
+			background-color: #e2e8f0;
+		}
+
+		/* 💡 選中高亮狀態 (統一為藍色) */
+		.btn-race-logic.active {
+			color: #ffffff !important;
+			background-color: #0284c7 !important;
+			border-color: #0369a1 !important;
+			opacity: 1 !important;
+		}
+
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1403,7 +1479,14 @@
         <div class="row-flex">
 			<!-- D/F. 種族設定 -->
 			<div class="col" id="section-race">
-				<h3>種族設定</h3>
+				<h3>
+					<span>種族設定</span>
+					<!-- 💡 加上 advanced-only 與 advanced-only-flex 讓按鈕在基礎過濾時自動隱藏 -->
+					<div id="race-logic-group" class="race-logic-group advanced-only advanced-only-flex">
+						<button type="button" class="btn-race-logic active" data-logic="AND">全部包含</button>
+						<button type="button" class="btn-race-logic" data-logic="OR">滿足任一</button>
+					</div>
+				</h3>
 				<div id="race-container">
 					<div class="flex-input-row">
 						<select class="race-select"></select>
@@ -1823,8 +1906,6 @@
 			// 自動切換回第一個頁籤（條件過濾頁面）
 			if (typeof tabHeaders !== 'undefined' && tabHeaders[0]) {
 				tabHeaders[0].click();
-				window.scrollTo(0, 0);
-				if (tabFilter) tabFilter.scrollTop = 0;
 			}
 		});
 
@@ -1872,6 +1953,14 @@
 			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
 				btn.classList.remove('active');
 				btn.dataset.native = 'false';
+			});
+			
+			document.querySelectorAll('.btn-race-logic').forEach(btn => {
+				if (btn.dataset.logic === 'AND') {
+					btn.classList.add('active');
+				} else {
+					btn.classList.remove('active');
+				}
 			});
 
 			btnAdvanced.checked = false;
@@ -2023,9 +2112,37 @@
                 }
             }
 
-            document.querySelectorAll('.race-select').forEach((sel) => {
-                if(sel.value) tags.push({ label: `種族包含: ${sel.value}`, action: () => { sel.value = ""; updateSummaryText(); } });
-            });
+            const selectedRaces = Array.from(document.querySelectorAll('.race-select'))
+				.map(sel => sel.value)
+				.filter(Boolean);
+
+			if (selectedRaces.length > 0) {
+				const activeLogicBtn = document.querySelector('.btn-race-logic.active');
+				const isOrMode = activeLogicBtn && activeLogicBtn.dataset.logic === 'OR';
+				
+				let tagLabel = "";
+				if (selectedRaces.length === 1) {
+					// 單一項目：例如 "種族：R"
+					tagLabel = `種族：${selectedRaces[0]}`;
+				} else {
+					// 多項目：例如 "種族：A+B" 或 "種族：C/D"
+					const separator = isOrMode ? ' / ' : ' + ';
+					tagLabel = `種族：${selectedRaces.join(separator)}`;
+				}
+
+				tags.push({
+					label: tagLabel,
+					action: () => {
+						const raceContainer = document.getElementById('race-container');
+						if (raceContainer) {
+							const firstSelect = raceContainer.querySelector('.race-select');
+							if (firstSelect) firstSelect.value = "";
+							raceContainer.querySelectorAll('.flex-input-row:not(:first-child)').forEach(row => row.remove());
+						}
+						updateSummaryText();
+					}
+				});
+			}
             const abilText = document.getElementById('ability-text');
             if(abilText && abilText.value) tags.push({ label: `能力關鍵字: ${abilText.value}`, action: () => { abilText.value = ""; updateSummaryText(); } });
             
@@ -2076,18 +2193,19 @@
                 summaryBox.innerHTML = '<p style="margin:0; color:#aaa;">(目前過濾條件與預設值相同)</p>';
             } else {
                 const wrap = document.createElement('div');
-                wrap.className = 'tag-container';
-                tags.forEach(t => {
-                    const span = document.createElement('span');
-                    span.className = 'summary-tag';
-                    span.innerHTML = `${t.label} <span>&times;</span>`; 
-                    span.addEventListener('click', (e) => {
-                        e.stopPropagation(); 
-                        t.action();          
-                    });
-                    wrap.appendChild(span);
-                });
-                summaryBox.appendChild(wrap);
+				wrap.className = 'tag-container';
+				tags.forEach(t => {
+					const span = document.createElement('span');
+					span.className = 'summary-tag';
+					// 💡 將文字獨立包在 .tag-text，確保文字與叉叉按鈕美觀對齊
+					span.innerHTML = `<span class="tag-text">${t.label}</span> <span>&times;</span>`; 
+					span.addEventListener('click', (e) => {
+						e.stopPropagation(); 
+						t.action();          
+					});
+					wrap.appendChild(span);
+				});
+				summaryBox.appendChild(wrap);
             }
 			
         }
@@ -2705,6 +2823,33 @@
 					this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
 					updateSummaryText();
 				};
+			});
+			
+			const btnRaceLogic = document.getElementById('btn-race-logic');
+			if (btnRaceLogic) {
+				btnRaceLogic.addEventListener('click', () => {
+					const currentLogic = btnRaceLogic.dataset.logic;
+					if (currentLogic === 'AND') {
+						btnRaceLogic.dataset.logic = 'OR';
+						btnRaceLogic.innerText = '滿足任一';
+					} else {
+						btnRaceLogic.dataset.logic = 'AND';
+						btnRaceLogic.innerText = '全部包含';
+					}
+					if (typeof updateSummaryText === 'function') updateSummaryText();
+				});
+			}
+			
+			// 在 initDropdownData() 執行完畢或 DOMContentLoaded 中綁定：
+			document.querySelectorAll('.btn-race-logic').forEach(btn => {
+				btn.addEventListener('click', function() {
+					// 1. 同群組所有按鈕移除 active
+					document.querySelectorAll('.btn-race-logic').forEach(b => b.classList.remove('active'));
+					// 2. 當前點擊的按鈕加上 active
+					this.classList.add('active');
+					// 3. 更新 Z 區條件摘要
+					if (typeof updateSummaryText === 'function') updateSummaryText();
+				});
 			});
         }
 
@@ -3421,6 +3566,9 @@
 			const power2 = document.getElementById('power-2').value;
 
 			const races = Array.from(document.querySelectorAll('.race-select')).map(s => s.value).filter(Boolean);
+			// 在 getFilterConfigFromUI() 內部替換：
+			const activeRaceLogicBtn = document.querySelector('.btn-race-logic.active');
+			const raceLogic = activeRaceLogicBtn ? activeRaceLogicBtn.dataset.logic : 'AND';
 
 			const abilityText = document.getElementById('ability-text').value.trim();
 			const abilities = Array.from(document.querySelectorAll('#ability-container .flex-input-row')).map(row => {
@@ -3454,6 +3602,7 @@
 				power1, 
 				power2,
 				races, 
+				raceLogic,
 				abilityText, 
 				abilities, 
 				raceAdv, 
@@ -3689,13 +3838,13 @@
 					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 					if (!checkCostMatchList(allCosts, cfg)) return false;
 					if (!checkPowerMatchList(allPowers, cfg)) return false;
-					if (!checkRaceMatchList(allRaces, cfg.races)) return false;
+					if (!checkRaceMatchList(allRaces, cfg.races, cfg.raceLogic)) return false;
 				} else {
 					const hasMatchedBlock = card.wdata.some(w => {
 						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 						if (!checkCostMatchSingle(w.cost, cfg)) return false;
 						if (!checkPowerMatchSingle(w.power, cfg)) return false;
-						if (!checkRaceMatchList(w.race || [], cfg.races)) return false;
+						if (!checkRaceMatchList(w.race || [], cfg.races, cfg.raceLogic)) return false;
 						return true;
 					});
 
@@ -3712,7 +3861,7 @@
 				if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 				if (!checkCostMatchList(allCosts, cfg)) return false;
 				if (!checkPowerMatchList(allPowers, cfg)) return false;
-				if (!checkRaceMatchList(allRaces, cfg.races)) return false;
+				if (!checkRaceMatchList(allRaces, cfg.races, cfg.raceLogic)) return false;
 				if (!checkAbilityMatchList(allSp, cfg)) return false;
 
 			} else {
@@ -3778,11 +3927,20 @@
 			return powers.some(p => checkPowerMatchSingle(p, cfg));
 		}
 
-		function checkRaceMatchList(cardRaces, targetRaces) {
+		function checkRaceMatchList(cardRaces, targetRaces, raceLogic = 'AND') {
 			if (targetRaces.length === 0) return true;
-			return targetRaces.every(targetR => 
-				cardRaces.some(cardR => cardR.includes(targetR))
-			);
+
+			if (raceLogic === 'OR') {
+				// 滿足任意一個選擇的種族即可
+				return targetRaces.some(targetR => 
+					cardRaces.some(cardR => cardR.includes(targetR))
+				);
+			} else {
+				// 必須同時滿足所有選擇的種族
+				return targetRaces.every(targetR => 
+					cardRaces.some(cardR => cardR.includes(targetR))
+				);
+			}
 		}
 
 		function checkAbilityMatchList(spList, cfg) {
