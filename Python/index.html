@@ -1935,7 +1935,7 @@
 			// ✅ 修正為：
 			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
 
-			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
 			checkAllStatus();
 
 			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
@@ -2486,8 +2486,7 @@
         const btnAllCardType = document.getElementById('btn-all-cardtype');
         
         // --- 需求 1 修改：切換進階模式時保留舊有勾選狀態，新增加的預設不勾選 ---
-        // --- 調整後的 renderCardTypes 函式 ---
-		function renderCardTypes(wasAllChecked = false) {
+        function renderCardTypes(wasAllChecked = false) {
 			const topDiv = document.getElementById('cardtype-top');
 			const botDiv = document.getElementById('cardtype-bottom');
 			const isAdv = document.body.classList.contains('advanced-mode');
@@ -2510,15 +2509,13 @@
 				const lbl = document.createElement('label');
 				
 				// 2. 勾選狀態判斷邏輯：
-				// - 規則 3：原本已存在於畫面的卡種（如基礎過濾項），完全保留原本的勾選狀態 (previousStates)
-				// - 規則 1 & 2：若是新增出現的卡種（切換到進階才出來的）：
-				//   - 若切換前 UI 為全勾選 (wasAllChecked == true) ➔ 新增的全勾選
-				//   - 若切換前 UI 不是全勾選 (wasAllChecked == false) ➔ 新增的全數不勾選
+				// - 若之前已經在畫面上，保留之前的狀態
+				// - 若為新展開/首次渲染的項目：依據 wasAllChecked 決定 (全選狀態下新項目全選，否則預設不勾選)
 				let isChecked = false;
 				if (previousStates.hasOwnProperty(data.value)) {
 					isChecked = previousStates[data.value];
 				} else {
-					isChecked = wasAllChecked;
+					isChecked = wasAllChecked; // 👈 恢復為根據切換前的全選狀態(wasAllChecked)決定
 				}
 
 				lbl.innerHTML = `<input type="checkbox" class="chk-cardtype" value="${data.value}" ${isChecked ? 'checked' : ''}> ${data.text}`;
@@ -5643,7 +5640,7 @@
 
 			// 1. 靜默重置過濾 UI 欄位（不觸發 DOM 重新繪製或頁面閃爍）
 			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
-			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
 			checkAllStatus();
 
 			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
@@ -6077,8 +6074,8 @@
 				});
 				checkAllStatus();
 			} else {
-				// 若計算機沒選卡種，預設全選
-				document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = true);
+				// 若計算機沒選卡種，預設全不選
+				document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
 				checkAllStatus();
 			}
 			
