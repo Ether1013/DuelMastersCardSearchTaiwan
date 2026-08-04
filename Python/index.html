@@ -222,16 +222,17 @@
         .detail-info-scroll-panel { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
         
         .modal-img-container {
-			flex-shrink: 0; 
-			display: flex; 
-			flex-direction: column; 
-			justify-content: flex-start;
-			align-items: center;     /* 水平對齊置中 */
-			align-self: flex-start;  /* 💡 垂直方向：嚴格靠頂端置頂！ */
-			position: relative; 
-			padding: 0 15px;
+			position: relative !important;
+		}
+
+		/* 💡 相機按鈕：懸浮於卡圖右上方外側（不遮擋卡牌） */
+		.modal-img-container .cam-btn-overlay {
+			position: absolute;
+			top: 0px;
+			/* 計算算式：置中點 (50%) + 卡圖半寬 (var/2) + 額外外移邊距 (6px) */
+			left: calc(50% + (var(--stack-w, 180px) / 2) + 6px);
+			z-index: 30;
 			margin: 0;
-			transition: width 0.3s ease;
 		}
         /* ================= 卡圖點擊放大相關樣式 ================= */
 		/* 卡圖基本樣式與動畫 */
@@ -287,25 +288,57 @@
 
 		/* 💡 修正 2：確保 3D 堆疊卡片容器內部也是絕對置中 */
 		.card-stack-container {
-			position: relative;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			user-select: none;
-			perspective: 1000px;
-			margin: 0 auto;
-			transition: width 0.3s ease, height 0.3s ease; /* 💡 當大圖變大時，容器尺寸同步平滑變大 */
+			position: relative !important;
 		}
+
+		/* 💡 相機按鈕：掛載於 3D 卡圖框內，但用絕對定位推到卡圖右上方外側 */
+		.card-stack-container .cam-btn-overlay {
+			position: absolute !important;
+			top: 0px !important;
+			right: -36px !important; /* 精確推到卡圖右邊界外側 36px 處（不遮卡圖，緊貼右上） */
+			left: auto !important;   /* 覆蓋掉舊有的 left 計算 */
+			z-index: 30;
+			margin: 0;
+		}
+		/* 💡 修正：左右箭頭改為貼齊卡圖兩側邊緣內側/邊界，避免小圖時超出外容器被裁切 */
 		.ver-arrow-btn {
-			position: absolute; top: 50%; transform: translateY(-50%);
-			background: rgba(0, 0, 0, 0.5); color: white; border: none;
-			font-size: 20px; font-weight: bold; width: 28px; height: 44px;
-			border-radius: 6px; cursor: pointer; display: flex; align-items: center;
-			justify-content: center; user-select: none; transition: all 0.2s ease; z-index: 10;
+			position: absolute; 
+			top: 50%; 
+			transform: translateY(-50%);
+			background: rgba(0, 0, 0, 0.55); 
+			color: white; 
+			border: none;
+			font-size: 18px; 
+			font-weight: bold; 
+			width: 26px; 
+			height: 40px;
+			border-radius: 4px; 
+			cursor: pointer; 
+			display: flex; 
+			align-items: center;
+			justify-content: center; 
+			user-select: none; 
+			transition: all 0.2s ease; 
+			z-index: 25; /* 高於卡圖，低於相機按鈕 */
 		}
-		.ver-arrow-btn:hover { background: rgba(211, 47, 47, 0.9); }
-		.ver-arrow-btn.prev { left: 4px; }
-		.ver-arrow-btn.next { right: 4px; }
+
+		.ver-arrow-btn:hover { 
+			background: rgba(211, 47, 47, 0.9); 
+		}
+
+		/* 💡 將左右箭頭貼齊卡圖邊緣（0px 絕不溢出邊界） */
+		.ver-arrow-btn.prev { 
+			left: 2px !important; 
+		}
+		.ver-arrow-btn.next { 
+			right: 2px !important; 
+		}
+
+		/* 手機版 (RWD) 保持貼齊 */
+		@media (max-width: 768px) {
+			.ver-arrow-btn.prev { left: 2px !important; }
+			.ver-arrow-btn.next { right: 2px !important; }
+		}
 
         /* ================= 最新商品快捷區域 ================= */
         #latest-sets-container { display: flex; gap: 10px; width: 100%; }
@@ -440,7 +473,7 @@
             .modal-body { overflow-y: auto; }
             .modal-main-content { flex-direction: column; align-items: center; overflow: visible; }
             .detail-info-scroll-panel { overflow-y: visible; }
-            .modal-img-container { position: static !important; margin-bottom: 15px; width: 100% !important; justify-content: center !important; align-self: center !important; }
+            .modal-img-container { position: relative !important; margin-bottom: 15px; width: 100% !important; justify-content: center !important; align-self: center !important; overflow: visible !important;}
             .modal-info-container { width: 100%; }
             .footer-bar { padding: 10px 15px; gap: 10px; }
             .ver-arrow-btn.prev { left: -10px; }
@@ -449,7 +482,17 @@
             .btn-latest-set { width: 100%; box-sizing: border-box; }
             .ext-btn-grid { grid-template-columns: repeat(2, 1fr); }
             .desktop-only-tab { display: none !important; }
-        }
+			.modal-img-container .cam-btn-overlay {
+				top: 0px;
+				left: calc(50% + (var(--stack-w, 180px) / 2) + 6px);
+			}
+			.card-stack-container .cam-btn-overlay {
+				top: 0px !important;
+				right: -36px !important;
+				left: auto !important;
+			}
+		}
+			
 		
 		/* ================= 抽屜式工具列 (Sorting & Export Drawer) ================= */
 		/* ================= 抽屜工具列置頂修正 ================= */
@@ -1089,6 +1132,49 @@
 		.stacked-card-img:not(:first-child) {
 			margin-top: -165px; 
 		}
+		/* 💡 新增：圖片退回備援時的 CSS 樣式與 No Pic 標籤 */
+		.modal-img-stack-item.img-fallback {
+			filter: opacity(0.55) grayscale(0.5) !important; /* 半透明與灰階濾鏡 */
+		}
+
+		.no-pic-badge {
+			position: absolute;
+			top: 6px;
+			right: 6px;
+			background: rgba(211, 47, 47, 0.85); /* 警示紅色 */
+			color: #ffffff;
+			font-size: 11px;
+			font-weight: bold;
+			padding: 2px 6px;
+			border-radius: 4px;
+			z-index: 25;
+			pointer-events: none;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+		}
+		/* 💡 相機與分享按鈕：垂直排列懸浮於卡圖右上方外側 */
+		.card-stack-container .cam-btn-overlay {
+			position: absolute !important;
+			top: 0px !important;
+			right: -36px !important;
+			left: auto !important;
+			z-index: 30;
+			margin: 0;
+		}
+
+		.card-stack-container .share-btn-overlay {
+			position: absolute !important;
+			top: 34px !important; /* 排在相機 Icon (30px高) 下方 */
+			right: -36px !important;
+			left: auto !important;
+			z-index: 30;
+			margin: 0;
+		}
+
+		/* 截圖時同時隱藏截圖與分享 Icon */
+		.is-capturing .cam-btn-overlay,
+		.is-capturing .share-btn-overlay {
+			display: none !important;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1480,10 +1566,8 @@
             <div class="modal-header" id="modal-header">
                 <div class="modal-title" id="modal-title">卡牌名稱</div>
                 <div class="modal-controls" id="modal-controls">
-                    <!-- 上：關閉按鈕 [X] -->
+                    <!-- 僅保留關閉按鈕 [X] -->
                     <div class="modal-close" id="modal-close">&times;</div>
-                    <!-- 下：相機按鈕 [📷] -->
-                    <div class="modal-btn-icon" id="modal-screenshot" title="截圖 DETAIL">📷</div>
                 </div>
             </div>
             <div class="modal-body">
@@ -1750,11 +1834,9 @@
 
 			updateSummaryText();
 
-			// 💡 新增：自動切換回第一個頁籤（條件過濾頁面）
+			// 💡 切換回第一個頁籤（條件過濾頁面），但不將捲軸歸零
 			if (typeof tabHeaders !== 'undefined' && tabHeaders[0]) {
 				tabHeaders[0].click();
-				window.scrollTo(0, 0);
-				if (tabFilter) tabFilter.scrollTop = 0;
 			}
 		});
 
@@ -3774,9 +3856,9 @@
 			return parts.join('\n');
 		}
 		
-		// 💡 共用 Detail 渲染邏輯 (升級版：支援多卡圖 3D 堆疊與抽牌動畫 + Mana 資料顯示)
+		// 💡 共用 Detail 渲染邏輯 (支援多卡圖 3D 堆疊、版本切換連動 ID、分享與截圖功能)
 		function renderDetailContentToContainer(card, combinedCiv, matchedItem, targetImgBox, targetInfoContainer, isModal = false) {
-		
+
 			let idList = [];
 			let picList = [];
 			let flavorList = [];
@@ -3794,7 +3876,7 @@
 
 			targetImgBox.innerHTML = '';
 			targetInfoContainer.innerHTML = '';
-
+			
 			let isHorizontal = false;
 			if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
 				const firstTypeVal = card.wdata[0].type[0];
@@ -3821,13 +3903,57 @@
 			imgStackContainer.className = 'card-stack-container';
 			imgStackContainer.style.width = boxWidth;
 			imgStackContainer.style.height = boxHeight;
+			
+			// 💡 相機按鈕 (截圖)
+			let camBtn = imgStackContainer.querySelector('.cam-btn-overlay');
+			if (!camBtn) {
+				camBtn = document.createElement('div');
+				camBtn.className = 'modal-btn-icon cam-btn-overlay';
+				camBtn.title = '截圖 DETAIL';
+				camBtn.innerText = '📷';
+				imgStackContainer.appendChild(camBtn);
+			}
 
-			// 彙整所有可用的圖片網址
+			// 重新綁定截圖點擊事件
+			camBtn.onclick = (e) => {
+				e.stopPropagation();
+				const targetPanel = isModal 
+					? targetInfoContainer.closest('.modal-card') 
+					: document.getElementById('detail-panel-split');
+				const baseName = card.name || 'card';
+				if (targetPanel && typeof captureDetailPanel === 'function') {
+					captureDetailPanel(targetPanel, baseName);
+				}
+			};
+
+			// 💡 分享按鈕 (懸浮於相機 Icon 正下方)
+			let shareBtn = imgStackContainer.querySelector('.share-btn-overlay');
+			if (!shareBtn) {
+				shareBtn = document.createElement('div');
+				shareBtn.className = 'modal-btn-icon share-btn-overlay';
+				shareBtn.title = '分享卡牌頁面';
+				shareBtn.innerText = '🔗';
+				imgStackContainer.appendChild(shareBtn);
+			}
+
+			// 彙整所有可用的圖片網址與備援標記判定
 			let validPicUrls = picList.filter(p => p && p.trim() !== '');
-			if (validPicUrls.length === 0 && card.pic) {
+			let isFallbackPic = false; // 標記是否觸發指定商品的圖片備援
+
+			const filterConfig = typeof getFilterConfigFromUI === 'function' ? getFilterConfigFromUI() : {};
+			const hasSelectedSet = Boolean(filterConfig.seriesSmall || filterConfig.seriesBig);
+
+			// 若有指定商品但該商品沒有圖片，標記為 Fallback 狀況
+			if (hasSelectedSet && validPicUrls.length === 0) {
+				isFallbackPic = true;
+			}
+
+			// 備援 1：嘗試讀取卡牌本身的預設圖片
+			if (validPicUrls.length === 0 && card.pic && card.pic.trim() !== '') {
 				validPicUrls = [card.pic];
 			}
-			// 全域商品備援機制
+
+			// 備援 2：若仍無圖片，搜尋其他商品的同名卡圖
 			if (validPicUrls.length === 0) {
 				const cleanTargetName = card.name ? card.name.trim() : "";
 				if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
@@ -3856,6 +3982,9 @@
 				validPicUrls.forEach((url, idx) => {
 					const img = document.createElement('img');
 					img.className = 'modal-img modal-img-stack-item';
+					if (isFallbackPic) {
+						img.classList.add('img-fallback');
+					}
 					img.style.width = boxWidth;
 					img.style.height = boxHeight;
 					img.src = url;
@@ -3868,6 +3997,14 @@
 					imgStackContainer.appendChild(img);
 					cardImgElements.push(img);
 				});
+
+				// 若有指定商品且使用了備援卡圖，顯示 (No Pic) 標籤
+				if (isFallbackPic) {
+					const noPicBadge = document.createElement('div');
+					noPicBadge.className = 'no-pic-badge';
+					noPicBadge.innerText = '(No Pic)';
+					imgStackContainer.appendChild(noPicBadge);
+				}
 			} else {
 				const noImg = document.createElement('div');
 				noImg.className = 'no-image-box';
@@ -3884,9 +4021,9 @@
 					
 					if (index === 0) {
 						img.classList.add('stack-pos-0');
-						img.setAttribute('data-active', 'true');  // 💡 精確標記為當前第一張
+						img.setAttribute('data-active', 'true');
 					} else {
-						img.setAttribute('data-active', 'false'); // 💡 標記為背景卡牌
+						img.setAttribute('data-active', 'false');
 						if (index === 1) {
 							img.classList.add('stack-pos-1');
 						} else if (index === 2) {
@@ -3929,7 +4066,6 @@
 				const curWidth = expanded ? (isHorizontal ? '350px' : '250px') : boxWidth;
 				const curHeight = expanded ? (isHorizontal ? '250px' : '350px') : boxHeight;
 
-				// 💡 關鍵：同步讓 3D 堆疊容器尺寸變大，箭頭和圖片就不會錯位
 				if (imgStackContainer) {
 					imgStackContainer.style.width = curWidth;
 					imgStackContainer.style.height = curHeight;
@@ -3975,15 +4111,6 @@
 			flavorBlock.style.lineHeight = '1.4';
 			flavorBlock.style.marginTop = '10px';
 
-			function updateFlavorText(flavor) {
-				if (flavor && flavor.trim() !== '') {
-					flavorBlock.innerHTML = `${flavor}`;
-					flavorBlock.style.display = 'block';
-				} else {
-					flavorBlock.style.display = 'none';
-				}
-			}
-
 			if (flavorList.length === 0) {
 				const cleanTargetName = card.name ? card.name.trim() : "";
 				if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
@@ -4004,8 +4131,41 @@
 				}
 			}
 
+			// 💡 版本切換連動：同時更新 Flavor Text 與頂部 Header 的 ID 顯示
 			let currentVerIdx = 0;
-			updateFlavorText(flavorList[currentVerIdx] || flavorList[0]);
+
+			function updateVersionDetails(idx) {
+				currentVerIdx = idx;
+
+				// A. 更新 Flavor Text
+				const currentFlavor = flavorList[currentVerIdx] || flavorList[0];
+				if (currentFlavor && currentFlavor.trim() !== '') {
+					flavorBlock.innerHTML = `${currentFlavor}`;
+					flavorBlock.style.display = 'block';
+				} else {
+					flavorBlock.style.display = 'none';
+				}
+
+				// B. 動態更新頂部 Header 的 ID 顯示
+				if (idList && idList.length > 0) {
+					const curId = idList[currentVerIdx] || idList[0];
+					const displayId = curId ? formatDmId(curId) : '';
+					
+					const modalHeaderEl = isModal 
+						? targetInfoContainer.closest('.modal-card') 
+						: document.getElementById('detail-panel-split');
+
+					if (modalHeaderEl) {
+						const targetIdTextEl = modalHeaderEl.querySelector('.card-id-text-display');
+						if (targetIdTextEl) {
+							targetIdTextEl.innerText = displayId ? `( ${displayId} )` : '';
+						}
+					}
+				}
+			}
+
+			// 初始觸發一次渲染
+			updateVersionDetails(0);
 
 			// 3. 切換版本按鈕與 3D 抽牌動畫邏輯
 			if (cardImgElements.length > 1) {
@@ -4023,14 +4183,14 @@
 
 					setTimeout(() => {
 						topCard.classList.remove('anim-slide-out-left');
-						// 第一張拿去最後面
 						const shifted = cardImgElements.shift();
 						cardImgElements.push(shifted);
 
 						updateStackClasses();
 
-						currentVerIdx = (currentVerIdx + 1) % cardImgElements.length;
-						updateFlavorText(flavorList[currentVerIdx]);
+						// 計算新版次並更新連動 ID 與 Flavor
+						const newIdx = (currentVerIdx + 1) % cardImgElements.length;
+						updateVersionDetails(newIdx);
 
 						isAnimating = false;
 					}, 300);
@@ -4048,25 +4208,33 @@
 					const lastCard = cardImgElements[cardImgElements.length - 1];
 					lastCard.classList.add('anim-slide-in-left');
 
-					// 將最後一張搬到陣列最前面
 					const popped = cardImgElements.pop();
 					cardImgElements.unshift(popped);
 
 					updateStackClasses();
 
 					setTimeout(() => {
-						// 讓剛進來的卡片平滑壓入第一張
 						lastCard.classList.remove('anim-slide-in-left');
-						currentVerIdx = (currentVerIdx - 1 + cardImgElements.length) % cardImgElements.length;
-						updateFlavorText(flavorList[currentVerIdx]);
+						
+						// 計算新版次並更新連動 ID 與 Flavor
+						const newIdx = (currentVerIdx - 1 + cardImgElements.length) % cardImgElements.length;
+						updateVersionDetails(newIdx);
 
 						setTimeout(() => { isAnimating = false; }, 300);
 					}, 20);
 				});
 
-				targetImgBox.appendChild(prevBtn);
-				targetImgBox.appendChild(nextBtn);
+				imgStackContainer.appendChild(prevBtn);
+				imgStackContainer.appendChild(nextBtn);
 			}
+
+			// 💡 分享按鈕點擊事件：帶入當前選取的版本索引 currentVerIdx
+			shareBtn.onclick = (e) => {
+				e.stopPropagation();
+				if (typeof handleShareCard === 'function') {
+					handleShareCard(card, matchedItem, currentVerIdx);
+				}
+			};
 
 			// 屬性 wdata 區塊渲染
 			const abilityDictMap = new Map();
@@ -4165,7 +4333,7 @@
 					spContainer.style.marginTop = '8px';
 					block.appendChild(spContainer);
 
-					// 1. 建立按鈕橫列容器
+					// 按鈕橫列容器
 					const btnRow = document.createElement('div');
 					btnRow.className = 'wdata-btn-row';
 					btnRow.style.display = 'flex';
@@ -4173,7 +4341,6 @@
 					btnRow.style.alignItems = 'center';
 					btnRow.style.marginTop = '10px';
 
-					// 2. 建立能力說明按鈕 (注意：保留原本的 abil-explain-btn class 以確保截圖時能被 CSS 隱藏)
 					const abilExplainBtn = document.createElement('button');
 					abilExplainBtn.className = 'btn-icon abil-explain-btn btn-abil-explain';
 					abilExplainBtn.style.backgroundColor = '#2196f3';
@@ -4185,12 +4352,11 @@
 					abilExplainBtn.style.fontSize = '12px';
 					abilExplainBtn.style.fontWeight = 'bold';
 					abilExplainBtn.innerText = '[展開能力說明]';
-					abilExplainBtn.style.display = 'none'; // 預設隱藏，由 renderSpAbilities 動態開啟
+					abilExplainBtn.style.display = 'none';
 
-					// 3. 建立錯誤回報按鈕
 					const reportErrorBtn = document.createElement('button');
 					reportErrorBtn.className = 'btn-icon btn-report-error';
-					reportErrorBtn.style.marginLeft = 'auto'; // 無能力說明時自動靠右對齊
+					reportErrorBtn.style.marginLeft = 'auto';
 					reportErrorBtn.innerText = '🚨 [錯誤回報]';
 					reportErrorBtn.addEventListener('click', () => {
 						openReportModal(card, matchedItem);
@@ -4199,7 +4365,6 @@
 					btnRow.appendChild(abilExplainBtn);
 					btnRow.appendChild(reportErrorBtn);
 
-					// 4. 能力說明展開區塊
 					const abilExplainBox = document.createElement('div');
 					abilExplainBox.style.display = 'none';
 					abilExplainBox.style.marginTop = '8px';
@@ -4369,7 +4534,7 @@
 				targetInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
 			}
 
-			// ==================== 【Mana 區塊】：放在 wdata[last] 後面 ====================
+			// Mana 區塊
 			if (card.mana !== null && card.mana !== undefined) {
 				const manaBlock = document.createElement('div');
 				manaBlock.className = 'wdata-block mana-block';
@@ -4385,10 +4550,10 @@
 				targetInfoContainer.appendChild(manaBlock);
 			}
 
-			// ==================== 【Flavor 區塊】：放在 Mana / wdata 後面 ====================
+			// Flavor 區塊
 			targetInfoContainer.appendChild(flavorBlock);
 
-			// 收錄商品區塊與外部連結
+			// 收錄商品與外部連結
 			renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal);
 		}
 		
@@ -4793,10 +4958,12 @@
 
 			cardModal.classList.add('active');
 
-			// 💡 新增：開啟新卡片 Modal 時，將右側資訊欄與 Mobile Modal 身軀的捲軸歸零
-			if (modalInfoContainer) modalInfoContainer.scrollTop = 0;
-			const modalBody = cardModal.querySelector('.modal-body');
-			if (modalBody) modalBody.scrollTop = 0;
+			// 💡 將原本的捲軸歸零邏輯用 if (resetScroll) 包起來
+			if (resetScroll) {
+				if (modalInfoContainer) modalInfoContainer.scrollTop = 0;
+				const modalBody = cardModal.querySelector('.modal-body');
+				if (modalBody) modalBody.scrollTop = 0;
+			}
 		}
 		
 		// 💡 Page 3 雙欄模式右側渲染函式
@@ -4849,26 +5016,7 @@
 				copyTextToClipboard(baseName);
 			};
 
-			const controlsDiv = document.createElement('div');
-			controlsDiv.className = 'modal-controls';
-			controlsDiv.style.justifyContent = 'center';
-
-			const screenshotBtn = document.createElement('div');
-			screenshotBtn.className = 'modal-btn-icon';
-			screenshotBtn.title = '截圖 DETAIL';
-			screenshotBtn.innerText = '📷';
-
-			screenshotBtn.addEventListener('click', () => {
-				const rightPanel = document.getElementById('detail-panel-split');
-				if (rightPanel) {
-					captureDetailPanel(rightPanel, baseName);
-				}
-			});
-
-			controlsDiv.appendChild(screenshotBtn);
-
 			headerDiv.appendChild(titleDiv);
-			headerDiv.appendChild(controlsDiv);
 			rightPanel.appendChild(headerDiv);
 
 			const mainContent = document.createElement('div');
@@ -6224,6 +6372,60 @@
 
 			return resultJsonString;
 		};
+		
+		// 💡 分享卡牌連結輔助函式（支援動態抓取當前切換後版本的 ID）
+		async function handleShareCard(card, matchedItem, currentVerIdx = 0) {
+			let paramVal = '';
+			
+			// 1. 優先從 matchedItem 中讀取當前切換版本對應的 ID
+			if (matchedItem && matchedItem.id) {
+				if (Array.isArray(matchedItem.id)) {
+					// 取當前版本索引的 ID，若超出索引則保底用第一個
+					paramVal = matchedItem.id[currentVerIdx] || matchedItem.id[0];
+				} else {
+					paramVal = matchedItem.id;
+				}
+			}
+
+			// 2. 若無卡號 ID，則以卡名為準
+			if (!paramVal) {
+				paramVal = cleanCardName(card.name) || card.name;
+			}
+
+			if (!paramVal) {
+				showToast('無法取得該卡牌的分享連結');
+				return;
+			}
+
+			// 3. 組裝卡牌 URL
+			const shareUrl = `${window.location.origin}/card.html?p=${encodeURIComponent(paramVal)}`;
+			const cardTitle = card.name || '卡牌詳細資料';
+
+			// 4. 判斷裝置類型並執行分享或複製
+			const isMobile = window.innerWidth <= 768 || (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
+
+			if (isMobile && navigator.share) {
+				try {
+					await navigator.share({
+						title: cardTitle,
+						text: `【${cardTitle}】卡牌效果與詳細資料：`,
+						url: shareUrl
+					});
+				} catch (err) {
+					if (err.name !== 'AbortError') {
+						await copyTextToClipboard(shareUrl);
+					}
+				}
+			} else {
+				// 桌機版：複製網址並彈出 Toast 提示
+				if (navigator.clipboard && window.isSecureContext) {
+					await navigator.clipboard.writeText(shareUrl);
+					showToast(`已複製分享連結至剪貼簿！\n${shareUrl}`);
+				} else {
+					await copyTextToClipboard(shareUrl);
+				}
+			}
+		}
 
 		function showAbilityTipsAlert() {
 			const tipsText = 

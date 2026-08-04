@@ -230,6 +230,11 @@ async def serve_index():
 @app.get("/pop.html")
 async def get_pop_page():
     return FileResponse("pop.html") # 請確認 pop.html 與 index.html 放在同一個目錄下
+    
+# 1. 提供 card.html 靜態頁面路由
+@app.get("/card.html")
+async def get_card_page():
+    return FileResponse("card.html")  # 請確保 card.html 與 main.py 放在同一個目錄下
 
 # 讓前端確認伺服器是否有重啟過的輕量級 API
 @app.get("/api/server_id")
@@ -392,4 +397,204 @@ async def report_error(request: Request, report: ReportModel, background_tasks: 
     return {
         "status": "success", 
         "message": f"回報成功！感謝{name}！"
+    }
+    
+def format_card_wdata_types(card_dict):
+    """
+    深層複製卡牌資料並將 wdata 內的 type/cardtype 替換/新增中文翻譯 cardtype_chi
+    """
+    if not card_dict or "wdata" not in card_dict or not isinstance(card_dict["wdata"], list):
+        return card_dict
+
+    import copy
+    card_copy = copy.deepcopy(card_dict)
+
+    # 建立多向比對字典 (全自動轉大寫、去空白)
+    cardtype_map = {}
+    if isinstance(card_types_cache, list):
+        for item in card_types_cache:
+            if isinstance(item, dict):
+                chi_val = item.get("text") or item.get("chi") or item.get("cht") or item.get("jap")
+                if not chi_val:
+                    continue
+                for k in ["value", "jap", "id", "key"]:
+                    val = item.get(k)
+                    if val is not None:
+                        cardtype_map[str(val).strip().upper()] = chi_val
+
+    for w in card_copy["wdata"]:
+        if isinstance(w, dict):
+            # 💡 抓取原始 type (相容字串與陣列)
+            raw_val = w.get("type") if w.get("type") is not None else (w.get("cardtype") if w.get("cardtype") is not None else w.get("card_type"))
+            
+            # 若是陣列，取第一個元素
+            if isinstance(raw_val, list) and len(raw_val) > 0:
+                target_key = raw_val[0]
+            else:
+                target_key = raw_val
+
+            if target_key is not None and str(target_key).strip() != "":
+                clean_key = str(target_key).strip().upper()
+                # 查表轉中文；若查無對照則保留 target_key
+                w["cardtype_chi"] = cardtype_map.get(clean_key, target_key)
+
+    return card_copy
+    
+# 2. Card 頁面專用 API (新增 matched_index 精確版本支援)
+@app.get("/api/card_detail")
+@limiter.limit("6/minute")
+async def get_card_detail(request: Request, p: str = Query(..., description="卡牌名稱或ID/卡號")):
+    query_str = p.strip()
+    if not query_str:
+        raise HTTPException(status_code=400, detail="請提供卡牌名稱或ID")
+
+    # 正規化 ID (全形轉半形、轉大寫、剔除非英數字)
+    def normalize_id(s: str) -> str:
+        if not s:
+            return ""
+        res = []
+        for ch in str(s):
+            code = ord(ch)
+            if 0xFF01 <= code <= 0xFF5E:
+                res.append(chr(code - 0xfee0))
+            else:
+                res.append(ch)
+        import re
+        return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
+
+    clean_query = normalize_id(query_str)
+
+    # ----------------------------------------------------
+    # 邏輯 A：先嘗試以「卡名」精確或模糊尋找卡牌
+    # ----------------------------------------------------
+    matched_card = None
+    for card in carddata_cache:
+        c_name = card.get("name", "").strip()
+        if c_name == query_str:
+            matched_card = card
+            break
+
+    if not matched_card and isinstance(nickname_cache, list):
+        for nick_item in nickname_cache:
+            nicknames = nick_item.get("nicknames", [])
+            if query_str in nicknames:
+                real_name = nick_item.get("realname")
+                matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == real_name), None)
+                if matched_card:
+                    break
+
+    if matched_card:
+        # 💡 將 card 經過轉換處理
+        processed_card = format_card_wdata_types(matched_card)
+        return {
+            "found_by": "name",
+            "card": processed_card,
+            "setdata": None,
+            "matched_id": "",
+            "matched_index": 0,
+            "set_list": get_card_set_list(matched_card.get("name", "")),
+            "races": races_cache,
+            "abilities": abilities_cache
+        }
+
+    # ----------------------------------------------------
+    # 邏輯 B：若卡名找不到，嘗試以「ID / 卡號」搜尋 setlist
+    # ----------------------------------------------------
+    matched_setdata = None
+    target_card_name = None
+    matched_id_val = ""
+    matched_index = 0
+
+    for set_code, set_info in setlist_cache.items():
+        card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+        
+        # 用來記錄當前 set 中每一種卡名出現的次數 (Occurrences)
+        name_occurrence_counter = {}
+
+        for item in card_list:
+            if isinstance(item, dict):
+                item_name = item.get("name", "").strip()
+                
+                # 更新該卡名的計數器
+                current_occ = name_occurrence_counter.get(item_name, 0)
+                
+                if "id" in item:
+                    ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                    for idx, single_id in enumerate(ids):
+                        if normalize_id(single_id) == clean_query:
+                            matched_setdata = set_info
+                            target_card_name = item_name
+                            matched_id_val = single_id
+                            
+                            # 💡 關鍵修正：
+                            # 若一個物件有多個 ID，索引 = 當前物件前的同名卡數量 + 該物件內部的 id 索引
+                            # 若同名卡被拆分成多個物件，current_occ 會遞增，精確代表這是第幾個版本！
+                            matched_index = current_occ + idx
+                            break
+                
+                # 計算完畢後更新該卡名的累計次數
+                ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
+                name_occurrence_counter[item_name] = current_occ + ids_count
+
+            if matched_setdata:
+                break
+        if matched_setdata:
+            break
+
+    if matched_setdata and target_card_name:
+        matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == target_card_name), None)
+        if not matched_card:
+            matched_card = {"name": target_card_name, "wdata": []}
+
+        # 💡 將 card 經過轉換處理
+        processed_card = format_card_wdata_types(matched_card)
+
+        return {
+            "found_by": "id",
+            "card": processed_card,
+            "setdata": matched_setdata,
+            "matched_id": matched_id_val,
+            "matched_index": matched_index,
+            "set_list": get_card_set_list(target_card_name),
+            "races": races_cache,
+            "abilities": abilities_cache
+        }
+
+    raise HTTPException(status_code=404, detail=f"查無卡名或 ID 為 '{p}' 的卡牌資料")
+
+def get_card_set_list(card_name: str):
+    """取得收錄商品列表 (分成 tw / non_tw / net 三個區塊)"""
+    tw_sets = []
+    non_tw_sets = []
+    net_sets = []
+    clean_target = card_name.strip()
+
+    if isinstance(setlist_cache, dict):
+        for key, set_obj in setlist_cache.items():
+            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+            if isinstance(card_list, list):
+                has_card = any(
+                    (i.get("name", "").strip() == clean_target if isinstance(i, dict) else str(i).strip() == clean_target)
+                    for i in card_list
+                )
+                if has_card:
+                    setcode = set_obj.get("setcode") or set_obj.get("code") or set_obj.get("id") or key
+                    setname = set_obj.get("setname") or set_obj.get("name") or setcode
+                    is_tw = set_obj.get("istw") == True
+                    
+                    upper_code = str(setcode).strip().upper()
+                    is_net = not upper_code.startswith('D') and not upper_code.startswith('O')
+
+                    display_str = f"{setcode}{setname}"
+                    if is_net:
+                        net_sets.append(display_str)
+                    elif is_tw:
+                        tw_sets.append(display_str)
+                    else:
+                        non_tw_sets.append(display_str)
+
+    return {
+        "tw": tw_sets,
+        "non_tw": non_tw_sets,
+        "net": net_sets
     }
