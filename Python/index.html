@@ -1286,7 +1286,31 @@
 			border-color: #0369a1 !important;
 			opacity: 1 !important;
 		}
+		/* 日誌彈窗樣式修正：設定最大高度與捲軸 */
+		#diary-modal .modal-card {
+			max-height: 80vh; /* 限制視窗最高為螢幕高度的 80% */
+			display: flex;
+			flex-direction: column;
+		}
 
+		#diary-modal-body {
+			overflow-y: auto; /* 內容超出時顯示垂直捲軸 */
+			max-height: calc(80vh - 60px); /* 扣除 Header 高度 */
+			padding-right: 8px; /* 預留捲軸邊距，避免文字貼齊 */
+			overscroll-behavior: contain;
+		}
+
+		/* 滾動條美化（選填，讓捲軸更契合網站風格） */
+		#diary-modal-body::-webkit-scrollbar {
+			width: 6px;
+		}
+		#diary-modal-body::-webkit-scrollbar-thumb {
+			background-color: #ccc;
+			border-radius: 3px;
+		}
+		#diary-modal-body::-webkit-scrollbar-thumb:hover {
+			background-color: #999;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -3691,35 +3715,20 @@
 			const diaryModalClose = document.getElementById('diary-modal-close');
 			const diaryModalBody = document.getElementById('diary-modal-body');
 
-			if (!diaryBtn || !rawDiary || rawDiary.length === 0) return;
+			if (!diaryBtn) return;
 
-			// 1. 日期降冪排序 (最新的在最上面)
-			const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
-			const latestEntry = sortedDiary[0];
-
-			// 2. 判斷今天是否在最新一筆的「兩天內」
-			if (latestEntry && latestEntry.date) {
-				const today = new Date();
-				today.setHours(0, 0, 0, 0); // 歸零時間部分，只比對日期
-
-				const latestDate = new Date(latestEntry.date);
-				latestDate.setHours(0, 0, 0, 0);
-
-				// 計算天數差
-				const diffTime = today.getTime() - latestDate.getTime();
-				const diffDays = diffTime / (1000 * 3600 * 24);
-
-				// 兩天內 (0天、1天或2天) 則更換 Icon 為帶筆的日記 📝
-				if (diffDays >= 0 && diffDays <= 2) {
-					diaryBtn.innerText = '📝';
-				} else {
-					diaryBtn.innerText = '📖';
-				}
-			}
-
-			// 3. 點擊 Icon 開啟 Modal 並渲染內容
-			diaryBtn.addEventListener('click', () => {
+			// 💡 修正 1：將點擊事件獨立綁定，不論有沒有資料都能正常開啟 Modal
+			diaryBtn.onclick = () => {
 				diaryModalBody.innerHTML = '';
+
+				if (!rawDiary || rawDiary.length === 0) {
+					diaryModalBody.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無更新日誌</div>';
+					diaryModal.classList.add('active');
+					return;
+				}
+
+				// 日期降冪排序 (最新的在最上面)
+				const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
 
 				sortedDiary.forEach(item => {
 					const entryBlock = document.createElement('div');
@@ -3741,15 +3750,15 @@
 					ul.style.fontSize = '14px';
 					ul.style.color = '#555';
 
-					// 💡 修改處：直接讀取 item.content 陣列
 					const listItems = Array.isArray(item.content) ? item.content : [];
 
 					listItems.forEach(text => {
 						const li = document.createElement('li');
 						li.style.marginBottom = '3px';
-						li.innerHTML = result.html;
+						// 💡 修正 2：正確印出文字內容，並套用效果標籤
+						li.innerHTML = typeof applyEffectTags === 'function' ? applyEffectTags(text) : text;
 						
-						if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
+						if (typeof specialIcons !== 'undefined' && specialIcons.some(icon => text.startsWith(icon))) {
 							li.style.listStyleType = 'none';
 							li.style.marginLeft = '-1.2em';
 						}
@@ -3762,21 +3771,44 @@
 				});
 
 				diaryModal.classList.add('active');
-			});
+			};
 
-			// 4. 關閉 Modal 邏輯
+			// 💡 判斷今天是否在最新一筆的「兩天內」，更新 Icon 樣式
+			if (rawDiary && rawDiary.length > 0) {
+				const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
+				const latestEntry = sortedDiary[0];
+
+				if (latestEntry && latestEntry.date) {
+					const today = new Date();
+					today.setHours(0, 0, 0, 0);
+
+					const latestDate = new Date(latestEntry.date);
+					latestDate.setHours(0, 0, 0, 0);
+
+					const diffTime = today.getTime() - latestDate.getTime();
+					const diffDays = diffTime / (1000 * 3600 * 24);
+
+					if (diffDays >= 0 && diffDays <= 2) {
+						diaryBtn.innerText = '📝';
+					} else {
+						diaryBtn.innerText = '📖';
+					}
+				}
+			}
+
+			// 關閉 Modal 事件綁定
 			if (diaryModalClose) {
-				diaryModalClose.addEventListener('click', () => {
+				diaryModalClose.onclick = () => {
 					diaryModal.classList.remove('active');
-				});
+				};
 			}
 
 			if (diaryModal) {
-				diaryModal.addEventListener('click', (e) => {
+				diaryModal.onclick = (e) => {
 					if (e.target === diaryModal) {
 						diaryModal.classList.remove('active');
 					}
-				});
+				};
 			}
 		}
 
