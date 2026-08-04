@@ -326,12 +326,21 @@
 
 	//新站引導
 	{
+		// 計算關閉倒數天數 (目標時間: 2026/08/08 00:00:00)
+		const targetDate = new Date("2026-08-08T00:00:00");
+		const now = new Date();
+		const diffTime = targetDate - now;
+		// 計算剩餘天數 (不足一天以 1 天計，小於 0 則為 0)
+		const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
 		const redSpan = document.createElement("span");
 		redSpan.style.color = "red";
 		redSpan.appendChild( document.createTextNode("NEW!!") );
 		getById("newest").appendChild(redSpan);
+
 		const theHref = document.createElement("span");
-		const theText = document.createTextNode("舊站將自動於星期六關閉！這邊也不會更新8/8的龍娘包喔！");
+		// 動態帶入剩餘天數 X
+		const theText = document.createTextNode(`舊站關閉倒數${daysLeft}天，這邊也不會更新8/8的龍娘包喔！`);
 		theHref.style.color = "blue";
 		theHref.style.fontWeight = "big";
 		theHref.style.cursor = "pointer";
