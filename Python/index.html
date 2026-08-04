@@ -1398,10 +1398,13 @@
 
         <div class="row-flex">
             <!-- F/H. 卡名指定 -->
-            <div class="col">
-                <h3>卡名指定</h3>
-                <input type="text" id="card-name" placeholder="請輸入卡名...">
-            </div>
+			<div class="col">
+				<h3>卡名指定</h3>
+				<div class="flex-input-row" style="margin-bottom: 0;">
+					<input type="text" id="card-name" placeholder="請輸入卡名..." style="margin-bottom: 0;">
+					<button type="button" id="btn-insert-dot" class="btn-icon" style="white-space: nowrap; padding: 8px 12px; background: #0284c7; color: white; border: none;">・</button>
+				</div>
+			</div>
 
             <!-- F/I. 系列 -->
             <div class="col">
@@ -5997,6 +6000,27 @@
 				btn.addEventListener('click', () => {
 					toggleQuickTag('quick-race', btn.dataset.val, btn.dataset.val, btn);
 				});
+			});
+			
+			// 卡名輸入框新增 [・] 按鈕功能
+			document.getElementById('btn-insert-dot')?.addEventListener('click', () => {
+				const cardNameInput = document.getElementById('card-name');
+				if (!cardNameInput) return;
+
+				// 1. 在卡名輸入框最後面新增 ・
+				cardNameInput.value += '・';
+
+				// 2. 聚焦 (focus) 輸入框
+				cardNameInput.focus();
+
+				// 3. 將文字選取/游標位置設至末端
+				const len = cardNameInput.value.length;
+				cardNameInput.setSelectionRange(len, len);
+
+				// 4. 觸發 summary 摘要更新 (讓 Z 區條件摘要同步變更)
+				if (typeof updateSummaryText === 'function') {
+					updateSummaryText();
+				}
 			});
 		});
 		
