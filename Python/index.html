@@ -7152,11 +7152,16 @@
 			}
 		}
 
-		// 4. 新增：模式 1 - 「僅匯出圖片」模式
+		// 4. 修改後：模式 1 - 「僅匯出圖片」模式
 		function renderImageOnlyExportTab() {
 			const sortedList = getSortedResults(currentFilterResults);
 			const filterConfig = getFilterConfigFromUI();
 			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+
+			// 取得當前 setCode (若不是 D 或 O 開頭則判定為非標準商品)
+			const currentSetCode = currentSetObj ? (currentSetObj.setcode || currentSetObj.code || currentSetObj.id || filterConfig.seriesSmall) : '';
+			const upperSetCode = String(currentSetCode).trim().toUpperCase();
+			const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
 
 			const itemsToRender = [];
 			sortedList.forEach(card => {
@@ -7164,6 +7169,7 @@
 				let cardCount = 1;
 				const cleanName = card.name || '未命名卡牌';
 
+				// 1. 優先嘗試從當前指定商品抓取圖片與張數
 				if (currentSetObj) {
 					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
 					const matchedItem = cardList.find(item => {
@@ -7179,8 +7185,35 @@
 					}
 				}
 
-				if (!picUrl && card.pic && card.pic.trim() !== '') {
+				// 2. 若當前商品沒圖，或屬於非 D/O 開頭的商品，嘗試抓取 card.pic
+				if ((!picUrl || picUrl.trim() === '' || isNonStandardSet) && card.pic && card.pic.trim() !== '') {
 					picUrl = card.pic;
+				}
+
+				// 💡 調整 1：非 D/O 商品且 (商品 pic == "" && card.pic == "") 時，全域尋找其他商品的圖備援
+				if ((!picUrl || picUrl.trim() === '') && isNonStandardSet) {
+					const cleanTargetName = cleanName.trim();
+					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+						for (const setObj of Object.values(rawSetlist)) {
+							const cardList = setObj.setcardlist || setObj.cardlist;
+							if (Array.isArray(cardList)) {
+								const foundItem = cardList.find(item => {
+									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+								});
+								if (foundItem) {
+									let foundPic = '';
+									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) foundPic = foundItem.pic[0];
+									else if (typeof foundItem.pic === 'string') foundPic = foundItem.pic;
+
+									if (foundPic && foundPic.trim() !== '') {
+										picUrl = foundPic;
+										break; // 找到第一張可用備援圖即停止
+									}
+								}
+							}
+						}
+					}
 				}
 
 				itemsToRender.push({
@@ -7234,16 +7267,16 @@
 						width: 100%;
 						max-width: 160px;
 						height: auto;
-						aspect-ratio: 5/7; /* 💡 確保縱向/橫向卡一律直立呈現不打橫 */
+						aspect-ratio: 5/7; /* 💡 縱向/橫向卡一律直立呈現不打橫 */
 						object-fit: contain;
 						border-radius: 6px;
-						box-shadow: 0 -3px 8px rgba(0,0,0,0.7);
+						box-shadow: 0 4px 10px rgba(0,0,0,0.7);
 						position: relative;
 						background: #222;
 					}
-					/* 重疊露出頭部標題區塊 */
-					.stacked-card-img:not(:first-child) {
-						margin-top: -85%; 
+					/* 💡 調整 2 & 3：往「後上」展開，且上方暴露比例約 1/3 (隱藏 2/3，即 margin-bottom: -66.6%) */
+					.stacked-card-img:not(:last-child) {
+						margin-bottom: -66.6%; 
 					}
 					.no-img-box {
 						width: 100%;
@@ -7276,6 +7309,7 @@
 						htmlContent += `<div class="card-col">`;
 						if (item.picUrl) {
 							htmlContent += `<div class="stack-img-container">`;
+							// 💡 調整 z-index：前面的卡片 z-index 較高，蓋在後方卡片之上，形成向「後上」階梯展開
 							for (let c = 0; c < item.count; c++) {
 								htmlContent += `<img class="stacked-card-img" style="z-index: ${item.count - c};" src="${item.picUrl}" alt="${item.name}" />`;
 							}
