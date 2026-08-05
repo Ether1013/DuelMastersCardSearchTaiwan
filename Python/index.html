@@ -3262,401 +3262,6 @@
 			currentFilterResults = historyResults;
 			renderCurrentResultsWithSort();
 		}
-		
-		function renderStandardExportTab( includeImage ) {
-			if (!currentFilterResults || currentFilterResults.length === 0) {
-				alert("目前沒有可匯出的卡牌資料！");
-				return;
-			}
-
-			const sortedList = getSortedResults(currentFilterResults);
-			const filterConfig = getFilterConfigFromUI();
-			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
-
-			// 建立全域已出現過的能力關鍵字集合，避免重複註釋
-			const globalAppearedAbilities = new Set();
-
-			let htmlContent = `
-			<!DOCTYPE html>
-			<html lang="zh-TW">
-			<head>
-				<meta charset="UTF-8">
-				<title>卡牌列表匯出結果 (${sortedList.length}張)</title>
-				<style>
-					body { font-family: "微軟正黑體", sans-serif; padding: 20px; background: #fff; color: #111; line-height: 1.5; }
-					h1 { border-bottom: 2px solid #333; padding-bottom: 8px; font-size: 20px; }
-					.card-item { border: 1px solid #ccc; border-radius: 6px; padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; page-break-inside: avoid; }
-					.card-img { width: 140px; height: 196px; object-fit: contain; flex-shrink: 0; background: #f0f0f0; border-radius: 4px; }
-					.card-detail { flex: 1; }
-					.card-title { font-size: 16px; font-weight: bold; color: #d32f2f; margin-bottom: 6px; }
-					.card-flavor { background: #fffbe6; border: 1px solid #ffe58f; padding: 6px 10px; font-style: italic; font-size: 13px; color: #873800; border-radius: 4px; margin-top: 8px; margin-bottom: 8px; }
-					.wdata-box { background: #f8f9fa; border-left: 3px solid #333; padding: 8px; margin-top: 6px; font-size: 13px; }
-					.sp-list { margin: 4px 0 0 18px; padding: 0; }
-					
-					/* 超化模式分隔橫線 */
-					.hyper-divider {
-						display: flex;
-						align-items: center;
-						text-align: center;
-						color: #d32f2f;
-						font-weight: bold;
-						font-size: 12px;
-						margin: 8px 0 4px 0;
-					}
-					.hyper-divider::before, .hyper-divider::after {
-						content: '';
-						flex: 1;
-						border-bottom: 1px dashed #d32f2f;
-					}
-					.hyper-divider:not(:empty)::before { margin-right: .5em; }
-					.hyper-divider:not(:empty)::after { margin-left: .5em; }
-
-					/* 能力關鍵字註釋區塊 */
-					.ability-explain-box {
-						background: #eef6ff;
-						border: 1px solid #bbdefb;
-						border-radius: 4px;
-						padding: 8px 12px;
-						margin-top: 8px;
-						font-size: 12px;
-					}
-					.ability-explain-item { margin-bottom: 6px; }
-					.ability-explain-item:last-child { margin-bottom: 0; }
-					.ability-title { font-weight: bold; color: #1565c0; }
-
-					.export-disclaimer {
-						font-size: 10px;
-						color: #888;
-						text-align: center;
-						margin-top: 4px;
-						user-select: none;
-						white-space: nowrap;
-					}
-
-					/* 💡 套牌卡圖多張重疊 CSS */
-					.stack-img-container {
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						position: relative;
-						margin-bottom: 10px;
-					}
-					.stacked-card-img {
-						width: 140px;
-						height: 196px;
-						object-fit: contain;
-						background: #f0f0f0;
-						border-radius: 4px;
-						box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
-						position: relative;
-						transition: all 0.2s ease;
-					}
-					/* 從第二張開始向上滑入覆蓋，形成垂直階梯重疊感 */
-					.stacked-card-img:not(:first-child) {
-						margin-top: -165px; 
-						transition: all 0.2s ease;
-					}
-					.stack-img-container.is-horizontal {
-						max-width: 196px;
-					}
-
-					.stacked-card-img.is-horizontal {
-						width: 196px !important;
-						height: 140px !important;
-					}
-
-					/* 修正橫向卡片的重疊偏移量 */
-					.stacked-card-img.is-horizontal:not(:first-child) {
-						margin-top: -110px !important; 
-					}
-					/* ===================================================
-					   💡 新增：行動裝置 + 直立螢幕 (Portrait) 尺寸縮小 40% 響應式設定
-					   =================================================== */
-					@media (max-width: 768px) and (orientation: portrait) {
-						/* 1. 單張卡圖縮小 40% (140px*0.6 = 84px / 196px*0.6 = 118px) */
-						.card-img {
-							width: 84px !important;
-							height: 118px !important;
-						}
-
-						/* 2. 重疊卡圖縮小 40% */
-						.stacked-card-img {
-							width: 84px !important;
-							height: 118px !important;
-						}
-
-						/* 3. 重疊位移量同步縮小 40% (-165px * 0.6 = -99px) */
-						.stacked-card-img:not(:first-child) {
-							margin-top: -99px !important;
-						}
-						.stacked-card-img.is-horizontal {
-							width: 118px !important;
-							height: 84px !important;
-						}
-						.stacked-card-img.is-horizontal:not(:first-child) {
-							margin-top: -66px !important;
-						}
-					}
-				</style>
-			</head>
-			<body>
-			`;
-
-			sortedList.forEach((card, idx) => {
-				const cleanName = card.name || '未命名卡牌';
-				let picUrl = '';
-				let flavorText = '';
-				let setCardId = '';
-				let cardCount = 1; // 預設張數為 1
-
-				// 💡 1. 關鍵修正：必須先宣告 isDeckSet，後面的程式碼才能使用它！
-				const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
-
-				// 1. 優先嘗試從「指定商品」中抓取圖片、Flavor、ID 與 Count
-				if (currentSetObj) {
-					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
-					const matchedItem = cardList.find(item => {
-						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-						return typeof itemName === 'string' && itemName.trim() === cleanName.trim();
-					});
-
-					if (matchedItem && typeof matchedItem === 'object') {
-						if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) picUrl = matchedItem.pic[0];
-						else if (typeof matchedItem.pic === 'string') picUrl = matchedItem.pic;
-
-						if (Array.isArray(matchedItem.flavor) && matchedItem.flavor.length > 0) flavorText = matchedItem.flavor[0];
-						else if (typeof matchedItem.flavor === 'string') flavorText = matchedItem.flavor;
-
-						if (matchedItem.id) setCardId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
-
-						if (matchedItem.count !== undefined && matchedItem.count !== null) {
-							cardCount = Number(matchedItem.count);
-						}
-					}
-				}
-
-				// 💡 檢查當前 setCode
-				const currentSetCode = currentSetObj ? (currentSetObj.setcode || currentSetObj.code || currentSetObj.id || filterConfig.seriesSmall) : '';
-				const upperSetCode = String(currentSetCode).trim().toUpperCase();
-				const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
-
-				// 💡 備援圖片機制：若指定商品沒抓到圖片，或屬於非 D/O 開頭的商品，退回讀取基本/其他商品卡圖
-				if (!picUrl || picUrl.trim() === '' || isNonStandardSet) {
-					// 1. 優先讀取卡牌基本卡圖
-					if (card.pic && card.pic.trim() !== '') {
-						picUrl = card.pic;
-					} else {
-						// 2. 全域尋找同名卡圖備援
-						const cleanTargetName = card.name ? card.name.trim() : "";
-						if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-							for (const setObj of Object.values(rawSetlist)) {
-								const cardList = setObj.setcardlist || setObj.cardlist;
-								if (Array.isArray(cardList)) {
-									const foundItem = cardList.find(item => {
-										const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-										return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-									});
-									if (foundItem) {
-										let foundPic = '';
-										if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) foundPic = foundItem.pic[0];
-										else if (typeof foundItem.pic === 'string') foundPic = foundItem.pic;
-										
-										if (foundPic && foundPic.trim() !== '') {
-											picUrl = foundPic;
-											break;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				// 💡 3. 判斷是否為橫向卡
-				let isHorizontal = false;
-				if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
-					const firstTypeVal = card.wdata[0].type[0];
-					const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
-					if (matchedType && matchedType.horizontal === true) {
-						isHorizontal = true;
-					}
-				}
-
-				const horizClass = isHorizontal ? ' is-horizontal' : '';
-
-				// 💡 2. 正確的 HTML 雙欄結構
-				htmlContent += `<div class="card-item">`; // 最外層 (Flex 左右雙欄)
-
-				// === 左欄：圖片顯示區塊 ===
-				if (includeImage) {
-					const containerMaxWidth = isHorizontal ? '196px' : '140px';
-					htmlContent += `<div class="card-img-container" style="display:flex; flex-direction:column; align-items:center; flex-shrink:0; max-width:${containerMaxWidth};">`;
-					
-					if (picUrl && picUrl.trim() !== '') {
-						if (isDeckSet && cardCount > 1) {
-							htmlContent += `<div class="stack-img-container${horizClass}">`;
-							for (let c = 0; c < cardCount; c++) {
-								htmlContent += `<img class="stacked-card-img${horizClass}" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" />`;
-							}
-							htmlContent += `</div>`;
-						} else {
-							htmlContent += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" />`;
-						}
-					} else {
-						htmlContent += `<div class="card-img${horizClass}" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
-					}
-					
-					htmlContent += `<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>`;
-					htmlContent += `</div>`; // 關閉左欄圖片容器
-				}
-
-				// === 右欄：卡名與詳細資料區塊 ===
-				htmlContent += `<div class="card-detail">`; // 開啟右欄
-
-				let countPrefix = '';
-				if (isDeckSet && (!includeImage || !picUrl)) {
-					countPrefix = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px;">${cardCount} ⅹ </span>`;
-				}
-
-				const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
-				htmlContent += `<div class="card-title">${indexPrefix}${countPrefix}${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
-
-				// 用於紀錄這張卡片新出現的能力關鍵字
-				const newAbilitiesForThisCard = [];
-
-				if (card.wdata && Array.isArray(card.wdata)) {
-					card.wdata.forEach(w => {
-						const typeText = (w.type && Array.isArray(w.type)) 
-							? w.type.map(t => getCardTypeText(t)).join(', ') 
-							: '無';
-
-						let displayPower = w.power ?? '-';
-						if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
-							displayPower = `${displayPower} / ${w.hypermode.power}`;
-						}
-
-						htmlContent += `<div class="wdata-box">`;
-						htmlContent += `<div><b>卡種:</b> ${typeText} | <b>費用:</b> ${w.cost ?? '-'} | <b>攻擊力:</b> ${displayPower} | <b>種族:</b> ${w.race ? w.race.join(', ') : '無'}</div>`;
-
-						const sortedRawAbilities = (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities))
-							? [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length)
-							: [];
-
-						const checkAndCollectAbilities = (spList) => {
-							if (!spList || !Array.isArray(spList)) return;
-							
-							spList.forEach(spText => {
-								if (!spText) return;
-								let tempSpText = spText;
-
-								sortedRawAbilities.forEach(abil => {
-									const keyword = abil.jap;
-									
-									if (tempSpText.includes(keyword)) {
-										if (!globalAppearedAbilities.has(keyword)) {
-											globalAppearedAbilities.add(keyword);
-											newAbilitiesForThisCard.push(abil);
-										}
-
-										const regex = new RegExp(escapeRegExp(keyword), 'g');
-										tempSpText = tempSpText.replace(regex, '___MATCHED___');
-									}
-								});
-							});
-						};
-
-						// 匯出頁面專用的能力解析 Helper (包含 applyEffectTags 效果標籤)
-						const renderExportSpItemHtml = (spRaw) => {
-							let formatted = formatDisplayValue(spRaw);
-							if (!formatted) return '';
-
-							// 處理 HINT: 格式
-							if (formatted.startsWith('HINT:')) {
-								const hintContent = formatted.replace(/^HINT:\s*/, '');
-								return `<li style="list-style-type: none;"><div style="color: #666; font-style: italic; font-size: 13px; margin: 4px 0;">（${applyEffectTags(hintContent)}）</div></li>`;
-							}
-
-							// 處理帶有 # 的階層格式
-							if (formatted.includes('#')) {
-								const parts = formatted.split(/#+/).map(p => p.trim()).filter(Boolean);
-								if (parts.length > 0) {
-									const isSpecial = specialIcons.some(icon => parts[0].startsWith(icon));
-									const mainStyle = isSpecial ? ' style="list-style-type: none; margin-left: -1.2em;"' : '';
-
-									let html = `<li${mainStyle}><div style="font-weight: bold; margin-bottom: 2px;">${applyEffectTags(parts[0])}</div>`;
-									html += `<ul style="margin: 2px 0 6px 18px; padding-left: 0;">`;
-									for (let i = 1; i < parts.length; i++) {
-										html += `<li>${applyEffectTags(parts[i])}</li>`;
-									}
-									html += `</ul></li>`;
-									return html;
-								}
-							}
-
-							// 一般單行格式
-							const isSpecial = specialIcons.some(icon => formatted.startsWith(icon));
-							const hideStyle = isSpecial ? ' style="list-style-type: none; margin-left: -1.2em;"' : '';
-							return `<li${hideStyle}>${applyEffectTags(formatted)}</li>`;
-						};
-
-						if (w.sp && w.sp.length > 0) {
-							checkAndCollectAbilities(w.sp);
-							htmlContent += `<ul class="sp-list">`;
-							w.sp.forEach(s => htmlContent += renderExportSpItemHtml(s));
-							htmlContent += `</ul>`;
-						}
-
-						if (w.hypermode && w.hypermode.sp && w.hypermode.sp.length > 0) {
-							checkAndCollectAbilities(w.hypermode.sp);
-							htmlContent += `<div class="hyper-divider">Hyper Mode</div>`;
-							htmlContent += `<ul class="sp-list">`;
-							w.hypermode.sp.forEach(hs => htmlContent += renderExportSpItemHtml(hs));
-							htmlContent += `</ul>`;
-						}
-
-						htmlContent += `</div>`;
-					});
-				}
-
-                if (card.mana !== null && card.mana !== undefined) {
-                    htmlContent += `
-                        <div style="background: #f1f8e9; border-left: 3px solid #4caf50; padding: 6px 10px; font-size: 13px; font-weight: bold; color: #33691e; border-radius: 4px; margin-top: 8px;">
-                            魔力供應 ${card.mana}
-                        </div>
-                    `;
-                }
-
-                if (flavorText) {
-                    htmlContent += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
-                }
-
-				if (newAbilitiesForThisCard.length > 0) {
-					htmlContent += `<div class="ability-explain-box">`;
-					newAbilitiesForThisCard.forEach(abil => {
-						const headerLine = [abil.jap, abil.chi || abil.cht, abil.eng].filter(Boolean).join(' / ');
-						const descStr = abil.descript || abil.desc || abil.text || abil.detail || '(無效果說明)';
-						htmlContent += `
-							<div class="ability-explain-item">
-								<span class="ability-title">【${headerLine}】</span>: ${descStr}
-							</div>
-						`;
-					});
-					htmlContent += `</div>`;
-				}
-
-				htmlContent += `</div></div>`;
-			});
-
-			htmlContent += `</body></html>`;
-
-			const newWindow = window.open('', '_blank');
-			if (newWindow) {
-				newWindow.document.write(htmlContent);
-				newWindow.document.close();
-			} else {
-				alert("瀏覽器阻擋了彈出式分頁，請允許本站開啓彈出視窗。");
-			}
-		}
 
 		function getAllDescendantCardTypes(selectedTypeValues) {
 			const resultTypes = new Set(selectedTypeValues);
@@ -7131,7 +6736,11 @@
 			return distribution;
 		}
 
-		// 2. 開啟/觸發匯出流程（開啟選擇 Modal）
+		// ==========================================
+		// 匯出模式 Modal 與排版邏輯 (使用 sessionStorage + export.html)
+		// ==========================================
+
+		// 1. 開啟/觸發匯出流程（開啟選擇 Modal）
 		function exportResultsToNewTab() {
 			if (!currentFilterResults || currentFilterResults.length === 0) {
 				alert("目前沒有可匯出的卡牌資料！");
@@ -7144,32 +6753,35 @@
 			}
 		}
 
-		// 3. 關閉匯出 Modal
+		// 2. 關閉匯出 Modal
 		function closeExportModal() {
 			const exportModal = document.getElementById('export-mode-modal');
 			if (exportModal) {
 				exportModal.classList.remove('active');
 			}
 		}
-
-		// 4. 修正後：模式 1 - 「僅匯出圖片」模式 (正確向後上展開 + 向底對齊)
-		function renderImageOnlyExportTab() {
+		
+		// 3. 核心打包與送出 sessionStorage
+		function dispatchExportToPage(mode) {
 			const sortedList = getSortedResults(currentFilterResults);
 			const filterConfig = getFilterConfigFromUI();
 			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+			const isDeckSet = Boolean(currentSetObj && currentSetObj.isdeck === true);
 
-			// 取得當前 setCode (若不是 D 或 O 開頭則判定為非標準商品)
 			const currentSetCode = currentSetObj ? (currentSetObj.setcode || currentSetObj.code || currentSetObj.id || filterConfig.seriesSmall) : '';
 			const upperSetCode = String(currentSetCode).trim().toUpperCase();
 			const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
 
-			const itemsToRender = [];
-			sortedList.forEach(card => {
-				let picUrl = '';
-				let cardCount = 1;
-				const cleanName = card.name || '未命名卡牌';
+			const globalAppearedAbilities = new Set();
+			const itemsPayload = [];
 
-				// 1. 優先嘗試從當前指定商品抓取圖片與張數
+			sortedList.forEach(card => {
+				const cleanName = card.name || '未命名卡牌';
+				let picUrl = '';
+				let flavorText = '';
+				let setCardId = '';
+				let cardCount = 1;
+
 				if (currentSetObj) {
 					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
 					const matchedItem = cardList.find(item => {
@@ -7181,34 +6793,36 @@
 						if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) picUrl = matchedItem.pic[0];
 						else if (typeof matchedItem.pic === 'string') picUrl = matchedItem.pic;
 
+						if (Array.isArray(matchedItem.flavor) && matchedItem.flavor.length > 0) flavorText = matchedItem.flavor[0];
+						else if (typeof matchedItem.flavor === 'string') flavorText = matchedItem.flavor;
+
+						if (matchedItem.id) setCardId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
 						if (matchedItem.count !== undefined && matchedItem.count !== null) cardCount = Number(matchedItem.count);
 					}
 				}
 
-				// 2. 若當前商品沒圖，或屬於非 D/O 開頭的商品，嘗試抓取 card.pic
-				if ((!picUrl || picUrl.trim() === '' || isNonStandardSet) && card.pic && card.pic.trim() !== '') {
-					picUrl = card.pic;
-				}
-
-				// 3. 非 D/O 商品且 (商品 pic == "" && card.pic == "") 時，全域尋找其他商品的圖備援
-				if ((!picUrl || picUrl.trim() === '') && isNonStandardSet) {
-					const cleanTargetName = cleanName.trim();
-					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-						for (const setObj of Object.values(rawSetlist)) {
-							const cardList = setObj.setcardlist || setObj.cardlist;
-							if (Array.isArray(cardList)) {
-								const foundItem = cardList.find(item => {
-									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-								});
-								if (foundItem) {
-									let foundPic = '';
-									if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) foundPic = foundItem.pic[0];
-									else if (typeof foundItem.pic === 'string') foundPic = foundItem.pic;
-
-									if (foundPic && foundPic.trim() !== '') {
-										picUrl = foundPic;
-										break;
+				// 全域備援抓圖邏輯 (非 D/O 商品且 pic 為空時)
+				if (!picUrl || picUrl.trim() === '' || isNonStandardSet) {
+					if (card.pic && card.pic.trim() !== '') {
+						picUrl = card.pic;
+					} else if (isNonStandardSet) {
+						const cleanTargetName = cleanName.trim();
+						if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+							for (const setObj of Object.values(rawSetlist)) {
+								const cardList = setObj.setcardlist || setObj.cardlist;
+								if (Array.isArray(cardList)) {
+									const foundItem = cardList.find(item => {
+										const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+										return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+									});
+									if (foundItem) {
+										let foundPic = '';
+										if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) foundPic = foundItem.pic[0];
+										else if (typeof foundItem.pic === 'string') foundPic = foundItem.pic;
+										if (foundPic && foundPic.trim() !== '') {
+											picUrl = foundPic;
+											break;
+										}
 									}
 								}
 							}
@@ -7216,132 +6830,67 @@
 					}
 				}
 
-				itemsToRender.push({
+				// 判斷橫向卡
+				let isHorizontal = false;
+				if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
+					const firstTypeVal = card.wdata[0].type[0];
+					const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
+					if (matchedType && matchedType.horizontal === true) isHorizontal = true;
+				}
+
+				// 收集能力說明
+				const explainedAbilities = [];
+				if (mode !== 'img_only' && card.wdata && Array.isArray(card.wdata)) {
+					const sortedRawAbilities = (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities))
+						? [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length)
+						: [];
+
+					card.wdata.forEach(w => {
+						const checkAndCollect = (spList) => {
+							if (!spList || !Array.isArray(spList)) return;
+							spList.forEach(spText => {
+								if (!spText) return;
+								sortedRawAbilities.forEach(abil => {
+									const keyword = abil.jap;
+									if (spText.includes(keyword) && !globalAppearedAbilities.has(keyword)) {
+										globalAppearedAbilities.add(keyword);
+										explainedAbilities.push(abil);
+									}
+								});
+							});
+						};
+						checkAndCollect(w.sp);
+						if (w.hypermode) checkAndCollect(w.hypermode.sp);
+					});
+				}
+
+				itemsPayload.push({
 					name: cleanName,
 					picUrl: picUrl,
-					count: cardCount
+					flavorText: flavorText,
+					setCardId: setCardId,
+					count: cardCount,
+					isHorizontal: isHorizontal,
+					wdata: card.wdata || [],
+					mana: card.mana,
+					explainedAbilities: explainedAbilities
 				});
 			});
 
-			const rowDistribution = calculateImageGridRowDistribution(itemsToRender.length);
+			const payload = {
+				mode: mode, // 'img_only' | 'img_text' | 'text_only'
+				isDeckSet: isDeckSet,
+				cardTypes: rawCardTypes || [],
+				items: itemsPayload
+			};
 
-			let htmlContent = `
-			<!DOCTYPE html>
-			<html lang="zh-TW">
-			<head>
-				<meta charset="UTF-8">
-				<title>匯出結果 - 僅圖片模式 (${itemsToRender.length}種卡牌)</title>
-				<style>
-					body { 
-						font-family: "微軟正黑體", sans-serif; 
-						padding: 20px; 
-						background: #111; 
-						color: #fff; 
-						margin: 0;
-					}
-					.grid-container {
-						display: flex;
-						flex-direction: column;
-						gap: 25px;
-						max-width: 1400px;
-						margin: 0 auto;
-					}
-					.grid-row {
-						display: flex;
-						gap: 12px;
-						justify-content: flex-start;
-						align-items: flex-end; /* 💡 關鍵調整：改為向底對齊 */
-					}
-					.card-col {
-						flex: 1;
-						min-width: 0;
-					}
-					/* 垂直重疊卡片容器 */
-					.stack-img-container {
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						position: relative;
-					}
-					.stacked-card-img {
-						width: 100%;
-						max-width: 160px;
-						height: auto;
-						aspect-ratio: 5/7; /* 直立呈現不打橫 */
-						object-fit: contain;
-						border-radius: 6px;
-						box-shadow: 0 4px 10px rgba(0,0,0,0.7);
-						position: relative;
-						background: #222;
-					}
-					/* 負邊距縮進，只露出頂部卡名區塊 (約 18%) */
-					.stacked-card-img:not(:last-child) {
-						margin-bottom: -118%; 
-					}
-					.no-img-box {
-						width: 100%;
-						max-width: 160px;
-						aspect-ratio: 5/7;
-						background: #222;
-						border: 2px dashed #555;
-						border-radius: 6px;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						color: #aaa;
-						font-size: 12px;
-						text-align: center;
-						padding: 4px;
-						box-sizing: border-box;
-					}
-				</style>
-			</head>
-			<body>
-				<div class="grid-container">
-			`;
-
-			let currentIndex = 0;
-			rowDistribution.forEach(countInRow => {
-				htmlContent += `<div class="grid-row">`;
-				for (let i = 0; i < countInRow; i++) {
-					const item = itemsToRender[currentIndex];
-					if (item) {
-						htmlContent += `<div class="card-col">`;
-						if (item.picUrl) {
-							htmlContent += `<div class="stack-img-container">`;
-							for (let c = 0; c < item.count; c++) {
-								const zIndex = c + 1;
-								htmlContent += `<img class="stacked-card-img" style="z-index: ${zIndex};" src="${item.picUrl}" alt="${item.name}" />`;
-							}
-							htmlContent += `</div>`;
-						} else {
-							htmlContent += `<div class="no-img-box">${item.name}<br>(No Image)</div>`;
-						}
-						htmlContent += `</div>`;
-					}
-					currentIndex++;
-				}
-				htmlContent += `</div>`;
-			});
-
-			htmlContent += `
-				</div>
-			</body>
-			</html>
-			`;
-
-			const newWindow = window.open('', '_blank');
-			if (newWindow) {
-				newWindow.document.write(htmlContent);
-				newWindow.document.close();
-			} else {
-				alert("瀏覽器阻擋了彈出式分頁，請允許本站開啟彈出視窗。");
-			}
+			// 寫入 sessionStorage 並在新分頁開啟 export.html
+			sessionStorage.setItem('dm_export_payload', JSON.stringify(payload));
+			window.open('export.html', '_blank');
 		}
 
-		// 5. 初始化 Modal 的三個按鈕點擊事件
+		// 4. Modal 按鈕事件監聽
 		document.addEventListener('DOMContentLoaded', () => {
-			// 關閉按鈕
 			document.getElementById('export-modal-close')?.addEventListener('click', closeExportModal);
 			document.getElementById('export-mode-modal')?.addEventListener('click', (e) => {
 				if (e.target.id === 'export-mode-modal') closeExportModal();
@@ -7350,21 +6899,19 @@
 			// 模式 1：僅匯出圖片
 			document.getElementById('btn-export-mode-1')?.addEventListener('click', () => {
 				closeExportModal();
-				renderImageOnlyExportTab();
+				dispatchExportToPage('img_only');
 			});
 
 			// 模式 2：圖 + 效果
 			document.getElementById('btn-export-mode-2')?.addEventListener('click', () => {
 				closeExportModal();
-				// 呼叫原本包含圖片的標準匯出 (帶 true)
-				renderStandardExportTab(true);
+				dispatchExportToPage('img_text');
 			});
 
 			// 模式 3：只要效果
 			document.getElementById('btn-export-mode-3')?.addEventListener('click', () => {
 				closeExportModal();
-				// 呼叫不包含圖片的純文字匯出 (帶 false)
-				renderStandardExportTab(false);
+				dispatchExportToPage('text_only');
 			});
 		});
 

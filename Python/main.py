@@ -295,6 +295,11 @@ async def serve_index():
 @app.get("/pop.html")
 async def get_pop_page():
     return FileResponse("pop.html") # 請確認 pop.html 與 index.html 放在同一個目錄下
+
+# 💡 新增 export.html 路由
+@app.get("/export.html")
+async def get_export_page():
+    return FileResponse("export.html")
     
 # 1. 提供 card.html 靜態頁面路由
 @app.get("/card.html")
