@@ -3767,6 +3767,8 @@
 			return true;
 		}
 		
+		let isDiaryRendered = false; // 標記是否已渲染，避免重複操作 DOM
+
 		function initDiaryUI() {
 			const diaryBtn = document.getElementById('diary-btn');
 			const diaryModal = document.getElementById('diary-modal');
@@ -3775,63 +3777,68 @@
 
 			if (!diaryBtn) return;
 
-			// 💡 修正 1：將點擊事件獨立綁定，不論有沒有資料都能正常開啟 Modal
 			diaryBtn.onclick = () => {
-				diaryModalBody.innerHTML = '';
+				// 💡 只有第一次點開時進行 DOM 組裝，之後開啟皆為 0 毫秒極速彈出
+				if (!isDiaryRendered) {
+					diaryModalBody.innerHTML = '';
 
-				if (!rawDiary || rawDiary.length === 0) {
-					diaryModalBody.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無更新日誌</div>';
-					diaryModal.classList.add('active');
-					return;
+					if (!rawDiary || rawDiary.length === 0) {
+						diaryModalBody.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無更新日誌</div>';
+					} else {
+						const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
+						const fragment = document.createDocumentFragment(); // 一次性掛載，避免頻繁 Repaint
+
+						sortedDiary.forEach(item => {
+							const entryBlock = document.createElement('div');
+							entryBlock.style.background = '#f8f9fa';
+							entryBlock.style.borderLeft = '4px solid #d32f2f';
+							entryBlock.style.padding = '10px 14px';
+							entryBlock.style.borderRadius = '6px';
+							entryBlock.style.marginBottom = '12px';
+
+							const dateHeader = document.createElement('div');
+							dateHeader.style.fontWeight = 'bold';
+							dateHeader.style.color = '#333';
+							dateHeader.style.marginBottom = '6px';
+							dateHeader.innerText = `📅 ${item.date}`;
+							entryBlock.appendChild(dateHeader);
+
+							const ul = document.createElement('ul');
+							ul.style.margin = '0';
+							ul.style.paddingLeft = '20px';
+							ul.style.fontSize = '14px';
+							ul.style.color = '#555';
+
+							const listItems = Array.isArray(item.content) ? item.content : [];
+
+							listItems.forEach(text => {
+								const li = document.createElement('li');
+								li.style.marginBottom = '3px';
+								
+								// 💡 關鍵修正：取消 applyEffectTags 標籤化，直接輸出原始文字
+								li.innerText = text;
+
+								if (typeof specialIcons !== 'undefined' && specialIcons.some(icon => text.startsWith(icon))) {
+									li.style.listStyleType = 'none';
+									li.style.marginLeft = '-1.2em';
+								}
+								ul.appendChild(li);
+							});
+
+							entryBlock.appendChild(ul);
+							fragment.appendChild(entryBlock);
+						});
+
+						diaryModalBody.appendChild(fragment);
+					}
+
+					isDiaryRendered = true;
 				}
-
-				// 日期降冪排序 (最新的在最上面)
-				const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-				sortedDiary.forEach(item => {
-					const entryBlock = document.createElement('div');
-					entryBlock.style.background = '#f8f9fa';
-					entryBlock.style.borderLeft = '4px solid #d32f2f';
-					entryBlock.style.padding = '10px 14px';
-					entryBlock.style.borderRadius = '6px';
-
-					const dateHeader = document.createElement('div');
-					dateHeader.style.fontWeight = 'bold';
-					dateHeader.style.color = '#333';
-					dateHeader.style.marginBottom = '6px';
-					dateHeader.innerText = `📅 ${item.date}`;
-					entryBlock.appendChild(dateHeader);
-
-					const ul = document.createElement('ul');
-					ul.style.margin = '0';
-					ul.style.paddingLeft = '20px';
-					ul.style.fontSize = '14px';
-					ul.style.color = '#555';
-
-					const listItems = Array.isArray(item.content) ? item.content : [];
-
-					listItems.forEach(text => {
-						const li = document.createElement('li');
-						li.style.marginBottom = '3px';
-						// 💡 修正 2：正確印出文字內容，並套用效果標籤
-						li.innerHTML = typeof applyEffectTags === 'function' ? applyEffectTags(text) : text;
-						
-						if (typeof specialIcons !== 'undefined' && specialIcons.some(icon => text.startsWith(icon))) {
-							li.style.listStyleType = 'none';
-							li.style.marginLeft = '-1.2em';
-						}
-						
-						ul.appendChild(li);
-					});
-
-					entryBlock.appendChild(ul);
-					diaryModalBody.appendChild(entryBlock);
-				});
 
 				diaryModal.classList.add('active');
 			};
 
-			// 💡 判斷今天是否在最新一筆的「兩天內」，更新 Icon 樣式
+			// 判斷今日 Icon 顯示邏輯 (兩天內顯示 📝，超過顯示 📖)
 			if (rawDiary && rawDiary.length > 0) {
 				const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
 				const latestEntry = sortedDiary[0];
@@ -3843,29 +3850,18 @@
 					const latestDate = new Date(latestEntry.date);
 					latestDate.setHours(0, 0, 0, 0);
 
-					const diffTime = today.getTime() - latestDate.getTime();
-					const diffDays = diffTime / (1000 * 3600 * 24);
-
-					if (diffDays >= 0 && diffDays <= 2) {
-						diaryBtn.innerText = '📝';
-					} else {
-						diaryBtn.innerText = '📖';
-					}
+					const diffDays = (today.getTime() - latestDate.getTime()) / (1000 * 3600 * 24);
+					diaryBtn.innerText = (diffDays >= 0 && diffDays <= 2) ? '📝' : '📖';
 				}
 			}
 
-			// 關閉 Modal 事件綁定
 			if (diaryModalClose) {
-				diaryModalClose.onclick = () => {
-					diaryModal.classList.remove('active');
-				};
+				diaryModalClose.onclick = () => diaryModal.classList.remove('active');
 			}
 
 			if (diaryModal) {
 				diaryModal.onclick = (e) => {
-					if (e.target === diaryModal) {
-						diaryModal.classList.remove('active');
-					}
+					if (e.target === diaryModal) diaryModal.classList.remove('active');
 				};
 			}
 		}
