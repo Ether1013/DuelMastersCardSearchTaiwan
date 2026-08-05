@@ -502,7 +502,7 @@ def format_card_wdata_types(card_dict):
 
     return card_copy
     
-# 2. Card 頁面專用 API (新增 matched_index 精確版本支援)
+# 2. Card 頁面專用 API (統一使用相同的 setdata 搜尋邏輯)
 @app.get("/api/card_detail")
 @limiter.limit("6/minute")
 async def get_card_detail(request: Request, p: str = Query(..., description="卡牌名稱或ID/卡號")):
@@ -527,13 +527,16 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
     clean_query = normalize_id(query_str)
 
     # ----------------------------------------------------
-    # 邏輯 A：先嘗試以「卡名」精確或模糊尋找卡牌
+    # 邏輯 A：先嘗試以「卡名」精確或暱稱模糊尋找卡牌
     # ----------------------------------------------------
     matched_card = None
+    target_card_name = None
+
     for card in carddata_cache:
         c_name = card.get("name", "").strip()
         if c_name == query_str:
             matched_card = card
+            target_card_name = c_name
             break
 
     if not matched_card and isinstance(nickname_cache, list):
@@ -543,18 +546,48 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                 real_name = nick_item.get("realname")
                 matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == real_name), None)
                 if matched_card:
+                    target_card_name = real_name
                     break
 
-    if matched_card:
-        # 💡 將 card 經過轉換處理
+    # 若以卡名找到卡片，為其尋找對應的 setdata 與版本索引 (matched_index)
+    if matched_card and target_card_name:
+        matched_setdata = None
+        matched_id_val = ""
+        matched_index = 0
+
+        for set_code, set_info in setlist_cache.items():
+            card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+            name_occurrence_counter = {}
+
+            for item in card_list:
+                if isinstance(item, dict):
+                    item_name = item.get("name", "").strip()
+                    current_occ = name_occurrence_counter.get(item_name, 0)
+
+                    if item_name == target_card_name:
+                        matched_setdata = set_info
+                        matched_index = current_occ
+                        if "id" in item:
+                            ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                            matched_id_val = ids[0] if ids else ""
+                        break
+
+                    ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
+                    name_occurrence_counter[item_name] = current_occ + ids_count
+
+                if matched_setdata:
+                    break
+            if matched_setdata:
+                break
+
         processed_card = format_card_wdata_types(matched_card)
         return {
             "found_by": "name",
             "card": processed_card,
-            "setdata": None,
-            "matched_id": "",
-            "matched_index": 0,
-            "set_list": get_card_set_list(matched_card.get("name", "")),
+            "setdata": matched_setdata,
+            "matched_id": matched_id_val,
+            "matched_index": matched_index,
+            "set_list": get_card_set_list(target_card_name),
             "races": races_cache,
             "abilities": abilities_cache
         }
@@ -576,8 +609,6 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
         for item in card_list:
             if isinstance(item, dict):
                 item_name = item.get("name", "").strip()
-                
-                # 更新該卡名的計數器
                 current_occ = name_occurrence_counter.get(item_name, 0)
                 
                 if "id" in item:
@@ -588,13 +619,10 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                             target_card_name = item_name
                             matched_id_val = single_id
                             
-                            # 💡 關鍵修正：
                             # 若一個物件有多個 ID，索引 = 當前物件前的同名卡數量 + 該物件內部的 id 索引
-                            # 若同名卡被拆分成多個物件，current_occ 會遞增，精確代表這是第幾個版本！
                             matched_index = current_occ + idx
                             break
                 
-                # 計算完畢後更新該卡名的累計次數
                 ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
                 name_occurrence_counter[item_name] = current_occ + ids_count
 
@@ -608,7 +636,6 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
         if not matched_card:
             matched_card = {"name": target_card_name, "wdata": []}
 
-        # 💡 將 card 經過轉換處理
         processed_card = format_card_wdata_types(matched_card)
 
         return {
