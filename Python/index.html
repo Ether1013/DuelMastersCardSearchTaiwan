@@ -1628,7 +1628,7 @@
 				<div class="drawer-row">
 					<label>自訂：</label>
 					<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
-					<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 取得連結</button>
+					<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
 				</div>
 			</div>
 		</div>
@@ -7303,9 +7303,10 @@
 			rawSetlist[newCode] = newSetObj;
 			initSeriesDropdown();
 
-			// 關閉 Modal 並自動切換至該商品
+			// 關閉匯入 Modal 彈窗 (維持 Modal 關閉)
 			document.getElementById('deck-import-modal').classList.remove('active');
 			
+			// 自動切換下拉選單至剛匯入的自訂牌組
 			const bigSelect = document.getElementById('series-big');
 			const smallSelect = document.getElementById('series-small');
 			if (bigSelect && smallSelect) {
@@ -7314,6 +7315,17 @@
 				smallSelect.value = newCode;
 			}
 
+			// 💡 關鍵修正：確保 Page 2 & Page 3 的功能抽屜維持展開 (.open) 狀態
+			document.querySelectorAll('.drawer-container').forEach(drawer => {
+				// 排除快速計算機面板，僅將 Page 2/3 的工具抽屜打開
+				if (drawer.id === 'drawer-tab2' || drawer.id === 'drawer-tab3') {
+					drawer.classList.add('open');
+					const arrow = drawer.querySelector('.drawer-arrow');
+					if (arrow) arrow.innerText = '▲';
+				}
+			});
+
+			// 執行搜尋與列表渲染
 			document.getElementById('btn-search')?.click();
 			showToast(`✅ 牌組 ${newCode} 匯入成功！`);
 		});
