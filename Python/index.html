@@ -7152,7 +7152,7 @@
 			}
 		}
 
-		// 4. 修改後：模式 1 - 「僅匯出圖片」模式
+		// 4. 修正後：模式 1 - 「僅匯出圖片」模式 (正確向後上展開)
 		function renderImageOnlyExportTab() {
 			const sortedList = getSortedResults(currentFilterResults);
 			const filterConfig = getFilterConfigFromUI();
@@ -7190,7 +7190,7 @@
 					picUrl = card.pic;
 				}
 
-				// 💡 調整 1：非 D/O 商品且 (商品 pic == "" && card.pic == "") 時，全域尋找其他商品的圖備援
+				// 3. 非 D/O 商品且 (商品 pic == "" && card.pic == "") 時，全域尋找其他商品的圖備援
 				if ((!picUrl || picUrl.trim() === '') && isNonStandardSet) {
 					const cleanTargetName = cleanName.trim();
 					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
@@ -7208,7 +7208,7 @@
 
 									if (foundPic && foundPic.trim() !== '') {
 										picUrl = foundPic;
-										break; // 找到第一張可用備援圖即停止
+										break;
 									}
 								}
 							}
@@ -7242,7 +7242,7 @@
 					.grid-container {
 						display: flex;
 						flex-direction: column;
-						gap: 20px;
+						gap: 25px;
 						max-width: 1400px;
 						margin: 0 auto;
 					}
@@ -7267,16 +7267,16 @@
 						width: 100%;
 						max-width: 160px;
 						height: auto;
-						aspect-ratio: 5/7; /* 💡 縱向/橫向卡一律直立呈現不打橫 */
+						aspect-ratio: 5/7; /* 直立呈現不打橫 */
 						object-fit: contain;
 						border-radius: 6px;
 						box-shadow: 0 4px 10px rgba(0,0,0,0.7);
 						position: relative;
 						background: #222;
 					}
-					/* 💡 調整 2 & 3：往「後上」展開，且上方暴露比例約 1/3 (隱藏 2/3，即 margin-bottom: -66.6%) */
+					/* 💡 核心修改：負邊距縮進，只露出頂部卡名區塊 (約 18%)，並讓底部的卡片往上蓋住上面的卡片 */
 					.stacked-card-img:not(:last-child) {
-						margin-bottom: -66.6%; 
+						margin-bottom: -118%; 
 					}
 					.no-img-box {
 						width: 100%;
@@ -7309,9 +7309,13 @@
 						htmlContent += `<div class="card-col">`;
 						if (item.picUrl) {
 							htmlContent += `<div class="stack-img-container">`;
-							// 💡 調整 z-index：前面的卡片 z-index 較高，蓋在後方卡片之上，形成向「後上」階梯展開
+							// 💡 核心修改 z-index：
+							// c = 0 (最上面那張) z-index 最低 (1)
+							// c = item.count - 1 (最下面最後一張，即完整顯示的卡) z-index 最高 (item.count)
+							// 這樣最下面的卡片就會蓋在上方的卡片上，達成「最底下顯示完整卡圖，上方只露出卡名邊框」
 							for (let c = 0; c < item.count; c++) {
-								htmlContent += `<img class="stacked-card-img" style="z-index: ${item.count - c};" src="${item.picUrl}" alt="${item.name}" />`;
+								const zIndex = c + 1;
+								htmlContent += `<img class="stacked-card-img" style="z-index: ${zIndex};" src="${item.picUrl}" alt="${item.name}" />`;
 							}
 							htmlContent += `</div>`;
 						} else {
