@@ -1841,6 +1841,27 @@
 			</div>
 		</div>
 	</div>
+	
+	<!-- 匯出模式選擇 Modal -->
+	<div class="modal-overlay" id="export-mode-modal">
+		<div class="modal-card" style="max-width: 420px;">
+			<div class="modal-header">
+				<div class="modal-title">📄 請選擇匯出模式</div>
+				<div class="modal-close" id="export-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" style="padding: 20px; gap: 12px;">
+				<button type="button" class="btn-drawer-action" id="btn-export-mode-1" style="padding: 12px; font-size: 14px; background: #0284c7;">
+					🖼️ 僅匯出圖片 (圖格展開模式)
+				</button>
+				<button type="button" class="btn-drawer-action" id="btn-export-mode-2" style="padding: 12px; font-size: 14px; background: #16a34a;">
+					🖼️+📝 圖 + 效果 (標準圖文模式)
+				</button>
+				<button type="button" class="btn-drawer-action" id="btn-export-mode-3" style="padding: 12px; font-size: 14px; background: #475569;">
+					📝 只要效果 (純文字模式)
+				</button>
+			</div>
+		</div>
+	</div>
 
     <!-- ================= JavaScript 邏輯 ================= -->
     <script>
@@ -3242,14 +3263,11 @@
 			renderCurrentResultsWithSort();
 		}
 		
-		function exportResultsToNewTab() {
+		function renderStandardExportTab( includeImage ) {
 			if (!currentFilterResults || currentFilterResults.length === 0) {
 				alert("目前沒有可匯出的卡牌資料！");
 				return;
 			}
-
-			// 1. 詢問使用者是否匯出圖片 (節省流量)
-			const includeImage = confirm("請問是否要載入並匯出卡牌圖片？\n(選擇「取消」可節省網路流量僅匯出效果文字)");
 
 			const sortedList = getSortedResults(currentFilterResults);
 			const filterConfig = getFilterConfigFromUI();
@@ -7087,6 +7105,234 @@
 			});
 			return `NET-${maxNum + 1}`;
 		}
+		
+		// ==========================================
+		// 匯出模式 Modal 與排版邏輯
+		// ==========================================
+
+		// 1. 計算「僅圖片模式」動態每列張數 (支援 5+4 邏輯)
+		function calculateImageGridRowDistribution(totalCards) {
+			if (totalCards <= 0) return [];
+			
+			// 特殊案例：9 張時自動分為 5 + 4
+			if (totalCards === 9) return [5, 4];
+			
+			// 8 張（含）以下直接排成一列
+			if (totalCards <= 8) return [totalCards];
+
+			let rows = Math.ceil(totalCards / 8);
+			let baseItems = Math.floor(totalCards / rows);
+			let remainder = totalCards % rows;
+
+			let distribution = [];
+			for (let i = 0; i < rows; i++) {
+				distribution.push(baseItems + (i < remainder ? 1 : 0));
+			}
+			return distribution;
+		}
+
+		// 2. 開啟/觸發匯出流程（開啟選擇 Modal）
+		function exportResultsToNewTab() {
+			if (!currentFilterResults || currentFilterResults.length === 0) {
+				alert("目前沒有可匯出的卡牌資料！");
+				return;
+			}
+
+			const exportModal = document.getElementById('export-mode-modal');
+			if (exportModal) {
+				exportModal.classList.add('active');
+			}
+		}
+
+		// 3. 關閉匯出 Modal
+		function closeExportModal() {
+			const exportModal = document.getElementById('export-mode-modal');
+			if (exportModal) {
+				exportModal.classList.remove('active');
+			}
+		}
+
+		// 4. 新增：模式 1 - 「僅匯出圖片」模式
+		function renderImageOnlyExportTab() {
+			const sortedList = getSortedResults(currentFilterResults);
+			const filterConfig = getFilterConfigFromUI();
+			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+
+			const itemsToRender = [];
+			sortedList.forEach(card => {
+				let picUrl = '';
+				let cardCount = 1;
+				const cleanName = card.name || '未命名卡牌';
+
+				if (currentSetObj) {
+					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+					const matchedItem = cardList.find(item => {
+						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+						return typeof itemName === 'string' && itemName.trim() === cleanName.trim();
+					});
+
+					if (matchedItem && typeof matchedItem === 'object') {
+						if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) picUrl = matchedItem.pic[0];
+						else if (typeof matchedItem.pic === 'string') picUrl = matchedItem.pic;
+
+						if (matchedItem.count !== undefined && matchedItem.count !== null) cardCount = Number(matchedItem.count);
+					}
+				}
+
+				if (!picUrl && card.pic && card.pic.trim() !== '') {
+					picUrl = card.pic;
+				}
+
+				itemsToRender.push({
+					name: cleanName,
+					picUrl: picUrl,
+					count: cardCount
+				});
+			});
+
+			const rowDistribution = calculateImageGridRowDistribution(itemsToRender.length);
+
+			let htmlContent = `
+			<!DOCTYPE html>
+			<html lang="zh-TW">
+			<head>
+				<meta charset="UTF-8">
+				<title>匯出結果 - 僅圖片模式 (${itemsToRender.length}種卡牌)</title>
+				<style>
+					body { 
+						font-family: "微軟正黑體", sans-serif; 
+						padding: 20px; 
+						background: #111; 
+						color: #fff; 
+						margin: 0;
+					}
+					.grid-container {
+						display: flex;
+						flex-direction: column;
+						gap: 20px;
+						max-width: 1400px;
+						margin: 0 auto;
+					}
+					.grid-row {
+						display: flex;
+						gap: 12px;
+						justify-content: flex-start;
+						align-items: flex-start;
+					}
+					.card-col {
+						flex: 1;
+						min-width: 0;
+					}
+					/* 垂直重疊卡片容器 */
+					.stack-img-container {
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+						position: relative;
+					}
+					.stacked-card-img {
+						width: 100%;
+						max-width: 160px;
+						height: auto;
+						aspect-ratio: 5/7; /* 💡 確保縱向/橫向卡一律直立呈現不打橫 */
+						object-fit: contain;
+						border-radius: 6px;
+						box-shadow: 0 -3px 8px rgba(0,0,0,0.7);
+						position: relative;
+						background: #222;
+					}
+					/* 重疊露出頭部標題區塊 */
+					.stacked-card-img:not(:first-child) {
+						margin-top: -85%; 
+					}
+					.no-img-box {
+						width: 100%;
+						max-width: 160px;
+						aspect-ratio: 5/7;
+						background: #222;
+						border: 2px dashed #555;
+						border-radius: 6px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						color: #aaa;
+						font-size: 12px;
+						text-align: center;
+						padding: 4px;
+						box-sizing: border-box;
+					}
+				</style>
+			</head>
+			<body>
+				<div class="grid-container">
+			`;
+
+			let currentIndex = 0;
+			rowDistribution.forEach(countInRow => {
+				htmlContent += `<div class="grid-row">`;
+				for (let i = 0; i < countInRow; i++) {
+					const item = itemsToRender[currentIndex];
+					if (item) {
+						htmlContent += `<div class="card-col">`;
+						if (item.picUrl) {
+							htmlContent += `<div class="stack-img-container">`;
+							for (let c = 0; c < item.count; c++) {
+								htmlContent += `<img class="stacked-card-img" style="z-index: ${item.count - c};" src="${item.picUrl}" alt="${item.name}" />`;
+							}
+							htmlContent += `</div>`;
+						} else {
+							htmlContent += `<div class="no-img-box">${item.name}<br>(No Image)</div>`;
+						}
+						htmlContent += `</div>`;
+					}
+					currentIndex++;
+				}
+				htmlContent += `</div>`;
+			});
+
+			htmlContent += `
+				</div>
+			</body>
+			</html>
+			`;
+
+			const newWindow = window.open('', '_blank');
+			if (newWindow) {
+				newWindow.document.write(htmlContent);
+				newWindow.document.close();
+			} else {
+				alert("瀏覽器阻擋了彈出式分頁，請允許本站開啟彈出視窗。");
+			}
+		}
+
+		// 5. 初始化 Modal 的三個按鈕點擊事件
+		document.addEventListener('DOMContentLoaded', () => {
+			// 關閉按鈕
+			document.getElementById('export-modal-close')?.addEventListener('click', closeExportModal);
+			document.getElementById('export-mode-modal')?.addEventListener('click', (e) => {
+				if (e.target.id === 'export-mode-modal') closeExportModal();
+			});
+
+			// 模式 1：僅匯出圖片
+			document.getElementById('btn-export-mode-1')?.addEventListener('click', () => {
+				closeExportModal();
+				renderImageOnlyExportTab();
+			});
+
+			// 模式 2：圖 + 效果
+			document.getElementById('btn-export-mode-2')?.addEventListener('click', () => {
+				closeExportModal();
+				// 呼叫原本包含圖片的標準匯出 (帶 true)
+				renderStandardExportTab(true);
+			});
+
+			// 模式 3：只要效果
+			document.getElementById('btn-export-mode-3')?.addEventListener('click', () => {
+				closeExportModal();
+				// 呼叫不包含圖片的純文字匯出 (帶 false)
+				renderStandardExportTab(false);
+			});
+		});
 
 
 		// ==========================================
