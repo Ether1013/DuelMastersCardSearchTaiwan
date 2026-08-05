@@ -14,11 +14,13 @@ from collections import OrderedDict
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import re
+from lzstring import LZString
 
 
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI()
+lz_compressor = LZString()
 
 # 自動讀取同目錄下的 .env 檔案
 load_dotenv()
@@ -49,6 +51,9 @@ categoryname_cache = []  # 分類名稱快取
 nickname_cache = []      # 暱稱快取
 diary_cache = []         # 💡 新增：日記快取
 setlist_cache = {}       # 新增：系列清單合併快取 (以 dict 儲存)
+
+class CustomDeckModel(BaseModel):
+    deck_list: str  # 接收解壓縮後的 4*卡名A,2*卡名B... 或直接傳密碼
 
 # 專門用來存放已計算好的 card_stats 結果
 card_stats_cache = {"powers": [], "costs": []}
@@ -675,4 +680,69 @@ def get_card_set_list(card_name: str):
         "tw": tw_sets,
         "non_tw": non_tw_sets,
         "net": net_sets
+    }
+    
+@app.post("/api/pop_custom")
+async def get_pop_custom_data(payload: CustomDeckModel):
+    compressed = payload.deck_list.strip()
+    if not compressed:
+        raise HTTPException(status_code=400, detail="密碼不可為空")
+
+    # 1. 嘗試 LZ 解壓縮
+    decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed)
+    if not decompressed:
+        decompressed = compressed
+
+    # 2. 解析 4*卡名A,2*卡名B 格式
+    raw_items = decompressed.split(',')
+    custom_card_list = []
+    
+    for item in raw_items:
+        item = item.strip()
+        if not item:
+            continue
+        if '*' in item:
+            parts = item.split('*', 1)
+            try:
+                count = int(parts[0])
+                cname = parts[1].strip()
+            except ValueError:
+                count = 1
+                cname = item
+        else:
+            count = 1
+            cname = item
+            
+        custom_card_list.append({
+            "name": cname,
+            "count": count
+        })
+
+    # 3. 從記憶體中的 carddata_cache 匹配完整卡片資料
+    order_map = {}
+    for index, item in enumerate(custom_card_list):
+        clean_name = str(item["name"]).strip()
+        if clean_name not in order_map:
+            order_map[clean_name] = index
+
+    matched_cards = []
+    for card in carddata_cache:
+        c_name = card.get("name")
+        if c_name and c_name.strip() in order_map:
+            matched_cards.append(card)
+
+    matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
+
+    # 4. 組合成與 /api/pop/{set_code} 相同的結構回傳
+    custom_set_info = {
+        "setcode": "NET-CUSTOM",
+        "setname": "自訂分享卡表",
+        "isdeck": True,
+        "istw": True,
+        "setcardlist": custom_card_list
+    }
+
+    return {
+        "set_info": custom_set_info,
+        "cards": matched_cards
     }

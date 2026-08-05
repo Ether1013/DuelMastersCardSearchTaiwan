@@ -204,6 +204,7 @@
 			}
 		}
     </style>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
 <body>
 
@@ -266,40 +267,54 @@
 		async function initPopPage() {
 			const urlParams = new URLSearchParams(window.location.search);
 			const setCode = urlParams.get('setCode');
+			const deckListParam = urlParams.get('deckList');
 
-			if (!setCode) {
+			if (!setCode && !deckListParam) {
 				document.getElementById('loading').style.display = 'none';
-				document.getElementById('page-title').innerText = "❌ 錯誤：未在 URL 中指定 setCode 參數！";
+				document.getElementById('page-title').innerText = "❌ 錯誤：未在 URL 中指定 setCode 或 deckList 參數！";
 				return;
 			}
 
 			try {
-				// 💡 併行讀取：專用商品卡片資料 + 類型與能力靜態檔 + 全域商品列表(作為備援)
-				const [popRes, ctData, abilData, setlistData] = await Promise.all([
-					fetch(`/api/pop/${encodeURIComponent(setCode)}`),
+				// 💡 1. 併行讀取：卡型態、能力與 Setlist 靜態檔 (不論哪種模式都需要)
+				const [ctData, abilData, setlistData] = await Promise.all([
 					fetch('/api/card_types').then(r => r.json()).catch(() => []),
 					fetch('/api/abilities').then(r => r.json()).catch(() => []),
 					fetch('/api/setlist').then(r => r.json()).catch(() => ({}))
 				]);
 
+				const rawCardTypes = ctData || [];
+				const rawAbilities = abilData || [];
+				const rawSetlist = setlistData || {};
+
+				// 💡 2. 判斷來源發送 pop API 請求
+				let popRes;
+				if (deckListParam) {
+					popRes = await fetch('/api/pop_custom', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ deck_list: deckListParam })
+					});
+				} else {
+					popRes = await fetch(`/api/pop/${encodeURIComponent(setCode)}`);
+				}
+
 				if (!popRes.ok) {
 					document.getElementById('loading').style.display = 'none';
-					document.getElementById('page-title').innerText = `❌ 錯誤：找不到代碼為「${setCode}」的商品資料！`;
+					document.getElementById('page-title').innerText = `❌ 錯誤：找不到代碼為「${setCode || '自訂'}」的商品資料！`;
 					return;
 				}
 
 				const { set_info: currentSetObj, cards: filteredCards } = await popRes.json();
-				const rawCardTypes = ctData || [];
-				const rawAbilities = abilData || [];
-				const rawSetlist = setlistData || {};
 
 				const getCardTypeText = (typeVal) => {
 					const match = rawCardTypes.find(ct => ct.value === typeVal);
 					return match ? match.text : typeVal;
 				};
 
-				const setName = currentSetObj.setname || currentSetObj.name || setCode;
-				document.getElementById('page-title').innerText = `${setCode} ${setName} - 卡表總覽`;
+				const displayTitleCode = currentSetObj.setcode || setCode || '自訂牌組';
+				const setName = currentSetObj.setname || currentSetObj.name || displayTitleCode;
+				document.getElementById('page-title').innerText = `${displayTitleCode} ${setName} - 卡表總覽`;
 
 				const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
 				if (!Array.isArray(setCardList) || setCardList.length === 0) {
@@ -315,7 +330,7 @@
 
 				const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
 
-				// 💡 對過濾好的 filteredCards 進行渲染
+				// 💡 對過濾好的 filteredCards 進行渲染 (保留原本的所有渲染邏輯)
 				filteredCards.forEach((card, idx) => {
 					const cleanName = card.name || '未命名卡牌';
 					let picUrl = '';
@@ -426,21 +441,17 @@
 						card.wdata.forEach(w => {
 							htmlContent += `<div class="wdata-box">`;
 							
-							// 💡 動態收集存在且有效的屬性欄位
 							const metaFields = [];
 
-							// 1. 卡種
 							if (w.type && Array.isArray(w.type) && w.type.length > 0) {
 								const typeText = w.type.map(t => getCardTypeText(t)).join(', ');
 								metaFields.push(`<b>卡種:</b> ${typeText}`);
 							}
 
-							// 2. 費用
 							if (w.cost !== undefined && w.cost !== null) {
 								metaFields.push(`<b>費用:</b> ${formatDisplayValue(w.cost)}`);
 							}
 
-							// 3. 攻擊力 (需處理 Hypermode)
 							let powerText = '';
 							if (w.power !== undefined && w.power !== null) {
 								powerText = formatDisplayValue(w.power);
@@ -453,12 +464,10 @@
 								metaFields.push(`<b>攻擊力:</b> ${powerText}`);
 							}
 
-							// 4. 種族
 							if (w.race && Array.isArray(w.race) && w.race.length > 0) {
 								metaFields.push(`<b>種族:</b> ${w.race.join(', ')}`);
 							}
 
-							// 💡 只有在至少有一個屬性存在時，才印出這個 <div> 欄位
 							if (metaFields.length > 0) {
 								htmlContent += `<div>${metaFields.join(' | ')}</div>`;
 							}
@@ -529,7 +538,7 @@
 						htmlContent += `</div>`;
 					}
 
-					htmlContent += `</div></div>`; // 關閉 .card-detail 與 .card-item
+					htmlContent += `</div></div>`;
 				});
 
 				container.innerHTML = htmlContent;

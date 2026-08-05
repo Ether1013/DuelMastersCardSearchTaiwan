@@ -1314,6 +1314,7 @@
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
 <body>
 
@@ -1623,6 +1624,12 @@
 					<label>歷史：</label>
 					<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
 				</div>
+				<!-- 新增手動匯入與分享連結按鈕 -->
+				<div class="drawer-row">
+					<label>自訂：</label>
+					<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
+					<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 取得連結</button>
+				</div>
 			</div>
 		</div>
 
@@ -1636,7 +1643,7 @@
 		<div class="split-layout-container">
 			<!-- 左邊列表區域 -->
 			<div class="split-left-panel">
-				<!-- 抽屜工具列 (Page 3 專用 ID) -->
+				<!-- Page 3 抽屜工具列 (#drawer-tab3) -->
 				<div class="drawer-container" id="drawer-tab3">
 					<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
 						<span>⚙️ 排序與列表匯出工具</span>
@@ -1662,10 +1669,16 @@
 							<label>匯出：</label>
 							<button type="button" class="btn-drawer-action btn-export-action">📄 匯出文字與圖片至新分頁</button>
 						</div>
-						<!-- 抽屜區塊內新增第 3 行按鈕 -->
+						<!-- 3. 歷史區塊 -->
 						<div class="drawer-row">
 							<label>歷史：</label>
 							<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+						</div>
+						<!-- 💡 4. 新增：Page 3 的自訂按鈕區塊 -->
+						<div class="drawer-row">
+							<label>自訂：</label>
+							<button type="button" class="btn-drawer-action btn-open-deck-import-action">📥 手動匯入卡表</button>
+							<button type="button" class="btn-drawer-action btn-share-deck-link-action" style="background: #16a34a;">🔗 取得連結</button>
 						</div>
 					</div>
 				</div>
@@ -1797,6 +1810,37 @@
 			</div>
 		</div>
 	</div>
+	
+	<!-- 手動匯入牌組 Modal -->
+	<div class="modal-overlay" id="deck-import-modal">
+		<div class="modal-card" style="max-width: 600px;">
+			<div class="modal-header">
+				<div class="modal-title">📥 手動匯入自訂牌組</div>
+				<div class="modal-close" id="deck-import-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" style="padding: 16px; gap: 12px;">
+				<!-- 階段一：文字輸入框 -->
+				<div id="deck-input-step">
+					<p style="font-size: 13px; color: #64748b; margin-top: 0;">
+						請在下方貼上卡牌列表，支援多種輸入方式（如：<code>A</code>, <code>3*B</code>, <code>4 C</code>, <code>E,E,F</code>）
+					</p>
+					<textarea id="deck-textarea" rows="8" style="width:100%; font-size:14px; padding:8px; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:6px;" placeholder="例如：&#10;4*フェアリー・ライフ&#10;2x 斬隠蒼頭龍バイケン&#10;ボルメテウス・サファイア・ドラゴン"></textarea>
+					<button type="button" id="btn-parse-deck" style="width:100%; margin-top:10px; padding:10px; background:#0284c7; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">🔍 開始解析與模糊比對</button>
+				</div>
+
+				<!-- 階段二：比對結果與二次 UI 校正清單 -->
+				<div id="deck-verify-step" style="display:none;">
+					<div id="deck-verify-summary" style="font-size:14px; font-weight:bold; margin-bottom:8px; color:#334155;"></div>
+					<div id="deck-verify-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 8px;"></div>
+					
+					<div style="display:flex; gap:8px; margin-top:12px;">
+						<button type="button" id="btn-re-edit-deck" style="flex:1; padding:8px; background:#94a3b8; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">← 返回修改</button>
+						<button type="button" id="btn-confirm-deck-import" disabled style="flex:2; padding:8px; background:#16a34a; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; opacity:0.5;">✅ 確認匯入牌組 (需全數通過)</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
     <!-- ================= JavaScript 邏輯 ================= -->
     <script>
@@ -1812,6 +1856,11 @@
 		// 全域快取當前過濾後的原始結果
 		let currentFilterResults = [];
 		const specialIcons = ["✪", "⌂", "✚", "✡"];
+		// ==========================================
+		// 1. LocalStorage 自訂牌組管理（含 7 天未選用自動清理機制）
+		// ==========================================
+		const CUSTOM_DECKS_STORAGE_KEY = 'dm_custom_decks';
+		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
 		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
@@ -2381,16 +2430,19 @@
 				rawSetlist = setlistData || {};
 				rawDiary = diaryData || [];
 
+				// 💡 修正 1：資料載入後，先將 localStorage 內的自訂套牌載入 rawSetlist 中
+				loadCustomDecksIntoSetlist();
+
 				initDiaryUI();
 
 				console.log(`載入完成: 卡牌 ${globalCardData.length} 筆, 分類 ${rawCategoryNames.length} 筆, 暱稱 ${rawNicknames.length} 筆, 系列 ${Object.keys(rawSetlist).length} 筆`);
 
 				sortCardTypes(); 
 				renderCardTypes();
-				initQuickCardTypes(); // 👈 補上這一行！
-				initQuickSetCodeButtons(); // 👈 補上這一行！動態生成商品代碼按鈕
+				initQuickCardTypes();
+				initQuickSetCodeButtons();
 				initDropdownData();
-				initSeriesDropdown();
+				initSeriesDropdown(); // 💡 繪製選單時就能一併渲染自訂套牌
 				renderLatestSetButtons();
 				initStatsSelects(statsData);
 
@@ -2403,13 +2455,14 @@
 				if (!rawRaces.length) rawRaces = [{ jap: 'Armored Dragon', pop: true }];
 				if (!rawAbilities.length) rawAbilities = [{ jap: 'Speed Attacker', pop: true }];
 				
+				loadCustomDecksIntoSetlist(); // 備援載入自訂套牌
 				sortCardTypes();
 				renderCardTypes();
 				initDropdownData();
+				initSeriesDropdown();
 				initStatsSelects(null);
 				initDiaryUI();
 			} finally {
-				// 💡 關鍵保險：資料初始化完畢後，一律強制關閉全螢幕遮罩
 				hideInitialLoading();
 			}
 		}
@@ -3053,7 +3106,7 @@
 				isDeckSet = (currentSetObj.isdeck === true);
 			}
 
-			// 3. 建立 Card List Item 生成輔助函式（整合文明背景與商品顯示名稱）
+			// 3. 建立 Card List Item 生成輔助函式（統一 DOM 結構）
 			function createCardListItem(card) {
 				let combinedCiv = 0;
 				if (card.wdata && Array.isArray(card.wdata)) {
@@ -3065,8 +3118,8 @@
 				itemDiv.style.background = getCivBackground(combinedCiv);
 				
 				const cleanName = cleanCardName(card.name);
-				let displayName = cleanName;
 				let matchedItem = null;
+				let prefixHtml = ''; // 存放 ID 或 張數 的 HTML
 
 				if (currentSetObj) {
 					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
@@ -3083,21 +3136,26 @@
 						if (isDeckSet) {
 							if (matchedItem.count !== undefined) {
 								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-								displayName = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>${cleanName}`;
+								prefixHtml = `<span class="card-name-count" style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>`;
 							}
 						} else {
 							const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
 							if (firstId) {
 								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-								// 💡 使用 formatDmId 自動處理前綴
 								const displayId = formatDmId(firstId);
-								displayName = `<span style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">${displayId}</span><span>${cleanName}</span>`;
+								prefixHtml = `<span class="card-name-id" style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">${displayId}</span>`;
 							}
 						}
 					}
 				}
 
-				itemDiv.innerHTML = `<div class="card-name">${displayName}</div>`;
+				// 💡 關鍵：統一包裹卡名於 <span class="card-name-text">
+				itemDiv.innerHTML = `
+					<div class="card-name">
+						${prefixHtml}
+						<span class="card-name-text">${cleanName}</span>
+					</div>
+				`;
 
 				return { itemDiv, combinedCiv, matchedItem };
 			}
@@ -6845,6 +6903,79 @@
 			return resultJsonString;
 		};
 		
+		/**
+		 * 🧹 Console 開發者隱藏工具：清除所有 LocalStorage 自訂商品卡表與選單，並清空目前瀏覽中的視圖
+		 * 使用方式：在 Console 輸入 clearCustomDecks() 即可執行
+		 */
+		window.clearCustomDecks = function() {
+			console.group('🧹 [隱藏方法] 正在清除 NET-900 起的自訂商品卡表與視圖...');
+
+			// 1. 取得目前選取的商品代碼
+			const smallSelect = document.getElementById('series-small');
+			const currentSelectedValue = smallSelect ? smallSelect.value : '';
+			
+			// 💡 僅判定是否為 NET-900 起的自訂商品 (例如 NET-900, NET-901...)
+			const isCustomNetDeck = currentSelectedValue && /^NET-9\d{2,}$/.test(currentSelectedValue);
+
+			// 2. 清除 LocalStorage 紀錄
+			localStorage.removeItem(CUSTOM_DECKS_STORAGE_KEY);
+			console.log('✅ 已清除 LocalStorage 中的自訂卡表資料。');
+
+			// 3. 僅從全域 rawSetlist 中移除 NET-900 起的自訂牌組
+			let removedCount = 0;
+			Object.keys(rawSetlist).forEach(key => {
+				if (/^NET-9\d{2,}$/.test(key)) {
+					delete rawSetlist[key];
+					removedCount++;
+				}
+			});
+			console.log(`✅ 已從記憶體中移除 ${removedCount} 個 NET-900 起的自訂套牌項目。`);
+
+			// 4. 重新繪製商品下拉選單
+			if (typeof initSeriesDropdown === 'function') {
+				initSeriesDropdown();
+				console.log('✅ 已重新繪製商品下拉選單。');
+			}
+
+			// 5. 觸發 Footer 條件摘要更新
+			if (typeof updateSummaryText === 'function') {
+				updateSummaryText();
+			}
+
+			// 6. 如果使用者目前正在瀏覽 NET-900 起的自訂牌組，立即清空 Page 2 與 Page 3 的渲染結果
+			if (isCustomNetDeck) {
+				// 重置全域結果快取
+				currentFilterResults = [];
+
+				// 清空 Page 2 列表
+				const listContainerPage2 = document.getElementById('list-container');
+				if (listContainerPage2) {
+					listContainerPage2.innerHTML = '<div class="empty-state">尚無資料</div>';
+				}
+
+				// 清空 Page 3 雙欄列表與右側面板
+				const listContainerPage3 = document.getElementById('list-container-split');
+				if (listContainerPage3) {
+					listContainerPage3.innerHTML = '<div class="empty-state">尚無資料</div>';
+				}
+
+				const rightPanelPage3 = document.getElementById('detail-panel-split');
+				if (rightPanelPage3) {
+					rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
+				}
+
+				console.log('✅ 使用者正在瀏覽 NET-900 起的自訂卡表，已將 Page 2 與 Page 3 內容清空。');
+			}
+
+			console.groupEnd();
+
+			if (typeof showToast === 'function') {
+				showToast('✅ 已成功清除 NET-900 起的自訂商品卡表並刷新選單！');
+			} else {
+				alert('✅ 已成功清除 NET-900 起的自訂商品卡表並刷新選單！');
+			}
+		};
+		
 		// 💡 分享卡牌連結輔助函式（支援動態抓取當前切換後版本的 ID）
 		async function handleShareCard(card, matchedItem, currentVerIdx = 0) {
 			let paramVal = '';
@@ -6898,6 +7029,439 @@
 				}
 			}
 		}
+		
+		// 取得並整理所有未過期的自訂牌組
+		function getValidCustomDecks() {
+			const rawData = localStorage.getItem(CUSTOM_DECKS_STORAGE_KEY);
+			if (!rawData) return {};
+
+			let decks = {};
+			try { decks = JSON.parse(rawData); } catch(e) { return {}; }
+
+			const now = Date.now();
+			let isChanged = false;
+
+			// 檢查生命週期：超過 1 週未選用則移除
+			Object.keys(decks).forEach(key => {
+				const deck = decks[key];
+				const lastUsed = deck.lastUsed || deck.createdTime || now;
+				if (now - lastUsed > SEVEN_DAYS_MS) {
+					delete decks[key];
+					isChanged = true;
+					console.log(`🧹 已自動清理 7 天未選用的自訂卡表: ${key}`);
+				}
+			});
+
+			if (isChanged) {
+				localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(decks));
+			}
+
+			return decks;
+		}
+
+		// 網頁初始化時，將有效的自訂牌組放進 rawSetlist 地圖
+		function loadCustomDecksIntoSetlist() {
+			const customDecks = getValidCustomDecks();
+			Object.assign(rawSetlist, customDecks);
+		}
+
+		// 在選擇下拉選單 (series-small) 時更新最後使用時間 (lastUsed)
+		document.getElementById('series-small')?.addEventListener('change', (e) => {
+			const selectedKey = e.target.value;
+			if (selectedKey && selectedKey.startsWith('NET-')) {
+				const customDecks = getValidCustomDecks();
+				if (customDecks[selectedKey]) {
+					customDecks[selectedKey].lastUsed = Date.now();
+					localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(customDecks));
+					console.log(`⏱️ 已更新自訂卡表 ${selectedKey} 的最後選用時間`);
+				}
+			}
+		});
+
+		// 產生下一個 NET-900 系列流水號
+		function getNextNetCode() {
+			const customDecks = getValidCustomDecks();
+			let maxNum = 899;
+			Object.keys(customDecks).forEach(key => {
+				const match = key.match(/^NET-(\d+)$/);
+				if (match) {
+					const num = parseInt(match[1]);
+					if (num > maxNum) maxNum = num;
+				}
+			});
+			return `NET-${maxNum + 1}`;
+		}
+
+
+		// ==========================================
+		// 2. 寬容模糊比對與候選演算法
+		// ==========================================
+		function normalizeForMatch(str) {
+			if (!str) return '';
+			return str
+				.replace(/（.*?）|\(.*?\)/g, '') // 移除括號
+				.replace(/[\s\t\n\r\u3000]/g, '') // 移除全半形空白
+				.replace(/[「」『』""''・／\/\\\-_~〜!！?？《》]/g, '') // 移除標點
+				.toLowerCase();
+		}
+
+		// 找尋相似候選卡牌 (前 5 名)
+		function findCandidateCards(inputName) {
+			const normInput = normalizeForMatch(inputName);
+			if (!normInput || !globalCardData) return [];
+
+			const candidates = [];
+
+			globalCardData.forEach(card => {
+				const cName = card.name || '';
+				const normCard = normalizeForMatch(cName);
+
+				// 包含比對/子字串命中得分最高
+				if (normCard === normInput) {
+					candidates.push({ card: cName, score: 100 });
+				} else if (normCard.includes(normInput) || normInput.includes(normCard)) {
+					candidates.push({ card: cName, score: 80 });
+				} else {
+					// 簡易相似字元比例比對
+					let matchChars = 0;
+					for (let ch of normInput) {
+						if (normCard.includes(ch)) matchChars++;
+					}
+					const score = (matchChars / Math.max(normInput.length, normCard.length)) * 60;
+					if (score > 25) {
+						candidates.push({ card: cName, score });
+					}
+				}
+			});
+
+			candidates.sort((a, b) => b.score - a.score);
+			// 回傳卡名去重後的前 5 個候選
+			return Array.from(new Set(candidates.map(c => c.card))).slice(0, 5);
+		}
+
+
+		// ==========================================
+		// 3. Textarea 自由輸入解析與 UI 校正
+		// ==========================================
+		let parsedVerifyItems = []; // 暫存待校正的牌組項目 [{ rawName, count, matchedName }]
+
+		function parseDeckText(text) {
+			const lines = text.split(/[\n,，]/).map(l => l.trim()).filter(Boolean);
+			const resultMap = new Map(); // 卡名 -> 張數
+
+			lines.forEach(line => {
+				let count = 1;
+				let cname = line;
+
+				// 正則模式 A: 開頭帶數字 3*B, 4 C, 5 X D
+				const matchStart = line.match(/^\s*(\d+)\s*[*xX×\s]+\s*(.+)$/);
+				// 正則模式 B: 尾端帶數字 B *3, C 4
+				const matchEnd = line.match(/^\s*(.+?)\s*[*xX×\s]+\s*(\d+)\s*$/);
+
+				if (matchStart) {
+					count = parseInt(matchStart[1]);
+					cname = matchStart[2].trim();
+				} else if (matchEnd) {
+					count = parseInt(matchEnd[2]);
+					cname = matchEnd[1].trim();
+				}
+
+				if (cname) {
+					resultMap.set(cname, (resultMap.get(cname) || 0) + count);
+				}
+			});
+
+			return Array.from(resultMap.entries()).map(([rawName, count]) => ({ rawName, count }));
+		}
+
+		// 點擊「解析與模糊比對」
+		document.getElementById('btn-parse-deck')?.addEventListener('click', () => {
+			const text = document.getElementById('deck-textarea').value.trim();
+			if (!text) { alert("請貼上卡牌文字！"); return; }
+
+			const rawList = parseDeckText(text);
+			parsedVerifyItems = [];
+
+			rawList.forEach(item => {
+				const candidates = findCandidateCards(item.rawName);
+				const normInput = normalizeForMatch(item.rawName);
+				
+				// 判斷是否 100% 完全相同
+				const exactMatch = candidates.find(c => normalizeForMatch(c) === normInput);
+
+				parsedVerifyItems.push({
+					rawName: item.rawName,
+					count: item.count,
+					matchedName: exactMatch || (candidates.length > 0 ? candidates[0] : '__NOT_FOUND__'),
+					candidates: candidates,
+					isExact: Boolean(exactMatch)
+				});
+			});
+
+			renderVerifyListUI();
+			document.getElementById('deck-input-step').style.display = 'none';
+			document.getElementById('deck-verify-step').style.display = 'block';
+		});
+
+		// 渲染校正 UI 列表
+		function renderVerifyListUI() {
+			const container = document.getElementById('deck-verify-list');
+			const summary = document.getElementById('deck-verify-summary');
+			const btnConfirm = document.getElementById('btn-confirm-deck-import');
+
+			container.innerHTML = '';
+			let notFoundCount = 0;
+
+			parsedVerifyItems.forEach((item, idx) => {
+				const row = document.createElement('div');
+				row.style.cssText = "display:flex; align-items:center; gap:8px; padding:6px; background:#f8fafc; border-radius:4px; font-size:13px;";
+
+				const info = document.createElement('div');
+				info.style.flex = "1";
+				info.innerHTML = `<b>${item.count}ⅹ</b> <span style="color:#64748b;">${item.rawName}</span>`;
+
+				const select = document.createElement('select');
+				select.style.cssText = "flex:2; padding:4px; font-size:13px; margin-bottom:0;";
+
+				let selectHtml = `<option value="__NOT_FOUND__" style="color:#ef4444;">❌ [未找到對應卡牌]</option>`;
+				
+				item.candidates.forEach(cand => {
+					const selectedAttr = (cand === item.matchedName) ? 'selected' : '';
+					selectHtml += `<option value="${cand}" ${selectedAttr}>✅ ${cand}</option>`;
+				});
+
+				select.innerHTML = selectHtml;
+
+				select.addEventListener('change', (e) => {
+					parsedVerifyItems[idx].matchedName = e.target.value;
+					checkVerifyStatus();
+				});
+
+				if (parsedVerifyItems[idx].matchedName === '__NOT_FOUND__') {
+					notFoundCount++;
+				}
+
+				row.appendChild(info);
+				row.appendChild(select);
+				container.appendChild(row);
+			});
+
+			checkVerifyStatus();
+		}
+
+		// 檢查是否所有項目皆有對應卡牌
+		function checkVerifyStatus() {
+			const summary = document.getElementById('deck-verify-summary');
+			const btnConfirm = document.getElementById('btn-confirm-deck-import');
+
+			const notFoundCount = parsedVerifyItems.filter(i => i.matchedName === '__NOT_FOUND__').length;
+			const totalItems = parsedVerifyItems.length;
+
+			if (notFoundCount > 0) {
+				summary.innerHTML = `<span style="color:#ef4444;">⚠️ 共 ${totalItems} 項，尚有 ${notFoundCount} 項「未找到」</span>`;
+				btnConfirm.disabled = true;
+				btnConfirm.style.opacity = '0.5';
+			} else {
+				summary.innerHTML = `<span style="color:#16a34a;">✅ 全數匹配成功 (${totalItems} 項)！可以匯入。</span>`;
+				btnConfirm.disabled = false;
+				btnConfirm.style.opacity = '1';
+			}
+		}
+
+		// 返回修改
+		document.getElementById('btn-re-edit-deck')?.addEventListener('click', () => {
+			document.getElementById('deck-input-step').style.display = 'block';
+			document.getElementById('deck-verify-step').style.display = 'none';
+		});
+
+		// 確認匯入牌組
+		document.getElementById('btn-confirm-deck-import')?.addEventListener('click', () => {
+			const newCode = getNextNetCode();
+			const now = Date.now();
+
+			const setCardList = parsedVerifyItems.map(item => ({
+				name: item.matchedName,
+				count: item.count
+			}));
+
+			const newSetObj = {
+				setcode: newCode,
+				setname: `自訂套牌 (${newCode})`,
+				isdeck: true,
+				istw: true,
+				createdTime: now,
+				lastUsed: now,
+				setcardlist: setCardList
+			};
+
+			// 寫入 LocalStorage
+			const customDecks = getValidCustomDecks();
+			customDecks[newCode] = newSetObj;
+			localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(customDecks));
+
+			// 合併至 rawSetlist
+			rawSetlist[newCode] = newSetObj;
+			initSeriesDropdown();
+
+			// 關閉 Modal 並自動切換至該商品
+			document.getElementById('deck-import-modal').classList.remove('active');
+			
+			const bigSelect = document.getElementById('series-big');
+			const smallSelect = document.getElementById('series-small');
+			if (bigSelect && smallSelect) {
+				bigSelect.value = "";
+				bigSelect.dispatchEvent(new Event('change'));
+				smallSelect.value = newCode;
+			}
+
+			document.getElementById('btn-search')?.click();
+			showToast(`✅ 牌組 ${newCode} 匯入成功！`);
+		});
+
+		// 彈窗開關綁定 (同時支援 Page 2 ID 與兩頁共通 Class)
+		document.querySelectorAll('#btn-open-deck-import, .btn-open-deck-import-action').forEach(btn => {
+			btn.addEventListener('click', () => {
+				closeAllDrawers(); // 💡 點擊後收合抽屜
+				document.getElementById('deck-input-step').style.display = 'block';
+				document.getElementById('deck-verify-step').style.display = 'none';
+				document.getElementById('deck-textarea').value = '';
+				document.getElementById('deck-import-modal').classList.add('active');
+			});
+		});
+
+		document.getElementById('deck-import-modal-close')?.addEventListener('click', () => {
+			document.getElementById('deck-import-modal').classList.remove('active');
+		});
+
+
+		// ==========================================
+		// 4. 分享連結功能 (取得連結) - 同時綁定 Page 2 與 Page 3
+		// ==========================================
+		document.querySelectorAll('#btn-share-deck-link, .btn-share-deck-link-action').forEach(btn => {
+			btn.addEventListener('click', async () => {
+				closeAllDrawers(); // 💡 點擊後收合抽屜
+				const filterConfig = getFilterConfigFromUI();
+				const selectedSetKey = filterConfig.seriesSmall;
+
+				let shareUrl = '';
+				let isOriginalSetList = false;
+
+				console.group('🔍 [分享連結] 檢查商品卡表比對狀態');
+				console.log('目前選取的商品代碼 (selectedSetKey):', selectedSetKey);
+
+				// 💡 1. 檢查是否有選擇商品，且該商品不是 NET-900 起的自訂牌組
+				const isCustomNetDeck = selectedSetKey && /^NET-9\d{2,}$/.test(selectedSetKey);
+
+				if (isCustomNetDeck) {
+					console.log('⚠️ 判定為 NET-900 起的自訂牌組，直接匯出 deckList。');
+				} else if (!selectedSetKey) {
+					console.log('⚠️ 未選取任何商品，直接匯出 deckList。');
+				} else if (!rawSetlist[selectedSetKey]) {
+					console.log(`⚠️ rawSetlist 找不到商品資料 key: "${selectedSetKey}"，直接匯出 deckList。`);
+				} else {
+					const currentSetObj = rawSetlist[selectedSetKey];
+					const rawCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+
+					// 自動判斷目前處於 Page 2 還是 Page 3，並抓取對應頁面的卡片 DOM 列表
+					const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
+					const containerId = isSplitActive ? 'list-container-split' : 'list-container';
+					const domItems = Array.from(document.querySelectorAll(`#${containerId} .card-list-item`));
+
+					console.log(`DOM 渲染數量: ${domItems.length} 張 | 原始商品資料數量: ${rawCardList.length} 張 (模式: ${isSplitActive ? '雙欄' : '單欄'})`);
+
+					// 💡 2. 比對 DOM 個數與商品原始卡牌數量是否一致
+					if (domItems.length !== rawCardList.length) {
+						console.warn(`❌ [不符合] 數量不一致：DOM 為 ${domItems.length} 張，但原始商品為 ${rawCardList.length} 張。`);
+					} else {
+						console.log('✅ 數量一致，開始從 .card-name-text 萃取純卡名進行逐筆比對...');
+
+						// 逐一比對每個位置的卡名與順序
+						isOriginalSetList = domItems.every((item, idx) => {
+							const rawItem = rawCardList[idx];
+							const rawName = (typeof rawItem === 'object' && rawItem !== null) ? rawItem.name : rawItem;
+
+							// 結構統一後，直接從 .card-name-text 取純卡名
+							const cardNameTextEl = item.querySelector('.card-name-text');
+							const domCardName = cardNameTextEl ? cardNameTextEl.innerText.trim() : '';
+
+							const cleanDomName = cleanCardName(domCardName);
+							const cleanRawName = cleanCardName(rawName);
+
+							if (cleanDomName !== cleanRawName) {
+								console.warn(`❌ [不符合] 第 ${idx + 1} 項卡名不匹配：\n   - DOM 卡名: "${cleanDomName}"\n   - 原始卡名: "${cleanRawName}"`);
+								return false;
+							}
+
+							return true;
+						});
+
+						if (isOriginalSetList) {
+							console.log('🎉 [完全符合] DOM 純卡名與商品原始資料完全一致，將產生 setCode 連結！');
+						}
+					}
+				}
+
+				console.groupEnd();
+
+				// 💡 3. 根據比對結果決定輸出 setCode 還是 deckList
+				if (isOriginalSetList) {
+					// 未經過任何條件過濾與排序變動的原始商品卡表 ➔ 產生 setCode
+					shareUrl = `${window.location.origin}/pop.html?setCode=${encodeURIComponent(selectedSetKey)}`;
+				} else {
+					// 有經過條件過濾、排序變動、或未選商品/選 NET-900 起自訂套牌 ➔ 匯出卡牌名稱列表 (deckList)
+					if (!currentFilterResults || currentFilterResults.length === 0) {
+						alert("目前搜尋結果為空，無法產生分享連結！");
+						return;
+					}
+
+					const sortedResults = getSortedResults(currentFilterResults);
+					const currentSetObj = selectedSetKey ? rawSetlist[selectedSetKey] : null;
+
+					// 計算張數
+					const cardCountMap = new Map();
+					sortedResults.forEach(card => {
+						const cleanName = cleanCardName(card.name);
+						let count = 1;
+
+						if (currentSetObj) {
+							const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+							const matchedItem = cardList.find(item => {
+								const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+								return typeof itemName === 'string' && itemName.trim() === (card.name || '').trim();
+							});
+							if (matchedItem && matchedItem.count) {
+								count = Number(matchedItem.count);
+							}
+						}
+						cardCountMap.set(cleanName, (cardCountMap.get(cleanName) || 0) + count);
+					});
+
+					// 轉為 4*卡名,2*卡名 格式並進行 LZ 壓縮
+					const rawStr = Array.from(cardCountMap.entries())
+						.map(([name, count]) => `${count}*${name}`)
+						.join(',');
+
+					const compressed = LZString.compressToEncodedURIComponent(rawStr);
+					shareUrl = `${window.location.origin}/pop.html?deckList=${compressed}`;
+				}
+
+				// 💡 4. 執行分享或複製網址
+				const isMobile = window.innerWidth <= 768 || (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
+
+				if (isMobile && navigator.share) {
+					try {
+						await navigator.share({
+							title: `卡表分享`,
+							url: shareUrl
+						});
+					} catch (err) {
+						if (err.name !== 'AbortError') copyTextToClipboard(shareUrl);
+					}
+				} else {
+					copyTextToClipboard(shareUrl);
+				}
+			});
+		});
 
 		function showAbilityTipsAlert() {
 			const tipsText = 
