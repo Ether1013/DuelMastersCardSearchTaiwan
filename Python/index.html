@@ -7305,8 +7305,50 @@
 
 			// 關閉匯入 Modal 彈窗 (維持 Modal 關閉)
 			document.getElementById('deck-import-modal').classList.remove('active');
-			
-			// 自動切換下拉選單至剛匯入的自訂牌組
+
+			// 💡 關鍵修正：將「商品以外」的所有過濾條件重置/初始化
+			// A. 重置卡種（全不選）
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
+			checkAllStatus();
+
+			// B. 重置雙極卡
+			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
+			document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
+
+			// C. 重置文明（許可文明全選、必須文明清空）
+			document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
+			document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
+			document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
+
+			// D. 重置費用、攻擊力與文字輸入框 (卡名、能力自由輸入等)
+			document.querySelectorAll('select:not(#series-big):not(#series-small)').forEach(sel => sel.value = "");
+			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+
+			// E. 清空動態種族與能力區塊
+			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
+				btn.classList.remove('active');
+				btn.dataset.native = 'false';
+			});
+
+			// F. 重置種族邏輯按鈕
+			document.querySelectorAll('.btn-race-logic').forEach(btn => {
+				if (btn.dataset.logic === 'AND') btn.classList.add('active');
+				else btn.classList.remove('active');
+			});
+
+			// G. 關閉進階模式
+			document.body.classList.remove('advanced-mode');
+			const btnAdvanced = document.getElementById('toggle-advanced');
+			if (btnAdvanced) btnAdvanced.innerHTML = '進階<br>選項';
+
+			// H. 清除快速計算機的標籤與緩衝區 (若有)
+			if (typeof clearQuickSearch === 'function') {
+				clearQuickSearch();
+			}
+
+			// 🎯 自動切換下拉選單至剛匯入的自訂牌組
 			const bigSelect = document.getElementById('series-big');
 			const smallSelect = document.getElementById('series-small');
 			if (bigSelect && smallSelect) {
@@ -7315,9 +7357,13 @@
 				smallSelect.value = newCode;
 			}
 
-			// 💡 關鍵修正：確保 Page 2 & Page 3 的功能抽屜維持展開 (.open) 狀態
+			// 更新 Z 區條件摘要
+			if (typeof updateSummaryText === 'function') {
+				updateSummaryText();
+			}
+
+			// 💡 確保 Page 2 & Page 3 的功能抽屜維持展開 (.open) 狀態
 			document.querySelectorAll('.drawer-container').forEach(drawer => {
-				// 排除快速計算機面板，僅將 Page 2/3 的工具抽屜打開
 				if (drawer.id === 'drawer-tab2' || drawer.id === 'drawer-tab3') {
 					drawer.classList.add('open');
 					const arrow = drawer.querySelector('.drawer-arrow');
