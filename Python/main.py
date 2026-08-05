@@ -502,7 +502,7 @@ def format_card_wdata_types(card_dict):
 
     return card_copy
     
-# 2. Card 頁面專用 API (統一使用相同的 setdata 搜尋邏輯)
+# 2. Card 頁面專用 API (當 p=卡名 時不主動指定 ID)
 @app.get("/api/card_detail")
 @limiter.limit("6/minute")
 async def get_card_detail(request: Request, p: str = Query(..., description="卡牌名稱或ID/卡號")):
@@ -549,51 +549,44 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                     target_card_name = real_name
                     break
 
-    # 若以卡名找到卡片，為其尋找對應的 setdata 與版本索引 (matched_index)
+    # 🎯 當以卡名找到時：不上鎖任何特定商品 ID
     if matched_card and target_card_name:
-        matched_setdata = None
-        matched_id_val = ""
-        matched_index = 0
+        import copy
+        card_to_return = copy.deepcopy(matched_card)
 
-        for set_code, set_info in setlist_cache.items():
-            card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
-            name_occurrence_counter = {}
-
-            for item in card_list:
-                if isinstance(item, dict):
-                    item_name = item.get("name", "").strip()
-                    current_occ = name_occurrence_counter.get(item_name, 0)
-
-                    if item_name == target_card_name:
-                        matched_setdata = set_info
-                        matched_index = current_occ
-                        if "id" in item:
-                            ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
-                            matched_id_val = ids[0] if ids else ""
-                        break
-
-                    ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
-                    name_occurrence_counter[item_name] = current_occ + ids_count
-
-                if matched_setdata:
+        # 💡 若卡片本尊 pic 為空，向其他商品「借用」圖片
+        if not card_to_return.get("pic"):
+            borrowed_pic = ""
+            for set_info in setlist_cache.values():
+                card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+                for item in card_list:
+                    if isinstance(item, dict) and item.get("name", "").strip() == target_card_name:
+                        pics = item.get("pic")
+                        if isinstance(pics, list) and len(pics) > 0 and pics[0]:
+                            borrowed_pic = pics[0]
+                            break
+                        elif isinstance(pics, str) and pics:
+                            borrowed_pic = pics
+                            break
+                if borrowed_pic:
                     break
-            if matched_setdata:
-                break
+            if borrowed_pic:
+                card_to_return["pic"] = borrowed_pic
 
-        processed_card = format_card_wdata_types(matched_card)
+        processed_card = format_card_wdata_types(card_to_return)
         return {
             "found_by": "name",
             "card": processed_card,
-            "setdata": matched_setdata,
-            "matched_id": matched_id_val,
-            "matched_index": matched_index,
+            "setdata": None,        # 不指定任何特定商品
+            "matched_id": "",       # 不載入任何 ID
+            "matched_index": 0,
             "set_list": get_card_set_list(target_card_name),
             "races": races_cache,
             "abilities": abilities_cache
         }
 
     # ----------------------------------------------------
-    # 邏輯 B：若卡名找不到，嘗試以「ID / 卡號」搜尋 setlist
+    # 邏輯 B：若卡名找不到，才以「ID / 卡號」搜尋特定商品版本
     # ----------------------------------------------------
     matched_setdata = None
     target_card_name = None
@@ -602,8 +595,6 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
 
     for set_code, set_info in setlist_cache.items():
         card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
-        
-        # 用來記錄當前 set 中每一種卡名出現的次數 (Occurrences)
         name_occurrence_counter = {}
 
         for item in card_list:
@@ -618,8 +609,6 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                             matched_setdata = set_info
                             target_card_name = item_name
                             matched_id_val = single_id
-                            
-                            # 若一個物件有多個 ID，索引 = 當前物件前的同名卡數量 + 該物件內部的 id 索引
                             matched_index = current_occ + idx
                             break
                 
