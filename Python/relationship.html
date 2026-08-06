@@ -393,7 +393,7 @@
     <button class="btn btn-danger" id="btn-clear-all">全清空</button>
     <button class="btn btn-success" id="btn-export">匯出關係圖</button>
     <span style="font-size: 12px; color: #ccc; margin-left: 6px;">
-      💡 點擊選取卡片後再點擊另一卡片即可連線；可新增自由移動備註
+      💡 點擊選取卡片後再點擊目標卡片（或自己）即可建立連線
     </span>
   </div>
 
@@ -648,7 +648,7 @@
       saveToStorage();
     }
 
-    // --- 4. 行動裝置優化：點擊連線選取邏輯 ---
+    // --- 4. 行動裝置與桌機通用：連線選取邏輯 ---
     function showTargetHint(nodeObj) {
       removeHintAndSource(false);
 
@@ -657,7 +657,7 @@
 
       const hintEl = document.createElement('div');
       hintEl.className = 'target-hint-popover';
-      hintEl.innerText = '點擊另一張目標卡片連線';
+      hintEl.innerText = '點擊目標卡片（或自己）連線';
       nodeObj.element.appendChild(hintEl);
     }
 
@@ -974,11 +974,10 @@
       });
     }
 
+    // 💡 修正：支援點擊自己建立「自連線 (Self-Loop)」
     async function handleNodeClickForRelation(nodeObj) {
       if (!relSourceNode) {
         showTargetHint(nodeObj);
-      } else if (relSourceNode.id === nodeObj.id) {
-        removeHintAndSource();
       } else {
         const source = relSourceNode;
         removeHintAndSource();
@@ -989,7 +988,7 @@
         const lineObj = {
           id: nextLineId++,
           fromId: source.id,
-          toId: nodeObj.id,
+          toId: nodeObj.id, // 允許 fromId === toId (自己連自己)
           dir: config.dir,
           style: config.style
         };
@@ -1006,7 +1005,7 @@
       }
     });
 
-    // --- 7. 線條計算（斜線直連 + 寬鬆直角）---
+    // --- 7. 線條計算（自連線 + 斜線直連 + 寬鬆直角）---
 
     function computeSideOffset(node, side, slotIndex, totalSlots) {
       if (totalSlots <= 1) {
@@ -1082,10 +1081,22 @@
       return map;
     }
 
+    // 計算線條軌跡
     function getLineRoute(line, edgeMap) {
       const fromNode = nodes.find(n => n.id === line.fromId);
       const toNode = nodes.find(n => n.id === line.toId);
       if (!fromNode || !toNode) return [];
+
+      // 💡 處理自己連自己（Self-Loop）
+      if (fromNode.id === toNode.id) {
+        const pad = PADDING_OFFSET;
+        const pStart = { x: fromNode.x + fromNode.w * 0.5, y: fromNode.y - pad };
+        const p1 = { x: pStart.x, y: fromNode.y - 30 };
+        const p2 = { x: fromNode.x + fromNode.w + 35, y: p1.y };
+        const p3 = { x: p2.x, y: fromNode.y + fromNode.h * 0.5 };
+        const pEnd = { x: fromNode.x + fromNode.w + pad, y: p3.y };
+        return [pStart, p1, p2, p3, pEnd];
+      }
 
       const fromSide = determineSide(fromNode, toNode);
       const toSide = determineSide(toNode, fromNode);
@@ -1156,7 +1167,6 @@
       svgLayer.innerHTML = '';
       svgLayer.appendChild(defs);
 
-      // 💡 關鍵修復：清空上一繪製畫面的線條刪除按鈕，防止移動圖片時產生殘影
       labelsLayer.querySelectorAll('.line-delete-btn').forEach(btn => btn.remove());
 
       const edgeMap = buildEdgeConnectionsMap();
