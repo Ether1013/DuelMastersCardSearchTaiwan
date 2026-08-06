@@ -2034,6 +2034,8 @@
 		// ==========================================
 		const CUSTOM_DECKS_STORAGE_KEY = 'dm_custom_decks';
 		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+		// 全域變數：紀錄目前正在編輯/覆蓋的自訂牌組代碼 (例如 'NET-900')，若為 null 則代表新增
+		let editingDeckCode = null;
 
 		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
 		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
@@ -3256,6 +3258,136 @@
 
             return `linear-gradient(135deg, ${gradientStops.join(', ')})`;
         }
+		
+		// 💡 新增：開啟手動匯入面板並回填指定 NET-900+ 牌組內容
+		function openDeckImportForEdit(deckKey) {
+			const targetSetObj = rawSetlist[deckKey];
+			if (!targetSetObj) {
+				alert("找不到欲修改的卡表資料！");
+				return;
+			}
+
+			// 1. 設定為修改模式，紀錄目前修改的 Target Key
+			editingDeckCode = deckKey;
+
+			// 2. 將卡表內容還原為手動匯入的文字格式 (如: "4*卡牌名稱")
+			const cardList = targetSetObj.setcardlist || targetSetObj.cardlist || [];
+			const textContent = cardList.map(item => {
+				const count = item.count || 1;
+				const name = (typeof item === 'object' && item !== null) ? item.name : item;
+				return `${count}*${name}`;
+			}).join('\n');
+
+			// 3. 填回文字面板並重置階段畫面
+			document.getElementById('deck-textarea').value = textContent;
+			document.getElementById('deck-input-step').style.display = 'block';
+			document.getElementById('deck-verify-step').style.display = 'none';
+
+			// 4. 開啟 Modal
+			document.getElementById('deck-import-modal').classList.add('active');
+		}
+
+		// 💡 綁定一般點擊「📥 手動匯入卡表」按鈕時，重置為新增模式 (editingDeckCode = null)
+		document.querySelectorAll('#btn-open-deck-import, .btn-open-deck-import-action').forEach(btn => {
+			btn.addEventListener('click', () => {
+				editingDeckCode = null; // 重置為新增狀態
+				closeAllDrawers();
+				document.getElementById('deck-input-step').style.display = 'block';
+				document.getElementById('deck-verify-step').style.display = 'none';
+				document.getElementById('deck-textarea').value = '';
+				document.getElementById('deck-import-modal').classList.add('active');
+			});
+		});
+
+		// 💡 修改：確認匯入牌組按鈕的事件處理器（支援覆蓋）
+		document.getElementById('btn-confirm-deck-import')?.addEventListener('click', () => {
+			// 若為修改模式則沿用 editingDeckCode；否則取得下一個流水號
+			const targetCode = editingDeckCode ? editingDeckCode : getNextNetCode();
+			const now = Date.now();
+
+			const setCardList = parsedVerifyItems.map(item => ({
+				name: item.matchedName,
+				count: item.count
+			}));
+
+			const updatedSetObj = {
+				setcode: targetCode,
+				setname: `自訂套牌 (${targetCode})`,
+				isdeck: true,
+				istw: true,
+				createdTime: rawSetlist[targetCode]?.createdTime || now,
+				lastUsed: now,
+				setcardlist: setCardList
+			};
+
+			// 1. 寫入 LocalStorage
+			const customDecks = getValidCustomDecks();
+			customDecks[targetCode] = updatedSetObj;
+			localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(customDecks));
+
+			// 2. 更新全域 rawSetlist
+			rawSetlist[targetCode] = updatedSetObj;
+			initSeriesDropdown();
+
+			// 3. 關閉匯入 Modal 彈窗
+			document.getElementById('deck-import-modal').classList.remove('active');
+
+			// 4. 重置「商品以外」的所有過濾條件
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
+			checkAllStatus();
+
+			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
+			document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
+
+			document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
+			document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
+			document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
+
+			document.querySelectorAll('select:not(#series-big):not(#series-small)').forEach(sel => sel.value = "");
+			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+
+			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
+			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
+				btn.classList.remove('active');
+				btn.dataset.native = 'false';
+			});
+
+			document.querySelectorAll('.btn-race-logic').forEach(btn => {
+				if (btn.dataset.logic === 'AND') btn.classList.add('active');
+				else btn.classList.remove('active');
+			});
+
+			document.body.classList.remove('advanced-mode');
+			const btnAdvanced = document.getElementById('toggle-advanced');
+			if (btnAdvanced) btnAdvanced.innerHTML = '進階<br>選項';
+
+			if (typeof clearQuickSearch === 'function') {
+				clearQuickSearch();
+			}
+
+			// 5. 確保下拉選單選取該目標商品
+			const bigSelect = document.getElementById('series-big');
+			const smallSelect = document.getElementById('series-small');
+			if (bigSelect && smallSelect) {
+				bigSelect.value = "";
+				bigSelect.dispatchEvent(new Event('change'));
+				smallSelect.value = targetCode;
+			}
+			
+			checkAndToggleClearCustomBtn();
+
+			if (typeof updateSummaryText === 'function') {
+				updateSummaryText();
+			}
+
+			// 6. 重置修改標記狀態
+			editingDeckCode = null;
+
+			// 7. 觸發重新查詢與渲染畫面結果
+			document.getElementById('btn-search')?.click();
+			showToast(`✅ 牌組 ${targetCode} 已成功覆蓋並更新結果！`);
+		});
 
         // =========================================
 		// 搜尋過濾核心演算法 (整合後)
@@ -3308,13 +3440,6 @@
 				rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
 			}
 
-			// 若無搜尋結果，顯示查無資料
-			if (!currentFilterResults || currentFilterResults.length === 0) {
-				listContainerPage2.innerHTML = '<div class="empty-state">查無資料</div>';
-				listContainerPage3.innerHTML = '<div class="empty-state">查無資料</div>';
-				return;
-			}
-
 			// 1. 取得排序後的資料列表
 			const sortedResults = getSortedResults(currentFilterResults);
 
@@ -3323,9 +3448,68 @@
 			let currentSetObj = null;
 			let isDeckSet = false;
 
-			if (filterConfig.seriesSmall && rawSetlist[filterConfig.seriesSmall]) {
-				currentSetObj = rawSetlist[filterConfig.seriesSmall];
+			const selectedSetKey = filterConfig.seriesSmall || '';
+			const isCustomNetDeck = /^NET-9\d{2,}$/.test(selectedSetKey);
+
+			if (selectedSetKey && rawSetlist[selectedSetKey]) {
+				currentSetObj = rawSetlist[selectedSetKey];
 				isDeckSet = (currentSetObj.isdeck === true);
+			}
+
+			// 💡 判斷是否「過濾條件只有商品」
+			const hasOtherFilters = Boolean(
+				filterConfig.cardName ||
+				filterConfig.twinpect !== 'all' ||
+				filterConfig.cost1 || filterConfig.cost2 ||
+				filterConfig.power1 || filterConfig.power2 ||
+				filterConfig.races.length > 0 ||
+				filterConfig.abilityText ||
+				filterConfig.abilities.length > 0 ||
+				filterConfig.raceAdv ||
+				(filterConfig.checkedCardTypes && filterConfig.checkedCardTypes.length > 0 && !filterConfig.isAllCardTypesChecked)
+			);
+
+			// 💡 動態控制與渲染抽屜工具列中的 [✏️ 修改自訂卡表] 按鈕
+			document.querySelectorAll('#drawer-tab2 .drawer-row, #drawer-tab3 .drawer-row').forEach(row => {
+				const label = row.querySelector('label');
+				if (label && label.innerText.includes('自訂')) {
+					let btnEdit = row.querySelector('.btn-edit-deck-action');
+					
+					// 條件：過濾條件只有商品 + 為 NET-900 起的自訂牌組
+					if (isCustomNetDeck && !hasOtherFilters) {
+						if (!btnEdit) {
+							btnEdit = document.createElement('button');
+							btnEdit.type = 'button';
+							btnEdit.className = 'btn-drawer-action btn-edit-deck-action';
+							btnEdit.style.backgroundColor = '#eab308'; // 黃色醒目按鈕
+							btnEdit.style.color = '#ffffff';
+							btnEdit.innerText = '✏️ 修改自訂卡表';
+							
+							const btnImport = row.querySelector('.btn-open-deck-import-action');
+							if (btnImport) {
+								btnImport.after(btnEdit);
+							} else {
+								row.appendChild(btnEdit);
+							}
+						}
+						
+						// 綁定修改點擊事件
+						btnEdit.onclick = () => {
+							closeAllDrawers();
+							openDeckImportForEdit(selectedSetKey);
+						};
+						btnEdit.style.display = 'inline-block';
+					} else {
+						if (btnEdit) btnEdit.style.display = 'none';
+					}
+				}
+			});
+
+			// 若無搜尋結果，顯示查無資料
+			if (!currentFilterResults || currentFilterResults.length === 0) {
+				listContainerPage2.innerHTML = '<div class="empty-state">查無資料</div>';
+				listContainerPage3.innerHTML = '<div class="empty-state">查無資料</div>';
+				return;
 			}
 
 			// 3. 建立 Card List Item 生成輔助函式（統一 DOM 結構）
@@ -3371,7 +3555,6 @@
 					}
 				}
 
-				// 💡 關鍵：統一包裹卡名於 <span class="card-name-text">
 				itemDiv.innerHTML = `
 					<div class="card-name">
 						${prefixHtml}
@@ -3386,9 +3569,8 @@
 			sortedResults.forEach(card => {
 				// 生成 Page 2 的 Node 並綁定 Modal 彈窗事件
 				const res2 = createCardListItem(card);
-				// 生成 Page 2 的 Node 並綁定 Modal 彈窗事件
 				res2.itemDiv.addEventListener('click', () => {
-					recordCardHistory(card.name); // 💡 寫入歷史紀錄
+					recordCardHistory(card.name); // 寫入歷史紀錄
 					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
 					res2.itemDiv.classList.add('selected');
 					openCardModal(card, res2.combinedCiv, res2.matchedItem);
@@ -3398,15 +3580,13 @@
 
 				// 生成 Page 3 的 Node 並綁定右側 Split Detail 渲染事件
 				const res3 = createCardListItem(card);
-				// 生成 Page 3 的 Node 並綁定右側 Split Detail 渲染事件
 				res3.itemDiv.addEventListener('click', () => {
-					recordCardHistory(card.name); // 💡 寫入歷史紀錄
+					recordCardHistory(card.name); // 寫入歷史紀錄
 					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
 					res3.itemDiv.classList.add('selected');
 					renderSplitDetail(card, res3.combinedCiv, res3.matchedItem);
 				});
 				listContainerPage3.appendChild(res3.itemDiv);
-
 			});
 		}
 		
