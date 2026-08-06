@@ -1051,7 +1051,7 @@
       }
     });
 
-    // --- 7. 線條計算（自連線 + 斜線直連 + 寬鬆直角）---
+    // --- 7. 線條計算（同卡多線避開 + 側接頂底 L 型優先 + 重複線平行位移）---
 
     function computeSideOffset(node, side, slotIndex, totalSlots) {
       if (totalSlots <= 1) {
@@ -1127,11 +1127,13 @@
       return map;
     }
 
+    // 計算線條軌跡（調整：優先 L 型側接頂底 + 重複連線路徑動態錯開）
     function getLineRoute(line, edgeMap) {
       const fromNode = nodes.find(n => n.id === line.fromId);
       const toNode = nodes.find(n => n.id === line.toId);
       if (!fromNode || !toNode) return [];
 
+      // 1. 處理自連線 (Self-Loop)
       if (fromNode.id === toNode.id) {
         const pad = PADDING_OFFSET;
         const pStart = { x: fromNode.x + fromNode.w * 0.5, y: fromNode.y - pad };
@@ -1141,6 +1143,15 @@
         const pEnd = { x: fromNode.x + fromNode.w + pad, y: p3.y };
         return [pStart, p1, p2, p3, pEnd];
       }
+
+      // 💡 2. 統計兩卡片之間的「重複連線」組，進行動態平行偏移避開重疊
+      const pairKey = [fromNode.id, toNode.id].sort((a, b) => a - b).join('_');
+      const samePairLines = lines.filter(l => 
+        (l.fromId === fromNode.id && l.toId === toNode.id) || 
+        (l.fromId === toNode.id && l.toId === fromNode.id)
+      );
+      const lineIndexInPair = samePairLines.findIndex(l => l.id === line.id);
+      const dupShift = samePairLines.length > 1 ? (lineIndexInPair - (samePairLines.length - 1) / 2) * 24 : 0;
 
       const fromSide = determineSide(fromNode, toNode);
       const toSide = determineSide(toNode, fromNode);
@@ -1154,13 +1165,26 @@
       const idxFrom = listFrom.findIndex(item => item.lineId === line.id && item.role === 'from');
       const idxTo = listTo.findIndex(item => item.lineId === line.id && item.role === 'to');
 
-      const pStart = computeSideOffset(fromNode, fromSide, idxFrom !== -1 ? idxFrom : 0, listFrom.length);
-      const pEnd = computeSideOffset(toNode, toSide, idxTo !== -1 ? idxTo : 0, listTo.length);
+      let pStart = computeSideOffset(fromNode, fromSide, idxFrom !== -1 ? idxFrom : 0, listFrom.length);
+      let pEnd = computeSideOffset(toNode, toSide, idxTo !== -1 ? idxTo : 0, listTo.length);
 
+      // 若有重複連線，進行座標向量偏移
+      if (dupShift !== 0) {
+        if (fromSide === 'left' || fromSide === 'right') {
+          pStart.y += dupShift;
+          pEnd.y += dupShift;
+        } else {
+          pStart.x += dupShift;
+          pEnd.x += dupShift;
+        }
+      }
+
+      // 3. 斜線直接連結模式
       if (line.style === 'straight') {
         return [pStart, pEnd];
       }
 
+      // 4. 直線判斷 (X/Y 軸有區域重疊時直線穿過)
       const overlapXStart = Math.max(fromNode.x, toNode.x);
       const overlapXEnd = Math.min(fromNode.x + fromNode.w, toNode.x + toNode.w);
       const hasOverlapX = overlapXEnd - overlapXStart >= 15;
@@ -1170,7 +1194,7 @@
       const hasOverlapY = overlapYEnd - overlapYStart >= 15;
 
       if (hasOverlapX) {
-        const midX = (overlapXStart + overlapXEnd) / 2;
+        const midX = (overlapXStart + overlapXEnd) / 2 + dupShift;
         return [
           { x: midX, y: fromNode.y < toNode.y ? fromNode.y + fromNode.h + PADDING_OFFSET : fromNode.y - PADDING_OFFSET },
           { x: midX, y: fromNode.y < toNode.y ? toNode.y - PADDING_OFFSET : toNode.y + toNode.h + PADDING_OFFSET }
@@ -1178,25 +1202,42 @@
       }
 
       if (hasOverlapY) {
-        const midY = (overlapYStart + overlapYEnd) / 2;
+        const midY = (overlapYStart + overlapYEnd) / 2 + dupShift;
         return [
           { x: fromNode.x < toNode.x ? fromNode.x + fromNode.w + PADDING_OFFSET : fromNode.x - PADDING_OFFSET, y: midY },
           { x: fromNode.x < toNode.x ? toNode.x - PADDING_OFFSET : toNode.x + toNode.w + PADDING_OFFSET, y: midY }
         ];
       }
 
-      if (fromSide === 'left' || fromSide === 'right') {
-        const corner = { x: pEnd.x, y: pStart.y };
-        const isFromValid = (fromSide === 'right' && corner.x >= pStart.x) || (fromSide === 'left' && corner.x <= pStart.x);
-        const isToValid = (toSide === 'bottom' && corner.y >= pEnd.y) || (toSide === 'top' && corner.y <= pEnd.y);
-        if (isFromValid && isToValid) return [pStart, corner, pEnd];
-      } else {
-        const corner = { x: pStart.x, y: pEnd.y };
-        const isFromValid = (fromSide === 'bottom' && corner.y >= pStart.y) || (fromSide === 'top' && corner.y <= pStart.y);
-        const isToValid = (toSide === 'right' && corner.x >= pEnd.x) || (toSide === 'left' && corner.x <= pEnd.x);
-        if (isFromValid && isToValid) return [pStart, corner, pEnd];
+      // 💡 5. 調整：優先以【L 型連結】（側邊對接頂部/底部）
+      const fC = { x: fromNode.x + fromNode.w / 2, y: fromNode.y + fromNode.h / 2 };
+      const tC = { x: toNode.x + toNode.w / 2, y: toNode.y + toNode.h / 2 };
+
+      // 嘗試構建：從側邊 (Left/Right) 發射，轉折接至目標卡片的頂/底邊 (Top/Bottom)
+      const lCornerSideToTopBottom = { x: tC.x, y: fC.y };
+      const isSideToTopBottomValid = 
+        ((fC.x < tC.x && lCornerSideToTopBottom.x >= fC.x) || (fC.x > tC.x && lCornerSideToTopBottom.x <= fC.x)) &&
+        ((fC.y < tC.y && lCornerSideToTopBottom.y <= tC.y) || (fC.y > tC.y && lCornerSideToTopBottom.y >= tC.y));
+
+      if (isSideToTopBottomValid) {
+        const startPt = { x: fC.x < tC.x ? fromNode.x + fromNode.w + PADDING_OFFSET : fromNode.x - PADDING_OFFSET, y: fC.y + dupShift };
+        const endPt = { x: tC.x + dupShift, y: fC.y < tC.y ? toNode.y - PADDING_OFFSET : toNode.y + toNode.h + PADDING_OFFSET };
+        return [startPt, { x: endPt.x, y: startPt.y }, endPt];
       }
 
+      // 嘗試構建：從頂/底邊發射，轉折接至目標卡片的側邊
+      const lCornerTopBottomToSide = { x: fC.x, y: tC.y };
+      const isTopBottomToSideValid = 
+        ((fC.y < tC.y && lCornerTopBottomToSide.y >= fC.y) || (fC.y > tC.y && lCornerTopBottomToSide.y <= fC.y)) &&
+        ((fC.x < tC.x && lCornerTopBottomToSide.x <= tC.x) || (fC.x > tC.x && lCornerTopBottomToSide.x >= tC.x));
+
+      if (isTopBottomToSideValid) {
+        const startPt = { x: fC.x + dupShift, y: fC.y < tC.y ? fromNode.y + fromNode.h + PADDING_OFFSET : fromNode.y - PADDING_OFFSET };
+        const endPt = { x: fC.x < tC.x ? toNode.x - PADDING_OFFSET : toNode.x + toNode.w + PADDING_OFFSET, y: tC.y + dupShift };
+        return [startPt, { x: startPt.x, y: endPt.y }, endPt];
+      }
+
+      // 6. 若 L 型角度被卡片本身擋住，降級為 Z 型轉折
       if (fromSide === 'left' || fromSide === 'right') {
         const midX = (pStart.x + pEnd.x) / 2;
         return [pStart, { x: midX, y: pStart.y }, { x: midX, y: pEnd.y }, pEnd];
@@ -1335,12 +1376,10 @@
         renderLinesToCanvas(ctx);
         renderFreeLabelsToCanvas(ctx);
 
-        // 💡 核心優化：優先發起原生手機 Web Share API (直出「加入照片/儲存影像」)
         exportCanvas.toBlob(async (blob) => {
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
           const file = new File([blob], `tcg_relationship_${timestamp}.png`, { type: 'image/png' });
 
-          // 1. 手機支援 Web Share 檔案分享時，喚起原生分享介面
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
               await navigator.share({
@@ -1352,7 +1391,6 @@
               console.log('使用者取消或不支援分享選單');
             }
           } else {
-            // 2. 行動裝置不支援原生的話，跳出全螢幕長按儲存對話框；電腦則直接存檔
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             const dataUrl = exportCanvas.toDataURL('image/png');
 
