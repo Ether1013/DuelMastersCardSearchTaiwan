@@ -1519,23 +1519,29 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
+        // 算出最長的一行字寬度
         let maxW = 0;
         linesArr.forEach(l => {
           const w = ctx.measureText(l).width;
           if (w > maxW) maxW = w;
         });
 
-        const totalH = linesArr.length * lineHeight;
         const padding = 10;
+        const boxWidth = Math.max(100, maxW + padding * 2); // 黑框總寬度
+        const totalH = linesArr.length * lineHeight;
+        const boxHeight = Math.max(32, totalH + padding); // 黑框總高度
 
+        // 1. 繪製半透明黑框背景
         ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
-        ctx.fillRect(lbl.x, lbl.y, maxW + padding * 2, totalH + padding);
+        ctx.fillRect(lbl.x, lbl.y, boxWidth, boxHeight);
 
+        // 2. 繪製文字 (以黑框正水平中心點 lbl.x + boxWidth / 2 為基準點置中)
         ctx.fillStyle = lbl.color || '#ffffff';
-        const startY = lbl.y + padding / 2 + lineHeight / 2;
+        const centerX = lbl.x + boxWidth / 2;
+        const startY = lbl.y + (boxHeight - totalH) / 2 + lineHeight / 2;
 
         linesArr.forEach((lineText, idx) => {
-          ctx.fillText(lineText, lbl.x + maxW / 2 + padding, startY + idx * lineHeight);
+          ctx.fillText(lineText, centerX, startY + idx * lineHeight);
         });
       });
     }
