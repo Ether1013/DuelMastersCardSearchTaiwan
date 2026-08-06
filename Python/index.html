@@ -1850,8 +1850,11 @@
 				<div class="modal-close" id="export-modal-close">&times;</div>
 			</div>
 			<div class="modal-body" style="padding: 20px; gap: 12px;">
+				<button type="button" class="btn-drawer-action" id="btn-export-mode-unfold" style="padding: 12px; font-size: 14px; background: #8b5cf6;">
+					🖼️ 僅匯出圖片 (全數展開)
+				</button>
 				<button type="button" class="btn-drawer-action" id="btn-export-mode-1" style="padding: 12px; font-size: 14px; background: #0284c7;">
-					🖼️ 僅匯出圖片 (圖格展開模式)
+					🖼️ 僅匯出圖片 (同卡縮排)
 				</button>
 				<button type="button" class="btn-drawer-action" id="btn-export-mode-2" style="padding: 12px; font-size: 14px; background: #16a34a;">
 					🖼️+📝 圖 + 效果 (標準圖文模式)
@@ -6917,6 +6920,12 @@
 			document.getElementById('btn-export-mode-3')?.addEventListener('click', () => {
 				closeExportModal();
 				dispatchExportToPage('text_only');
+			});
+			
+			// index.html: 綁定模式 4 觸發事件
+			document.getElementById('btn-export-mode-unfold')?.addEventListener('click', () => {
+				closeExportModal();
+				dispatchExportToPage('img_unfold');
 			});
 		});
 

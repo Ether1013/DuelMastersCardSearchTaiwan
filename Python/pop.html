@@ -251,6 +251,52 @@
         .stacked-card-img.is-horizontal:not(:first-child) {
             margin-top: -110px !important;
         }
+		
+		/* pop.html: 模式 4 (img_unfold) 全域樣式與變數 */
+		body.mode-img-unfold {
+			background: #111 !important;
+			color: #fff !important;
+			--card-w: 120px;
+			--card-h: 168px;
+			--card-gap: 6px;
+		}
+
+		.img-unfold-grid {
+			display: grid;
+			grid-template-columns: repeat(8, var(--card-w));
+			gap: var(--card-gap);
+			justify-content: center;
+			align-content: start;
+			width: 100%;
+			max-width: 1060px;
+			margin: 0 auto;
+			box-sizing: border-box;
+		}
+
+		.img-unfold-card {
+			width: var(--card-w);
+			height: var(--card-h);
+			object-fit: contain;
+			border-radius: 4px;
+			box-shadow: 0 3px 8px rgba(0,0,0,0.6);
+			background: #222;
+		}
+
+		.img-unfold-no-img {
+			width: var(--card-w);
+			height: var(--card-h);
+			background: #222;
+			border: 2px dashed #555;
+			border-radius: 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #aaa;
+			font-size: 11px;
+			text-align: center;
+			padding: 2px;
+			box-sizing: border-box;
+		}
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
@@ -491,6 +537,41 @@
 				});
                 return;
             }
+			
+			// ================= 模式 4：展開式純圖 (img_unfold) =================
+			if (mode === 'img_unfold') {
+				document.body.classList.add('mode-img-unfold');
+				document.title = `匯出結果 - 展開式純圖模式 (${items.length}種卡牌)`;
+				document.getElementById('page-title').innerText = `展開式純圖模式 (${items.length}種卡牌)`;
+
+				let metaViewport = document.querySelector('meta[name="viewport"]');
+				if (metaViewport) {
+					metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes');
+				}
+
+				const unfoldedCards = computeUnfoldLayout(items);
+
+				let html = '<div class="img-unfold-grid">';
+				unfoldedCards.forEach(card => {
+					if (card.picUrl) {
+						html += `<img class="img-unfold-card" src="${card.picUrl}" alt="${card.name}" title="${card.name}" />`;
+					} else {
+						html += `<div class="img-unfold-no-img">${card.name}<br>(No Image)</div>`;
+					}
+				});
+				html += '</div>';
+
+				container.innerHTML = html;
+
+				requestAnimationFrame(() => {
+					updateImgUnfoldScale();
+				});
+
+				// 綁定 Resize 與 螢幕旋轉事件
+				window.addEventListener('resize', updateImgUnfoldScale);
+				window.addEventListener('orientationchange', () => setTimeout(updateImgUnfoldScale, 200));
+				return;
+			}
 
             // ================= 模式 2 & 3：圖+效果 (img_text) 與 只要效果 (text_only) =================
             document.title = `卡牌列表匯出結果 (${items.length}張)`;
@@ -591,6 +672,211 @@
 
             container.innerHTML = html;
         }
+		
+		// A. 響應式動態計算卡片寬度 (--card-w)
+		function updateImgUnfoldScale() {
+			if (!document.body.classList.contains('mode-img-unfold')) return;
+
+			const COLS = 8;
+			const container = document.getElementById('card-list-container');
+			const bodyW = document.body.clientWidth || window.innerWidth;
+			const actualWidth = (container && container.clientWidth > 0) ? container.clientWidth : bodyW;
+
+			const gap = 6;
+			const safePadding = 24;
+			const availableWidth = actualWidth - safePadding;
+
+			let calculatedCardW = Math.floor((availableWidth - (COLS - 1) * gap) / COLS);
+			calculatedCardW = Math.min(140, Math.max(30, calculatedCardW));
+			const calculatedCardH = Math.round(calculatedCardW * 1.4);
+
+			document.body.style.setProperty('--card-w', `${calculatedCardW}px`);
+			document.body.style.setProperty('--card-h', `${calculatedCardH}px`);
+			document.body.style.setProperty('--card-gap', `${gap}px`);
+		}
+
+		/**
+ * 展開式純圖 (Unfolded Pure Image) 合成矩形對齊演算函式
+ * 核心：
+ * 1. 矩形度 Penalty 優先級最高
+ * 2. 【新增】跨列合成矩形加分：當 4 張卡正下方為 (3+1) 或 (2+2) 拼出等寬度 4 的矩形時給予高額加分
+ */
+function computeUnfoldLayout(items) {
+    const COLS = 8;
+
+    // 1. 將實體卡片轉為「同名卡橫條 (Strips)」
+    const strips = items.map((item, originalIndex) => ({
+        ...item,
+        id: originalIndex,
+        groupCount: item.count || 1,
+        length: item.count || 1
+    }));
+
+    let totalCards = 0;
+    strips.forEach(s => totalCards += s.length);
+    if (totalCards === 0) return [];
+
+    const totalRows = Math.ceil(totalCards / COLS);
+    const grid = Array.from({ length: totalRows }, () => Array(COLS).fill(null));
+
+    // 2. 評估評分機制 (Evaluation Function)
+    function evaluateGrid(currGrid) {
+        const blockStats = {};
+
+        for (let r = 0; r < totalRows; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const card = currGrid[r][c];
+                if (!card) continue;
+                const gc = card.groupCount;
+                if (!blockStats[gc]) {
+                    blockStats[gc] = { minR: r, maxR: r, minC: c, maxC: c, count: 0, rowFirstCol: {} };
+                }
+                const b = blockStats[gc];
+                b.minR = Math.min(b.minR, r);
+                b.maxR = Math.max(b.maxR, r);
+                b.minC = Math.min(b.minC, c);
+                b.maxC = Math.max(b.maxC, c);
+                b.count++;
+
+                if (b.rowFirstCol[r] === undefined || c < b.rowFirstCol[r]) {
+                    b.rowFirstCol[r] = c;
+                }
+            }
+        }
+
+        let totalPenalty = 0;
+        let anchorBonus = 0;
+        let compositeRectBonus = 0; // 【核心加分：跨列合成矩形】
+
+        // 【Tier 1 - 最高權重】單一卡數群矩形度 Penalty
+        Object.keys(blockStats).forEach(gc => {
+            const b = blockStats[gc];
+            const width = b.maxC - b.minC + 1;
+            const height = b.maxR - b.minR + 1;
+            const boundingBoxArea = width * height;
+
+            totalPenalty += (boundingBoxArea - b.count) * 10000;
+
+            // 【Tier 2 - 次高權重】同張數群左側齊頭對齊 (Column Alignment)
+            const rows = Object.keys(b.rowFirstCol);
+            if (rows.length > 1) {
+                const firstCols = rows.map(r => b.rowFirstCol[r]);
+                if (firstCols.every(col => col === firstCols[0])) {
+                    anchorBonus += 1000;
+                }
+            }
+        });
+
+        // 【Tier 3 - 核心重點】檢測 4 與下方 (3+1) 或 (2+2) 的合成矩形
+        for (let r = 0; r < totalRows - 1; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const topCard = currGrid[r][c];
+                const bottomCard = currGrid[r + 1][c];
+
+                // 條件：當上方是 4 張卡的區塊起點 (c % 4 === 0 且長度為 4)
+                if (topCard && topCard.length === 4 && (c === 0 || currGrid[r][c - 1]?.id !== topCard.id)) {
+                    // 檢查下方在 [c ~ c+3] 這 4 個格子的填補狀況
+                    let subStrips = [];
+                    let isSubComplete = true;
+
+                    for (let k = 0; k < 4; k++) {
+                        const cell = currGrid[r + 1][c + k];
+                        if (!cell) {
+                            isSubComplete = false;
+                            break;
+                        }
+                        if (k === 0 || cell.id !== currGrid[r + 1][c + k - 1]?.id) {
+                            subStrips.push(cell);
+                        }
+                    }
+
+                    if (isSubComplete) {
+                        const subLengths = subStrips.map(s => s.length);
+
+                        // 判斷 1: 下方為 3 + 1 (例如 C C C F) 且 3 張在前、1 張在後
+                        if (subLengths.length === 2 && subLengths[0] === 3 && subLengths[1] === 1) {
+                            compositeRectBonus += 500; // 拼成 2x4 大矩形加分！
+                        }
+                        // 判斷 2: 下方為 2 + 2 (例如 C C D D)
+                        else if (subLengths.length === 2 && subLengths[0] === 2 && subLengths[2] === 2) {
+                            compositeRectBonus += 400; // 拼成 2x4 大矩形加分！
+                        }
+                    }
+                }
+            }
+        }
+
+        return (-totalPenalty) + anchorBonus + compositeRectBonus;
+    }
+
+    let bestGrid = null;
+    let bestScore = -Infinity;
+
+    let searchCount = 0;
+    const MAX_SEARCH_NODES = 5000;
+
+    const sortedStrips = [...strips].sort((a, b) => b.length - a.length);
+
+    // 3. 實體橫條的回溯搜尋 (DFS with Pruning)
+    function backtrack(stripIdx) {
+        if (searchCount > MAX_SEARCH_NODES) return;
+        searchCount++;
+
+        if (stripIdx >= sortedStrips.length) {
+            const score = evaluateGrid(grid);
+            if (score > bestScore) {
+                bestScore = score;
+                bestGrid = grid.map(row => [...row]);
+            }
+            return;
+        }
+
+        const currentStrip = sortedStrips[stripIdx];
+        const len = currentStrip.length;
+
+        for (let r = 0; r < totalRows; r++) {
+            for (let c = 0; c <= COLS - len; c++) {
+                let canPlace = true;
+                for (let k = 0; k < len; k++) {
+                    if (grid[r][c + k] !== null) {
+                        canPlace = false;
+                        break;
+                    }
+                }
+
+                if (canPlace) {
+                    for (let k = 0; k < len; k++) {
+                        grid[r][c + k] = {
+                            ...currentStrip,
+                            isFirstOfCard: (k === 0)
+                        };
+                    }
+
+                    backtrack(stripIdx + 1);
+
+                    for (let k = 0; k < len; k++) {
+                        grid[r][c + k] = null;
+                    }
+                }
+            }
+        }
+    }
+
+    backtrack(0);
+
+    if (!bestGrid) return items;
+
+    // 4. 展平成一維陣列回傳給渲染器
+    const resultCards = [];
+    for (let r = 0; r < totalRows; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if (bestGrid[r][c]) {
+                resultCards.push(bestGrid[r][c]);
+            }
+        }
+    }
+    return resultCards;
+}
 
         async function initPopPage() {
             const urlParams = new URLSearchParams(window.location.search);
