@@ -1574,7 +1574,7 @@
                     <option value="DMD">DMD</option>
                     <option value="DM-">DM-</option>
                     <option value="OF-">OF-</option>
-                    <option value="NET">台灣大賽</option>
+                    <option value="NET">台灣大賽/個人牌組</option>
                 </select>
             </div>
             <div class="col">
@@ -3888,6 +3888,13 @@
 				}
 			}
 		});
+		
+		function generateUuidKey() {
+			if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+				return crypto.randomUUID().replace(/-/g, '');
+			}
+			return 'key_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+		}
 
 		function getRaceTooltipText(raceJap) {
 			if (!Array.isArray(rawRaces)) return raceJap;
@@ -6801,7 +6808,6 @@
 					}
 				}
 
-				// 全域備援抓圖邏輯 (非 D/O 商品且 pic 為空時)
 				if (!picUrl || picUrl.trim() === '' || isNonStandardSet) {
 					if (card.pic && card.pic.trim() !== '') {
 						picUrl = card.pic;
@@ -6830,7 +6836,6 @@
 					}
 				}
 
-				// 判斷橫向卡
 				let isHorizontal = false;
 				if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
 					const firstTypeVal = card.wdata[0].type[0];
@@ -6838,7 +6843,6 @@
 					if (matchedType && matchedType.horizontal === true) isHorizontal = true;
 				}
 
-				// 收集能力說明
 				const explainedAbilities = [];
 				if (mode !== 'img_only' && card.wdata && Array.isArray(card.wdata)) {
 					const sortedRawAbilities = (typeof rawAbilities !== 'undefined' && Array.isArray(rawAbilities))
@@ -6884,9 +6888,10 @@
 				items: itemsPayload
 			};
 
-			// 寫入 sessionStorage 並在新分頁開啟 export.html
-			sessionStorage.setItem('dm_export_payload', JSON.stringify(payload));
-			window.open('export.html', '_blank');
+			// 💡 產生無符號 UUID key 寫入 sessionStorage 並開啟 pop.html?session=key
+			const sessionKey = generateUuidKey();
+			sessionStorage.setItem(sessionKey, JSON.stringify(payload));
+			window.open(`pop.html?session=${sessionKey}`, '_blank');
 		}
 
 		// 4. Modal 按鈕事件監聽
@@ -7220,76 +7225,70 @@
 		// ==========================================
 		document.querySelectorAll('#btn-share-deck-link, .btn-share-deck-link-action').forEach(btn => {
 			btn.addEventListener('click', async () => {
-				closeAllDrawers(); // 💡 點擊後收合抽屜
-				const filterConfig = getFilterConfigFromUI();
-				const selectedSetKey = filterConfig.seriesSmall;
+				closeAllDrawers(); // 點擊後收合抽屜
+				
+				// 1. 強制從 UI 選單精確讀取選取的商品 setCode (series-small)
+				const smallSelect = document.getElementById('series-small');
+				const selectedSetKey = smallSelect ? smallSelect.value.trim() : '';
 
 				let shareUrl = '';
-				let isOriginalSetList = false;
+				let isSameContent = false;
+				let isSameOrder = false;
 
-				console.group('🔍 [分享連結] 檢查商品卡表比對狀態');
-				console.log('目前選取的商品代碼 (selectedSetKey):', selectedSetKey);
+				// 抓取當前 UI 上的排序下拉選單數值
+				const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
+				const sortSelectEl = isSplitActive ? document.getElementById('sort-select-split') : document.getElementById('sort-select');
+				const currentSortVal = sortSelectEl ? sortSelectEl.value : 'default';
 
-				// 💡 1. 檢查是否有選擇商品，且該商品不是 NET-900 起的自訂牌組
+				console.group('🔍 [DEBUG 分享連結] 檢查商品狀態');
+				console.log('當前 UI 選取的商品代碼 (selectedSetKey):', selectedSetKey);
+
 				const isCustomNetDeck = selectedSetKey && /^NET-9\d{2,}$/.test(selectedSetKey);
 
-				if (isCustomNetDeck) {
-					console.log('⚠️ 判定為 NET-900 起的自訂牌組，直接匯出 deckList。');
-				} else if (!selectedSetKey) {
-					console.log('⚠️ 未選取任何商品，直接匯出 deckList。');
-				} else if (!rawSetlist[selectedSetKey]) {
-					console.log(`⚠️ rawSetlist 找不到商品資料 key: "${selectedSetKey}"，直接匯出 deckList。`);
-				} else {
+				// 💡 關鍵修正點：只要選取了非自訂的真實商品，且該商品存在於 rawSetlist 中
+				if (selectedSetKey && !isCustomNetDeck && rawSetlist[selectedSetKey]) {
 					const currentSetObj = rawSetlist[selectedSetKey];
 					const rawCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
-
-					// 自動判斷目前處於 Page 2 還是 Page 3，並抓取對應頁面的卡片 DOM 列表
-					const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
+					
+					// 抓取目前畫面上顯示的所有卡牌項目
 					const containerId = isSplitActive ? 'list-container-split' : 'list-container';
 					const domItems = Array.from(document.querySelectorAll(`#${containerId} .card-list-item`));
 
-					console.log(`DOM 渲染數量: ${domItems.length} 張 | 原始商品資料數量: ${rawCardList.length} 張 (模式: ${isSplitActive ? '雙欄' : '單欄'})`);
+					console.log('商品內收錄數量:', rawCardList.length, '| 畫面上渲染數量:', domItems.length);
 
-					// 💡 2. 比對 DOM 個數與商品原始卡牌數量是否一致
-					if (domItems.length !== rawCardList.length) {
-						console.warn(`❌ [不符合] 數量不一致：DOM 為 ${domItems.length} 張，但原始商品為 ${rawCardList.length} 張。`);
-					} else {
-						console.log('✅ 數量一致，開始從 .card-name-text 萃取純卡名進行逐筆比對...');
+					// 判斷 1：如果沒有額外過濾其他條件（畫面張數等於商品總張數）
+					if (domItems.length === rawCardList.length) {
+						const domCardNames = domItems.map(item => cleanCardName(item.querySelector('.card-name-text')?.innerText.trim() || ''));
+						const rawCardNames = rawCardList.map(item => cleanCardName((typeof item === 'object' && item !== null) ? item.name : item));
 
-						// 逐一比對每個位置的卡名與順序
-						isOriginalSetList = domItems.every((item, idx) => {
-							const rawItem = rawCardList[idx];
-							const rawName = (typeof rawItem === 'object' && rawItem !== null) ? rawItem.name : rawItem;
+						// 檢查卡牌內容是否 100% 吻合
+						isSameContent = rawCardNames.every(name => domCardNames.includes(name));
 
-							// 結構統一後，直接從 .card-name-text 取純卡名
-							const cardNameTextEl = item.querySelector('.card-name-text');
-							const domCardName = cardNameTextEl ? cardNameTextEl.innerText.trim() : '';
-
-							const cleanDomName = cleanCardName(domCardName);
-							const cleanRawName = cleanCardName(rawName);
-
-							if (cleanDomName !== cleanRawName) {
-								console.warn(`❌ [不符合] 第 ${idx + 1} 項卡名不匹配：\n   - DOM 卡名: "${cleanDomName}"\n   - 原始卡名: "${cleanRawName}"`);
-								return false;
-							}
-
-							return true;
-						});
-
-						if (isOriginalSetList) {
-							console.log('🎉 [完全符合] DOM 純卡名與商品原始資料完全一致，將產生 setCode 連結！');
+						if (isSameContent) {
+							// 檢查卡牌順序是否 100% 吻合
+							isSameOrder = domItems.every((item, idx) => {
+								const rawItem = rawCardList[idx];
+								const rawName = (typeof rawItem === 'object' && rawItem !== null) ? rawItem.name : rawItem;
+								const domCardName = item.querySelector('.card-name-text')?.innerText.trim() || '';
+								return cleanCardName(domCardName) === cleanCardName(rawName);
+							});
 						}
 					}
 				}
-
 				console.groupEnd();
 
-				// 💡 3. 根據比對結果決定輸出 setCode 還是 deckList
-				if (isOriginalSetList) {
-					// 未經過任何條件過濾與排序變動的原始商品卡表 ➔ 產生 setCode
-					shareUrl = `${window.location.origin}/pop.html?setCode=${encodeURIComponent(selectedSetKey)}`;
+				// 💡 根據判斷產出相應的連結
+				if (selectedSetKey && !isCustomNetDeck && rawSetlist[selectedSetKey] && (isSameContent || currentFilterResults.length > 0)) {
+					// 只要選取了商品牌組（且未被額外過濾掉卡片），優先吐出 setCode 連結
+					if (isSameOrder || currentSortVal === 'default') {
+						// 順序相同或預設排序：只帶 setCode
+						shareUrl = `${window.location.origin}/pop.html?setCode=${encodeURIComponent(selectedSetKey)}`;
+					} else {
+						// 順序不同（使用者自訂了排序）：帶 setCode + sort 參數
+						shareUrl = `${window.location.origin}/pop.html?setCode=${encodeURIComponent(selectedSetKey)}&sort=${encodeURIComponent(currentSortVal)}`;
+					}
 				} else {
-					// 有經過條件過濾、排序變動、或未選商品/選 NET-900 起自訂套牌 ➔ 匯出卡牌名稱列表 (deckList)
+					// 僅在完全自訂搜尋或自訂牌組時，才壓縮成 deckList 參數
 					if (!currentFilterResults || currentFilterResults.length === 0) {
 						alert("目前搜尋結果為空，無法產生分享連結！");
 						return;
@@ -7298,7 +7297,6 @@
 					const sortedResults = getSortedResults(currentFilterResults);
 					const currentSetObj = selectedSetKey ? rawSetlist[selectedSetKey] : null;
 
-					// 計算張數
 					const cardCountMap = new Map();
 					sortedResults.forEach(card => {
 						const cleanName = cleanCardName(card.name);
@@ -7317,7 +7315,6 @@
 						cardCountMap.set(cleanName, (cardCountMap.get(cleanName) || 0) + count);
 					});
 
-					// 轉為 4*卡名,2*卡名 格式並進行 LZ 壓縮
 					const rawStr = Array.from(cardCountMap.entries())
 						.map(([name, count]) => `${count}*${name}`)
 						.join(',');
@@ -7326,7 +7323,7 @@
 					shareUrl = `${window.location.origin}/pop.html?deckList=${compressed}`;
 				}
 
-				// 💡 4. 執行分享或複製網址
+				// 執行複製或分享網址
 				const isMobile = window.innerWidth <= 768 || (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
 
 				if (isMobile && navigator.share) {
