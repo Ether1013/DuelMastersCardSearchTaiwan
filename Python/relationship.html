@@ -213,12 +213,13 @@
       user-select: none;
     }
 
+    /* 💡 修改：輸入框文字對齊改為靠左 (left) */
     .free-label-textarea {
       background: rgba(15, 15, 15, 0.85);
       border: 1px dashed #888;
       border-radius: 6px;
       outline: none;
-      text-align: center;
+      text-align: left;
       padding: 6px 10px;
       resize: none;
       overflow: hidden;
@@ -614,7 +615,7 @@
       return Math.round(val / GRID_SIZE) * GRID_SIZE;
     }
 
-    // --- 3. 建立與恢復卡片節點（防變形，等比例） ---
+    // --- 3. 建立與恢復卡片節點 ---
     function createNode(src, x = 100, y = 100) {
       const img = new Image();
       img.onload = () => {
@@ -1061,7 +1062,7 @@
       }
     });
 
-    // --- 7. 線條計算（同卡多線避開 + 側接頂底 L 型優先 + 重複線平行位移）---
+    // --- 7. 線條計算 ---
 
     function computeSideOffset(node, side, slotIndex, totalSlots) {
       if (totalSlots <= 1) {
@@ -1340,7 +1341,7 @@
       }
     });
 
-    // --- 9. Canvas 匯出與手機儲存至相簿邏輯 (超高清 2K 畫質版本) ---
+    // --- 9. Canvas 匯出與手機儲存至相簿邏輯 ---
     document.getElementById('btn-export').addEventListener('click', async () => {
       if (nodes.length === 0 && freeLabels.length === 0) {
         alert('畫面上沒有任何內容可供匯出！');
@@ -1360,7 +1361,6 @@
           return { ...node, loadedImgSrc: finalSrc };
         }));
 
-        // 💡 強制取用 2 倍畫質或螢幕原生超高 DPI
         const scale = Math.max(window.devicePixelRatio || 1, 2);
 
         const exportCanvas = document.createElement('canvas');
@@ -1507,6 +1507,7 @@
       ctx.fill();
     }
 
+    // 💡 修改：繪製文字改為靠左對齊 (left)
     function renderFreeLabelsToCanvas(ctx) {
       freeLabels.forEach(lbl => {
         if (!lbl.text.trim()) return;
@@ -1516,10 +1517,9 @@
         const lineHeight = fontSize * 1.35;
 
         ctx.font = `${fontSize}px Arial`;
-        ctx.textAlign = 'center';
+        ctx.textAlign = 'left'; // 靠左對齊
         ctx.textBaseline = 'middle';
 
-        // 算出最長的一行字寬度
         let maxW = 0;
         linesArr.forEach(l => {
           const w = ctx.measureText(l).width;
@@ -1527,21 +1527,21 @@
         });
 
         const padding = 10;
-        const boxWidth = Math.max(100, maxW + padding * 2); // 黑框總寬度
+        const boxWidth = Math.max(100, maxW + padding * 2);
         const totalH = linesArr.length * lineHeight;
-        const boxHeight = Math.max(32, totalH + padding); // 黑框總高度
+        const boxHeight = Math.max(32, totalH + padding);
 
         // 1. 繪製半透明黑框背景
         ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
         ctx.fillRect(lbl.x, lbl.y, boxWidth, boxHeight);
 
-        // 2. 繪製文字 (以黑框正水平中心點 lbl.x + boxWidth / 2 為基準點置中)
+        // 2. 繪製靠左文字（起點為黑框左側加上內邊距 padding）
         ctx.fillStyle = lbl.color || '#ffffff';
-        const centerX = lbl.x + boxWidth / 2;
+        const startX = lbl.x + padding;
         const startY = lbl.y + (boxHeight - totalH) / 2 + lineHeight / 2;
 
         linesArr.forEach((lineText, idx) => {
-          ctx.fillText(lineText, centerX, startY + idx * lineHeight);
+          ctx.fillText(lineText, startX, startY + idx * lineHeight);
         });
       });
     }
