@@ -2758,7 +2758,8 @@
 			botDiv.innerHTML = '';
 
 			rawCardTypes.forEach(data => {
-				if (data.value == null) return;
+				// 💡 新增/修改：1. value 必須有值 2. disabled 不能為 true (僅當 disabled 為 undefined, null, 或 false 時通過)
+				if (data.value == null || data.value === "" || data.disabled === true) return;
 				
 				const isCategory = data.catagory || data.category;
 				if (!(isAdv || isCategory || data.main)) return;
