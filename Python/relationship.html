@@ -91,7 +91,7 @@
       pointer-events: visiblePainted;
     }
 
-    /* 圖層：自由獨立文字備註與線條按鈕 (提高至高圖層 10000) */
+    /* 圖層：自由獨立文字備註與線條按鈕 */
     #labels-layer {
       position: absolute;
       top: 0;
@@ -201,7 +201,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
 
-    /* 💡 自由移動的獨立備註容器：預設 z-index 提升至 90000 */
+    /* 自由移動的獨立備註容器 */
     .free-label-node {
       position: absolute;
       pointer-events: auto;
@@ -259,7 +259,7 @@
       display: block;
     }
 
-    /* 💡 樣式選單 / 色盤彈窗：編輯狀態下推升至最高 z-index: 9999999 */
+    /* 樣式選單 / 色盤彈窗 */
     .style-popover {
       display: none;
       position: absolute;
@@ -295,7 +295,7 @@
       cursor: pointer;
     }
 
-    /* 💡 關聯線設定 Modal：推升至最高層級 z-index: 9999999 */
+    /* 關聯線設定 Modal */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -391,7 +391,7 @@
     <button class="btn" id="btn-select-file">選擇圖片</button>
     <button class="btn btn-info" id="btn-add-label">＋新增文字備註</button>
     <button class="btn btn-danger" id="btn-clear-all">全清空</button>
-    <button class="btn btn-success" id="btn-export">匯出關係圖</button>
+    <button class="btn btn-success" id="btn-export">下載關係圖</button>
     <span style="font-size: 12px; color: #ccc; margin-left: 6px;">
       💡 點擊選取卡片後再點擊目標卡片（或自己）即可建立連線
     </span>
@@ -789,7 +789,7 @@
       resizerEl.addEventListener('touchstart', onResizeStart, { passive: false });
     }
 
-    // --- 5. 自由移動的文字備註模組 (最高層級優化) ---
+    // --- 5. 自由移動的文字備註模組 ---
     document.getElementById('btn-add-label').addEventListener('click', () => {
       createFreeLabel(window.innerWidth / 2 - 50, window.innerHeight / 2 - 20, '', '#ffffff', 14);
     });
@@ -858,7 +858,6 @@
         el.style.height = el.scrollHeight + 'px';
       };
 
-      // 💡 聚焦與彈出選單時，提升備註節點與選單至極高層級 9999999
       textareaEl.onfocus = () => {
         containerEl.style.zIndex = '9999999';
         popover.classList.add('active');
@@ -1081,7 +1080,6 @@
       return map;
     }
 
-    // 計算線條軌跡
     function getLineRoute(line, edgeMap) {
       const fromNode = nodes.find(n => n.id === line.fromId);
       const toNode = nodes.find(n => n.id === line.toId);
@@ -1254,7 +1252,7 @@
       }
     });
 
-    // --- 9. Canvas 匯出預覽圖 ---
+    // --- 9. Canvas 匯出與圖檔下載 ---
     document.getElementById('btn-export').addEventListener('click', async () => {
       if (nodes.length === 0 && freeLabels.length === 0) {
         alert('畫面上沒有任何內容可供匯出！');
@@ -1290,25 +1288,22 @@
         renderLinesToCanvas(ctx);
         renderFreeLabelsToCanvas(ctx);
 
+        // 💡 調整：自動建立下載連結並觸發檔案下載到使用者的「下載/相簿」
         const dataUrl = exportCanvas.toDataURL('image/png');
-        const newWin = window.open();
-        if (newWin) {
-          newWin.document.write(`
-            <html>
-              <head><title>匯出關係圖預覽</title></head>
-              <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-                <img src="${dataUrl}" style="max-width:100%; height:auto; border:1px solid #444;" />
-              </body>
-            </html>
-          `);
-        } else {
-          alert('彈出視窗被瀏覽器攔截，請允許開啟視窗後重試。');
-        }
+        const downloadLink = document.createElement('a');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        
+        downloadLink.href = dataUrl;
+        downloadLink.download = `tcg_relationship_${timestamp}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
       } catch (err) {
         console.error('匯出失敗:', err);
         alert('匯出關係圖發生錯誤: ' + err.message);
       } finally {
-        btnExport.innerText = '匯出關係圖';
+        btnExport.innerText = '下載關係圖';
         btnExport.disabled = false;
       }
     });
