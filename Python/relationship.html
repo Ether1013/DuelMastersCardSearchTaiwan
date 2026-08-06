@@ -122,7 +122,7 @@
       height: 100%;
       display: block;
       pointer-events: none;
-      object-fit: cover; /* 修正：確保圖片填滿且絕不變形 */
+      object-fit: cover;
     }
 
     /* 縮放手把 */
@@ -614,14 +614,13 @@
       return Math.round(val / GRID_SIZE) * GRID_SIZE;
     }
 
-    // --- 3. 建立與恢復卡片節點（修正：嚴格保持圖片原始比例，避免變形） ---
+    // --- 3. 建立與恢復卡片節點（防變形，等比例） ---
     function createNode(src, x = 100, y = 100) {
       const img = new Image();
       img.onload = () => {
         let rawW = img.naturalWidth || img.width || 120;
         let rawH = img.naturalHeight || img.height || 160;
         
-        // 嚴格按原始長寬比例，限制最大尺寸為 160px，不做網格對齊防擠壓
         const MAX_SIZE = 160;
         let w = rawW;
         let h = rawH;
@@ -1143,7 +1142,6 @@
       const toNode = nodes.find(n => n.id === line.toId);
       if (!fromNode || !toNode) return [];
 
-      // 自連線
       if (fromNode.id === toNode.id) {
         const pad = PADDING_OFFSET;
         const pStart = { x: fromNode.x + fromNode.w * 0.5, y: fromNode.y - pad };
@@ -1154,7 +1152,6 @@
         return [pStart, p1, p2, p3, pEnd];
       }
 
-      // 統計「重複連線」組進行平行向量位移
       const pairKey = [fromNode.id, toNode.id].sort((a, b) => a - b).join('_');
       const samePairLines = lines.filter(l => 
         (l.fromId === fromNode.id && l.toId === toNode.id) || 
@@ -1216,7 +1213,6 @@
         ];
       }
 
-      // 優先以 L 型連結（側接頂底）
       const fC = { x: fromNode.x + fromNode.w / 2, y: fromNode.y + fromNode.h / 2 };
       const tC = { x: toNode.x + toNode.w / 2, y: toNode.y + toNode.h / 2 };
 
@@ -1344,7 +1340,7 @@
       }
     });
 
-    // --- 9. Canvas 匯出與手機儲存至相簿邏輯 ---
+    // --- 9. Canvas 匯出與手機儲存至相簿邏輯 (超高清 2K 畫質版本) ---
     document.getElementById('btn-export').addEventListener('click', async () => {
       if (nodes.length === 0 && freeLabels.length === 0) {
         alert('畫面上沒有任何內容可供匯出！');
@@ -1352,7 +1348,7 @@
       }
 
       const btnExport = document.getElementById('btn-export');
-      btnExport.innerText = '處理與繪製中...';
+      btnExport.innerText = '高清繪製中...';
       btnExport.disabled = true;
 
       try {
@@ -1364,13 +1360,21 @@
           return { ...node, loadedImgSrc: finalSrc };
         }));
 
+        // 💡 強制取用 2 倍畫質或螢幕原生超高 DPI
+        const scale = Math.max(window.devicePixelRatio || 1, 2);
+
         const exportCanvas = document.createElement('canvas');
-        exportCanvas.width = window.innerWidth;
-        exportCanvas.height = window.innerHeight;
+        exportCanvas.width = window.innerWidth * scale;
+        exportCanvas.height = window.innerHeight * scale;
+        
         const ctx = exportCanvas.getContext('2d');
+        ctx.scale(scale, scale);
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
         const sortedNodes = [...preparedNodes].sort((a, b) => a.zIndex - b.zIndex);
         for (let node of sortedNodes) {
@@ -1382,21 +1386,21 @@
 
         exportCanvas.toBlob(async (blob) => {
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-          const file = new File([blob], `tcg_relationship_${timestamp}.png`, { type: 'image/png' });
+          const file = new File([blob], `tcg_relationship_hd_${timestamp}.png`, { type: 'image/png' });
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
               await navigator.share({
                 files: [file],
                 title: 'TCG 卡牌關係圖',
-                text: '這是我編輯的卡牌關係圖'
+                text: '這是我編輯的高清卡牌關係圖'
               });
             } catch (shareErr) {
               console.log('使用者取消或不支援分享選單');
             }
           } else {
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const dataUrl = exportCanvas.toDataURL('image/png');
+            const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
 
             if (isMobile) {
               document.getElementById('preview-img').src = dataUrl;
@@ -1404,13 +1408,13 @@
             } else {
               const downloadLink = document.createElement('a');
               downloadLink.href = dataUrl;
-              downloadLink.download = `tcg_relationship_${timestamp}.png`;
+              downloadLink.download = `tcg_relationship_hd_${timestamp}.png`;
               document.body.appendChild(downloadLink);
               downloadLink.click();
               document.body.removeChild(downloadLink);
             }
           }
-        }, 'image/png');
+        }, 'image/png', 1.0);
 
       } catch (err) {
         console.error('匯出失敗:', err);
