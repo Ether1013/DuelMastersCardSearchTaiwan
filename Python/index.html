@@ -74,12 +74,12 @@
         .col-half { flex: 0.5; }
 
         /* ================= 進階模式控制 ================= */
-        .advanced-only { display: none !important; }
-        body.advanced-mode div.advanced-only { display: block !important; }
-        body.advanced-mode div.advanced-only-flex { display: flex !important; }
+        .advanced-only { display: none; }
+        body.advanced-mode div.advanced-only { display: block; }
+        body.advanced-mode div.advanced-only-flex { display: flex; }
         body.advanced-mode span.advanced-only, 
         body.advanced-mode select.advanced-only, 
-        body.advanced-mode button.advanced-only { display: inline-block !important; }
+        body.advanced-mode button.advanced-only { display: inline-block; }
 
         /* ================= Chip 按鈕風格元件 ================= */
 		.checkbox-group { 
@@ -122,9 +122,9 @@
 		/* 💡 選中高亮狀態 (支援雙重相容：:has(input:checked) 或 .chip-active 類別) */
 		.checkbox-group label:has(input:checked),
 		.checkbox-group label.chip-active {
-			background-color: #0284c7 !important;
-			color: #ffffff !important;
-			border-color: #0369a1 !important;
+			background-color: #0284c7;
+			color: #ffffff;
+			border-color: #0369a1;
 			box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
 		}
 
@@ -144,9 +144,9 @@
 		}
 		#cardtype-top label:has(input:checked),
 		#cardtype-top label.chip-active {
-			background-color: #059669 !important;
-			color: #ffffff !important;
-			border-color: #047857 !important;
+			background-color: #059669;
+			color: #ffffff;
+			border-color: #047857;
 			box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25);
 		}
 
@@ -161,9 +161,9 @@
 		}
 		#cardtype-bottom label:has(input:checked),
 		#cardtype-bottom label.chip-active {
-			background-color: #ea580c !important;
-			color: #ffffff !important;
-			border-color: #c2410c !important;
+			background-color: #ea580c;
+			color: #ffffff;
+			border-color: #c2410c;
 			box-shadow: 0 2px 4px rgba(234, 88, 12, 0.25);
 		}
 
@@ -178,16 +178,16 @@
 		}
 		#section-b-group label:has(input:checked),
 		#section-b-group label.chip-active {
-			background-color: #4f46e5 !important;
-			color: #ffffff !important;
-			border-color: #4338ca !important;
+			background-color: #4f46e5;
+			color: #ffffff;
+			border-color: #4338ca;
 			box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
 		}
 
 		/* ---------------- 需求 2：[查詢衍生卡種] 專用按鈕高亮樣式 ---------------- */
 		.btn-icon.active {
-			background-color: #0284c7 !important;
-			color: #ffffff !important;
+			background-color: #0284c7;
+			color: #ffffff;
 		}
 
 
@@ -1927,6 +1927,11 @@
 			<div class="modal-body" style="padding: 16px; gap: 12px;">
 				<!-- 階段一：文字輸入框 -->
 				<div id="deck-input-step">
+<!--
+					<button type="button" id="btn-deckmaker-import" style="width:100%; margin-bottom:10px; padding:10px; background:#7c3aed; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">📄 直接上傳 DeckMaker 卡表 PDF</button>
+					<input type="file" id="input-deckmaker-pdf" accept="application/pdf,.pdf" hidden>
+					<div id="deckmaker-ocr-status" role="status" style="display:none; margin-bottom:10px; padding:8px; border-radius:6px; background:#f5f3ff; color:#5b21b6; font-size:12px;"></div>
+-->
 					<p style="font-size: 13px; color: #64748b; margin-top: 0;">
 						請在下方貼上卡牌列表，支援多種輸入方式（如：<code>A</code>, <code>3*B</code>, <code>4 C</code>, <code>E,E,F</code>）
 					</p>
@@ -2529,7 +2534,7 @@
 
         const CACHE_NAME = 'dm-data-cache-v1';
 
-        async function fetchFirebaseData() {
+        async function loadSearchData() {
 			const loadingOverlay = document.getElementById('loading-overlay');
 			const loadingText = document.getElementById('loading-text');
 
@@ -5499,15 +5504,6 @@
 		}
 		
 		// 強制觸發瀏覽器下載檔案的輔助函數
-		function triggerDirectDownload(dataUrl, fileName) {
-			const a = document.createElement('a');
-			a.href = dataUrl;
-			a.download = fileName;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-		}
-
 		function navigateToBackCard(targetName) {
 			if (!targetName) return;
 
@@ -6556,8 +6552,7 @@
 			});
 		});
 
-		// 資料載入完成後初始化快搜卡種按鈕 (寫在 fetchFirebaseData 成功的流程內)
-		// 請確保在 fetchFirebaseData 的 end 或 initDropdownData() 裡加上: initQuickCardTypes();
+		// 資料載入完成後初始化快搜卡種按鈕（由 loadSearchData 呼叫）。
 		
 		// 點擊「卡名標籤」與「分類標籤」後的快捷搜尋邏輯
 		function handleNameOrCategoryTagClick(targetName) {
@@ -7164,6 +7159,178 @@
 		}
 
 		// 點擊「解析與模糊比對」
+		const DECKMAKER_OCR_CACHE_KEY = 'dm_deckmaker_ocr_v1';
+		const DECKMAKER_PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+		const DECKMAKER_PDFJS_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+		const DECKMAKER_TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+		const DECKMAKER_TESSDATA_BEST_URL = 'https://tessdata.projectnaptha.com/4.0.0_best';
+
+		function setDeckMakerOcrStatus(message, isError = false) {
+			const status = document.getElementById('deckmaker-ocr-status');
+			if (!status) return;
+			status.textContent = message;
+			status.style.display = 'block';
+			status.style.background = isError ? '#fef2f2' : '#f5f3ff';
+			status.style.color = isError ? '#b91c1c' : '#5b21b6';
+		}
+
+		function loadDeckMakerScript(src, globalName) {
+			if (window[globalName]) return Promise.resolve();
+			const existing = document.querySelector(`script[data-deckmaker-src="${src}"]`);
+			if (existing) {
+				return new Promise((resolve, reject) => {
+					existing.addEventListener('load', resolve, { once: true });
+					existing.addEventListener('error', () => reject(new Error('OCR 模組載入失敗')), { once: true });
+				});
+			}
+			return new Promise((resolve, reject) => {
+				const script = document.createElement('script');
+				script.src = src;
+				script.async = true;
+				script.dataset.deckmakerSrc = src;
+				script.onload = resolve;
+				script.onerror = () => reject(new Error('OCR 模組下載失敗'));
+				document.head.appendChild(script);
+			});
+		}
+
+		async function ensureDeckMakerOcrModules() {
+			const wasLoadedBefore = localStorage.getItem(DECKMAKER_OCR_CACHE_KEY) === '1';
+			if (!wasLoadedBefore) {
+				const approved = window.confirm(
+					'首次使用 DeckMaker PDF 匯入，需下載 PDF 解析器、OCR 引擎與 tessdata_best 日文模型。\n\n'
+					+ '檔案只會在此瀏覽器內分析，不會上傳到伺服器。是否繼續？'
+				);
+				if (!approved) return false;
+			}
+
+			setDeckMakerOcrStatus('正在準備本機 PDF／日文 OCR 模組…');
+			await Promise.all([
+				loadDeckMakerScript(DECKMAKER_PDFJS_URL, 'pdfjsLib'),
+				loadDeckMakerScript(DECKMAKER_TESSERACT_URL, 'Tesseract')
+			]);
+			window.pdfjsLib.GlobalWorkerOptions.workerSrc = DECKMAKER_PDFJS_WORKER_URL;
+			localStorage.setItem(DECKMAKER_OCR_CACHE_KEY, '1');
+			return true;
+		}
+
+		function deckMakerIsNewLayout(canvas) {
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			const x = Math.round(canvas.width * 0.694);
+			const top = Math.round(canvas.height * 0.14);
+			const bottom = Math.round(canvas.height * 0.51);
+			const data = ctx.getImageData(x, top, 2, bottom - top).data;
+			let darkPixels = 0;
+			for (let i = 0; i < data.length; i += 4) {
+				if (data[i] < 70 && data[i + 1] < 70 && data[i + 2] < 70) darkPixels++;
+			}
+			return darkPixels > ((bottom - top) * 2 * 0.35);
+		}
+
+		function getDeckMakerCardCrops(canvas) {
+			const ctx = canvas.getContext('2d');
+			const isNewLayout = deckMakerIsNewLayout(canvas);
+			const layout = isNewLayout
+				? { columns: [[0.045, 0.323], [0.355, 0.635], [0.675, 0.950]], top: 0.134, bottom: 0.519, rows: 20 }
+				: { columns: [[0.045, 0.475], [0.520, 0.950]], top: 0.146, bottom: 0.791, rows: 20 };
+			const crops = [];
+
+			for (const [left, right] of layout.columns) {
+				for (let row = 0; row < layout.rows; row++) {
+					const rowTop = layout.top + ((layout.bottom - layout.top) * row / layout.rows);
+					const rowBottom = layout.top + ((layout.bottom - layout.top) * (row + 1) / layout.rows);
+					const x = Math.round(canvas.width * left);
+					const y = Math.round(canvas.height * (rowTop + 0.003));
+					const width = Math.round(canvas.width * (right - left));
+					const height = Math.round(canvas.height * (rowBottom - rowTop - 0.006));
+					const crop = document.createElement('canvas');
+					crop.width = width;
+					crop.height = height;
+					crop.getContext('2d').drawImage(canvas, x, y, width, height, 0, 0, width, height);
+					crops.push(crop);
+				}
+			}
+			return { crops, isNewLayout };
+		}
+
+		function normalizeDeckMakerOcrText(text) {
+			return (text || '')
+				.replace(/[\r\n]+/g, ' ')
+				.replace(/[|｜]/g, '')
+				.replace(/\s+/g, ' ')
+				.trim();
+		}
+
+		async function readDeckMakerPdf(file) {
+			const pdfData = await file.arrayBuffer();
+			const pdf = await window.pdfjsLib.getDocument({ data: pdfData }).promise;
+			if (pdf.numPages !== 1) throw new Error('目前只支援單頁的 DeckMaker 卡表 PDF。');
+
+			const page = await pdf.getPage(1);
+			const viewport = page.getViewport({ scale: 2.5 });
+			const canvas = document.createElement('canvas');
+			canvas.width = Math.ceil(viewport.width);
+			canvas.height = Math.ceil(viewport.height);
+			await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+			const { crops, isNewLayout } = getDeckMakerCardCrops(canvas);
+			setDeckMakerOcrStatus(`已辨識 ${isNewLayout ? '60 格新版' : '40 格舊版'} DeckMaker 版型，正在下載／載入 tessdata_best 日文模型…`);
+			const worker = await window.Tesseract.createWorker('jpn', 1, {
+				langPath: DECKMAKER_TESSDATA_BEST_URL,
+				cacheMethod: 'write',
+				logger: message => {
+					if (typeof message.progress === 'number') {
+						setDeckMakerOcrStatus(`OCR 處理中：${Math.round(message.progress * 100)}%`);
+					}
+				}
+			});
+
+			try {
+				await worker.setParameters({ tessedit_pageseg_mode: '7' });
+				const names = [];
+				for (let i = 0; i < crops.length; i++) {
+					setDeckMakerOcrStatus(`正在辨識卡名：${i + 1} / ${crops.length}`);
+					const result = await worker.recognize(crops[i]);
+					const name = normalizeDeckMakerOcrText(result.data.text);
+					if (name) names.push(name);
+				}
+				if (names.length === 0) throw new Error('沒有辨識到卡名，請確認選擇的是 DeckMaker 匯出的卡表。');
+				return names;
+			} finally {
+				await worker.terminate();
+			}
+		}
+
+		async function importDeckMakerPdf(file) {
+			try {
+				setDeckMakerOcrStatus('正在讀取 PDF…');
+				const names = await readDeckMakerPdf(file);
+				const textarea = document.getElementById('deck-textarea');
+				textarea.value = names.join('\n');
+				setDeckMakerOcrStatus(`已讀取 ${names.length} 格卡名，正在進行既有的模糊比對…`);
+				document.getElementById('btn-parse-deck').click();
+			} catch (error) {
+				console.error('DeckMaker OCR failed:', error);
+				setDeckMakerOcrStatus(`DeckMaker OCR 失敗：${error.message || '請改用手動文字匯入。'}`, true);
+			}
+		}
+
+		document.getElementById('btn-deckmaker-import')?.addEventListener('click', async () => {
+			const isReady = await ensureDeckMakerOcrModules();
+			if (isReady) document.getElementById('input-deckmaker-pdf')?.click();
+		});
+
+		document.getElementById('input-deckmaker-pdf')?.addEventListener('change', async event => {
+			const file = event.target.files?.[0];
+			event.target.value = '';
+			if (!file) return;
+			if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+				setDeckMakerOcrStatus('請選擇 PDF 檔案。', true);
+				return;
+			}
+			await importDeckMakerPdf(file);
+		});
+
 		document.getElementById('btn-parse-deck')?.addEventListener('click', () => {
 			const text = document.getElementById('deck-textarea').value.trim();
 			if (!text) { alert("請貼上卡牌文字！"); return; }
@@ -7556,7 +7723,7 @@
         });
 
         // 執行資料載入
-		fetchFirebaseData();
+		loadSearchData();
 
 		// 💡 額外安全機制：若因為任何極端原因 5 秒內資料還沒載入完，強制移除遮罩，避免頁面死鎖
 		setTimeout(() => {

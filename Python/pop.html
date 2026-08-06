@@ -29,8 +29,8 @@
 
         /* ================= 模式 1：僅匯出圖片 (響應式卡牌寬度) ================= */
         body.mode-img-only {
-            background: #111 !important;
-            color: #fff !important;
+            background: #111;
+            color: #fff;
             /* 預設卡牌寬高與間距 CSS 變數，JS 會依螢幕寬度動態計算更新 */
             --card-w: 140px;
             --card-h: 196px;
@@ -121,8 +121,8 @@
             width: auto;
         }
         .card-img.is-horizontal {
-            width: 196px !important;
-            height: 140px !important;
+            width: 196px;
+            height: 140px;
         }
         .card-img { 
             width: 140px; 
@@ -245,17 +245,17 @@
             max-width: 196px;
         }
         .stacked-card-img.is-horizontal {
-            width: 196px !important;
-            height: 140px !important;
+            width: 196px;
+            height: 140px;
         }
         .stacked-card-img.is-horizontal:not(:first-child) {
-            margin-top: -110px !important;
+            margin-top: -110px;
         }
 		
 		/* pop.html: 模式 4 (img_unfold) 全域樣式與變數 */
 		body.mode-img-unfold {
-			background: #111 !important;
-			color: #fff !important;
+			background: #111;
+			color: #fff;
 			--card-w: 120px;
 			--card-h: 168px;
 			--card-gap: 6px;
@@ -696,187 +696,187 @@
 		}
 
 		/**
- * 展開式純圖 (Unfolded Pure Image) 合成矩形對齊演算函式
- * 核心：
- * 1. 矩形度 Penalty 優先級最高
- * 2. 【新增】跨列合成矩形加分：當 4 張卡正下方為 (3+1) 或 (2+2) 拼出等寬度 4 的矩形時給予高額加分
- */
-function computeUnfoldLayout(items) {
-    const COLS = 8;
+		 * 展開式純圖 (Unfolded Pure Image) 合成矩形對齊演算函式
+		 * 核心：
+		 * 1. 矩形度 Penalty 優先級最高
+		 * 2. 【新增】跨列合成矩形加分：當 4 張卡正下方為 (3+1) 或 (2+2) 拼出等寬度 4 的矩形時給予高額加分
+		 */
+		function computeUnfoldLayout(items) {
+			const COLS = 8;
 
-    // 1. 將實體卡片轉為「同名卡橫條 (Strips)」
-    const strips = items.map((item, originalIndex) => ({
-        ...item,
-        id: originalIndex,
-        groupCount: item.count || 1,
-        length: item.count || 1
-    }));
+			// 1. 將實體卡片轉為「同名卡橫條 (Strips)」
+			const strips = items.map((item, originalIndex) => ({
+				...item,
+				id: originalIndex,
+				groupCount: item.count || 1,
+				length: item.count || 1
+			}));
 
-    let totalCards = 0;
-    strips.forEach(s => totalCards += s.length);
-    if (totalCards === 0) return [];
+			let totalCards = 0;
+			strips.forEach(s => totalCards += s.length);
+			if (totalCards === 0) return [];
 
-    const totalRows = Math.ceil(totalCards / COLS);
-    const grid = Array.from({ length: totalRows }, () => Array(COLS).fill(null));
+			const totalRows = Math.ceil(totalCards / COLS);
+			const grid = Array.from({ length: totalRows }, () => Array(COLS).fill(null));
 
-    // 2. 評估評分機制 (Evaluation Function)
-    function evaluateGrid(currGrid) {
-        const blockStats = {};
+			// 2. 評估評分機制 (Evaluation Function)
+			function evaluateGrid(currGrid) {
+				const blockStats = {};
 
-        for (let r = 0; r < totalRows; r++) {
-            for (let c = 0; c < COLS; c++) {
-                const card = currGrid[r][c];
-                if (!card) continue;
-                const gc = card.groupCount;
-                if (!blockStats[gc]) {
-                    blockStats[gc] = { minR: r, maxR: r, minC: c, maxC: c, count: 0, rowFirstCol: {} };
-                }
-                const b = blockStats[gc];
-                b.minR = Math.min(b.minR, r);
-                b.maxR = Math.max(b.maxR, r);
-                b.minC = Math.min(b.minC, c);
-                b.maxC = Math.max(b.maxC, c);
-                b.count++;
+				for (let r = 0; r < totalRows; r++) {
+					for (let c = 0; c < COLS; c++) {
+						const card = currGrid[r][c];
+						if (!card) continue;
+						const gc = card.groupCount;
+						if (!blockStats[gc]) {
+							blockStats[gc] = { minR: r, maxR: r, minC: c, maxC: c, count: 0, rowFirstCol: {} };
+						}
+						const b = blockStats[gc];
+						b.minR = Math.min(b.minR, r);
+						b.maxR = Math.max(b.maxR, r);
+						b.minC = Math.min(b.minC, c);
+						b.maxC = Math.max(b.maxC, c);
+						b.count++;
 
-                if (b.rowFirstCol[r] === undefined || c < b.rowFirstCol[r]) {
-                    b.rowFirstCol[r] = c;
-                }
-            }
-        }
+						if (b.rowFirstCol[r] === undefined || c < b.rowFirstCol[r]) {
+							b.rowFirstCol[r] = c;
+						}
+					}
+				}
 
-        let totalPenalty = 0;
-        let anchorBonus = 0;
-        let compositeRectBonus = 0; // 【核心加分：跨列合成矩形】
+				let totalPenalty = 0;
+				let anchorBonus = 0;
+				let compositeRectBonus = 0; // 【核心加分：跨列合成矩形】
 
-        // 【Tier 1 - 最高權重】單一卡數群矩形度 Penalty
-        Object.keys(blockStats).forEach(gc => {
-            const b = blockStats[gc];
-            const width = b.maxC - b.minC + 1;
-            const height = b.maxR - b.minR + 1;
-            const boundingBoxArea = width * height;
+				// 【Tier 1 - 最高權重】單一卡數群矩形度 Penalty
+				Object.keys(blockStats).forEach(gc => {
+					const b = blockStats[gc];
+					const width = b.maxC - b.minC + 1;
+					const height = b.maxR - b.minR + 1;
+					const boundingBoxArea = width * height;
 
-            totalPenalty += (boundingBoxArea - b.count) * 10000;
+					totalPenalty += (boundingBoxArea - b.count) * 10000;
 
-            // 【Tier 2 - 次高權重】同張數群左側齊頭對齊 (Column Alignment)
-            const rows = Object.keys(b.rowFirstCol);
-            if (rows.length > 1) {
-                const firstCols = rows.map(r => b.rowFirstCol[r]);
-                if (firstCols.every(col => col === firstCols[0])) {
-                    anchorBonus += 1000;
-                }
-            }
-        });
+					// 【Tier 2 - 次高權重】同張數群左側齊頭對齊 (Column Alignment)
+					const rows = Object.keys(b.rowFirstCol);
+					if (rows.length > 1) {
+						const firstCols = rows.map(r => b.rowFirstCol[r]);
+						if (firstCols.every(col => col === firstCols[0])) {
+							anchorBonus += 1000;
+						}
+					}
+				});
 
-        // 【Tier 3 - 核心重點】檢測 4 與下方 (3+1) 或 (2+2) 的合成矩形
-        for (let r = 0; r < totalRows - 1; r++) {
-            for (let c = 0; c < COLS; c++) {
-                const topCard = currGrid[r][c];
-                const bottomCard = currGrid[r + 1][c];
+				// 【Tier 3 - 核心重點】檢測 4 與下方 (3+1) 或 (2+2) 的合成矩形
+				for (let r = 0; r < totalRows - 1; r++) {
+					for (let c = 0; c < COLS; c++) {
+						const topCard = currGrid[r][c];
+						const bottomCard = currGrid[r + 1][c];
 
-                // 條件：當上方是 4 張卡的區塊起點 (c % 4 === 0 且長度為 4)
-                if (topCard && topCard.length === 4 && (c === 0 || currGrid[r][c - 1]?.id !== topCard.id)) {
-                    // 檢查下方在 [c ~ c+3] 這 4 個格子的填補狀況
-                    let subStrips = [];
-                    let isSubComplete = true;
+						// 條件：當上方是 4 張卡的區塊起點 (c % 4 === 0 且長度為 4)
+						if (topCard && topCard.length === 4 && (c === 0 || currGrid[r][c - 1]?.id !== topCard.id)) {
+							// 檢查下方在 [c ~ c+3] 這 4 個格子的填補狀況
+							let subStrips = [];
+							let isSubComplete = true;
 
-                    for (let k = 0; k < 4; k++) {
-                        const cell = currGrid[r + 1][c + k];
-                        if (!cell) {
-                            isSubComplete = false;
-                            break;
-                        }
-                        if (k === 0 || cell.id !== currGrid[r + 1][c + k - 1]?.id) {
-                            subStrips.push(cell);
-                        }
-                    }
+							for (let k = 0; k < 4; k++) {
+								const cell = currGrid[r + 1][c + k];
+								if (!cell) {
+									isSubComplete = false;
+									break;
+								}
+								if (k === 0 || cell.id !== currGrid[r + 1][c + k - 1]?.id) {
+									subStrips.push(cell);
+								}
+							}
 
-                    if (isSubComplete) {
-                        const subLengths = subStrips.map(s => s.length);
+							if (isSubComplete) {
+								const subLengths = subStrips.map(s => s.length);
 
-                        // 判斷 1: 下方為 3 + 1 (例如 C C C F) 且 3 張在前、1 張在後
-                        if (subLengths.length === 2 && subLengths[0] === 3 && subLengths[1] === 1) {
-                            compositeRectBonus += 500; // 拼成 2x4 大矩形加分！
-                        }
-                        // 判斷 2: 下方為 2 + 2 (例如 C C D D)
-                        else if (subLengths.length === 2 && subLengths[0] === 2 && subLengths[2] === 2) {
-                            compositeRectBonus += 400; // 拼成 2x4 大矩形加分！
-                        }
-                    }
-                }
-            }
-        }
+								// 判斷 1: 下方為 3 + 1 (例如 C C C F) 且 3 張在前、1 張在後
+								if (subLengths.length === 2 && subLengths[0] === 3 && subLengths[1] === 1) {
+									compositeRectBonus += 500; // 拼成 2x4 大矩形加分！
+								}
+								// 判斷 2: 下方為 2 + 2 (例如 C C D D)
+								else if (subLengths.length === 2 && subLengths[0] === 2 && subLengths[2] === 2) {
+									compositeRectBonus += 400; // 拼成 2x4 大矩形加分！
+								}
+							}
+						}
+					}
+				}
 
-        return (-totalPenalty) + anchorBonus + compositeRectBonus;
-    }
+				return (-totalPenalty) + anchorBonus + compositeRectBonus;
+			}
 
-    let bestGrid = null;
-    let bestScore = -Infinity;
+			let bestGrid = null;
+			let bestScore = -Infinity;
 
-    let searchCount = 0;
-    const MAX_SEARCH_NODES = 5000;
+			let searchCount = 0;
+			const MAX_SEARCH_NODES = 5000;
 
-    const sortedStrips = [...strips].sort((a, b) => b.length - a.length);
+			const sortedStrips = [...strips].sort((a, b) => b.length - a.length);
 
-    // 3. 實體橫條的回溯搜尋 (DFS with Pruning)
-    function backtrack(stripIdx) {
-        if (searchCount > MAX_SEARCH_NODES) return;
-        searchCount++;
+			// 3. 實體橫條的回溯搜尋 (DFS with Pruning)
+			function backtrack(stripIdx) {
+				if (searchCount > MAX_SEARCH_NODES) return;
+				searchCount++;
 
-        if (stripIdx >= sortedStrips.length) {
-            const score = evaluateGrid(grid);
-            if (score > bestScore) {
-                bestScore = score;
-                bestGrid = grid.map(row => [...row]);
-            }
-            return;
-        }
+				if (stripIdx >= sortedStrips.length) {
+					const score = evaluateGrid(grid);
+					if (score > bestScore) {
+						bestScore = score;
+						bestGrid = grid.map(row => [...row]);
+					}
+					return;
+				}
 
-        const currentStrip = sortedStrips[stripIdx];
-        const len = currentStrip.length;
+				const currentStrip = sortedStrips[stripIdx];
+				const len = currentStrip.length;
 
-        for (let r = 0; r < totalRows; r++) {
-            for (let c = 0; c <= COLS - len; c++) {
-                let canPlace = true;
-                for (let k = 0; k < len; k++) {
-                    if (grid[r][c + k] !== null) {
-                        canPlace = false;
-                        break;
-                    }
-                }
+				for (let r = 0; r < totalRows; r++) {
+					for (let c = 0; c <= COLS - len; c++) {
+						let canPlace = true;
+						for (let k = 0; k < len; k++) {
+							if (grid[r][c + k] !== null) {
+								canPlace = false;
+								break;
+							}
+						}
 
-                if (canPlace) {
-                    for (let k = 0; k < len; k++) {
-                        grid[r][c + k] = {
-                            ...currentStrip,
-                            isFirstOfCard: (k === 0)
-                        };
-                    }
+						if (canPlace) {
+							for (let k = 0; k < len; k++) {
+								grid[r][c + k] = {
+									...currentStrip,
+									isFirstOfCard: (k === 0)
+								};
+							}
 
-                    backtrack(stripIdx + 1);
+							backtrack(stripIdx + 1);
 
-                    for (let k = 0; k < len; k++) {
-                        grid[r][c + k] = null;
-                    }
-                }
-            }
-        }
-    }
+							for (let k = 0; k < len; k++) {
+								grid[r][c + k] = null;
+							}
+						}
+					}
+				}
+			}
 
-    backtrack(0);
+			backtrack(0);
 
-    if (!bestGrid) return items;
+			if (!bestGrid) return items;
 
-    // 4. 展平成一維陣列回傳給渲染器
-    const resultCards = [];
-    for (let r = 0; r < totalRows; r++) {
-        for (let c = 0; c < COLS; c++) {
-            if (bestGrid[r][c]) {
-                resultCards.push(bestGrid[r][c]);
-            }
-        }
-    }
-    return resultCards;
-}
+			// 4. 展平成一維陣列回傳給渲染器
+			const resultCards = [];
+			for (let r = 0; r < totalRows; r++) {
+				for (let c = 0; c < COLS; c++) {
+					if (bestGrid[r][c]) {
+						resultCards.push(bestGrid[r][c]);
+					}
+				}
+			}
+			return resultCards;
+		}
 
         async function initPopPage() {
             const urlParams = new URLSearchParams(window.location.search);

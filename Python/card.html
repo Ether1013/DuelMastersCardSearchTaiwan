@@ -222,20 +222,6 @@
             return strId.toUpperCase().startsWith('DM') ? strId : 'DM' + strId;
         }
 
-        function normalizeId(s) {
-            if (!s) return "";
-            let res = [];
-            for (let ch of String(s)) {
-                let code = ch.charCodeAt(0);
-                if (0xFF01 <= code && code <= 0xFF5E) {
-                    res.push(String.fromCharCode(code - 0xfee0));
-                } else {
-                    res.push(ch);
-                }
-            }
-            return res.join('').toUpperCase().replace(/[^A-Z0-9]/g, '');
-        }
-
         function getCivBackground(totalCiv) {
             const colors = [];
             if (totalCiv & 16) colors.push('#FFD54F'); // 光
