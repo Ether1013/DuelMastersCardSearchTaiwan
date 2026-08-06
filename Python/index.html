@@ -729,13 +729,35 @@
 
 		.drawer-row {
 			display: flex;
-			align-items: center;
+			align-items: flex-start; /* 💡 改為頂部對齊，確保 label 與第一排按鈕對齊 */
 			gap: 10px;
 			font-size: 13px;
-			flex-wrap: wrap;
+			margin-bottom: 6px;
 		}
-		.drawer-row label { font-weight: bold; color: #334155; min-width: 45px; }
-		.drawer-row select { width: auto; margin-bottom: 0; padding: 4px 8px; font-size: 13px; }
+
+		/* 標題固定寬度，不參與壓縮與折行 */
+		.drawer-row label { 
+			font-weight: bold; 
+			color: #334155; 
+			min-width: 45px; 
+			padding-top: 4px; /* 💡 稍微置頂對齊按鈕 */
+			flex-shrink: 0;   /* 💡 強制標題不可被壓縮 */
+		}
+		/* 💡 新增：按鈕群組容器，負責處理按鈕之間的換行與對齊 */
+		.drawer-btn-group {
+			display: flex;
+			flex-wrap: wrap;  /* 讓按鈕在自身容器內換行 */
+			gap: 6px;         /* 按鈕之間的間距 */
+			flex: 1;          /* 佔滿右側剩餘空間 */
+			min-width: 0;
+		}
+
+		.drawer-row select { 
+			width: auto; 
+			margin-bottom: 0; 
+			padding: 4px 8px; 
+			font-size: 13px; 
+		}
 		.btn-drawer-action {
 			padding: 4px 12px;
 			background: #0284c7;
@@ -1737,7 +1759,7 @@
     <!-- 第二個頁籤：查詢結果 (列表) -->
 	<div id="tab-list" class="tab-content">
 		
-		<!-- 抽屜工具列 -->
+		<!-- 第二頁籤 抽屜工具列 -->
 		<div class="drawer-container" id="drawer-tab2">
 			<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
 				<span>⚙️ 排序與列表匯出工具</span>
@@ -1747,32 +1769,40 @@
 				<!-- 1. 排序區塊 -->
 				<div class="drawer-row">
 					<label>排序：</label>
-					<select id="sort-select">
-						<option value="default" selected>預設</option>
-						<option value="name_asc">卡名 (升冪 A→Z)</option>
-						<option value="name_desc">卡名 (降冪 Z→A)</option>
-						<option value="cost_asc">費用 (升冪 低→高)</option>
-						<option value="cost_desc">費用 (降冪 高→低)</option>
-						<option value="power_asc">攻擊力 (升冪 低→高)</option>
-						<option value="power_desc">攻擊力 (降冪 高→低)</option>
-						<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
-					</select>
+					<div class="drawer-btn-group">
+						<select id="sort-select">
+							<option value="default" selected>預設</option>
+							<option value="name_asc">卡名 (升冪 A→Z)</option>
+							<option value="name_desc">卡名 (降冪 Z→A)</option>
+							<option value="cost_asc">費用 (升冪 低→高)</option>
+							<option value="cost_desc">費用 (降冪 高→低)</option>
+							<option value="power_asc">攻擊力 (升冪 低→高)</option>
+							<option value="power_desc">攻擊力 (降冪 高→低)</option>
+							<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+						</select>
+					</div>
 				</div>
 				<!-- 2. 匯出區塊 -->
 				<div class="drawer-row">
 					<label>匯出：</label>
-					<button type="button" class="btn-drawer-action" id="btn-export-list">📄 匯出文字與圖片至新分頁</button>
+					<div class="drawer-btn-group">
+						<button type="button" class="btn-drawer-action" id="btn-export-list">📄 匯出文字與圖片至新分頁</button>
+					</div>
 				</div>
-				<!-- 抽屜區塊內新增第 3 行按鈕 -->
+				<!-- 3. 歷史區塊 -->
 				<div class="drawer-row">
 					<label>歷史：</label>
-					<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+					<div class="drawer-btn-group">
+						<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+					</div>
 				</div>
-				<!-- 新增手動匯入與分享連結按鈕 -->
+				<!-- 4. 自訂區塊 (按鈕全部放入 group 容器內) -->
 				<div class="drawer-row">
 					<label>自訂：</label>
-					<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
-					<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
+					<div class="drawer-btn-group">
+						<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
+						<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -1797,32 +1827,40 @@
 						<!-- 1. 排序區塊 -->
 						<div class="drawer-row">
 							<label>排序：</label>
-							<select class="sort-select-input" id="sort-select-split">
-								<option value="default" selected>預設</option>
-								<option value="name_asc">卡名 (升冪 A→Z)</option>
-								<option value="name_desc">卡名 (降冪 Z→A)</option>
-								<option value="cost_asc">費用 (升冪 低→高)</option>
-								<option value="cost_desc">費用 (降冪 高→低)</option>
-								<option value="power_asc">攻擊力 (升冪 低→高)</option>
-								<option value="power_desc">攻擊力 (降冪 高→低)</option>
-								<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
-							</select>
+							<div class="drawer-btn-group">
+								<select class="sort-select-input" id="sort-select-split">
+									<option value="default" selected>預設</option>
+									<option value="name_asc">卡名 (升冪 A→Z)</option>
+									<option value="name_desc">卡名 (降冪 Z→A)</option>
+									<option value="cost_asc">費用 (升冪 低→高)</option>
+									<option value="cost_desc">費用 (降冪 高→低)</option>
+									<option value="power_asc">攻擊力 (升冪 低→高)</option>
+									<option value="power_desc">攻擊力 (降冪 高→低)</option>
+									<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+								</select>
+							</div>
 						</div>
 						<!-- 2. 匯出區塊 -->
 						<div class="drawer-row">
 							<label>匯出：</label>
-							<button type="button" class="btn-drawer-action btn-export-action">📄 匯出文字與圖片至新分頁</button>
+							<div class="drawer-btn-group">
+								<button type="button" class="btn-drawer-action btn-export-action">📄 匯出文字與圖片至新分頁</button>
+							</div>
 						</div>
 						<!-- 3. 歷史區塊 -->
 						<div class="drawer-row">
 							<label>歷史：</label>
-							<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+							<div class="drawer-btn-group">
+								<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+							</div>
 						</div>
-						<!-- 💡 4. 新增：Page 3 的自訂按鈕區塊 -->
+						<!-- 4. 自訂區塊 -->
 						<div class="drawer-row">
 							<label>自訂：</label>
-							<button type="button" class="btn-drawer-action btn-open-deck-import-action">📥 手動匯入卡表</button>
-							<button type="button" class="btn-drawer-action btn-share-deck-link-action" style="background: #16a34a;">🔗 取得連結</button>
+							<div class="drawer-btn-group">
+								<button type="button" class="btn-drawer-action btn-open-deck-import-action">📥 手動匯入卡表</button>
+								<button type="button" class="btn-drawer-action btn-share-deck-link-action" style="background: #16a34a;">🔗 取得連結</button>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -3473,7 +3511,9 @@
 			document.querySelectorAll('#drawer-tab2 .drawer-row, #drawer-tab3 .drawer-row').forEach(row => {
 				const label = row.querySelector('label');
 				if (label && label.innerText.includes('自訂')) {
-					let btnEdit = row.querySelector('.btn-edit-deck-action');
+					// 取得按鈕專屬的 group 容器
+					const btnGroup = row.querySelector('.drawer-btn-group') || row;
+					let btnEdit = btnGroup.querySelector('.btn-edit-deck-action');
 					
 					// 條件：過濾條件只有商品 + 為 NET-900 起的自訂牌組
 					if (isCustomNetDeck && !hasOtherFilters) {
@@ -3485,11 +3525,12 @@
 							btnEdit.style.color = '#ffffff';
 							btnEdit.innerText = '✏️ 修改自訂卡表';
 							
-							const btnImport = row.querySelector('.btn-open-deck-import-action');
+							// 插入在 [手動匯入卡表] 按鈕之後
+							const btnImport = btnGroup.querySelector('.btn-open-deck-import-action');
 							if (btnImport) {
 								btnImport.after(btnEdit);
 							} else {
-								row.appendChild(btnEdit);
+								btnGroup.appendChild(btnEdit);
 							}
 						}
 						
