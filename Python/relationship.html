@@ -33,6 +33,7 @@
       border-radius: 8px;
       align-items: center;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      flex-wrap: wrap;
     }
     .btn {
       background: #007bff;
@@ -46,6 +47,8 @@
       transition: background 0.2s;
     }
     .btn:hover { background: #0056b3; }
+    .btn-info { background: #17a2b8; }
+    .btn-info:hover { background: #138496; }
     .btn-success { background: #28a745; }
     .btn-success:hover { background: #218838; }
     .btn-danger { background: #dc3545; }
@@ -88,7 +91,7 @@
       pointer-events: visiblePainted;
     }
 
-    /* 文字註解層 */
+    /* 圖層：自由獨立文字備註 */
     #labels-layer {
       position: absolute;
       top: 0;
@@ -99,7 +102,7 @@
       pointer-events: none;
     }
 
-    /* 圖片容器 */
+    /* 圖片卡片容器 */
     .card-node {
       position: absolute;
       display: inline-block;
@@ -110,13 +113,9 @@
       border: 2px solid transparent;
       box-sizing: border-box;
     }
-    .card-node.selected {
-      border: 2px solid #ffc107;
-      box-shadow: 0 0 10px #ffc107;
-    }
     .card-node.rel-source {
-      border: 2px dashed #00ffff;
-      box-shadow: 0 0 12px #00ffff;
+      border: 3px dashed #00ffff;
+      box-shadow: 0 0 14px #00ffff;
     }
     .card-node img {
       width: 100%;
@@ -128,12 +127,12 @@
 
     /* 縮放手把 */
     .resizer {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       background: #ffc107;
       position: absolute;
-      right: -6px;
-      bottom: -6px;
+      right: -7px;
+      bottom: -7px;
       cursor: se-resize;
       border-radius: 50%;
     }
@@ -146,10 +145,10 @@
       background: #dc3545;
       color: white;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       text-align: center;
-      line-height: 18px;
+      line-height: 20px;
       font-size: 12px;
       cursor: pointer;
       font-weight: bold;
@@ -159,13 +158,13 @@
       display: block;
     }
 
-    /* [請雙擊目標] 提示浮框 */
+    /* 選擇目標卡片提示浮框 */
     .target-hint-popover {
       position: absolute;
-      top: -36px;
+      top: -38px;
       left: 50%;
       transform: translateX(-50%);
-      background: #ffc107;
+      background: #00ffff;
       color: #000;
       padding: 4px 10px;
       font-size: 13px;
@@ -182,59 +181,82 @@
       to { opacity: 1; transform: translate(-50%, 0); }
     }
 
-    /* 箭頭中間刪除按鈕 */
+    /* 箭頭刪除按鈕 */
     .line-delete-btn {
       position: absolute;
       background: #dc3545;
       color: white;
       border-radius: 50%;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       text-align: center;
-      line-height: 20px;
-      font-size: 12px;
+      line-height: 22px;
+      font-size: 13px;
       font-weight: bold;
       cursor: pointer;
       transform: translate(-50%, -50%);
       pointer-events: auto;
       z-index: 120;
-      border: 1px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      border: 1.5px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
 
-    /* 線條文字備註容器 */
-    .line-label-container {
+    /* 自由移動的獨立備註容器 */
+    .free-label-node {
       position: absolute;
-      transform: translate(-50%, -50%);
       pointer-events: auto;
-      z-index: 20000;
+      z-index: 500;
+      cursor: move;
       display: flex;
       flex-direction: column;
       align-items: center;
+      user-select: none;
     }
 
-    /* 可換行的 Textarea */
-    .line-label-textarea {
-      background: rgba(15, 15, 15, 0.8);
+    .free-label-textarea {
+      background: rgba(15, 15, 15, 0.85);
       border: 1px dashed #888;
-      border-radius: 4px;
+      border-radius: 6px;
       outline: none;
       text-align: center;
-      padding: 4px 8px;
+      padding: 6px 10px;
       resize: none;
       overflow: hidden;
       white-space: pre-wrap;
       word-break: break-all;
       font-family: inherit;
-      line-height: 1.3;
-      min-width: 90px;
-      min-height: 28px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      line-height: 1.35;
+      min-width: 100px;
+      min-height: 32px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      color: #ffffff;
+      font-size: 14px;
     }
-    .line-label-textarea:focus {
+    .free-label-textarea:focus {
       border-style: solid;
       border-color: #007bff;
       background: rgba(0, 0, 0, 0.95);
+    }
+
+    .btn-delete-label {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      text-align: center;
+      line-height: 16px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+      border: 1px solid #fff;
+    }
+    .free-label-node:hover .btn-delete-label {
+      display: block;
     }
 
     /* 樣式選單 / 色盤 */
@@ -273,7 +295,7 @@
       cursor: pointer;
     }
 
-    /* 箭頭選擇 Modal */
+    /* 關聯連線設定 Modal */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -293,7 +315,7 @@
     .modal-card {
       background: #2d2d2d;
       border-radius: 12px;
-      width: 320px;
+      width: 340px;
       padding: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       border: 1px solid #444;
@@ -304,45 +326,58 @@
       from { transform: scale(0.85); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-    .modal-title {
-      font-size: 18px;
+    .modal-section-title {
+      font-size: 14px;
+      color: #aaa;
+      text-align: left;
+      margin: 12px 0 6px 0;
       font-weight: bold;
-      margin-bottom: 16px;
-      color: #fff;
     }
-    .modal-options {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
+    .modal-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
     .modal-opt-btn {
       background: #3a3a3a;
       color: #fff;
       border: 1px solid #555;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 13px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
     }
-    .modal-opt-btn:hover {
+    .modal-opt-btn.selected {
       background: #007bff;
       border-color: #007bff;
-      transform: translateY(-1px);
     }
+    .modal-btn-confirm {
+      width: 100%;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .modal-btn-confirm:hover { background: #218838; }
     .modal-btn-cancel {
       background: transparent;
       color: #aaa;
       border: none;
-      padding: 6px 12px;
+      padding: 8px 12px;
       font-size: 13px;
       cursor: pointer;
+      margin-top: 6px;
     }
     .modal-btn-cancel:hover { color: #fff; }
 
@@ -354,10 +389,11 @@
   <!-- 工具列 -->
   <div id="toolbar">
     <button class="btn" id="btn-select-file">選擇圖片</button>
+    <button class="btn btn-info" id="btn-add-label">＋新增文字備註</button>
     <button class="btn btn-danger" id="btn-clear-all">全清空</button>
     <button class="btn btn-success" id="btn-export">匯出關係圖</button>
-    <span style="font-size: 12px; color: #ccc; margin-left: 10px;">
-      雙擊圖片進入連線模式；貼上圖片/網址或上傳圖片
+    <span style="font-size: 12px; color: #ccc; margin-left: 6px;">
+      💡 點擊選取卡片後再點擊另一卡片即可連線；可新增自由移動備註
     </span>
   </div>
 
@@ -368,10 +404,11 @@
     <canvas id="grid-bg"></canvas>
     <svg id="svg-layer">
       <defs>
-        <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <!-- 放大至 8x8 配合加粗關係線 -->
+        <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff4d4d" />
         </marker>
-        <marker id="arrow-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <marker id="arrow-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
           <path d="M 10 0 L 0 5 L 10 10 z" fill="#ff4d4d" />
         </marker>
       </defs>
@@ -379,21 +416,26 @@
     <div id="labels-layer"></div>
   </div>
 
-  <!-- 箭頭選擇 Modal -->
+  <!-- 關聯線設定 Modal -->
   <div class="modal-overlay" id="relation-modal">
     <div class="modal-card">
-      <div class="modal-title">選擇關聯箭頭方向</div>
-      <div class="modal-options">
-        <button class="modal-opt-btn" data-dir="forward">
-          <span>單向箭頭</span> <span style="color:#ff4d4d;">➔</span>
-        </button>
-        <button class="modal-opt-btn" data-dir="backward">
-          <span>反向箭頭</span> <span style="color:#ff4d4d;">⬅</span>
-        </button>
-        <button class="modal-opt-btn" data-dir="both">
-          <span>雙向箭頭</span> <span style="color:#ff4d4d;">⬌</span>
-        </button>
+      <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">設定關係線樣式</div>
+      
+      <div class="modal-section-title">1. 箭頭方向</div>
+      <div class="modal-options-grid" id="opt-group-dir">
+        <button class="modal-opt-btn selected" data-value="forward">單向 ➔</button>
+        <button class="modal-opt-btn" data-value="backward">反向 ⬅</button>
+        <button class="modal-opt-btn" data-value="both">雙向 ⬌</button>
+        <button class="modal-opt-btn" data-value="none">無箭頭 ━</button>
       </div>
+
+      <div class="modal-section-title">2. 線段走向</div>
+      <div class="modal-options-grid" id="opt-group-style">
+        <button class="modal-opt-btn selected" data-value="orthogonal">走直角 (預設)</button>
+        <button class="modal-opt-btn" data-value="straight">斜線 / 直線</button>
+      </div>
+
+      <button class="modal-btn-confirm" id="btn-modal-confirm">確定建立連線</button>
       <button class="modal-btn-cancel" id="btn-modal-cancel">取消</button>
     </div>
   </div>
@@ -412,8 +454,11 @@
 
     let nodes = [];
     let lines = [];
+    let freeLabels = [];
+
     let nextNodeId = 1;
     let nextLineId = 1;
+    let nextLabelId = 1;
     let highestZ = 10;
 
     let relSourceNode = null;
@@ -433,8 +478,10 @@
         timestamp: Date.now(),
         nextNodeId,
         nextLineId,
+        nextLabelId,
         nodes: nodes.map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h, src: n.src, zIndex: n.zIndex })),
-        lines: lines
+        lines: lines,
+        freeLabels: freeLabels.map(l => ({ id: l.id, x: l.x, y: l.y, text: l.text, color: l.color, size: l.size }))
       };
 
       try {
@@ -464,10 +511,15 @@
 
         nextNodeId = data.nextNodeId || 1;
         nextLineId = data.nextLineId || 1;
+        nextLabelId = data.nextLabelId || 1;
         lines = data.lines || [];
 
         if (Array.isArray(data.nodes)) {
           data.nodes.forEach(n => restoreNode(n));
+        }
+
+        if (Array.isArray(data.freeLabels)) {
+          data.freeLabels.forEach(l => createFreeLabel(l.x, l.y, l.text, l.color, l.size, l.id));
         }
       } catch (e) {
         console.error('復原快取失敗:', e);
@@ -475,10 +527,12 @@
     }
 
     function clearAllData() {
-      if (confirm('確定要清空所有圖片與關係線嗎？此操作無法復原。')) {
+      if (confirm('確定要清空所有圖片、關係線與備註嗎？此操作無法復原。')) {
         nodes.forEach(n => n.element.remove());
+        freeLabels.forEach(l => l.element.remove());
         nodes = [];
         lines = [];
+        freeLabels = [];
         relSourceNode = null;
         hasShownStorageFullAlert = false;
         localStorage.removeItem(STORAGE_KEY);
@@ -595,7 +649,7 @@
       saveToStorage();
     }
 
-    // --- 4. 雙擊提示與卡片事件 ---
+    // --- 4. 行動裝置優化：點擊連線選取邏輯 ---
     function showTargetHint(nodeObj) {
       removeHintAndSource(false);
 
@@ -604,12 +658,8 @@
 
       const hintEl = document.createElement('div');
       hintEl.className = 'target-hint-popover';
-      hintEl.innerText = '請雙擊目標';
+      hintEl.innerText = '點擊另一張目標卡片連線';
       nodeObj.element.appendChild(hintEl);
-
-      hintTimeoutId = setTimeout(() => {
-        if (hintEl.parentNode) hintEl.remove();
-      }, 1000);
     }
 
     function removeHintAndSource(clearSource = true) {
@@ -624,12 +674,14 @@
     function bindNodeEvents(nodeObj, resizerEl) {
       const el = nodeObj.element;
       let isDragging = false;
+      let hasMoved = false;
       let startX, startY, initialX, initialY;
 
       const onMouseDown = (e) => {
         if (e.target.classList.contains('resizer') || e.target.classList.contains('btn-delete-node')) return;
         
         isDragging = true;
+        hasMoved = false;
         showGrid(true);
 
         highestZ++;
@@ -649,10 +701,14 @@
 
       const onMouseMove = (e) => {
         if (!isDragging) return;
-        if (e.cancelable) e.preventDefault();
-
         const currentX = e.clientX || (e.touches && e.touches[0].clientX);
         const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
+          hasMoved = true;
+        }
+
+        if (hasMoved && e.cancelable) e.preventDefault();
 
         nodeObj.x = Math.max(0, snapToGrid(initialX + (currentX - startX)));
         nodeObj.y = Math.max(0, snapToGrid(initialY + (currentY - startY)));
@@ -663,11 +719,16 @@
         updateLines();
       };
 
-      const onMouseUp = () => {
+      const onMouseUp = (e) => {
         if (isDragging) {
           isDragging = false;
           showGrid(false);
           saveToStorage();
+
+          // 若沒有顯著移動，視為點擊事件（相容 Touch / Mouse）
+          if (!hasMoved) {
+            handleNodeClickForRelation(nodeObj);
+          }
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
@@ -678,11 +739,7 @@
       el.addEventListener('mousedown', onMouseDown);
       el.addEventListener('touchstart', onMouseDown, { passive: false });
 
-      el.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        handleNodeClickForRelation(nodeObj);
-      });
-
+      // 縮放邏輯
       let isResizing = false;
       let startW, startH;
 
@@ -734,53 +791,209 @@
       resizerEl.addEventListener('touchstart', onResizeStart, { passive: false });
     }
 
-    // --- 5. Modal 箭頭選擇器處理 ---
+    // --- 5. 自由移動的文字備註模組 ---
+    document.getElementById('btn-add-label').addEventListener('click', () => {
+      createFreeLabel(window.innerWidth / 2 - 50, window.innerHeight / 2 - 20, '', '#ffffff', 14);
+    });
+
+    function createFreeLabel(x, y, text = '', color = '#ffffff', size = 14, existingId = null) {
+      const labelId = existingId || nextLabelId++;
+      
+      const containerEl = document.createElement('div');
+      containerEl.className = 'free-label-node';
+      containerEl.style.left = x + 'px';
+      containerEl.style.top = y + 'px';
+
+      const delBtn = document.createElement('div');
+      delBtn.className = 'btn-delete-label';
+      delBtn.innerText = '✕';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        containerEl.remove();
+        freeLabels = freeLabels.filter(l => l.id !== labelId);
+        saveToStorage();
+      };
+      containerEl.appendChild(delBtn);
+
+      const popover = document.createElement('div');
+      popover.className = 'style-popover';
+
+      COLOR_PALETTE.forEach(c => {
+        const dot = document.createElement('div');
+        dot.className = 'color-picker-dot';
+        dot.style.background = c;
+        dot.onclick = (e) => {
+          e.stopPropagation();
+          labelObj.color = c;
+          textareaEl.style.color = c;
+          saveToStorage();
+        };
+        popover.appendChild(dot);
+      });
+
+      FONT_SIZES.forEach(s => {
+        const sBtn = document.createElement('div');
+        sBtn.className = 'size-btn';
+        sBtn.innerText = s + 'px';
+        sBtn.onclick = (e) => {
+          e.stopPropagation();
+          labelObj.size = s;
+          textareaEl.style.fontSize = s + 'px';
+          adjustTextareaHeight(textareaEl);
+          saveToStorage();
+        };
+        popover.appendChild(sBtn);
+      });
+
+      containerEl.appendChild(popover);
+
+      const textareaEl = document.createElement('textarea');
+      textareaEl.className = 'free-label-textarea';
+      textareaEl.value = text;
+      textareaEl.placeholder = '點擊輸入備註';
+      textareaEl.style.color = color;
+      textareaEl.style.fontSize = size + 'px';
+      textareaEl.rows = 1;
+
+      const adjustTextareaHeight = (el) => {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      };
+
+      textareaEl.onfocus = () => {
+        containerEl.style.zIndex = '999999';
+        popover.classList.add('active');
+      };
+
+      textareaEl.onblur = () => {
+        setTimeout(() => {
+          popover.classList.remove('active');
+          containerEl.style.zIndex = '500';
+        }, 200);
+      };
+
+      textareaEl.oninput = (e) => {
+        labelObj.text = e.target.value;
+        adjustTextareaHeight(e.target);
+        saveToStorage();
+      };
+
+      setTimeout(() => adjustTextareaHeight(textareaEl), 0);
+      containerEl.appendChild(textareaEl);
+
+      // 文字卡片拖曳 logic
+      let isDragging = false, startX, startY, initialX, initialY;
+      const onMouseDown = (e) => {
+        if (e.target === textareaEl || e.target === delBtn || e.target.classList.contains('color-picker-dot') || e.target.classList.contains('size-btn')) return;
+        isDragging = true;
+        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startY = e.clientY || (e.touches && e.touches[0].clientY);
+        initialX = labelObj.x;
+        initialY = labelObj.y;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchmove', onMouseMove, { passive: false });
+        document.addEventListener('touchend', onMouseUp);
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        if (e.cancelable) e.preventDefault();
+
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        labelObj.x = Math.max(0, snapToGrid(initialX + (currentX - startX)));
+        labelObj.y = Math.max(0, snapToGrid(initialY + (currentY - startY)));
+
+        containerEl.style.left = labelObj.x + 'px';
+        containerEl.style.top = labelObj.y + 'px';
+      };
+
+      const onMouseUp = () => {
+        if (isDragging) {
+          isDragging = false;
+          saveToStorage();
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onMouseMove);
+        document.removeEventListener('touchend', onMouseUp);
+      };
+
+      containerEl.addEventListener('mousedown', onMouseDown);
+      containerEl.addEventListener('touchstart', onMouseDown, { passive: false });
+
+      labelsLayer.appendChild(containerEl);
+
+      const labelObj = { id: labelId, x, y, text, color, size, element: containerEl };
+      if (!existingId) freeLabels.push(labelObj);
+
+      saveToStorage();
+    }
+
+    // --- 6. Modal 關聯線樣式選擇器 ---
+    let selectedDir = 'forward';
+    let selectedStyle = 'orthogonal';
+
+    function initModalGroup(groupId, callback) {
+      const grp = document.getElementById(groupId);
+      grp.querySelectorAll('.modal-opt-btn').forEach(btn => {
+        btn.onclick = () => {
+          grp.querySelectorAll('.modal-opt-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          callback(btn.dataset.value);
+        };
+      });
+    }
+
+    initModalGroup('opt-group-dir', (val) => { selectedDir = val; });
+    initModalGroup('opt-group-style', (val) => { selectedStyle = val; });
+
     function openRelationModal() {
       return new Promise((resolve) => {
         relationModal.classList.add('active');
 
-        const onClickOption = (e) => {
-          const btn = e.target.closest('.modal-opt-btn');
-          if (btn) {
-            const dir = btn.dataset.dir;
-            cleanup();
-            resolve(dir);
-          }
+        const onConfirm = () => {
+          cleanup();
+          resolve({ dir: selectedDir, style: selectedStyle });
         };
 
-        const onClickCancel = () => {
+        const onCancel = () => {
           cleanup();
           resolve(null);
         };
 
         const cleanup = () => {
           relationModal.classList.remove('active');
-          relationModal.removeEventListener('click', onClickOption);
-          document.getElementById('btn-modal-cancel').removeEventListener('click', onClickCancel);
+          document.getElementById('btn-modal-confirm').removeEventListener('click', onConfirm);
+          document.getElementById('btn-modal-cancel').removeEventListener('click', onCancel);
         };
 
-        relationModal.addEventListener('click', onClickOption);
-        document.getElementById('btn-modal-cancel').addEventListener('click', onClickCancel);
+        document.getElementById('btn-modal-confirm').addEventListener('click', onConfirm);
+        document.getElementById('btn-modal-cancel').addEventListener('click', onCancel);
       });
     }
 
     async function handleNodeClickForRelation(nodeObj) {
       if (!relSourceNode) {
         showTargetHint(nodeObj);
+      } else if (relSourceNode.id === nodeObj.id) {
+        removeHintAndSource();
       } else {
         const source = relSourceNode;
         removeHintAndSource();
 
-        const dir = await openRelationModal();
-        if (!dir) return;
+        const config = await openRelationModal();
+        if (!config) return;
 
         const lineObj = {
           id: nextLineId++,
           fromId: source.id,
           toId: nodeObj.id,
-          dir: dir,
-          label1: { text: '', color: '#ffffff', size: 14 },
-          label2: { text: '', color: '#ffffff', size: 14 }
+          dir: config.dir,
+          style: config.style
         };
 
         lines.push(lineObj);
@@ -795,7 +1008,7 @@
       }
     });
 
-    // --- 6. 幾何計算：寬鬆直線與 L 型優先演算法 ---
+    // --- 7. 線條計算（斜線直連 + 寬鬆直角）---
 
     function computeSideOffset(node, side, slotIndex, totalSlots) {
       if (totalSlots <= 1) {
@@ -871,58 +1084,12 @@
       return map;
     }
 
-    // 💡 調整 1 & 2：寬鬆直線與 L 型優先路由演算法
-    function getOrthogonalRoute(line, edgeMap) {
+    // 計算線條軌跡（支援：斜線 straight / 直線直角 orthogonal）
+    function getLineRoute(line, edgeMap) {
       const fromNode = nodes.find(n => n.id === line.fromId);
       const toNode = nodes.find(n => n.id === line.toId);
       if (!fromNode || !toNode) return [];
 
-      // 1. 寬鬆直線判斷：檢測 X 軸或 Y 軸是否有區域重疊 (Intersection)
-      const overlapXStart = Math.max(fromNode.x, toNode.x);
-      const overlapXEnd = Math.min(fromNode.x + fromNode.w, toNode.x + toNode.w);
-      const hasOverlapX = overlapXEnd - overlapXStart >= 15; // 寬鬆容許交錯區域
-
-      const overlapYStart = Math.max(fromNode.y, toNode.y);
-      const overlapYEnd = Math.min(fromNode.y + fromNode.h, toNode.y + toNode.h);
-      const hasOverlapY = overlapYEnd - overlapYStart >= 15;
-
-      // 狀況 1-A：X 軸有交錯，直接穿過交錯空間的中點畫垂直直線
-      if (hasOverlapX) {
-        const midX = (overlapXStart + overlapXEnd) / 2;
-        if (fromNode.y < toNode.y) {
-          // fromNode 在上方，toNode 在下方
-          return [
-            { x: midX, y: fromNode.y + fromNode.h + PADDING_OFFSET },
-            { x: midX, y: toNode.y - PADDING_OFFSET }
-          ];
-        } else {
-          // fromNode 在下方，toNode 在上方
-          return [
-            { x: midX, y: fromNode.y - PADDING_OFFSET },
-            { x: midX, y: toNode.y + toNode.h + PADDING_OFFSET }
-          ];
-        }
-      }
-
-      // 狀況 1-B：Y 軸有交錯，直接穿過交錯空間的中點畫水平直線
-      if (hasOverlapY) {
-        const midY = (overlapYStart + overlapYEnd) / 2;
-        if (fromNode.x < toNode.x) {
-          // fromNode 在左側，toNode 在右側
-          return [
-            { x: fromNode.x + fromNode.w + PADDING_OFFSET, y: midY },
-            { x: toNode.x - PADDING_OFFSET, y: midY }
-          ];
-        } else {
-          // fromNode 在右側，toNode 在左側
-          return [
-            { x: fromNode.x - PADDING_OFFSET, y: midY },
-            { x: toNode.x + toNode.w + PADDING_OFFSET, y: midY }
-          ];
-        }
-      }
-
-      // 2. 無交錯時：優先採用 1 個轉折點的【L 型】線條
       const fromSide = determineSide(fromNode, toNode);
       const toSide = determineSide(toNode, fromNode);
 
@@ -938,43 +1105,56 @@
       const pStart = computeSideOffset(fromNode, fromSide, idxFrom !== -1 ? idxFrom : 0, listFrom.length);
       const pEnd = computeSideOffset(toNode, toSide, idxTo !== -1 ? idxTo : 0, listTo.length);
 
-      // 嘗試構建 L 型轉折點 (1 角)
+      // 💡 選項「斜線 / 直線」模式：兩點直接直連
+      if (line.style === 'straight') {
+        return [pStart, pEnd];
+      }
+
+      // 💡 選項「走直角」模式（預設）：
+      const overlapXStart = Math.max(fromNode.x, toNode.x);
+      const overlapXEnd = Math.min(fromNode.x + fromNode.w, toNode.x + toNode.w);
+      const hasOverlapX = overlapXEnd - overlapXStart >= 15;
+
+      const overlapYStart = Math.max(fromNode.y, toNode.y);
+      const overlapYEnd = Math.min(fromNode.y + fromNode.h, toNode.y + toNode.h);
+      const hasOverlapY = overlapYEnd - overlapYStart >= 15;
+
+      if (hasOverlapX) {
+        const midX = (overlapXStart + overlapXEnd) / 2;
+        return [
+          { x: midX, y: fromNode.y < toNode.y ? fromNode.y + fromNode.h + PADDING_OFFSET : fromNode.y - PADDING_OFFSET },
+          { x: midX, y: fromNode.y < toNode.y ? toNode.y - PADDING_OFFSET : toNode.y + toNode.h + PADDING_OFFSET }
+        ];
+      }
+
+      if (hasOverlapY) {
+        const midY = (overlapYStart + overlapYEnd) / 2;
+        return [
+          { x: fromNode.x < toNode.x ? fromNode.x + fromNode.w + PADDING_OFFSET : fromNode.x - PADDING_OFFSET, y: midY },
+          { x: fromNode.x < toNode.x ? toNode.x - PADDING_OFFSET : toNode.x + toNode.w + PADDING_OFFSET, y: midY }
+        ];
+      }
+
+      // 嘗試 1 個轉折點 L 型
       if (fromSide === 'left' || fromSide === 'right') {
         const corner = { x: pEnd.x, y: pStart.y };
-        // 檢查角點是否方向合理
         const isFromValid = (fromSide === 'right' && corner.x >= pStart.x) || (fromSide === 'left' && corner.x <= pStart.x);
         const isToValid = (toSide === 'bottom' && corner.y >= pEnd.y) || (toSide === 'top' && corner.y <= pEnd.y);
-
-        if (isFromValid && isToValid) {
-          return [pStart, corner, pEnd]; // 乾淨 L 型
-        }
+        if (isFromValid && isToValid) return [pStart, corner, pEnd];
       } else {
         const corner = { x: pStart.x, y: pEnd.y };
         const isFromValid = (fromSide === 'bottom' && corner.y >= pStart.y) || (fromSide === 'top' && corner.y <= pStart.y);
         const isToValid = (toSide === 'right' && corner.x >= pEnd.x) || (toSide === 'left' && corner.x <= pEnd.x);
-
-        if (isFromValid && isToValid) {
-          return [pStart, corner, pEnd]; // 乾淨 L 型
-        }
+        if (isFromValid && isToValid) return [pStart, corner, pEnd];
       }
 
-      // 若 L 型方向衝突，降級回 2 個轉折點的 Z 型
+      // Z 型備援
       if (fromSide === 'left' || fromSide === 'right') {
         const midX = (pStart.x + pEnd.x) / 2;
-        return [
-          pStart,
-          { x: midX, y: pStart.y },
-          { x: midX, y: pEnd.y },
-          pEnd
-        ];
+        return [pStart, { x: midX, y: pStart.y }, { x: midX, y: pEnd.y }, pEnd];
       } else {
         const midY = (pStart.y + pEnd.y) / 2;
-        return [
-          pStart,
-          { x: pStart.x, y: midY },
-          { x: pEnd.x, y: midY },
-          pEnd
-        ];
+        return [pStart, { x: pStart.x, y: midY }, { x: pEnd.x, y: midY }, pEnd];
       }
     }
 
@@ -982,7 +1162,6 @@
       const defs = svgLayer.querySelector('defs');
       svgLayer.innerHTML = '';
       svgLayer.appendChild(defs);
-      labelsLayer.innerHTML = '';
 
       const edgeMap = buildEdgeConnectionsMap();
 
@@ -991,45 +1170,13 @@
         const toNode = nodes.find(n => n.id === line.toId);
         if (!fromNode || !toNode) return;
 
-        if (fromNode.id === toNode.id) {
-          drawSelfLoop(line, fromNode);
-        } else {
-          drawOrthogonalLine(line, edgeMap);
-        }
+        drawLinePath(line, edgeMap);
       });
     }
 
-    // 自連線 (Self-Loop) 折線繪製
-    function drawSelfLoop(line, node) {
-      const pad = PADDING_OFFSET;
-      const pStart = { x: node.x + node.w * 0.5, y: node.y - pad };
-      const p1 = { x: pStart.x, y: node.y - 30 };
-      const p2 = { x: node.x + node.w + 35, y: p1.y };
-      const p3 = { x: p2.x, y: node.y + node.h * 0.5 };
-      const pEnd = { x: node.x + node.w + pad, y: p3.y };
-
-      const dPath = `M ${pStart.x} ${pStart.y + pad} L ${pStart.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} L ${pEnd.x} ${pEnd.y}`;
-
-      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      pathEl.setAttribute('d', dPath);
-      pathEl.setAttribute('stroke', '#ff4d4d');
-      pathEl.setAttribute('stroke-width', '3');
-      pathEl.setAttribute('fill', 'none');
-
-      if (line.dir === 'forward' || line.dir === 'both') pathEl.setAttribute('marker-end', 'url(#arrow-end)');
-      if (line.dir === 'backward' || line.dir === 'both') pathEl.setAttribute('marker-start', 'url(#arrow-start)');
-
-      svgLayer.appendChild(pathEl);
-
-      const midX = (p1.x + p2.x) / 2;
-      const midY = p1.y;
-      createLineDeleteBtn(line.id, midX, midY);
-      createLabelContainer(line, midX, midY, 0, -1, 38, true);
-    }
-
-    // 一般卡片之間的直角折線
-    function drawOrthogonalLine(line, edgeMap) {
-      const pts = getOrthogonalRoute(line, edgeMap);
+    // 繪製加粗關係線 (5px)
+    function drawLinePath(line, edgeMap) {
+      const pts = getLineRoute(line, edgeMap);
       if (pts.length < 2) return;
 
       let dPath = `M ${pts[0].x} ${pts[0].y}`;
@@ -1040,7 +1187,7 @@
       const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathEl.setAttribute('d', dPath);
       pathEl.setAttribute('stroke', '#ff4d4d');
-      pathEl.setAttribute('stroke-width', '3');
+      pathEl.setAttribute('stroke-width', '5'); // 💡 關係線加粗至 5px
       pathEl.setAttribute('fill', 'none');
 
       if (line.dir === 'forward' || line.dir === 'both') pathEl.setAttribute('marker-end', 'url(#arrow-end)');
@@ -1048,6 +1195,7 @@
 
       svgLayer.appendChild(pathEl);
 
+      // 線段中間放置 [X] 刪除按鈕
       const midSegIdx = Math.floor((pts.length - 1) / 2);
       const pA = pts[midSegIdx];
       const pB = pts[midSegIdx + 1];
@@ -1056,12 +1204,6 @@
       const midY = (pA.y + pB.y) / 2;
 
       createLineDeleteBtn(line.id, midX, midY);
-
-      const isHorizontal = Math.abs(pA.y - pB.y) < 1;
-      const nx = isHorizontal ? 0 : 1;
-      const ny = isHorizontal ? -1 : 0;
-
-      createLabelContainer(line, midX, midY, nx, ny, 42, isHorizontal);
     }
 
     function createLineDeleteBtn(lineId, x, y) {
@@ -1079,100 +1221,7 @@
       labelsLayer.appendChild(btn);
     }
 
-    function createLabelContainer(line, midX, midY, nx, ny, offsetDist = 42, isHorizontal = true) {
-      const ALONG_OFFSET = 18;
-
-      let pos1, pos2;
-      if (isHorizontal) {
-        pos1 = { x: midX - ALONG_OFFSET, y: midY + ny * offsetDist };
-        pos2 = { x: midX + ALONG_OFFSET, y: midY - ny * offsetDist };
-      } else {
-        pos1 = { x: midX + nx * offsetDist, y: midY - ALONG_OFFSET };
-        pos2 = { x: midX - nx * offsetDist, y: midY + ALONG_OFFSET };
-      }
-
-      labelsLayer.appendChild(createSingleLabelInput(line, 'label1', pos1.x, pos1.y));
-      labelsLayer.appendChild(createSingleLabelInput(line, 'label2', pos2.x, pos2.y));
-    }
-
-    function createSingleLabelInput(line, labelKey, x, y) {
-      const containerEl = document.createElement('div');
-      containerEl.className = 'line-label-container';
-      containerEl.style.left = x + 'px';
-      containerEl.style.top = y + 'px';
-
-      const labelData = line[labelKey];
-
-      const popover = document.createElement('div');
-      popover.className = 'style-popover';
-
-      COLOR_PALETTE.forEach(c => {
-        const dot = document.createElement('div');
-        dot.className = 'color-picker-dot';
-        dot.style.background = c;
-        dot.onclick = (e) => {
-          e.stopPropagation();
-          labelData.color = c;
-          textareaEl.style.color = c;
-          saveToStorage();
-        };
-        popover.appendChild(dot);
-      });
-
-      FONT_SIZES.forEach(s => {
-        const sBtn = document.createElement('div');
-        sBtn.className = 'size-btn';
-        sBtn.innerText = s + 'px';
-        sBtn.onclick = (e) => {
-          e.stopPropagation();
-          labelData.size = s;
-          textareaEl.style.fontSize = s + 'px';
-          adjustTextareaHeight(textareaEl);
-          saveToStorage();
-        };
-        popover.appendChild(sBtn);
-      });
-
-      containerEl.appendChild(popover);
-
-      const textareaEl = document.createElement('textarea');
-      textareaEl.className = 'line-label-textarea';
-      textareaEl.value = labelData.text;
-      textareaEl.placeholder = '點擊輸入備註';
-      textareaEl.style.color = labelData.color;
-      textareaEl.style.fontSize = labelData.size + 'px';
-      textareaEl.rows = 1;
-
-      const adjustTextareaHeight = (el) => {
-        el.style.height = 'auto';
-        el.style.height = el.scrollHeight + 'px';
-      };
-
-      textareaEl.onfocus = () => {
-        containerEl.style.zIndex = '999999';
-        popover.classList.add('active');
-      };
-
-      textareaEl.onblur = () => {
-        setTimeout(() => {
-          popover.classList.remove('active');
-          containerEl.style.zIndex = '20000';
-        }, 200);
-      };
-
-      textareaEl.oninput = (e) => {
-        labelData.text = e.target.value;
-        adjustTextareaHeight(e.target);
-        saveToStorage();
-      };
-
-      setTimeout(() => adjustTextareaHeight(textareaEl), 0);
-
-      containerEl.appendChild(textareaEl);
-      return containerEl;
-    }
-
-    // --- 7. 剪貼簿與檔案上傳 ---
+    // --- 8. 剪貼簿與檔案上傳 ---
     window.addEventListener('paste', (e) => {
       const items = (e.clipboardData || e.originalEvent.clipboardData).items;
       for (let item of items) {
@@ -1202,10 +1251,10 @@
       }
     });
 
-    // --- 8. Canvas 匯出與渲染 ---
+    // --- 9. Canvas 匯出預覽圖 ---
     document.getElementById('btn-export').addEventListener('click', async () => {
-      if (nodes.length === 0) {
-        alert('畫面上沒有任何圖片可供匯出！');
+      if (nodes.length === 0 && freeLabels.length === 0) {
+        alert('畫面上沒有任何內容可供匯出！');
         return;
       }
 
@@ -1236,6 +1285,7 @@
         }
 
         renderLinesToCanvas(ctx);
+        renderFreeLabelsToCanvas(ctx);
 
         const dataUrl = exportCanvas.toDataURL('image/png');
         const newWin = window.open();
@@ -1300,7 +1350,7 @@
     }
 
     function renderLinesToCanvas(ctx) {
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 5; // 💡 匯出線條加粗至 5px
       ctx.strokeStyle = '#ff4d4d';
       ctx.fillStyle = '#ff4d4d';
 
@@ -1311,77 +1361,28 @@
         const toNode = nodes.find(n => n.id === line.toId);
         if (!fromNode || !toNode) return;
 
-        if (fromNode.id === toNode.id) {
-          const pad = PADDING_OFFSET;
-          const pStart = { x: fromNode.x + fromNode.w * 0.5, y: fromNode.y - pad };
-          const p1 = { x: pStart.x, y: fromNode.y - 30 };
-          const p2 = { x: fromNode.x + fromNode.w + 35, y: p1.y };
-          const p3 = { x: p2.x, y: fromNode.y + fromNode.h * 0.5 };
-          const pEnd = { x: fromNode.x + fromNode.w + pad, y: p3.y };
+        const pts = getLineRoute(line, edgeMap);
+        if (pts.length < 2) return;
 
-          ctx.beginPath();
-          ctx.moveTo(pStart.x, pStart.y + pad);
-          ctx.lineTo(pStart.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.lineTo(p3.x, p3.y);
-          ctx.lineTo(pEnd.x, pEnd.y);
-          ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x, pts[i].y);
+        }
+        ctx.stroke();
 
-          if (line.dir === 'forward' || line.dir === 'both') drawCanvasArrow(ctx, p3.x, p3.y, pEnd.x, pEnd.y);
-          if (line.dir === 'backward' || line.dir === 'both') drawCanvasArrow(ctx, pStart.x, p1.y, pStart.x, pStart.y + pad);
-
-          const midX = (p1.x + p2.x) / 2;
-          const midY = p1.y;
-          renderMultilineLabelToCanvas(ctx, line.label1, midX - 18, midY - 42);
-          renderMultilineLabelToCanvas(ctx, line.label2, midX + 18, midY + 42);
-        } else {
-          const pts = getOrthogonalRoute(line, edgeMap);
-          if (pts.length < 2) return;
-
-          ctx.beginPath();
-          ctx.moveTo(pts[0].x, pts[0].y);
-          for (let i = 1; i < pts.length; i++) {
-            ctx.lineTo(pts[i].x, pts[i].y);
-          }
-          ctx.stroke();
-
-          const lastIdx = pts.length - 1;
-          if (line.dir === 'forward' || line.dir === 'both') {
-            drawCanvasArrow(ctx, pts[lastIdx - 1].x, pts[lastIdx - 1].y, pts[lastIdx].x, pts[lastIdx].y);
-          }
-          if (line.dir === 'backward' || line.dir === 'both') {
-            drawCanvasArrow(ctx, pts[1].x, pts[1].y, pts[0].x, pts[0].y);
-          }
-
-          const midSegIdx = Math.floor((pts.length - 1) / 2);
-          const pA = pts[midSegIdx];
-          const pB = pts[midSegIdx + 1];
-
-          const midX = (pA.x + pB.x) / 2;
-          const midY = (pA.y + pB.y) / 2;
-
-          const isHorizontal = Math.abs(pA.y - pB.y) < 1;
-          const nx = isHorizontal ? 0 : 1;
-          const ny = isHorizontal ? -1 : 0;
-
-          const ALONG_OFFSET = 18;
-          let pos1, pos2;
-          if (isHorizontal) {
-            pos1 = { x: midX - ALONG_OFFSET, y: midY + ny * 42 };
-            pos2 = { x: midX + ALONG_OFFSET, y: midY - ny * 42 };
-          } else {
-            pos1 = { x: midX + nx * 42, y: midY - ALONG_OFFSET };
-            pos2 = { x: midX - nx * 42, y: midY + ALONG_OFFSET };
-          }
-
-          renderMultilineLabelToCanvas(ctx, line.label1, pos1.x, pos1.y);
-          renderMultilineLabelToCanvas(ctx, line.label2, pos2.x, pos2.y);
+        const lastIdx = pts.length - 1;
+        if (line.dir === 'forward' || line.dir === 'both') {
+          drawCanvasArrow(ctx, pts[lastIdx - 1].x, pts[lastIdx - 1].y, pts[lastIdx].x, pts[lastIdx].y);
+        }
+        if (line.dir === 'backward' || line.dir === 'both') {
+          drawCanvasArrow(ctx, pts[1].x, pts[1].y, pts[0].x, pts[0].y);
         }
       });
     }
 
     function drawCanvasArrow(ctx, fromX, fromY, toX, toY) {
-      const headlen = 10;
+      const headlen = 14;
       const angle = Math.atan2(toY - fromY, toX - fromX);
       ctx.beginPath();
       ctx.moveTo(toX, toY);
@@ -1391,33 +1392,36 @@
       ctx.fill();
     }
 
-    function renderMultilineLabelToCanvas(ctx, labelObj, x, y) {
-      if (!labelObj || !labelObj.text.trim()) return;
+    function renderFreeLabelsToCanvas(ctx) {
+      freeLabels.forEach(lbl => {
+        if (!lbl.text.trim()) return;
 
-      const linesArr = labelObj.text.split('\n');
-      const fontSize = labelObj.size;
-      const lineHeight = fontSize * 1.3;
+        const linesArr = lbl.text.split('\n');
+        const fontSize = lbl.size;
+        const lineHeight = fontSize * 1.35;
 
-      ctx.font = `${fontSize}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+        ctx.font = `${fontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-      let maxW = 0;
-      linesArr.forEach(l => {
-        const w = ctx.measureText(l).width;
-        if (w > maxW) maxW = w;
-      });
+        let maxW = 0;
+        linesArr.forEach(l => {
+          const w = ctx.measureText(l).width;
+          if (w > maxW) maxW = w;
+        });
 
-      const totalH = linesArr.length * lineHeight;
+        const totalH = linesArr.length * lineHeight;
+        const padding = 10;
 
-      ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
-      ctx.fillRect(x - maxW / 2 - 6, y - totalH / 2 - 4, maxW + 12, totalH + 8);
+        ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
+        ctx.fillRect(lbl.x, lbl.y, maxW + padding * 2, totalH + padding);
 
-      ctx.fillStyle = labelObj.color || '#ffffff';
-      const startY = y - (totalH / 2) + (lineHeight / 2);
+        ctx.fillStyle = lbl.color || '#ffffff';
+        const startY = lbl.y + padding / 2 + lineHeight / 2;
 
-      linesArr.forEach((lineText, idx) => {
-        ctx.fillText(lineText, x, startY + idx * lineHeight);
+        linesArr.forEach((lineText, idx) => {
+          ctx.fillText(lineText, lbl.x + maxW / 2 + padding, startY + idx * lineHeight);
+        });
       });
     }
 
