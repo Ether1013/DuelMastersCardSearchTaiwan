@@ -81,10 +81,116 @@
         body.advanced-mode select.advanced-only, 
         body.advanced-mode button.advanced-only { display: inline-block !important; }
 
-        /* ================= 元件樣式 ================= */
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
-        .checkbox-group label { display: flex; align-items: center; font-size: 14px; cursor: pointer; }
-        
+        /* ================= Chip 按鈕風格元件 ================= */
+		.checkbox-group { 
+			display: flex; 
+			flex-wrap: wrap; 
+			gap: 8px; /* 縮小間距，讓 Chip 排列更緊湊 */
+		}
+
+		/* 基礎通用 Chip 樣式 */
+		.checkbox-group label { 
+			display: inline-flex; 
+			align-items: center; 
+			justify-content: center;
+			padding: 6px 12px;
+			font-size: 13px; 
+			font-weight: bold;
+			border-radius: 6px; 
+			cursor: pointer; 
+			user-select: none;
+			transition: all 0.15s ease;
+			touch-action: manipulation;
+		}
+
+		/* 隱藏原生的 Checkbox 與 Radio */
+		.checkbox-group label input[type="checkbox"],
+		.checkbox-group label input[type="radio"] {
+			position: absolute;
+			opacity: 0;
+			width: 0;
+			height: 0;
+			pointer-events: none;
+		}
+
+		/* Hover 狀態 */
+		.checkbox-group label:hover {
+			background-color: #e2e8f0;
+			color: #1e293b;
+		}
+
+		/* 💡 選中高亮狀態 (支援雙重相容：:has(input:checked) 或 .chip-active 類別) */
+		.checkbox-group label:has(input:checked),
+		.checkbox-group label.chip-active {
+			background-color: #0284c7 !important;
+			color: #ffffff !important;
+			border-color: #0369a1 !important;
+			box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+		}
+
+		/* 點擊按壓反饋 */
+		.checkbox-group label:active {
+			transform: scale(0.96);
+		} 
+		
+		/* ---------------- 區域配色 1：卡種上區 (主卡種/M區) - 翡翠綠色系 ---------------- */
+		#cardtype-top label {
+			color: #065f46;
+			background-color: #ecfdf5;
+			border: 1px solid #a7f3d0;
+		}
+		#cardtype-top label:hover {
+			background-color: #d1fae5;
+		}
+		#cardtype-top label:has(input:checked),
+		#cardtype-top label.chip-active {
+			background-color: #059669 !important;
+			color: #ffffff !important;
+			border-color: #047857 !important;
+			box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25);
+		}
+
+		/* ---------------- 區域配色 2：卡種下區 (衍生/其他區) - 琥珀橙色系 ---------------- */
+		#cardtype-bottom label {
+			color: #9a3412;
+			background-color: #fff7ed;
+			border: 1px solid #fed7aa;
+		}
+		#cardtype-bottom label:hover {
+			background-color: #ffedd5;
+		}
+		#cardtype-bottom label:has(input:checked),
+		#cardtype-bottom label.chip-active {
+			background-color: #ea580c !important;
+			color: #ffffff !important;
+			border-color: #c2410c !important;
+			box-shadow: 0 2px 4px rgba(234, 88, 12, 0.25);
+		}
+
+		/* ---------------- 區域配色 3：雙極卡設定區 - 靛藍色系 ---------------- */
+		#section-b-group label {
+			color: #3730a3;
+			background-color: #eef2ff;
+			border: 1px solid #c7d2fe;
+		}
+		#section-b-group label:hover {
+			background-color: #e0e7ff;
+		}
+		#section-b-group label:has(input:checked),
+		#section-b-group label.chip-active {
+			background-color: #4f46e5 !important;
+			color: #ffffff !important;
+			border-color: #4338ca !important;
+			box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+		}
+
+		/* ---------------- 需求 2：[查詢衍生卡種] 專用按鈕高亮樣式 ---------------- */
+		.btn-icon.active {
+			background-color: #0284c7 !important;
+			color: #ffffff !important;
+		}
+
+
         /* 文明方塊 UI */
         .civ-row { display: flex; gap: 2px; margin-bottom: 10px; width: 100%; }
         .civ-box { 
@@ -1422,14 +1528,14 @@
         <!-- A. 卡種選擇 -->
         <div class="col" id="section-a">
             <h3>
-                <span>卡種選擇</span> 
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label style="font-size: 14px; font-weight: normal; cursor: pointer; display: flex; align-items: center;">
-                        <input type="checkbox" id="chk-derived-cardtype"> 查詢衍伸卡種
-                    </label>
-                    <button id="btn-all-cardtype" class="btn-icon">全取消</button>
-                </div>
-            </h3>
+				<span>卡種選擇</span> 
+				<div style="display: flex; align-items: center; gap: 6px;">
+					<!-- 💡 改為與 [全取消] 一模一樣的 .btn-icon 格式，並保留 hidden 的 input 供 JS 讀取 -->
+					<input type="checkbox" id="chk-derived-cardtype" style="display: none;">
+					<button id="btn-derived-cardtype" class="btn-icon">查詢衍生卡種</button>
+					<button id="btn-all-cardtype" class="btn-icon">全取消</button>
+				</div>
+			</h3>
             <div id="cardtype-top" class="checkbox-group"></div>
             <hr class="divider">
             <div id="cardtype-bottom" class="checkbox-group"></div>
@@ -1437,20 +1543,20 @@
 
         <div class="row-flex">
             <!-- B. 雙極卡設定 -->
-            <div class="col col-half">
-                <h3>雙極卡設定</h3>
-                <div class="checkbox-group" style="margin-bottom: 10px;">
-                    <label><input type="radio" name="twinpect" value="yes"> 雙極</label>
-                    <label><input type="radio" name="twinpect" value="no"> 非雙極</label>
-                    <label><input type="radio" name="twinpect" value="all" checked> 都找</label>
-                </div>
-                <div class="checkbox-group advanced-only advanced-only-flex">
-                    <label><input type="checkbox" name="twin_adv" value="ability" checked> 能力混找</label>
-                    <label><input type="checkbox" name="twin_adv" value="top_big" checked> 上面較大</label>
-                    <label><input type="checkbox" name="twin_adv" value="same" checked> 上下一樣</label>
-                    <label><input type="checkbox" name="twin_adv" value="bot_big" checked> 下面較大</label>
-                </div>
-            </div>
+			<div class="col col-half" id="section-b-group">
+				<h3>雙極卡設定</h3>
+				<div class="checkbox-group" style="margin-bottom: 10px;">
+					<label><input type="radio" name="twinpect" value="yes"> 限定雙極</label>
+					<label><input type="radio" name="twinpect" value="no"> 排除雙極</label>
+					<label><input type="radio" name="twinpect" value="all" checked> 都找</label>
+				</div>
+				<div class="checkbox-group advanced-only advanced-only-flex">
+					<label><input type="checkbox" name="twin_adv" value="ability" checked> 能力混找</label>
+					<label><input type="checkbox" name="twin_adv" value="top_big" checked> 上面較大</label>
+					<label><input type="checkbox" name="twin_adv" value="same" checked> 上下一樣</label>
+					<label><input type="checkbox" name="twin_adv" value="bot_big" checked> 下面較大</label>
+				</div>
+			</div>
 
             <!-- C. 文明設定 -->
             <div class="col">
@@ -1910,6 +2016,41 @@
 				searchHistoryCards();
 			});
 		});
+		
+		// 💡 輔助函式：根據內部的 input:checked 狀態，更新外層 label 的 Chip 高亮類別
+		// 💡 1. 補強 Chip UI 同步函式 (含按鈕式的衍生卡種高亮狀態)
+		function syncChipUI() {
+			// A. 處理一般 Chip Label
+			document.querySelectorAll('.checkbox-group label').forEach(label => {
+				const input = label.querySelector('input');
+				if (input) {
+					label.classList.toggle('chip-active', input.checked);
+				}
+			});
+
+			// B. 處理 [查詢衍生卡種] 按鈕高亮連動
+			const chkDerived = document.getElementById('chk-derived-cardtype');
+			const btnDerived = document.getElementById('btn-derived-cardtype');
+			if (chkDerived && btnDerived) {
+				btnDerived.classList.toggle('active', chkDerived.checked);
+			}
+		}
+
+		// 💡 2. [查詢衍生卡種] 按鈕點擊切換事件
+		document.addEventListener('DOMContentLoaded', () => {
+			const chkDerived = document.getElementById('chk-derived-cardtype');
+			const btnDerived = document.getElementById('btn-derived-cardtype');
+
+			if (chkDerived && btnDerived) {
+				btnDerived.addEventListener('click', () => {
+					chkDerived.checked = !chkDerived.checked; // 反轉 hidden 的 input 狀態
+					syncChipUI();                              // 更新按鈕高亮
+					if (typeof updateSummaryText === 'function') {
+						updateSummaryText();                  // 更新 Z 區摘要
+					}
+				});
+			}
+		});
 
         // 極大數值改以無限符號 ∞ 替代之數值判斷
         const INFINITY_THRESHOLD = 9000000000000000;
@@ -2064,6 +2205,7 @@
 			btnAdvanced.checked = false;
 			document.body.classList.remove('advanced-mode');
 			
+			syncChipUI(); // 💡 新增：確保初始化後所有 Chip 狀態亮暗正確
 			updateSummaryText();
 
 			// 💡 切換回第一個頁籤（條件過濾頁面），但不將捲軸歸零
@@ -2073,6 +2215,7 @@
 		});
 
         function updateSummaryText() {
+			syncChipUI();
             let tags = [];
             const isAdv = document.body.classList.contains('advanced-mode');
 
@@ -2085,7 +2228,7 @@
                     checkedCT.forEach(cb => {
                         tags.push({ 
                             label: `卡種: ${cb.parentNode.textContent.trim()}`, 
-                            action: () => { cb.checked = false; checkAllStatus(); updateSummaryText(); } 
+                            action: () => { cb.checked = false; syncChipUI(); checkAllStatus(); updateSummaryText(); }
                         });
                     });
                 } else {
@@ -2112,20 +2255,28 @@
 
             const twinSelected = document.querySelector('input[name="twinpect"]:checked');
             if (twinSelected && twinSelected.value !== 'all') {
-                tags.push({ 
-                    label: `雙極卡: ${twinSelected.value === 'yes' ? '限定雙極' : '排除雙極'}`, 
-                    action: () => { document.querySelector('input[name="twinpect"][value="all"]').checked = true; updateSummaryText(); } 
-                });
-            }
+				tags.push({ 
+					label: `雙極卡: ${twinSelected.value === 'yes' ? '限定雙極' : '排除雙極'}`, 
+					action: () => { 
+						document.querySelector('input[name="twinpect"][value="all"]').checked = true; 
+						syncChipUI(); // 👈 加這行
+						updateSummaryText(); 
+					} 
+				});
+			}
             
             const twinAdvBoxes = document.querySelectorAll('input[name="twin_adv"]');
             const uncheckedTwinAdv = Array.from(twinAdvBoxes).filter(cb => !cb.checked);
             if (uncheckedTwinAdv.length > 0) {
                 Array.from(twinAdvBoxes).filter(cb => cb.checked).forEach(cb => {
                     tags.push({ 
-                        label: `雙極條件包含: ${cb.parentNode.textContent.trim()}`, 
-                        action: () => { cb.checked = false; updateSummaryText(); } 
-                    });
+						label: `雙極條件包含: ${cb.parentNode.textContent.trim()}`, 
+						action: () => { 
+							cb.checked = false; 
+							syncChipUI(); // 👈 加這行
+							updateSummaryText(); 
+						} 
+					});
                 });
             }
 
@@ -2653,10 +2804,11 @@
         }
 
         btnAllCardType.addEventListener('click', () => {
-            const isSelectAll = btnAllCardType.innerText === "全選";
-            document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = isSelectAll);
-            checkAllStatus();
-        });
+			const isSelectAll = btnAllCardType.innerText === "全選";
+			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = isSelectAll);
+			syncChipUI(); // 💡 新增：同步 Chip UI
+			checkAllStatus();
+		});
 		
 		function getSortedResults(dataList) {
 			const isSplitActive = document.getElementById('tab-list-split')?.classList.contains('active');
