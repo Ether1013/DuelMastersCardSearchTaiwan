@@ -91,7 +91,7 @@
       pointer-events: visiblePainted;
     }
 
-    /* 圖層：自由獨立文字備註 */
+    /* 圖層：自由獨立文字備註與線條按鈕 */
     #labels-layer {
       position: absolute;
       top: 0;
@@ -295,7 +295,7 @@
       cursor: pointer;
     }
 
-    /* 關聯連線設定 Modal */
+    /* 關聯線設定 Modal */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -404,7 +404,6 @@
     <canvas id="grid-bg"></canvas>
     <svg id="svg-layer">
       <defs>
-        <!-- 放大至 8x8 配合加粗關係線 -->
         <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff4d4d" />
         </marker>
@@ -725,7 +724,6 @@
           showGrid(false);
           saveToStorage();
 
-          // 若沒有顯著移動，視為點擊事件（相容 Touch / Mouse）
           if (!hasMoved) {
             handleNodeClickForRelation(nodeObj);
           }
@@ -1084,7 +1082,6 @@
       return map;
     }
 
-    // 計算線條軌跡（支援：斜線 straight / 直線直角 orthogonal）
     function getLineRoute(line, edgeMap) {
       const fromNode = nodes.find(n => n.id === line.fromId);
       const toNode = nodes.find(n => n.id === line.toId);
@@ -1105,12 +1102,10 @@
       const pStart = computeSideOffset(fromNode, fromSide, idxFrom !== -1 ? idxFrom : 0, listFrom.length);
       const pEnd = computeSideOffset(toNode, toSide, idxTo !== -1 ? idxTo : 0, listTo.length);
 
-      // 💡 選項「斜線 / 直線」模式：兩點直接直連
       if (line.style === 'straight') {
         return [pStart, pEnd];
       }
 
-      // 💡 選項「走直角」模式（預設）：
       const overlapXStart = Math.max(fromNode.x, toNode.x);
       const overlapXEnd = Math.min(fromNode.x + fromNode.w, toNode.x + toNode.w);
       const hasOverlapX = overlapXEnd - overlapXStart >= 15;
@@ -1135,7 +1130,6 @@
         ];
       }
 
-      // 嘗試 1 個轉折點 L 型
       if (fromSide === 'left' || fromSide === 'right') {
         const corner = { x: pEnd.x, y: pStart.y };
         const isFromValid = (fromSide === 'right' && corner.x >= pStart.x) || (fromSide === 'left' && corner.x <= pStart.x);
@@ -1148,7 +1142,6 @@
         if (isFromValid && isToValid) return [pStart, corner, pEnd];
       }
 
-      // Z 型備援
       if (fromSide === 'left' || fromSide === 'right') {
         const midX = (pStart.x + pEnd.x) / 2;
         return [pStart, { x: midX, y: pStart.y }, { x: midX, y: pEnd.y }, pEnd];
@@ -1163,6 +1156,9 @@
       svgLayer.innerHTML = '';
       svgLayer.appendChild(defs);
 
+      // 💡 關鍵修復：清空上一繪製畫面的線條刪除按鈕，防止移動圖片時產生殘影
+      labelsLayer.querySelectorAll('.line-delete-btn').forEach(btn => btn.remove());
+
       const edgeMap = buildEdgeConnectionsMap();
 
       lines.forEach(line => {
@@ -1174,7 +1170,6 @@
       });
     }
 
-    // 繪製加粗關係線 (5px)
     function drawLinePath(line, edgeMap) {
       const pts = getLineRoute(line, edgeMap);
       if (pts.length < 2) return;
@@ -1187,7 +1182,7 @@
       const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       pathEl.setAttribute('d', dPath);
       pathEl.setAttribute('stroke', '#ff4d4d');
-      pathEl.setAttribute('stroke-width', '5'); // 💡 關係線加粗至 5px
+      pathEl.setAttribute('stroke-width', '5');
       pathEl.setAttribute('fill', 'none');
 
       if (line.dir === 'forward' || line.dir === 'both') pathEl.setAttribute('marker-end', 'url(#arrow-end)');
@@ -1195,7 +1190,6 @@
 
       svgLayer.appendChild(pathEl);
 
-      // 線段中間放置 [X] 刪除按鈕
       const midSegIdx = Math.floor((pts.length - 1) / 2);
       const pA = pts[midSegIdx];
       const pB = pts[midSegIdx + 1];
@@ -1350,7 +1344,7 @@
     }
 
     function renderLinesToCanvas(ctx) {
-      ctx.lineWidth = 5; // 💡 匯出線條加粗至 5px
+      ctx.lineWidth = 5;
       ctx.strokeStyle = '#ff4d4d';
       ctx.fillStyle = '#ff4d4d';
 
