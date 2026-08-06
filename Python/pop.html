@@ -6,46 +6,60 @@
     <title>商品卡表展示</title>
     <style>
         /* 基礎全域樣式 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden; /* 防止 1080px 版型微幅溢出導致右側截斷 */
+        }
         body { 
-			font-family: "微軟正黑體", sans-serif; 
-			padding: 20px 10px; /* 左右邊距由 20px 縮減為 10px */
-			background: #fff; 
-			color: #111; 
-			line-height: 1.5; 
-			margin: 0;
-			box-sizing: border-box;
-		}
+            font-family: "微軟正黑體", sans-serif; 
+            padding: 20px 10px;
+            background: #fff; 
+            color: #111; 
+            line-height: 1.5; 
+            box-sizing: border-box;
+        }
         h1 { 
             border-bottom: 2px solid #333; 
             padding-bottom: 8px; 
             font-size: 20px; 
+            margin-top: 0;
         }
 
-        /* ================= 模式 1：僅匯出圖片 (圖格展開模式 - 鍊鋸人向上滑開) ================= */
+        /* ================= 模式 1：僅匯出圖片 (響應式卡牌寬度) ================= */
         body.mode-img-only {
             background: #111 !important;
             color: #fff !important;
+            /* 預設卡牌寬高與間距 CSS 變數，JS 會依螢幕寬度動態計算更新 */
+            --card-w: 140px;
+            --card-h: 196px;
+            --card-overlap: -160px;
+            --card-gap: 10px;
         }
-        /* 💡 微調僅圖片模式的容器 width 與 overflow 處理 */
-		.img-grid-container {
-			display: flex;
-			flex-direction: column;
-			gap: 20px;
-			width: 100%;
-			max-width: 1060px; /* 限制最大寬度在 viewport 緩衝範圍內 */
-			margin: 0 auto;
-			box-sizing: border-box;
-		}
 
-		.img-grid-row {
-			display: flex;
-			gap: 10px; /* 橫向間距由 12px 微調為 10px，釋放右側空間 */
-			justify-content: flex-start;
-			align-items: flex-start;
-			flex-wrap: nowrap; /* 確保保持單橫列不隨意折行 */
-		}
+        .img-grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 1060px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            align-items: center;
+        }
+
+        .img-grid-row {
+            display: flex;
+            gap: var(--card-gap);
+            justify-content: center;
+            align-items: flex-end; /* 向下對齊/向上拉展 */
+            flex-wrap: nowrap;
+            width: 100%;
+            box-sizing: border-box;
+        }
         .img-card-col {
-            width: 140px;
+            width: var(--card-w);
             flex-shrink: 0;
         }
         .img-stack-box {
@@ -53,24 +67,23 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-            width: 140px;
+            width: var(--card-w);
         }
         .img-only-card {
-            width: 140px;
-            height: 196px;
+            width: var(--card-w);
+            height: var(--card-h);
             object-fit: contain;
             border-radius: 6px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.7);
             position: relative;
             background: #222;
         }
-        /* 💡 向上滑開露頂：配合第一張 z-index 最高，完美露出上方卡片標題欄 */
         .img-only-card:not(:first-child) {
-            margin-top: -160px;
+            margin-top: var(--card-overlap);
         }
         .no-img-box {
-            width: 140px;
-            height: 196px;
+            width: var(--card-w);
+            height: var(--card-h);
             background: #222;
             border: 2px dashed #555;
             border-radius: 6px;
@@ -82,6 +95,10 @@
             text-align: center;
             padding: 4px;
             box-sizing: border-box;
+            position: relative;
+        }
+        .no-img-box:not(:first-child) {
+            margin-top: var(--card-overlap);
         }
 
         /* ================= 模式 2 & 3：標準圖文 / 純文字模式樣式 ================= */
@@ -116,11 +133,10 @@
             transition: all 0.2s ease;
         }
 
-        /* 💡 解決手機文字裁切與效果欄過窄的核心設定 */
         .card-detail { 
             flex: 1; 
             min-width: 0; 
-            word-break: break-word; /* 自動折行長單字/網址/日文 */
+            word-break: break-word;
             overflow-wrap: break-word;
         }
         
@@ -357,7 +373,45 @@
             });
         }
 
-        // 💡 渲染匯出 payload 格式 (Session 模式專用)
+        // 全域變數保存目前 rowDist 分佈，以利螢幕旋轉/縮放時動態計算卡牌大小
+        let currentImgOnlyRowDist = [];
+
+        function updateImgOnlyScale() {
+			if (!document.body.classList.contains('mode-img-only') || currentImgOnlyRowDist.length === 0) return;
+
+			// 抓取單列最多有幾張卡片 (例如 7 張)
+			const maxCountInRow = Math.max(...currentImgOnlyRowDist);
+			if (maxCountInRow <= 0) return;
+
+			// 💡 1. 精準取得容器或 Body 的實際渲染內部寬度
+			const container = document.getElementById('card-list-container');
+			const bodyW = document.body.clientWidth || window.innerWidth;
+			const actualWidth = (container && container.clientWidth > 0) ? container.clientWidth : bodyW;
+
+			// 💡 2. 預留左右安全邊距 (24px) 與卡牌之間間距 (間距隨卡片數量調整，最小 4px)
+			const gap = maxCountInRow > 5 ? 6 : 10;
+			const safePadding = 24; 
+			const availableWidth = actualWidth - safePadding;
+
+			// 💡 3. 計算每張卡片的精準寬度
+			let calculatedCardW = Math.floor((availableWidth - (maxCountInRow - 1) * gap) / maxCountInRow);
+
+			// 限制卡片寬度：桌機最大 140px，手機最小不低於 30px
+			calculatedCardW = Math.min(140, Math.max(30, calculatedCardW));
+			
+			// 依 140 : 196 (即 1 : 1.4) 比例算出高度與堆疊負邊距
+			const calculatedCardH = Math.round(calculatedCardW * 1.4);
+			// 重疊負邊距比例約為高度的 81.6%
+			const calculatedOverlap = -Math.round(calculatedCardH * 0.816);
+
+			// 更新 CSS 全域變數
+			document.body.style.setProperty('--card-w', `${calculatedCardW}px`);
+			document.body.style.setProperty('--card-h', `${calculatedCardH}px`);
+			document.body.style.setProperty('--card-overlap', `${calculatedOverlap}px`);
+			document.body.style.setProperty('--card-gap', `${gap}px`);
+		}
+
+        // 渲染匯出 payload 格式 (Session 模式專用)
         function renderExportPayload(payload) {
             const container = document.getElementById('card-list-container');
             const { mode, items, isDeckSet, cardTypes } = payload;
@@ -368,12 +422,19 @@
                 return match ? match.text : typeVal;
             }
 
-            // 模式 1：僅匯出圖片 (Image Only)
+            // ================= 模式 1：僅匯出圖片 (Image Only) =================
             if (mode === 'img_only') {
                 document.body.classList.add('mode-img-only');
                 document.title = `匯出結果 - 僅圖片模式 (${items.length}種卡牌)`;
                 document.getElementById('page-title').innerText = `僅圖片模式 (${items.length}種卡牌)`;
 
+                // 💡 僅圖片模式動態切換 Viewport 為裝置寬度，以利精準響應式計算圖片
+                let metaViewport = document.querySelector('meta[name="viewport"]');
+                if (metaViewport) {
+                    metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes');
+                }
+
+                // 依據原始需求：依卡牌種類數量固定計算列數與單列行數
                 function calculateRowDistribution(totalCards) {
                     if (totalCards <= 0) return [];
                     if (totalCards === 9) return [5, 4];
@@ -388,28 +449,34 @@
                     return dist;
                 }
 
-                const rowDist = calculateRowDistribution(items.length);
+                currentImgOnlyRowDist = calculateRowDistribution(items.length);
+
                 let html = '<div class="img-grid-container">';
                 let currIdx = 0;
 
-                rowDist.forEach(countInRow => {
+                currentImgOnlyRowDist.forEach(countInRow => {
                     html += '<div class="img-grid-row">';
                     for (let i = 0; i < countInRow; i++) {
                         const item = items[currIdx];
                         if (item) {
                             html += '<div class="img-card-col">';
+                            html += '<div class="img-stack-box">';
+                            
                             if (item.picUrl) {
-                                html += '<div class="img-stack-box">';
-                                // 💡 第一張 (c=0) z-index 最高，後面向上拉負邊距，達成「向下露出頂部標題」
                                 for (let c = 0; c < item.count; c++) {
-                                    const zIndex = item.count - c;
+                                    const zIndex = c + 1; // 畫面最下方(最後一張) z-index 最高
                                     html += `<img class="img-only-card" style="z-index:${zIndex};" src="${item.picUrl}" alt="${item.name}" />`;
                                 }
-                                html += '</div>';
                             } else {
-                                html += `<div class="no-img-box">${item.name}<br>(No Image)</div>`;
+                                for (let c = 0; c < item.count; c++) {
+                                    const zIndex = c + 1;
+                                    const isTop = (c === item.count - 1);
+                                    const boxContent = isTop ? `${item.name}<br>(No Image)` : '';
+                                    html += `<div class="no-img-box" style="z-index:${zIndex};">${boxContent}</div>`;
+                                }
                             }
-                            html += '</div>';
+                            
+                            html += '</div></div>';
                         }
                         currIdx++;
                     }
@@ -417,10 +484,15 @@
                 });
                 html += '</div>';
                 container.innerHTML = html;
+
+                // 💡 確保 DOM 渲染完畢後執行尺寸計算
+				requestAnimationFrame(() => {
+					updateImgOnlyScale();
+				});
                 return;
             }
 
-            // 模式 2 & 3：圖+效果 (img_text) 與 只要效果 (text_only)
+            // ================= 模式 2 & 3：圖+效果 (img_text) 與 只要效果 (text_only) =================
             document.title = `卡牌列表匯出結果 (${items.length}張)`;
             document.getElementById('page-title').innerText = `卡牌列表匯出結果 (${items.length}張)`;
             const includeImage = (mode === 'img_text');
@@ -461,7 +533,6 @@
 
                 html += '<div class="card-detail">';
                 
-                // 💡 調整需求：只要是 isDeckSet 且無圖片/純文字模式，1 張牌也要顯示 "1 ⅹ "[cite: 5]
                 let countPrefix = '';
                 if (isDeckSet && (!includeImage || !picUrl)) {
                     countPrefix = `<span style="font-weight:bold; color:#d32f2f; margin-right:6px;">${cardCount} ⅹ </span>`;
@@ -694,7 +765,6 @@
 
                     htmlContent += `<div class="card-detail">`;
                     
-                    // 💡 調整需求：只要是 isDeckSet 且無圖片，即使是 1 張牌也要顯示 "1 ⅹ "[cite: 5]
                     let countPrefix = '';
                     if (isDeckSet && (!picUrl || picUrl.trim() === '')) {
                         countPrefix = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px;">${cardCount} ⅹ </span>`;
@@ -818,6 +888,16 @@
                 document.getElementById('loading').style.display = 'none';
             }
         }
+
+        // 💡 監聽螢幕旋轉與 Resize 事件：手機轉橫向時即時重新調整純圖片模式的大小
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(updateImgOnlyScale, 100);
+        });
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateImgOnlyScale, 200);
+        });
 
         window.addEventListener('DOMContentLoaded', initPopPage);
     </script>
