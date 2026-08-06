@@ -122,7 +122,7 @@
       height: 100%;
       display: block;
       pointer-events: none;
-      object-fit: contain;
+      object-fit: cover; /* 修正：確保圖片填滿且絕不變形 */
     }
 
     /* 縮放手把 */
@@ -614,18 +614,29 @@
       return Math.round(val / GRID_SIZE) * GRID_SIZE;
     }
 
-    // --- 3. 建立與恢復卡片節點 ---
+    // --- 3. 建立與恢復卡片節點（修正：嚴格保持圖片原始比例，避免變形） ---
     function createNode(src, x = 100, y = 100) {
       const img = new Image();
       img.onload = () => {
-        let w = img.width || 120;
-        let h = img.height || 160;
-        if (w > 200) {
-          h = (200 / w) * h;
-          w = 200;
+        let rawW = img.naturalWidth || img.width || 120;
+        let rawH = img.naturalHeight || img.height || 160;
+        
+        // 嚴格按原始長寬比例，限制最大尺寸為 160px，不做網格對齊防擠壓
+        const MAX_SIZE = 160;
+        let w = rawW;
+        let h = rawH;
+
+        if (w > h) {
+          if (w > MAX_SIZE) {
+            h = Math.round((MAX_SIZE / w) * h);
+            w = MAX_SIZE;
+          }
+        } else {
+          if (h > MAX_SIZE) {
+            w = Math.round((MAX_SIZE / h) * w);
+            h = MAX_SIZE;
+          }
         }
-        w = Math.max(80, snapToGrid(w));
-        h = Math.max(80, snapToGrid(h));
 
         let snappedX = snapToGrid(x);
         let snappedY = snapToGrid(y);
@@ -1127,13 +1138,12 @@
       return map;
     }
 
-    // 計算線條軌跡（調整：優先 L 型側接頂底 + 重複連線路徑動態錯開）
     function getLineRoute(line, edgeMap) {
       const fromNode = nodes.find(n => n.id === line.fromId);
       const toNode = nodes.find(n => n.id === line.toId);
       if (!fromNode || !toNode) return [];
 
-      // 1. 處理自連線 (Self-Loop)
+      // 自連線
       if (fromNode.id === toNode.id) {
         const pad = PADDING_OFFSET;
         const pStart = { x: fromNode.x + fromNode.w * 0.5, y: fromNode.y - pad };
@@ -1144,7 +1154,7 @@
         return [pStart, p1, p2, p3, pEnd];
       }
 
-      // 💡 2. 統計兩卡片之間的「重複連線」組，進行動態平行偏移避開重疊
+      // 統計「重複連線」組進行平行向量位移
       const pairKey = [fromNode.id, toNode.id].sort((a, b) => a - b).join('_');
       const samePairLines = lines.filter(l => 
         (l.fromId === fromNode.id && l.toId === toNode.id) || 
@@ -1168,7 +1178,6 @@
       let pStart = computeSideOffset(fromNode, fromSide, idxFrom !== -1 ? idxFrom : 0, listFrom.length);
       let pEnd = computeSideOffset(toNode, toSide, idxTo !== -1 ? idxTo : 0, listTo.length);
 
-      // 若有重複連線，進行座標向量偏移
       if (dupShift !== 0) {
         if (fromSide === 'left' || fromSide === 'right') {
           pStart.y += dupShift;
@@ -1179,12 +1188,10 @@
         }
       }
 
-      // 3. 斜線直接連結模式
       if (line.style === 'straight') {
         return [pStart, pEnd];
       }
 
-      // 4. 直線判斷 (X/Y 軸有區域重疊時直線穿過)
       const overlapXStart = Math.max(fromNode.x, toNode.x);
       const overlapXEnd = Math.min(fromNode.x + fromNode.w, toNode.x + toNode.w);
       const hasOverlapX = overlapXEnd - overlapXStart >= 15;
@@ -1209,11 +1216,10 @@
         ];
       }
 
-      // 💡 5. 調整：優先以【L 型連結】（側邊對接頂部/底部）
+      // 優先以 L 型連結（側接頂底）
       const fC = { x: fromNode.x + fromNode.w / 2, y: fromNode.y + fromNode.h / 2 };
       const tC = { x: toNode.x + toNode.w / 2, y: toNode.y + toNode.h / 2 };
 
-      // 嘗試構建：從側邊 (Left/Right) 發射，轉折接至目標卡片的頂/底邊 (Top/Bottom)
       const lCornerSideToTopBottom = { x: tC.x, y: fC.y };
       const isSideToTopBottomValid = 
         ((fC.x < tC.x && lCornerSideToTopBottom.x >= fC.x) || (fC.x > tC.x && lCornerSideToTopBottom.x <= fC.x)) &&
@@ -1225,7 +1231,6 @@
         return [startPt, { x: endPt.x, y: startPt.y }, endPt];
       }
 
-      // 嘗試構建：從頂/底邊發射，轉折接至目標卡片的側邊
       const lCornerTopBottomToSide = { x: fC.x, y: tC.y };
       const isTopBottomToSideValid = 
         ((fC.y < tC.y && lCornerTopBottomToSide.y >= fC.y) || (fC.y > tC.y && lCornerTopBottomToSide.y <= fC.y)) &&
@@ -1237,7 +1242,6 @@
         return [startPt, { x: startPt.x, y: endPt.y }, endPt];
       }
 
-      // 6. 若 L 型角度被卡片本身擋住，降級為 Z 型轉折
       if (fromSide === 'left' || fromSide === 'right') {
         const midX = (pStart.x + pEnd.x) / 2;
         return [pStart, { x: midX, y: pStart.y }, { x: midX, y: pEnd.y }, pEnd];
