@@ -86,6 +86,36 @@
             border: 2px dashed #ccc; 
             font-size: 16px;
         }
+		
+		.loading-image-box {
+			width: 100%;
+			height: 250px; 
+			background: #f8f9fa; 
+			color: #0284c7; 
+			display: flex;
+			flex-direction: column;
+			justify-content: center; 
+			align-items: center; 
+			font-weight: bold;
+			border-radius: 6px; 
+			border: 2px dashed #0284c7; 
+			font-size: 14px;
+			gap: 10px;
+		}
+
+		.card-img-spinner {
+			border: 3px solid #e2e8f0;
+			border-top: 3px solid #0284c7;
+			border-radius: 50%;
+			width: 28px;
+			height: 28px;
+			animation: cardSpin 1s linear infinite;
+		}
+
+		@keyframes cardSpin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
 
         .modal-info-container { 
             flex: 1; 
@@ -491,7 +521,12 @@
             if (picUrl) {
                 modalImgBox.innerHTML = `<img class="modal-img" src="${picUrl}" alt="Card Image" />`;
             } else {
-                modalImgBox.innerHTML = `<div class="no-image-box">No Image</div>`;
+                modalImgBox.innerHTML = `
+					<div class="loading-image-box">
+						<div class="card-img-spinner"></div>
+						<div>圖片讀取中...</div>
+					</div>
+				`;
             }
 
             // 2. wdata 屬性區塊渲染

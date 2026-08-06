@@ -408,6 +408,32 @@
             justify-content: center; align-items: center; font-weight: bold;
             border-radius: 6px; border: 2px dashed #ccc; font-size: 16px;
         }
+		/* 虛框 + Loading 容器樣式 */
+		.loading-image-box {
+			width: 100%;
+			height: 250px;
+			background: #f8f9fa;
+			color: #666;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			font-weight: bold;
+			border-radius: 6px;
+			border: 2px dashed #0284c7; /* 醒目的藍色虛框 */
+			font-size: 14px;
+			gap: 10px;
+		}
+
+		/* 卡圖專用的小型 Spinner */
+		.card-img-spinner {
+			border: 3px solid #f3f3f3;
+			border-top: 3px solid #0284c7;
+			border-radius: 50%;
+			width: 28px;
+			height: 28px;
+			animation: spin 1s linear infinite; /* 複用原本的 spin 動畫 */
+		}
 
         .modal-info-container { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 
@@ -2758,7 +2784,7 @@
 			botDiv.innerHTML = '';
 
 			rawCardTypes.forEach(data => {
-				// 💡 新增/修改：1. value 必須有值 2. disabled 不能為 true (僅當 disabled 為 undefined, null, 或 false 時通過)
+				// 💡 新增 / 修改：1. value 必須有值 2. disabled 不能為 true (僅當 disabled 為 undefined, null, 或 false 時通過)
 				if (data.value == null || data.value === "" || data.disabled === true) return;
 				
 				const isCategory = data.catagory || data.category;
@@ -4255,12 +4281,15 @@
 					imgStackContainer.appendChild(noPicBadge);
 				}
 			} else {
-				const noImg = document.createElement('div');
-				noImg.className = 'no-image-box';
-				noImg.style.width = boxWidth;
-				noImg.style.height = boxHeight;
-				noImg.innerText = 'No Image';
-				imgStackContainer.appendChild(noImg);
+				const loadingImg = document.createElement('div');
+				loadingImg.className = 'loading-image-box';
+				loadingImg.style.width = boxWidth;
+				loadingImg.style.height = boxHeight;
+				loadingImg.innerHTML = `
+					<div class="card-img-spinner"></div>
+					<div>圖片讀取中...</div>
+				`;
+				imgStackContainer.appendChild(loadingImg);
 			}
 
 			// 更新堆疊圖層 Class 與當前活動標記 (data-active) 的 Helper 函式
@@ -4933,10 +4962,16 @@
 							// 2. 靜默更新第一頁的 UI 選單狀態（不觸發頁面切換）
 							const bigSelect = document.getElementById('series-big');
 							const smallSelect = document.getElementById('series-small');
+
+							// 💡【訂正點 1】：重置所有卡種 Checkbox 勾選狀態，並同步 Chip UI 視覺
+							document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
+							if (typeof checkAllStatus === 'function') checkAllStatus();
+							if (typeof syncChipUI === 'function') syncChipUI(); // 👈 關鍵：重置 Chip 高亮樣式
+
+							// 💡【訂正點 2】：清空文字輸入框與其他條件
+							document.querySelectorAll('#tab-filter input[type="text"]').forEach(input => input.value = "");
+
 							if (bigSelect && smallSelect) {
-								// 先重置其他過濾欄位 (如只清空卡名、文明等，但不切換頁籤)
-								document.querySelectorAll('#tab-filter input[type="text"]').forEach(input => input.value = "");
-								
 								bigSelect.value = "";
 								bigSelect.dispatchEvent(new Event('change'));
 								smallSelect.value = targetSetKey;
