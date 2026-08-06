@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TCG 卡牌關係圖編輯器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+
+    /* 工具列 */
+    #toolbar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 8px 12px;
+      border-radius: 8px;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #0056b3; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+
+    /* 畫布與網格背景 */
+    #container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-color: #2a2a2a;
+    }
+
+    #grid-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1;
+    }
+    #grid-bg.visible {
+      opacity: 0.3;
+    }
+
+    /* SVG 繪圖層 */
+    #svg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+    #svg-layer * {
+      pointer-events: visiblePainted;
+    }
+
+    /* 文字註解層 */
+    #labels-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* 圖片容器 */
+    .card-node {
+      position: absolute;
+      display: inline-block;
+      cursor: move;
+      user-select: none;
+      z-index: 10;
+      padding: 2px;
+      border: 2px solid transparent;
+      box-sizing: border-box;
+    }
+    .card-node.selected {
+      border: 2px solid #ffc107;
+      box-shadow: 0 0 10px #ffc107;
+    }
+    .card-node.rel-source {
+      border: 2px dashed #00ffff;
+      box-shadow: 0 0 12px #00ffff;
+    }
+    .card-node img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+      object-fit: contain;
+    }
+
+    /* 縮放手把 */
+    .resizer {
+      width: 12px;
+      height: 12px;
+      background: #ffc107;
+      position: absolute;
+      right: -6px;
+      bottom: -6px;
+      cursor: se-resize;
+      border-radius: 50%;
+    }
+
+    /* 刪除圖片按鈕 */
+    .btn-delete-node {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 18px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+    }
+    .card-node:hover .btn-delete-node {
+      display: block;
+    }
+
+    /* [請雙擊目標] 提示浮框 */
+    .target-hint-popover {
+      position: absolute;
+      top: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffc107;
+      color: #000;
+      padding: 4px 10px;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      pointer-events: none;
+      z-index: 999;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -5px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* 箭頭中間刪除按鈕 */
+    .line-delete-btn {
+      position: absolute;
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      z-index: 120;
+      border: 1px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    /* 線條文字備註容器 */
+    .line-label-container {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      z-index: 20000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 可換行的 Textarea */
+    .line-label-textarea {
+      background: rgba(15, 15, 15, 0.8);
+      border: 1px dashed #888;
+      border-radius: 4px;
+      outline: none;
+      text-align: center;
+      padding: 4px 8px;
+      resize: none;
+      overflow: hidden;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: inherit;
+      line-height: 1.3;
+      min-width: 90px;
+      min-height: 28px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .line-label-textarea:focus {
+      border-style: solid;
+      border-color: #007bff;
+      background: rgba(0, 0, 0, 0.95);
+    }
+
+    /* 樣式選單 / 色盤 */
+    .style-popover {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      padding: 6px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      gap: 6px;
+      flex-wrap: wrap;
+      width: 160px;
+      z-index: 999999;
+      margin-bottom: 6px;
+    }
+    .style-popover.active {
+      display: flex;
+    }
+    .color-picker-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1px solid #fff;
+    }
+    .size-btn {
+      background: #555;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    /* 箭頭選擇 Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(3px);
+      z-index: 999999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #2d2d2d;
+      border-radius: 12px;
+      width: 320px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid #444;
+      text-align: center;
+      animation: modalSlideIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes modalSlideIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .modal-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .modal-opt-btn {
+      background: #3a3a3a;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .modal-opt-btn:hover {
+      background: #007bff;
+      border-color: #007bff;
+      transform: translateY(-1px);
+    }
+    .modal-btn-cancel {
+      background: transparent;
+      color: #aaa;
+      border: none;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .modal-btn-cancel:hover { color: #fff; }
+
+    #file-input { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- 工具列 -->
+  <div id="toolbar">
+    <button class="btn" id="btn-select-file">選擇圖片</button>
+    <button class="btn btn-danger" id="btn-clear-all">全清空</button>
+    <button class="btn btn-success" id="btn-export">匯出關係圖</button>
+    <span style="font-size: 12px; color: #ccc; margin-left: 10px;">
+      雙擊圖片進入連線模式；貼上圖片/網址或上傳圖片
+    </span>
+  </div>
+
+  <input type="file" id="file-input" accept="image/*" />
+
+  <!-- 主容器 -->
+  <div id="container">
+    <canvas id="grid-bg"></canvas>
+    <svg id="svg-layer">
+      <defs>
+        <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff4d4d" />
+        </marker>
+        <marker id="arrow-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 10 0 L 0 5 L 10 10 z" fill="#ff4d4d" />
+        </marker>
+      </defs>
+    </svg>
+    <div id="labels-layer"></div>
+  </div>
+
+  <!-- 箭頭選擇 Modal -->
+  <div class="modal-overlay" id="relation-modal">
+    <div class="modal-card">
+      <div class="modal-title">選擇關聯箭頭方向</div>
+      <div class="modal-options">
+        <button class="modal-opt-btn" data-dir="forward">
+          <span>單向箭頭</span> <span style="color:#ff4d4d;">➔</span>
+        </button>
+        <button class="modal-opt-btn" data-dir="backward">
+          <span>反向箭頭</span> <span style="color:#ff4d4d;">⬅</span>
+        </button>
+        <button class="modal-opt-btn" data-dir="both">
+          <span>雙向箭頭</span> <span style="color:#ff4d4d;">⬌</span>
+        </button>
+      </div>
+      <button class="modal-btn-cancel" id="btn-modal-cancel">取消</button>
+    </div>
+  </div>
+
+  <script>
+    const GRID_SIZE = 20;
+    const PADDING_OFFSET = 8;
+    const STORAGE_KEY = 'tcg_relationship_data_v1';
+    const EXPIRATION_DAYS = 3;
+
+    const COLOR_PALETTE = [
+      "#ffffff", "#ff4d4d", "#ffbe76", "#fffa65", 
+      "#32ff7e", "#18dcff", "#7d5fff", "#ffb8b8"
+    ];
+    const FONT_SIZES = [12, 14, 16, 20, 24];
+
+    let nodes = [];
+    let lines = [];
+    let nextNodeId = 1;
+    let nextLineId = 1;
+    let highestZ = 10;
+
+    let relSourceNode = null;
+    let hintTimeoutId = null;
+    let hasShownStorageFullAlert = false;
+
+    const container = document.getElementById('container');
+    const svgLayer = document.getElementById('svg-layer');
+    const labelsLayer = document.getElementById('labels-layer');
+    const gridBg = document.getElementById('grid-bg');
+    const fileInput = document.getElementById('file-input');
+    const relationModal = document.getElementById('relation-modal');
+
+    // --- 1. LocalStorage 管理與滿載異常捕捉 ---
+    function saveToStorage() {
+      const data = {
+        timestamp: Date.now(),
+        nextNodeId,
+        nextLineId,
+        nodes: nodes.map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h, src: n.src, zIndex: n.zIndex })),
+        lines: lines
+      };
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('LocalStorage 儲存容量已滿:', e);
+        if (!hasShownStorageFullAlert) {
+          alert('⚠️ 瀏覽器儲存空間已滿，當前進度無法自動儲存！\n重新整理 (F5) 後新變更可能會遺失，但您仍可繼續編輯與匯出圖片。');
+          hasShownStorageFullAlert = true;
+        }
+      }
+    }
+
+    function loadFromStorage() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+
+      try {
+        const data = JSON.parse(raw);
+        const now = Date.now();
+        const diffDays = (now - data.timestamp) / (1000 * 60 * 60 * 24);
+
+        if (diffDays > EXPIRATION_DAYS) {
+          localStorage.removeItem(STORAGE_KEY);
+          return;
+        }
+
+        nextNodeId = data.nextNodeId || 1;
+        nextLineId = data.nextLineId || 1;
+        lines = data.lines || [];
+
+        if (Array.isArray(data.nodes)) {
+          data.nodes.forEach(n => restoreNode(n));
+        }
+      } catch (e) {
+        console.error('復原快取失敗:', e);
+      }
+    }
+
+    function clearAllData() {
+      if (confirm('確定要清空所有圖片與關係線嗎？此操作無法復原。')) {
+        nodes.forEach(n => n.element.remove());
+        nodes = [];
+        lines = [];
+        relSourceNode = null;
+        hasShownStorageFullAlert = false;
+        localStorage.removeItem(STORAGE_KEY);
+        updateLines();
+      }
+    }
+    document.getElementById('btn-clear-all').addEventListener('click', clearAllData);
+
+    // --- 2. 網格輔助線 ---
+    function initGrid() {
+      gridBg.width = window.innerWidth;
+      gridBg.height = window.innerHeight;
+      const ctx = gridBg.getContext('2d');
+      ctx.clearRect(0, 0, gridBg.width, gridBg.height);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+
+      for (let x = 0; x < gridBg.width; x += GRID_SIZE) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gridBg.height); ctx.stroke();
+      }
+      for (let y = 0; y < gridBg.height; y += GRID_SIZE) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(gridBg.width, y); ctx.stroke();
+      }
+    }
+    window.addEventListener('resize', initGrid);
+    initGrid();
+
+    function showGrid(visible) {
+      gridBg.classList.toggle('visible', visible);
+    }
+
+    function snapToGrid(val) {
+      return Math.round(val / GRID_SIZE) * GRID_SIZE;
+    }
+
+    // --- 3. 建立與恢復卡片節點 ---
+    function createNode(src, x = 100, y = 100) {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width || 120;
+        let h = img.height || 160;
+        if (w > 200) {
+          h = (200 / w) * h;
+          w = 200;
+        }
+        w = Math.max(80, snapToGrid(w));
+        h = Math.max(80, snapToGrid(h));
+
+        let snappedX = snapToGrid(x);
+        let snappedY = snapToGrid(y);
+        while (nodes.some(n => n.x === snappedX && n.y === snappedY)) {
+          snappedX += GRID_SIZE;
+          snappedY += GRID_SIZE;
+        }
+
+        const nodeId = nextNodeId++;
+        highestZ++;
+
+        instantiateNode({ id: nodeId, x: snappedX, y: snappedY, w, h, src, zIndex: highestZ });
+        saveToStorage();
+      };
+      img.src = src;
+    }
+
+    function restoreNode(nData) {
+      highestZ = Math.max(highestZ, nData.zIndex || 10);
+      instantiateNode(nData);
+    }
+
+    function instantiateNode(nodeData) {
+      const nodeEl = document.createElement('div');
+      nodeEl.className = 'card-node';
+      nodeEl.style.left = nodeData.x + 'px';
+      nodeEl.style.top = nodeData.y + 'px';
+      nodeEl.style.width = nodeData.w + 'px';
+      nodeEl.style.height = nodeData.h + 'px';
+      nodeEl.style.zIndex = nodeData.zIndex;
+
+      const imgEl = document.createElement('img');
+      imgEl.src = nodeData.src;
+      nodeEl.appendChild(imgEl);
+
+      const delBtn = document.createElement('div');
+      delBtn.className = 'btn-delete-node';
+      delBtn.innerText = '✕';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteNode(nodeData.id);
+      };
+      nodeEl.appendChild(delBtn);
+
+      const resizer = document.createElement('div');
+      resizer.className = 'resizer';
+      nodeEl.appendChild(resizer);
+
+      container.appendChild(nodeEl);
+
+      const nodeObj = { ...nodeData, element: nodeEl };
+      nodes.push(nodeObj);
+
+      bindNodeEvents(nodeObj, resizer);
+      updateLines();
+    }
+
+    function deleteNode(nodeId) {
+      const index = nodes.findIndex(n => n.id === nodeId);
+      if (index !== -1) {
+        nodes[index].element.remove();
+        nodes.splice(index, 1);
+      }
+      lines = lines.filter(l => l.fromId !== nodeId && l.toId !== nodeId);
+      if (relSourceNode && relSourceNode.id === nodeId) removeHintAndSource();
+      updateLines();
+      saveToStorage();
+    }
+
+    // --- 4. 雙擊提示與卡片事件 ---
+    function showTargetHint(nodeObj) {
+      removeHintAndSource(false);
+
+      relSourceNode = nodeObj;
+      nodeObj.element.classList.add('rel-source');
+
+      const hintEl = document.createElement('div');
+      hintEl.className = 'target-hint-popover';
+      hintEl.innerText = '請雙擊目標';
+      nodeObj.element.appendChild(hintEl);
+
+      hintTimeoutId = setTimeout(() => {
+        if (hintEl.parentNode) hintEl.remove();
+      }, 1000);
+    }
+
+    function removeHintAndSource(clearSource = true) {
+      if (hintTimeoutId) clearTimeout(hintTimeoutId);
+      document.querySelectorAll('.target-hint-popover').forEach(el => el.remove());
+      if (clearSource && relSourceNode) {
+        relSourceNode.element.classList.remove('rel-source');
+        relSourceNode = null;
+      }
+    }
+
+    function bindNodeEvents(nodeObj, resizerEl) {
+      const el = nodeObj.element;
+      let isDragging = false;
+      let startX, startY, initialX, initialY;
+
+      const onMouseDown = (e) => {
+        if (e.target.classList.contains('resizer') || e.target.classList.contains('btn-delete-node')) return;
+        
+        isDragging = true;
+        showGrid(true);
+
+        highestZ++;
+        nodeObj.zIndex = highestZ;
+        el.style.zIndex = highestZ;
+
+        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startY = e.clientY || (e.touches && e.touches[0].clientY);
+        initialX = nodeObj.x;
+        initialY = nodeObj.y;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchmove', onMouseMove, { passive: false });
+        document.addEventListener('touchend', onMouseUp);
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        if (e.cancelable) e.preventDefault();
+
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        nodeObj.x = Math.max(0, snapToGrid(initialX + (currentX - startX)));
+        nodeObj.y = Math.max(0, snapToGrid(initialY + (currentY - startY)));
+
+        el.style.left = nodeObj.x + 'px';
+        el.style.top = nodeObj.y + 'px';
+
+        updateLines();
+      };
+
+      const onMouseUp = () => {
+        if (isDragging) {
+          isDragging = false;
+          showGrid(false);
+          saveToStorage();
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onMouseMove);
+        document.removeEventListener('touchend', onMouseUp);
+      };
+
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('touchstart', onMouseDown, { passive: false });
+
+      el.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        handleNodeClickForRelation(nodeObj);
+      });
+
+      let isResizing = false;
+      let startW, startH;
+
+      const onResizeStart = (e) => {
+        e.stopPropagation();
+        isResizing = true;
+        showGrid(true);
+
+        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startY = e.clientY || (e.touches && e.touches[0].clientY);
+        startW = nodeObj.w;
+        startH = nodeObj.h;
+
+        document.addEventListener('mousemove', onResizeMove);
+        document.addEventListener('mouseup', onResizeEnd);
+        document.addEventListener('touchmove', onResizeMove, { passive: false });
+        document.addEventListener('touchend', onResizeEnd);
+      };
+
+      const onResizeMove = (e) => {
+        if (!isResizing) return;
+        if (e.cancelable) e.preventDefault();
+
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        nodeObj.w = Math.max(60, snapToGrid(startW + (currentX - startX)));
+        nodeObj.h = Math.max(60, snapToGrid(startH + (currentY - startY)));
+
+        el.style.width = nodeObj.w + 'px';
+        el.style.height = nodeObj.h + 'px';
+
+        updateLines();
+      };
+
+      const onResizeEnd = () => {
+        if (isResizing) {
+          isResizing = false;
+          showGrid(false);
+          saveToStorage();
+        }
+        document.removeEventListener('mousemove', onResizeMove);
+        document.removeEventListener('mouseup', onResizeEnd);
+        document.removeEventListener('touchmove', onResizeMove);
+        document.removeEventListener('touchend', onResizeEnd);
+      };
+
+      resizerEl.addEventListener('mousedown', onResizeStart);
+      resizerEl.addEventListener('touchstart', onResizeStart, { passive: false });
+    }
+
+    // --- 5. Modal 箭頭選擇器處理 ---
+    function openRelationModal() {
+      return new Promise((resolve) => {
+        relationModal.classList.add('active');
+
+        const onClickOption = (e) => {
+          const btn = e.target.closest('.modal-opt-btn');
+          if (btn) {
+            const dir = btn.dataset.dir;
+            cleanup();
+            resolve(dir);
+          }
+        };
+
+        const onClickCancel = () => {
+          cleanup();
+          resolve(null);
+        };
+
+        const cleanup = () => {
+          relationModal.classList.remove('active');
+          relationModal.removeEventListener('click', onClickOption);
+          document.getElementById('btn-modal-cancel').removeEventListener('click', onClickCancel);
+        };
+
+        relationModal.addEventListener('click', onClickOption);
+        document.getElementById('btn-modal-cancel').addEventListener('click', onClickCancel);
+      });
+    }
+
+    async function handleNodeClickForRelation(nodeObj) {
+      if (!relSourceNode) {
+        showTargetHint(nodeObj);
+      } else {
+        const source = relSourceNode;
+        removeHintAndSource();
+
+        const dir = await openRelationModal();
+        if (!dir) return;
+
+        const lineObj = {
+          id: nextLineId++,
+          fromId: source.id,
+          toId: nodeObj.id,
+          dir: dir,
+          label1: { text: '', color: '#ffffff', size: 14 },
+          label2: { text: '', color: '#ffffff', size: 14 }
+        };
+
+        lines.push(lineObj);
+        updateLines();
+        saveToStorage();
+      }
+    }
+
+    container.addEventListener('click', (e) => {
+      if (e.target === container || e.target === gridBg || e.target === svgLayer) {
+        removeHintAndSource();
+      }
+    });
+
+    // --- 6. 幾何計算：寬鬆直線與 L 型優先演算法 ---
+
+    function computeSideOffset(node, side, slotIndex, totalSlots) {
+      if (totalSlots <= 1) {
+        return {
+          x: node.x + (side === 'left' ? -PADDING_OFFSET : (side === 'right' ? node.w + PADDING_OFFSET : node.w / 2)),
+          y: node.y + (side === 'top' ? -PADDING_OFFSET : (side === 'bottom' ? node.h + PADDING_OFFSET : node.h / 2))
+        };
+      }
+
+      const STEP = 16;
+      const centerOffset = (slotIndex - (totalSlots - 1) / 2) * STEP;
+
+      if (side === 'left' || side === 'right') {
+        const x = side === 'left' ? node.x - PADDING_OFFSET : node.x + node.w + PADDING_OFFSET;
+        const baseY = node.y + node.h / 2;
+        const clampedY = Math.max(node.y + 10, Math.min(node.y + node.h - 10, baseY + centerOffset));
+        return { x, y: clampedY };
+      } else {
+        const y = side === 'top' ? node.y - PADDING_OFFSET : node.y + node.h + PADDING_OFFSET;
+        const baseX = node.x + node.w / 2;
+        const clampedX = Math.max(node.x + 10, Math.min(node.x + node.w - 10, baseX + centerOffset));
+        return { x: clampedX, y };
+      }
+    }
+
+    function determineSide(fromNode, toNode) {
+      const fC = { x: fromNode.x + fromNode.w / 2, y: fromNode.y + fromNode.h / 2 };
+      const tC = { x: toNode.x + toNode.w / 2, y: toNode.y + toNode.h / 2 };
+
+      const dx = tC.x - fC.x;
+      const dy = tC.y - fC.y;
+
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        return dx >= 0 ? 'right' : 'left';
+      } else {
+        return dy >= 0 ? 'bottom' : 'top';
+      }
+    }
+
+    function buildEdgeConnectionsMap() {
+      const map = {};
+
+      lines.forEach(line => {
+        const fromNode = nodes.find(n => n.id === line.fromId);
+        const toNode = nodes.find(n => n.id === line.toId);
+        if (!fromNode || !toNode || fromNode.id === toNode.id) return;
+
+        const fromSide = determineSide(fromNode, toNode);
+        const toSide = determineSide(toNode, fromNode);
+
+        const keyFrom = `${fromNode.id}_${fromSide}`;
+        const keyTo = `${toNode.id}_${toSide}`;
+
+        if (!map[keyFrom]) map[keyFrom] = [];
+        if (!map[keyTo]) map[keyTo] = [];
+
+        const tC = { x: toNode.x + toNode.w / 2, y: toNode.y + toNode.h / 2 };
+        const fC = { x: fromNode.x + fromNode.w / 2, y: fromNode.y + fromNode.h / 2 };
+
+        map[keyFrom].push({ lineId: line.id, role: 'from', targetPos: tC, side: fromSide });
+        map[keyTo].push({ lineId: line.id, role: 'to', targetPos: fC, side: toSide });
+      });
+
+      Object.keys(map).forEach(key => {
+        const side = key.split('_')[1];
+        if (side === 'left' || side === 'right') {
+          map[key].sort((a, b) => a.targetPos.y - b.targetPos.y);
+        } else {
+          map[key].sort((a, b) => a.targetPos.x - b.targetPos.x);
+        }
+      });
+
+      return map;
+    }
+
+    // 💡 調整 1 & 2：寬鬆直線與 L 型優先路由演算法
+    function getOrthogonalRoute(line, edgeMap) {
+      const fromNode = nodes.find(n => n.id === line.fromId);
+      const toNode = nodes.find(n => n.id === line.toId);
+      if (!fromNode || !toNode) return [];
+
+      // 1. 寬鬆直線判斷：檢測 X 軸或 Y 軸是否有區域重疊 (Intersection)
+      const overlapXStart = Math.max(fromNode.x, toNode.x);
+      const overlapXEnd = Math.min(fromNode.x + fromNode.w, toNode.x + toNode.w);
+      const hasOverlapX = overlapXEnd - overlapXStart >= 15; // 寬鬆容許交錯區域
+
+      const overlapYStart = Math.max(fromNode.y, toNode.y);
+      const overlapYEnd = Math.min(fromNode.y + fromNode.h, toNode.y + toNode.h);
+      const hasOverlapY = overlapYEnd - overlapYStart >= 15;
+
+      // 狀況 1-A：X 軸有交錯，直接穿過交錯空間的中點畫垂直直線
+      if (hasOverlapX) {
+        const midX = (overlapXStart + overlapXEnd) / 2;
+        if (fromNode.y < toNode.y) {
+          // fromNode 在上方，toNode 在下方
+          return [
+            { x: midX, y: fromNode.y + fromNode.h + PADDING_OFFSET },
+            { x: midX, y: toNode.y - PADDING_OFFSET }
+          ];
+        } else {
+          // fromNode 在下方，toNode 在上方
+          return [
+            { x: midX, y: fromNode.y - PADDING_OFFSET },
+            { x: midX, y: toNode.y + toNode.h + PADDING_OFFSET }
+          ];
+        }
+      }
+
+      // 狀況 1-B：Y 軸有交錯，直接穿過交錯空間的中點畫水平直線
+      if (hasOverlapY) {
+        const midY = (overlapYStart + overlapYEnd) / 2;
+        if (fromNode.x < toNode.x) {
+          // fromNode 在左側，toNode 在右側
+          return [
+            { x: fromNode.x + fromNode.w + PADDING_OFFSET, y: midY },
+            { x: toNode.x - PADDING_OFFSET, y: midY }
+          ];
+        } else {
+          // fromNode 在右側，toNode 在左側
+          return [
+            { x: fromNode.x - PADDING_OFFSET, y: midY },
+            { x: toNode.x + toNode.w + PADDING_OFFSET, y: midY }
+          ];
+        }
+      }
+
+      // 2. 無交錯時：優先採用 1 個轉折點的【L 型】線條
+      const fromSide = determineSide(fromNode, toNode);
+      const toSide = determineSide(toNode, fromNode);
+
+      const keyFrom = `${fromNode.id}_${fromSide}`;
+      const keyTo = `${toNode.id}_${toSide}`;
+
+      const listFrom = edgeMap[keyFrom] || [];
+      const listTo = edgeMap[keyTo] || [];
+
+      const idxFrom = listFrom.findIndex(item => item.lineId === line.id && item.role === 'from');
+      const idxTo = listTo.findIndex(item => item.lineId === line.id && item.role === 'to');
+
+      const pStart = computeSideOffset(fromNode, fromSide, idxFrom !== -1 ? idxFrom : 0, listFrom.length);
+      const pEnd = computeSideOffset(toNode, toSide, idxTo !== -1 ? idxTo : 0, listTo.length);
+
+      // 嘗試構建 L 型轉折點 (1 角)
+      if (fromSide === 'left' || fromSide === 'right') {
+        const corner = { x: pEnd.x, y: pStart.y };
+        // 檢查角點是否方向合理
+        const isFromValid = (fromSide === 'right' && corner.x >= pStart.x) || (fromSide === 'left' && corner.x <= pStart.x);
+        const isToValid = (toSide === 'bottom' && corner.y >= pEnd.y) || (toSide === 'top' && corner.y <= pEnd.y);
+
+        if (isFromValid && isToValid) {
+          return [pStart, corner, pEnd]; // 乾淨 L 型
+        }
+      } else {
+        const corner = { x: pStart.x, y: pEnd.y };
+        const isFromValid = (fromSide === 'bottom' && corner.y >= pStart.y) || (fromSide === 'top' && corner.y <= pStart.y);
+        const isToValid = (toSide === 'right' && corner.x >= pEnd.x) || (toSide === 'left' && corner.x <= pEnd.x);
+
+        if (isFromValid && isToValid) {
+          return [pStart, corner, pEnd]; // 乾淨 L 型
+        }
+      }
+
+      // 若 L 型方向衝突，降級回 2 個轉折點的 Z 型
+      if (fromSide === 'left' || fromSide === 'right') {
+        const midX = (pStart.x + pEnd.x) / 2;
+        return [
+          pStart,
+          { x: midX, y: pStart.y },
+          { x: midX, y: pEnd.y },
+          pEnd
+        ];
+      } else {
+        const midY = (pStart.y + pEnd.y) / 2;
+        return [
+          pStart,
+          { x: pStart.x, y: midY },
+          { x: pEnd.x, y: midY },
+          pEnd
+        ];
+      }
+    }
+
+    function updateLines() {
+      const defs = svgLayer.querySelector('defs');
+      svgLayer.innerHTML = '';
+      svgLayer.appendChild(defs);
+      labelsLayer.innerHTML = '';
+
+      const edgeMap = buildEdgeConnectionsMap();
+
+      lines.forEach(line => {
+        const fromNode = nodes.find(n => n.id === line.fromId);
+        const toNode = nodes.find(n => n.id === line.toId);
+        if (!fromNode || !toNode) return;
+
+        if (fromNode.id === toNode.id) {
+          drawSelfLoop(line, fromNode);
+        } else {
+          drawOrthogonalLine(line, edgeMap);
+        }
+      });
+    }
+
+    // 自連線 (Self-Loop) 折線繪製
+    function drawSelfLoop(line, node) {
+      const pad = PADDING_OFFSET;
+      const pStart = { x: node.x + node.w * 0.5, y: node.y - pad };
+      const p1 = { x: pStart.x, y: node.y - 30 };
+      const p2 = { x: node.x + node.w + 35, y: p1.y };
+      const p3 = { x: p2.x, y: node.y + node.h * 0.5 };
+      const pEnd = { x: node.x + node.w + pad, y: p3.y };
+
+      const dPath = `M ${pStart.x} ${pStart.y + pad} L ${pStart.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} L ${pEnd.x} ${pEnd.y}`;
+
+      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pathEl.setAttribute('d', dPath);
+      pathEl.setAttribute('stroke', '#ff4d4d');
+      pathEl.setAttribute('stroke-width', '3');
+      pathEl.setAttribute('fill', 'none');
+
+      if (line.dir === 'forward' || line.dir === 'both') pathEl.setAttribute('marker-end', 'url(#arrow-end)');
+      if (line.dir === 'backward' || line.dir === 'both') pathEl.setAttribute('marker-start', 'url(#arrow-start)');
+
+      svgLayer.appendChild(pathEl);
+
+      const midX = (p1.x + p2.x) / 2;
+      const midY = p1.y;
+      createLineDeleteBtn(line.id, midX, midY);
+      createLabelContainer(line, midX, midY, 0, -1, 38, true);
+    }
+
+    // 一般卡片之間的直角折線
+    function drawOrthogonalLine(line, edgeMap) {
+      const pts = getOrthogonalRoute(line, edgeMap);
+      if (pts.length < 2) return;
+
+      let dPath = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        dPath += ` L ${pts[i].x} ${pts[i].y}`;
+      }
+
+      const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      pathEl.setAttribute('d', dPath);
+      pathEl.setAttribute('stroke', '#ff4d4d');
+      pathEl.setAttribute('stroke-width', '3');
+      pathEl.setAttribute('fill', 'none');
+
+      if (line.dir === 'forward' || line.dir === 'both') pathEl.setAttribute('marker-end', 'url(#arrow-end)');
+      if (line.dir === 'backward' || line.dir === 'both') pathEl.setAttribute('marker-start', 'url(#arrow-start)');
+
+      svgLayer.appendChild(pathEl);
+
+      const midSegIdx = Math.floor((pts.length - 1) / 2);
+      const pA = pts[midSegIdx];
+      const pB = pts[midSegIdx + 1];
+
+      const midX = (pA.x + pB.x) / 2;
+      const midY = (pA.y + pB.y) / 2;
+
+      createLineDeleteBtn(line.id, midX, midY);
+
+      const isHorizontal = Math.abs(pA.y - pB.y) < 1;
+      const nx = isHorizontal ? 0 : 1;
+      const ny = isHorizontal ? -1 : 0;
+
+      createLabelContainer(line, midX, midY, nx, ny, 42, isHorizontal);
+    }
+
+    function createLineDeleteBtn(lineId, x, y) {
+      const btn = document.createElement('div');
+      btn.className = 'line-delete-btn';
+      btn.innerText = '✕';
+      btn.style.left = x + 'px';
+      btn.style.top = y + 'px';
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        lines = lines.filter(l => l.id !== lineId);
+        updateLines();
+        saveToStorage();
+      };
+      labelsLayer.appendChild(btn);
+    }
+
+    function createLabelContainer(line, midX, midY, nx, ny, offsetDist = 42, isHorizontal = true) {
+      const ALONG_OFFSET = 18;
+
+      let pos1, pos2;
+      if (isHorizontal) {
+        pos1 = { x: midX - ALONG_OFFSET, y: midY + ny * offsetDist };
+        pos2 = { x: midX + ALONG_OFFSET, y: midY - ny * offsetDist };
+      } else {
+        pos1 = { x: midX + nx * offsetDist, y: midY - ALONG_OFFSET };
+        pos2 = { x: midX - nx * offsetDist, y: midY + ALONG_OFFSET };
+      }
+
+      labelsLayer.appendChild(createSingleLabelInput(line, 'label1', pos1.x, pos1.y));
+      labelsLayer.appendChild(createSingleLabelInput(line, 'label2', pos2.x, pos2.y));
+    }
+
+    function createSingleLabelInput(line, labelKey, x, y) {
+      const containerEl = document.createElement('div');
+      containerEl.className = 'line-label-container';
+      containerEl.style.left = x + 'px';
+      containerEl.style.top = y + 'px';
+
+      const labelData = line[labelKey];
+
+      const popover = document.createElement('div');
+      popover.className = 'style-popover';
+
+      COLOR_PALETTE.forEach(c => {
+        const dot = document.createElement('div');
+        dot.className = 'color-picker-dot';
+        dot.style.background = c;
+        dot.onclick = (e) => {
+          e.stopPropagation();
+          labelData.color = c;
+          textareaEl.style.color = c;
+          saveToStorage();
+        };
+        popover.appendChild(dot);
+      });
+
+      FONT_SIZES.forEach(s => {
+        const sBtn = document.createElement('div');
+        sBtn.className = 'size-btn';
+        sBtn.innerText = s + 'px';
+        sBtn.onclick = (e) => {
+          e.stopPropagation();
+          labelData.size = s;
+          textareaEl.style.fontSize = s + 'px';
+          adjustTextareaHeight(textareaEl);
+          saveToStorage();
+        };
+        popover.appendChild(sBtn);
+      });
+
+      containerEl.appendChild(popover);
+
+      const textareaEl = document.createElement('textarea');
+      textareaEl.className = 'line-label-textarea';
+      textareaEl.value = labelData.text;
+      textareaEl.placeholder = '點擊輸入備註';
+      textareaEl.style.color = labelData.color;
+      textareaEl.style.fontSize = labelData.size + 'px';
+      textareaEl.rows = 1;
+
+      const adjustTextareaHeight = (el) => {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      };
+
+      textareaEl.onfocus = () => {
+        containerEl.style.zIndex = '999999';
+        popover.classList.add('active');
+      };
+
+      textareaEl.onblur = () => {
+        setTimeout(() => {
+          popover.classList.remove('active');
+          containerEl.style.zIndex = '20000';
+        }, 200);
+      };
+
+      textareaEl.oninput = (e) => {
+        labelData.text = e.target.value;
+        adjustTextareaHeight(e.target);
+        saveToStorage();
+      };
+
+      setTimeout(() => adjustTextareaHeight(textareaEl), 0);
+
+      containerEl.appendChild(textareaEl);
+      return containerEl;
+    }
+
+    // --- 7. 剪貼簿與檔案上傳 ---
+    window.addEventListener('paste', (e) => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = (evt) => createNode(evt.target.result, 120, 120);
+          reader.readAsDataURL(blob);
+        } else if (item.kind === 'string' && item.type === 'text/plain') {
+          item.getAsString((text) => {
+            const trimmed = text.trim();
+            if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:image/')) {
+              createNode(trimmed, 120, 120);
+            }
+          });
+        }
+      }
+    });
+
+    document.getElementById('btn-select-file').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files && files[0]) {
+        const reader = new FileReader();
+        reader.onload = (evt) => createNode(evt.target.result, 120, 120);
+        reader.readAsDataURL(files[0]);
+      }
+    });
+
+    // --- 8. Canvas 匯出與渲染 ---
+    document.getElementById('btn-export').addEventListener('click', async () => {
+      if (nodes.length === 0) {
+        alert('畫面上沒有任何圖片可供匯出！');
+        return;
+      }
+
+      const btnExport = document.getElementById('btn-export');
+      btnExport.innerText = '處理與繪製中...';
+      btnExport.disabled = true;
+
+      try {
+        const preparedNodes = await Promise.all(nodes.map(async (node) => {
+          let finalSrc = node.src;
+          if (finalSrc.startsWith('http://') || finalSrc.startsWith('https://')) {
+            finalSrc = await fetchImageWithProxy(finalSrc);
+          }
+          return { ...node, loadedImgSrc: finalSrc };
+        }));
+
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = window.innerWidth;
+        exportCanvas.height = window.innerHeight;
+        const ctx = exportCanvas.getContext('2d');
+
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+        const sortedNodes = [...preparedNodes].sort((a, b) => a.zIndex - b.zIndex);
+        for (let node of sortedNodes) {
+          await renderNodeToCanvas(ctx, node);
+        }
+
+        renderLinesToCanvas(ctx);
+
+        const dataUrl = exportCanvas.toDataURL('image/png');
+        const newWin = window.open();
+        if (newWin) {
+          newWin.document.write(`
+            <html>
+              <head><title>匯出關係圖預覽</title></head>
+              <body style="margin:0; background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                <img src="${dataUrl}" style="max-width:100%; height:auto; border:1px solid #444;" />
+              </body>
+            </html>
+          `);
+        } else {
+          alert('彈出視窗被瀏覽器攔截，請允許開啟視窗後重試。');
+        }
+      } catch (err) {
+        console.error('匯出失敗:', err);
+        alert('匯出關係圖發生錯誤: ' + err.message);
+      } finally {
+        btnExport.innerText = '匯出關係圖';
+        btnExport.disabled = false;
+      }
+    });
+
+    async function fetchImageWithProxy(originalUrl) {
+      try {
+        const res = await fetch(originalUrl, { mode: 'cors' });
+        if (res.ok) return await blobToDataURL(await res.blob());
+      } catch (e) {}
+
+      try {
+        const proxyUrl = `/api/proxy-relationship-image?url=${encodeURIComponent(originalUrl)}`;
+        const resProxy = await fetch(proxyUrl);
+        if (resProxy.status === 429) {
+          alert('請求過於頻繁（每分鐘 20 張限制），部分圖片可能無法載入。');
+          return originalUrl;
+        }
+        if (!resProxy.ok) throw new Error('Proxy 代理讀取圖片失敗');
+        return await blobToDataURL(await resProxy.blob());
+      } catch (e) {
+        return originalUrl;
+      }
+    }
+
+    function blobToDataURL(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function renderNodeToCanvas(ctx, node) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => { ctx.drawImage(img, node.x, node.y, node.w, node.h); resolve(); };
+        img.onerror = () => { ctx.fillStyle = '#555'; ctx.fillRect(node.x, node.y, node.w, node.h); resolve(); };
+        img.src = node.loadedImgSrc;
+      });
+    }
+
+    function renderLinesToCanvas(ctx) {
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#ff4d4d';
+      ctx.fillStyle = '#ff4d4d';
+
+      const edgeMap = buildEdgeConnectionsMap();
+
+      lines.forEach(line => {
+        const fromNode = nodes.find(n => n.id === line.fromId);
+        const toNode = nodes.find(n => n.id === line.toId);
+        if (!fromNode || !toNode) return;
+
+        if (fromNode.id === toNode.id) {
+          const pad = PADDING_OFFSET;
+          const pStart = { x: fromNode.x + fromNode.w * 0.5, y: fromNode.y - pad };
+          const p1 = { x: pStart.x, y: fromNode.y - 30 };
+          const p2 = { x: fromNode.x + fromNode.w + 35, y: p1.y };
+          const p3 = { x: p2.x, y: fromNode.y + fromNode.h * 0.5 };
+          const pEnd = { x: fromNode.x + fromNode.w + pad, y: p3.y };
+
+          ctx.beginPath();
+          ctx.moveTo(pStart.x, pStart.y + pad);
+          ctx.lineTo(pStart.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.lineTo(p3.x, p3.y);
+          ctx.lineTo(pEnd.x, pEnd.y);
+          ctx.stroke();
+
+          if (line.dir === 'forward' || line.dir === 'both') drawCanvasArrow(ctx, p3.x, p3.y, pEnd.x, pEnd.y);
+          if (line.dir === 'backward' || line.dir === 'both') drawCanvasArrow(ctx, pStart.x, p1.y, pStart.x, pStart.y + pad);
+
+          const midX = (p1.x + p2.x) / 2;
+          const midY = p1.y;
+          renderMultilineLabelToCanvas(ctx, line.label1, midX - 18, midY - 42);
+          renderMultilineLabelToCanvas(ctx, line.label2, midX + 18, midY + 42);
+        } else {
+          const pts = getOrthogonalRoute(line, edgeMap);
+          if (pts.length < 2) return;
+
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) {
+            ctx.lineTo(pts[i].x, pts[i].y);
+          }
+          ctx.stroke();
+
+          const lastIdx = pts.length - 1;
+          if (line.dir === 'forward' || line.dir === 'both') {
+            drawCanvasArrow(ctx, pts[lastIdx - 1].x, pts[lastIdx - 1].y, pts[lastIdx].x, pts[lastIdx].y);
+          }
+          if (line.dir === 'backward' || line.dir === 'both') {
+            drawCanvasArrow(ctx, pts[1].x, pts[1].y, pts[0].x, pts[0].y);
+          }
+
+          const midSegIdx = Math.floor((pts.length - 1) / 2);
+          const pA = pts[midSegIdx];
+          const pB = pts[midSegIdx + 1];
+
+          const midX = (pA.x + pB.x) / 2;
+          const midY = (pA.y + pB.y) / 2;
+
+          const isHorizontal = Math.abs(pA.y - pB.y) < 1;
+          const nx = isHorizontal ? 0 : 1;
+          const ny = isHorizontal ? -1 : 0;
+
+          const ALONG_OFFSET = 18;
+          let pos1, pos2;
+          if (isHorizontal) {
+            pos1 = { x: midX - ALONG_OFFSET, y: midY + ny * 42 };
+            pos2 = { x: midX + ALONG_OFFSET, y: midY - ny * 42 };
+          } else {
+            pos1 = { x: midX + nx * 42, y: midY - ALONG_OFFSET };
+            pos2 = { x: midX - nx * 42, y: midY + ALONG_OFFSET };
+          }
+
+          renderMultilineLabelToCanvas(ctx, line.label1, pos1.x, pos1.y);
+          renderMultilineLabelToCanvas(ctx, line.label2, pos2.x, pos2.y);
+        }
+      });
+    }
+
+    function drawCanvasArrow(ctx, fromX, fromY, toX, toY) {
+      const headlen = 10;
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.lineTo(toX, toY);
+      ctx.fill();
+    }
+
+    function renderMultilineLabelToCanvas(ctx, labelObj, x, y) {
+      if (!labelObj || !labelObj.text.trim()) return;
+
+      const linesArr = labelObj.text.split('\n');
+      const fontSize = labelObj.size;
+      const lineHeight = fontSize * 1.3;
+
+      ctx.font = `${fontSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      let maxW = 0;
+      linesArr.forEach(l => {
+        const w = ctx.measureText(l).width;
+        if (w > maxW) maxW = w;
+      });
+
+      const totalH = linesArr.length * lineHeight;
+
+      ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
+      ctx.fillRect(x - maxW / 2 - 6, y - totalH / 2 - 4, maxW + 12, totalH + 8);
+
+      ctx.fillStyle = labelObj.color || '#ffffff';
+      const startY = y - (totalH / 2) + (lineHeight / 2);
+
+      linesArr.forEach((lineText, idx) => {
+        ctx.fillText(lineText, x, startY + idx * lineHeight);
+      });
+    }
+
+    loadFromStorage();
+  </script>
+</body>
+</html>

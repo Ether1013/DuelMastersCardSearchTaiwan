@@ -441,7 +441,63 @@ async def proxy_image(request: Request, url: str = Query(...)):
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
-    
+
+# 專為關係圖匯出設計的代理 API (開放至每個 IP 1 分鐘最多 20 次)
+@app.get("/api/proxy-relationship-image")
+@limiter.limit("20/minute")
+async def proxy_relationship_image(request: Request, url: str = Query(...)):
+    now = time.time()
+
+    # 1. 先從記憶體快取尋找 (Hit Cache 不佔用後端發起請求的資源)
+    if url in proxy_cache:
+        item = proxy_cache[url]
+        if now - item["timestamp"] < CACHE_TTL_SECONDS:
+            item["timestamp"] = now
+            proxy_cache.move_to_end(url)
+            return Response(
+                content=item["content"],
+                media_type=item["content_type"],
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400",
+                },
+            )
+        else:
+            del proxy_cache[url]
+
+    # 2. 若快取沒有，發起網路請求抓取
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"},
+                timeout=10.0,
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
+
+            content_type = resp.headers.get("content-type", "image/jpeg")
+
+            if len(proxy_cache) >= MAX_CACHE_SIZE:
+                proxy_cache.popitem(last=False)
+
+            proxy_cache[url] = {
+                "content": resp.content,
+                "content_type": content_type,
+                "timestamp": now
+            }
+
+            return Response(
+                content=resp.content,
+                media_type=content_type,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400",
+                },
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
+
 @app.get("/api/diary")
 async def get_diary():
     return diary_cache
@@ -746,3 +802,8 @@ async def get_pop_custom_data(payload: CustomDeckModel):
         "set_info": custom_set_info,
         "cards": matched_cards
     }
+
+# 提供 relationship.html 靜態頁面路由
+@app.get("/relationship.html")
+async def get_relationship_page():
+    return FileResponse("relationship.html")
