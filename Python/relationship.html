@@ -381,6 +381,46 @@
     }
     .modal-btn-cancel:hover { color: #fff; }
 
+    /* 手機長按儲存圖片 Modal */
+    #save-preview-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #save-preview-modal.active {
+      display: flex;
+    }
+    #save-preview-modal img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    #save-preview-modal .hint {
+      margin-top: 12px;
+      color: #00ffff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    #save-preview-modal .btn-close {
+      margin-top: 12px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
     #file-input { display: none; }
   </style>
 </head>
@@ -391,7 +431,7 @@
     <button class="btn" id="btn-select-file">選擇圖片</button>
     <button class="btn btn-info" id="btn-add-label">＋新增文字備註</button>
     <button class="btn btn-danger" id="btn-clear-all">全清空</button>
-    <button class="btn btn-success" id="btn-export">下載關係圖</button>
+    <button class="btn btn-success" id="btn-export">儲存至相簿</button>
     <span style="font-size: 12px; color: #ccc; margin-left: 6px;">
       💡 點擊選取卡片後再點擊目標卡片（或自己）即可建立連線
     </span>
@@ -437,6 +477,13 @@
       <button class="modal-btn-confirm" id="btn-modal-confirm">確定建立連線</button>
       <button class="modal-btn-cancel" id="btn-modal-cancel">取消</button>
     </div>
+  </div>
+
+  <!-- 行動裝置長按存圖片備援 Modal -->
+  <div id="save-preview-modal">
+    <img id="preview-img" src="" alt="預覽圖" />
+    <div class="hint">長按上方圖片即可選取「儲存至相簿 / 加入照片」</div>
+    <button class="btn-close" onclick="document.getElementById('save-preview-modal').classList.remove('active')">關閉</button>
   </div>
 
   <script>
@@ -1252,7 +1299,7 @@
       }
     });
 
-    // --- 9. Canvas 匯出與圖檔下載 ---
+    // --- 9. Canvas 匯出與手機儲存至相簿邏輯 ---
     document.getElementById('btn-export').addEventListener('click', async () => {
       if (nodes.length === 0 && freeLabels.length === 0) {
         alert('畫面上沒有任何內容可供匯出！');
@@ -1288,22 +1335,46 @@
         renderLinesToCanvas(ctx);
         renderFreeLabelsToCanvas(ctx);
 
-        // 💡 調整：自動建立下載連結並觸發檔案下載到使用者的「下載/相簿」
-        const dataUrl = exportCanvas.toDataURL('image/png');
-        const downloadLink = document.createElement('a');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-        
-        downloadLink.href = dataUrl;
-        downloadLink.download = `tcg_relationship_${timestamp}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        // 💡 核心優化：優先發起原生手機 Web Share API (直出「加入照片/儲存影像」)
+        exportCanvas.toBlob(async (blob) => {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+          const file = new File([blob], `tcg_relationship_${timestamp}.png`, { type: 'image/png' });
+
+          // 1. 手機支援 Web Share 檔案分享時，喚起原生分享介面
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'TCG 卡牌關係圖',
+                text: '這是我編輯的卡牌關係圖'
+              });
+            } catch (shareErr) {
+              console.log('使用者取消或不支援分享選單');
+            }
+          } else {
+            // 2. 行動裝置不支援原生的話，跳出全螢幕長按儲存對話框；電腦則直接存檔
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const dataUrl = exportCanvas.toDataURL('image/png');
+
+            if (isMobile) {
+              document.getElementById('preview-img').src = dataUrl;
+              document.getElementById('save-preview-modal').classList.add('active');
+            } else {
+              const downloadLink = document.createElement('a');
+              downloadLink.href = dataUrl;
+              downloadLink.download = `tcg_relationship_${timestamp}.png`;
+              document.body.appendChild(downloadLink);
+              downloadLink.click();
+              document.body.removeChild(downloadLink);
+            }
+          }
+        }, 'image/png');
 
       } catch (err) {
         console.error('匯出失敗:', err);
         alert('匯出關係圖發生錯誤: ' + err.message);
       } finally {
-        btnExport.innerText = '下載關係圖';
+        btnExport.innerText = '儲存至相簿';
         btnExport.disabled = false;
       }
     });
