@@ -1443,6 +1443,14 @@
 		#diary-modal-body::-webkit-scrollbar-thumb:hover {
 			background-color: #999;
 		}
+		/* 💡 [進階選項] 按鈕亮起樣式 (當處於進階模式時，不需使用 !important) */
+		.footer-top-row #toggle-advanced.active {
+			background-color: #0284c7;
+			color: #ffffff;
+			border-color: #0369a1;
+			box-shadow: 0 0 6px rgba(2, 132, 199, 0.5);
+			font-weight: bold;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1710,11 +1718,15 @@
                 </select>
             </div>
             <div class="col">
-                <h3>系列編號與商品名稱</h3>
-                <select id="series-small" disabled>
-                    <option value="">資料載入中……</option>
-                </select>
-            </div>
+				<h3>
+					<span>系列編號與商品名稱</span>
+					<!-- 💡 新增：清除自訂牌組按鈕 (預設隱藏) -->
+					<button type="button" id="btn-clear-custom-decks" class="btn-icon" style="display: none; background: #ef4444; color: white;">清除自訂牌組</button>
+				</h3>
+				<select id="series-small" disabled>
+					<option value="">資料載入中……</option>
+				</select>
+			</div>
         </div>
 		<!-- 新增：最新商品快捷按鈕區 (無 Title) -->
         <div class="col" id="section-latest-sets">
@@ -2150,7 +2162,7 @@
 
 		btnAdvanced.addEventListener('click', () => {
 		
-				// 💡 新增：如果「快速計算機面板」目前是展開狀態，點擊時將其收起來
+			// 💡 新增：如果「快速計算機面板」目前是展開狀態，點擊時將其收起來
 			const quickDrawer = document.getElementById('drawer-quick-search');
 			if (quickDrawer && quickDrawer.classList.contains('open')) {
 				quickDrawer.classList.remove('open');
@@ -2166,8 +2178,11 @@
 			// 切換 advanced-mode class
 			const isAdv = document.body.classList.toggle('advanced-mode');
 			
-			// 依據狀態切換按鈕文字
-			btnAdvanced.innerHTML = isAdv ? '基礎<br>過濾' : '進階<br>選項';
+			// 💡 1. 保持文字一律為「進階選項」
+			btnAdvanced.innerHTML = '進階<br>選項';
+			
+			// 💡 2. 切換亮起狀態 (.active Class)
+			btnAdvanced.classList.toggle('active', isAdv);
 			
 			// 傳入切換前是否全選的狀態給 renderCardTypes
 			renderCardTypes(isCurrentlyAllChecked);
@@ -2177,6 +2192,8 @@
 			if (typeof tabHeaders !== 'undefined' && tabHeaders[0]) {
 				tabHeaders[0].click();
 			}
+			
+			checkAndToggleClearCustomBtn(); // 💡 確保切換進階模式時同步檢查按鈕顯示狀態
 		});
 
         btnSummary.addEventListener('click', () => {
@@ -2233,9 +2250,6 @@
 				}
 			});
 
-			btnAdvanced.checked = false;
-			document.body.classList.remove('advanced-mode');
-			
 			syncChipUI(); // 💡 新增：確保初始化後所有 Chip 狀態亮暗正確
 			updateSummaryText();
 
@@ -6343,6 +6357,29 @@
 			});
 		});
 		
+		document.addEventListener('DOMContentLoaded', () => {
+			// 1. 當商品選單切換時，檢查是否顯示/隱藏按鈕
+			const smallSelect = document.getElementById('series-small');
+			if (smallSelect) {
+				smallSelect.addEventListener('change', checkAndToggleClearCustomBtn);
+			}
+
+			// 2. 綁定 [清除自訂牌組] 按鈕點擊事件
+			const clearBtn = document.getElementById('btn-clear-custom-decks');
+			if (clearBtn) {
+				clearBtn.addEventListener('click', () => {
+					if (confirm('確定要清除所有 NET-900 起的自訂牌組資料嗎？')) {
+						// 呼叫清空邏輯 (刪除 localStorage、記憶體與視圖)
+						if (typeof clearCustomDecks === 'function') {
+							clearCustomDecks();
+						}
+						// 清除後按鈕自動隱藏
+						checkAndToggleClearCustomBtn();
+					}
+				});
+			}
+		});
+
 		// 全域變數或輔助函式：開啟錯誤回報 Modal 並帶入卡片資料
 		function openReportModal(card, matchedItem) {
 			const reportModal = document.getElementById('report-modal');
@@ -6716,71 +6753,77 @@
 		};
 		
 		/**
-		 * 🧹 Console 開發者隱藏工具：清除所有 LocalStorage 自訂商品卡表與選單，並清空目前瀏覽中的視圖
-		 * 使用方式：在 Console 輸入 clearCustomDecks() 即可執行
+		 * 🧹 清除所有 LocalStorage 自訂商品卡表與選單，並清空目前瀏覽中的視圖
 		 */
 		window.clearCustomDecks = function() {
-			console.group('🧹 [隱藏方法] 正在清除 NET-900 起的自訂商品卡表與視圖...');
+			console.group('🧹 正在清除 NET-900 起的自訂商品卡表與視圖...');
 
 			// 1. 取得目前選取的商品代碼
 			const smallSelect = document.getElementById('series-small');
 			const currentSelectedValue = smallSelect ? smallSelect.value : '';
 			
-			// 💡 僅判定是否為 NET-900 起的自訂商品 (例如 NET-900, NET-901...)
+			// 判斷選取的項目是否為 NET-900 起的自訂商品 (例如 NET-900, NET-901...)
 			const isCustomNetDeck = currentSelectedValue && /^NET-9\d{2,}$/.test(currentSelectedValue);
 
 			// 2. 清除 LocalStorage 紀錄
 			localStorage.removeItem(CUSTOM_DECKS_STORAGE_KEY);
 			console.log('✅ 已清除 LocalStorage 中的自訂卡表資料。');
 
-			// 3. 僅從全域 rawSetlist 中移除 NET-900 起的自訂牌組
+			// 3. 從全域 rawSetlist 中移除 NET-900 起的自訂牌組
 			let removedCount = 0;
-			Object.keys(rawSetlist).forEach(key => {
-				if (/^NET-9\d{2,}$/.test(key)) {
-					delete rawSetlist[key];
-					removedCount++;
-				}
-			});
+			if (typeof rawSetlist === 'object' && rawSetlist !== null) {
+				Object.keys(rawSetlist).forEach(key => {
+					if (/^NET-9\d{2,}$/.test(key)) {
+						delete rawSetlist[key];
+						removedCount++;
+					}
+				});
+			}
 			console.log(`✅ 已從記憶體中移除 ${removedCount} 個 NET-900 起的自訂套牌項目。`);
 
-			// 4. 重新繪製商品下拉選單
+			// 4. 重新繪製商品下拉選單，並將選擇值重置為預設（全部商品）
 			if (typeof initSeriesDropdown === 'function') {
 				initSeriesDropdown();
 				console.log('✅ 已重新繪製商品下拉選單。');
 			}
+			if (smallSelect) {
+				smallSelect.value = "";
+			}
 
-			// 5. 觸發 Footer 條件摘要更新
+			// 5. 觸發 Z 區 Footer 條件摘要更新
 			if (typeof updateSummaryText === 'function') {
 				updateSummaryText();
 			}
 
-			// 6. 如果使用者目前正在瀏覽 NET-900 起的自訂牌組，立即清空 Page 2 與 Page 3 的渲染結果
-			if (isCustomNetDeck) {
-				// 重置全域結果快取
-				currentFilterResults = [];
+			// 6. 重置全域結果快取與畫面清空
+			currentFilterResults = [];
 
-				// 清空 Page 2 列表
-				const listContainerPage2 = document.getElementById('list-container');
-				if (listContainerPage2) {
-					listContainerPage2.innerHTML = '<div class="empty-state">尚無資料</div>';
-				}
+			// 清空 Page 2 列表視圖
+			const listContainerPage2 = document.getElementById('list-container');
+			if (listContainerPage2) {
+				listContainerPage2.innerHTML = '<div class="empty-state">尚無資料</div>';
+			}
 
-				// 清空 Page 3 雙欄列表與右側面板
-				const listContainerPage3 = document.getElementById('list-container-split');
-				if (listContainerPage3) {
-					listContainerPage3.innerHTML = '<div class="empty-state">尚無資料</div>';
-				}
+			// 清空 Page 3 雙欄列表視圖
+			const listContainerPage3 = document.getElementById('list-container-split');
+			if (listContainerPage3) {
+				listContainerPage3.innerHTML = '<div class="empty-state">尚無資料</div>';
+			}
 
-				const rightPanelPage3 = document.getElementById('detail-panel-split');
-				if (rightPanelPage3) {
-					rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
-				}
+			// 清空 Page 3 右側 Detail 面板
+			const rightPanelPage3 = document.getElementById('detail-panel-split');
+			if (rightPanelPage3) {
+				rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
+			}
 
-				console.log('✅ 使用者正在瀏覽 NET-900 起的自訂卡表，已將 Page 2 與 Page 3 內容清空。');
+			// 7. 隱藏 [清除自訂牌組] 按鈕
+			if (typeof checkAndToggleClearCustomBtn === 'function') {
+				checkAndToggleClearCustomBtn();
 			}
 
 			console.groupEnd();
 
+			// 8. 顯示提示訊息
 			if (typeof showToast === 'function') {
 				showToast('✅ 已成功清除 NET-900 起的自訂商品卡表並刷新選單！');
 			} else {
@@ -7394,6 +7437,27 @@
 			document.getElementById('deck-input-step').style.display = 'none';
 			document.getElementById('deck-verify-step').style.display = 'block';
 		});
+		
+		// 💡 檢查並控制 [清除自訂牌組] 按鈕的顯示/隱藏
+		function checkAndToggleClearCustomBtn() {
+			const clearBtn = document.getElementById('btn-clear-custom-decks');
+			const smallSelect = document.getElementById('series-small');
+			if (!clearBtn || !smallSelect) return;
+
+			// 條件 1：必須開啟「進階選項模式」
+			const isAdvMode = document.body.classList.contains('advanced-mode');
+
+			// 條件 2：目前下拉選單選取的是 NET-900 起的自訂商品
+			const selectedVal = smallSelect.value;
+			const isCustomDeckSelected = selectedVal && /^NET-9\d{2,}$/.test(selectedVal);
+
+			// 兩者皆滿足才顯示按鈕
+			if (isAdvMode && isCustomDeckSelected) {
+				clearBtn.style.display = 'inline-block';
+			} else {
+				clearBtn.style.display = 'none';
+			}
+		}
 
 		// 渲染校正 UI 列表
 		function renderVerifyListUI() {
@@ -7548,6 +7612,9 @@
 				bigSelect.dispatchEvent(new Event('change'));
 				smallSelect.value = newCode;
 			}
+			
+			// 💡 新增：觸發按鈕狀態檢查 (若當前處於進階模式，按鈕會在此刻立刻跑出來)
+			checkAndToggleClearCustomBtn();
 
 			// 更新 Z 區條件摘要
 			if (typeof updateSummaryText === 'function') {
