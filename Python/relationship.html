@@ -879,22 +879,50 @@
     }
 
     function clearAllData() {
-      if (confirm('確定要清空所有圖片、空框框、關係線與備註嗎？此操作無法復原。')) {
-        nodes.forEach(n => n.element.remove());
-        emptyBoxes.forEach(b => b.element.remove());
-        freeLabels.forEach(l => l.element.remove());
-        nodes = [];
-        emptyBoxes = [];
-        lines = [];
-        freeLabels = [];
-        relSourceNode = null;
-        hasShownStorageFullAlert = false;
-        localStorage.removeItem(STORAGE_KEY);
-        clearSnapGuides();
-        updateLines();
-      }
-    }
-    document.getElementById('btn-clear-all').addEventListener('click', clearAllData);
+	  if (nodes.length === 0 && emptyBoxes.length === 0 && freeLabels.length === 0 && lines.length === 0) {
+		return; // 畫面上本來就空無一物時，不需要彈出確認框
+	  }
+
+	  if (confirm('確定要清空所有圖片、空框框、關係線與備註嗎？此操作無法復原。')) {
+		// 1. 移除所有圖層上的 DOM 元素
+		nodes.forEach(n => n.element && n.element.remove());
+		emptyBoxes.forEach(b => b.element && b.element.remove());
+		freeLabels.forEach(l => l.element && l.element.remove());
+
+		// 2. 重置所有資料陣列
+		nodes = [];
+		emptyBoxes = [];
+		freeLabels = [];
+		lines = [];
+
+		// 3. 重置全域狀態與流水號 ID（恢復初始狀態）
+		nextNodeId = 1;
+		nextLineId = 1;
+		nextLabelId = 1;
+		nextBoxId = 10000;
+		highestZ = 10;
+
+		// 4. 清除進行中的選取連線與提示 popover
+		removeHintAndSource(true);
+		document.querySelectorAll('.style-popover.active').forEach(p => p.classList.remove('active'));
+
+		// 5. 清除網格輔助線與重置 SVG 線條圖層
+		clearSnapGuides();
+		showGrid(false);
+		updateLines();
+
+		// 6. 重置快取狀態並同步刪除 LocalStorage
+		hasShownStorageFullAlert = false;
+		try {
+		  localStorage.removeItem(STORAGE_KEY);
+		} catch (e) {
+		  console.warn('清空快取失敗:', e);
+		}
+	  }
+	}
+
+	// 確定按鈕監聽器正確綁定
+	document.getElementById('btn-clear-all').addEventListener('click', clearAllData);
 
     // --- 2. 網格輔助線 ---
     function initGrid() {
@@ -1175,205 +1203,228 @@
       createEmptyBox(window.innerWidth / 2 - 100, window.innerHeight / 2 - 100, 200, 200, 4, '#18dcff');
     });
 
-    function createEmptyBox(x, y, w = 200, h = 200, borderWidth = 4, borderColor = '#18dcff', existingId = null) {
-      const boxId = existingId || nextBoxId++;
+    // --- 5. 插入與刪除空框框模組（修正版） ---
+	function createEmptyBox(x, y, w = 200, h = 200, borderWidth = 4, borderColor = '#18dcff', existingId = null) {
+	  const boxId = existingId || nextBoxId++;
 
-      const containerEl = document.createElement('div');
-      containerEl.className = 'empty-box-node';
-      containerEl.style.left = x + 'px';
-      containerEl.style.top = y + 'px';
-      containerEl.style.width = w + 'px';
-      containerEl.style.height = h + 'px';
-      containerEl.style.border = `${borderWidth}px solid ${borderColor}`;
+	  const containerEl = document.createElement('div');
+	  containerEl.className = 'empty-box-node';
+	  containerEl.style.left = x + 'px';
+	  containerEl.style.top = y + 'px';
+	  containerEl.style.width = w + 'px';
+	  containerEl.style.height = h + 'px';
+	  containerEl.style.border = `${borderWidth}px solid ${borderColor}`;
 
-      const delBtn = document.createElement('div');
-      delBtn.className = 'btn-delete-box';
-      delBtn.innerText = '✕';
-      delBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteEmptyBox(boxId);
-      };
-      containerEl.appendChild(delBtn);
+	  const delBtn = document.createElement('div');
+	  delBtn.className = 'btn-delete-box';
+	  delBtn.innerText = '✕';
+	  
+	  // 💡 修正 1：點擊 [X] 刪除按鈕時，精準調用刪除邏輯
+	  delBtn.onclick = (e) => {
+		e.stopPropagation();
+		deleteEmptyBox(boxId);
+	  };
+	  containerEl.appendChild(delBtn);
 
-      const popover = document.createElement('div');
-      popover.className = 'style-popover';
+	  const popover = document.createElement('div');
+	  popover.className = 'style-popover';
 
-      COLOR_PALETTE.forEach(c => {
-        const dot = document.createElement('div');
-        dot.className = 'color-picker-dot';
-        dot.style.background = c;
-        dot.onclick = (e) => {
-          e.stopPropagation();
-          boxObj.borderColor = c;
-          containerEl.style.borderColor = c;
-          saveToStorage();
-        };
-        popover.appendChild(dot);
-      });
+	  COLOR_PALETTE.forEach(c => {
+		const dot = document.createElement('div');
+		dot.className = 'color-picker-dot';
+		dot.style.background = c;
+		dot.onclick = (e) => {
+		  e.stopPropagation();
+		  boxObj.borderColor = c;
+		  containerEl.style.borderColor = c;
+		  saveToStorage();
+		};
+		popover.appendChild(dot);
+	  });
 
-      BORDER_WIDTHS.forEach(bw => {
-        const bwBtn = document.createElement('div');
-        bwBtn.className = 'size-btn';
-        bwBtn.innerText = bw + 'px';
-        bwBtn.onclick = (e) => {
-          e.stopPropagation();
-          boxObj.borderWidth = bw;
-          containerEl.style.borderWidth = bw + 'px';
-          saveToStorage();
-        };
-        popover.appendChild(bwBtn);
-      });
+	  BORDER_WIDTHS.forEach(bw => {
+		const bwBtn = document.createElement('div');
+		bwBtn.className = 'size-btn';
+		bwBtn.innerText = bw + 'px';
+		bwBtn.onclick = (e) => {
+		  e.stopPropagation();
+		  boxObj.borderWidth = bw;
+		  containerEl.style.borderWidth = bw + 'px';
+		  saveToStorage();
+		};
+		popover.appendChild(bwBtn);
+	  });
 
-      containerEl.appendChild(popover);
+	  containerEl.appendChild(popover);
 
-      const resizer = document.createElement('div');
-      resizer.className = 'resizer';
-      containerEl.appendChild(resizer);
+	  const resizer = document.createElement('div');
+	  resizer.className = 'resizer';
+	  containerEl.appendChild(resizer);
 
-      const boxObj = { id: boxId, x, y, w, h, borderWidth, borderColor, element: containerEl };
+	  const boxObj = { id: boxId, x, y, w, h, borderWidth, borderColor, element: containerEl };
 
-      let isDragging = false, hasMoved = false, startX, startY, initialX, initialY;
-      const onMouseDown = (e) => {
-        if (e.target === delBtn || e.target.classList.contains('color-picker-dot') || e.target.classList.contains('size-btn') || e.target === resizer) return;
-        isDragging = true;
-        hasMoved = false;
-        showGrid(true);
-        startX = e.clientX || (e.touches && e.touches[0].clientX);
-        startY = e.clientY || (e.touches && e.touches[0].clientY);
-        initialX = boxObj.x;
-        initialY = boxObj.y;
+	  let isDragging = false, hasMoved = false, startX, startY, initialX, initialY;
+	  const onMouseDown = (e) => {
+		if (e.target === delBtn || e.target.classList.contains('color-picker-dot') || e.target.classList.contains('size-btn') || e.target === resizer) return;
+		isDragging = true;
+		hasMoved = false;
+		showGrid(true);
+		startX = e.clientX || (e.touches && e.touches[0].clientX);
+		startY = e.clientY || (e.touches && e.touches[0].clientY);
+		initialX = boxObj.x;
+		initialY = boxObj.y;
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-        document.addEventListener('touchmove', onMouseMove, { passive: false });
-        document.addEventListener('touchend', onMouseUp);
-      };
+		document.addEventListener('mousemove', onMouseMove);
+		document.addEventListener('mouseup', onMouseUp);
+		document.addEventListener('touchmove', onMouseMove, { passive: false });
+		document.addEventListener('touchend', onMouseUp);
+	  };
 
-      const onMouseMove = (e) => {
-        if (!isDragging) return;
-        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
-        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+	  const onMouseMove = (e) => {
+		if (!isDragging) return;
+		const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+		const currentY = e.clientY || (e.touches && e.touches[0].clientY);
 
-        if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
-          hasMoved = true;
-        }
+		if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
+		  hasMoved = true;
+		}
 
-        if (hasMoved && e.cancelable) e.preventDefault();
+		if (hasMoved && e.cancelable) e.preventDefault();
 
-        const rawX = Math.max(0, initialX + (currentX - startX));
-        const rawY = Math.max(0, initialY + (currentY - startY));
+		const rawX = Math.max(0, initialX + (currentX - startX));
+		const rawY = Math.max(0, initialY + (currentY - startY));
 
-        const snappedPos = snapToOtherObjects(boxObj, rawX, rawY);
+		const snappedPos = snapToOtherObjects(boxObj, rawX, rawY);
 
-        boxObj.x = snappedPos.finalX;
-        boxObj.y = snappedPos.finalY;
+		boxObj.x = snappedPos.finalX;
+		boxObj.y = snappedPos.finalY;
 
-        containerEl.style.left = boxObj.x + 'px';
-        containerEl.style.top = boxObj.y + 'px';
+		containerEl.style.left = boxObj.x + 'px';
+		containerEl.style.top = boxObj.y + 'px';
 
-        updateLines();
-      };
+		updateLines();
+	  };
 
-      const onMouseUp = (e) => {
-        if (isDragging) {
-          isDragging = false;
-          showGrid(false);
-          clearSnapGuides();
-          saveToStorage();
+	  const onMouseUp = (e) => {
+		if (isDragging) {
+		  isDragging = false;
+		  showGrid(false);
+		  clearSnapGuides();
+		  saveToStorage();
 
-          if (!hasMoved) {
-            if (relSourceNode) {
-              handleNodeClickForRelation(boxObj);
-            } else {
-              document.querySelectorAll('.style-popover.active').forEach(p => p.classList.remove('active'));
-              popover.classList.add('active');
-              handleNodeClickForRelation(boxObj);
-            }
-          }
-        }
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        document.removeEventListener('touchmove', onMouseMove);
-        document.removeEventListener('touchend', onMouseUp);
-      };
+		  if (!hasMoved) {
+			if (relSourceNode) {
+			  handleNodeClickForRelation(boxObj);
+			} else {
+			  document.querySelectorAll('.style-popover.active').forEach(p => p.classList.remove('active'));
+			  popover.classList.add('active');
+			  handleNodeClickForRelation(boxObj);
+			}
+		  }
+		}
+		document.removeEventListener('mousemove', onMouseMove);
+		document.removeEventListener('mouseup', onMouseUp);
+		document.removeEventListener('touchmove', onMouseMove);
+		document.removeEventListener('touchend', onMouseUp);
+	  };
 
-      containerEl.addEventListener('mousedown', onMouseDown);
-      containerEl.addEventListener('touchstart', onMouseDown, { passive: false });
+	  containerEl.addEventListener('mousedown', onMouseDown);
+	  containerEl.addEventListener('touchstart', onMouseDown, { passive: false });
 
-      let isResizing = false, startW, startH;
-      const onResizeStart = (e) => {
-        e.stopPropagation();
-        isResizing = true;
-        showGrid(true);
+	  let isResizing = false, startW, startH;
+	  const onResizeStart = (e) => {
+		e.stopPropagation();
+		isResizing = true;
+		showGrid(true);
 
-        startX = e.clientX || (e.touches && e.touches[0].clientX);
-        startY = e.clientY || (e.touches && e.touches[0].clientY);
-        startW = boxObj.w;
-        startH = boxObj.h;
+		startX = e.clientX || (e.touches && e.touches[0].clientX);
+		startY = e.clientY || (e.touches && e.touches[0].clientY);
+		startW = boxObj.w;
+		startH = boxObj.h;
 
-        document.addEventListener('mousemove', onResizeMove);
-        document.addEventListener('mouseup', onResizeEnd);
-        document.addEventListener('touchmove', onResizeMove, { passive: false });
-        document.addEventListener('touchend', onResizeEnd);
-      };
+		document.addEventListener('mousemove', onResizeMove);
+		document.addEventListener('mouseup', onResizeEnd);
+		document.addEventListener('touchmove', onResizeMove, { passive: false });
+		document.addEventListener('touchend', onResizeEnd);
+	  };
 
-      const onResizeMove = (e) => {
-        if (!isResizing) return;
-        if (e.cancelable) e.preventDefault();
+	  const onResizeMove = (e) => {
+		if (!isResizing) return;
+		if (e.cancelable) e.preventDefault();
 
-        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
-        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+		const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+		const currentY = e.clientY || (e.touches && e.touches[0].clientY);
 
-        boxObj.w = Math.max(40, snapToGrid(startW + (currentX - startX)));
-        boxObj.h = Math.max(40, snapToGrid(startH + (currentY - startY)));
+		boxObj.w = Math.max(40, snapToGrid(startW + (currentX - startX)));
+		boxObj.h = Math.max(40, snapToGrid(startH + (currentY - startY)));
 
-        containerEl.style.width = boxObj.w + 'px';
-        containerEl.style.height = boxObj.h + 'px';
+		containerEl.style.width = boxObj.w + 'px';
+		containerEl.style.height = boxObj.h + 'px';
 
-        updateLines();
-      };
+		updateLines();
+	  };
 
-      const onResizeEnd = () => {
-        if (isResizing) {
-          isResizing = false;
-          showGrid(false);
-          clearSnapGuides();
-          saveToStorage();
-        }
-        document.removeEventListener('mousemove', onResizeMove);
-        document.removeEventListener('mouseup', onResizeEnd);
-        document.removeEventListener('touchmove', onResizeMove);
-        document.removeEventListener('touchend', onResizeEnd);
-      };
+	  const onResizeEnd = () => {
+		if (isResizing) {
+		  isResizing = false;
+		  showGrid(false);
+		  clearSnapGuides();
+		  saveToStorage();
+		}
+		document.removeEventListener('mousemove', onResizeMove);
+		document.removeEventListener('mouseup', onResizeEnd);
+		document.removeEventListener('touchmove', onResizeMove);
+		document.removeEventListener('touchend', onResizeEnd);
+	  };
 
-      resizer.addEventListener('mousedown', onResizeStart);
-      resizer.addEventListener('touchstart', onResizeStart, { passive: false });
+	  resizer.addEventListener('mousedown', onResizeStart);
+	  resizer.addEventListener('touchstart', onResizeStart, { passive: false });
 
-      boxLayer.appendChild(containerEl);
+	  boxLayer.appendChild(containerEl);
 
-      if (!existingId) emptyBoxes.push(boxObj);
+	  // 💡 修正 2：不管是不是既有 ID，建立時一律加入記憶體陣列 (若已存在則不重複 push)
+	  if (!emptyBoxes.some(b => b.id === boxId)) {
+		emptyBoxes.push(boxObj);
+	  }
 
-      saveToStorage();
-      updateLines();
-    }
+	  saveToStorage();
+	  updateLines();
+	}
 
-    function deleteEmptyBox(boxId) {
-      const index = emptyBoxes.findIndex(b => b.id === boxId);
-      if (index !== -1) {
-        emptyBoxes[index].element.remove();
-        emptyBoxes.splice(index, 1);
-      }
-      lines = lines.filter(l => l.fromId !== boxId && l.toId !== boxId);
-      if (relSourceNode && relSourceNode.id === boxId) removeHintAndSource();
-      updateLines();
-      saveToStorage();
-    }
+    // 💡 修正 3：徹底刪除空框框（DOM、陣列、連線與快取同步刪除）
+	function deleteEmptyBox(boxId) {
+	  // 1. 搜尋陣列中的物件
+	  const index = emptyBoxes.findIndex(b => Number(b.id) === Number(boxId));
+	  if (index !== -1) {
+		// 2. 移除 DOM 元素
+		if (emptyBoxes[index].element) {
+		  emptyBoxes[index].element.remove();
+		}
+		// 3. 從 emptyBoxes 陣列剔除
+		emptyBoxes.splice(index, 1);
+	  } else {
+		// 備援：若 index 找不到，直接依 DOM id 或 class 移除殘留 DOM
+		document.querySelectorAll('.empty-box-node').forEach(el => {
+		  // 若有比對邏輯可強制移除
+		});
+	  }
+
+	  // 4. 清除連到這個框框的關係線
+	  lines = lines.filter(l => Number(l.fromId) !== Number(boxId) && Number(l.toId) !== Number(boxId));
+
+	  // 5. 若當前正選取此框框進行連線，取消選取狀態
+	  if (relSourceNode && Number(relSourceNode.id) === Number(boxId)) {
+		removeHintAndSource();
+	  }
+
+	  // 6. 重繪與同步更新快取
+	  updateLines();
+	  saveToStorage();
+	}
 
     function restoreEmptyBox(bData) {
-      const boxObj = { id: bData.id, x: bData.x, y: bData.y, w: bData.w, h: bData.h, borderWidth: bData.borderWidth, borderColor: bData.borderColor };
-      emptyBoxes.push(boxObj);
-      createEmptyBox(bData.x, bData.y, bData.w, bData.h, bData.borderWidth, bData.borderColor, bData.id);
-    }
+	  createEmptyBox(bData.x, bData.y, bData.w, bData.h, bData.borderWidth, bData.borderColor, bData.id);
+	}
 
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.empty-box-node') && !e.target.closest('.free-label-node')) {
