@@ -1515,6 +1515,51 @@
 		.report-card-link:hover {
 			color: #0369a1;
 		}
+		
+		/* ================= RWD 手機版報表優化 ================= */
+		@media (max-width: 768px) {
+			/* 1. 撐開手機版 Modal 寬度 */
+			#championship-report-modal .modal-card {
+				width: 95% !important;
+				max-width: 95% !important;
+				margin: 10px auto;
+			}
+
+			/* 2. 允許表格橫向滑動，防止擠壓文字 */
+			#report-view-deck, #report-view-user {
+				overflow-x: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+
+			/* 3. 重設欄位寬度與換行規則（徹底解決文字直排問題） */
+			.report-table {
+				min-width: 500px; /* 設底限寬度，寬度不夠時自動開啟橫向滾動 */
+			}
+
+			.report-table th, .report-table td {
+				padding: 6px 8px !important;
+				white-space: normal !important; /* 允許正常橫向換行 */
+				word-break: break-word !important;
+			}
+
+			/* 重新分配適當欄位比例 */
+			.report-table th:nth-child(1), .report-table td:nth-child(1) { width: 45px !important; text-align: center; } /* 名次 */
+			.report-table th:nth-child(2), .report-table td:nth-child(2) { width: 140px !important; } /* 卡名 */
+			.report-table th:nth-child(3), .report-table td:nth-child(3) { width: 55px !important; text-align: center; }  /* 人數/數量 */
+			
+			/* 報表 2 的使用者清單欄 */
+			#report-view-user .report-table th:nth-child(4),
+			#report-view-user .report-table td:nth-child(4) { 
+				width: auto !important; 
+				font-size: 11px !important;
+			}
+
+			/* 4. 微調頁籤按鈕字級，避免字體過大疊字 */
+			.report-tab-btn {
+				padding: 8px 4px !important;
+				font-size: 12px !important;
+			}
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2106,8 +2151,8 @@
 			</div>
 			<!-- 報表切換頁籤 -->
 			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-				<button type="button" class="report-tab-btn active" id="btn-report-tab-deck" style="flex: 1; padding: 10px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer;">1. 牌組別排行 (Top 30+)</button>
-				<button type="button" class="report-tab-btn" id="btn-report-tab-user" style="flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer;">2. 使用者別排行 (Top 15+)</button>
+				<button type="button" class="report-tab-btn active" id="btn-report-tab-deck" style="flex: 1; padding: 10px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer;">牌組別 (Top 30+)</button>
+				<button type="button" class="report-tab-btn" id="btn-report-tab-user" style="flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer;">使用者別 (Top 15+)</button>
 			</div>
 			<div class="modal-body" style="padding: 15px; overflow-y: auto;">
 				<!-- 報表 1 內容 -->
