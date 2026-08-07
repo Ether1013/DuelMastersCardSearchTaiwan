@@ -7976,12 +7976,32 @@
 				});
 			});
 
-			// 2-4. 依照使用者人數降冪排序（使用者名稱清單內部改為 ASC 升冪排序）
+			// 輔助函式：判斷字元類型權重 (數字=1 < 英文=2 < 其他文字=3)
+			function getUserNamePriority(str) {
+				if (!str) return 3;
+				const firstChar = str.trim().charAt(0);
+				if (/[0-9]/.test(firstChar)) return 1;       // 1. 數字（最低）
+				if (/[a-zA-Z]/.test(firstChar)) return 2;    // 2. 英文（中）
+				return 3;                                    // 3. 其他文字 / 中文 / 日文（最高）
+			}
+
+			// 2-4. 依照使用者人數降冪排序（使用者名稱清單內部：數字 -> 英文 -> 其他文字 ASC 升冪排序）
 			const sortedList = Array.from(cardUserMap.values()).map(item => ({
 				cardName: item.cardName,
 				userCount: item.usersMap.size,
 				userList: Array.from(item.usersMap.values())
-					.sort((a, b) => a.localeCompare(b, 'zh-TW')) // 💡 新增：使用者名稱升冪排序 (A→Z / 筆劃)
+					.sort((a, b) => {
+						const priorityA = getUserNamePriority(a);
+						const priorityB = getUserNamePriority(b);
+
+						// 1. 優先依類別權重排序 (數字 < 英文 < 其他文字)
+						if (priorityA !== priorityB) {
+							return priorityA - priorityB;
+						}
+
+						// 2. 同類別內進行自然語系/字串升冪排序 (ASC)
+						return a.localeCompare(b, 'zh-TW', { numeric: true, sensitivity: 'base' });
+					})
 					.join(', ')
 			})).sort((a, b) => b.userCount - a.userCount);
 			// 2-5. 取出 1~15 名，16 起如果使用次數跟 15 一樣的話追加列入
