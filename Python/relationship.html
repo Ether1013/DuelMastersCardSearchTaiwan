@@ -49,6 +49,8 @@
     .btn:hover { background: #0056b3; }
     .btn-info { background: #17a2b8; }
     .btn-info:hover { background: #138496; }
+    .btn-warning { background: #ffc107; color: #000; }
+    .btn-warning:hover { background: #e0a800; }
     .btn-success { background: #28a745; }
     .btn-success:hover { background: #218838; }
     .btn-danger { background: #dc3545; }
@@ -77,6 +79,34 @@
       opacity: 0.3;
     }
 
+    /* 對齊輔助線圖層 */
+    #snap-guide-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 99999;
+    }
+    .snap-guide-line {
+      position: absolute;
+      background-color: #00ffff;
+      box-shadow: 0 0 6px #00ffff;
+    }
+    .snap-guide-line.v-line {
+      width: 1px;
+      top: 0;
+      bottom: 0;
+      border-left: 1px dashed #00ffff;
+    }
+    .snap-guide-line.h-line {
+      height: 1px;
+      left: 0;
+      right: 0;
+      border-top: 1px dashed #00ffff;
+    }
+
     /* SVG 繪圖層 */
     #svg-layer {
       position: absolute;
@@ -89,6 +119,52 @@
     }
     #svg-layer * {
       pointer-events: visiblePainted;
+    }
+
+    /* 空框框圖層 */
+    #box-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .empty-box-node {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      pointer-events: auto;
+      box-sizing: border-box;
+      background: transparent;
+    }
+    .empty-box-node.rel-source {
+      outline: 3px dashed #00ffff !important;
+      box-shadow: 0 0 14px #00ffff;
+    }
+
+    .btn-delete-box {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+      z-index: 10;
+      border: 1px solid #fff;
+    }
+    .empty-box-node:hover .btn-delete-box {
+      display: block;
     }
 
     /* 圖層：自由獨立文字備註與線條按鈕 */
@@ -122,7 +198,7 @@
       height: 100%;
       display: block;
       pointer-events: none;
-      object-fit: cover;
+      object-fit: fill;
     }
 
     /* 縮放手把 */
@@ -135,6 +211,7 @@
       bottom: -7px;
       cursor: se-resize;
       border-radius: 50%;
+      z-index: 10;
     }
 
     /* 刪除圖片按鈕 */
@@ -153,12 +230,12 @@
       cursor: pointer;
       font-weight: bold;
       display: none;
+      z-index: 11;
     }
     .card-node:hover .btn-delete-node {
       display: block;
     }
 
-    /* 選擇目標卡片提示浮框 */
     .target-hint-popover {
       position: absolute;
       top: -38px;
@@ -181,7 +258,6 @@
       to { opacity: 1; transform: translate(-50%, 0); }
     }
 
-    /* 箭頭刪除按鈕 */
     .line-delete-btn {
       position: absolute;
       background: #dc3545;
@@ -201,7 +277,6 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
 
-    /* 自由移動的獨立備註容器 */
     .free-label-node {
       position: absolute;
       pointer-events: auto;
@@ -213,7 +288,6 @@
       user-select: none;
     }
 
-    /* 💡 修改：輸入框文字對齊改為靠左 (left) */
     .free-label-textarea {
       background: rgba(15, 15, 15, 0.85);
       border: 1px dashed #888;
@@ -260,7 +334,6 @@
       display: block;
     }
 
-    /* 樣式選單 / 色盤彈窗 */
     .style-popover {
       display: none;
       position: absolute;
@@ -296,7 +369,7 @@
       cursor: pointer;
     }
 
-    /* 關聯線設定 Modal */
+    /* Modal 通用遮罩 */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -316,7 +389,7 @@
     .modal-card {
       background: #2d2d2d;
       border-radius: 12px;
-      width: 340px;
+      width: 360px;
       padding: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       border: 1px solid #444;
@@ -382,7 +455,75 @@
     }
     .modal-btn-cancel:hover { color: #fff; }
 
-    /* 手機長按儲存圖片 Modal */
+    /* 滑動選單專用樣式 */
+    .range-slider-container {
+      margin: 20px 0 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .range-slider-container input[type=range] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: #007bff;
+    }
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 11px;
+      color: #888;
+    }
+    .res-display-badge {
+      background: #1e1e1e;
+      border: 1px solid #00ffff;
+      color: #00ffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    /* 💡 新增：下載中全螢幕遮罩樣式 */
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 99999999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    #loading-overlay.active {
+      display: flex;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #00ffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 16px;
+      font-weight: bold;
+      color: #00ffff;
+      letter-spacing: 1px;
+    }
+
     #save-preview-modal {
       display: none;
       position: fixed;
@@ -430,11 +571,12 @@
   <!-- 工具列 -->
   <div id="toolbar">
     <button class="btn" id="btn-select-file">選擇圖片</button>
+    <button class="btn btn-warning" id="btn-add-box">＋新增空框框</button>
     <button class="btn btn-info" id="btn-add-label">＋新增文字備註</button>
     <button class="btn btn-danger" id="btn-clear-all">全清空</button>
     <button class="btn btn-success" id="btn-export">儲存至相簿</button>
     <span style="font-size: 12px; color: #ccc; margin-left: 6px;">
-      💡 點擊選取卡片後再點擊目標卡片（或自己）即可建立連線
+      💡 點擊選取物件後再點擊目標物件（或自己）即可建立連線
     </span>
   </div>
 
@@ -443,6 +585,8 @@
   <!-- 主容器 -->
   <div id="container">
     <canvas id="grid-bg"></canvas>
+    <div id="snap-guide-layer"></div>
+    <div id="box-layer"></div>
     <svg id="svg-layer">
       <defs>
         <marker id="arrow-end" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
@@ -480,6 +624,33 @@
     </div>
   </div>
 
+  <!-- 匯出解析度滑動調整 Modal -->
+  <div class="modal-overlay" id="export-options-modal">
+    <div class="modal-card">
+      <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">選擇匯出畫布解析度</div>
+      <div style="font-size: 12px; color: #aaa;">拖曳滑桿選擇最合適的匯出高畫質比例</div>
+      
+      <div class="range-slider-container">
+        <input type="range" id="export-scale-slider" step="0.05" />
+        <div class="range-labels">
+          <span>最小還原 (Min)</span>
+          <span>原始桌布 (Default)</span>
+          <span>最大高清 (Max)</span>
+        </div>
+        <div class="res-display-badge" id="export-res-display">0 x 0 px (1.0x)</div>
+      </div>
+
+      <button class="modal-btn-confirm" id="btn-export-confirm">確定匯出</button>
+      <button class="modal-btn-cancel" id="btn-export-cancel">取消</button>
+    </div>
+  </div>
+
+  <!-- 💡 新增：下載中全螢幕遮罩 HTML -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">高清圖像繪製與下載中，請稍候...</div>
+  </div>
+
   <!-- 行動裝置長按存圖片備援 Modal -->
   <div id="save-preview-modal">
     <img id="preview-img" src="" alt="預覽圖" />
@@ -489,8 +660,9 @@
 
   <script>
     const GRID_SIZE = 20;
+    const SNAP_THRESHOLD = 10;
     const PADDING_OFFSET = 8;
-    const STORAGE_KEY = 'tcg_relationship_data_v1';
+    const STORAGE_KEY = 'tcg_relationship_data_v4';
     const EXPIRATION_DAYS = 3;
 
     const COLOR_PALETTE = [
@@ -498,14 +670,17 @@
       "#32ff7e", "#18dcff", "#7d5fff", "#ffb8b8"
     ];
     const FONT_SIZES = [12, 14, 16, 20, 24];
+    const BORDER_WIDTHS = [2, 4, 6, 8, 10];
 
     let nodes = [];
     let lines = [];
     let freeLabels = [];
+    let emptyBoxes = [];
 
     let nextNodeId = 1;
     let nextLineId = 1;
     let nextLabelId = 1;
+    let nextBoxId = 10000;
     let highestZ = 10;
 
     let relSourceNode = null;
@@ -514,21 +689,146 @@
 
     const container = document.getElementById('container');
     const svgLayer = document.getElementById('svg-layer');
+    const boxLayer = document.getElementById('box-layer');
     const labelsLayer = document.getElementById('labels-layer');
+    const snapGuideLayer = document.getElementById('snap-guide-layer');
     const gridBg = document.getElementById('grid-bg');
     const fileInput = document.getElementById('file-input');
     const relationModal = document.getElementById('relation-modal');
+    const exportOptionsModal = document.getElementById('export-options-modal');
+    const loadingOverlay = document.getElementById('loading-overlay');
 
-    // --- 1. LocalStorage 管理與滿載異常捕捉 ---
+    function showLoading(show) {
+      loadingOverlay.classList.toggle('active', show);
+    }
+
+    function getAllNodes() {
+      return [...nodes, ...emptyBoxes];
+    }
+
+    function getNodeById(id) {
+      return getAllNodes().find(n => n.id === id);
+    }
+
+    function clearSnapGuides() {
+      snapGuideLayer.innerHTML = '';
+    }
+
+    function drawSnapGuide(type, pos) {
+      const guide = document.createElement('div');
+      guide.className = `snap-guide-line ${type === 'v' ? 'v-line' : 'h-line'}`;
+      if (type === 'v') {
+        guide.style.left = pos + 'px';
+      } else {
+        guide.style.top = pos + 'px';
+      }
+      snapGuideLayer.appendChild(guide);
+    }
+
+    function snapToOtherObjects(currentObj, rawX, rawY) {
+      clearSnapGuides();
+
+      let finalX = rawX;
+      let finalY = rawY;
+
+      let snappedX = false;
+      let snappedY = false;
+
+      const curLeft = rawX;
+      const curRight = rawX + currentObj.w;
+      const curCenterX = rawX + currentObj.w / 2;
+
+      const curTop = rawY;
+      const curBottom = rawY + currentObj.h;
+      const curCenterY = rawY + currentObj.h / 2;
+
+      const targetObjects = getAllNodes().filter(n => n.id !== currentObj.id);
+
+      let minDiffX = SNAP_THRESHOLD;
+      let minDiffY = SNAP_THRESHOLD;
+
+      let guideX = null;
+      let guideY = null;
+
+      for (let target of targetObjects) {
+        const tLeft = target.x;
+        const tRight = target.x + target.w;
+        const tCenterX = target.x + target.w / 2;
+
+        const xPairs = [
+          { cur: curLeft, target: tLeft, offset: 0 },
+          { cur: curLeft, target: tRight, offset: 0 },
+          { cur: curRight, target: tLeft, offset: -currentObj.w },
+          { cur: curRight, target: tRight, offset: -currentObj.w },
+          { cur: curCenterX, target: tCenterX, offset: -currentObj.w / 2 }
+        ];
+
+        for (let pair of xPairs) {
+          const diff = Math.abs(pair.cur - pair.target);
+          if (diff < minDiffX) {
+            minDiffX = diff;
+            finalX = pair.target + pair.offset;
+            guideX = pair.target;
+            snappedX = true;
+          }
+        }
+      }
+
+      for (let target of targetObjects) {
+        const tTop = target.y;
+        const tBottom = target.y + target.h;
+        const tCenterY = target.y + target.h / 2;
+
+        const yPairs = [
+          { cur: curTop, target: tTop, offset: 0 },
+          { cur: curTop, target: tBottom, offset: 0 },
+          { cur: curBottom, target: tTop, offset: -currentObj.h },
+          { cur: curBottom, target: tBottom, offset: -currentObj.h },
+          { cur: curCenterY, target: tCenterY, offset: -currentObj.h / 2 }
+        ];
+
+        for (let pair of yPairs) {
+          const diff = Math.abs(pair.cur - pair.target);
+          if (diff < minDiffY) {
+            minDiffY = diff;
+            finalY = pair.target + pair.offset;
+            guideY = pair.target;
+            snappedY = true;
+          }
+        }
+      }
+
+      if (!snappedX) {
+        finalX = snapToGrid(rawX);
+      } else if (guideX !== null) {
+        drawSnapGuide('v', guideX);
+      }
+
+      if (!snappedY) {
+        finalY = snapToGrid(rawY);
+      } else if (guideY !== null) {
+        drawSnapGuide('h', guideY);
+      }
+
+      return { finalX, finalY };
+    }
+
+    // --- 1. LocalStorage 管理 ---
     function saveToStorage() {
       const data = {
         timestamp: Date.now(),
         nextNodeId,
         nextLineId,
         nextLabelId,
-        nodes: nodes.map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h, src: n.src, zIndex: n.zIndex })),
+        nextBoxId,
+        nodes: nodes.map(n => ({ 
+          id: n.id, x: n.x, y: n.y, w: n.w, h: n.h, 
+          naturalW: n.naturalW, naturalH: n.naturalH, 
+          src: n.src, zIndex: n.zIndex 
+        })),
         lines: lines,
-        freeLabels: freeLabels.map(l => ({ id: l.id, x: l.x, y: l.y, text: l.text, color: l.color, size: l.size }))
+        freeLabels: freeLabels.map(l => ({ id: l.id, x: l.x, y: l.y, text: l.text, color: l.color, size: l.size })),
+        emptyBoxes: emptyBoxes.map(b => ({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h, borderWidth: b.borderWidth, borderColor: b.borderColor }))
       };
 
       try {
@@ -559,7 +859,12 @@
         nextNodeId = data.nextNodeId || 1;
         nextLineId = data.nextLineId || 1;
         nextLabelId = data.nextLabelId || 1;
+        nextBoxId = data.nextBoxId || 10000;
         lines = data.lines || [];
+
+        if (Array.isArray(data.emptyBoxes)) {
+          data.emptyBoxes.forEach(b => restoreEmptyBox(b));
+        }
 
         if (Array.isArray(data.nodes)) {
           data.nodes.forEach(n => restoreNode(n));
@@ -574,15 +879,18 @@
     }
 
     function clearAllData() {
-      if (confirm('確定要清空所有圖片、關係線與備註嗎？此操作無法復原。')) {
+      if (confirm('確定要清空所有圖片、空框框、關係線與備註嗎？此操作無法復原。')) {
         nodes.forEach(n => n.element.remove());
+        emptyBoxes.forEach(b => b.element.remove());
         freeLabels.forEach(l => l.element.remove());
         nodes = [];
+        emptyBoxes = [];
         lines = [];
         freeLabels = [];
         relSourceNode = null;
         hasShownStorageFullAlert = false;
         localStorage.removeItem(STORAGE_KEY);
+        clearSnapGuides();
         updateLines();
       }
     }
@@ -640,7 +948,7 @@
 
         let snappedX = snapToGrid(x);
         let snappedY = snapToGrid(y);
-        while (nodes.some(n => n.x === snappedX && n.y === snappedY)) {
+        while (getAllNodes().some(n => n.x === snappedX && n.y === snappedY)) {
           snappedX += GRID_SIZE;
           snappedY += GRID_SIZE;
         }
@@ -648,7 +956,7 @@
         const nodeId = nextNodeId++;
         highestZ++;
 
-        instantiateNode({ id: nodeId, x: snappedX, y: snappedY, w, h, src, zIndex: highestZ });
+        instantiateNode({ id: nodeId, x: snappedX, y: snappedY, w, h, naturalW: rawW, naturalH: rawH, src, zIndex: highestZ });
         saveToStorage();
       };
       img.src = src;
@@ -706,7 +1014,7 @@
       saveToStorage();
     }
 
-    // --- 4. 行動裝置與桌機通用：連線選取邏輯 ---
+    // --- 4. 行動裝置與桌機通用：連線與移動拖拽選取邏輯 ---
     function showTargetHint(nodeObj) {
       removeHintAndSource(false);
 
@@ -715,7 +1023,7 @@
 
       const hintEl = document.createElement('div');
       hintEl.className = 'target-hint-popover';
-      hintEl.innerText = '點擊目標卡片（或自己）連線';
+      hintEl.innerText = '點擊目標物件（或自己）連線';
       nodeObj.element.appendChild(hintEl);
     }
 
@@ -767,8 +1075,13 @@
 
         if (hasMoved && e.cancelable) e.preventDefault();
 
-        nodeObj.x = Math.max(0, snapToGrid(initialX + (currentX - startX)));
-        nodeObj.y = Math.max(0, snapToGrid(initialY + (currentY - startY)));
+        const rawX = Math.max(0, initialX + (currentX - startX));
+        const rawY = Math.max(0, initialY + (currentY - startY));
+
+        const snappedPos = snapToOtherObjects(nodeObj, rawX, rawY);
+
+        nodeObj.x = snappedPos.finalX;
+        nodeObj.y = snappedPos.finalY;
 
         el.style.left = nodeObj.x + 'px';
         el.style.top = nodeObj.y + 'px';
@@ -780,6 +1093,7 @@
         if (isDragging) {
           isDragging = false;
           showGrid(false);
+          clearSnapGuides();
           saveToStorage();
 
           if (!hasMoved) {
@@ -795,9 +1109,8 @@
       el.addEventListener('mousedown', onMouseDown);
       el.addEventListener('touchstart', onMouseDown, { passive: false });
 
-      // 縮放邏輯
       let isResizing = false;
-      let startW, startH;
+      let startW, startH, aspectRatio;
 
       const onResizeStart = (e) => {
         e.stopPropagation();
@@ -808,6 +1121,7 @@
         startY = e.clientY || (e.touches && e.touches[0].clientY);
         startW = nodeObj.w;
         startH = nodeObj.h;
+        aspectRatio = startW / startH;
 
         document.addEventListener('mousemove', onResizeMove);
         document.addEventListener('mouseup', onResizeEnd);
@@ -822,8 +1136,16 @@
         const currentX = e.clientX || (e.touches && e.touches[0].clientX);
         const currentY = e.clientY || (e.touches && e.touches[0].clientY);
 
-        nodeObj.w = Math.max(60, snapToGrid(startW + (currentX - startX)));
-        nodeObj.h = Math.max(60, snapToGrid(startH + (currentY - startY)));
+        let deltaX = currentX - startX;
+        let deltaY = currentY - startY;
+
+        let delta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY * aspectRatio;
+        let newW = snapToGrid(startW + delta);
+        newW = Math.max(60, newW);
+        let newH = Math.round(newW / aspectRatio);
+
+        nodeObj.w = newW;
+        nodeObj.h = newH;
 
         el.style.width = nodeObj.w + 'px';
         el.style.height = nodeObj.h + 'px';
@@ -835,6 +1157,7 @@
         if (isResizing) {
           isResizing = false;
           showGrid(false);
+          clearSnapGuides();
           saveToStorage();
         }
         document.removeEventListener('mousemove', onResizeMove);
@@ -847,7 +1170,218 @@
       resizerEl.addEventListener('touchstart', onResizeStart, { passive: false });
     }
 
-    // --- 5. 自由移動的文字備註模組 ---
+    // --- 5. 插入空框框模組 ---
+    document.getElementById('btn-add-box').addEventListener('click', () => {
+      createEmptyBox(window.innerWidth / 2 - 100, window.innerHeight / 2 - 100, 200, 200, 4, '#18dcff');
+    });
+
+    function createEmptyBox(x, y, w = 200, h = 200, borderWidth = 4, borderColor = '#18dcff', existingId = null) {
+      const boxId = existingId || nextBoxId++;
+
+      const containerEl = document.createElement('div');
+      containerEl.className = 'empty-box-node';
+      containerEl.style.left = x + 'px';
+      containerEl.style.top = y + 'px';
+      containerEl.style.width = w + 'px';
+      containerEl.style.height = h + 'px';
+      containerEl.style.border = `${borderWidth}px solid ${borderColor}`;
+
+      const delBtn = document.createElement('div');
+      delBtn.className = 'btn-delete-box';
+      delBtn.innerText = '✕';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteEmptyBox(boxId);
+      };
+      containerEl.appendChild(delBtn);
+
+      const popover = document.createElement('div');
+      popover.className = 'style-popover';
+
+      COLOR_PALETTE.forEach(c => {
+        const dot = document.createElement('div');
+        dot.className = 'color-picker-dot';
+        dot.style.background = c;
+        dot.onclick = (e) => {
+          e.stopPropagation();
+          boxObj.borderColor = c;
+          containerEl.style.borderColor = c;
+          saveToStorage();
+        };
+        popover.appendChild(dot);
+      });
+
+      BORDER_WIDTHS.forEach(bw => {
+        const bwBtn = document.createElement('div');
+        bwBtn.className = 'size-btn';
+        bwBtn.innerText = bw + 'px';
+        bwBtn.onclick = (e) => {
+          e.stopPropagation();
+          boxObj.borderWidth = bw;
+          containerEl.style.borderWidth = bw + 'px';
+          saveToStorage();
+        };
+        popover.appendChild(bwBtn);
+      });
+
+      containerEl.appendChild(popover);
+
+      const resizer = document.createElement('div');
+      resizer.className = 'resizer';
+      containerEl.appendChild(resizer);
+
+      const boxObj = { id: boxId, x, y, w, h, borderWidth, borderColor, element: containerEl };
+
+      let isDragging = false, hasMoved = false, startX, startY, initialX, initialY;
+      const onMouseDown = (e) => {
+        if (e.target === delBtn || e.target.classList.contains('color-picker-dot') || e.target.classList.contains('size-btn') || e.target === resizer) return;
+        isDragging = true;
+        hasMoved = false;
+        showGrid(true);
+        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startY = e.clientY || (e.touches && e.touches[0].clientY);
+        initialX = boxObj.x;
+        initialY = boxObj.y;
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchmove', onMouseMove, { passive: false });
+        document.addEventListener('touchend', onMouseUp);
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        if (Math.abs(currentX - startX) > 4 || Math.abs(currentY - startY) > 4) {
+          hasMoved = true;
+        }
+
+        if (hasMoved && e.cancelable) e.preventDefault();
+
+        const rawX = Math.max(0, initialX + (currentX - startX));
+        const rawY = Math.max(0, initialY + (currentY - startY));
+
+        const snappedPos = snapToOtherObjects(boxObj, rawX, rawY);
+
+        boxObj.x = snappedPos.finalX;
+        boxObj.y = snappedPos.finalY;
+
+        containerEl.style.left = boxObj.x + 'px';
+        containerEl.style.top = boxObj.y + 'px';
+
+        updateLines();
+      };
+
+      const onMouseUp = (e) => {
+        if (isDragging) {
+          isDragging = false;
+          showGrid(false);
+          clearSnapGuides();
+          saveToStorage();
+
+          if (!hasMoved) {
+            if (relSourceNode) {
+              handleNodeClickForRelation(boxObj);
+            } else {
+              document.querySelectorAll('.style-popover.active').forEach(p => p.classList.remove('active'));
+              popover.classList.add('active');
+              handleNodeClickForRelation(boxObj);
+            }
+          }
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onMouseMove);
+        document.removeEventListener('touchend', onMouseUp);
+      };
+
+      containerEl.addEventListener('mousedown', onMouseDown);
+      containerEl.addEventListener('touchstart', onMouseDown, { passive: false });
+
+      let isResizing = false, startW, startH;
+      const onResizeStart = (e) => {
+        e.stopPropagation();
+        isResizing = true;
+        showGrid(true);
+
+        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startY = e.clientY || (e.touches && e.touches[0].clientY);
+        startW = boxObj.w;
+        startH = boxObj.h;
+
+        document.addEventListener('mousemove', onResizeMove);
+        document.addEventListener('mouseup', onResizeEnd);
+        document.addEventListener('touchmove', onResizeMove, { passive: false });
+        document.addEventListener('touchend', onResizeEnd);
+      };
+
+      const onResizeMove = (e) => {
+        if (!isResizing) return;
+        if (e.cancelable) e.preventDefault();
+
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        boxObj.w = Math.max(40, snapToGrid(startW + (currentX - startX)));
+        boxObj.h = Math.max(40, snapToGrid(startH + (currentY - startY)));
+
+        containerEl.style.width = boxObj.w + 'px';
+        containerEl.style.height = boxObj.h + 'px';
+
+        updateLines();
+      };
+
+      const onResizeEnd = () => {
+        if (isResizing) {
+          isResizing = false;
+          showGrid(false);
+          clearSnapGuides();
+          saveToStorage();
+        }
+        document.removeEventListener('mousemove', onResizeMove);
+        document.removeEventListener('mouseup', onResizeEnd);
+        document.removeEventListener('touchmove', onResizeMove);
+        document.removeEventListener('touchend', onResizeEnd);
+      };
+
+      resizer.addEventListener('mousedown', onResizeStart);
+      resizer.addEventListener('touchstart', onResizeStart, { passive: false });
+
+      boxLayer.appendChild(containerEl);
+
+      if (!existingId) emptyBoxes.push(boxObj);
+
+      saveToStorage();
+      updateLines();
+    }
+
+    function deleteEmptyBox(boxId) {
+      const index = emptyBoxes.findIndex(b => b.id === boxId);
+      if (index !== -1) {
+        emptyBoxes[index].element.remove();
+        emptyBoxes.splice(index, 1);
+      }
+      lines = lines.filter(l => l.fromId !== boxId && l.toId !== boxId);
+      if (relSourceNode && relSourceNode.id === boxId) removeHintAndSource();
+      updateLines();
+      saveToStorage();
+    }
+
+    function restoreEmptyBox(bData) {
+      const boxObj = { id: bData.id, x: bData.x, y: bData.y, w: bData.w, h: bData.h, borderWidth: bData.borderWidth, borderColor: bData.borderColor };
+      emptyBoxes.push(boxObj);
+      createEmptyBox(bData.x, bData.y, bData.w, bData.h, bData.borderWidth, bData.borderColor, bData.id);
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.empty-box-node') && !e.target.closest('.free-label-node')) {
+        document.querySelectorAll('.style-popover.active').forEach(p => p.classList.remove('active'));
+      }
+    });
+
+    // --- 6. 自由移動的文字備註模組 ---
     document.getElementById('btn-add-label').addEventListener('click', () => {
       createFreeLabel(window.innerWidth / 2 - 50, window.innerHeight / 2 - 20, '', '#ffffff', 14);
     });
@@ -922,6 +1456,7 @@
       };
 
       textareaEl.onblur = () => {
+        saveToStorage();
         setTimeout(() => {
           popover.classList.remove('active');
           containerEl.style.zIndex = '90000';
@@ -937,7 +1472,6 @@
       setTimeout(() => adjustTextareaHeight(textareaEl), 0);
       containerEl.appendChild(textareaEl);
 
-      // 文字卡片拖曳 logic
       let isDragging = false, startX, startY, initialX, initialY;
       const onMouseDown = (e) => {
         if (e.target === textareaEl || e.target === delBtn || e.target.classList.contains('color-picker-dot') || e.target.classList.contains('size-btn')) return;
@@ -984,12 +1518,12 @@
       labelsLayer.appendChild(containerEl);
 
       const labelObj = { id: labelId, x, y, text, color, size, element: containerEl };
-      if (!existingId) freeLabels.push(labelObj);
+      freeLabels.push(labelObj);
 
       saveToStorage();
     }
 
-    // --- 6. Modal 關聯線樣式選擇器 ---
+    // --- 7. Modal 關聯線樣式選擇器 ---
     let selectedDir = 'forward';
     let selectedStyle = 'orthogonal';
 
@@ -1062,7 +1596,7 @@
       }
     });
 
-    // --- 7. 線條計算 ---
+    // --- 8. 線條計算 ---
 
     function computeSideOffset(node, side, slotIndex, totalSlots) {
       if (totalSlots <= 1) {
@@ -1106,8 +1640,8 @@
       const map = {};
 
       lines.forEach(line => {
-        const fromNode = nodes.find(n => n.id === line.fromId);
-        const toNode = nodes.find(n => n.id === line.toId);
+        const fromNode = getNodeById(line.fromId);
+        const toNode = getNodeById(line.toId);
         if (!fromNode || !toNode || fromNode.id === toNode.id) return;
 
         const fromSide = determineSide(fromNode, toNode);
@@ -1139,8 +1673,8 @@
     }
 
     function getLineRoute(line, edgeMap) {
-      const fromNode = nodes.find(n => n.id === line.fromId);
-      const toNode = nodes.find(n => n.id === line.toId);
+      const fromNode = getNodeById(line.fromId);
+      const toNode = getNodeById(line.toId);
       if (!fromNode || !toNode) return [];
 
       if (fromNode.id === toNode.id) {
@@ -1258,8 +1792,8 @@
       const edgeMap = buildEdgeConnectionsMap();
 
       lines.forEach(line => {
-        const fromNode = nodes.find(n => n.id === line.fromId);
-        const toNode = nodes.find(n => n.id === line.toId);
+        const fromNode = getNodeById(line.fromId);
+        const toNode = getNodeById(line.toId);
         if (!fromNode || !toNode) return;
 
         drawLinePath(line, edgeMap);
@@ -1311,7 +1845,7 @@
       labelsLayer.appendChild(btn);
     }
 
-    // --- 8. 剪貼簿與檔案上傳 ---
+    // --- 9. 剪貼簿與檔案上傳 ---
     window.addEventListener('paste', (e) => {
       const items = (e.clipboardData || e.originalEvent.clipboardData).items;
       for (let item of items) {
@@ -1341,65 +1875,141 @@
       }
     });
 
-    // --- 9. Canvas 匯出與手機儲存至相簿邏輯 ---
+    // --- 10. Canvas 匯出 Modal 與全螢幕下載遮罩邏輯 ---
+    function openExportOptionsModal(defaultScale, minScale, maxScale) {
+      return new Promise((resolve) => {
+        exportOptionsModal.classList.add('active');
+
+        const slider = document.getElementById('export-scale-slider');
+        const resDisplay = document.getElementById('export-res-display');
+
+        slider.min = minScale;
+        slider.max = maxScale;
+        slider.value = defaultScale;
+
+        const updateDisplay = () => {
+          const curScale = parseFloat(slider.value);
+          const w = Math.round(window.innerWidth * curScale);
+          const h = Math.round(window.innerHeight * curScale);
+          resDisplay.innerText = `${w} x ${h} px (${curScale.toFixed(2)}x)`;
+        };
+
+        slider.oninput = updateDisplay;
+        updateDisplay();
+
+        const onConfirm = () => {
+          cleanup();
+          resolve(parseFloat(slider.value));
+        };
+
+        const onCancel = () => {
+          cleanup();
+          resolve(null);
+        };
+
+        const cleanup = () => {
+          exportOptionsModal.classList.remove('active');
+          document.getElementById('btn-export-confirm').removeEventListener('click', onConfirm);
+          document.getElementById('btn-export-cancel').removeEventListener('click', onCancel);
+        };
+
+        document.getElementById('btn-export-confirm').addEventListener('click', onConfirm);
+        document.getElementById('btn-export-cancel').addEventListener('click', onCancel);
+      });
+    }
+
     document.getElementById('btn-export').addEventListener('click', async () => {
-      if (nodes.length === 0 && freeLabels.length === 0) {
+      if (nodes.length === 0 && freeLabels.length === 0 && emptyBoxes.length === 0) {
         alert('畫面上沒有任何內容可供匯出！');
         return;
       }
+
+      const preparedNodes = await Promise.all(nodes.map(async (node) => {
+        let finalSrc = node.src;
+        if (finalSrc.startsWith('http://') || finalSrc.startsWith('https://')) {
+          finalSrc = await fetchImageWithProxy(finalSrc);
+        }
+        return { ...node, loadedImgSrc: finalSrc };
+      }));
+
+      const dpr = Math.max(window.devicePixelRatio || 1, 2);
+      const defaultScale = dpr;
+
+      let maxImgRatio = 0.001;
+      let minImgRatio = 999.0;
+
+      preparedNodes.forEach(node => {
+        const natW = node.naturalW || node.w;
+        const ratio = node.w / natW;
+        if (ratio > maxImgRatio) maxImgRatio = ratio;
+        if (ratio < minImgRatio) minImgRatio = ratio;
+      });
+
+      let computedMinScale = defaultScale * (1 / maxImgRatio);
+      let computedMaxScale = defaultScale * (1 / minImgRatio);
+
+      computedMinScale = Math.max(0.5, Math.min(computedMinScale, defaultScale));
+      computedMaxScale = Math.max(defaultScale, Math.min(computedMaxScale, 8.0));
+
+      if (computedMinScale === computedMaxScale) {
+        computedMinScale = defaultScale * 0.5;
+        computedMaxScale = defaultScale * 2.0;
+      }
+
+      const selectedCanvasScale = await openExportOptionsModal(defaultScale, computedMinScale, computedMaxScale);
+      if (!selectedCanvasScale) return;
+
+      // 💡 點擊確定後顯示全螢幕下載中遮罩
+      showLoading(true);
 
       const btnExport = document.getElementById('btn-export');
       btnExport.innerText = '高清繪製中...';
       btnExport.disabled = true;
 
-      try {
-        const preparedNodes = await Promise.all(nodes.map(async (node) => {
-          let finalSrc = node.src;
-          if (finalSrc.startsWith('http://') || finalSrc.startsWith('https://')) {
-            finalSrc = await fetchImageWithProxy(finalSrc);
+      // 使用 setTimeout 讓瀏覽器有時間渲染全螢幕遮罩 DOM
+      setTimeout(async () => {
+        try {
+          const exportCanvas = document.createElement('canvas');
+          exportCanvas.width = Math.round(window.innerWidth * selectedCanvasScale);
+          exportCanvas.height = Math.round(window.innerHeight * selectedCanvasScale);
+          
+          const ctx = exportCanvas.getContext('2d');
+          ctx.scale(selectedCanvasScale, selectedCanvasScale);
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          ctx.fillStyle = '#2a2a2a';
+          ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+          renderEmptyBoxesToCanvas(ctx);
+
+          const sortedNodes = [...preparedNodes].sort((a, b) => a.zIndex - b.zIndex);
+          for (let node of sortedNodes) {
+            await renderNodeToCanvas(ctx, node);
           }
-          return { ...node, loadedImgSrc: finalSrc };
-        }));
 
-        const scale = Math.max(window.devicePixelRatio || 1, 2);
+          renderLinesToCanvas(ctx);
+          renderFreeLabelsToCanvas(ctx);
 
-        const exportCanvas = document.createElement('canvas');
-        exportCanvas.width = window.innerWidth * scale;
-        exportCanvas.height = window.innerHeight * scale;
-        
-        const ctx = exportCanvas.getContext('2d');
-        ctx.scale(scale, scale);
-
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-
-        ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
-        const sortedNodes = [...preparedNodes].sort((a, b) => a.zIndex - b.zIndex);
-        for (let node of sortedNodes) {
-          await renderNodeToCanvas(ctx, node);
-        }
-
-        renderLinesToCanvas(ctx);
-        renderFreeLabelsToCanvas(ctx);
-
-        exportCanvas.toBlob(async (blob) => {
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-          const file = new File([blob], `tcg_relationship_hd_${timestamp}.png`, { type: 'image/png' });
-
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                files: [file],
-                title: 'TCG 卡牌關係圖',
-                text: '這是我編輯的高清卡牌關係圖'
-              });
-            } catch (shareErr) {
-              console.log('使用者取消或不支援分享選單');
-            }
-          } else {
+          exportCanvas.toBlob(async (blob) => {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            const fileName = `tcg_relationship_hd_${timestamp}.png`;
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            if (isMobile && navigator.canShare) {
+              const file = new File([blob], fileName, { type: 'image/png' });
+              if (navigator.canShare({ files: [file] })) {
+                try {
+                  await navigator.share({ files: [file], title: 'TCG 卡牌關係圖', text: '這是我編輯的高清卡牌關係圖' });
+                  showLoading(false);
+                  return;
+                } catch (shareErr) {
+                  console.log('使用者取消分享或觸發備援');
+                }
+              }
+            }
+
             const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
 
             if (isMobile) {
@@ -1408,39 +2018,37 @@
             } else {
               const downloadLink = document.createElement('a');
               downloadLink.href = dataUrl;
-              downloadLink.download = `tcg_relationship_hd_${timestamp}.png`;
+              downloadLink.download = fileName;
               document.body.appendChild(downloadLink);
               downloadLink.click();
               document.body.removeChild(downloadLink);
             }
-          }
-        }, 'image/png', 1.0);
 
-      } catch (err) {
-        console.error('匯出失敗:', err);
-        alert('匯出關係圖發生錯誤: ' + err.message);
-      } finally {
-        btnExport.innerText = '儲存至相簿';
-        btnExport.disabled = false;
-      }
+            showLoading(false);
+          }, 'image/png', 1.0);
+
+        } catch (err) {
+          console.error('匯出失敗:', err);
+          alert('匯出關係圖發生錯誤: ' + err.message);
+          showLoading(false);
+        } finally {
+          btnExport.innerText = '儲存至相簿';
+          btnExport.disabled = false;
+        }
+      }, 50);
     });
 
     async function fetchImageWithProxy(originalUrl) {
-      try {
-        const res = await fetch(originalUrl, { mode: 'cors' });
-        if (res.ok) return await blobToDataURL(await res.blob());
-      } catch (e) {}
+      if (originalUrl.startsWith('data:')) return originalUrl;
+      const proxyUrl = `/api/proxy-relationship-image?url=${encodeURIComponent(originalUrl)}`;
 
       try {
-        const proxyUrl = `/api/proxy-relationship-image?url=${encodeURIComponent(originalUrl)}`;
         const resProxy = await fetch(proxyUrl);
-        if (resProxy.status === 429) {
-          alert('請求過於頻繁（每分鐘 20 張限制），部分圖片可能無法載入。');
-          return originalUrl;
-        }
-        if (!resProxy.ok) throw new Error('Proxy 代理讀取圖片失敗');
-        return await blobToDataURL(await resProxy.blob());
+        if (!resProxy.ok) throw new Error(`Proxy error ${resProxy.status}`);
+        const blob = await resProxy.blob();
+        return await blobToDataURL(blob);
       } catch (e) {
+        console.warn('Proxy 失敗:', e);
         return originalUrl;
       }
     }
@@ -1451,6 +2059,16 @@
         reader.onload = (e) => resolve(e.target.result);
         reader.onerror = reject;
         reader.readAsDataURL(blob);
+      });
+    }
+
+    function renderEmptyBoxesToCanvas(ctx) {
+      emptyBoxes.forEach(box => {
+        ctx.save();
+        ctx.lineWidth = box.borderWidth;
+        ctx.strokeStyle = box.borderColor;
+        ctx.strokeRect(box.x, box.y, box.w, box.h);
+        ctx.restore();
       });
     }
 
@@ -1472,8 +2090,8 @@
       const edgeMap = buildEdgeConnectionsMap();
 
       lines.forEach(line => {
-        const fromNode = nodes.find(n => n.id === line.fromId);
-        const toNode = nodes.find(n => n.id === line.toId);
+        const fromNode = getNodeById(line.fromId);
+        const toNode = getNodeById(line.toId);
         if (!fromNode || !toNode) return;
 
         const pts = getLineRoute(line, edgeMap);
@@ -1507,7 +2125,6 @@
       ctx.fill();
     }
 
-    // 💡 修改：繪製文字改為靠左對齊 (left)
     function renderFreeLabelsToCanvas(ctx) {
       freeLabels.forEach(lbl => {
         if (!lbl.text.trim()) return;
@@ -1517,7 +2134,7 @@
         const lineHeight = fontSize * 1.35;
 
         ctx.font = `${fontSize}px Arial`;
-        ctx.textAlign = 'left'; // 靠左對齊
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
 
         let maxW = 0;
@@ -1531,11 +2148,9 @@
         const totalH = linesArr.length * lineHeight;
         const boxHeight = Math.max(32, totalH + padding);
 
-        // 1. 繪製半透明黑框背景
         ctx.fillStyle = 'rgba(15, 15, 15, 0.85)';
         ctx.fillRect(lbl.x, lbl.y, boxWidth, boxHeight);
 
-        // 2. 繪製靠左文字（起點為黑框左側加上內邊距 padding）
         ctx.fillStyle = lbl.color || '#ffffff';
         const startX = lbl.x + padding;
         const startY = lbl.y + (boxHeight - totalH) / 2 + lineHeight / 2;

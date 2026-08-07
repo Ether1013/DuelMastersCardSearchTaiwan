@@ -448,12 +448,15 @@ async def proxy_image(request: Request, url: str = Query(...)):
 async def proxy_relationship_image(request: Request, url: str = Query(...)):
     now = time.time()
 
-    # 1. 先從記憶體快取尋找 (Hit Cache 不佔用後端發起請求的資源)
-    if url in proxy_cache:
-        item = proxy_cache[url]
+    # 0. 解決 URL 編碼問題：先解碼確保吃到真實的圖片網址
+    target_url = unquote(url).strip()
+
+    # 1. 快取比對（使用解碼後的 target_url）
+    if target_url in proxy_cache:
+        item = proxy_cache[target_url]
         if now - item["timestamp"] < CACHE_TTL_SECONDS:
             item["timestamp"] = now
-            proxy_cache.move_to_end(url)
+            proxy_cache.move_to_end(target_url)
             return Response(
                 content=item["content"],
                 media_type=item["content_type"],
@@ -463,28 +466,47 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
                 },
             )
         else:
-            del proxy_cache[url]
+            del proxy_cache[target_url]
 
-    # 2. 若快取沒有，發起網路請求抓取
+    # 2. 抓取遠端圖片
     try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                url,
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"},
-                timeout=10.0,
-            )
+        # 動態抓取圖片目標網域，作為 Referer 欺騙防盜連機制
+        parsed_uri = urlparse(target_url)
+        domain_origin = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
+
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                " (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            "Referer": domain_origin,  # 擬造同源 Referer 突破防盜連
+        }
+
+        # follow_redirects=True 防止圖片網址被 301/302 重導向時抓不到
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            resp = await client.get(target_url, headers=headers, timeout=10.0)
+
             if resp.status_code != 200:
-                raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
+                print(
+                    f"[Proxy Error] Failed to fetch: {target_url}, Status:"
+                    f" {resp.status_code}"
+                )
+                raise HTTPException(
+                    status_code=resp.status_code,
+                    detail=f"Failed to fetch image: HTTP {resp.status_code}",
+                )
 
             content_type = resp.headers.get("content-type", "image/jpeg")
 
+            # 寫入快取
             if len(proxy_cache) >= MAX_CACHE_SIZE:
                 proxy_cache.popitem(last=False)
 
-            proxy_cache[url] = {
+            proxy_cache[target_url] = {
                 "content": resp.content,
                 "content_type": content_type,
-                "timestamp": now
+                "timestamp": now,
             }
 
             return Response(
@@ -495,7 +517,11 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
                     "Cache-Control": "public, max-age=86400",
                 },
             )
+
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"[Proxy Exception] {target_url} -> {e}")
         raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
 
 @app.get("/api/diary")
