@@ -1560,6 +1560,47 @@
 				font-size: 12px !important;
 			}
 		}
+		/* ================= 行動裝置橫向螢幕 (Landscape) 專用修正 ================= */
+		@media screen and (max-height: 500px) and (orientation: landscape) {
+			/* 1. 壓低頂部 Header 高度，釋放垂直空間 */
+			.header-tabs {
+				position: relative !important; /* 打橫時取消黏性置頂，避免遮擋內容 */
+			}
+
+			/* 2. 壓低 sticky 抽屜置頂位置 */
+			.drawer-container, .quick-search-drawer {
+				position: relative !important;
+			}
+
+			/* 3. 確保所有可點擊標籤有足夠的 touch target 與適當層級 */
+			.effect-tag, 
+			.wdata-race-tag, 
+			.summary-tag, 
+			.report-card-link {
+				position: relative;
+				z-index: 5;
+				touch-action: manipulation; /* 消除點擊延遲並提升觸控反應 */
+				padding: 4px 8px !important;  /* 稍微放大觸控熱區 */
+				display: inline-block;
+			}
+
+			/* 4. 修正 Modal 在橫屏時的高度與捲軸，確保內部標籤能順利點擊 */
+			.modal-card {
+				max-height: 95vh !important;
+			}
+			.modal-body, .detail-info-scroll-panel {
+				overscroll-behavior: contain;
+				-webkit-overflow-scrolling: touch;
+			}
+
+			/* 5. 壓低 Footer 避免橫屏時佔用過多空間 */
+			.footer {
+				position: relative !important; /* 打橫時改為隨頁面滾動，不強行固定在底部遮擋 */
+			}
+			body {
+				padding-bottom: 0px !important;
+			}
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
