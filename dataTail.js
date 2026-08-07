@@ -340,7 +340,7 @@
 
 		const theHref = document.createElement("span");
 		// 動態帶入剩餘天數 X
-		const theText = document.createTextNode(`舊站關閉倒數${daysLeft}天，這邊也不會更新8/8的龍娘包喔！`);
+		const theText = document.createTextNode(`舊站關閉倒數${daysLeft}天，想看龍娘包內容？點這邊！`);
 		theHref.style.color = "blue";
 		theHref.style.fontWeight = "big";
 		theHref.style.cursor = "pointer";
