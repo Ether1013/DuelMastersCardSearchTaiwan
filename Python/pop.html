@@ -141,21 +141,29 @@
             page-break-inside: avoid; 
             box-sizing: border-box;
             width: 100%;
+            max-width: 100%; /* 新增這行：鎖死最大寬度 */
         }
+        
+        /* 圖片容器：佔比 1 */
         .card-img-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             flex-shrink: 0;
-            width: auto;
+            flex: 1;          /* 新增：佔據 1 份彈性空間 */
+            max-width: 25%;   /* 新增：限制最大寬度為總寬的 1/4 */
         }
+        
+        /* 圖片本身：寬度隨容器自適應 */
         .card-img.is-horizontal {
-            width: 196px;
-            height: 140px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1.4 / 1; /* 確保橫圖比例 */
         }
         .card-img { 
-            width: 140px; 
-            height: 196px; 
+            width: 100%; 
+            height: auto;
+            aspect-ratio: 1 / 1.4; /* 確保直圖比例 */
             object-fit: contain; 
             background: #f0f0f0; 
             border-radius: 4px; 
@@ -169,11 +177,12 @@
             overflow-wrap: break-word;
         }
         
-        .card-title { 
-            font-size: 16px; 
-            font-weight: bold; 
-            color: #d32f2f; 
-            margin-bottom: 6px; 
+		/* 文字區塊：佔比 3 */
+        .card-detail { 
+            flex: 3;          /* 修改：佔據 3 份彈性空間，達成 1:3 完美比例 */
+            min-width: 0;     /* 重要：防止內部連續長文字把 Flex 容器撐破 */
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .card-flavor { 
             background: #fffbe6; 
@@ -257,8 +266,9 @@
             margin-bottom: 10px;
         }
         .stacked-card-img {
-            width: 140px;
-            height: 196px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1.4;
             object-fit: contain;
             background: #f0f0f0;
             border-radius: 4px;
@@ -267,18 +277,19 @@
             transition: all 0.2s ease;
         }
         .stacked-card-img:not(:first-child) {
-            margin-top: -165px;
+            margin-top: -80%; /* 改用百分比負邊距來重疊 */
             transition: all 0.2s ease;
         }
         .stack-img-container.is-horizontal {
-            max-width: 196px;
+            max-width: 350px;
         }
         .stacked-card-img.is-horizontal {
-            width: 196px;
-            height: 140px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1.4 / 1;
         }
         .stacked-card-img.is-horizontal:not(:first-child) {
-            margin-top: -110px;
+            margin-top: -60%;
         }
 		
 		/* pop.html: 模式 4 (img_unfold) 全域樣式與變數 */
@@ -620,7 +631,7 @@
                 html += '<div class="card-item">';
 
                 if (includeImage) {
-                    const containerMaxWidth = isHorizontal ? '196px' : '140px';
+                    const containerMaxWidth = isHorizontal ? '35%' : '25%';
                     html += `<div class="card-img-container${horizClass}" style="max-width:${containerMaxWidth};">`;
                     
                     if (picUrl) {
@@ -1056,7 +1067,7 @@
                     }
 
                     const horizClass = isHorizontal ? ' is-horizontal' : '';
-                    const containerMaxWidth = isHorizontal ? '196px' : '140px';
+                    const containerMaxWidth = isHorizontal ? '35%' : '25%';
 
                     htmlContent += `<div class="card-item">`;
                     htmlContent += `<div class="card-img-container" style="max-width: ${containerMaxWidth};">`;
