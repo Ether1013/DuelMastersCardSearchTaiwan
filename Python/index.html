@@ -2248,6 +2248,23 @@
 		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 		// 全域變數：紀錄目前正在編輯/覆蓋的自訂牌組代碼 (例如 'NET-900')，若為 null 則代表新增
 		let editingDeckCode = null;
+		const CIV_MAP = [
+			{ bit: 16, name: '光' },
+			{ bit: 8,  name: '水' },
+			{ bit: 4,  name: '闇' },
+			{ bit: 2,  name: '火' },
+			{ bit: 1,  name: '自然' }
+		];
+
+		function getCivText(civilVal) {
+			const civNum = parseInt(civilVal) || 0;
+			if (civNum === 0 || civNum === 32) return '無文明';
+			const names = [];
+			CIV_MAP.forEach(item => {
+				if (civNum & item.bit) names.push(item.name);
+			});
+			return names.length > 0 ? names.join(' / ') : '無文明';
+		}
 
 		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
 		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
@@ -4958,6 +4975,11 @@
 
 					const grid = document.createElement('div');
 					grid.className = 'card-attr-grid';
+					
+					// 1. 補上文明資訊
+					if (w.civil !== undefined && w.civil !== null) {
+						grid.appendChild(createAttrPill('文明', getCivText(w.civil)));
+					}
 
 					if (w.cost !== undefined && w.cost !== null) grid.appendChild(createAttrPill('費用', formatDisplayValue(w.cost)));
 
@@ -4986,22 +5008,21 @@
 					block.appendChild(grid);
 
 					if (w.race && Array.isArray(w.race) && w.race.length > 0) {
-						const raceBox = document.createElement('div');
-						raceBox.style.marginTop = '6px';
-						raceBox.style.display = 'flex';
-						raceBox.style.flexWrap = 'wrap';
-						raceBox.style.gap = '4px';
+						const raceRow = document.createElement('div');
+						raceRow.style.cssText = 'margin-top: 8px; width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 13px;';
 						
+						const raceLabel = document.createElement('span');
+						raceLabel.style.cssText = 'font-weight: bold; color: #555; flex-shrink: 0;';
+						raceLabel.innerText = '種族:';
+						raceRow.appendChild(raceLabel);
+
+						const raceBox = document.createElement('div');
+						raceBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 4px; align-items: center;';
+
 						w.race.forEach(r => {
 							const rTag = document.createElement('span');
 							rTag.className = 'wdata-race-tag';
-							rTag.style.background = '#e2e8f0';
-							rTag.style.color = '#334155';
-							rTag.style.padding = '2px 8px';
-							rTag.style.borderRadius = '4px';
-							rTag.style.fontSize = '12px';
-							rTag.style.fontWeight = 'bold';
-							rTag.style.cursor = 'pointer';
+							rTag.style.cssText = 'background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;';
 							rTag.innerText = r;
 							
 							const tooltipText = getRaceTooltipText(r);
@@ -5010,7 +5031,9 @@
 
 							raceBox.appendChild(rTag);
 						});
-						block.appendChild(raceBox);
+
+						raceRow.appendChild(raceBox);
+						block.appendChild(raceRow);
 					}
 
 					const spContainer = document.createElement('div');

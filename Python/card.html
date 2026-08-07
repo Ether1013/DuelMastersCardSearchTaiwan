@@ -239,6 +239,24 @@
 		let rawCardTypes = [];
 		const specialIcons = ["✪", "⌂", "✚", "✡"];
 
+        const CIV_MAP = [
+            { bit: 16, name: '光' },
+            { bit: 8,  name: '水' },
+            { bit: 4,  name: '闇' },
+            { bit: 2,  name: '火' },
+            { bit: 1,  name: '自然' }
+        ];
+
+        function getCivText(civilVal) {
+            const civNum = parseInt(civilVal) || 0;
+            if (civNum === 0 || civNum === 32) return '無文明';
+            const names = [];
+            CIV_MAP.forEach(item => {
+                if (civNum & item.bit) names.push(item.name);
+            });
+            return names.length > 0 ? names.join(' / ') : '無文明';
+        }
+
         function formatDisplayValue(val) {
             if (val === null || val === undefined) return '';
             const num = Number(val);
@@ -546,15 +564,29 @@
                         grid.appendChild(createAttrPill('卡種', formatDisplayValue(displayCardType)));
                     }
 
+                    // 1. 補上文明資訊
+                    if (w.civil !== undefined && w.civil !== null) {
+                        grid.appendChild(createAttrPill('文明', getCivText(w.civil)));
+                    }
+
                     if (w.cost !== undefined && w.cost !== null) grid.appendChild(createAttrPill('費用', formatDisplayValue(w.cost)));
                     if (w.power !== undefined && w.power !== null) grid.appendChild(createAttrPill('攻擊力', formatDisplayValue(w.power)));
 
                     block.appendChild(grid);
 
-                    // 種族標籤
+                    // 2. 把種族資料獨立自成一行
                     if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+                        const raceRow = document.createElement('div');
+                        raceRow.style.cssText = 'margin-top: 8px; width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 14px;';
+                        
+                        const raceLabel = document.createElement('span');
+                        raceLabel.style.cssText = 'font-weight: bold; color: #555; flex-shrink: 0;';
+                        raceLabel.innerText = '種族:';
+                        raceRow.appendChild(raceLabel);
+
                         const raceBox = document.createElement('div');
-                        raceBox.style.cssText = 'margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;';
+                        raceBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 4px; align-items: center;';
+
                         w.race.forEach(r => {
                             const rTag = document.createElement('span');
                             rTag.className = 'wdata-race-tag';
@@ -566,7 +598,9 @@
 
                             raceBox.appendChild(rTag);
                         });
-                        block.appendChild(raceBox);
+
+                        raceRow.appendChild(raceBox);
+                        block.appendChild(raceRow);
                     }
 
                     // 特殊能力

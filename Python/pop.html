@@ -382,6 +382,25 @@
         const INFINITY_THRESHOLD = 9000000000000000;
         const NEGATIVE_INFINITY = -999999999;
         const specialIcons = ["✪", "⌂", "✚", "✡"];
+		// 文明 Bitmask 對應設定
+		const CIV_MAP = [
+			{ bit: 16, name: '光' },
+			{ bit: 8,  name: '水' },
+			{ bit: 4,  name: '闇' },
+			{ bit: 2,  name: '火' },
+			{ bit: 1,  name: '自然' }
+		];
+
+		// 解析文明 Bitmask 為文字名稱（例如: "火 / 自然"）
+		function getCivText(civilVal) {
+			const civNum = parseInt(civilVal) || 0;
+			if (civNum === 0 || civNum === 32) return '無文明';
+			const names = [];
+			CIV_MAP.forEach(item => {
+				if (civNum & item.bit) names.push(item.name);
+			});
+			return names.length > 0 ? names.join(' / ') : '無文明';
+		}
 
         function formatDisplayValue(val) {
             if (val === null || val === undefined) return '';
@@ -690,32 +709,57 @@
                 html += `<div class="card-title">${indexPrefix}${countPrefix}${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
 
                 if (item.wdata && Array.isArray(item.wdata)) {
-                    item.wdata.forEach(w => {
-                        const typeText = (w.type && Array.isArray(w.type)) ? w.type.map(t => getCardTypeText(t)).join(', ') : '無';
-                        let displayPower = w.power ?? '-';
-                        if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
-                            displayPower = `${displayPower} / ${w.hypermode.power}`;
-                        }
+					item.wdata.forEach(w => {
+						const typeText = (w.type && Array.isArray(w.type)) ? w.type.map(t => getCardTypeText(t)).join(', ') : '';
+						let displayPower = w.power ?? '-';
+						if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
+							displayPower = `${displayPower} / ${w.hypermode.power}`;
+						}
 
-                        html += '<div class="wdata-box">';
-                        html += `<div><b>卡種:</b> ${typeText} | <b>費用:</b> ${w.cost ?? '-'} | <b>攻擊力:</b> ${displayPower} | <b>種族:</b> ${w.race ? w.race.join(', ') : '無'}</div>`;
+						html += '<div class="wdata-box">';
 
-                        if (w.sp && w.sp.length > 0) {
-                            html += `<ul class="sp-list">`;
-                            w.sp.forEach(s => html += renderSpItemHtml(s));
-                            html += `</ul>`;
-                        }
+						// 1. 第一行欄位 (卡種 | 文明 | 費用 | 攻擊力)
+						const metaRow = [];
+						if (typeText) {
+							metaRow.push(`<b>卡種:</b> ${typeText}`);
+						}
+						if (w.civil !== undefined && w.civil !== null && w.civil !== '') {
+							metaRow.push(`<b>文明:</b> ${getCivText(w.civil)}`);
+						}
+						if (w.cost !== undefined && w.cost !== null) {
+							metaRow.push(`<b>費用:</b> ${w.cost}`);
+						}
+						if (displayPower !== '-' && displayPower !== undefined && displayPower !== null) {
+							metaRow.push(`<b>攻擊力:</b> ${displayPower}`);
+						}
 
-                        if (w.hypermode && w.hypermode.sp && w.hypermode.sp.length > 0) {
-                            html += '<div class="hyper-divider">Hyper Mode</div>';
-                            html += `<ul class="sp-list">`;
-                            w.hypermode.sp.forEach(hs => html += renderSpItemHtml(hs));
-                            html += `</ul>`;
-                        }
+						if (metaRow.length > 0) {
+							html += `<div>${metaRow.join(' | ')}</div>`;
+						}
 
-                        html += '</div>';
-                    });
-                }
+						// 2. 種族獨立一行 (無資料則完全不輸出)
+						if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+							html += `<div style="margin-top: 4px;"><b>種族:</b> ${w.race.join(', ')}</div>`;
+						}
+
+						// 💡 3.【補回被遺漏的能力 SP 渲染】
+						if (w.sp && Array.isArray(w.sp) && w.sp.length > 0) {
+							html += `<ul class="sp-list">`;
+							w.sp.forEach(s => html += renderSpItemHtml(s));
+							html += `</ul>`;
+						}
+
+						// 💡 4.【補回被遺漏的 Hyper Mode SP 渲染】
+						if (w.hypermode && w.hypermode.sp && Array.isArray(w.hypermode.sp) && w.hypermode.sp.length > 0) {
+							html += '<div class="hyper-divider">Hyper Mode</div>';
+							html += `<ul class="sp-list">`;
+							w.hypermode.sp.forEach(hs => html += renderSpItemHtml(hs));
+							html += `</ul>`;
+						}
+
+						html += '</div>';
+					});
+				}
 
                 if (item.mana !== null && item.mana !== undefined) {
                     html += `<div style="background:#f1f8e9; border-left:3px solid #4caf50; padding:6px 10px; font-size:13px; font-weight:bold; color:#33691e; border-radius:4px; margin-top:8px;">魔力供應: ${item.mana}</div>`;
@@ -1135,34 +1179,41 @@
                             htmlContent += `<div class="wdata-box">`;
                             const metaFields = [];
 
-                            if (w.type && Array.isArray(w.type) && w.type.length > 0) {
-                                const typeText = w.type.map(t => getCardTypeText(t)).join(', ');
-                                metaFields.push(`<b>卡種:</b> ${typeText}`);
-                            }
+							if (w.type && Array.isArray(w.type) && w.type.length > 0) {
+								const typeText = w.type.map(t => getCardTypeText(t)).join(', ');
+								if (typeText) metaFields.push(`<b>卡種:</b> ${typeText}`);
+							}
 
-                            if (w.cost !== undefined && w.cost !== null) {
-                                metaFields.push(`<b>費用:</b> ${formatDisplayValue(w.cost)}`);
-                            }
+							// 💡 只有文明有資料時才加入
+							if (w.civil !== undefined && w.civil !== null && w.civil !== '') {
+								metaFields.push(`<b>文明:</b> ${getCivText(w.civil)}`);
+							}
 
-                            let powerText = '';
-                            if (w.power !== undefined && w.power !== null) {
-                                powerText = formatDisplayValue(w.power);
-                            }
-                            if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
-                                const hyperPower = formatDisplayValue(w.hypermode.power);
-                                powerText = powerText ? `${powerText} / ${hyperPower}` : hyperPower;
-                            }
-                            if (powerText) {
-                                metaFields.push(`<b>攻擊力:</b> ${powerText}`);
-                            }
+							if (w.cost !== undefined && w.cost !== null) {
+								metaFields.push(`<b>費用:</b> ${formatDisplayValue(w.cost)}`);
+							}
 
-                            if (w.race && Array.isArray(w.race) && w.race.length > 0) {
-                                metaFields.push(`<b>種族:</b> ${w.race.join(', ')}`);
-                            }
+							let powerText = '';
+							if (w.power !== undefined && w.power !== null) {
+								powerText = formatDisplayValue(w.power);
+							}
+							if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
+								const hyperPower = formatDisplayValue(w.hypermode.power);
+								powerText = powerText ? `${powerText} / ${hyperPower}` : hyperPower;
+							}
+							if (powerText) {
+								metaFields.push(`<b>攻擊力:</b> ${powerText}`);
+							}
 
-                            if (metaFields.length > 0) {
-                                htmlContent += `<div>${metaFields.join(' | ')}</div>`;
-                            }
+							// 第一行：只印出有資料的欄位
+							if (metaFields.length > 0) {
+								htmlContent += `<div>${metaFields.join(' | ')}</div>`;
+							}
+
+							// 💡 種族獨立一行：若沒種族資料，完全不輸出整行與 Title
+							if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+								htmlContent += `<div style="margin-top: 4px;"><b>種族:</b> ${w.race.join(', ')}</div>`;
+							}
 
                             const sortedRawAbilities = [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length);
 
