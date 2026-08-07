@@ -4689,15 +4689,13 @@
 					imgStackContainer.appendChild(noPicBadge);
 				}
 			} else {
-				const loadingImg = document.createElement('div');
-				loadingImg.className = 'loading-image-box';
-				loadingImg.style.width = boxWidth;
-				loadingImg.style.height = boxHeight;
-				loadingImg.innerHTML = `
-					<div class="card-img-spinner"></div>
-					<div>圖片讀取中...</div>
-				`;
-				imgStackContainer.appendChild(loadingImg);
+				// 💡 當完全沒有圖片資料時，改顯示 [無圖片] 方框而非 [讀取中]
+				const noImgBox = document.createElement('div');
+				noImgBox.className = 'no-image-box';
+				noImgBox.style.width = boxWidth;
+				noImgBox.style.height = boxHeight;
+				noImgBox.innerText = '無圖片';
+				imgStackContainer.appendChild(noImgBox);
 			}
 
 			// 更新堆疊圖層 Class 與當前活動標記 (data-active) 的 Helper 函式
