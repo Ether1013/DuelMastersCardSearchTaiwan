@@ -1473,6 +1473,48 @@
 			box-shadow: 0 0 6px rgba(2, 132, 199, 0.5);
 			font-weight: bold;
 		}
+		
+		/* ================= 台灣大賽報表彈窗樣式 ================= */
+		.report-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 13px;
+		}
+		.report-table th, .report-table td {
+			padding: 8px 10px;
+			border: 1px solid #cbd5e1;
+			text-align: left;
+		}
+		.report-table th {
+			background-color: #f1f5f9;
+			color: #1e293b;
+			font-weight: bold;
+			position: sticky;
+			top: 0;
+			z-index: 10;
+		}
+		.report-table tr:nth-child(even) {
+			background-color: #f8fafc;
+		}
+		.report-table tr:hover {
+			background-color: #f1f5f9;
+		}
+		.report-rank {
+			font-weight: bold;
+			text-align: center !important;
+		}
+		.report-rank-1 { color: #d97706; font-size: 15px; } /* 金 */
+		.report-rank-2 { color: #475569; font-size: 14px; } /* 銀 */
+		.report-rank-3 { color: #b45309; font-size: 14px; } /* 銅 */
+		.report-card-link {
+			color: #0284c7;
+			font-weight: bold;
+			cursor: pointer;
+			text-decoration: underline;
+		}
+		.report-card-link:hover {
+			color: #0369a1;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1794,6 +1836,7 @@
 					<label>歷史：</label>
 					<div class="drawer-btn-group">
 						<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+						<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
 					</div>
 				</div>
 				<!-- 4. 自訂區塊 (按鈕全部放入 group 容器內) -->
@@ -1852,6 +1895,7 @@
 							<label>歷史：</label>
 							<div class="drawer-btn-group">
 								<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+								<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
 							</div>
 						</div>
 						<!-- 4. 自訂區塊 -->
@@ -2049,6 +2093,50 @@
 				<button type="button" class="btn-drawer-action" id="btn-export-mode-3" style="padding: 12px; font-size: 14px; background: #475569;">
 					📝 只要效果 (純文字模式)
 				</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 台灣大賽冠軍卡片排行 Modal -->
+	<div class="modal-overlay" id="championship-report-modal">
+		<div class="modal-card" style="max-width: 720px; max-height: 85vh;">
+			<div class="modal-header">
+				<div class="modal-title">📊 台灣大賽冠軍使用卡排行</div>
+				<div class="modal-close" id="report-modal-close-btn">&times;</div>
+			</div>
+			<!-- 報表切換頁籤 -->
+			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
+				<button type="button" class="report-tab-btn active" id="btn-report-tab-deck" style="flex: 1; padding: 10px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer;">1. 牌組別排行 (Top 30+)</button>
+				<button type="button" class="report-tab-btn" id="btn-report-tab-user" style="flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer;">2. 使用者別排行 (Top 15+)</button>
+			</div>
+			<div class="modal-body" style="padding: 15px; overflow-y: auto;">
+				<!-- 報表 1 內容 -->
+				<div id="report-view-deck" class="report-view-content">
+					<table class="report-table">
+						<thead>
+							<tr>
+								<th style="width: 70px;">名次</th>
+								<th>卡名</th>
+								<th style="width: 120px;">使用牌組數量</th>
+							</tr>
+						</thead>
+						<tbody id="report-tbody-deck"></tbody>
+					</table>
+				</div>
+				<!-- 報表 2 內容 -->
+				<div id="report-view-user" class="report-view-content" style="display: none;">
+					<table class="report-table">
+						<thead>
+							<tr>
+								<th style="width: 70px;">名次</th>
+								<th style="width: 220px;">卡名</th>
+								<th style="width: 90px;">人數</th>
+								<th>使用者清單</th>
+							</tr>
+						</thead>
+						<tbody id="report-tbody-user"></tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -7658,6 +7746,282 @@
 			document.getElementById('deck-input-step').style.display = 'none';
 			document.getElementById('deck-verify-step').style.display = 'block';
 		});
+		
+		// ==========================================
+		// 台灣大賽冠軍使用卡排行 (報表 #1 & #2) 核心邏輯
+		// ==========================================
+
+		// 輔助：使用者名稱模糊比對簡化（去除空格、常見標點符號與小寫化）
+		function normalizeUserName(name) {
+			if (!name) return '';
+			return name
+				.trim()
+				.toLowerCase()
+				.replace(/[\s\t\r\n\u3000]/g, '')
+				.replace(/[・／\/\\\-_~〜!！?？@＠【】]/g, '');
+		}
+
+		// 產生報表 1：牌組別排行
+		function generateDeckReport() {
+			const cardUsageMap = new Map(); // cleanCardName -> { originalName, count }
+
+			Object.keys(rawSetlist).forEach(setCode => {
+				// 1-1. 去商品裡遊歷 NET-001~NET-899
+				const match = setCode.match(/^NET-(\d+)$/);
+				if (!match) return;
+				const num = parseInt(match[1], 10);
+				if (num < 1 || num > 899) return;
+
+				const setObj = rawSetlist[setCode];
+				const cardList = setObj.setcardlist || setObj.cardlist;
+				if (!Array.isArray(cardList)) return;
+
+				// 牌組內出現過的卡片集合（同一牌組不論張數只算 +1）
+				const appearedInThisDeck = new Set();
+
+				cardList.forEach(item => {
+					const rawName = (typeof item === 'object' && item !== null) ? item.name : item;
+					if (!rawName) return;
+					const cleanName = cleanCardName(rawName);
+					if (cleanName) {
+						appearedInThisDeck.add(cleanName);
+					}
+				});
+
+				// 1-2. 只要卡牌在牌組裡被使用到，不論張數一律算 +1
+				appearedInThisDeck.forEach(cleanName => {
+					if (!cardUsageMap.has(cleanName)) {
+						// 從 globalCardData 尋找標準全名，沒有的話用 cleanName
+						const fullCard = globalCardData.find(c => cleanCardName(c.name) === cleanName);
+						cardUsageMap.set(cleanName, {
+							cardName: fullCard ? fullCard.name : cleanName,
+							count: 0
+						});
+					}
+					cardUsageMap.get(cleanName).count += 1;
+				});
+			});
+
+			// 1-3. 依照使用率 (次數) 降冪排序
+			const sortedList = Array.from(cardUsageMap.values()).sort((a, b) => b.count - a.count);
+
+			// 1-4. 取出 1~25 名，26 起如果使用次數跟 25 一樣的話追加列入
+			let cutOffCount = 0;
+			if (sortedList.length >= 25) {
+				cutOffCount = sortedList[29].count;
+			}
+
+			const filteredList = sortedList.filter((item, index) => {
+				if (index < 25) return true;
+				return item.count === cutOffCount;
+			});
+
+			// 1-5. 渲染表單
+			const tbody = document.getElementById('report-tbody-deck');
+			tbody.innerHTML = '';
+
+			let currentRank = 1;
+			filteredList.forEach((item, index) => {
+				// 計算並列名次
+				if (index > 0 && item.count < filteredList[index - 1].count) {
+					currentRank = index + 1;
+				}
+
+				const tr = document.createElement('tr');
+				const rankClass = currentRank <= 3 ? `report-rank-${currentRank}` : '';
+				
+				tr.innerHTML = `
+					<td class="report-rank ${rankClass}">${currentRank}</td>
+					<td><span class="report-card-link" data-name="${item.cardName}">${item.cardName}</span></td>
+					<td style="text-align: center; font-weight: bold;">${item.count}</td>
+				`;
+				tbody.appendChild(tr);
+			});
+		}
+
+		// 產生報表 2：使用者別排行
+		function generateUserReport() {
+			const cardUserMap = new Map(); // cleanCardName -> { cardName, usersMap: Map<normalizedUser, displayUser> }
+
+			Object.keys(rawSetlist).forEach(setCode => {
+				// 2-1. 去商品裡遊歷 NET-001~NET-899
+				const match = setCode.match(/^NET-(\d+)$/);
+				if (!match) return;
+				const num = parseInt(match[1], 10);
+				if (num < 1 || num > 899) return;
+
+				const setObj = rawSetlist[setCode];
+				const setName = setObj.setname || setObj.name || '';
+
+				// 2-2. 從 setname 取得使用者名稱 (規則：＠使用者】)
+				const userMatch = setName.match(/＠(.*?)】/);
+				
+				// 3. 找不到使用者的話不列入報表#2
+				if (!userMatch || !userMatch[1].trim()) return;
+
+				const rawUserName = userMatch[1].trim();
+				const normUser = normalizeUserName(rawUserName);
+
+				const cardList = setObj.setcardlist || setObj.cardlist;
+				if (!Array.isArray(cardList)) return;
+
+				const appearedInThisDeck = new Set();
+				cardList.forEach(item => {
+					const rawName = (typeof item === 'object' && item !== null) ? item.name : item;
+					if (!rawName) return;
+					const cleanName = cleanCardName(rawName);
+					if (cleanName) appearedInThisDeck.add(cleanName);
+				});
+
+				// 2-3. 只要卡牌被某使用者使用到，不論張數次數都一律只算 +1 (以歸戶後的 normUser 記錄)
+				appearedInThisDeck.forEach(cleanName => {
+					if (!cardUserMap.has(cleanName)) {
+						const fullCard = globalCardData.find(c => cleanCardName(c.name) === cleanName);
+						cardUserMap.set(cleanName, {
+							cardName: fullCard ? fullCard.name : cleanName,
+							usersMap: new Map()
+						});
+					}
+					// 記錄使用者（重複歸戶名稱者不重複採計）
+					const target = cardUserMap.get(cleanName);
+					if (!target.usersMap.has(normUser)) {
+						target.usersMap.set(normUser, rawUserName);
+					}
+				});
+			});
+
+			// 2-4. 依照使用者人數降冪排序（使用者名稱清單內部改為 ASC 升冪排序）
+			const sortedList = Array.from(cardUserMap.values()).map(item => ({
+				cardName: item.cardName,
+				userCount: item.usersMap.size,
+				userList: Array.from(item.usersMap.values())
+					.sort((a, b) => a.localeCompare(b, 'zh-TW')) // 💡 新增：使用者名稱升冪排序 (A→Z / 筆劃)
+					.join(', ')
+			})).sort((a, b) => b.userCount - a.userCount);
+			// 2-5. 取出 1~15 名，16 起如果使用次數跟 15 一樣的話追加列入
+			let cutOffCount = 0;
+			if (sortedList.length >= 15) {
+				cutOffCount = sortedList[14].userCount;
+			}
+
+			const filteredList = sortedList.filter((item, index) => {
+				if (index < 15) return true;
+				return item.userCount === cutOffCount;
+			});
+
+			// 2-6. 渲染表單
+			const tbody = document.getElementById('report-tbody-user');
+			tbody.innerHTML = '';
+
+			let currentRank = 1;
+			filteredList.forEach((item, index) => {
+				if (index > 0 && item.userCount < filteredList[index - 1].userCount) {
+					currentRank = index + 1;
+				}
+
+				const tr = document.createElement('tr');
+				const rankClass = currentRank <= 3 ? `report-rank-${currentRank}` : '';
+
+				tr.innerHTML = `
+					<td class="report-rank ${rankClass}">${currentRank}</td>
+					<td><span class="report-card-link" data-name="${item.cardName}">${item.cardName}</span></td>
+					<td style="text-align: center; font-weight: bold;">${item.userCount} 人</td>
+					<td style="color: #475569; font-size: 12px; word-break: break-all;">${item.userList}</td>
+				`;
+				tbody.appendChild(tr);
+			});
+		}
+
+		// 事件綁定：Modal 與頁籤切換
+		document.addEventListener('DOMContentLoaded', () => {
+			const reportModal = document.getElementById('championship-report-modal');
+			const btnTabDeck = document.getElementById('btn-report-tab-deck');
+			const btnTabUser = document.getElementById('btn-report-tab-user');
+			const viewDeck = document.getElementById('report-view-deck');
+			const viewUser = document.getElementById('report-view-user');
+
+			// 開啟報表 Modal
+			document.querySelectorAll('.btn-open-report-action').forEach(btn => {
+				btn.addEventListener('click', () => {
+					if (typeof closeAllDrawers === 'function') closeAllDrawers();
+					generateDeckReport();
+					generateUserReport();
+					reportModal.classList.add('active');
+				});
+			});
+
+			// 關閉 Modal
+			document.getElementById('report-modal-close-btn')?.addEventListener('click', () => {
+				reportModal.classList.remove('active');
+			});
+			reportModal?.addEventListener('click', (e) => {
+				if (e.target === reportModal) reportModal.classList.remove('active');
+			});
+
+			// 切換至頁籤 1 (牌組別)
+			btnTabDeck?.addEventListener('click', () => {
+				btnTabDeck.style.background = '#0284c7';
+				btnTabDeck.style.color = '#ffffff';
+				btnTabUser.style.background = '#e2e8f0';
+				btnTabUser.style.color = '#334155';
+				viewDeck.style.display = 'block';
+				viewUser.style.display = 'none';
+			});
+
+			// 切換至頁籤 2 (使用者別)
+			btnTabUser?.addEventListener('click', () => {
+				btnTabUser.style.background = '#0284c7';
+				btnTabUser.style.color = '#ffffff';
+				btnTabDeck.style.background = '#e2e8f0';
+				btnTabDeck.style.color = '#334155';
+				viewUser.style.display = 'block';
+				viewDeck.style.display = 'none';
+			});
+
+			// 點擊報表卡名連動開啟 Detail Modal（加入動態高 z-index）
+			document.getElementById('championship-report-modal')?.addEventListener('click', (e) => {
+				if (e.target.classList.contains('report-card-link')) {
+					const cardName = e.target.dataset.name;
+					if (!cardName) return;
+
+					const targetCard = globalCardData.find(c => c.name === cardName || cleanCardName(c.name) === cleanCardName(cardName));
+					if (targetCard) {
+						let combinedCiv = 0;
+						if (targetCard.wdata && Array.isArray(targetCard.wdata)) {
+							targetCard.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+						}
+						
+						// 💡 1. 取得卡牌彈窗 DOM，臨時將 z-index 提升至 10000（壓過報表彈窗的 1000）
+						const cardModalEl = document.getElementById('card-modal');
+						if (cardModalEl) {
+							cardModalEl.style.zIndex = '10000';
+						}
+
+						if (typeof openCardModal === 'function') {
+							openCardModal(targetCard, combinedCiv, null);
+						}
+					}
+				}
+			});
+		});
+		
+		// 💡 2. 當卡牌 Modal 關閉時，將 z-index 重置恢復預設值
+		const modalCloseBtn = document.getElementById('modal-close');
+		const cardModalEl = document.getElementById('card-modal');
+		
+		if (modalCloseBtn && cardModalEl) {
+			modalCloseBtn.addEventListener('click', () => {
+				cardModalEl.style.zIndex = '';
+			});
+		}
+		
+		if (cardModalEl) {
+			cardModalEl.addEventListener('click', (e) => {
+				if (e.target === cardModalEl) {
+					cardModalEl.style.zIndex = '';
+				}
+			});
+		}
 		
 		// 💡 檢查並控制 [清除自訂牌組] 按鈕的顯示/隱藏
 		function checkAndToggleClearCustomBtn() {
