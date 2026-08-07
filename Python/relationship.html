@@ -1919,124 +1919,127 @@
     }
 
     document.getElementById('btn-export').addEventListener('click', async () => {
-      if (nodes.length === 0 && freeLabels.length === 0 && emptyBoxes.length === 0) {
-        alert('畫面上沒有任何內容可供匯出！');
-        return;
-      }
+	  if (nodes.length === 0 && freeLabels.length === 0 && emptyBoxes.length === 0) {
+		alert('畫面上沒有任何內容可供匯出！');
+		return;
+	  }
 
-      const preparedNodes = await Promise.all(nodes.map(async (node) => {
-        let finalSrc = node.src;
-        if (finalSrc.startsWith('http://') || finalSrc.startsWith('https://')) {
-          finalSrc = await fetchImageWithProxy(finalSrc);
-        }
-        return { ...node, loadedImgSrc: finalSrc };
-      }));
+	  // 1. 先計算建議比例
+	  const dpr = Math.max(window.devicePixelRatio || 1, 2);
+	  const defaultScale = dpr;
 
-      const dpr = Math.max(window.devicePixelRatio || 1, 2);
-      const defaultScale = dpr;
+	  let maxImgRatio = 0.001;
+	  let minImgRatio = 999.0;
 
-      let maxImgRatio = 0.001;
-      let minImgRatio = 999.0;
+	  nodes.forEach(node => {
+		const natW = node.naturalW || node.w;
+		const ratio = node.w / natW;
+		if (ratio > maxImgRatio) maxImgRatio = ratio;
+		if (ratio < minImgRatio) minImgRatio = ratio;
+	  });
 
-      preparedNodes.forEach(node => {
-        const natW = node.naturalW || node.w;
-        const ratio = node.w / natW;
-        if (ratio > maxImgRatio) maxImgRatio = ratio;
-        if (ratio < minImgRatio) minImgRatio = ratio;
-      });
+	  let computedMinScale = Math.max(0.5, Math.min(defaultScale * (1 / maxImgRatio), defaultScale));
+	  let computedMaxScale = Math.max(defaultScale, Math.min(defaultScale * (1 / minImgRatio), 8.0));
 
-      let computedMinScale = defaultScale * (1 / maxImgRatio);
-      let computedMaxScale = defaultScale * (1 / minImgRatio);
+	  if (computedMinScale === computedMaxScale) {
+		computedMinScale = defaultScale * 0.5;
+		computedMaxScale = defaultScale * 2.0;
+	  }
 
-      computedMinScale = Math.max(0.5, Math.min(computedMinScale, defaultScale));
-      computedMaxScale = Math.max(defaultScale, Math.min(computedMaxScale, 8.0));
+	  // 2. 開啟尺寸選擇 Modal，等待使用者點擊確定
+	  const selectedCanvasScale = await openExportOptionsModal(defaultScale, computedMinScale, computedMaxScale);
+	  if (!selectedCanvasScale) return;
 
-      if (computedMinScale === computedMaxScale) {
-        computedMinScale = defaultScale * 0.5;
-        computedMaxScale = defaultScale * 2.0;
-      }
+	  // 3. 使用者點擊確定後，顯示全螢幕等待遮罩
+	  showLoading(true);
 
-      const selectedCanvasScale = await openExportOptionsModal(defaultScale, computedMinScale, computedMaxScale);
-      if (!selectedCanvasScale) return;
+	  const btnExport = document.getElementById('btn-export');
+	  btnExport.innerText = '高清繪製中...';
+	  btnExport.disabled = true;
 
-      // 💡 點擊確定後顯示全螢幕下載中遮罩
-      showLoading(true);
+	  // 4. 延遲 50ms 讓 DOM 先渲染出 Loading 畫面，再開始『佇列（Queue）Proxy 抓圖』
+	  setTimeout(async () => {
+		try {
+		  const preparedNodes = [];
 
-      const btnExport = document.getElementById('btn-export');
-      btnExport.innerText = '高清繪製中...';
-      btnExport.disabled = true;
+		  // 💡 關鍵：使用 for...of 佇列依序發送 Proxy，避免一次爆擊，每張間隔 80~100ms
+		  for (const node of nodes) {
+			let finalSrc = node.src;
+			if (finalSrc.startsWith('http://') || finalSrc.startsWith('https://')) {
+			  finalSrc = await fetchImageWithProxy(finalSrc);
+			  await new Promise(r => setTimeout(r, 80)); // 輕量緩衝
+			}
+			preparedNodes.push({ ...node, loadedImgSrc: finalSrc });
+		  }
 
-      // 使用 setTimeout 讓瀏覽器有時間渲染全螢幕遮罩 DOM
-      setTimeout(async () => {
-        try {
-          const exportCanvas = document.createElement('canvas');
-          exportCanvas.width = Math.round(window.innerWidth * selectedCanvasScale);
-          exportCanvas.height = Math.round(window.innerHeight * selectedCanvasScale);
-          
-          const ctx = exportCanvas.getContext('2d');
-          ctx.scale(selectedCanvasScale, selectedCanvasScale);
+		  // 5. 開始繪製 Canvas
+		  const exportCanvas = document.createElement('canvas');
+		  exportCanvas.width = Math.round(window.innerWidth * selectedCanvasScale);
+		  exportCanvas.height = Math.round(window.innerHeight * selectedCanvasScale);
+		  
+		  const ctx = exportCanvas.getContext('2d');
+		  ctx.scale(selectedCanvasScale, selectedCanvasScale);
 
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
+		  ctx.imageSmoothingEnabled = true;
+		  ctx.imageSmoothingQuality = 'high';
 
-          ctx.fillStyle = '#2a2a2a';
-          ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+		  ctx.fillStyle = '#2a2a2a';
+		  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-          renderEmptyBoxesToCanvas(ctx);
+		  renderEmptyBoxesToCanvas(ctx);
 
-          const sortedNodes = [...preparedNodes].sort((a, b) => a.zIndex - b.zIndex);
-          for (let node of sortedNodes) {
-            await renderNodeToCanvas(ctx, node);
-          }
+		  const sortedNodes = [...preparedNodes].sort((a, b) => a.zIndex - b.zIndex);
+		  for (let node of sortedNodes) {
+			await renderNodeToCanvas(ctx, node);
+		  }
 
-          renderLinesToCanvas(ctx);
-          renderFreeLabelsToCanvas(ctx);
+		  renderLinesToCanvas(ctx);
+		  renderFreeLabelsToCanvas(ctx);
 
-          exportCanvas.toBlob(async (blob) => {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            const fileName = `tcg_relationship_hd_${timestamp}.png`;
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+		  // 6. 產出圖片與下載/預覽處理
+		  exportCanvas.toBlob(async (blob) => {
+			const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+			const fileName = `tcg_relationship_hd_${timestamp}.png`;
+			const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-            if (isMobile && navigator.canShare) {
-              const file = new File([blob], fileName, { type: 'image/png' });
-              if (navigator.canShare({ files: [file] })) {
-                try {
-                  await navigator.share({ files: [file], title: 'TCG 卡牌關係圖', text: '這是我編輯的高清卡牌關係圖' });
-                  showLoading(false);
-                  return;
-                } catch (shareErr) {
-                  console.log('使用者取消分享或觸發備援');
-                }
-              }
-            }
+			if (isMobile && navigator.canShare) {
+			  const file = new File([blob], fileName, { type: 'image/png' });
+			  if (navigator.canShare({ files: [file] })) {
+				try {
+				  await navigator.share({ files: [file], title: 'TCG 卡牌關係圖', text: '這是我編輯的高清卡牌關係圖' });
+				  showLoading(false);
+				  return;
+				} catch (shareErr) {}
+			  }
+			}
 
-            const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
+			const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
 
-            if (isMobile) {
-              document.getElementById('preview-img').src = dataUrl;
-              document.getElementById('save-preview-modal').classList.add('active');
-            } else {
-              const downloadLink = document.createElement('a');
-              downloadLink.href = dataUrl;
-              downloadLink.download = fileName;
-              document.body.appendChild(downloadLink);
-              downloadLink.click();
-              document.body.removeChild(downloadLink);
-            }
+			if (isMobile) {
+			  document.getElementById('preview-img').src = dataUrl;
+			  document.getElementById('save-preview-modal').classList.add('active');
+			} else {
+			  const downloadLink = document.createElement('a');
+			  downloadLink.href = dataUrl;
+			  downloadLink.download = fileName;
+			  document.body.appendChild(downloadLink);
+			  downloadLink.click();
+			  downloadLink.remove();
+			}
 
-            showLoading(false);
-          }, 'image/png', 1.0);
+			showLoading(false);
+		  }, 'image/png', 1.0);
 
-        } catch (err) {
-          console.error('匯出失敗:', err);
-          alert('匯出關係圖發生錯誤: ' + err.message);
-          showLoading(false);
-        } finally {
-          btnExport.innerText = '儲存至相簿';
-          btnExport.disabled = false;
-        }
-      }, 50);
-    });
+		} catch (err) {
+		  console.error('匯出失敗:', err);
+		  alert('匯出關係圖發生錯誤: ' + err.message);
+		  showLoading(false);
+		} finally {
+		  btnExport.innerText = '儲存至相簿';
+		  btnExport.disabled = false;
+		}
+	  }, 50);
+	});
 
     async function fetchImageWithProxy(originalUrl) {
 	  if (originalUrl.startsWith('data:')) return originalUrl;
