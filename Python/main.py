@@ -442,19 +442,18 @@ async def proxy_image(request: Request, url: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
 
-# 專為關係圖匯出設計的代理 API (開放至每個 IP 1 分鐘最多 20 次)
 @app.get("/api/proxy-relationship-image")
-@limiter.limit("30/minute")
+@limiter.limit("60/minute")
 async def proxy_relationship_image(request: Request, url: str = Query(...)):
     now = time.time()
 
-    # 0. 安全解碼網址 (避免 NameError)
+    # 1. 確保 url 安全解碼
     try:
         target_url = unquote(url).strip()
     except Exception:
         target_url = url.strip()
 
-    # 1. 檢查快取
+    # 2. 檢查快取
     if target_url in proxy_cache:
         item = proxy_cache[target_url]
         if now - item["timestamp"] < CACHE_TTL_SECONDS:
@@ -471,32 +470,23 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
         else:
             del proxy_cache[target_url]
 
-    # 2. 偽裝成真實 Chrome 瀏覽器 Header
-    parsed_uri = urlparse(target_url)
-    domain_origin = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
-
+    # 3. 採用與其他成功 Proxy 應用相同的 Header (乾淨、不亂偽造 Referer)
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        "Accept-Language": "ja,zh-TW;q=0.9,zh;q=0.8,en-US;q=0.7,en;q=0.6",
-        "Referer": domain_origin,
-        "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Dest": "image",
-        "Sec-Fetch-Mode": "no-cors",
-        "Sec-Fetch-Site": "cross-site",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
     }
 
     try:
-        # verify=False 防止憑證問題, follow_redirects=True 防止轉址問題
-        async with httpx.AsyncClient(follow_redirects=True, verify=False) as client:
-            resp = await client.get(target_url, headers=headers, timeout=10.0)
+        # 使用 httpx 連線，允許重導向 (follow_redirects)
+        async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
+            resp = await client.get(target_url, headers=headers)
 
             if resp.status_code != 200:
-                print(f"[Proxy Target Error] Takara Tomy 回傳 HTTP {resp.status_code}")
-                # 轉成 502 讓前端識別是外部網站封鎖
-                raise HTTPException(status_code=502, detail=f"Target returned HTTP {resp.status_code}")
+                print(f"[Proxy Fail] Target returned status: {resp.status_code} for URL: {target_url}")
+                raise HTTPException(
+                    status_code=resp.status_code,
+                    detail=f"Failed to fetch image: HTTP {resp.status_code}"
+                )
 
             content_type = resp.headers.get("content-type", "image/jpeg")
 
@@ -507,7 +497,7 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
             proxy_cache[target_url] = {
                 "content": resp.content,
                 "content_type": content_type,
-                "timestamp": now,
+                "timestamp": now
             }
 
             return Response(
@@ -522,8 +512,9 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[Proxy Exception] Render 連線失敗: {e}")
-        raise HTTPException(status_code=502, detail=f"Render network failed: {str(e)}")
+        # 💡 印出精準的錯誤到 Render 日誌 (Logs)，方便除錯
+        print(f"[Proxy Fatal Error] {target_url} -> Exception: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Proxy internal error: {str(e)}")
 
 @app.get("/api/diary")
 async def get_diary():
