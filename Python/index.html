@@ -7837,6 +7837,51 @@
 		// 台灣大賽冠軍使用卡排行 (報表 #1 & #2) 核心邏輯
 		// ==========================================
 
+		// 自訂字元類別權重：符號(1) > 數字(2) > 英文(3) > 片假名與平假名(4) > 其他/中文(5)
+		function getCharTypePriority(ch) {
+			if (!ch) return 6;
+			
+			// 1. 數字
+			if (/[0-9]/.test(ch)) return 2;
+			// 2. 英文
+			if (/[a-zA-Z]/.test(ch)) return 3;
+			// 3. 平假名與片假名 (包含長音符號 ー 與假名擴充)
+			if (/[\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF]/.test(ch)) return 4;
+			// 4. 符號與標點 (常見 ASCII 標點、全形符號、通用標點等)
+			if (/[\u0020-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E\u3000-\u303F\uFF00-\uFFEF]/.test(ch)) return 1;
+			
+			// 5. 其他 (漢字/中文/其餘字元)
+			return 5;
+		}
+
+		// 根據優先順序進行 ASC (升冪) 比較
+		function customAscCompare(aStr, bStr) {
+			if (!aStr) return -1;
+			if (!bStr) return 1;
+
+			const len = Math.min(aStr.length, bStr.length);
+
+			for (let i = 0; i < len; i++) {
+				const charA = aStr[i];
+				const charB = bStr[i];
+
+				if (charA === charB) continue;
+
+				const prioA = getCharTypePriority(charA);
+				const prioB = getCharTypePriority(charB);
+
+				// 不同字元類型，按權重大小排序
+				if (prioA !== prioB) {
+					return prioA - prioB;
+				}
+
+				// 同字元類型，按字母/碼位自然排序
+				return charA.localeCompare(charB, 'zh-TW', { numeric: true, sensitivity: 'base' });
+			}
+
+			return aStr.length - bStr.length;
+		}
+
 		// 輔助：使用者名稱模糊比對簡化（去除空格、常見標點符號與小寫化）
 		function normalizeUserName(name) {
 			if (!name) return '';
@@ -7888,8 +7933,13 @@
 				});
 			});
 
-			// 1-3. 依照使用率 (次數) 降冪排序
-			const sortedList = Array.from(cardUsageMap.values()).sort((a, b) => b.count - a.count);
+			// 1-3. 依照使用率 (次數) 降冪排序，名次相同時依卡名 (符號 > 數字 > 英文 > 假名 > 其他) ASC 排序
+			const sortedList = Array.from(cardUsageMap.values()).sort((a, b) => {
+				if (b.count !== a.count) {
+					return b.count - a.count;
+				}
+				return customAscCompare(a.cardName, b.cardName);
+			});
 
 			// 1-4. 取出 1~20 名，21 起如果使用次數跟 20 一樣的話追加列入
 			let cutOffCount = 0;
@@ -7976,34 +8026,19 @@
 				});
 			});
 
-			// 輔助函式：判斷字元類型權重 (數字=1 < 英文=2 < 其他文字=3)
-			function getUserNamePriority(str) {
-				if (!str) return 3;
-				const firstChar = str.trim().charAt(0);
-				if (/[0-9]/.test(firstChar)) return 1;       // 1. 數字（最低）
-				if (/[a-zA-Z]/.test(firstChar)) return 2;    // 2. 英文（中）
-				return 3;                                    // 3. 其他文字 / 中文 / 日文（最高）
-			}
-
-			// 2-4. 依照使用者人數降冪排序（使用者名稱清單內部：數字 -> 英文 -> 其他文字 ASC 升冪排序）
+			// 2-4. 依照使用者人數降冪排序（使用者清單與同名次卡名皆套用自訂優先權）
 			const sortedList = Array.from(cardUserMap.values()).map(item => ({
 				cardName: item.cardName,
 				userCount: item.usersMap.size,
 				userList: Array.from(item.usersMap.values())
-					.sort((a, b) => {
-						const priorityA = getUserNamePriority(a);
-						const priorityB = getUserNamePriority(b);
-
-						// 1. 優先依類別權重排序 (數字 < 英文 < 其他文字)
-						if (priorityA !== priorityB) {
-							return priorityA - priorityB;
-						}
-
-						// 2. 同類別內進行自然語系/字串升冪排序 (ASC)
-						return a.localeCompare(b, 'zh-TW', { numeric: true, sensitivity: 'base' });
-					})
+					.sort((a, b) => customAscCompare(a, b))
 					.join(', ')
-			})).sort((a, b) => b.userCount - a.userCount);
+			})).sort((a, b) => {
+				if (b.userCount !== a.userCount) {
+					return b.userCount - a.userCount;
+				}
+				return customAscCompare(a.cardName, b.cardName);
+			});
 			// 2-5. 取出 1~15 名，16 起如果使用次數跟 15 一樣的話追加列入
 			let cutOffCount = 0;
 			if (sortedList.length >= 15) {
