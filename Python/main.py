@@ -444,14 +444,17 @@ async def proxy_image(request: Request, url: str = Query(...)):
 
 # 專為關係圖匯出設計的代理 API (開放至每個 IP 1 分鐘最多 20 次)
 @app.get("/api/proxy-relationship-image")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def proxy_relationship_image(request: Request, url: str = Query(...)):
     now = time.time()
 
-    # 0. 解決 URL 編碼問題：先解碼確保吃到真實的圖片網址
-    target_url = unquote(url).strip()
+    # 0. 安全解碼網址 (避免 NameError)
+    try:
+        target_url = unquote(url).strip()
+    except Exception:
+        target_url = url.strip()
 
-    # 1. 快取比對（使用解碼後的 target_url）
+    # 1. 檢查快取
     if target_url in proxy_cache:
         item = proxy_cache[target_url]
         if now - item["timestamp"] < CACHE_TTL_SECONDS:
@@ -468,34 +471,32 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
         else:
             del proxy_cache[target_url]
 
-    # 2. 抓取遠端圖片
+    # 2. 偽裝成真實 Chrome 瀏覽器 Header
+    parsed_uri = urlparse(target_url)
+    domain_origin = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        "Accept-Language": "ja,zh-TW;q=0.9,zh;q=0.8,en-US;q=0.7,en;q=0.6",
+        "Referer": domain_origin,
+        "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "image",
+        "Sec-Fetch-Mode": "no-cors",
+        "Sec-Fetch-Site": "cross-site",
+    }
+
     try:
-        # 動態抓取圖片目標網域，作為 Referer 欺騙防盜連機制
-        parsed_uri = urlparse(target_url)
-        domain_origin = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
-
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                " (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            ),
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-            "Referer": domain_origin,  # 擬造同源 Referer 突破防盜連
-        }
-
-        # follow_redirects=True 防止圖片網址被 301/302 重導向時抓不到
-        async with httpx.AsyncClient(follow_redirects=True) as client:
+        # verify=False 防止憑證問題, follow_redirects=True 防止轉址問題
+        async with httpx.AsyncClient(follow_redirects=True, verify=False) as client:
             resp = await client.get(target_url, headers=headers, timeout=10.0)
 
             if resp.status_code != 200:
-                print(
-                    f"[Proxy Error] Failed to fetch: {target_url}, Status:"
-                    f" {resp.status_code}"
-                )
-                raise HTTPException(
-                    status_code=resp.status_code,
-                    detail=f"Failed to fetch image: HTTP {resp.status_code}",
-                )
+                print(f"[Proxy Target Error] Takara Tomy 回傳 HTTP {resp.status_code}")
+                # 轉成 502 讓前端識別是外部網站封鎖
+                raise HTTPException(status_code=502, detail=f"Target returned HTTP {resp.status_code}")
 
             content_type = resp.headers.get("content-type", "image/jpeg")
 
@@ -521,8 +522,8 @@ async def proxy_relationship_image(request: Request, url: str = Query(...)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[Proxy Exception] {target_url} -> {e}")
-        raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
+        print(f"[Proxy Exception] Render 連線失敗: {e}")
+        raise HTTPException(status_code=502, detail=f"Render network failed: {str(e)}")
 
 @app.get("/api/diary")
 async def get_diary():

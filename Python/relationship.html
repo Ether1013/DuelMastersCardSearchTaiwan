@@ -2039,19 +2039,27 @@
     });
 
     async function fetchImageWithProxy(originalUrl) {
-      if (originalUrl.startsWith('data:')) return originalUrl;
-      const proxyUrl = `/api/proxy-relationship-image?url=${encodeURIComponent(originalUrl)}`;
+	  if (originalUrl.startsWith('data:')) return originalUrl;
+	  
+	  const proxyUrl = `/api/proxy-relationship-image?url=${encodeURIComponent(originalUrl)}`;
 
-      try {
-        const resProxy = await fetch(proxyUrl);
-        if (!resProxy.ok) throw new Error(`Proxy error ${resProxy.status}`);
-        const blob = await resProxy.blob();
-        return await blobToDataURL(blob);
-      } catch (e) {
-        console.warn('Proxy 失敗:', e);
-        return originalUrl;
-      }
-    }
+	  try {
+		const resProxy = await fetch(proxyUrl);
+		
+		// 💡 關鍵：如果 Render Proxy 失敗 (例如被日本官網擋 IP 丟 500/502)
+		// 不要 throw Error，直接降級回傳原圖片網址！
+		if (!resProxy.ok) {
+		  console.warn(`Render 代理失敗 (HTTP ${resProxy.status})，自動降級使用原網址直連`);
+		  return originalUrl;
+		}
+		
+		const blob = await resProxy.blob();
+		return await blobToDataURL(blob);
+	  } catch (e) {
+		console.warn('Proxy 網路連線異常，降級使用原網址:', e);
+		return originalUrl; // 💡 降級備援
+	  }
+	}
 
     function blobToDataURL(blob) {
       return new Promise((resolve, reject) => {
