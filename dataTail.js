@@ -395,8 +395,8 @@
 	 * @param {boolean} debug - 若傳入 true，則會忽略時間直接觸發跳轉提示（Debug 模式）
 	 */
 	function checkSiteStatus(debug = false) {
-		// 設定關閉時間點：2026/08/09 00:00:00 (相當於 8/8 23:59:59 剛過)
-		const targetDate = new Date("2026-08-09T00:00:00");
+		// 設定關閉時間點：2026/08/08 00:00:00 (相當於 8/7 23:59:59 剛過)
+		const targetDate = new Date("2026-08-08T00:00:00");
 		const currentDate = new Date();
 
 		// 判斷是否超過關閉時間或啟動 Debug 模式
