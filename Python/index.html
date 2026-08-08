@@ -1641,7 +1641,16 @@
 			cursor: pointer;
 			user-select: none;
 			transition: transform 0.15s ease;
+			
+			/* 💡 針對手機版 (iOS) 按鈕與特殊字元偏移的修正 */
+			-webkit-appearance: none;           /* 移除 iOS 預設按鈕外觀 */
+			line-height: normal !important;     /* 覆蓋原本的 line-height: 1，避免擠壓字元 */
+			padding: 0 !important;              /* 確保內邊距歸零 */
+			display: flex !important;
+			justify-content: center !important;
+			align-items: center !important;
 		}
+
 		.btn-toggle-en-name:hover {
 			transform: scale(1.15);
 		}
