@@ -3586,6 +3586,55 @@
             if (!name) return "";
             return name.replace(/（.*?）|\(.*?\)/g, '').trim();
         }
+		
+		// 💡 前端直接查詢 Fandom Wiki API 並開啟精準卡牌頁面
+		async function openFandomWikiDirectly(jpCardName) {
+			if (!jpCardName) return;
+
+			// 清理日文卡名 (去除括號等標點)
+			const cleanName = cleanCardName(jpCardName);
+
+			// 1. 優先檢查前端快取是否有英文名稱
+			if (fetchedEnNameMap && fetchedEnNameMap[jpCardName]) {
+				const enTitle = fetchedEnNameMap[jpCardName].replace(/\s+/g, '_');
+				window.open(`https://duelmasters.fandom.com/wiki/${encodeURIComponent(enTitle)}`, '_blank', 'noopener,noreferrer');
+				return;
+			}
+
+			// 開啟讀取提示 Toast
+			if (typeof showToast === 'function') {
+				showToast('Searching Fandom Wiki...');
+			}
+
+			// 2. 使用 Fandom API 進行前端跨域搜尋 (需帶上 &origin=*)
+			const searchUrl = `https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanName)}&format=json&origin=*`;
+
+			try {
+				const res = await fetch(searchUrl);
+				if (res.ok) {
+					const data = await res.json();
+					const searchResults = data?.query?.search || [];
+
+					if (searchResults.length > 0 && searchResults[0].title) {
+						const enTitle = searchResults[0].title;
+
+						// 寫入前端快取，下次秒開
+						fetchedEnNameMap[jpCardName] = enTitle;
+						localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
+
+						const wikiUrl = `https://duelmasters.fandom.com/wiki/${encodeURIComponent(enTitle.replace(/\s+/g, '_'))}`;
+						window.open(wikiUrl, '_blank', 'noopener,noreferrer');
+						return;
+					}
+				}
+			} catch (err) {
+				console.error("Fandom Wiki API 查詢失敗:", err);
+			}
+
+			// 3. 備援機制：若 API 無結果或網路異常，自動退回使用 Fandom 站內搜尋頁面
+			const fallbackUrl = `https://duelmasters.fandom.com/wiki/Special:Search?query=${encodeURIComponent(cleanName)}`;
+			window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+		}
 
         function getCivBackground(totalCiv) {
             const colors = [];
@@ -5584,6 +5633,7 @@
 			}
 
 			// 外部連結區塊
+			// 外部連結區塊
 			const toCDB = (str) => {
 				if (!str) return "";
 				let tmp = "";
@@ -5615,8 +5665,6 @@
 			// 僅帶入處理後的卡名 (cleanNameOnly)
 			const urlOfficial = `https://www.google.com/search?q=${encodeURIComponent(cleanNameOnly + ' site:https://dm.takaratomy.co.jp/card/')}`;
 			const urlOfficialQA = `https://dm.takaratomy.co.jp/rule/qa/?qa_w=${encodeURIComponent(cleanNameOnly)}`;
-			const urlWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Admwiki.net`;
-			const urlEnWiki = `https://www.google.co.jp/search?q=${encodeURIComponent(cleanHalfName)}+site%3Aduelmasters.fandom.com%2Fwiki%2F`;
 
 			const extBlock = document.createElement('div');
 			extBlock.className = 'ext-links-block';
@@ -5684,8 +5732,76 @@
 			wikiGrid.className = 'ext-btn-grid';
 			wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
 			wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
-			wikiGrid.appendChild(createExtBtn('🌐 日文 Wiki', urlWiki, 'wiki-btn'));
-			wikiGrid.appendChild(createExtBtn('🌐 英文 Wiki', urlEnWiki, 'wiki-btn'));
+
+			// 💡 [日文 Wiki] 直連精準頁面按鈕 (帶《》網址格式)
+			const jpWikiBtn = document.createElement('button');
+			jpWikiBtn.type = 'button';
+			jpWikiBtn.className = 'ext-link-btn wiki-btn';
+			jpWikiBtn.innerHTML = `🌐 日文 Wiki <span style="font-size:9px; opacity:0.7;">↗</span>`;
+			jpWikiBtn.onclick = (e) => {
+				e.preventDefault();
+				if (!rawCardName) return;
+				const cleanName = cleanCardName(rawCardName);
+				// DM Wiki 的標準頁面網址格式為：《卡名》
+				const directWikiUrl = `https://dmwiki.net/《${encodeURIComponent(cleanName)}》`;
+				window.open(directWikiUrl, '_blank', 'noopener,noreferrer');
+			};
+			wikiGrid.appendChild(jpWikiBtn);
+
+			// 💡 [英文 Wiki] 向 Fandom API 查詢正確網頁並開啟
+			const enWikiBtn = document.createElement('button');
+			enWikiBtn.type = 'button';
+			enWikiBtn.className = 'ext-link-btn wiki-btn';
+			enWikiBtn.innerHTML = `🌐 英文 Wiki <span style="font-size:9px; opacity:0.7;">↗</span>`;
+			enWikiBtn.onclick = async (e) => {
+				e.preventDefault();
+				if (!rawCardName) return;
+
+				const targetJpName = rawCardName.trim();
+				const cleanName = cleanCardName(targetJpName);
+
+				// 1. 優先檢查前端快取是否有英文名稱
+				if (fetchedEnNameMap && fetchedEnNameMap[targetJpName]) {
+					const enTitle = fetchedEnNameMap[targetJpName].replace(/\s+/g, '_');
+					window.open(`https://duelmasters.fandom.com/wiki/${encodeURIComponent(enTitle)}`, '_blank', 'noopener,noreferrer');
+					return;
+				}
+
+				if (typeof showToast === 'function') {
+					showToast('Searching Fandom Wiki...');
+				}
+
+				// 2. 前端直接呼叫 Fandom API 搜尋 (需帶上 &origin=*)
+				const searchUrl = `https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanName)}&format=json&origin=*`;
+
+				try {
+					const res = await fetch(searchUrl);
+					if (res.ok) {
+						const data = await res.json();
+						const searchResults = data?.query?.search || [];
+
+						if (searchResults.length > 0 && searchResults[0].title) {
+							const enTitle = searchResults[0].title;
+
+							// 寫入前端快取
+							fetchedEnNameMap[targetJpName] = enTitle;
+							localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
+
+							const wikiUrl = `https://duelmasters.fandom.com/wiki/${encodeURIComponent(enTitle.replace(/\s+/g, '_'))}`;
+							window.open(wikiUrl, '_blank', 'noopener,noreferrer');
+							return;
+						}
+					}
+				} catch (err) {
+					console.error("Fandom Wiki API 查詢失敗:", err);
+				}
+
+				// 3. 備援：若查無結果，開啟 Fandom 站內搜尋頁
+				const fallbackUrl = `https://duelmasters.fandom.com/wiki/Special:Search?query=${encodeURIComponent(cleanName)}`;
+				window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+			};
+			wikiGrid.appendChild(enWikiBtn);
+
 			extBody.appendChild(wikiGrid);
 
 			targetInfoContainer.appendChild(extBlock);
