@@ -382,12 +382,25 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
     if not query_str:
         raise HTTPException(status_code=400, detail="請提供卡牌名稱或ID")
 
+    # 正規化 ID (全形轉半形、轉大寫、剔除非英數字)
     def normalize_id(s: str) -> str:
-        if not s: return ""
-        res = [chr(ord(ch) - 0xfee0) if 0xFF01 <= ord(ch) <= 0xFF5E else ch for ch in str(s)]
+        if not s:
+            return ""
+        res = []
+        for ch in str(s):
+            code = ord(ch)
+            if 0xFF01 <= code <= 0xFF5E:
+                res.append(chr(code - 0xfee0))
+            else:
+                res.append(ch)
+        import re
         return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
 
     clean_query = normalize_id(query_str)
+
+    # ----------------------------------------------------
+    # 邏輯 A：先嘗試以「卡名」精確或暱稱模糊尋找卡牌
+    # ----------------------------------------------------
     matched_card = None
     target_card_name = None
 
@@ -408,9 +421,12 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                     target_card_name = real_name
                     break
 
+    # 🎯 當以卡名找到時：不上鎖任何特定商品 ID
     if matched_card and target_card_name:
+        import copy
         card_to_return = copy.deepcopy(matched_card)
 
+        # 💡 若卡片本尊 pic 為空，向其他商品「借用」圖片
         if not card_to_return.get("pic"):
             borrowed_pic = ""
             for set_info in setlist_cache.values():
@@ -424,7 +440,8 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                         elif isinstance(pics, str) and pics:
                             borrowed_pic = pics
                             break
-                if borrowed_pic: break
+                if borrowed_pic:
+                    break
             if borrowed_pic:
                 card_to_return["pic"] = borrowed_pic
 
@@ -432,45 +449,64 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
         return {
             "found_by": "name",
             "card": processed_card,
-            "setdata": None,
-            "matched_id": "",
+            "setdata": None,        # 不指定任何特定商品
+            "matched_id": "",       # 不載入任何 ID
             "matched_index": 0,
             "set_list": get_card_set_list(target_card_name),
             "races": races_cache,
             "abilities": abilities_cache,
-            "card_types": card_types_cache  # 💡 已補齊
+            "card_types": card_types_cache
         }
 
-    matched_setdata = None
-    target_card_name = None
-    matched_id_val = ""
-    matched_index = 0
+    # ----------------------------------------------------
+    # 邏輯 B：若卡名找不到，才以「ID / 卡號」搜尋特定商品版本
+    # ----------------------------------------------------
+    def search_by_id(target_id_clean: str):
+        """輔助函式：傳入正規化後的 ID 進行 setlist 掃描"""
+        m_setdata = None
+        t_card_name = None
+        m_id_val = ""
+        m_index = 0
 
-    for set_code, set_info in setlist_cache.items():
-        card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
-        name_occurrence_counter = {}
+        for set_code, set_info in setlist_cache.items():
+            card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+            name_occurrence_counter = {}
 
-        for item in card_list:
-            if isinstance(item, dict):
-                item_name = item.get("name", "").strip()
-                current_occ = name_occurrence_counter.get(item_name, 0)
-                
-                if "id" in item:
-                    ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
-                    for idx, single_id in enumerate(ids):
-                        if normalize_id(single_id) == clean_query:
-                            matched_setdata = set_info
-                            target_card_name = item_name
-                            matched_id_val = single_id
-                            matched_index = current_occ + idx
-                            break
-                
-                ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
-                name_occurrence_counter[item_name] = current_occ + ids_count
+            for item in card_list:
+                if isinstance(item, dict):
+                    item_name = item.get("name", "").strip()
+                    current_occ = name_occurrence_counter.get(item_name, 0)
+                    
+                    if "id" in item:
+                        ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                        for idx, single_id in enumerate(ids):
+                            if normalize_id(single_id) == target_id_clean:
+                                m_setdata = set_info
+                                t_card_name = item_name
+                                m_id_val = single_id
+                                m_index = current_occ + idx
+                                break
+                    
+                    ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
+                    name_occurrence_counter[item_name] = current_occ + ids_count
 
-            if matched_setdata: break
-        if matched_setdata: break
+                if m_setdata:
+                    break
+            if m_setdata:
+                break
+        return m_setdata, t_card_name, m_id_val, m_index
 
+    # 第一次比對：使用原始規整後的 clean_query
+    matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query)
+
+    # 💡 第一次找不到，且輸入以 DM (不分大小寫) 開頭時：去處 DM 再找第二次
+    if not matched_setdata and query_str.upper().startswith("DM"):
+        stripped_query = query_str[2:].strip()
+        if stripped_query:
+            clean_query_stripped = normalize_id(stripped_query)
+            matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query_stripped)
+
+    # 如果找到商品與卡牌名稱，打包成果回傳
     if matched_setdata and target_card_name:
         matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == target_card_name), None)
         if not matched_card:
@@ -487,7 +523,7 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
             "set_list": get_card_set_list(target_card_name),
             "races": races_cache,
             "abilities": abilities_cache,
-            "card_types": card_types_cache  # 💡 已補齊
+            "card_types": card_types_cache
         }
 
     raise HTTPException(status_code=404, detail=f"查無卡名或 ID 為 '{p}' 的卡牌資料")
