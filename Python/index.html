@@ -2192,15 +2192,18 @@
             <div class="qa-content-lv1" id="qa-sec-2">
                 
                 <!-- 2-1 -->
-                <button type="button" class="qa-btn-lv2" data-target="qa-sub-2-1">📦 指定商品 / 預組代號</button>
-                <div class="qa-content-lv2" id="qa-sub-2-1">
-                    <!-- 💡 將 select 替換為 text input -->
-                    <input type="text" id="qa-input-set" class="qa-input" placeholder="請輸入商品代碼 (例: DM26-EX3)" style="margin-bottom: 5px;" autocomplete="off">
-                    <div class="action-btn-group">
-                        <button type="button" class="btn-drawer-action" id="qa-btn-set-view" style="background:#ea580c;">📦 開箱看卡表</button>
-                        <button type="button" class="btn-drawer-action" id="qa-btn-set-share" style="background:#16a34a;">🔗 拷貝商品連結</button>
-                    </div>
-                </div>
+				<button type="button" class="qa-btn-lv2" data-target="qa-sub-2-1">📦 指定商品 / 預組代號</button>
+				<div class="qa-content-lv2" id="qa-sub-2-1">
+					<input type="text" id="qa-input-set" class="qa-input" placeholder="請輸入商品代碼 (例: DM26-EX3)" style="margin-bottom: 5px;" autocomplete="off">
+					
+					<!-- 💡 新增：最新兩個商品的快捷按鈕容器 -->
+					<div id="qa-latest-sets-container" style="display: flex; gap: 6px; margin-bottom: 8px;"></div>
+
+					<div class="action-btn-group">
+						<button type="button" class="btn-drawer-action" id="qa-btn-set-view" style="background:#ea580c;">📦 開箱看卡表</button>
+						<button type="button" class="btn-drawer-action" id="qa-btn-set-share" style="background:#16a34a;">🔗 拷貝商品連結</button>
+					</div>
+				</div>
 
                 <!-- 2-2 -->
                 <button type="button" class="qa-btn-lv2" data-target="qa-sub-2-2">📋 我有卡表文字 (貼上與轉換)</button>
@@ -3627,6 +3630,7 @@
 				initDropdownData();
 				initSeriesDropdown(); // 💡 繪製選單時就能一併渲染自訂套牌
 				renderLatestSetButtons();
+				renderQaLatestSetButtons(); // 👈 💡 在這裡補上這行！資料下載完後自動渲染按鈕
 				initStatsSelects(statsData);
 
 			} catch (error) {
@@ -4060,6 +4064,39 @@
 				});
 
 				container.appendChild(btn);
+			});
+		}
+		
+		// 💡【新增/修正】今天我要 > 2-1 指定商品的最新商品快捷按鈕
+		function renderQaLatestSetButtons() {
+			const qaContainer = document.getElementById('qa-latest-sets-container');
+			if (!qaContainer || typeof LATEST_SET_CODES === 'undefined') return;
+
+			qaContainer.innerHTML = '';
+
+			// 取出最新的前兩個商品代碼
+			const top2Codes = LATEST_SET_CODES.slice(0, 2);
+
+			top2Codes.forEach(code => {
+				const setInfo = (typeof rawSetlist !== 'undefined') ? rawSetlist[code] : null;
+				const setname = setInfo ? (setInfo.setname || setInfo.name || code) : code;
+
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'btn-drawer-action';
+				btn.style.cssText = 'flex: 1; padding: 6px 4px; font-size: 12px; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+				btn.innerText = `⚡ ${code}`;
+				btn.title = `${code}【${setname}】`;
+
+				btn.addEventListener('click', () => {
+					const inputSet = document.getElementById('qa-input-set');
+					if (inputSet) {
+						inputSet.value = code;
+						inputSet.focus();
+					}
+				});
+
+				qaContainer.appendChild(btn);
 			});
 		}
 
