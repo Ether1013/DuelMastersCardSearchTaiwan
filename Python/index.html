@@ -645,7 +645,7 @@
         .is-capturing .set-list-block,
         .is-capturing .ext-links-block { display: none !important; }
 		.is-capturing .btn-copy-title { display: none !important; }
-
+		.is-capturing .btn-toggle-en-name { display: none !important; } /* 👈 加上 .btn-toggle-en-name 即可在截圖時自動隱藏 🇪/🇯 Icon */
 
         /* ================= 手機版 (RWD) 統一合併區 ================= */
         @media (max-width: 768px) {
@@ -1601,6 +1601,16 @@
 				padding-bottom: 0px !important;
 			}
 		}
+		/* 英文名切換 Icon 樣式 */
+		.btn-toggle-en-name {
+			font-size: 16px;
+			cursor: pointer;
+			user-select: none;
+			transition: transform 0.15s ease;
+		}
+		.btn-toggle-en-name:hover {
+			transform: scale(1.15);
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2255,6 +2265,9 @@
 			{ bit: 2,  name: '火' },
 			{ bit: 1,  name: '自然' }
 		];
+		// 英文卡名切換專用全域變數
+		let currentCardLang = 'jp';  // 預設 'jp'，可切換為 'en'
+		let fetchedEnNameMap = JSON.parse(localStorage.getItem('dm_en_name_cache') || '{}');
 
 		function getCivText(civilVal) {
 			const civNum = parseInt(civilVal) || 0;
@@ -2489,6 +2502,109 @@
 				tabHeaders[0].click();
 			}
 		});
+		
+		// 💡 更新 Modal 標題（支援 🇪/🇯 英文卡名切換）
+		function updateModalTitleUI(card, modalTitleEl, matchedItem, targetIdIndex = 0) {
+			let idList = [];
+			if (matchedItem && typeof matchedItem === 'object') {
+				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
+				else if (matchedItem.id) idList = [matchedItem.id];
+			}
+
+			const jpName = card.name || '未命名卡牌';
+			const cleanJpName = cleanCardName(jpName);
+			const enName = fetchedEnNameMap[jpName] || null;
+
+			// 依據目前語言狀態決定顯示卡名與 Icon
+			const isEnActive = (currentCardLang === 'en' && enName);
+			const displayName = isEnActive ? enName : jpName;
+			const copyTargetName = isEnActive ? enName : cleanJpName;
+
+			// 僅使用 🇪 / 🇯 Emoji，無多餘文字
+			const toggleIconText = isEnActive ? '🇯' : '🇪';
+			const toggleIconTitle = isEnActive ? '切換為日文卡名' : '切換為英文卡名';
+
+			const selectedId = (idList.length > 0) ? (idList[targetIdIndex] || idList[0]) : '';
+			const displayId = selectedId ? formatDmId(selectedId) : '';
+			const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( ${displayId} )</div>` : '';
+
+			modalTitleEl.innerHTML = `
+				${idTag}
+				<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="雙擊標題複製卡名">
+					<span style="display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+						<span class="main-title-display-text">${displayName}</span>
+						<span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; cursor: pointer;" title="複製卡名">📋</span>
+						<span class="btn-toggle-en-name" style="font-size: 16px; cursor: pointer; user-select: none;" title="${toggleIconTitle}">${toggleIconText}</span>
+					</span>
+				</div>
+			`;
+
+			// 綁定 🇪 / 🇯 Icon 切換事件
+			const btnToggleEn = modalTitleEl.querySelector('.btn-toggle-en-name');
+			if (btnToggleEn) {
+				btnToggleEn.onclick = async (e) => {
+					e.stopPropagation();
+
+					// 若目前是英文 ➔ 切換回日文
+					if (currentCardLang === 'en') {
+						currentCardLang = 'jp';
+						updateModalTitleUI(card, modalTitleEl, matchedItem, targetIdIndex);
+						showToast("已切換為日文卡名");
+						return;
+					}
+
+					// 若已有快取 ➔ 直接切換為英文
+					if (fetchedEnNameMap[jpName]) {
+						currentCardLang = 'en';
+						updateModalTitleUI(card, modalTitleEl, matchedItem, targetIdIndex);
+						showToast("已切換為英文卡名");
+						return;
+					}
+
+					// 無快取 ➔ 開啟 [查詢英文卡名中……] 遮罩向後端 API 請求
+					const loadingOverlay = document.getElementById('loading-overlay');
+					const loadingText = document.getElementById('loading-text');
+					if (loadingOverlay) {
+						if (loadingText) loadingText.innerText = '查詢英文卡名中……';
+						loadingOverlay.style.display = 'flex';
+					}
+
+					try {
+						const res = await fetch(`/api/get_english_name?name=${encodeURIComponent(jpName)}`);
+						if (res.ok) {
+							const data = await res.json();
+							if (data.en_name) {
+								fetchedEnNameMap[jpName] = data.en_name;
+								// 💡 2. 同步寫入瀏覽器 localStorage，讓重整網頁或切換卡牌都能秒開！
+								localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));	
+								currentCardLang = 'en';
+								updateModalTitleUI(card, modalTitleEl, matchedItem, targetIdIndex);
+								showToast("成功取得英文卡名！");
+							}
+						} else {
+							showToast("⚠️ 查無此卡牌的英文名稱");
+						}
+					} catch (err) {
+						console.error("查詢英文名失敗:", err);
+						showToast("⚠️ 網路請求失敗，請稍後再試");
+					} finally {
+						if (loadingOverlay) loadingOverlay.style.display = 'none';
+					}
+				};
+			}
+
+			// 複製卡名事件綁定
+			modalTitleEl.onclick = (e) => {
+				if (e.target.classList.contains('btn-copy-title')) {
+					e.stopPropagation();
+					copyTextToClipboard(copyTargetName);
+				}
+			};
+			modalTitleEl.ondblclick = (e) => {
+				e.preventDefault();
+				copyTextToClipboard(copyTargetName);
+			};
+		}
 
         function updateSummaryText() {
 			syncChipUI();
@@ -2860,7 +2976,7 @@
 				}
 
 				// 並行發送所有請求
-				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData] = await Promise.all([
+				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, enNamesData] = await Promise.all([
 					fetchWithCache('/api/carddata'),
 					fetchWithCache('/api/card_types'),
 					fetchWithCache('/api/races'),
@@ -2869,7 +2985,8 @@
 					fetchWithCache('/api/categoryname'),
 					fetchWithCache('/api/nickname'),
 					fetchWithCache('/api/setlist'),
-					fetchWithCache('/api/diary')
+					fetchWithCache('/api/diary'),
+					fetchWithCache('/api/get_all_english_names')
 				]);
 
 				globalCardData = cardData || [];
@@ -2880,6 +2997,10 @@
 				rawNicknames = nicknameData || [];
 				rawSetlist = setlistData || {};
 				rawDiary = diaryData || [];
+				if (enNamesData && typeof enNamesData === 'object') {
+					fetchedEnNameMap = { ...fetchedEnNameMap, ...enNamesData };
+					localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
+				}
 
 				// 💡 修正 1：資料載入後，先將 localStorage 內的自訂套牌載入 rawSetlist 中
 				loadCustomDecksIntoSetlist();
@@ -5630,135 +5751,163 @@
         }
 
         // --- 卡牌資料彈出視窗 (Modal Window) 控制與渲染邏輯 ---
-        function openCardModal(card, combinedCiv, matchedItem = null, targetIdIndex = 0) {
-			let idList = [];
-			if (matchedItem && typeof matchedItem === 'object') {
-				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
-				else if (matchedItem.id) idList = [matchedItem.id];
-			}
+        function openCardModal(card, combinedCiv, matchedItem = null, targetIdIndex = 0, resetScroll = true) {
+            currentCardLang = 'jp'; // 每次開啟卡牌，預設先顯示日文
 
-			const baseName = cleanCardName(card.name) || card.name || '未命名卡牌';
+            // 呼叫動態標題 UI 渲染 (包含 🇪/🇯 切換與動態複製)
+            updateModalTitleUI(card, modalTitle, matchedItem, targetIdIndex);
 
-			function updateModalTitle() {
-				// 💡 優先使用比對到的 targetIdIndex (例如 id[2])
-				const selectedId = (idList.length > 0) ? (idList[targetIdIndex] || idList[0]) : '';
-				const displayId = selectedId ? formatDmId(selectedId) : '';
-				const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( ${displayId} )</div>` : '';
-				
-				modalTitle.innerHTML = `
-					${idTag}
-					<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="點擊按鈕或雙擊標題複製卡名">
-						<span style="display: inline;">
-							${card.name || '未命名卡牌'}
-							<span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; margin-left: 4px; vertical-align: middle; cursor: pointer;" title="複製卡名">📋</span>
-						</span>
-					</div>
-				`;
-			}
-			updateModalTitle();
+            modalHeader.style.background = getCivBackground(combinedCiv);
+            modalInfoContainer.className = 'modal-info-container detail-info-scroll-panel';
 
-			// 💡 事件處理：支援點擊📋圖示、雙擊標題觸發複製
-			modalTitle.onclick = (e) => {
-				if (e.target.classList.contains('btn-copy-title') || e.target.parentElement?.classList.contains('btn-copy-title')) {
-					e.stopPropagation();
-					copyTextToClipboard(baseName);
-				}
-			};
+            renderDetailContentToContainer(card, combinedCiv, matchedItem, modalImgBox, modalInfoContainer, true);
 
-			modalTitle.ondblclick = (e) => {
-				e.preventDefault();
-				copyTextToClipboard(baseName);
-			};
+            cardModal.classList.add('active');
 
-			modalHeader.style.background = getCivBackground(combinedCiv);
-			modalInfoContainer.className = 'modal-info-container detail-info-scroll-panel';
-
-			renderDetailContentToContainer(card, combinedCiv, matchedItem, modalImgBox, modalInfoContainer, true);
-
-			cardModal.classList.add('active');
-
-			// 💡 將原本的捲軸歸零邏輯用 if (resetScroll) 包起來
-			if (resetScroll) {
-				if (modalInfoContainer) modalInfoContainer.scrollTop = 0;
-				const modalBody = cardModal.querySelector('.modal-body');
-				if (modalBody) modalBody.scrollTop = 0;
-			}
-		}
+            if (resetScroll) {
+                if (modalInfoContainer) modalInfoContainer.scrollTop = 0;
+                const modalBody = cardModal.querySelector('.modal-body');
+                if (modalBody) modalBody.scrollTop = 0;
+            }
+        }
 		
-		// 💡 Page 3 雙欄模式右側渲染函式
-		function renderSplitDetail(card, combinedCiv, matchedItem = null) {
-			const rightPanel = document.getElementById('detail-panel-split');
-			if (!rightPanel) return;
+		// 💡 Page 3 雙欄模式右側渲染函式 (已修復支援 🇪/🇯 英文卡名切換)
+        function renderSplitDetail(card, combinedCiv, matchedItem = null) {
+            const rightPanel = document.getElementById('detail-panel-split');
+            if (!rightPanel) return;
 
-			rightPanel.innerHTML = '';
+            rightPanel.innerHTML = '';
 
-			const headerDiv = document.createElement('div');
-			headerDiv.className = 'modal-header';
-			headerDiv.style.borderRadius = '8px';
-			headerDiv.style.marginBottom = '15px';
-			headerDiv.style.background = getCivBackground(combinedCiv);
-			headerDiv.style.flexShrink = '0';
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'modal-header';
+            headerDiv.style.borderRadius = '8px';
+            headerDiv.style.marginBottom = '15px';
+            headerDiv.style.background = getCivBackground(combinedCiv);
+            headerDiv.style.flexShrink = '0';
 
-			let idList = [];
-			if (matchedItem && typeof matchedItem === 'object') {
-				if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
-				else if (matchedItem.id) idList = [matchedItem.id];
-			}
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'modal-title';
 
-			const titleDiv = document.createElement('div');
-			titleDiv.className = 'modal-title';
-			const rawName = card.name || '未命名卡牌';
-			const baseName = cleanCardName(rawName) || rawName;
-			const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
+            currentCardLang = 'jp'; // 預設顯示日文
 
-			// --- 修改後 ---
-			titleDiv.innerHTML = `
-				${idTag}
-				<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="點擊按鈕或雙擊標題複製卡名">
-					<span style="display: inline;">
-						${rawName}
-						<span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; margin-left: 4px; vertical-align: middle; cursor: pointer;" title="複製卡名">📋</span>
-					</span>
-				</div>
-			`;
+            // 內部動態更新雙欄標題函式
+            function updateSplitTitle() {
+                let idList = [];
+                if (matchedItem && typeof matchedItem === 'object') {
+                    if (Array.isArray(matchedItem.id)) idList = matchedItem.id;
+                    else if (matchedItem.id) idList = [matchedItem.id];
+                }
 
-			// 💡 事件處理：點擊📋或雙擊標題
-			titleDiv.onclick = (e) => {
-				if (e.target.classList.contains('btn-copy-title') || e.target.parentElement?.classList.contains('btn-copy-title')) {
-					e.stopPropagation();
-					copyTextToClipboard(baseName);
-				}
-			};
+                const jpName = card.name || '未命名卡牌';
+                const cleanJpName = cleanCardName(jpName);
+                const enName = fetchedEnNameMap[jpName] || null;
 
-			titleDiv.ondblclick = (e) => {
-				e.preventDefault();
-				copyTextToClipboard(baseName);
-			};
+                const isEnActive = (currentCardLang === 'en' && enName);
+                const displayName = isEnActive ? enName : jpName;
+                const copyTargetName = isEnActive ? enName : cleanJpName;
 
-			headerDiv.appendChild(titleDiv);
-			rightPanel.appendChild(headerDiv);
+                const toggleIconText = isEnActive ? '🇯' : '🇪';
+                const toggleIconTitle = isEnActive ? '切換為日文卡名' : '切換為英文卡名';
 
-			const mainContent = document.createElement('div');
-			mainContent.className = 'modal-main-content';
-			mainContent.style.flex = '1';
-			mainContent.style.overflow = 'hidden';
+                const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
 
-			const imgBox = document.createElement('div');
-			imgBox.className = 'modal-img-container';
-			imgBox.style.flexShrink = '0';
+                titleDiv.innerHTML = `
+                    ${idTag}
+                    <div class="card-title-text" style="cursor: pointer; display: inline-block;" title="雙擊標題複製卡名">
+                        <span style="display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+                            <span class="main-title-display-text">${displayName}</span>
+                            <span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; cursor: pointer;" title="複製卡名">📋</span>
+                            <span class="btn-toggle-en-name" style="font-size: 16px; cursor: pointer; user-select: none;" title="${toggleIconTitle}">${toggleIconText}</span>
+                        </span>
+                    </div>
+                `;
 
-			const infoContainer = document.createElement('div');
-			infoContainer.className = 'modal-info-container detail-info-scroll-panel';
+                // 綁定 🇪 / 🇯 切換事件
+                const btnToggleEn = titleDiv.querySelector('.btn-toggle-en-name');
+                if (btnToggleEn) {
+                    btnToggleEn.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (currentCardLang === 'en') {
+                            currentCardLang = 'jp';
+                            updateSplitTitle();
+                            showToast("已切換為日文卡名");
+                            return;
+                        }
+                        if (fetchedEnNameMap[jpName]) {
+                            currentCardLang = 'en';
+                            updateSplitTitle();
+                            showToast("已切換為英文卡名");
+                            return;
+                        }
+                        const loadingOverlay = document.getElementById('loading-overlay');
+                        const loadingText = document.getElementById('loading-text');
+                        if (loadingOverlay) {
+                            if (loadingText) loadingText.innerText = '查詢英文卡名中……';
+                            loadingOverlay.style.display = 'flex';
+                        }
+                        try {
+                            const res = await fetch(`/api/get_english_name?name=${encodeURIComponent(jpName)}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data.en_name) {
+                                    fetchedEnNameMap[jpName] = data.en_name;
+                                    localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
+                                    currentCardLang = 'en';
+                                    updateSplitTitle();
+                                    showToast("成功取得英文卡名！");
+                                }
+                            } else {
+                                showToast("⚠️ 查無此卡牌的英文名稱");
+                            }
+                        } catch (err) {
+                            console.error("查詢英文名失敗:", err);
+                            showToast("⚠️ 網路請求失敗，請稍後再試");
+                        } finally {
+                            if (loadingOverlay) loadingOverlay.style.display = 'none';
+                        }
+                    };
+                }
 
-			mainContent.appendChild(imgBox);
-			mainContent.appendChild(infoContainer);
-			rightPanel.appendChild(mainContent);
+                // 複製事件綁定（動態支援英文/日文）
+                titleDiv.onclick = (e) => {
+                    if (e.target.classList.contains('btn-copy-title') || e.target.parentElement?.classList.contains('btn-copy-title')) {
+                        e.stopPropagation();
+                        copyTextToClipboard(copyTargetName);
+                    }
+                };
 
-			renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
-			
-			// 💡 新增：點擊左側新卡片時，強制將右側 Detail 捲軸歸零
-			if (infoContainer) infoContainer.scrollTop = 0;
-		}
+                titleDiv.ondblclick = (e) => {
+                    e.preventDefault();
+                    copyTextToClipboard(copyTargetName);
+                };
+            }
+
+            // 初次繪製標題
+            updateSplitTitle();
+
+            headerDiv.appendChild(titleDiv);
+            rightPanel.appendChild(headerDiv);
+
+            const mainContent = document.createElement('div');
+            mainContent.className = 'modal-main-content';
+            mainContent.style.flex = '1';
+            mainContent.style.overflow = 'hidden';
+
+            const imgBox = document.createElement('div');
+            imgBox.className = 'modal-img-container';
+            imgBox.style.flexShrink = '0';
+
+            const infoContainer = document.createElement('div');
+            infoContainer.className = 'modal-info-container detail-info-scroll-panel';
+
+            mainContent.appendChild(imgBox);
+            mainContent.appendChild(infoContainer);
+            rightPanel.appendChild(mainContent);
+
+            renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
+
+            if (infoContainer) infoContainer.scrollTop = 0;
+        }
 		
 		// 💡 將 DataURL 轉換為標準 Blob 檔案
 		function dataURLtoBlob(dataurl) {
