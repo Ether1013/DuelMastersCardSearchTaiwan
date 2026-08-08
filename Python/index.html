@@ -4858,26 +4858,27 @@
 			}
 
 			// 彙整所有可用的圖片網址與備援標記判定
-			// 彙整所有可用的圖片網址與備援標記判定
 			let validPicUrls = picList.filter(p => p && p.trim() !== '');
 			let isFallbackPic = false; // 標記是否觸發指定商品的圖片備援
 
 			const filterConfig = typeof getFilterConfigFromUI === 'function' ? getFilterConfigFromUI() : {};
 			const hasSelectedSet = Boolean(filterConfig.seriesSmall || filterConfig.seriesBig);
 
-			// 💡 判斷當前商品的 setCode 是否不是 D 開頭且不是 O 開頭 (例如 NET 大賽牌組)
+			// 💡 判斷當前商品代碼：是否為 NET 系列或非 D/O 官方商品
 			const currentSetCode = filterConfig.seriesSmall || filterConfig.seriesBig || (matchedItem ? (matchedItem.setcode || matchedItem.code) : '');
 			const upperSetCode = String(currentSetCode).trim().toUpperCase();
-			const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
 
-			// 💡 1. 只有在「有選擇標準 D/O 商品」且「該商品沒設定 pic」的情況下，才標記為 isFallbackPic
+			// 💡 關鍵修正：只要包含 NET 或不以 D/O 開頭，就認定為非標準商品（不套用濾鏡）
+			const isNonStandardSet = upperSetCode.includes('NET') || (upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O'));
+
+			// 1. 只有在「選擇了標準 D/O 官方商品」且「該商品本身沒設定 pic」時，才觸發 isFallbackPic 濾鏡
 			if (hasSelectedSet && !isNonStandardSet && validPicUrls.length === 0) {
 				isFallbackPic = true;
 			}
 
-			// 💡 2. 只要當前沒有抓到圖片（無論是否有選商品），一律進行全域圖片搜尋補全
+			// 2. 當當前商品版本無圖片時（包含 NET 系列），開始尋找預設/全域圖片
 			if (validPicUrls.length === 0) {
-				// A. 優先嘗試讀取卡牌的基本（原生）預設圖片
+				// A. 優先使用卡牌本身的預設圖片 (card.pic)
 				if (card.pic && card.pic.trim() !== '') {
 					validPicUrls = [card.pic];
 				}
@@ -4897,15 +4898,16 @@
 									if (Array.isArray(foundItem.pic)) validPicUrls = foundItem.pic.filter(p => p && p.trim() !== '');
 									else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') validPicUrls = [foundItem.pic];
 									
-									if (validPicUrls.length > 0) {
-										// 💡 注意：沒指定商品時 (hasSelectedSet === false)，不將 isFallbackPic 設為 true
-										// 這樣就不會觸發右上角 (No Pic) 標籤的顯示
-										break;
-									}
+									if (validPicUrls.length > 0) break;
 								}
 							}
 						}
 					}
+				}
+
+				// 💡 關鍵保險：如果最後是 NET 系列或是非 D/O 商品，強行關閉 No Pic 濾鏡！
+				if (isNonStandardSet) {
+					isFallbackPic = false;
 				}
 			}
 
