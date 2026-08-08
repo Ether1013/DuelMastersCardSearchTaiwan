@@ -5,6 +5,7 @@ import asyncio
 import base64
 import re
 import time
+import copy
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Dict, Any
@@ -32,16 +33,16 @@ LINE_USER_ID = os.getenv("LINE_USER_ID", "你的_LINE_USER_ID")
 
 # GitHub 自動批次 Commit 設定
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
-GITHUB_REPO = os.getenv("GITHUB_REPO", "").strip()  # 範例："ether1013/DuelMastersCardSearchTaiwan"
+GITHUB_REPO = os.getenv("GITHUB_REPO", "").strip()
 
-# --- 1. Rate Limiter 設定 ---
+# --- Rate Limiter 設定 ---
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # 快取配置
-MAX_CACHE_SIZE = 200          # 最多快取 200 張卡圖 (約 30~50MB RAM)
-CACHE_TTL_SECONDS = 7 * 86400 # 圖片快取有效期限：7 天 (秒)
+MAX_CACHE_SIZE = 200          # 最多快取 200 張卡圖
+CACHE_TTL_SECONDS = 7 * 86400 # 圖片快取有效期限：7 天
 
 proxy_cache = OrderedDict()
 SERVER_INSTANCE_ID = str(uuid.uuid4())
@@ -51,12 +52,11 @@ carddata_cache = []
 card_types_cache = []
 races_cache = []
 abilities_cache = []
-categoryname_cache = []  # 分類名稱快取
-nickname_cache = []      # 暱稱快取
-diary_cache = []         # 日記快取
-setlist_cache = {}       # 系列清單合併快取
+categoryname_cache = []
+nickname_cache = []
+diary_cache = []
+setlist_cache = {}
 
-# 英文卡名快取全域變數與同步鎖 ( Lock 避免並發寫檔問題 )
 ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
 has_unsynced_en_names = False
@@ -75,7 +75,6 @@ class ExportDeckRequest(BaseModel):
 card_stats_cache = {"powers": [], "costs": []}
 
 def load_json_file(filename: str):
-    """輔助函式：從伺服器本機讀取 JSON 檔案"""
     file_path = BASE_DIR / filename
     if file_path.exists():
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -85,52 +84,42 @@ def load_json_file(filename: str):
         return []
 
 def load_english_names():
-    """啟動時讀取 englishname.json"""
     global english_name_cache
     if ENGLISH_NAME_FILE.exists():
         try:
             with open(ENGLISH_NAME_FILE, 'r', encoding='utf-8') as f:
                 english_name_cache = json.load(f)
-                print(f"-> englishname.json 載入完成，共計 {len(english_name_cache)} 筆對照。")
         except Exception as e:
-            print(f"錯誤: 讀取 englishname.json 失敗: {e}")
             english_name_cache = {}
     else:
         english_name_cache = {}
         save_english_names_sync()
 
 def save_english_names_sync():
-    """同步版本的原子寫檔，僅供啟動初始化使用"""
     tmp_file = ENGLISH_NAME_FILE.with_suffix(".tmp")
     try:
         with open(tmp_file, 'w', encoding='utf-8') as f:
             json.dump(english_name_cache, f, ensure_ascii=False, indent=2)
         os.replace(tmp_file, ENGLISH_NAME_FILE)
     except Exception as e:
-        print(f"寫入 englishname.json 失敗: {e}")
         if tmp_file.exists():
             os.remove(tmp_file)
 
 async def save_english_names_async():
-    """非同步 Atomic Write 安全寫入檔案，確保多執行緒/任務不會寫入髒值"""
     async with file_write_lock:
         tmp_file = ENGLISH_NAME_FILE.with_suffix(".tmp")
         try:
-            # 於獨立 ThreadPool 執行阻塞型 I/O 操作
             def _write():
                 with open(tmp_file, 'w', encoding='utf-8') as f:
                     json.dump(english_name_cache, f, ensure_ascii=False, indent=2)
                 os.replace(tmp_file, ENGLISH_NAME_FILE)
             await asyncio.to_thread(_write)
         except Exception as e:
-            print(f"非同步寫入 englishname.json 失敗: {e}")
             if tmp_file.exists():
                 os.remove(tmp_file)
 
 def push_english_names_to_github():
-    """自動將 englishname.json 批次 Commit 並 Push 至 GitHub Repo"""
     if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
-        print("[GitHub Sync] 未設定正確的 GITHUB_TOKEN 或 GITHUB_REPO，跳過 Commit")
         return
 
     file_path = "englishname.json"
@@ -144,15 +133,12 @@ def push_english_names_to_github():
     try:
         with httpx.Client() as client:
             get_resp = client.get(url, headers=headers, timeout=10.0)
-            sha = ""
-            if get_resp.status_code == 200:
-                sha = get_resp.json().get("sha", "")
+            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
 
             with open(ENGLISH_NAME_FILE, 'r', encoding='utf-8') as f:
                 content_str = f.read()
 
             content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
-
             payload = {
                 "message": "auto: batch update englishname.json [skip ci]",
                 "content": content_base64,
@@ -161,29 +147,20 @@ def push_english_names_to_github():
             if sha:
                 payload["sha"] = sha
 
-            put_resp = client.put(url, headers=headers, json=payload, timeout=10.0)
-            if put_resp.status_code in [200, 201]:
-                print(f"[GitHub Sync 成功] 新增的英文卡名已批次 Commit 至 Repo: {GITHUB_REPO}")
-            else:
-                print(f"[GitHub Sync 失敗] 狀態碼 {put_resp.status_code}: {put_resp.text}")
-
+            client.put(url, headers=headers, json=payload, timeout=10.0)
     except Exception as e:
         print(f"[GitHub Sync 網路錯誤]: {e}")
 
 def load_all_setlists():
-    """載入 setlist 資料夾下所有 _setlist_xxxxx.json"""
     merged_setlist = {}
     setlist_dir = BASE_DIR / "setlist"
-    
     if not setlist_dir.exists() or not setlist_dir.is_dir():
-        print(f"警告: 找不到資料夾 {setlist_dir}，將回傳空物件。")
         return merged_setlist
 
     for file_path in setlist_dir.glob("_setlist_*.json"):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                
                 if isinstance(data, dict) and ("setcode" in data or "code" in data or "id" in data):
                     set_code = data.get("setcode") or data.get("code") or data.get("id")
                     if set_code:
@@ -196,19 +173,14 @@ def load_all_setlists():
                             set_code = item.get("setcode") or item.get("code") or item.get("id")
                             if set_code:
                                 merged_setlist[set_code] = item
-
-            print(f"  └─ 已成功載入系列檔: {file_path.name}")
         except Exception as e:
             print(f"錯誤: 讀取系列檔案 {file_path.name} 失敗: {e}")
 
     return merged_setlist
 
-# --- 伺服器啟動時執行 ---
 @app.on_event("startup")
 def load_and_process_caches():
     global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, diary_cache
-    
-    print("正在從本機 JSON 檔案載入所有資料至伺服器記憶體緩存...")
     try:
         carddata_cache = load_json_file("carddata.json")
         card_types_cache = load_json_file("card_type.json")
@@ -217,44 +189,34 @@ def load_and_process_caches():
         categoryname_cache = load_json_file("categoryname.json")
         nickname_cache = load_json_file("nickname.json")
         diary_cache = load_json_file("diary.json")
-
         load_english_names()
-
         setlist_cache = load_all_setlists()
 
-        powers = set()
-        costs = set()
+        powers, costs = set(), set()
         for card_dict in carddata_cache:
             wdata_list = card_dict.get("wdata", [])
             if isinstance(wdata_list, list):
                 for w in wdata_list:
                     if isinstance(w, dict):
-                        p = w.get("power")
+                        p, c = w.get("power"), w.get("cost")
                         if p is not None:
                             try: powers.add(int(p))
                             except ValueError: pass
-                        c = w.get("cost")
                         if c is not None:
                             try: costs.add(int(c))
                             except ValueError: pass
                             
-        card_stats_cache = {
-            "powers": sorted(list(powers)),
-            "costs": sorted(list(costs))
-        }
+        card_stats_cache = {"powers": sorted(list(powers)), "costs": sorted(list(costs))}
 
         async def periodic_github_sync_loop():
             global has_unsynced_en_names
             while True:
-                await asyncio.sleep(10800)  # 每 3 小時檢查一次
+                await asyncio.sleep(10800)
                 if has_unsynced_en_names:
-                    print("[GitHub Sync] 偵測到有未同步的新英文卡名，發起批次 Commit...")
                     push_english_names_to_github()
                     has_unsynced_en_names = False
 
         asyncio.create_task(periodic_github_sync_loop())
-
-        print("所有緩存與預處理載入完畢！")
     except Exception as e:
         print(f"載入緩存失敗: {e}")
 
@@ -265,62 +227,43 @@ class ReportModel(BaseModel):
     error_desc: str = ""
 
 def send_line_notification(report: ReportModel, base_url: str = ""):
-    token = LINE_ACCESS_TOKEN.strip() if LINE_ACCESS_TOKEN else ""
-    user_id = LINE_USER_ID.strip() if LINE_USER_ID else ""
-
+    token, user_id = LINE_ACCESS_TOKEN.strip(), LINE_USER_ID.strip()
     if not token or not user_id or "你的_" in token:
         return
 
     url = "https://api.line.me/v2/bot/message/push"
-    headers = {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": f"Bearer {token}"
-    }
-
+    headers = {"Content-Type": "application/json; charset=utf-8", "Authorization": f"Bearer {token}"}
     raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
     target_param = raw_id if raw_id else report.card_name.strip()
     card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
 
     msg_text = (
-        f"🚨 【卡牌翻譯錯誤回報】\n\n"
-        f"📌 卡名：{report.card_name}\n"
-        f"🆔 卡號：{report.card_id or '未提供'}\n"
-        f"🔗 連結：\n{card_link}\n\n"
-        f"👤 回報者：{report.reporter_name}\n"
-        f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}"
+        f"🚨 【卡牌翻譯錯誤回報】\n\n📌 卡名：{report.card_name}\n🆔 卡號：{report.card_id or '未提供'}\n"
+        f"🔗 連結：\n{card_link}\n\n👤 回報者：{report.reporter_name}\n📝 錯誤內容：{report.error_desc or '（無簡答內容）'}"
     )
-
     payload = {"to": user_id, "messages": [{"type": "text", "text": msg_text}]}
-
     try:
         with httpx.Client() as client:
             client.post(url, headers=headers, json=payload, timeout=5.0)
     except Exception as e:
         print(f"[LINE Push 網路錯誤]: {e}")
 
-# --- 核心不同步查詢英文名 logic ---
 async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
-    """抽出的核心邏輯：查詢單張日文卡牌的英文名（含快取與爬蟲）"""
     global has_unsynced_en_names
-
     jp_name_clean = jp_name.strip()
     if not jp_name_clean:
         return jp_name
 
-    # 1. 優先命中快取
     if jp_name_clean in english_name_cache:
         return english_name_cache[jp_name_clean]
 
-    # 2. 清理卡名並打 Fandom API
     clean_search_name = re.sub(r'（.*?）|\(.*?\)|《.*?》|＜.*?＞', '', jp_name_clean).strip() or jp_name_clean
     search_url = f"https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch={quote(clean_search_name)}&format=json"
 
     try:
-        resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0"})
         if resp.status_code == 200:
-            data = resp.json()
-            search_results = data.get("query", {}).get("search", [])
-
+            search_results = resp.json().get("query", {}).get("search", [])
             if search_results:
                 en_title = search_results[0].get("title", "").strip()
                 if en_title:
@@ -331,57 +274,224 @@ async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient
     except Exception as e:
         print(f"[Fandom Fetch Error] {jp_name_clean} -> {e}")
 
-    # 若查無英文名，降級回傳原日文名
     return jp_name_clean
 
+# ----------------------------------------------------
+# 工具函式區（必須放在 API 路由宣告的「上方」）
+# ----------------------------------------------------
+def format_card_wdata_types(card_dict):
+    if not card_dict or "wdata" not in card_dict or not isinstance(card_dict["wdata"], list):
+        return card_dict
 
-# --- 路由區 ---
+    card_copy = copy.deepcopy(card_dict)
+    cardtype_map = {}
+    if isinstance(card_types_cache, list):
+        for item in card_types_cache:
+            if isinstance(item, dict):
+                chi_val = item.get("text") or item.get("chi") or item.get("cht") or item.get("jap")
+                if not chi_val: continue
+                for k in ["value", "jap", "id", "key"]:
+                    val = item.get(k)
+                    if val is not None:
+                        cardtype_map[str(val).strip().upper()] = chi_val
 
+    for w in card_copy["wdata"]:
+        if isinstance(w, dict):
+            raw_val = w.get("type") if w.get("type") is not None else (w.get("cardtype") if w.get("cardtype") is not None else w.get("card_type"))
+            target_key = raw_val[0] if isinstance(raw_val, list) and len(raw_val) > 0 else raw_val
+
+            if target_key is not None and str(target_key).strip() != "":
+                clean_key = str(target_key).strip().upper()
+                w["cardtype_chi"] = cardtype_map.get(clean_key, target_key)
+
+    return card_copy
+
+def get_card_set_list(card_name: str):
+    tw_sets, non_tw_sets, net_sets = [], [], []
+    clean_target = card_name.strip()
+
+    if isinstance(setlist_cache, dict):
+        for key, set_obj in setlist_cache.items():
+            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+            if isinstance(card_list, list):
+                has_card = any(
+                    (i.get("name", "").strip() == clean_target if isinstance(i, dict) else str(i).strip() == clean_target)
+                    for i in card_list
+                )
+                if has_card:
+                    setcode = set_obj.get("setcode") or set_obj.get("code") or set_obj.get("id") or key
+                    setname = set_obj.get("setname") or set_obj.get("name") or setcode
+                    is_tw = set_obj.get("istw") == True
+                    upper_code = str(setcode).strip().upper()
+                    is_net = not upper_code.startswith('D') and not upper_code.startswith('O')
+
+                    display_str = f"{setcode}{setname}"
+                    if is_net:
+                        net_sets.append(display_str)
+                    elif is_tw:
+                        tw_sets.append(display_str)
+                    else:
+                        non_tw_sets.append(display_str)
+
+    return {"tw": tw_sets, "non_tw": non_tw_sets, "net": net_sets}
+
+
+# ----------------------------------------------------
+# 路由區
+# ----------------------------------------------------
 @app.get("/")
-async def serve_index():
-    return FileResponse("index.html")
+async def serve_index(): return FileResponse("index.html")
 
 @app.get("/pop.html")
-async def get_pop_page():
-    return FileResponse("pop.html")
+async def get_pop_page(): return FileResponse("pop.html")
 
 @app.get("/card.html")
-async def get_card_page():
-    return FileResponse("card.html")
+async def get_card_page(): return FileResponse("card.html")
+
+@app.get("/relationship.html")
+async def get_relationship_page(): return FileResponse("relationship.html")
 
 @app.get("/api/server_id")
-async def get_server_id():
-    return {"server_id": SERVER_INSTANCE_ID}
+async def get_server_id(): return {"server_id": SERVER_INSTANCE_ID}
 
 @app.get("/api/card_types")
-async def get_card_types():
-    return card_types_cache
+async def get_card_types(): return card_types_cache
 
 @app.get("/api/races")
-async def get_races():
-    return races_cache
+async def get_races(): return races_cache
 
 @app.get("/api/abilities")
-async def get_abilities():
-    return abilities_cache
+async def get_abilities(): return abilities_cache
 
 @app.get("/api/carddata")
-async def get_carddata():
-    return carddata_cache
+async def get_carddata(): return carddata_cache
 
 @app.get("/api/categoryname")
-async def get_categoryname():
-    return categoryname_cache
+async def get_categoryname(): return categoryname_cache
 
 @app.get("/api/nickname")
-async def get_nickname():
-    return nickname_cache
+async def get_nickname(): return nickname_cache
 
 @app.get("/api/setlist")
-async def get_setlist():
-    return setlist_cache
+async def get_setlist(): return setlist_cache
 
-# 取得單張英文卡名 API (使用抽出後的核心)
+@app.get("/api/card_detail")
+@limiter.limit("6/minute")
+async def get_card_detail(request: Request, p: str = Query(..., description="卡牌名稱或ID/卡號")):
+    query_str = p.strip()
+    if not query_str:
+        raise HTTPException(status_code=400, detail="請提供卡牌名稱或ID")
+
+    def normalize_id(s: str) -> str:
+        if not s: return ""
+        res = [chr(ord(ch) - 0xfee0) if 0xFF01 <= ord(ch) <= 0xFF5E else ch for ch in str(s)]
+        return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
+
+    clean_query = normalize_id(query_str)
+    matched_card = None
+    target_card_name = None
+
+    for card in carddata_cache:
+        c_name = card.get("name", "").strip()
+        if c_name == query_str:
+            matched_card = card
+            target_card_name = c_name
+            break
+
+    if not matched_card and isinstance(nickname_cache, list):
+        for nick_item in nickname_cache:
+            nicknames = nick_item.get("nicknames", [])
+            if query_str in nicknames:
+                real_name = nick_item.get("realname")
+                matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == real_name), None)
+                if matched_card:
+                    target_card_name = real_name
+                    break
+
+    if matched_card and target_card_name:
+        card_to_return = copy.deepcopy(matched_card)
+
+        if not card_to_return.get("pic"):
+            borrowed_pic = ""
+            for set_info in setlist_cache.values():
+                card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+                for item in card_list:
+                    if isinstance(item, dict) and item.get("name", "").strip() == target_card_name:
+                        pics = item.get("pic")
+                        if isinstance(pics, list) and len(pics) > 0 and pics[0]:
+                            borrowed_pic = pics[0]
+                            break
+                        elif isinstance(pics, str) and pics:
+                            borrowed_pic = pics
+                            break
+                if borrowed_pic: break
+            if borrowed_pic:
+                card_to_return["pic"] = borrowed_pic
+
+        processed_card = format_card_wdata_types(card_to_return)
+        return {
+            "found_by": "name",
+            "card": processed_card,
+            "setdata": None,
+            "matched_id": "",
+            "matched_index": 0,
+            "set_list": get_card_set_list(target_card_name),
+            "races": races_cache,
+            "abilities": abilities_cache,
+            "card_types": card_types_cache  # 💡 已補齊
+        }
+
+    matched_setdata = None
+    target_card_name = None
+    matched_id_val = ""
+    matched_index = 0
+
+    for set_code, set_info in setlist_cache.items():
+        card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+        name_occurrence_counter = {}
+
+        for item in card_list:
+            if isinstance(item, dict):
+                item_name = item.get("name", "").strip()
+                current_occ = name_occurrence_counter.get(item_name, 0)
+                
+                if "id" in item:
+                    ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                    for idx, single_id in enumerate(ids):
+                        if normalize_id(single_id) == clean_query:
+                            matched_setdata = set_info
+                            target_card_name = item_name
+                            matched_id_val = single_id
+                            matched_index = current_occ + idx
+                            break
+                
+                ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
+                name_occurrence_counter[item_name] = current_occ + ids_count
+
+            if matched_setdata: break
+        if matched_setdata: break
+
+    if matched_setdata and target_card_name:
+        matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == target_card_name), None)
+        if not matched_card:
+            matched_card = {"name": target_card_name, "wdata": []}
+
+        processed_card = format_card_wdata_types(matched_card)
+
+        return {
+            "found_by": "id",
+            "card": processed_card,
+            "setdata": matched_setdata,
+            "matched_id": matched_id_val,
+            "matched_index": matched_index,
+            "set_list": get_card_set_list(target_card_name),
+            "races": races_cache,
+            "abilities": abilities_cache,
+            "card_types": card_types_cache  # 💡 已補齊
+        }
+
+    raise HTTPException(status_code=404, detail=f"查無卡名或 ID 為 '{p}' 的卡牌資料")
+
 @app.get("/api/get_english_name")
 @limiter.limit("20/minute")
 async def get_english_name(request: Request, name: str = Query(..., description="日文卡名")):
@@ -394,35 +504,22 @@ async def get_english_name(request: Request, name: str = Query(..., description=
         en_name = await fetch_english_name_from_fandom(jp_name, client)
 
     if en_name and en_name != jp_name:
-        return {
-            "status": "success",
-            "jp_name": jp_name,
-            "en_name": en_name,
-            "from_cache": from_cache
-        }
+        return {"status": "success", "jp_name": jp_name, "en_name": en_name, "from_cache": from_cache}
 
     raise HTTPException(status_code=404, detail=f"查無卡牌「{jp_name}」的英文名稱")
 
-# 新增：匯出牌組英文卡名列表 API (限制 Concurrent Request 避免 Fandom 封鎖)
 @app.post("/api/export_english_deck")
 @limiter.limit("10/minute")
 async def export_english_deck(request: Request, payload: ExportDeckRequest):
     if not payload.items:
         raise HTTPException(status_code=400, detail="牌組清單不可為空")
 
-    # 限制最大併發請求數為 3，避免同時 request 導致對方伺服器拒絕 (Rate Limit / 429)
     semaphore = asyncio.Semaphore(3)
-
     async def fetch_item_with_throttle(item: DeckItem, client: httpx.AsyncClient):
         async with semaphore:
-            # 微小的延遲，平滑併發請求
             await asyncio.sleep(0.15)
             en_name = await fetch_english_name_from_fandom(item.name, client)
-            return {
-                "jp_name": item.name,
-                "en_name": en_name,
-                "count": item.count
-            }
+            return {"jp_name": item.name, "en_name": en_name, "count": item.count}
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         tasks = [fetch_item_with_throttle(item, client) for item in payload.items]
@@ -437,7 +534,6 @@ async def get_pop_data(set_code: str):
         raise HTTPException(status_code=404, detail=f"找不到代碼為 '{set_code}' 的商品資料")
 
     set_card_list = current_set.get("setcardlist") or current_set.get("cardlist") or []
-
     order_map = {}
     for index, item in enumerate(set_card_list):
         item_name = item.get("name") if isinstance(item, dict) else item
@@ -453,88 +549,82 @@ async def get_pop_data(set_code: str):
             matched_cards.append(card)
 
     matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
+    return {"set_info": current_set, "cards": matched_cards}
+
+@app.post("/api/pop_custom")
+async def get_pop_custom_data(payload: CustomDeckModel):
+    compressed = payload.deck_list.strip()
+    if not compressed:
+        raise HTTPException(status_code=400, detail="密碼不可為空")
+
+    decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed) or compressed
+    raw_items = decompressed.split(',')
+    custom_card_list = []
+    
+    for item in raw_items:
+        item = item.strip()
+        if not item: continue
+        if '*' in item:
+            parts = item.split('*', 1)
+            try:
+                count, cname = int(parts[0]), parts[1].strip()
+            except ValueError:
+                count, cname = 1, item
+        else:
+            count, cname = 1, item
+            
+        custom_card_list.append({"name": cname, "count": count})
+
+    order_map = {str(item["name"]).strip(): index for index, item in enumerate(custom_card_list)}
+    matched_cards = [card for card in carddata_cache if card.get("name") and card.get("name").strip() in order_map]
+    matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
 
     return {
-        "set_info": current_set,
+        "set_info": {
+            "setcode": "NET-CUSTOM", "setname": "自訂分享卡表", "isdeck": True, "istw": True, "setcardlist": custom_card_list
+        },
         "cards": matched_cards
     }
 
 @app.get("/api/card_stats")
-def get_card_stats():
-    return card_stats_cache
+def get_card_stats(): return card_stats_cache
 
 @app.get("/api/proxy-image")
 @limiter.limit("5/minute")
 async def proxy_image(request: Request, url: str = Query(...)):
     now = time.time()
-
     if url in proxy_cache:
         item = proxy_cache[url]
         if now - item["timestamp"] < CACHE_TTL_SECONDS:
             item["timestamp"] = now
             proxy_cache.move_to_end(url)
-            return Response(
-                content=item["content"],
-                media_type=item["content_type"],
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Cache-Control": "public, max-age=86400",
-                },
-            )
+            return Response(content=item["content"], media_type=item["content_type"], headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"})
         else:
             del proxy_cache[url]
 
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                url,
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"},
-                timeout=8.0,
-            )
-            if resp.status_code != 200:
-                raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
+            resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 Chrome/120.0.0.0"}, timeout=8.0)
+            if resp.status_code != 200: raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
 
             content_type = resp.headers.get("content-type", "image/jpeg")
+            if len(proxy_cache) >= MAX_CACHE_SIZE: proxy_cache.popitem(last=False)
 
-            if len(proxy_cache) >= MAX_CACHE_SIZE:
-                proxy_cache.popitem(last=False)
-
-            proxy_cache[url] = {
-                "content": resp.content,
-                "content_type": content_type,
-                "timestamp": now
-            }
-
-            return Response(
-                content=resp.content,
-                media_type=content_type,
-                headers={
-                    "Access-Control-Allow-Origin": "*",
-                    "Cache-Control": "public, max-age=86400",
-                },
-            )
+            proxy_cache[url] = {"content": resp.content, "content_type": content_type, "timestamp": now}
+            return Response(content=resp.content, media_type=content_type, headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
 
 @app.get("/api/diary")
-async def get_diary():
-    return diary_cache
+async def get_diary(): return diary_cache
 
 @app.post("/api/report_error")
 @limiter.limit("3/minute")
 async def report_error(request: Request, report: ReportModel, background_tasks: BackgroundTasks):
-    if not report.card_name:
-        raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
-    
-    base_url = str(request.base_url)
-    background_tasks.add_task(send_line_notification, report, base_url)
+    if not report.card_name: raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
+    background_tasks.add_task(send_line_notification, report, str(request.base_url))
     name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
-    
-    return {
-        "status": "success", 
-        "message": f"回報成功！感謝{name}！"
-    }
+    return {"status": "success", "message": f"回報成功！感謝{name}！"}
 
 @app.get("/api/get_all_english_names")
-async def get_all_english_names():
-    return english_name_cache
+async def get_all_english_names(): return english_name_cache
