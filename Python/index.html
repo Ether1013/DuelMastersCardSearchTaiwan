@@ -44,7 +44,7 @@
         .tab { 
             padding: 15px 12px; /* 💡 調整：左右邊距由 25px 縮減為 12px */
             cursor: pointer; 
-            font-size: 14px;    /* 💡 調整：字級由 15px 微調為 14px */
+            font-size: 13px;    /* 💡 調整：字級由 15px 微調為 13px */
             user-select: none;
             transition: background 0.2s;
             white-space: nowrap; /* 💡 關鍵保險：強制文字單行顯示，絕不折行 */
@@ -1654,6 +1654,97 @@
 		.btn-toggle-en-name:hover {
 			transform: scale(1.15);
 		}
+		
+		/* ================= ⚡ 今天我要... 階層式面板專屬樣式 ================= */
+        .qa-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        /* 第一層：大分類按鈕 */
+        .qa-btn-lv1 {
+            width: 100%;
+            padding: 16px 18px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #334155;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            touch-action: manipulation;
+        }
+        .qa-btn-lv1:hover { border-color: #94a3b8; }
+        .qa-btn-lv1.active { border-color: #0284c7; color: #0284c7; background: #f0f9ff; }
+        .qa-btn-lv1::after { content: '▼'; font-size: 12px; transition: transform 0.2s; color: #94a3b8; }
+        .qa-btn-lv1.active::after { transform: rotate(180deg); color: #0284c7; }
+
+        /* 第一層：展開的容器 */
+        .qa-content-lv1 {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            padding: 5px 0 10px 15px; /* 內縮產生階層感 */
+        }
+        .qa-content-lv1.active { display: flex; }
+
+        /* 第二層：次分類按鈕 */
+        .qa-btn-lv2 {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #475569;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+        .qa-btn-lv2.active { border-color: #ea580c; color: #ea580c; background: #fff7ed; }
+        .qa-btn-lv2::after { content: '▼'; font-size: 10px; transition: transform 0.2s; }
+        .qa-btn-lv2.active::after { transform: rotate(180deg); }
+
+        /* 第二層：展開的輸入與按鈕區塊 */
+        .qa-content-lv2 {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            padding: 15px;
+            background: #ffffff;
+            border: 1px dashed #cbd5e1;
+            border-left: 3px solid #ea580c; /* 左側醒目顏色邊框 */
+            border-radius: 6px;
+            margin-bottom: 5px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .qa-content-lv2.active { display: flex; }
+
+        /* 共用功能按鈕與輸入框 */
+        .action-btn-group { display: flex; gap: 8px; width: 100%; }
+        .action-btn-group .btn-drawer-action { flex: 1; padding: 12px 0; font-size: 14px; text-align: center; }
+        .qa-full-btn { width: 100%; padding: 14px !important; font-size: 15px !important; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
+        
+        .qa-input {
+            width: 100%; padding: 12px 14px !important; font-size: 15px !important;
+            border: 2px solid #cbd5e1 !important; border-radius: 6px !important;
+            box-sizing: border-box; background: #f8fafc; transition: border-color 0.2s;
+        }
+        .qa-input:focus { border-color: #0284c7 !important; outline: none; background: #ffffff; }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1668,6 +1759,7 @@
 		<div class="tab desktop-only-tab">查詢結果(雙欄)</div>
 		<!-- 請在 header-tabs 內找到 .tab 區域加入這行 -->
 		<button type="button" class="tab btn-id-search" id="btn-open-id-search">輸入ID找卡</button>
+		<div class="tab">⚡今天我要…</div>
 		
 		<!-- 新增：獨立計數器容器 (無切換功能、置右對齊) -->
 		<div class="header-counter">
@@ -1676,8 +1768,8 @@
 			</a>
 		</div>
 	</div>
-
-    <!-- 第一個頁籤：條件過濾 -->
+	
+	<!-- 第一個頁籤：條件過濾 -->
     <div id="tab-filter" class="tab-content active layout-grid">
         
 		<!-- ⚡ 快速計算機搜尋面板 (方案 A - Sticky Drawer) -->
@@ -2064,6 +2156,83 @@
 			</div>
 		</div>
 	</div>
+	
+	<!-- ⚡ 第零個頁籤：今天我要... (階層式儀表板) -->
+    <div id="tab-quick-action" class="tab-content active">
+        <div class="qa-container">
+            
+            <!-- ================= 第一大類 ================= -->
+            <button type="button" class="qa-btn-lv1" data-target="qa-sec-1">🔍 1. 我要查卡效 (找單卡)</button>
+            <div class="qa-content-lv1" id="qa-sec-1">
+                
+                <!-- 1-1 -->
+                <button type="button" class="qa-btn-lv2" data-target="qa-sub-1-1">🏷️ 我有卡號 (ID)</button>
+                <div class="qa-content-lv2" id="qa-sub-1-1">
+                    <input type="text" id="qa-input-id" class="qa-input" placeholder="例: DM26-EX3-1 或 dm26ex31" autocomplete="off">
+                    <div class="action-btn-group">
+                        <button type="button" class="btn-drawer-action" id="qa-btn-id-view">👀 看效果</button>
+                        <button type="button" class="btn-drawer-action" id="qa-btn-id-share" style="background:#16a34a;">🔗 拷貝連結</button>
+                    </div>
+                </div>
+
+                <!-- 1-2 -->
+                <button type="button" class="qa-btn-lv2" data-target="qa-sub-1-2">🔤 我有卡名</button>
+                <div class="qa-content-lv2" id="qa-sub-1-2">
+                    <input type="text" id="qa-input-name" class="qa-input" placeholder="請輸入精確卡名或關鍵字" autocomplete="off">
+                    <div class="action-btn-group">
+                        <button type="button" class="btn-drawer-action" id="qa-btn-name-view">👀 看效果</button>
+                        <button type="button" class="btn-drawer-action" id="qa-btn-name-share" style="background:#16a34a;">🔗 拷貝連結</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= 第二大類 ================= -->
+            <button type="button" class="qa-btn-lv1" data-target="qa-sec-2">📦 2. 我有卡表 / 商品資料</button>
+            <div class="qa-content-lv1" id="qa-sec-2">
+                
+                <!-- 2-1 -->
+                <button type="button" class="qa-btn-lv2" data-target="qa-sub-2-1">📦 指定商品 / 預組代號</button>
+                <div class="qa-content-lv2" id="qa-sub-2-1">
+                    <!-- 💡 將 select 替換為 text input -->
+                    <input type="text" id="qa-input-set" class="qa-input" placeholder="請輸入商品代碼 (例: DM26-EX3)" style="margin-bottom: 5px;" autocomplete="off">
+                    <div class="action-btn-group">
+                        <button type="button" class="btn-drawer-action" id="qa-btn-set-view" style="background:#ea580c;">📦 開箱看卡表</button>
+                        <button type="button" class="btn-drawer-action" id="qa-btn-set-share" style="background:#16a34a;">🔗 拷貝商品連結</button>
+                    </div>
+                </div>
+
+                <!-- 2-2 -->
+                <button type="button" class="qa-btn-lv2" data-target="qa-sub-2-2">📋 我有卡表文字 (貼上與轉換)</button>
+                <div class="qa-content-lv2" id="qa-sub-2-2">
+                    <textarea id="qa-input-deck-text" class="qa-input" rows="4" placeholder="請貼上卡表 (例如: 4* 霞み妖精ジャスミン)" style="margin-bottom: 5px; resize: vertical;"></textarea>
+                    <div class="action-btn-group">
+                        <button type="button" class="btn-drawer-action" id="qa-btn-deck-import" style="background:#7c3aed;">📥 匯入建檔</button>
+                        <button type="button" class="btn-drawer-action" id="qa-btn-deck-en" style="background:#0d9488;">🔤 直接轉英文</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= 第三大類 ================= -->
+            <button type="button" class="qa-btn-lv1" data-target="qa-sec-3">🎯 3. 我要找牌 (構築過濾)</button>
+            <div class="qa-content-lv1" id="qa-sec-3">
+                <!-- 找牌比較直覺，不需要 Lv2，直接給三個大按鈕 -->
+                <button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-filter-quick" style="margin-bottom:10px; background:#eab308; color:#000;">
+                    ⚡ 快速尋找 (文明/費用/攻擊力)
+                </button>
+                
+                <button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-filter-std" style="margin-bottom:10px; background:#0284c7;">
+                    🔍 標準搜尋 (關鍵字/種族/系列)
+                </button>
+                
+                <button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-filter-adv" style="background:#475569;">
+                    ⚙️ 精密進階過濾 (複合邏輯篩選)
+                </button>
+            </div>
+
+        </div>
+    </div>
 
     <!-- Z. Footer 區 (需求 4 修改結構) -->
     <div class="footer">
@@ -3003,6 +3172,315 @@
                 }
             });
         });
+
+		// ========================================================
+		// ⚡ 「今天我要...」快速儀表板核心邏輯
+		// ========================================================
+		document.addEventListener('DOMContentLoaded', () => {
+			
+			// --- 輔助函式：背景靜默搜尋卡名或卡號，並回傳精確卡片陣列 ---
+			function silentSearchCard(query, isId = false) {
+				const q = isId ? normalizeIdString(query) : cleanCardName(query).toLowerCase();
+				if (!q) return [];
+				
+				const results = [];
+				if (isId) {
+					// ID 搜尋邏輯
+					Object.values(rawSetlist).forEach(product => {
+						const cardList = product.setcardlist || product.cardlist;
+						if (Array.isArray(cardList)) {
+							cardList.forEach(item => {
+								if (item && item.id) {
+									const idArray = Array.isArray(item.id) ? item.id : [item.id];
+									if (idArray.some(idVal => normalizeIdString(idVal) === q)) {
+										const fullCard = globalCardData.find(c => cleanCardName(c.name) === cleanCardName(item.name || ''));
+										if (fullCard) results.push({ cardData: fullCard, matchedItem: item });
+									}
+								}
+							});
+						}
+					});
+				} else {
+					// 卡名精確搜尋邏輯
+					globalCardData.forEach(c => {
+						if (cleanCardName(c.name).toLowerCase() === q) results.push({ cardData: c, matchedItem: null });
+					});
+				}
+				
+				// 去重處理
+				const uniqueMap = new Map();
+				results.forEach(res => {
+					if (!uniqueMap.has(res.cardData.name)) uniqueMap.set(res.cardData.name, res);
+				});
+				return Array.from(uniqueMap.values());
+			}
+
+			// ----------------------------------------------------
+			// 1. 我要查卡效
+			// ----------------------------------------------------
+			// [看效果 (ID)]
+			document.getElementById('qa-btn-id-view').addEventListener('click', () => {
+				const idVal = document.getElementById('qa-input-id').value;
+				const results = silentSearchCard(idVal, true);
+				if (results.length > 0) {
+					let combinedCiv = 0;
+					results[0].cardData.wdata?.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+					openCardModal(results[0].cardData, combinedCiv, results[0].matchedItem);
+				} else {
+					showToast(`⚠️ 找不到卡號為「${idVal}」的卡牌`);
+				}
+			});
+
+			// [分享 (ID)]
+			document.getElementById('qa-btn-id-share').addEventListener('click', () => {
+				const idVal = document.getElementById('qa-input-id').value;
+				const results = silentSearchCard(idVal, true);
+				if (results.length > 0) {
+					handleShareCard(results[0].cardData, results[0].matchedItem);
+				} else {
+					// 即使沒找到資料庫卡片，直接硬派產生短網址
+					const shareUrl = `${window.location.origin}/card.html?p=${encodeURIComponent(idVal)}`;
+					copyTextToClipboard(shareUrl);
+				}
+			});
+
+			// [看效果 (卡名)]
+			document.getElementById('qa-btn-name-view').addEventListener('click', () => {
+				const nameVal = document.getElementById('qa-input-name').value;
+				const results = silentSearchCard(nameVal, false);
+				if (results.length > 0) {
+					let combinedCiv = 0;
+					results[0].cardData.wdata?.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+					openCardModal(results[0].cardData, combinedCiv, null);
+				} else {
+					// 如果精確找不到，嘗試呼叫原生模糊查詢並打開結果列表
+					document.getElementById('card-name').value = nameVal;
+					document.getElementById('btn-search').click();
+					showToast("進入模糊比對搜尋...");
+				}
+			});
+
+			// [分享 (卡名)]
+			document.getElementById('qa-btn-name-share').addEventListener('click', () => {
+				const nameVal = document.getElementById('qa-input-name').value;
+				if (!nameVal) { showToast("請輸入卡名"); return; }
+				const shareUrl = `${window.location.origin}/card.html?p=${encodeURIComponent(nameVal)}`;
+				copyTextToClipboard(shareUrl);
+			});
+
+			// ----------------------------------------------------
+			// 2. 我有卡表/商品代號
+			// ----------------------------------------------------
+			// [看內容 (商品)]
+			document.getElementById('qa-btn-set-view').addEventListener('click', () => {
+				const setKey = document.getElementById('qa-input-set').value.trim().toUpperCase();
+				if (!setKey) { showToast("請輸入商品代碼"); return; }
+				if (!rawSetlist[setKey]) { showToast(`⚠️ 找不到商品代碼：${setKey}`); return; }
+				
+				document.getElementById('btn-reset').click();
+				
+				const bigSelect = document.getElementById('series-big');
+				const smallSelect = document.getElementById('series-small');
+				if (bigSelect && smallSelect) {
+					bigSelect.value = "";
+					bigSelect.dispatchEvent(new Event('change'));
+					smallSelect.value = setKey;
+				}
+				document.getElementById('btn-search').click();
+			});
+
+			// [分享連結 (商品)]
+			document.getElementById('qa-btn-set-share').addEventListener('click', () => {
+				const setKey = document.getElementById('qa-input-set').value.trim().toUpperCase();
+				if (!setKey) { showToast("請輸入商品代碼"); return; }
+				if (!rawSetlist[setKey]) { showToast(`⚠️ 找不到商品代碼：${setKey}`); return; }
+
+				const shareUrl = `${window.location.origin}/pop.html?setCode=${encodeURIComponent(setKey)}`;
+				copyTextToClipboard(shareUrl);
+			});
+            
+			// 💡 順便在最下方 Input Enter 事件群組，補上商品代碼的 Enter 快捷鍵：
+			document.getElementById('qa-input-set').addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') document.getElementById('qa-btn-set-view').click();
+			});
+
+			// [貼上卡表並建檔]
+			document.getElementById('qa-btn-deck-import').addEventListener('click', () => {
+				const text = document.getElementById('qa-input-deck-text').value.trim();
+				if (!text) {
+					showToast("請先貼上卡表文字");
+					return;
+				}
+				
+				// 將這裡貼上的文字同步帶入 Modal 的輸入框
+				const modalTextArea = document.getElementById('deck-textarea');
+				if (modalTextArea) modalTextArea.value = text; 
+				
+				// 打開系統原本的匯入 Modal
+				document.getElementById('deck-import-modal').classList.add('active');
+
+				// 💡 關鍵：自動觸發原本的「開始解析與模糊比對」邏輯，直接跳轉至校正畫面！
+				const btnParse = document.getElementById('btn-parse-deck');
+				if (btnParse) {
+					btnParse.click();
+				}
+			});
+
+			// [直接轉換為英文卡表] - 不需建檔，直接解析後打 API 產出
+			document.getElementById('qa-btn-deck-en').addEventListener('click', async () => {
+				const text = document.getElementById('qa-input-deck-text').value.trim();
+				if (!text) {
+					showToast("請先在上方貼上卡表文字");
+					return;
+				}
+
+				// 使用系統原有的文字解析器處理張數與卡名
+				const rawList = parseDeckText(text); 
+				if (rawList.length === 0) {
+					showToast("無法解析卡表，請檢查格式");
+					return;
+				}
+
+				const items = rawList.map(item => ({
+					name: item.rawName,
+					count: item.count
+				}));
+
+				const loadingOverlay = document.getElementById('loading-overlay');
+				const loadingText = document.getElementById('loading-text');
+				if (loadingOverlay) {
+					if (loadingText) loadingText.innerText = '正在批量轉換英文卡名中...';
+					loadingOverlay.style.display = 'flex';
+				}
+
+				try {
+					const resp = await fetch('/api/export_english_deck', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ items: items })
+					});
+
+					if (!resp.ok) throw new Error('伺服器處理失敗');
+
+					const data = await resp.json();
+					const formattedList = data.result || [];
+
+					// 順便把查到的英文名存入全域快取，加速以後顯示
+					formattedList.forEach(item => {
+						if (item.name && item.en_name) {
+							fetchedEnNameMap[item.name] = item.en_name;
+						}
+					});
+					localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
+
+					// 組裝成純文字格式並打開 Modal
+					const textContent = formattedList.map(i => `${i.count} ${i.en_name}`).join('\n');
+					document.getElementById('en-deck-textarea').value = textContent;
+					document.getElementById('export-en-deck-modal').classList.add('active');
+
+				} catch (err) {
+					console.error("轉換英文牌組失敗:", err);
+					alert("轉換失敗，請稍後再試！");
+				} finally {
+					if (loadingOverlay) loadingOverlay.style.display = 'none';
+				}
+			});
+
+			// ----------------------------------------------------
+			// 3. 我要找卡
+			// ----------------------------------------------------
+			// [快速計算機]
+			document.getElementById('qa-btn-filter-quick').addEventListener('click', () => {
+				tabHeaders[0].click(); // 切換到「條件過濾」(現在是 index 1)
+				const drawer = document.getElementById('drawer-quick-search');
+				if (drawer && !drawer.classList.contains('open')) {
+					drawer.parentElement.querySelector('.drawer-handle')?.click();
+				}
+				showToast("⚡ 已為您開啟快速計算機");
+			});
+
+			// [標準搜尋]
+			document.getElementById('qa-btn-filter-std').addEventListener('click', () => {
+				// 💡 關鍵：強迫將快速計算機面板收起來
+				const quickDrawer = document.getElementById('drawer-quick-search');
+				if (quickDrawer && quickDrawer.classList.contains('open')) {
+					quickDrawer.classList.remove('open');
+					const arrow = quickDrawer.querySelector('.drawer-arrow');
+					if (arrow) arrow.innerText = '▼';
+				}
+
+				tabHeaders[0].click(); // 切換到「條件過濾」
+				const cardNameInput = document.getElementById('card-name');
+				if (cardNameInput) {
+					cardNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+					cardNameInput.focus();
+				}
+			});
+
+			// [精密進階過濾]
+			document.getElementById('qa-btn-filter-adv').addEventListener('click', () => {
+				tabHeaders[0].click(); // 切換到「條件過濾」
+				const btnAdv = document.getElementById('toggle-advanced');
+				if (btnAdv && !document.body.classList.contains('advanced-mode')) {
+					btnAdv.click(); // 啟動進階模式
+				}
+				showToast("⚙️ 已為您開啟所有進階篩選條件");
+			});
+			
+			// 輸入框 Enter 觸發
+			document.getElementById('qa-input-id').addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') document.getElementById('qa-btn-id-view').click();
+			});
+			document.getElementById('qa-input-name').addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') document.getElementById('qa-btn-name-view').click();
+			});
+			
+			// --- 階層式選單 (Accordion) 開合邏輯 ---
+			document.querySelectorAll('.qa-btn-lv1, .qa-btn-lv2').forEach(btn => {
+				btn.addEventListener('click', function() {
+					const isLv1 = this.classList.contains('qa-btn-lv1');
+					const targetId = this.getAttribute('data-target');
+					const targetContent = document.getElementById(targetId);
+					const isActive = this.classList.contains('active');
+
+					// 如果是點擊第一層，自動關閉其他第一層
+					if (isLv1) {
+						document.querySelectorAll('.qa-btn-lv1').forEach(otherBtn => {
+							otherBtn.classList.remove('active');
+							document.getElementById(otherBtn.getAttribute('data-target'))?.classList.remove('active');
+						});
+					} else {
+						// 如果是點擊第二層，自動關閉同一個分類下的其他第二層
+						const parentContent = this.closest('.qa-content-lv1');
+						if (parentContent) {
+							parentContent.querySelectorAll('.qa-btn-lv2').forEach(otherBtn => {
+								if (otherBtn !== this) {
+									otherBtn.classList.remove('active');
+									document.getElementById(otherBtn.getAttribute('data-target'))?.classList.remove('active');
+								}
+							});
+						}
+					}
+
+					// 反轉自己目前的狀態
+					if (!isActive) {
+						this.classList.add('active');
+						if (targetContent) {
+							targetContent.classList.add('active');
+							// 如果有輸入框，自動 Focus 方便使用者直接打字
+							const firstInput = targetContent.querySelector('input');
+							if (firstInput) {
+								setTimeout(() => { firstInput.focus(); }, 100);
+							}
+						}
+					} else {
+						this.classList.remove('active');
+						if (targetContent) targetContent.classList.remove('active');
+					}
+				});
+			});
+		});
+
 
         const CACHE_NAME = 'dm-data-cache-v1';
 
