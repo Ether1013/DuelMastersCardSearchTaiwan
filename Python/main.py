@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from collections import defaultdict
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -61,6 +62,9 @@ ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
 has_unsynced_en_names = False
 file_write_lock = asyncio.Lock()
+
+# 1. 記憶體計數器 (Render 重啟後自動歸零)
+feature_counter = defaultdict(int)
 
 class CustomDeckModel(BaseModel):
     deck_list: str
@@ -711,3 +715,25 @@ async def message_author(request: Request, payload: AuthorMessageModel, backgrou
     background_tasks.add_task(send_author_message_notification, payload)
     nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
     return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}
+    
+# 2. 接收前端埋點 API (靜默接收，不阻擋)
+@app.post("/api/track")
+async def track_feature(request: Request):
+    try:
+        data = await request.json()
+        feature_name = data.get("feature")
+        if feature_name:
+            feature_counter[feature_name] += 1
+    except Exception:
+        pass  # 隨緣統計，出現例外直接忽略
+    return {"status": "ok"}
+
+# 3. 讓你查看統計數據的 API
+@app.get("/api/track/stats")
+async def get_feature_stats():
+    # 依照點擊次數由大到小排序回傳
+    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+    return {
+        "total_events": sum(sorted_stats.values()),
+        "stats": sorted_stats
+    }
