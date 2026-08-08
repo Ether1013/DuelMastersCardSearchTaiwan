@@ -358,15 +358,67 @@
         .modal-overlay.active .modal-card { transform: scale(1); }
 
         .modal-header {
-            padding: 16px 20px; color: #111; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
+			display: flex !important;
+			justify-content: space-between !important;
+			align-items: flex-start !important;
+			padding: 12px 16px !important;
+			position: relative;
+		}
+
+		.modal-header .modal-title {
+			flex: 1;
+			min-width: 0;
+			margin-right: 12px; /* 留出空間給右上角按鈕群組 */
+		}
+		/* 舊有的 controls 容器若沒用到可以直接隱藏或設為 flex */
+		#modal-controls {
+			display: none !important;
+		}
+		.modal-action-btns {
+			display: flex;
+			gap: 6px;
+			align-items: center;
+			flex-shrink: 0;
+		}
         .modal-title { font-size: 20px; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
-        .modal-close {
-            font-size: 20px; font-weight: bold; cursor: pointer; background: rgba(255,255,255,0.7);
-            border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; transition: 0.2s;
-        }
-        .modal-close:hover { background: #fff; color: #d32f2f; }
+		/* 統一樣式：半透明精緻圓形按鈕 */
+		.action-circle-btn,
+		.modal-close {
+			width: 32px !important;
+			height: 32px !important;
+			border-radius: 50% !important;
+			background: rgba(255, 255, 255, 0.75) !important;
+			border: 1px solid rgba(0, 0, 0, 0.12) !important;
+			display: flex !important;
+			justify-content: center !important;
+			align-items: center !important;
+			font-size: 14px !important;
+			font-weight: bold !important;
+			color: #333 !important;
+			cursor: pointer !important;
+			transition: all 0.2s ease !important;
+			padding: 0 !important;
+			margin: 0 !important;
+			box-sizing: border-box !important;
+			user-select: none;
+			line-height: 1 !important;
+		}
+
+		.action-circle-btn:hover,
+		.modal-close:hover {
+			background: #ffffff !important;
+			transform: scale(1.08);
+			box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+		}
+
+		.action-circle-btn:active,
+		.modal-close:active {
+			transform: scale(0.95);
+		}
+
+		.modal-close:hover {
+			color: #d32f2f !important;
+		}
 
         .modal-body {
             padding: 20px; overflow: hidden; display: flex; flex-direction: column; gap: 20px; flex: 1;
@@ -638,14 +690,17 @@
         .split-right-panel.is-capturing { max-height: none !important; height: auto !important; transform: none !important; }
         .modal-card.is-capturing .modal-body,
         .split-right-panel.is-capturing .modal-main-content { max-height: none !important; overflow: visible !important; }
-        .is-capturing .ver-arrow-btn,
-        .is-capturing .modal-controls,
-        .is-capturing .abil-explain-btn,
-		.is-capturing .btn-report-error, /* 👈 新增這行：截圖時隱藏錯誤回報按鈕 */
-        .is-capturing .set-list-block,
-        .is-capturing .ext-links-block { display: none !important; }
-		.is-capturing .btn-copy-title { display: none !important; }
-		.is-capturing .btn-toggle-en-name { display: none !important; } /* 👈 加上 .btn-toggle-en-name 即可在截圖時自動隱藏 🇪/🇯 Icon */
+        /* 修改後 */
+		.is-capturing .ver-arrow-btn,
+		.is-capturing .modal-controls,
+		.is-capturing .abil-explain-btn,
+		.is-capturing .btn-report-error,
+		.is-capturing .set-list-block,
+		.is-capturing .ext-links-block,
+		.is-capturing .modal-action-btns, /* 👈 直接隱藏右上角的按鈕容器包 */
+		.is-capturing .modal-close {       /* 👈 保底隱藏獨立的關閉按鈕 */
+			display: none !important;
+		}
 
         /* ================= 手機版 (RWD) 統一合併區 ================= */
         @media (max-width: 768px) {
@@ -1314,27 +1369,6 @@
 			color: #ffffff;        /* 白字 */
 			border-color: #059669;
 			font-weight: bold;
-		}
-		/* 💡 新增：套牌卡圖多張重疊 CSS */
-		.stack-img-container {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			position: relative;
-			margin-bottom: 10px;
-		}
-		.stacked-card-img {
-			width: 140px;
-			height: 196px;
-			object-fit: contain;
-			background: #f0f0f0;
-			border-radius: 4px;
-			box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
-			position: relative;
-		}
-		/* 從第二張開始向上滑入覆蓋，形成垂直階梯重疊感 */
-		.stacked-card-img:not(:first-child) {
-			margin-top: -165px; 
 		}
 		/* 💡 新增：圖片退回備援時的 CSS 樣式與 No Pic 標籤 */
 		.modal-img-stack-item.img-fallback {
@@ -2189,6 +2223,24 @@
 				<button type="button" class="btn-drawer-action" id="btn-export-mode-3" style="padding: 12px; font-size: 14px; background: #475569;">
 					📝 只要效果 (純文字模式)
 				</button>
+				<!-- 💡 新增：預設隱藏，僅在選擇牌組商品時顯示 -->
+				<button type="button" class="btn-drawer-action" id="btn-export-mode-en-deck" style="padding: 12px; font-size: 14px; background: #0d9488; display: none;">
+					🔤 匯出英文牌組列表
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 新增：呈現英文卡表結果的 Modal -->
+	<div class="modal-overlay" id="export-en-deck-modal">
+		<div class="modal-card" style="max-width: 480px;">
+			<div class="modal-header">
+				<div class="modal-title">🔤 英文牌組列表</div>
+				<div class="modal-close" id="export-en-deck-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" style="padding: 16px; gap: 12px;">
+				<textarea id="en-deck-textarea" rows="12" readonly style="width:100%; font-family: monospace; font-size:14px; padding:10px; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; resize:vertical;"></textarea>
+				<button type="button" id="btn-copy-en-deck" style="width:100%; padding:10px; background:#16a34a; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">📋 一鍵複製全卡表</button>
 			</div>
 		</div>
 	</div>
@@ -2515,29 +2567,45 @@
 			const cleanJpName = cleanCardName(jpName);
 			const enName = fetchedEnNameMap[jpName] || null;
 
-			// 依據目前語言狀態決定顯示卡名與 Icon
 			const isEnActive = (currentCardLang === 'en' && enName);
 			const displayName = isEnActive ? enName : jpName;
 			const copyTargetName = isEnActive ? enName : cleanJpName;
 
-			// 僅使用 🇪 / 🇯 Emoji，無多餘文字
 			const toggleIconText = isEnActive ? '🇯' : '🇪';
 			const toggleIconTitle = isEnActive ? '切換為日文卡名' : '切換為英文卡名';
 
 			const selectedId = (idList.length > 0) ? (idList[targetIdIndex] || idList[0]) : '';
 			const displayId = selectedId ? formatDmId(selectedId) : '';
-			const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( ${displayId} )</div>` : '';
 
+			// 💡 整理後的漂亮頂欄結構
 			modalTitleEl.innerHTML = `
-				${idTag}
-				<div class="card-title-text" style="cursor: pointer; display: inline-block;" title="雙擊標題複製卡名">
-					<span style="display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px;">
-						<span class="main-title-display-text">${displayName}</span>
-						<span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; cursor: pointer;" title="複製卡名">📋</span>
-						<span class="btn-toggle-en-name" style="font-size: 16px; cursor: pointer; user-select: none;" title="${toggleIconTitle}">${toggleIconText}</span>
-					</span>
+				<div class="modal-header-top-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+					<!-- 左上：卡號 ID -->
+					<div class="card-id-display" style="font-size: 13px; font-weight: normal; opacity: 0.85;">
+						${displayId ? `( ${displayId} )` : ''}
+					</div>
+					
+					<!-- 右上：三合一按鈕區 ( 🇪/🇯 + 📋 + ✕ ) -->
+					<div class="modal-action-btns">
+						<button type="button" class="btn-copy-title action-circle-btn" title="複製卡名">📋</button>
+						<button type="button" class="btn-toggle-en-name action-circle-btn" title="${toggleIconTitle}">${toggleIconText}</button>
+						<div class="modal-close" id="modal-close-btn">&times;</div>
+					</div>
+				</div>
+
+				<!-- 下方：卡名主要區塊 -->
+				<div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
+					<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
 				</div>
 			`;
+
+			// 綁定新關閉按鈕點擊事件
+			const newCloseBtn = modalTitleEl.querySelector('#modal-close-btn');
+			if (newCloseBtn) {
+				newCloseBtn.onclick = () => {
+					document.getElementById('card-modal').classList.remove('active');
+				};
+			}
 
 			// 綁定 🇪 / 🇯 Icon 切換事件
 			const btnToggleEn = modalTitleEl.querySelector('.btn-toggle-en-name');
@@ -4823,27 +4891,6 @@
 				}
 			}
 
-			// 備援 2：若仍無圖片，搜尋其他商品的同名卡圖
-			if (validPicUrls.length === 0) {
-				const cleanTargetName = card.name ? card.name.trim() : "";
-				if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-					for (const setObj of Object.values(rawSetlist)) {
-						const cardList = setObj.setcardlist || setObj.cardlist;
-						if (Array.isArray(cardList)) {
-							const foundItem = cardList.find(item => {
-								const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-								return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-							});
-							if (foundItem) {
-								if (Array.isArray(foundItem.pic)) validPicUrls = foundItem.pic.filter(p => p && p.trim() !== '');
-								else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') validPicUrls = [foundItem.pic];
-								if (validPicUrls.length > 0) break;
-							}
-						}
-					}
-				}
-			}
-
 			// 維護卡片 DOM 陣列順序
 			let cardImgElements = [];
 			let isAnimating = false;
@@ -5839,7 +5886,11 @@
 		function formatDmId(rawId) {
 			if (!rawId) return '';
 			const strId = String(rawId).trim();
-			return strId.toUpperCase().startsWith('DM') ? strId : 'DM' + strId;
+			// 如果開頭已經是 DM (不分大小寫)，則直接轉大寫回傳；否則補上 DM
+			if (strId.toUpperCase().startsWith('DM')) {
+				return strId.toUpperCase();
+			}
+			return 'DM' + strId;
 		}
 
         async function copyTextToClipboard(text) {
@@ -5887,7 +5938,7 @@
             }
         }
 		
-		// 💡 Page 3 雙欄模式右側渲染函式 (已修復支援 🇪/🇯 英文卡名切換)
+		// 💡 Page 3 雙欄模式右側渲染函式 (已修復標題按鈕佈局與 🇪/🇯 切換)
         function renderSplitDetail(card, combinedCiv, matchedItem = null) {
             const rightPanel = document.getElementById('detail-panel-split');
             if (!rightPanel) return;
@@ -5925,16 +5976,28 @@
                 const toggleIconText = isEnActive ? '🇯' : '🇪';
                 const toggleIconTitle = isEnActive ? '切換為日文卡名' : '切換為英文卡名';
 
-                const idTag = (idList.length > 0 && idList[0]) ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85; margin-bottom: 2px;">( DM${idList[0]} )</div>` : '';
+                const selectedId = (idList.length > 0 && idList[0]) ? idList[0] : '';
+				const displayId = selectedId ? formatDmId(selectedId) : '';
+				const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85;">( ${displayId} )</div>` : '';
 
+                // 💡 使用與 Page 2 一致的三合一圓形按鈕佈局 (Page 3 雙欄不需 Modal 關閉按鈕，因此只放 📋 與 🇪/🇯)
                 titleDiv.innerHTML = `
-                    ${idTag}
-                    <div class="card-title-text" style="cursor: pointer; display: inline-block;" title="雙擊標題複製卡名">
-                        <span style="display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px;">
-                            <span class="main-title-display-text">${displayName}</span>
-                            <span class="btn-copy-title" style="font-size: 14px; opacity: 0.7; cursor: pointer;" title="複製卡名">📋</span>
-                            <span class="btn-toggle-en-name" style="font-size: 16px; cursor: pointer; user-select: none;" title="${toggleIconTitle}">${toggleIconText}</span>
-                        </span>
+                    <div class="modal-header-top-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <!-- 左上：卡號 ID -->
+                        <div class="card-id-display" style="font-size: 13px; font-weight: normal; opacity: 0.85;">
+                            ${idTag}
+                        </div>
+                        
+                        <!-- 右上：按鈕區 ( 📋 + 🇪/🇯 ) -->
+                        <div class="modal-action-btns">
+                            <button type="button" class="btn-copy-title action-circle-btn" title="複製卡名">📋</button>
+                            <button type="button" class="btn-toggle-en-name action-circle-btn" title="${toggleIconTitle}">${toggleIconText}</button>
+                        </div>
+                    </div>
+
+                    <!-- 下方：卡名主要區塊 -->
+                    <div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
+                        <span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
                     </div>
                 `;
 
@@ -7663,6 +7726,15 @@
 				return;
 			}
 
+			const filterConfig = getFilterConfigFromUI();
+			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+			const isDeck = Boolean(currentSetObj && currentSetObj.isdeck === true);
+
+			const btnEnDeck = document.getElementById('btn-export-mode-en-deck');
+			if (btnEnDeck) {
+				btnEnDeck.style.display = isDeck ? 'block' : 'none';
+			}
+
 			const exportModal = document.getElementById('export-mode-modal');
 			if (exportModal) {
 				exportModal.classList.add('active');
@@ -8118,6 +8190,76 @@
 			document.getElementById('deck-verify-step').style.display = 'block';
 		});
 		
+		// 2. 匯出英文牌組非同步處理流程
+		async function exportEnglishDeckProcess() {
+			const filterConfig = getFilterConfigFromUI();
+			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+
+			if (!currentSetObj) return;
+
+			const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+			if (cardList.length === 0) {
+				alert("該牌組內無卡牌資料！");
+				return;
+			}
+
+			const items = cardList.map(item => ({
+				name: (typeof item === 'object' && item !== null) ? item.name : item,
+				count: item.count || 1
+			}));
+
+			const loadingOverlay = document.getElementById('loading-overlay');
+			const loadingText = document.getElementById('loading-text');
+			if (loadingOverlay) {
+				if (loadingText) loadingText.innerText = '正在批量查詢英文卡名中...';
+				loadingOverlay.style.display = 'flex';
+			}
+
+			try {
+				const resp = await fetch('/api/export_english_deck', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ items: items })
+				});
+
+				if (!resp.ok) throw new Error('伺服器處理失敗');
+
+				const data = await resp.json();
+				const formattedList = data.result || [];
+
+				// 💡【關鍵修復】：將批量查到的英文名同步更新至全域變數與 localStorage 快取！
+				formattedList.forEach(item => {
+					if (item.name && item.en_name) {
+						fetchedEnNameMap[item.name] = item.en_name;
+					}
+				});
+				localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
+
+				// 格式化為純文字顯示
+				const textContent = formattedList.map(i => `${i.count} ${i.en_name}`).join('\n');
+
+				document.getElementById('en-deck-textarea').value = textContent;
+				document.getElementById('export-en-deck-modal').classList.add('active');
+
+			} catch (err) {
+				console.error("匯出英文牌組失敗:", err);
+				alert("匯出英文牌組失敗，請稍後再試！");
+			} finally {
+				if (loadingOverlay) loadingOverlay.style.display = 'none';
+			}
+		}
+
+		// 綁定複製與 Modal 關閉事件
+		document.getElementById('export-en-deck-modal-close')?.addEventListener('click', () => {
+			document.getElementById('export-en-deck-modal').classList.remove('active');
+		});
+
+		document.getElementById('btn-copy-en-deck')?.addEventListener('click', () => {
+			const textarea = document.getElementById('en-deck-textarea');
+			if (!textarea || !textarea.value) return;
+			copyTextToClipboard(textarea.value);
+		});
+		
 		// ==========================================
 		// 台灣大賽冠軍使用卡排行 (報表 #1 & #2) 核心邏輯
 		// ==========================================
@@ -8429,6 +8571,28 @@
 					}
 				}
 			});
+			
+			// 💡 新增：匯出英文牌組 Modal 相關事件綁定
+            document.getElementById('btn-export-mode-en-deck')?.addEventListener('click', () => {
+                closeExportModal();
+                exportEnglishDeckProcess();
+            });
+
+            document.getElementById('export-en-deck-modal-close')?.addEventListener('click', () => {
+                document.getElementById('export-en-deck-modal').classList.remove('active');
+            });
+
+            document.getElementById('export-en-deck-modal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'export-en-deck-modal') {
+                    e.target.classList.remove('active');
+                }
+            });
+
+            document.getElementById('btn-copy-en-deck')?.addEventListener('click', () => {
+                const textarea = document.getElementById('en-deck-textarea');
+                if (!textarea || !textarea.value) return;
+                copyTextToClipboard(textarea.value);
+            });
 		});
 		
 		// 💡 2. 當卡牌 Modal 關閉時，將 z-index 重置恢復預設值
@@ -8814,15 +8978,6 @@
 
 			alert(tipsText);
 		}
-		
-		// 💡 原本舊的相機截圖事件改為以下簡化版 (直接呼叫重構後的 captureDetailPanel 共用函式)
-		document.getElementById('modal-screenshot')?.addEventListener('click', () => {
-			const modalCard = document.querySelector('.modal-card');
-			const baseName = modalTitle ? modalTitle.innerText : 'card';
-			if (modalCard) {
-				captureDetailPanel(modalCard, baseName);
-			}
-		});
 
 		document.getElementById('btn-ability-tips')?.addEventListener('click', showAbilityTipsAlert);
 
