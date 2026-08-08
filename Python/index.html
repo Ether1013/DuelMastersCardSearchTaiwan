@@ -1770,7 +1770,7 @@
         </div>
 
         <div class="row-flex">
-            <!-- B. 雙極卡設定 -->
+			<!-- B. 雙極卡設定 -->
 			<div class="col col-half" id="section-b-group">
 				<h3>雙極卡設定</h3>
 				<div class="checkbox-group" style="margin-bottom: 10px;">
@@ -1778,11 +1778,15 @@
 					<label><input type="radio" name="twinpect" value="no"> 排除雙極</label>
 					<label><input type="radio" name="twinpect" value="all" checked> 都找</label>
 				</div>
-				<div class="checkbox-group advanced-only advanced-only-flex">
-					<label><input type="checkbox" name="twin_adv" value="ability" checked> 能力混找</label>
-					<label><input type="checkbox" name="twin_adv" value="top_big" checked> 上面較大</label>
-					<label><input type="checkbox" name="twin_adv" value="same" checked> 上下一樣</label>
-					<label><input type="checkbox" name="twin_adv" value="bot_big" checked> 下面較大</label>
+				
+				<!-- 💡 解決方案：在外層多包一個純粹的 div 專門負責進階隱藏，避開 CSS flex 衝突 -->
+				<div class="advanced-only">
+					<div class="checkbox-group" style="margin-top: 8px;">
+						<label><input type="checkbox" name="twin_adv" value="ability" checked> 能力混找</label>
+						<label><input type="checkbox" name="twin_adv" value="top_big" checked> 上面較大</label>
+						<label><input type="checkbox" name="twin_adv" value="same" checked> 上下一樣</label>
+						<label><input type="checkbox" name="twin_adv" value="bot_big" checked> 下面較大</label>
+					</div>
 				</div>
 			</div>
 
@@ -2359,10 +2363,11 @@
 		// 💡 輔助函式：根據內部的 input:checked 狀態，更新外層 label 的 Chip 高亮類別
 		// 💡 1. 補強 Chip UI 同步函式 (含按鈕式的衍生卡種高亮狀態)
 		function syncChipUI() {
-			// A. 處理一般 Chip Label
+			// A. 處理一般 Chip Label (排除了隱藏狀態下的進階選項)
 			document.querySelectorAll('.checkbox-group label').forEach(label => {
 				const input = label.querySelector('input');
 				if (input) {
+					// 💡 只有當父階層非隱藏，或者屬於卡種區時才加上高亮樣式
 					label.classList.toggle('chip-active', input.checked);
 				}
 			});
@@ -2725,19 +2730,22 @@
 				});
 			}
             
-            const twinAdvBoxes = document.querySelectorAll('input[name="twin_adv"]');
-            const uncheckedTwinAdv = Array.from(twinAdvBoxes).filter(cb => !cb.checked);
-            if (uncheckedTwinAdv.length > 0) {
-                Array.from(twinAdvBoxes).filter(cb => cb.checked).forEach(cb => {
-                    tags.push({ 
-						label: `雙極條件包含: ${cb.parentNode.textContent.trim()}`, 
-						action: () => { 
-							cb.checked = false; 
-							syncChipUI(); // 👈 加這行
-							updateSummaryText(); 
-						} 
-					});
-                });
+            // 💡 加上 if (isAdv) 包裹，確保只有在進階模式啟用時才處理雙極進階標籤
+            if (isAdv) {
+                const twinAdvBoxes = document.querySelectorAll('input[name="twin_adv"]');
+                const uncheckedTwinAdv = Array.from(twinAdvBoxes).filter(cb => !cb.checked);
+                if (uncheckedTwinAdv.length > 0) {
+                    Array.from(twinAdvBoxes).filter(cb => cb.checked).forEach(cb => {
+                        tags.push({ 
+                            label: `雙極條件包含: ${cb.parentNode.textContent.trim()}`, 
+                            action: () => { 
+                                cb.checked = false; 
+                                syncChipUI(); 
+                                updateSummaryText(); 
+                            } 
+                        });
+                    });
+                }
             }
 
             const allPermitBoxes = document.querySelectorAll('#civ-permit .civ-box');
