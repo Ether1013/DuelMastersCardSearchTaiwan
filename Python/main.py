@@ -220,19 +220,46 @@ def load_and_process_caches():
     except Exception as e:
         print(f"載入緩存失敗: {e}")
 
+# --- LINE 通知共用模型與函式 ---
+
+class LineNotificationModel(BaseModel):
+    reporter_name: str = "使用者"
+    email: str = ""
+    emojis: str = ""
+    message: str = ""
+    
+# 重構 ReportModel 繼承 Base 或獨立定義，此處展示獨立定義
 class ReportModel(BaseModel):
     card_name: str
     card_id: str = ""
     reporter_name: str = "熱情的決鬥者"
     error_desc: str = ""
 
-def send_line_notification(report: ReportModel, base_url: str = ""):
+class AuthorMessageModel(BaseModel):
+    nickname: str = "使用者"
+    email: str = ""
+    emojis: str = ""
+    message: str
+    
+def push_line_message(msg_text: str):
+    """共用的 LINE Push Notification 呼叫式"""
     token, user_id = LINE_ACCESS_TOKEN.strip(), LINE_USER_ID.strip()
     if not token or not user_id or "你的_" in token:
         return
 
     url = "https://api.line.me/v2/bot/message/push"
-    headers = {"Content-Type": "application/json; charset=utf-8", "Authorization": f"Bearer {token}"}
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": f"Bearer {token}"
+    }
+    payload = {"to": user_id, "messages": [{"type": "text", "text": msg_text}]}
+    try:
+        with httpx.Client() as client:
+            client.post(url, headers=headers, json=payload, timeout=5.0)
+    except Exception as e:
+        print(f"[LINE Push 網路錯誤]: {e}")
+        
+def send_line_notification(report: ReportModel, base_url: str = ""):
     raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
     target_param = raw_id if raw_id else report.card_name.strip()
     card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
@@ -241,12 +268,18 @@ def send_line_notification(report: ReportModel, base_url: str = ""):
         f"🚨 【卡牌翻譯錯誤回報】\n\n📌 卡名：{report.card_name}\n🆔 卡號：{report.card_id or '未提供'}\n"
         f"🔗 連結：\n{card_link}\n\n👤 回報者：{report.reporter_name}\n📝 錯誤內容：{report.error_desc or '（無簡答內容）'}"
     )
-    payload = {"to": user_id, "messages": [{"type": "text", "text": msg_text}]}
-    try:
-        with httpx.Client() as client:
-            client.post(url, headers=headers, json=payload, timeout=5.0)
-    except Exception as e:
-        print(f"[LINE Push 網路錯誤]: {e}")
+    push_line_message(msg_text)
+
+def send_author_message_notification(msg_data: AuthorMessageModel):
+    """處理留言給作者的 LINE 通知格式"""
+    msg_text = (
+        f"💬 【收到給作者的新留言】\n\n"
+        f"👤 暱稱：{msg_data.nickname or '使用者'}\n"
+        f"📧 Email：{msg_data.email or '未提供'}\n"
+        f"😀 表情：{msg_data.emojis or '無'}\n\n"
+        f"📝 留言內容：\n{msg_data.message}"
+    )
+    push_line_message(msg_text)
 
 async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
     global has_unsynced_en_names
@@ -664,3 +697,17 @@ async def report_error(request: Request, report: ReportModel, background_tasks: 
 
 @app.get("/api/get_all_english_names")
 async def get_all_english_names(): return english_name_cache
+
+@app.post("/api/message_author")
+@limiter.limit("3/minute")
+async def message_author(request: Request, payload: AuthorMessageModel, background_tasks: BackgroundTasks):
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(status_code=400, detail="留言內容為必填項目")
+    
+    # 限制表情文字上限（避免惡意過長輸入）
+    if len(payload.emojis) > 20:
+        raise HTTPException(status_code=400, detail="表情符號最多選擇 20 個")
+
+    background_tasks.add_task(send_author_message_notification, payload)
+    nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
+    return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}

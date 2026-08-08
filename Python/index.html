@@ -2231,7 +2231,15 @@
                 </button>
             </div>
 
-        </div>
+ 			<!-- ================= 第四大類 ================= -->
+			<button type="button" class="qa-btn-lv1" data-target="qa-sec-4">💬 4. 留言給作者</button>
+			<div class="qa-content-lv1" id="qa-sec-4">
+				<button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-open-author-msg" style="background:#0d9488; color:#fff;">
+					✍️ 給作者留言 / 意見回饋
+				</button>
+			</div>
+
+       </div>
     </div>
 
     <!-- Z. Footer 區 (需求 4 修改結構) -->
@@ -2467,6 +2475,46 @@
 						<tbody id="report-tbody-user"></tbody>
 					</table>
 				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 留言給作者 Modal 彈窗 -->
+	<div class="modal-overlay" id="author-msg-modal">
+		<div class="modal-card" style="max-width: 480px;">
+			<div class="modal-header">
+				<div class="modal-title">💬 留言給作者</div>
+				<div class="modal-close" id="author-msg-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" style="gap: 12px; padding: 16px;">
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">暱稱 (必填)：</label>
+					<input type="text" id="qa-author-nickname" class="qa-input" value="使用者" placeholder="請輸入暱稱">
+				</div>
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (非必填)：</label>
+					<input type="email" id="qa-author-email" class="qa-input" placeholder="example@email.com">
+				</div>
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">表情 Emoji (非必填，最多 20 個)：</label>
+					<!-- 預設常用 Emoji 選擇區 -->
+					<div id="emoji-picker" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👍</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">❤️</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🔥</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🎉</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👏</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🙏</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">😊</span>
+						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🚀</span>
+					</div>
+					<input type="text" id="qa-author-emojis" class="qa-input" placeholder="點擊上方或自行輸入 Emoji" maxlength="20">
+				</div>
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">留言內容 (必填)：</label>
+					<textarea id="qa-author-message" rows="4" style="width: 100%; padding: 8px; border: 2px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; resize: vertical; font-size: 15px;" placeholder="請輸入您想對作者說的話..."></textarea>
+				</div>
+				<button type="button" id="btn-submit-author-msg" style="width: 100%; padding: 10px; background: #0d9488; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px;">送出留言</button>
 			</div>
 		</div>
 	</div>
@@ -7619,6 +7667,89 @@
 					}
 				});
 			}
+		});
+		
+		document.addEventListener('DOMContentLoaded', () => {
+			const authorModal = document.getElementById('author-msg-modal');
+			const openBtn = document.getElementById('qa-btn-open-author-msg');
+			const closeBtn = document.getElementById('author-msg-modal-close');
+			const submitBtn = document.getElementById('btn-submit-author-msg');
+			const emojiInput = document.getElementById('qa-author-emojis');
+
+			// 開啟與關閉 Modal
+			openBtn?.addEventListener('click', () => {
+				document.getElementById('qa-author-nickname').value = "使用者";
+				document.getElementById('qa-author-email').value = "";
+				document.getElementById('qa-author-emojis').value = "";
+				document.getElementById('qa-author-message').value = "";
+				authorModal?.classList.add('active');
+			});
+
+			closeBtn?.addEventListener('click', () => authorModal?.classList.remove('active'));
+			authorModal?.addEventListener('click', (e) => {
+				if (e.target === authorModal) authorModal.classList.remove('active');
+			});
+
+			// 快捷點選 Emoji
+			document.querySelectorAll('.emoji-opt').forEach(el => {
+				el.addEventListener('click', () => {
+					const current = emojiInput.value;
+					// 限制最多 20 個字元/表情
+					if ([...current].length < 20) {
+						emojiInput.value = current + el.innerText;
+					}
+				});
+			});
+
+			// 送出 API 請求
+			submitBtn?.addEventListener('click', async () => {
+				const nickname = document.getElementById('qa-author-nickname').value.trim() || "使用者";
+				const email = document.getElementById('qa-author-email').value.trim();
+				const emojis = emojiInput.value.trim();
+				const message = document.getElementById('qa-author-message').value.trim();
+
+				if (!message) {
+					alert("請輸入留言內容！");
+					return;
+				}
+
+				submitBtn.disabled = true;
+				submitBtn.innerText = "傳送中...";
+
+				try {
+					const resp = await fetch('/api/message_author', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							nickname: nickname,
+							email: email,
+							emojis: emojis,
+							message: message
+						})
+					});
+
+					if (resp.ok) {
+						const resData = await resp.json();
+						if (typeof showToast === 'function') {
+							showToast(resData.message || "留言送出成功！");
+						} else {
+							alert(resData.message || "留言送出成功！");
+						}
+						authorModal?.classList.remove('active');
+					} else if (resp.status === 429) {
+						alert("⚠️ 留言頻率過高，請稍等 1 分鐘後再試！");
+					} else {
+						const errData = await resp.json();
+						alert(errData.detail || "傳送失敗，請稍後再試。");
+					}
+				} catch (e) {
+					console.error("送出留言失敗:", e);
+					alert("網路請求發生錯誤，請重試");
+				} finally {
+					submitBtn.disabled = false;
+					submitBtn.innerText = "送出留言";
+				}
+			});
 		});
 
 		// 全域變數或輔助函式：開啟錯誤回報 Modal 並帶入卡片資料
