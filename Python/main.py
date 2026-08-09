@@ -75,6 +75,16 @@ DEFAULT_TAGS = {
         {"id": "b1", "name": "Buff", "is_deletable": False, "is_renamable": False},
         {"id": "b2", "name": "Debuff", "is_deletable": False, "is_renamable": False}
     ],
+    "trigger_time": [
+        { "id": "tr_1", "name": "攻擊", "children": [] },
+        { "id": "tr_2", "name": "出場", "children": [] },
+        { "id": "tr_3", "name": "離場", "children": [] },
+        { "id": "tr_4", "name": "戰鬥", "children": [] },
+        { "id": "tr_5", "name": "回合初", "children": [] },
+        { "id": "tr_6", "name": "回合結束時", "children": [] },
+        { "id": "tr_7", "name": "戰鬥後", "children": [] },
+        { "id": "tr_8", "name": "攻擊後", "children": [] }
+    ],
     "target_obj": [
         { "id": "t_ele", "name": "元素", "children": [
             { "id": "t_ele_bio", "name": "元素-生物", "children": [] },
@@ -92,6 +102,7 @@ DEFAULT_TAGS = {
     ],
     "free": []
 }
+
 TAGS_FILE = BASE_DIR / "tags.json"
 tags_cache = copy.deepcopy(DEFAULT_TAGS)
 
@@ -298,10 +309,12 @@ def load_and_process_caches():
         # 新增 tags 載入
         loaded_tags = load_json_file("tags.json")
         if loaded_tags:
-            # 將讀取到的資料寫入 cache，同時確保舊版檔案若少了 target_obj 也能補上預設值
+            # 將讀取到的資料寫入 cache，同時確保舊版檔案若少了特定鍵值也能補上預設值
             tags_cache = loaded_tags
             if "target_obj" not in tags_cache:
                 tags_cache["target_obj"] = copy.deepcopy(DEFAULT_TAGS["target_obj"])
+            if "trigger_time" not in tags_cache:
+                tags_cache["trigger_time"] = copy.deepcopy(DEFAULT_TAGS["trigger_time"])
         else:
             # 如果本地沒檔案，存一份預設的
             with open(TAGS_FILE, 'w', encoding='utf-8') as f:
@@ -885,13 +898,14 @@ async def websocket_tags(websocket: WebSocket):
             category = msg.get("category")
             data = msg.get("data", {})
             
-            if category not in ["buff", "free", "target_obj"]:
+            # (約在接收 msg 之後)
+            if category not in ["buff", "free", "target_obj", "trigger_time"]:
                 continue
                 
             cat_list = tags_cache[category]
             
             # 判斷當前操作的分類是否屬於「樹狀結構」
-            is_tree_category = category in ["free", "target_obj"]
+            is_tree_category = category in ["free", "target_obj", "trigger_time"]
             
             # --- 處理相對操作 ---
             if action == "ADD":

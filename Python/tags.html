@@ -11,11 +11,11 @@
             --primary: #3b82f6; --hover: #eff6ff;
             --danger: #ef4444; --system: #94a3b8;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; gap: 20px; height: 100vh; box-sizing: border-box; }
-        .panel { background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 15px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        h2 { margin-top: 0; font-size: 1.2rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; gap: 15px; height: 100vh; box-sizing: border-box; overflow-x: auto; }
+        .panel { background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 15px; flex: 1; min-width: 280px; display: flex; flex-direction: column; overflow: hidden; }
+        h2 { margin-top: 0; font-size: 1.1rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
         
-        .add-btn { background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+        .add-btn { background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
         .add-btn:hover { opacity: 0.9; }
 
         .tree-container { flex: 1; overflow-y: auto; padding: 10px 0; }
@@ -32,14 +32,14 @@
         .tag-title { font-weight: 500; display: flex; align-items: center; gap: 6px; }
         .actions { display: none; gap: 5px; }
         .tag-content:hover .actions { display: flex; }
-        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 5px; border-radius: 4px; }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 0.9rem; padding: 2px 5px; border-radius: 4px; }
         .icon-btn:hover { background: #e2e8f0; }
         .icon-btn.del:hover { color: var(--danger); }
 
         .children-container { padding-left: 20px; border-left: 1px dashed var(--border); margin-left: 10px; margin-top: 4px; }
         
         /* 連線狀態 */
-        #status { position: fixed; bottom: 10px; right: 10px; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; background: #10b981; color: white; }
+        #status { position: fixed; bottom: 10px; right: 10px; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; background: #10b981; color: white; z-index: 100; }
         #status.offline { background: var(--danger); }
     </style>
 </head>
@@ -53,29 +53,38 @@
         <div id="buff-list" class="tree-container"></div>
     </div>
 
-    <div class="panel" style="flex: 1.5;">
-        <h2>目標 (可拖曳排序/建立子層) <button class="add-btn" onclick="addTag('target_obj', null)">+ 新增根標籤</button></h2>
+    <div class="panel" style="flex: 1.2;">
+        <h2>觸發時間 <button class="add-btn" onclick="addTag('trigger_time', null)">+ 新增根標籤</button></h2>
+        <div id="trigger-time-list" class="tree-container"></div>
+        <div id="trigger-time-drop" class="root-drop-zone" 
+             ondragover="handleDragOver(event)" 
+             ondragleave="handleDragLeave(event)" 
+             ondrop="handleDrop(event, null, 'trigger_time')">拖曳至此成為根節點</div>
+    </div>
+
+    <div class="panel" style="flex: 1.2;">
+        <h2>目標 <button class="add-btn" onclick="addTag('target_obj', null)">+ 新增根標籤</button></h2>
         <div id="target-obj-list" class="tree-container"></div>
         <div id="target-obj-drop" class="root-drop-zone" 
              ondragover="handleDragOver(event)" 
              ondragleave="handleDragLeave(event)" 
-             ondrop="handleDrop(event, null, 'target_obj')">拖曳至此處成為 目標 的根節點</div>
+             ondrop="handleDrop(event, null, 'target_obj')">拖曳至此成為根節點</div>
     </div>
 
-    <div class="panel" style="flex: 1.5;">
-        <h2>自由標籤 (可拖曳排序/建立子層) <button class="add-btn" onclick="addTag('free', null)">+ 新增根標籤</button></h2>
+    <div class="panel" style="flex: 1.2;">
+        <h2>自由標籤 <button class="add-btn" onclick="addTag('free', null)">+ 新增根標籤</button></h2>
         <div id="free-list" class="tree-container"></div>
         <div id="free-drop" class="root-drop-zone"
              ondragover="handleDragOver(event)" 
              ondragleave="handleDragLeave(event)" 
-             ondrop="handleDrop(event, null, 'free')">拖曳至此處成為 自由標籤 的根節點</div>
+             ondrop="handleDrop(event, null, 'free')">拖曳至此成為根節點</div>
     </div>
 
     <div id="status">連線中...</div>
 
     <script>
         let ws;
-        let localData = { target: [], buff: [], target_obj: [], free: [] };
+        let localData = { target: [], buff: [], target_obj: [], trigger_time: [], free: [] };
 
         // --- 模糊比對演算法 (Levenshtein Distance) ---
         function getEditDistance(a, b) {
@@ -104,6 +113,7 @@
                     if(n.children) extractTree(n.children);
                 });
             }
+            extractTree(localData.trigger_time);
             extractTree(localData.target_obj);
             extractTree(localData.free);
             return names;
@@ -116,7 +126,7 @@
             function find(nodes, id, path) {
                 for (let node of nodes) {
                     let currentPath = [...path, node.name];
-                    if (node.id === id) return currentPath; // 找到目標，回傳完整路徑
+                    if (node.id === id) return currentPath; 
                     if (node.children) {
                         let res = find(node.children, id, currentPath);
                         if (res) return res;
@@ -131,13 +141,8 @@
         function checkSimilarityWarning(newName, ancestorNames = []) {
             let allNames = extractAllNames();
             for(let name of allNames) {
-                // 1. 絕對不允許完全相同 (即使是父節點也不行)
                 if (name === newName) return `標籤「${newName}」已存在，確定要重複建立嗎？`;
-                
-                // 2. 【新增邏輯】如果比對的對象是父/父父等直系長輩，直接跳過模糊比對
                 if (ancestorNames.includes(name)) continue;
-
-                // 3. 字串包含或編輯距離太近的模糊比對
                 if (newName.includes(name) || name.includes(newName) || getEditDistance(newName, name) <= 1) {
                     return `新名稱「${newName}」與現有標籤「${name}」非常相似，確定要使用此名稱嗎？`;
                 }
@@ -166,7 +171,20 @@
                 const msg = JSON.parse(e.data);
                 if (msg.type === "FULL_SYNC") {
                     localData = msg.data;
-                    // 若後端還未產生 target_obj，做個保護機制給予預設值
+                    
+                    // 防呆：如果後端送來的資料沒有新欄位，前端自己補
+                    if (!localData.trigger_time) {
+                        localData.trigger_time = [
+                            { id: uuid(), name: "攻擊", children: [] },
+                            { id: uuid(), name: "出場", children: [] },
+                            { id: uuid(), name: "離場", children: [] },
+                            { id: uuid(), name: "戰鬥", children: [] },
+                            { id: uuid(), name: "回合初", children: [] },
+                            { id: uuid(), name: "回合結束時", children: [] },
+                            { id: uuid(), name: "戰鬥後", children: [] },
+                            { id: uuid(), name: "攻擊後", children: [] }
+                        ];
+                    }
                     if (!localData.target_obj) {
                         localData.target_obj = [
                             { id: uuid(), name: "元素", children: [
@@ -188,6 +206,7 @@
                 } else if (msg.type === "UPDATE_CATEGORY") {
                     localData[msg.category] = msg.data;
                     if (msg.category === 'buff') renderBuff();
+                    if (msg.category === 'trigger_time') renderTreeCategory('trigger-time-list', 'trigger_time', localData.trigger_time);
                     if (msg.category === 'target_obj') renderTreeCategory('target-obj-list', 'target_obj', localData.target_obj);
                     if (msg.category === 'free') renderTreeCategory('free-list', 'free', localData.free);
                 }
@@ -207,7 +226,6 @@
             if (!name || !name.trim()) return;
             name = name.trim();
             
-            // 取得要新增的位置的父節點祖先名單
             let ancestorNames = getAncestorNames(category, parentId);
             let warnMsg = checkSimilarityWarning(name, ancestorNames);
             if (warnMsg && !confirm(warnMsg)) return;
@@ -220,7 +238,6 @@
             if (!name || !name.trim() || name === oldName) return;
             name = name.trim();
 
-            // 取得該節點的祖先名單 (包含原本的名字，這樣改名時就不會跟舊名字打架)
             let ancestorNames = getAncestorNames(category, id);
             let warnMsg = checkSimilarityWarning(name, ancestorNames);
             if (warnMsg && !confirm(warnMsg)) return;
@@ -275,6 +292,7 @@
         function renderAll() {
             renderTarget(); 
             renderBuff(); 
+            renderTreeCategory('trigger-time-list', 'trigger_time', localData.trigger_time);
             renderTreeCategory('target-obj-list', 'target_obj', localData.target_obj);
             renderTreeCategory('free-list', 'free', localData.free);
         }
@@ -303,7 +321,7 @@
             `).join('');
         }
 
-        // 共用樹狀結構渲染器 (適用於 目標 與 自由標籤)
+        // 共用樹狀結構渲染器 (適用於 觸發時間, 目標, 自由標籤)
         function renderTreeCategory(containerId, category, dataList) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
