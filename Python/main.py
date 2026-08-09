@@ -13,7 +13,7 @@ from urllib.parse import quote, unquote
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from lzstring import LZString
 from pydantic import BaseModel
@@ -66,6 +66,105 @@ file_write_lock = asyncio.Lock()
 # 1. 記憶體計數器 (Render 重啟後自動歸零)
 feature_counter = defaultdict(int)
 
+
+# --- 定義預設標籤結構 ---
+DEFAULT_TAGS = {
+    "version": 1,
+    "target": ["我方", "對手", "雙方"],
+    "buff": [
+        {"id": "b1", "name": "Buff", "is_deletable": False, "is_renamable": False},
+        {"id": "b2", "name": "Debuff", "is_deletable": False, "is_renamable": False}
+    ],
+    "target_obj": [
+        { "id": "t_ele", "name": "元素", "children": [
+            { "id": "t_ele_bio", "name": "元素-生物", "children": [] },
+            { "id": "t_ele_soul", "name": "元素-魂種", "children": [] },
+            { "id": "t_ele_cg", "name": "元素-CrossGear", "children": [] },
+            { "id": "t_ele_field", "name": "元素-領域", "children": [] },
+            { "id": "t_ele_beat", "name": "元素-鼓動", "children": [] }
+        ]},
+        { "id": "t_spell", "name": "咒文", "children": [] },
+        { "id": "t_nonbio", "name": "非生物", "children": [] },
+        { "id": "t_castle", "name": "城", "children": [
+            { "id": "t_castle_gal", "name": "城-銀河城", "children": [] }
+        ]},
+        { "id": "t_player", "name": "玩家", "children": [] }
+    ],
+    "free": []
+}
+TAGS_FILE = BASE_DIR / "tags.json"
+tags_cache = copy.deepcopy(DEFAULT_TAGS)
+
+# 負責管理 WebSocket 連線
+class TagConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict, exclude: WebSocket = None):
+        for connection in self.active_connections:
+            if connection != exclude:
+                try:
+                    await connection.send_json(message)
+                except:
+                    pass
+
+tag_manager = TagConnectionManager()
+
+# 1 分鐘防抖任務
+tag_sync_task = None
+
+def push_tags_to_github():
+    if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
+        return
+    file_path = "tags.json"
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "FastAPI-AutoCommit"
+    }
+    try:
+        with httpx.Client() as client:
+            get_resp = client.get(url, headers=headers, timeout=10.0)
+            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
+            with open(TAGS_FILE, 'r', encoding='utf-8') as f:
+                content_str = f.read()
+            content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
+            payload = {
+                "message": "auto: sync tags.json [skip ci]",
+                "content": content_base64,
+                "branch": "main"
+            }
+            if sha: payload["sha"] = sha
+            client.put(url, headers=headers, json=payload, timeout=10.0)
+            print("[Tags] 成功 Push 至 GitHub")
+    except Exception as e:
+        print(f"[Tags GitHub Sync 錯誤]: {e}")
+
+async def tag_debounce_timer():
+    await asyncio.sleep(60) # 等待 60 秒
+    def _write():
+        with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+    await asyncio.to_thread(_write)
+    await asyncio.to_thread(push_tags_to_github)
+
+def trigger_tag_sync():
+    """每次異動時呼叫，重置 60 秒倒數計時器"""
+    global tag_sync_task
+    if tag_sync_task:
+        tag_sync_task.cancel()
+    tag_sync_task = asyncio.create_task(tag_debounce_timer())
+    
+    
 class CustomDeckModel(BaseModel):
     deck_list: str
 
@@ -184,7 +283,7 @@ def load_all_setlists():
 
 @app.on_event("startup")
 def load_and_process_caches():
-    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, diary_cache
+    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, diary_cache, tags_cache
     try:
         carddata_cache = load_json_file("carddata.json")
         card_types_cache = load_json_file("card_type.json")
@@ -195,6 +294,19 @@ def load_and_process_caches():
         diary_cache = load_json_file("diary.json")
         load_english_names()
         setlist_cache = load_all_setlists()
+        
+        # 新增 tags 載入
+        loaded_tags = load_json_file("tags.json")
+        if loaded_tags:
+            # 將讀取到的資料寫入 cache，同時確保舊版檔案若少了 target_obj 也能補上預設值
+            tags_cache = loaded_tags
+            if "target_obj" not in tags_cache:
+                tags_cache["target_obj"] = copy.deepcopy(DEFAULT_TAGS["target_obj"])
+        else:
+            # 如果本地沒檔案，存一份預設的
+            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+                
 
         powers, costs = set(), set()
         for card_dict in carddata_cache:
@@ -737,3 +849,110 @@ async def get_feature_stats():
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats
     }
+    
+def find_and_remove_node(node_list, target_id):
+    """遞迴在樹狀結構中尋找並移除節點，回傳該節點與其內容"""
+    for i, node in enumerate(node_list):
+        if node.get("id") == target_id:
+            return node_list.pop(i)
+        if "children" in node:
+            found = find_and_remove_node(node["children"], target_id)
+            if found: return found
+    return None
+
+def find_node(node_list, target_id):
+    """遞迴尋找節點"""
+    for node in node_list:
+        if node.get("id") == target_id: return node
+        if "children" in node:
+            found = find_node(node["children"], target_id)
+            if found: return found
+    return None
+
+@app.get("/tags.html")
+async def get_tags_page(): 
+    return FileResponse("tags.html")
+
+@app.websocket("/ws/tags")
+async def websocket_tags(websocket: WebSocket):
+    await tag_manager.connect(websocket)
+    await websocket.send_json({"type": "FULL_SYNC", "data": tags_cache})
+    
+    try:
+        while True:
+            msg = await websocket.receive_json()
+            action = msg.get("action")
+            category = msg.get("category")
+            data = msg.get("data", {})
+            
+            if category not in ["buff", "free", "target_obj"]:
+                continue
+                
+            cat_list = tags_cache[category]
+            
+            # 判斷當前操作的分類是否屬於「樹狀結構」
+            is_tree_category = category in ["free", "target_obj"]
+            
+            # --- 處理相對操作 ---
+            if action == "ADD":
+                new_node = {
+                    "id": data["id"],
+                    "name": data["name"],
+                    "is_deletable": True, "is_renamable": True
+                }
+                if is_tree_category:
+                    new_node["children"] = []
+                    parent_id = data.get("parent_id")
+                    if parent_id:
+                        parent_node = find_node(cat_list, parent_id)
+                        if parent_node: 
+                            parent_node.setdefault("children", []).append(new_node)
+                        else: 
+                            cat_list.append(new_node)
+                    else:
+                        cat_list.append(new_node)
+                else: 
+                    cat_list.append(new_node)
+                    
+            elif action == "RENAME":
+                target = find_node(cat_list, data["id"]) if is_tree_category else next((n for n in cat_list if n["id"] == data["id"]), None)
+                if target and target.get("is_renamable", True):
+                    target["name"] = data["name"]
+                    
+            elif action == "DELETE":
+                if is_tree_category:
+                    find_and_remove_node(cat_list, data["id"])
+                else:
+                    target = next((n for n in cat_list if n["id"] == data["id"]), None)
+                    if target and target.get("is_deletable", True):
+                        cat_list.remove(target)
+                        
+            elif action == "MOVE" and is_tree_category:
+                node_id = data["id"]
+                target_parent_id = data.get("target_parent_id") # null 代表移到根目錄
+                
+                # 1. 先把它從舊位置拔出來
+                moved_node = find_and_remove_node(cat_list, node_id)
+                if moved_node:
+                    # 2. 塞入新位置
+                    if target_parent_id:
+                        parent_node = find_node(cat_list, target_parent_id)
+                        if parent_node:
+                            parent_node.setdefault("children", []).append(moved_node)
+                        else:
+                            cat_list.append(moved_node) # 找不到父節點就放根目錄
+                    else:
+                        cat_list.append(moved_node)
+
+            # 廣播異動
+            await tag_manager.broadcast({
+                "type": "UPDATE_CATEGORY",
+                "category": category,
+                "data": tags_cache[category]
+            })
+            
+            # 觸發 60 秒防抖存檔
+            trigger_tag_sync()
+
+    except WebSocketDisconnect:
+        tag_manager.disconnect(websocket)

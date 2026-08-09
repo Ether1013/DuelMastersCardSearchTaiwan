@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCG 標籤管理系統</title>
+    <style>
+        :root {
+            --bg: #f8f9fa; --panel-bg: #ffffff;
+            --border: #e2e8f0; --text: #334155;
+            --primary: #3b82f6; --hover: #eff6ff;
+            --danger: #ef4444; --system: #94a3b8;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; gap: 20px; height: 100vh; box-sizing: border-box; }
+        .panel { background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 15px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        h2 { margin-top: 0; font-size: 1.2rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        
+        .add-btn { background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+        .add-btn:hover { opacity: 0.9; }
+
+        .tree-container { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .tag-node { display: flex; flex-direction: column; margin: 4px 0; }
+        .tag-content { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: white; border: 1px solid var(--border); border-radius: 6px; cursor: grab; transition: background 0.2s; }
+        .tag-content:hover { background: var(--hover); }
+        .tag-content.system { cursor: default; background: #f1f5f9; color: var(--system); border-color: #cbd5e1; }
+        
+        /* 拖曳視覺回饋 */
+        .tag-content.drag-over { border: 2px dashed var(--primary); background: #e0f2fe; }
+        .root-drop-zone { min-height: 40px; border: 2px dashed transparent; margin-top: 10px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.9rem; }
+        .root-drop-zone.drag-over { border-color: var(--primary); background: #e0f2fe; }
+
+        .tag-title { font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .actions { display: none; gap: 5px; }
+        .tag-content:hover .actions { display: flex; }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 5px; border-radius: 4px; }
+        .icon-btn:hover { background: #e2e8f0; }
+        .icon-btn.del:hover { color: var(--danger); }
+
+        .children-container { padding-left: 20px; border-left: 1px dashed var(--border); margin-left: 10px; margin-top: 4px; }
+        
+        /* 連線狀態 */
+        #status { position: fixed; bottom: 10px; right: 10px; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; background: #10b981; color: white; }
+        #status.offline { background: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <h2>對象 (系統保留)</h2>
+        <div id="target-list" class="tree-container" style="flex: none; min-height: 120px;"></div>
+        
+        <h2 style="margin-top: 20px;">增益 <button class="add-btn" onclick="addTag('buff', null)">+ 新增</button></h2>
+        <div id="buff-list" class="tree-container"></div>
+    </div>
+
+    <div class="panel" style="flex: 1.5;">
+        <h2>目標 (可拖曳排序/建立子層) <button class="add-btn" onclick="addTag('target_obj', null)">+ 新增根標籤</button></h2>
+        <div id="target-obj-list" class="tree-container"></div>
+        <div id="target-obj-drop" class="root-drop-zone" 
+             ondragover="handleDragOver(event)" 
+             ondragleave="handleDragLeave(event)" 
+             ondrop="handleDrop(event, null, 'target_obj')">拖曳至此處成為 目標 的根節點</div>
+    </div>
+
+    <div class="panel" style="flex: 1.5;">
+        <h2>自由標籤 (可拖曳排序/建立子層) <button class="add-btn" onclick="addTag('free', null)">+ 新增根標籤</button></h2>
+        <div id="free-list" class="tree-container"></div>
+        <div id="free-drop" class="root-drop-zone"
+             ondragover="handleDragOver(event)" 
+             ondragleave="handleDragLeave(event)" 
+             ondrop="handleDrop(event, null, 'free')">拖曳至此處成為 自由標籤 的根節點</div>
+    </div>
+
+    <div id="status">連線中...</div>
+
+    <script>
+        let ws;
+        let localData = { target: [], buff: [], target_obj: [], free: [] };
+
+        // --- 模糊比對演算法 (Levenshtein Distance) ---
+        function getEditDistance(a, b) {
+            if(a.length === 0) return b.length;
+            if(b.length === 0) return a.length;
+            let matrix = Array(a.length + 1).fill().map(() => Array(b.length + 1).fill(0));
+            for(let i = 0; i <= a.length; i++) matrix[i][0] = i;
+            for(let j = 0; j <= b.length; j++) matrix[0][j] = j;
+            for(let i = 1; i <= a.length; i++){
+                for(let j = 1; j <= b.length; j++){
+                    let cost = a[i-1] === b[j-1] ? 0 : 1;
+                    matrix[i][j] = Math.min(matrix[i-1][j] + 1, matrix[i][j-1] + 1, matrix[i-1][j-1] + cost);
+                }
+            }
+            return matrix[a.length][b.length];
+        }
+
+        // 遞迴取得所有標籤名稱
+        function extractAllNames() {
+            let names = [...(localData.target || [])];
+            (localData.buff || []).forEach(b => names.push(b.name));
+            function extractTree(nodes) {
+                if (!nodes) return;
+                nodes.forEach(n => {
+                    names.push(n.name);
+                    if(n.children) extractTree(n.children);
+                });
+            }
+            extractTree(localData.target_obj);
+            extractTree(localData.free);
+            return names;
+        }
+
+        // --- 取得目標節點的所有直系長輩名稱 (包含自己) ---
+        function getAncestorNames(category, targetId) {
+            if (!targetId || !localData[category]) return [];
+            
+            function find(nodes, id, path) {
+                for (let node of nodes) {
+                    let currentPath = [...path, node.name];
+                    if (node.id === id) return currentPath; // 找到目標，回傳完整路徑
+                    if (node.children) {
+                        let res = find(node.children, id, currentPath);
+                        if (res) return res;
+                    }
+                }
+                return null;
+            }
+            return find(localData[category], targetId, []) || [];
+        }
+
+        // --- 檢查相似度警告 (加入祖先豁免邏輯) ---
+        function checkSimilarityWarning(newName, ancestorNames = []) {
+            let allNames = extractAllNames();
+            for(let name of allNames) {
+                // 1. 絕對不允許完全相同 (即使是父節點也不行)
+                if (name === newName) return `標籤「${newName}」已存在，確定要重複建立嗎？`;
+                
+                // 2. 【新增邏輯】如果比對的對象是父/父父等直系長輩，直接跳過模糊比對
+                if (ancestorNames.includes(name)) continue;
+
+                // 3. 字串包含或編輯距離太近的模糊比對
+                if (newName.includes(name) || name.includes(newName) || getEditDistance(newName, name) <= 1) {
+                    return `新名稱「${newName}」與現有標籤「${name}」非常相似，確定要使用此名稱嗎？`;
+                }
+            }
+            return null;
+        }
+
+        // --- 產生隨機 ID ---
+        function uuid() { return Math.random().toString(36).substr(2, 9); }
+
+        // --- WebSocket 初始化 ---
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/tags`);
+            
+            ws.onopen = () => {
+                document.getElementById('status').className = '';
+                document.getElementById('status').innerText = '已連線 (即時同步)';
+            };
+            ws.onclose = () => {
+                document.getElementById('status').className = 'offline';
+                document.getElementById('status').innerText = '離線 (嘗試重連中...)';
+                setTimeout(initWebSocket, 3000);
+            };
+            ws.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+                if (msg.type === "FULL_SYNC") {
+                    localData = msg.data;
+                    // 若後端還未產生 target_obj，做個保護機制給予預設值
+                    if (!localData.target_obj) {
+                        localData.target_obj = [
+                            { id: uuid(), name: "元素", children: [
+                                { id: uuid(), name: "元素-生物", children: [] },
+                                { id: uuid(), name: "元素-魂種", children: [] },
+                                { id: uuid(), name: "元素-CrossGear", children: [] },
+                                { id: uuid(), name: "元素-領域", children: [] },
+                                { id: uuid(), name: "元素-鼓動", children: [] }
+                            ]},
+                            { id: uuid(), name: "咒文", children: [] },
+                            { id: uuid(), name: "非生物", children: [] },
+                            { id: uuid(), name: "城", children: [
+                                { id: uuid(), name: "城-銀河城", children: [] }
+                            ]},
+                            { id: uuid(), name: "玩家", children: [] }
+                        ];
+                    }
+                    renderAll();
+                } else if (msg.type === "UPDATE_CATEGORY") {
+                    localData[msg.category] = msg.data;
+                    if (msg.category === 'buff') renderBuff();
+                    if (msg.category === 'target_obj') renderTreeCategory('target-obj-list', 'target_obj', localData.target_obj);
+                    if (msg.category === 'free') renderTreeCategory('free-list', 'free', localData.free);
+                }
+            };
+        }
+
+        // --- 傳送操作至後端 ---
+        function sendAction(action, category, data) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action, category, data }));
+            }
+        }
+
+        // --- 使用者操作邏輯 ---
+        function addTag(category, parentId) {
+            let name = prompt("請輸入新標籤名稱:");
+            if (!name || !name.trim()) return;
+            name = name.trim();
+            
+            // 取得要新增的位置的父節點祖先名單
+            let ancestorNames = getAncestorNames(category, parentId);
+            let warnMsg = checkSimilarityWarning(name, ancestorNames);
+            if (warnMsg && !confirm(warnMsg)) return;
+
+            sendAction("ADD", category, { id: uuid(), name: name, parent_id: parentId });
+        }
+
+        function renameTag(category, id, oldName) {
+            let name = prompt("請輸入新名稱:", oldName);
+            if (!name || !name.trim() || name === oldName) return;
+            name = name.trim();
+
+            // 取得該節點的祖先名單 (包含原本的名字，這樣改名時就不會跟舊名字打架)
+            let ancestorNames = getAncestorNames(category, id);
+            let warnMsg = checkSimilarityWarning(name, ancestorNames);
+            if (warnMsg && !confirm(warnMsg)) return;
+
+            sendAction("RENAME", category, { id: id, name: name });
+        }
+
+        function deleteTag(category, id, name) {
+            if (confirm(`確定要刪除標籤「${name}」嗎？(若有子標籤會一併刪除)`)) {
+                sendAction("DELETE", category, { id: id });
+            }
+        }
+
+        // --- 拖曳邏輯 ---
+        let draggedId = null;
+        let draggedCategory = null;
+
+        function handleDragStart(e, id, category) {
+            draggedId = id;
+            draggedCategory = category;
+            e.dataTransfer.effectAllowed = 'move';
+            e.stopPropagation();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, targetParentId, category) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedId || draggedId === targetParentId) return; // 不能放進自己
+            if (draggedCategory !== category) {
+                alert('不可跨區塊拖曳標籤！');
+                return;
+            }
+            
+            sendAction("MOVE", category, { id: draggedId, target_parent_id: targetParentId });
+            draggedId = null;
+            draggedCategory = null;
+        }
+
+        // --- 畫面渲染 ---
+        function renderAll() {
+            renderTarget(); 
+            renderBuff(); 
+            renderTreeCategory('target-obj-list', 'target_obj', localData.target_obj);
+            renderTreeCategory('free-list', 'free', localData.free);
+        }
+
+        function renderTarget() {
+            const container = document.getElementById('target-list');
+            container.innerHTML = (localData.target || []).map(t => 
+                `<div class="tag-node"><div class="tag-content system"><span class="tag-title">🔒 ${t}</span></div></div>`
+            ).join('');
+        }
+
+        function renderBuff() {
+            const container = document.getElementById('buff-list');
+            container.innerHTML = (localData.buff || []).map(b => `
+                <div class="tag-node">
+                    <div class="tag-content ${b.is_renamable === false ? 'system' : ''}">
+                        <span class="tag-title">${b.is_renamable === false ? '🔒' : '📄'} ${b.name}</span>
+                        ${b.is_renamable !== false ? `
+                            <div class="actions">
+                                <button class="icon-btn" onclick="renameTag('buff', '${b.id}', '${b.name}')" title="改名">✏️</button>
+                                <button class="icon-btn del" onclick="deleteTag('buff', '${b.id}', '${b.name}')" title="刪除">🗑️</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 共用樹狀結構渲染器 (適用於 目標 與 自由標籤)
+        function renderTreeCategory(containerId, category, dataList) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            function buildTree(nodes) {
+                if (!nodes) return '';
+                let html = '';
+                for (let node of nodes) {
+                    let childrenHtml = node.children && node.children.length > 0 ? buildTree(node.children) : '';
+                    html += `
+                        <div class="tag-node">
+                            <div class="tag-content" draggable="true" 
+                                ondragstart="handleDragStart(event, '${node.id}', '${category}')"
+                                ondragover="handleDragOver(event)" 
+                                ondragleave="handleDragLeave(event)" 
+                                ondrop="handleDrop(event, '${node.id}', '${category}')">
+                                <span class="tag-title">📁 ${node.name}</span>
+                                <div class="actions">
+                                    <button class="icon-btn" onclick="addTag('${category}', '${node.id}')" title="新增子標籤">➕</button>
+                                    <button class="icon-btn" onclick="renameTag('${category}', '${node.id}', '${node.name}')" title="改名">✏️</button>
+                                    <button class="icon-btn del" onclick="deleteTag('${category}', '${node.id}', '${node.name}')" title="刪除">🗑️</button>
+                                </div>
+                            </div>
+                            ${childrenHtml ? `<div class="children-container">${childrenHtml}</div>` : ''}
+                        </div>
+                    `;
+                }
+                return html;
+            }
+            container.innerHTML = buildTree(dataList);
+        }
+
+        // 啟動
+        initWebSocket();
+    </script>
+</body>
+</html>
