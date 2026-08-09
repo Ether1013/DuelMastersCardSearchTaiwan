@@ -857,15 +857,32 @@ async def message_author(request: Request, payload: AuthorMessageModel, backgrou
 @app.post("/api/track")
 async def track_feature(request: Request):
     try:
+        # 💡 判斷是否為 Localhost，若是則直接跳過不記錄
+        client_host = request.client.host if request.client else ""
+        request_host = request.headers.get("host", "")
+        
+        is_localhost = (
+            client_host in ["127.0.0.1", "::1"] or 
+            "localhost" in request_host or 
+            "127.0.0.1" in request_host
+        )
+        
+        if is_localhost:
+            return {"status": "skipped", "reason": "localhost environment"}
+
         data = await request.json()
         feature_name = data.get("feature")
         detail = data.get("detail")
+        
+        # 💡 取得使用者國籍
+        country = get_client_country(request)
         
         if feature_name:
             feature_counter[feature_name] += 1
             
             entry = {
                 "feature": feature_name,
+                "country": country,  # 💡 紀錄國籍
                 "detail": detail,
                 "time": time.strftime("%Y-%m-%d %H:%M:%S")
             }
@@ -873,35 +890,43 @@ async def track_feature(request: Request):
             # 💡 若包含 detail，記錄最新 50 筆
             if detail:
                 action_details_log.appendleft(entry)
-                
-                # ----------------------------------------------------
-                # 💡【後端 Console 縮排列印】
-                # 如果你想在 Terminal 直接即時看到漂亮的縮排 Log，取消下方註解：
-                # print(f"\n[Track Detail Log] {entry['time']}")
-                # print(json.dumps(entry, ensure_ascii=False, indent=2))
-                # ----------------------------------------------------
 
     except Exception:
         pass  # 隨緣統計，出現例外直接忽略
     return {"status": "ok"}
 
-# 3. 查看統計數據與最新 50 筆 Detail 的 API (回傳漂亮的縮排 JSON + UTF-8 中日文)
-@app.get("/api/track/stats", response_class=PrettyJSONResponse) # 💡 response_class 指定 PrettyJSONResponse
+# 3. 查看統計數據與最新 50 筆 Detail 的 API
+@app.get("/api/track/stats", response_class=PrettyJSONResponse)
 async def get_feature_stats():
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     
+    # 💡 統計最新 50 筆紀錄中的國家分佈
+    country_counts = defaultdict(int)
+    for log in action_details_log:
+        c = log.get("country", "Unknown")
+        country_counts[c] += 1
+
     result = {
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
+        "recent_countries_summary": dict(country_counts),  # 💡 國籍統計摘要
         "recent_50_details": list(action_details_log)
     }
 
-    # 在後端控制台 (Terminal / Console) 也要印出縮排格式
     print("\n==================== [Feature Stats] ====================")
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print("=========================================================\n")
 
     return result
+
+def get_client_country(request: Request) -> str:
+    """取得請求來源的國籍 ISO 代碼（例: TW, JP, US）"""
+    # 1. 優先從 Render / Cloudflare 轉發的 Header 取得國籍代碼
+    country = request.headers.get("cf-ipcountry") or request.headers.get("x-country-code")
+    if country and country.upper() != "XX":  # XX 代表未知國籍
+        return country.upper()
+    
+    return "Unknown"
     
 def find_and_remove_node(node_list, target_id):
     """遞迴在樹狀結構中尋找並移除節點，回傳該節點與其內容"""
