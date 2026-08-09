@@ -2567,7 +2567,7 @@
 		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
 		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
 			selectEl.addEventListener('change', (e) => {
-				trackFeature('use_sort_' + e.target.value); // 使用排序 (會記錄具體排序類別)
+				trackFeature('列表更改排序', { sort_type: e.target.value });
 				// 讓 Page 2 與 Page 3 的下拉選單保持選擇一致
 				document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = e.target.value);
 				renderCurrentResultsWithSort();
@@ -2729,7 +2729,7 @@
 
         btnSummary.addEventListener('click', () => {
 		
-			trackFeature('toggle_footer_summary'); // 點擊 footer 的過濾總覽
+			trackFeature('開啟過濾總覽'); // 點擊 footer 的過濾總覽
 		
             summaryBox.classList.toggle('open');
             btnSummary.innerText = summaryBox.classList.contains('open') ? '▼' : '▲';
@@ -2850,7 +2850,10 @@
 			if (btnToggleEn) {
 				btnToggleEn.onclick = async (e) => {
 					e.stopPropagation();
-					trackFeature('modal_toggle_en_name'); // 翻看英文卡名
+					trackFeature('切換日/英卡名', { 
+						card_name: card.name, 
+						target_lang: currentCardLang === 'en' ? 'jp' : 'en' 
+					});
 					// 若目前是英文 ➔ 切換回日文
 					if (currentCardLang === 'en') {
 						currentCardLang = 'jp';
@@ -3275,7 +3278,6 @@
 			// ----------------------------------------------------
 			// [看效果 (ID)]
 			document.getElementById('qa-btn-id-view').addEventListener('click', () => {
-				trackFeature('qa_search_single_id');
 				const idVal = document.getElementById('qa-input-id').value;
 				const results = silentSearchCard(idVal, true);
 				if (results.length > 0) {
@@ -3285,6 +3287,7 @@
 				} else {
 					showToast(`⚠️ 找不到卡號為「${idVal}」的卡牌`);
 				}
+				trackFeature('索引－輸入ID', { input_id: idVal });
 			});
 
 			// [分享 (ID)]
@@ -3302,7 +3305,6 @@
 
 			// [看效果 (卡名)]
 			document.getElementById('qa-btn-name-view').addEventListener('click', () => {
-				trackFeature('qa_search_single_name');
 				const nameVal = document.getElementById('qa-input-name').value;
 				const results = silentSearchCard(nameVal, false);
 				if (results.length > 0) {
@@ -3315,6 +3317,7 @@
 					document.getElementById('btn-search').click();
 					showToast("進入模糊比對搜尋...");
 				}
+				trackFeature('索引－輸入卡名', { input_name: nameVal }); // 💡 補上卡名參數
 			});
 
 			// [分享 (卡名)]
@@ -3330,7 +3333,6 @@
 			// ----------------------------------------------------
 			// [看內容 (商品)]
 			document.getElementById('qa-btn-set-view').addEventListener('click', () => {
-				trackFeature('qa_search_setcode');
 				const setKey = document.getElementById('qa-input-set').value.trim().toUpperCase();
 				if (!setKey) { showToast("請輸入商品代碼"); return; }
 				if (!rawSetlist[setKey]) { showToast(`⚠️ 找不到商品代碼：${setKey}`); return; }
@@ -3345,6 +3347,7 @@
 					smallSelect.value = setKey;
 				}
 				document.getElementById('btn-search').click();
+				trackFeature('索引－輸入商品代號', { set_code: setKey }); // 💡 補上商品代碼
 			});
 
 			// [分享連結 (商品)]
@@ -3364,7 +3367,6 @@
 
 			// [貼上卡表並建檔]
 			document.getElementById('qa-btn-deck-import').addEventListener('click', () => {
-				trackFeature('qa_import_deck_text');
 				const text = document.getElementById('qa-input-deck-text').value.trim();
 				if (!text) {
 					showToast("請先貼上卡表文字");
@@ -3383,11 +3385,12 @@
 				if (btnParse) {
 					btnParse.click();
 				}
+				trackFeature('索引－輸入牌組', { raw_text: text }); // 💡 補上原始卡表文字
 			});
 
 			// [直接轉換為英文卡表] - 不需建檔，直接解析後打 API 產出
 			document.getElementById('qa-btn-deck-en').addEventListener('click', async () => {
-				trackFeature('qa_translate_deck_en');
+				trackFeature('索引－取得英文牌組');
 				const text = document.getElementById('qa-input-deck-text').value.trim();
 				if (!text) {
 					showToast("請先在上方貼上卡表文字");
@@ -4048,7 +4051,7 @@
 				// 點擊觸發連動操作
 				btn.addEventListener('click', () => {
 				
-					trackFeature('click_latest_set_shortcut'); // 點擊底部快速商品連結
+					trackFeature('商品快捷', { set_code: code }); // 💡 補上 code
 				
 					// 1. 過濾條件初始化
 					document.getElementById('btn-reset').click();
@@ -4455,21 +4458,33 @@
 		
 			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.classList.contains('open');
 			const isAdvMode = document.body.classList.contains('advanced-mode');
-
+			
+			// 💡 取得當前 UI 過濾條件作為 detail 側錄
+			const filterConfig = getFilterConfigFromUI();
+			const activeFiltersDetail = {
+				cardName: filterConfig.cardName || undefined,
+				seriesBig: filterConfig.seriesBig || undefined,
+				seriesSmall: filterConfig.seriesSmall || undefined,
+				cost: (filterConfig.cost1 || filterConfig.cost2) ? `${filterConfig.cost1}~${filterConfig.cost2}` : undefined,
+				power: (filterConfig.power1 || filterConfig.power2) ? `${filterConfig.power1}~${filterConfig.power2}` : undefined,
+				races: filterConfig.races.length > 0 ? filterConfig.races : undefined,
+				abilities: filterConfig.abilities.length > 0 ? filterConfig.abilities : undefined,
+				abilityText: filterConfig.abilityText || undefined,
+				twinpect: filterConfig.twinpect !== 'all' ? filterConfig.twinpect : undefined
+			};
+			
 			if (isQuickDrawerOpen) {
-				trackFeature('search_quick_panel');   // 1. 使用計算機面板搜尋
+				trackFeature('搜尋(計算機)', activeFiltersDetail);   // 1. 使用計算機面板搜尋
 			} else if (isAdvMode) {
-				trackFeature('search_advanced_panel'); // 3. 使用進階面板搜尋
+				trackFeature('搜尋(進階)', activeFiltersDetail); // 3. 使用進階面板搜尋
 			} else {
-				trackFeature('search_basic_panel');    // 2. 使用基礎面板搜尋
+				trackFeature('搜尋(標準)', activeFiltersDetail);    // 2. 使用基礎面板搜尋
 			}
 		
 			hasSearched = true;
 			
 			// 跳轉至結果頁籤
 			navigateToResultPage();
-
-			const filterConfig = getFilterConfigFromUI();
 
 			let targetRealNameFromNickname = null;
 			if (filterConfig.cardName && isOnlyCardNameFiltered(filterConfig)) {
@@ -6613,7 +6628,10 @@
                 if (btnToggleEn) {
                     btnToggleEn.onclick = async (e) => {
                         e.stopPropagation();
-						trackFeature('modal_toggle_en_name'); // 翻看英文卡名
+						trackFeature('切換日/英卡名', { 
+							card_name: card.name, 
+							target_lang: currentCardLang === 'en' ? 'jp' : 'en' 
+						});
                         if (currentCardLang === 'en') {
                             currentCardLang = 'jp';
                             updateSplitTitle();
@@ -6793,7 +6811,7 @@
 
 		async function captureDetailPanel(targetElement, cardName) {
 		
-			trackFeature('action_screenshot'); // 截圖
+			trackFeature('卡圖資料截圖', { card_name: cardName }); // 💡 補上卡名
 		
 			const loadingOverlay = document.getElementById('loading-overlay');
 			const loadingText = document.getElementById('loading-text');
@@ -7920,11 +7938,11 @@
 
 		// ================= 卡號搜尋邏輯 (已修正過濾與去重 Bug) =================
 		function executeCardIdSearch() {
-			trackFeature('search_id_modal'); // ID找卡 (Modal)
 			const inputEl = document.getElementById('input-card-id');
 			const errorEl = document.getElementById('id-search-error');
 			const rawQuery = inputEl.value;
 			const query = normalizeIdString(rawQuery);
+			trackFeature('用卡號搜尋(Banner)', { input_card_id: rawQuery });
 
 			errorEl.style.display = 'none';
 			errorEl.innerText = '';
@@ -8269,11 +8287,8 @@
 			}
 		};
 		
-		// 💡 分享卡牌連結輔助函式（支援動態抓取當前切換後版本的 ID）
+		// 💡 分享卡牌連結輔助函式（支援動態抓取當前切換後版本的 ID 並紀錄 detail）
 		async function handleShareCard(card, matchedItem, currentVerIdx = 0) {
-		
-			trackFeature('share_single_card_link'); // 取得單卡資訊連結
-		
 			let paramVal = '';
 			
 			// 1. 優先從 matchedItem 中讀取當前切換版本對應的 ID
@@ -8296,9 +8311,17 @@
 				return;
 			}
 
-			// 3. 組裝卡牌 URL
+			// 3. 組裝卡牌 URL 與標題
 			const shareUrl = `${window.location.origin}/card.html?p=${encodeURIComponent(paramVal)}`;
 			const cardTitle = card.name || '卡牌詳細資料';
+
+			// 💡【側錄區域】：在 shareUrl 與 paramVal 計算完成後發送 detail 紀錄
+			trackFeature('分享單卡連結', {
+				card_name: card.name || undefined,
+				param_val: paramVal,          // 實際帶入網址的 ID 或卡名
+				version_idx: currentVerIdx,   // 當前切換的版本索引
+				share_url: shareUrl
+			});
 
 			// 4. 判斷裝置類型並執行分享或複製
 			const isMobile = window.innerWidth <= 768 || (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);
@@ -8582,28 +8605,32 @@
 
 			// 模式 1：僅匯出圖片
 			document.getElementById('btn-export-mode-1')?.addEventListener('click', () => {
-				trackFeature('export_mode_img_folded');
+				const filterConfig = getFilterConfigFromUI();
+				trackFeature('匯出列表圖片(縮排)', { 
+					total_cards: currentFilterResults.length,
+					set_code: filterConfig.seriesSmall || undefined
+				});
 				closeExportModal();
 				dispatchExportToPage('img_only');
 			});
 
 			// 模式 2：圖 + 效果
 			document.getElementById('btn-export-mode-2')?.addEventListener('click', () => {
-				trackFeature('export_mode_img_text');
+				trackFeature('匯出列表圖文');
 				closeExportModal();
 				dispatchExportToPage('img_text');
 			});
 
 			// 模式 3：只要效果
 			document.getElementById('btn-export-mode-3')?.addEventListener('click', () => {
-				trackFeature('export_mode_text_only');
+				trackFeature('匯出列表效果文');
 				closeExportModal();
 				dispatchExportToPage('text_only');
 			});
 			
 			// index.html: 綁定模式 4 觸發事件
 			document.getElementById('btn-export-mode-unfold')?.addEventListener('click', () => {
-				trackFeature('export_mode_img_unfolded');
+				trackFeature('匯出列表圖片(展開)');
 				closeExportModal();
 				dispatchExportToPage('img_unfold');
 			});
@@ -9276,7 +9303,7 @@
 			
 			// 💡 新增：匯出英文牌組 Modal 相關事件綁定
             document.getElementById('btn-export-mode-en-deck')?.addEventListener('click', () => {
-				trackFeature('export_mode_english_deck');
+				trackFeature('匯出英文卡表');
                 closeExportModal();
                 exportEnglishDeckProcess();
             });
@@ -9411,7 +9438,12 @@
 		// 確認匯入牌組
 		document.getElementById('btn-confirm-deck-import')?.addEventListener('click', () => {
 		
-			trackFeature('import_custom_deck'); // 手動匯入卡表
+			// 💡 側錄解析解碼後的卡表細節 (包含張數與正名後的卡名)
+			const decodedDeckList = parsedVerifyItems.map(item => `${item.count}x ${item.matchedName}`);
+			trackFeature('匯入牌組', { 
+				total_items: parsedVerifyItems.length,
+				deck_content: decodedDeckList 
+			});
 		
 			const newCode = getNextNetCode();
 			const now = Date.now();
@@ -9517,10 +9549,14 @@
 		});
 		
 		// 全域統計工具 (發送即後不理，使用 sendBeacon 零延遲)
-		function trackFeature(featureName) {
+		function trackFeature(featureName, extraData = null) {
 			if (!featureName) return;
 			const url = '/api/track';
-			const payload = JSON.stringify({ feature: featureName });
+			const payload = JSON.stringify({ 
+				feature: featureName,
+				detail: extraData,
+				timestamp: Date.now()
+			});
 
 			if (navigator.sendBeacon) {
 				const blob = new Blob([payload], { type: 'application/json' });
@@ -9556,8 +9592,6 @@
 		// ==========================================
 		document.querySelectorAll('#btn-share-deck-link, .btn-share-deck-link-action').forEach(btn => {
 			btn.addEventListener('click', async () => {
-			
-				trackFeature('share_deck_list_link'); // 取得列表連結
 				
 				closeAllDrawers(); // 點擊後收合抽屜
 				
@@ -9656,6 +9690,23 @@
 					const compressed = LZString.compressToEncodedURIComponent(rawStr);
 					shareUrl = `${window.location.origin}/pop.html?deckList=${compressed}`;
 				}
+
+				// 💡【側錄區域】：在 shareUrl 確定產出後，進行解碼並記錄至後端
+				let decodedDeckInfo = null;
+				if (shareUrl.includes('deckList=')) {
+					const match = shareUrl.match(/deckList=([^&]+)/);
+					if (match) {
+						const decompressed = LZString.decompressFromEncodedURIComponent(match[1]) || '';
+						decodedDeckInfo = decompressed.split(',').filter(Boolean);
+					}
+				}
+
+				// 發送給後端紀錄 detail
+				trackFeature('分享列表連結', { 
+					set_code: selectedSetKey || undefined,
+					decoded_deck: decodedDeckInfo || undefined,
+					share_url: shareUrl 
+				});
 
 				// 執行複製或分享網址
 				const isMobile = window.innerWidth <= 768 || (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0);

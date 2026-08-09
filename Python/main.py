@@ -14,13 +14,13 @@ from urllib.parse import quote, unquote
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from lzstring import LZString
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-from collections import defaultdict
+from collections import defaultdict, deque
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -65,7 +65,16 @@ file_write_lock = asyncio.Lock()
 
 # 1. 記憶體計數器 (Render 重啟後自動歸零)
 feature_counter = defaultdict(int)
+# 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
+action_details_log = deque(maxlen=50)
 
+class PrettyJSONResponse(JSONResponse):
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            indent=2  # 💡 設定縮排為 2 個空格
+        ).encode("utf-8")
 
 # --- 定義預設標籤結構 ---
 DEFAULT_TAGS = {
@@ -841,27 +850,55 @@ async def message_author(request: Request, payload: AuthorMessageModel, backgrou
     nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
     return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}
     
-# 2. 接收前端埋點 API (靜默接收，不阻擋)
+# 2. 接收前端埋點 API (靜默接收，可選擇是否印在後端 Console)
 @app.post("/api/track")
 async def track_feature(request: Request):
     try:
         data = await request.json()
         feature_name = data.get("feature")
+        detail = data.get("detail")
+        
         if feature_name:
             feature_counter[feature_name] += 1
+            
+            entry = {
+                "feature": feature_name,
+                "detail": detail,
+                "time": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            # 💡 若包含 detail，記錄最新 50 筆
+            if detail:
+                action_details_log.appendleft(entry)
+                
+                # ----------------------------------------------------
+                # 💡【後端 Console 縮排列印】
+                # 如果你想在 Terminal 直接即時看到漂亮的縮排 Log，取消下方註解：
+                # print(f"\n[Track Detail Log] {entry['time']}")
+                # print(json.dumps(entry, ensure_ascii=False, indent=2))
+                # ----------------------------------------------------
+
     except Exception:
         pass  # 隨緣統計，出現例外直接忽略
     return {"status": "ok"}
 
-# 3. 讓你查看統計數據的 API
-@app.get("/api/track/stats")
+# 3. 查看統計數據與最新 50 筆 Detail 的 API (回傳漂亮的縮排 JSON)
+@app.get("/api/track/stats", response_class=PrettyJSONResponse) # 💡 response_class 指定 PrettyJSONResponse
 async def get_feature_stats():
-    # 依照點擊次數由大到小排序回傳
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    return {
+    
+    result = {
         "total_events": sum(sorted_stats.values()),
-        "stats": sorted_stats
+        "stats": sorted_stats,
+        "recent_50_details": list(action_details_log)
     }
+
+    # 💡 在後端控制台 (Terminal / Console) 也要印出縮排格式
+    print("\n==================== [Feature Stats] ====================")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print("=========================================================\n")
+
+    return result
     
 def find_and_remove_node(node_list, target_id):
     """遞迴在樹狀結構中尋找並移除節點，回傳該節點與其內容"""
