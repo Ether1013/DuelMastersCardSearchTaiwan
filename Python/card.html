@@ -604,34 +604,42 @@
                     }
 
                     // 特殊能力
-                    const spContainer = document.createElement('div');
-                    spContainer.style.marginTop = '8px';
-                    
-                    let currentSpList = Array.isArray(w.sp) ? [...w.sp] : [];
-                    if (w.hypermode && Array.isArray(w.hypermode.sp)) {
-                        currentSpList = currentSpList.concat(w.hypermode.sp);
-                    }
+					const spContainer = document.createElement('div');
+					spContainer.style.marginTop = '8px';
 
-                    if (currentSpList.length > 0) {
-                        const ul = document.createElement('ul');
-                        ul.className = 'sp-ability-list';
-                        currentSpList.forEach(abilityStr => {
-                            const result = renderAbilityText(abilityStr);
-                            if (!result.isHint) {
-                                const li = document.createElement('li');
-                                li.innerHTML = result.html;
+					let currentSpList = Array.isArray(w.sp) ? [...w.sp] : [];
+					if (w.hypermode && Array.isArray(w.hypermode.sp)) {
+						currentSpList = currentSpList.concat(w.hypermode.sp);
+					}
 
-                                if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
-                                    li.style.listStyleType = 'none';
-                                    li.style.marginLeft = '-1.2em'; 
-                                }
+					if (currentSpList.length > 0) {
+						const ul = document.createElement('ul');
+						ul.className = 'sp-ability-list';
+						currentSpList.forEach(abilityStr => {
+							const result = renderAbilityText(abilityStr);
+							if (!result.isHint) {
+								const li = document.createElement('li');
+								li.innerHTML = result.html;
 
-                                ul.appendChild(li);
-                            }
-                        });
-                        spContainer.appendChild(ul);
-                    }
-                    block.appendChild(spContainer);
+								if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
+									li.style.listStyleType = 'none';
+									li.style.marginLeft = '-1.2em'; 
+								}
+
+								ul.appendChild(li);
+							}
+						});
+						spContainer.appendChild(ul);
+					} else {
+						// 💡 新增：當沒有特殊能力時，印出 "( 無能力 )"
+						const noSpDiv = document.createElement('div');
+						noSpDiv.style.fontSize = '13px';
+						noSpDiv.style.color = '#777';
+						noSpDiv.style.fontStyle = 'italic';
+						noSpDiv.innerText = '( 無能力 )';
+						spContainer.appendChild(noSpDiv);
+					}
+					block.appendChild(spContainer);
 
                     // 展開能力說明區塊
                     const abilExplainBox = document.createElement('div');

@@ -742,11 +742,14 @@
 							html += `<div style="margin-top: 4px;"><b>種族:</b> ${w.race.join(', ')}</div>`;
 						}
 
-						// 💡 3.【補回被遺漏的能力 SP 渲染】
+						// 💡 3.【能力 SP 渲染】
 						if (w.sp && Array.isArray(w.sp) && w.sp.length > 0) {
 							html += `<ul class="sp-list">`;
 							w.sp.forEach(s => html += renderSpItemHtml(s));
 							html += `</ul>`;
+						} else {
+							// 💡 若無特殊能力，顯示 ( 無能力 )
+							html += `<div style="font-size:13px; color:#777; font-style:italic; margin-top:4px;">( 無能力 )</div>`;
 						}
 
 						// 💡 4.【補回被遺漏的 Hyper Mode SP 渲染】
@@ -1237,11 +1240,14 @@
                             };
 
                             if (w.sp && w.sp.length > 0) {
-                                checkAndCollectAbilities(w.sp);
-                                htmlContent += `<ul class="sp-list">`;
-                                w.sp.forEach(s => htmlContent += renderSpItemHtml(s));
-                                htmlContent += `</ul>`;
-                            }
+								checkAndCollectAbilities(w.sp);
+								htmlContent += `<ul class="sp-list">`;
+								w.sp.forEach(s => htmlContent += renderSpItemHtml(s));
+								htmlContent += `</ul>`;
+							} else {
+								// 💡 若無特殊能力，顯示 ( 無能力 )
+								htmlContent += `<div style="font-size:13px; color:#777; font-style:italic; margin-top:4px;">( 無能力 )</div>`;
+							}
 
                             if (w.hypermode && w.hypermode.sp && w.hypermode.sp.length > 0) {
                                 checkAndCollectAbilities(w.hypermode.sp);
