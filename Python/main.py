@@ -69,11 +69,14 @@ feature_counter = defaultdict(int)
 action_details_log = deque(maxlen=50)
 
 class PrettyJSONResponse(JSONResponse):
+    # 💡 增加 media_type，確保 Response Header 包含 utf-8 編碼宣告
+    media_type = "application/json; charset=utf-8"
+
     def render(self, content: Any) -> bytes:
         return json.dumps(
             content,
-            ensure_ascii=False,
-            indent=2  # 💡 設定縮排為 2 個空格
+            ensure_ascii=False,  # 💡 關鍵：保持日文/中文原字，不編碼成 \uXXXX
+            indent=2
         ).encode("utf-8")
 
 # --- 定義預設標籤結構 ---
@@ -200,7 +203,7 @@ card_stats_cache = {"powers": [], "costs": []}
 def load_json_file(filename: str):
     file_path = BASE_DIR / filename
     if file_path.exists():
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8') as f: # 💡 必須有 encoding='utf-8'
             return json.load(f)
     else:
         print(f"警告: 找不到檔案 {file_path}，將回傳空陣列。")
@@ -882,7 +885,7 @@ async def track_feature(request: Request):
         pass  # 隨緣統計，出現例外直接忽略
     return {"status": "ok"}
 
-# 3. 查看統計數據與最新 50 筆 Detail 的 API (回傳漂亮的縮排 JSON)
+# 3. 查看統計數據與最新 50 筆 Detail 的 API (回傳漂亮的縮排 JSON + UTF-8 中日文)
 @app.get("/api/track/stats", response_class=PrettyJSONResponse) # 💡 response_class 指定 PrettyJSONResponse
 async def get_feature_stats():
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
@@ -893,7 +896,7 @@ async def get_feature_stats():
         "recent_50_details": list(action_details_log)
     }
 
-    # 💡 在後端控制台 (Terminal / Console) 也要印出縮排格式
+    # 在後端控制台 (Terminal / Console) 也要印出縮排格式
     print("\n==================== [Feature Stats] ====================")
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print("=========================================================\n")
