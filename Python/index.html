@@ -9920,9 +9920,22 @@
 			showToast(`✅ 牌組 ${newCode} 匯入成功！`);
 		});
 		
+		// 💡 新增：API 側錄防護鎖 (避免連鎖點擊造成重複觸發)
+		let isTrackingLocked = false;
+
 		// 全域統計工具 (發送即後不理，使用 sendBeacon 零延遲)
 		function trackFeature(featureName, extraData = null) {
 			if (!featureName) return;
+
+			// 💡 如果目前正在上鎖狀態，代表這是程式連動觸發的二次動作，直接忽略不發送 API
+			if (isTrackingLocked) return;
+
+			// 💡 通過檢查後立刻上鎖，並設定 200 毫秒後解鎖
+			isTrackingLocked = true;
+			setTimeout(() => {
+				isTrackingLocked = false;
+			}, 200);
+
 			const url = '/api/track';
 			const payload = JSON.stringify({ 
 				feature: featureName,
