@@ -515,7 +515,28 @@
             } else {
                 modalId.style.display = 'none'; // 隱藏 ID 區塊
             }
-            modalTitle.innerText = card.name || '未命名卡牌';
+            let sanctuaryHtml = '';
+			if (card.sanctuary !== undefined && card.sanctuary !== null) {
+				let sSymbol = '';
+				let sMsg = '';
+				if (Array.isArray(card.sanctuary)) {
+					sSymbol = '★☆';
+					sMsg = `組合殿堂：${card.sanctuary.join(',')}`;
+				} else if (Number(card.sanctuary) === 1) {
+					sSymbol = '★';
+					sMsg = '殿堂';
+				} else if (Number(card.sanctuary) === 0) {
+					sSymbol = '☆';
+					sMsg = '白金殿堂';
+				}
+
+				if (sSymbol) {
+					sanctuaryHtml = `<span class="sanctuary-icon" title="${sMsg}" onclick="alert('${sMsg}')" style="cursor:pointer; margin-right:4px;">${sSymbol}</span>`;
+				}
+			}
+
+			// 改用 innerHTML 將符號渲染於卡名前面
+			modalTitle.innerHTML = `${sanctuaryHtml}${card.name || '未命名卡牌'}`;
 
             // 1. 圖片與 Flavor 處理
             let picUrl = card.pic || "";
