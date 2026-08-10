@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js DataLabels Plugin CDN (用於在圖表上自動標示數值/人數) -->
+    <!-- Chart.js DataLabels Plugin CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -29,6 +29,10 @@
                 <h1 class="text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
             </div>
             <div class="flex items-center gap-4">
+                <!-- 新增單次Token按鈕 (預設隱藏，若以 admin 進入才顯示) -->
+                <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-key"></i> 新增單次Token
+                </button>
                 <!-- Status Badge -->
                 <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                     <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
@@ -42,7 +46,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-
         <!-- Top Metrics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Total Events -->
@@ -126,16 +129,20 @@
                 </table>
             </div>
         </div>
-
     </main>
 
     <script>
         // 註冊 ChartDataLabels 插件
         Chart.register(ChartDataLabels);
 
-        // Parse Admin Parameter
+        // 💡 取得授權參數：支援 admin 或 token
         const urlParams = new URLSearchParams(window.location.search);
         const adminKey = urlParams.get('admin');
+        const tokenKey = urlParams.get('token');
+        
+        let authParam = '';
+        if (adminKey) authParam = `admin=${encodeURIComponent(adminKey)}`;
+        else if (tokenKey) authParam = `token=${encodeURIComponent(tokenKey)}`;
 
         // Chart instances
         let featureChart, countryChart;
@@ -151,7 +158,7 @@
                     maintainAspectRatio: false,
                     plugins: { 
                         legend: { display: false },
-                        datalabels: { display: false } // 長條圖關閉內部標籤
+                        datalabels: { display: false }
                     },
                     scales: {
                         x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
@@ -175,54 +182,40 @@
                     maintainAspectRatio: false,
                     plugins: { 
                         legend: { position: 'bottom', labels: { color: '#9ca3af' } },
-                        // 需求 1: 自動在國籍圓餅圖上標上人數
                         datalabels: {
                             color: '#ffffff',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            },
-                            formatter: (value) => {
-                                return value > 0 ? value + ' 人' : ''; // 顯示人數單位
-                            },
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value) => value > 0 ? value + ' 次' : '',
                             anchor: 'center',
                             align: 'center',
-                            dropShadow: {
-                                blur: 2,
-                                color: '#000000'
-                            }
+                            dropShadow: { blur: 2, color: '#000000' }
                         }
                     }
                 }
             });
         }
 
-        // Render UI with Payload
         function updateDashboard(data) {
             document.getElementById('totalEvents').innerText = data.total_events || 0;
             document.getElementById('activeFeatures').innerText = Object.keys(data.stats || {}).length;
             document.getElementById('activeCountries').innerText = Object.keys(data.recent_countries_summary || {}).length;
 
-            // 1. Update Feature Chart
             const featureLabels = Object.keys(data.stats || {});
             const featureData = Object.values(data.stats || {});
             featureChart.data.labels = featureLabels;
             featureChart.data.datasets[0].data = featureData;
             featureChart.update();
 
-            // 2. Update Country Chart
             const countryLabels = Object.keys(data.recent_countries_summary || {});
             const countryData = Object.values(data.recent_countries_summary || {});
             countryChart.data.labels = countryLabels;
             countryChart.data.datasets[0].data = countryData;
             countryChart.update();
 
-            // 3. Update Table
             const tbody = document.getElementById('logsTableBody');
             tbody.innerHTML = '';
             
-            (data.recent_50_details || []).forEach((log, index) => {
-                // 第一行：基本資訊
+            (data.recent_50_details || []).forEach((log) => {
                 const trHeader = document.createElement('tr');
                 trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
                 trHeader.innerHTML = `
@@ -231,7 +224,6 @@
                     <td class="px-4 pt-3 pb-1"><span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium">${log.country || 'Unknown'}</span></td>
                 `;
 
-                // 需求 2: 將 Detail payload 放在第二行，並完全顯示其內容
                 const trDetail = document.createElement('tr');
                 trDetail.className = "hover:bg-gray-800/40 border-b border-gray-800/80";
 
@@ -256,10 +248,11 @@
             });
         }
 
-        // Fallback HTTP Fetch
         async function fetchInitialData() {
+            if (!authParam) return;
             try {
-                const response = await fetch(`/api/track/stats?admin=${encodeURIComponent(adminKey)}&format=json`);
+                // 💡 使用動態 authParam
+                const response = await fetch(`/api/track/stats?${authParam}&format=json`);
                 if (response.ok) {
                     const data = await response.json();
                     updateDashboard(data);
@@ -269,12 +262,12 @@
             }
         }
 
-        // Setup WebSocket Realtime Listener
         function initWebSocket() {
+            if (!authParam) return;
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws/console?admin=${encodeURIComponent(adminKey)}`;
+            // 💡 使用動態 authParam
+            const wsUrl = `${protocol}//${window.location.host}/ws/console?${authParam}`;
             const ws = new WebSocket(wsUrl);
-
             const badge = document.getElementById('statusBadge');
 
             ws.onopen = () => {
@@ -294,17 +287,57 @@
             ws.onclose = () => {
                 badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
                 badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Disconnected</span>`;
-                // Reconnect retry after 3 seconds
                 setTimeout(initWebSocket, 3000);
             };
 
-            ws.onerror = () => {
-                ws.close();
-            };
+            ws.onerror = () => ws.close();
+        }
+
+        // 💡 產生 Token 並分享/複製的功能
+        async function generateToken() {
+            try {
+                const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
+                if (!response.ok) throw new Error('產生失敗，權限不足或伺服器錯誤');
+                
+                const data = await response.json();
+                const link = `${window.location.origin}${window.location.pathname}?token=${data.token}`;
+                
+                // 嘗試使用手機原生的分享 API (Web Share API)
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Console 單次登入連結',
+                            text: '1小時內有效，單次使用的 Console 連結 (重新整理即失效)',
+                            url: link
+                        });
+                        return; // 分享成功，直接結束
+                    } catch (err) {
+                        // 使用者手動取消分享，無需顯示錯誤
+                        if (err.name === 'AbortError') return; 
+                        console.error('Share failed', err);
+                    }
+                }
+                
+                // 降級方案：若不支援 Share API 或分享失敗，則複製到剪貼簿
+                await navigator.clipboard.writeText(link);
+                alert(`已複製單次 Token 連結至剪貼簿！\n\n${link}`);
+
+            } catch (err) {
+                alert(err.message);
+            }
         }
 
         // Init App
         window.addEventListener('DOMContentLoaded', () => {
+            if (!authParam) {
+                alert('未提供認證參數 (需使用 ?admin= 或 ?token= 進入)');
+                return;
+            }
+            // 只有用 admin 進入時，才顯示「新增單次Token」按鈕
+            if (adminKey) {
+                document.getElementById('generateTokenBtn').style.display = 'flex';
+            }
+
             initCharts();
             fetchInitialData();
             initWebSocket();

@@ -68,6 +68,7 @@ setlist_cache = {}
 setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
 # --- 在全域變數區新增參數化名單 ---
 EXCLUDED_COUNTRIES = ["JP", "TW"]
+one_time_tokens = {}
 
 ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
@@ -1005,18 +1006,39 @@ async def track_feature(request: Request):
 async def get_feature_stats(
     request: Request, 
     admin: Optional[str] = Query(None, description="admin"),
+    token: Optional[str] = Query(None, description="token"),
     format: Optional[str] = Query(None)
 ):
-    if not admin or admin != TRACK_STATS_USER:
+    accept_header = request.headers.get("accept", "")
+    is_html = "text/html" in accept_header and format != "json"
+
+    # 💡 清理已過期的 Token
+    now = time.time()
+    for k in list(one_time_tokens.keys()):
+        if one_time_tokens[k]["expires_at"] < now:
+            del one_time_tokens[k]
+
+    # 💡 權限驗證邏輯
+    authorized = False
+    if admin and admin == TRACK_STATS_USER:
+        authorized = True
+    elif token and token in one_time_tokens:
+        if is_html:
+            # 如果是載入網頁 (F5 或首次進入)，檢查是否已被存取過 HTML
+            if one_time_tokens[token]["html_accessed"]:
+                raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效 (重新整理即失效)")
+            one_time_tokens[token]["html_accessed"] = True
+        authorized = True
+
+    if not authorized:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 💡 判斷如果是瀏覽器直接點擊連結進入 (Accept 包含 text/html)，且沒有指定 format=json，回傳 Console UI
-    accept_header = request.headers.get("accept", "")
-    if "text/html" in accept_header and format != "json":
+    # 若為瀏覽器網頁請求，回傳 console.html
+    if is_html:
         if Path("console.html").exists():
             return FileResponse("console.html")
 
-    # 否則回傳原有 PrettyJSON 內容
+    # 否則回傳原有 JSON 統計資料
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     country_counts = defaultdict(int)
     for log in action_details_log:
@@ -1028,13 +1050,23 @@ async def get_feature_stats(
         "recent_countries_summary": dict(country_counts),
         "recent_50_details": list(action_details_log)
     }
-
     return PrettyJSONResponse(content=result)
 
-# 💡 新增 Console 即時 WebSocket 監聽點
 @app.websocket("/ws/console")
-async def websocket_console(websocket: WebSocket, admin: Optional[str] = Query(None)):
-    if not admin or admin != TRACK_STATS_USER:
+async def websocket_console(
+    websocket: WebSocket, 
+    admin: Optional[str] = Query(None),
+    token: Optional[str] = Query(None)
+):
+    now = time.time()
+    authorized = False
+    if admin and admin == TRACK_STATS_USER:
+        authorized = True
+    elif token and token in one_time_tokens:
+        if one_time_tokens[token]["expires_at"] >= now:
+            authorized = True
+
+    if not authorized:
         await websocket.close(code=4008)
         return
 
@@ -1054,7 +1086,6 @@ async def websocket_console(websocket: WebSocket, admin: Optional[str] = Query(N
 
     try:
         while True:
-            # 保持連線
             await websocket.receive_text()
     except WebSocketDisconnect:
         console_manager.disconnect(websocket)
@@ -1194,3 +1225,16 @@ async def check_sp_replace(request: Request):
     # 如果國籍「不在」排除名單內，就代表需要執行替換
     need_replace = country not in EXCLUDED_COUNTRIES
     return {"country": country, "need_replace": need_replace}
+    
+@app.post("/api/console/generate_token")
+async def generate_console_token(admin: str = Query(...)):
+    # 只有真正的 Admin 才能產生 Token
+    if admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    new_token = uuid.uuid4().hex
+    one_time_tokens[new_token] = {
+        "expires_at": time.time() + 3600,  # 1 小時後過期
+        "html_accessed": False             # 記錄是否已經被讀取過網頁 HTML
+    }
+    return {"status": "success", "token": new_token}
