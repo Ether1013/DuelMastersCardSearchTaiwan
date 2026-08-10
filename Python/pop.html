@@ -1131,34 +1131,35 @@
                         if (matchedItem.count !== undefined && matchedItem.count !== null) cardCount = Number(matchedItem.count);
                     }
 
-                    if (!picUrl || picUrl.trim() === '') {
-                        picUrl = card.pic || '';
-                    }
+                    // 修正後：若單卡無 pic，嘗試從全域 setlist 資料庫尋找備援卡圖
+					if (!picUrl || picUrl.trim() === '') {
+						picUrl = card.pic || '';
+					}
 
-                    if (!picUrl || picUrl.trim() === '') {
-                        const cleanTargetName = cleanName.trim();
-                        if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-                            for (const setObj of Object.values(rawSetlist)) {
-                                const cardList = setObj.setcardlist || setObj.cardlist;
-                                if (Array.isArray(cardList)) {
-                                    const foundItem = cardList.find(item => {
-                                        const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-                                        return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-                                    });
+					if (!picUrl || picUrl.trim() === '') {
+						const cleanTargetName = cleanName.trim();
+						if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
+							for (const setObj of Object.values(rawSetlist)) {
+								const cardList = setObj.setcardlist || setObj.cardlist;
+								if (Array.isArray(cardList)) {
+									const foundItem = cardList.find(item => {
+										const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+										return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
+									});
 
-                                    if (foundItem && foundItem.pic) {
-                                        if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0 && foundItem.pic[0]) {
-                                            picUrl = foundItem.pic[0];
-                                            break;
-                                        } else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') {
-                                            picUrl = foundItem.pic;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+									if (foundItem && foundItem.pic) {
+										if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0 && foundItem.pic[0]) {
+											picUrl = foundItem.pic[0];
+											break;
+										} else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') {
+											picUrl = foundItem.pic;
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
 
                     let isHorizontal = false;
                     if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
