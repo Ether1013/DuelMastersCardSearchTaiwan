@@ -148,9 +148,12 @@ tag_manager = TagConnectionManager()
 # 1 分鐘防抖任務
 tag_sync_task = None
 
-def push_tags_to_github():
+# --- 修正後的非同步 GitHub Push 函式 ---
+async def push_tags_to_github():
     if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
+        print("[Tags GitHub Sync 警告]: GITHUB_TOKEN 或 GITHUB_REPO 未設定/為預設值，跳過 Commit")
         return
+
     file_path = "tags.json"
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
     headers = {
@@ -158,31 +161,54 @@ def push_tags_to_github():
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "FastAPI-AutoCommit"
     }
+
     try:
-        with httpx.Client() as client:
-            get_resp = client.get(url, headers=headers, timeout=10.0)
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            # 1. 取得目標檔案最新的 SHA (若檔案存在)
+            get_resp = await client.get(url, headers=headers)
             sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
+
+            # 2. 讀取最新本地檔案內容並轉成 Base64
+            if not TAGS_FILE.exists():
+                print(f"[Tags GitHub Sync 錯誤]: 找不到本地檔案 {TAGS_FILE}")
+                return
+
             with open(TAGS_FILE, 'r', encoding='utf-8') as f:
                 content_str = f.read()
+
             content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
             payload = {
                 "message": "auto: sync tags.json [skip ci]",
                 "content": content_base64,
                 "branch": "main"
             }
-            if sha: payload["sha"] = sha
-            client.put(url, headers=headers, json=payload, timeout=10.0)
-            print("[Tags] 成功 Push 至 GitHub")
+            if sha:
+                payload["sha"] = sha
+
+            # 3. 發送 PUT 請求進行 Commit & Push
+            put_resp = await client.put(url, headers=headers, json=payload)
+            if put_resp.status_code in [200, 201]:
+                print("[Tags] 成功 Commit 併 Push 至 GitHub！")
+            else:
+                print(f"[Tags GitHub Sync 失敗]: HTTP {put_resp.status_code} - {put_resp.text}")
+
     except Exception as e:
-        print(f"[Tags GitHub Sync 錯誤]: {e}")
+        print(f"[Tags GitHub Sync 網路/系統錯誤]: {e}")
+
 
 async def tag_debounce_timer():
-    await asyncio.sleep(60) # 等待 60 秒
-    def _write():
-        with open(TAGS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(tags_cache, f, ensure_ascii=False, indent=2)
-    await asyncio.to_thread(_write)
-    await asyncio.to_thread(push_tags_to_github)
+    await asyncio.sleep(60)  # 等待 60 秒防抖
+    try:
+        # 1. 寫入本地檔案
+        def _write():
+            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+        await asyncio.to_thread(_write)
+
+        # 2. 推送到 GitHub
+        await push_tags_to_github()
+    except Exception as e:
+        print(f"[Tag Debounce Error]: {e}")
 
 def trigger_tag_sync():
     """每次異動時呼叫，重置 60 秒倒數計時器"""
