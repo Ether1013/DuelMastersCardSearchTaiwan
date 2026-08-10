@@ -4605,6 +4605,37 @@
 			let filterResults = globalCardData.filter(card => {
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
+			
+			// 【第二次備援查詢】：若第一次查無結果，且卡名有輸入，嘗試轉換漢字後再查一次
+			if (filterResults.length === 0 && filterConfig.cardName) {
+				const normalizedName = normalizeJapaneseKanji(filterConfig.cardName);
+				
+				// 只有在轉換後字串確實有改變時才發動二次查詢
+				if (normalizedName !== filterConfig.cardName) {
+					// 複製一份過濾條件，並替換為轉換後的漢字卡名
+					const fallbackConfig = { ...filterConfig, cardName: normalizedName };
+					
+					let fallbackNickname = null;
+					if (isOnlyCardNameFiltered(fallbackConfig)) {
+						const directMatches = globalCardData.filter(c => c.name && c.name.includes(normalizedName));
+						if (directMatches.length === 0 && Array.isArray(rawNicknames)) {
+							const matchedNick = rawNicknames.find(n => 
+								Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === normalizedName)
+							);
+							if (matchedNick) fallbackNickname = matchedNick.realname;
+						}
+					}
+
+					filterResults = globalCardData.filter(card => {
+						return checkCardMatchesFilters(card, fallbackConfig, fallbackNickname);
+					});
+
+					// 提示玩家自動進行了漢字轉換（選填，可讓體驗更透明）
+					if (filterResults.length > 0 && typeof showToast === 'function') {
+						showToast(`已自動將「${filterConfig.cardName}」對照轉換為「${normalizedName}」進行查詢`);
+					}
+				}
+			}
 
 			// 2. 將過濾出來的原始資料存入全域快取
 			currentFilterResults = filterResults;
@@ -4923,9 +4954,7 @@
 			}).filter(item => item.value !== '');
 			const raceAdv = document.querySelector('.race-select-adv')?.value || '';
 
-			// 修正後的程式碼（自動對照修正）：
-			const rawCardName = document.getElementById('card-name').value.trim();
-			const cardName = normalizeJapaneseKanji(rawCardName); // 自動修正如 "暗黑" -> "暗黒"
+			const cardName = document.getElementById('card-name').value.trim();
 
 			const seriesBig = document.getElementById('series-big')?.value || '';
 			const seriesSmall = document.getElementById('series-small')?.value || '';
