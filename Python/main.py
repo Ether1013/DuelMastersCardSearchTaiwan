@@ -21,6 +21,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from collections import defaultdict, deque
+from datetime import datetime, timezone, timedelta
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -47,6 +48,7 @@ CACHE_TTL_SECONDS = 7 * 86400 # 圖片快取有效期限：7 天
 
 proxy_cache = OrderedDict()
 SERVER_INSTANCE_ID = str(uuid.uuid4())
+TZ_UTC8 = timezone(timedelta(hours=8))
 
 # --- 全域緩存變數區 ---
 carddata_cache = []
@@ -57,6 +59,8 @@ categoryname_cache = []
 nickname_cache = []
 diary_cache = []
 setlist_cache = {}
+# --- 在全域變數區新增參數化名單 ---
+EXCLUDED_COUNTRIES = ["JP", "TW"]
 
 ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
@@ -880,11 +884,14 @@ async def track_feature(request: Request):
         if feature_name:
             feature_counter[feature_name] += 1
             
+            # 💡 取得 UTC+8 時間
+            now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
+            
             entry = {
                 "feature": feature_name,
                 "country": country,  # 💡 紀錄國籍
                 "detail": detail,
-                "time": time.strftime("%Y-%m-%d %H:%M:%S")
+                "time": now_utc8
             }
             
             # 💡 若包含 detail，記錄最新 50 筆
@@ -920,8 +927,15 @@ async def get_feature_stats():
     return result
 
 def get_client_country(request: Request) -> str:
-    """取得請求來源的國籍 ISO 代碼（例: TW, JP, US）"""
-    # 1. 優先從 Render / Cloudflare 轉發的 Header 取得國籍代碼
+    """取得請求來源的國籍 ISO 代碼（含 localhost = TW 判斷）"""
+    # 1. 判斷是否為 Localhost
+    client_host = request.client.host if request.client else ""
+    request_host = request.headers.get("host", "")
+    
+    if client_host in ["127.0.0.1", "::1"] or "localhost" in request_host or "127.0.0.1" in request_host:
+        return "TW"
+        
+    # 2. 優先從 Render / Cloudflare 轉發的 Header 取得國籍代碼
     country = request.headers.get("cf-ipcountry") or request.headers.get("x-country-code")
     if country and country.upper() != "XX":  # XX 代表未知國籍
         return country.upper()
@@ -1035,3 +1049,11 @@ async def websocket_tags(websocket: WebSocket):
 
     except WebSocketDisconnect:
         tag_manager.disconnect(websocket)
+        
+# --- 新增這支 API 供 3 支前端共用判斷 ---
+@app.get("/api/check_sp_replace")
+async def check_sp_replace(request: Request):
+    country = get_client_country(request)
+    # 如果國籍「不在」排除名單內，就代表需要執行替換
+    need_replace = country not in EXCLUDED_COUNTRIES
+    return {"country": country, "need_replace": need_replace}

@@ -406,6 +406,27 @@
 
             return processedText;
         }
+		
+		// 全域共用：針對指定卡牌的 sp 與 hypermode.sp 進行「或以上/或以下」替換
+		function processSpText(cards) {
+			if (!cards || !Array.isArray(cards)) return;
+			cards.forEach(card => {
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => {
+						// 處理一般 sp
+						if (w.sp && Array.isArray(w.sp)) {
+							w.sp = w.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+												  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+						// 處理超化模式 hypermode.sp
+						if (w.hypermode && w.hypermode.sp && Array.isArray(w.hypermode.sp)) {
+							w.hypermode.sp = w.hypermode.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+																	  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+					});
+				}
+			});
+		}
 
         function renderAbilityText(spStr) {
             let formatted = formatDisplayValue(spStr);
@@ -435,14 +456,26 @@
             }
 
             try {
-                const resp = await fetch(`/api/card_detail?p=${encodeURIComponent(p)}`);
-                if (!resp.ok) {
-                    const errData = await resp.json();
-                    throw new Error(errData.detail || '查無資料');
-                }
+				// 🔽 將原本單一的 fetch 改為並行請求
+				const [resp, replaceRes] = await Promise.all([
+					fetch(`/api/card_detail?p=${encodeURIComponent(p)}`),
+					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
+				]);
 
-                const data = await resp.json();
-                rawRaces = data.races || [];
+				if (!resp.ok) {
+					const errData = await resp.json();
+					throw new Error(errData.detail || '查無資料');
+				}
+
+				const data = await resp.json();
+				const replaceConfig = replaceRes; // 從上面的 Promise 中取得
+
+				// 🔽 新增這段判斷：取得單卡後立刻替換內文
+				if (replaceConfig && replaceConfig.need_replace && data.card) {
+					processSpText([data.card]);
+				}
+
+				rawRaces = data.races || [];
                 rawAbilities = data.abilities || [];
                 rawCardData = data.card ? [data.card] : [];
 				rawCardTypes = data.card_types || [];

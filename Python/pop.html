@@ -992,6 +992,27 @@
 			}
 			return resultCards;
 		}
+		
+		// 全域共用：針對指定卡牌的 sp 與 hypermode.sp 進行「或以上/或以下」替換
+		function processSpText(cards) {
+			if (!cards || !Array.isArray(cards)) return;
+			cards.forEach(card => {
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => {
+						// 處理一般 sp
+						if (w.sp && Array.isArray(w.sp)) {
+							w.sp = w.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+												  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+						// 處理超化模式 hypermode.sp
+						if (w.hypermode && w.hypermode.sp && Array.isArray(w.hypermode.sp)) {
+							w.hypermode.sp = w.hypermode.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+																	  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+					});
+				}
+			});
+		}
 
         async function initPopPage() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1028,11 +1049,13 @@
             }
 
             try {
-                const [ctData, abilData, setlistData] = await Promise.all([
-                    fetch('/api/card_types').then(r => r.json()).catch(() => []),
-                    fetch('/api/abilities').then(r => r.json()).catch(() => []),
-                    fetch('/api/setlist').then(r => r.json()).catch(() => ({}))
-                ]);
+                const [ctData, abilData, setlistData, replaceConfig] = await Promise.all([
+					fetch('/api/card_types').then(r => r.json()).catch(() => []),
+					fetch('/api/abilities').then(r => r.json()).catch(() => []),
+					fetch('/api/setlist').then(r => r.json()).catch(() => ({})),
+					// 🔽 新增這行去取得替換旗標
+					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
+				]);
 
                 const rawCardTypes = ctData || [];
                 const rawAbilities = abilData || [];
@@ -1056,7 +1079,12 @@
                 }
 
                 const { set_info: currentSetObj, cards: fetchedCards } = await popRes.json();
-                const filteredCards = sortCardList(fetchedCards, sortParam);
+				// 🔽 新增這段判斷：在排序與渲染前先處理卡牌內文
+				if (replaceConfig && replaceConfig.need_replace && fetchedCards) {
+					processSpText(fetchedCards);
+				}
+
+				const filteredCards = sortCardList(fetchedCards, sortParam);
 
                 const getCardTypeText = (typeVal) => {
                     const match = rawCardTypes.find(ct => ct.value === typeVal);

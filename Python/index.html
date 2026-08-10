@@ -3602,7 +3602,7 @@
 				}
 
 				// 並行發送所有請求
-				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, enNamesData] = await Promise.all([
+				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, enNamesData, replaceConfig] = await Promise.all([
 					fetchWithCache('/api/carddata'),
 					fetchWithCache('/api/card_types'),
 					fetchWithCache('/api/races'),
@@ -3612,7 +3612,8 @@
 					fetchWithCache('/api/nickname'),
 					fetchWithCache('/api/setlist'),
 					fetchWithCache('/api/diary'),
-					fetchWithCache('/api/get_all_english_names')
+					fetchWithCache('/api/get_all_english_names'),
+					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
 				]);
 
 				globalCardData = cardData || [];
@@ -3627,6 +3628,11 @@
 					fetchedEnNameMap = { ...fetchedEnNameMap, ...enNamesData };
 					localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
 				}
+				// 🔽 新增這段判斷：若需要替換，就在寫入 globalCardData 之前先行處理
+				if (replaceConfig && replaceConfig.need_replace && cardData) {
+					processSpText(cardData);
+				}
+				globalCardData = cardData || [];
 
 				// 💡 修正 1：資料載入後，先將 localStorage 內的自訂套牌載入 rawSetlist 中
 				loadCustomDecksIntoSetlist();
@@ -5292,17 +5298,28 @@
 				}
 			}
 
-			const numMatch = cond.match(/^(\d+)([+-])?$/);
-			if (numMatch) {
-				const targetNum = Number(numMatch[1]);
-				const op = numMatch[2];
+			// 🔽 替換這裡：字串串聯數值比較 (支援 "コスト5-", "2+隻", "攻擊力2000+", 或純數字 "7")
+			const mixMatch = cond.match(/^(.*?)(\d+)([+-])?(.*?)$/);
+			
+			// 觸發條件：必須有 +- 號才啟用數值邏輯，否則必須是純數字(如 "7")
+			// (如果只是純粹的 "コスト5"，保留給最後的字串包含比對會更精準)
+			if (mixMatch && (mixMatch[3] || (!mixMatch[1] && !mixMatch[4]))) {
+				const prefix = mixMatch[1];
+				const targetNum = Number(mixMatch[2]);
+				const op = mixMatch[3];
+				const suffix = mixMatch[4];
 				const isPowerType = targetNum >= 500;
 
 				return spList.some(sp => {
+					// 若有串聯前綴或後綴字串，同一條能力內必須包含該字串
+					if (prefix && !sp.includes(prefix)) return false;
+					if (suffix && !sp.includes(suffix)) return false;
+
 					const cleanedSp = sp.replace(/1[個張隻枚個]/g, ' ');
 					const numbersInSp = (cleanedSp.match(/\d+/g) || []).map(Number);
 
 					return numbersInSp.some(spNum => {
+                        // 防呆：攻擊力與一般數值不互相干擾
 						if (isPowerType && spNum < 500) return false;
 						if (!isPowerType && spNum >= 500) return false;
 
@@ -5313,6 +5330,7 @@
 				});
 			}
 
+			// 一般字串包含
 			return spList.some(sp => sp.includes(cond));
 		}
 
@@ -8297,6 +8315,27 @@
 				alert('✅ 已成功清除 NET-900 起的自訂商品卡表並刷新選單！');
 			}
 		};
+		
+		// 全域共用：針對指定卡牌的 sp 與 hypermode.sp 進行「或以上/或以下」替換
+		function processSpText(cards) {
+			if (!cards || !Array.isArray(cards)) return;
+			cards.forEach(card => {
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => {
+						// 處理一般 sp
+						if (w.sp && Array.isArray(w.sp)) {
+							w.sp = w.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+												  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+						// 處理超化模式 hypermode.sp
+						if (w.hypermode && w.hypermode.sp && Array.isArray(w.hypermode.sp)) {
+							w.hypermode.sp = w.hypermode.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+																	  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+					});
+				}
+			});
+		}
 		
 		// 💡 分享卡牌連結輔助函式（支援動態抓取當前切換後版本的 ID 並紀錄 detail）
 		async function handleShareCard(card, matchedItem, currentVerIdx = 0) {
