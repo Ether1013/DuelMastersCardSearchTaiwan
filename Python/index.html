@@ -2631,7 +2631,6 @@
 		// 建立高頻常錯漢字對映表 (可持續擴充)
 		const KANJI_MAP = {
 			'龍': '竜', '龙': '竜',
-			'鬪': '闘',
 			'黑': '黒', '戀': '恋',
 			'獸': '獣', '兽': '獣',
 			'靈': '霊', '灵': '霊',
@@ -6728,13 +6727,7 @@
 			jpWikiBtn.onclick = (e) => {
 				e.preventDefault();
 				if (!rawCardName) return;
-				
-				// 1. 基本清理（去除括號說明等）
-				let cleanName = cleanCardName(rawCardName);
-
-				// 2. 關鍵修正：將半形斜線 `/` 替換為日文 Wiki 使用的全形斜線 `／`
-				cleanName = cleanName.replace(/\//g, '／');
-
+				const cleanName = cleanCardName(rawCardName);
 				// DM Wiki 的標準頁面網址格式為：《卡名》
 				const directWikiUrl = `https://dmwiki.net/《${encodeURIComponent(cleanName)}》`;
 				window.open(directWikiUrl, '_blank', 'noopener,noreferrer');
