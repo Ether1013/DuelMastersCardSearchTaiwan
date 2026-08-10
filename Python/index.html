@@ -2628,6 +2628,20 @@
 			{ bit: 2,  name: '火' },
 			{ bit: 1,  name: '自然' }
 		];
+		// 建立高頻常錯漢字對映表 (可持續擴充)
+		const KANJI_MAP = {
+			'黑': '黒', '龙': '竜',
+			'獸': '獣', '兽': '獣',
+			'靈': '霊', '灵': '霊',
+			'戰': '戦', '战': '戦',
+			'國': '国', '惡': '悪', 
+			'鐵': '鉄', '铁': '鉄',
+			'絕': '絶', '绝': '絶',
+			'關': '関', '关': '関',
+			'圓': '円', '圆': '円',
+			'廣': '広', '广': '広',
+			'隱': '隠',
+		};
 		// 英文卡名切換專用全域變數
 		let currentCardLang = 'jp';  // 預設 'jp'，可切換為 'en'
 		let fetchedEnNameMap = JSON.parse(localStorage.getItem('dm_en_name_cache') || '{}');
@@ -4909,7 +4923,9 @@
 			}).filter(item => item.value !== '');
 			const raceAdv = document.querySelector('.race-select-adv')?.value || '';
 
-			const cardName = document.getElementById('card-name').value.trim();
+			// 修正後的程式碼（自動對照修正）：
+			const rawCardName = document.getElementById('card-name').value.trim();
+			const cardName = normalizeJapaneseKanji(rawCardName); // 自動修正如 "暗黑" -> "暗黒"
 
 			const seriesBig = document.getElementById('series-big')?.value || '';
 			const seriesSmall = document.getElementById('series-small')?.value || '';
@@ -6358,6 +6374,21 @@
 
 			// 收錄商品與外部連結
 			renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal);
+		}
+		
+		/**
+		 * 自動將輸入的繁體/簡體字替換為對應的日文常用漢字
+		 * @param {string} str 玩家輸入的卡名或關鍵字
+		 * @returns {string} 修正後的搜尋字串
+		 */
+		function normalizeJapaneseKanji(str) {
+			if (!str) return '';
+			let result = str;
+			for (const [fromChar, toChar] of Object.entries(KANJI_MAP)) {
+				// 使用全域全取代
+				result = result.replace(new RegExp(fromChar, 'g'), toChar);
+			}
+			return result;
 		}
 		
 		function renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal) {
