@@ -1017,6 +1017,10 @@ def find_node(node_list, target_id):
 async def get_tags_page(): 
     return FileResponse("tags.html")
 
+@app.get("/EtherLineQRCode.jpg")
+async def getLineQRCode(): 
+    return FileResponse("EtherLineQRCode.jpg")
+
 @app.websocket("/ws/tags")
 async def websocket_tags(websocket: WebSocket):
     await tag_manager.connect(websocket)

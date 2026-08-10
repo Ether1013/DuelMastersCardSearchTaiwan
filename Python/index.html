@@ -2486,38 +2486,55 @@
 	<div class="modal-overlay" id="author-msg-modal">
 		<div class="modal-card" style="max-width: 480px;">
 			<div class="modal-header">
-				<div class="modal-title">💬 留言給作者</div>
+				<div class="modal-title">💬 聯絡作者 / 意見回饋</div>
 				<div class="modal-close" id="author-msg-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" style="gap: 12px; padding: 16px;">
-				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">暱稱 (必填)：</label>
-					<input type="text" id="qa-author-nickname" class="qa-input" value="使用者" placeholder="請輸入暱稱">
-				</div>
-				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (非必填)：</label>
-					<input type="email" id="qa-author-email" class="qa-input" placeholder="example@email.com">
-				</div>
-				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">表情 Emoji (非必填，最多 20 個)：</label>
-					<!-- 預設常用 Emoji 選擇區 -->
-					<div id="emoji-picker" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👍</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">❤️</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🔥</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🎉</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👏</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🙏</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">😊</span>
-						<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🚀</span>
+			<div class="modal-body" style="gap: 16px; padding: 16px; align-items: center;">
+				
+				<!-- 💡 新增：LINE QR Code 與快速加好友區塊 -->
+				<div style="text-align: center; width: 100%; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; box-sizing: border-box;">
+					<p style="font-size: 13px; font-weight: bold; color: #334155; margin: 0 0 8px 0;">📱 掃描 QR Code 或點擊下方按鈕加 LINE 好友</p>
+					<!-- 根目錄的 EtherLineQRCode.jpg -->
+					<img src="./EtherLineQRCode.jpg" alt="Ether LINE QR Code" style="width: 140px; height: 140px; object-fit: contain; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; padding: 4px; box-sizing: border-box; margin-bottom: 8px;">
+					<div>
+						<!-- 💡 請將下方 href="https://line.me/ti/p/你的ID" 替換成你真正的 LINE 加好友連結 -->
+						<a href="https://line.me/ti/p/uDnD7usB5B" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 6px 14px; background: #06c755; color: white; font-size: 13px; font-weight: bold; border-radius: 4px; text-decoration: none;">
+							🔗 點我直接加 LINE 好友
+						</a>
 					</div>
-					<input type="text" id="qa-author-emojis" class="qa-input" placeholder="點擊上方或自行輸入 Emoji" maxlength="20">
 				</div>
-				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">留言內容 (必填)：</label>
-					<textarea id="qa-author-message" rows="4" style="width: 100%; padding: 8px; border: 2px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; resize: vertical; font-size: 15px;" placeholder="請輸入您想對作者說的話..."></textarea>
+
+				<div style="width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
+					<p style="font-size: 13px; font-weight: bold; color: #64748b; margin: 0 0 8px 0;">或是透過下方表單傳送訊息：</p>
+					<div style="margin-bottom: 10px;">
+						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">暱稱 (必填)：</label>
+						<input type="text" id="qa-author-nickname" class="qa-input" value="使用者" placeholder="請輸入暱稱">
+					</div>
+					<div style="margin-bottom: 10px;">
+						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (非必填)：</label>
+						<input type="email" id="qa-author-email" class="qa-input" placeholder="example@email.com">
+					</div>
+					<div style="margin-bottom: 10px;">
+						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">表情 Emoji (非必填，最多 20 個)：</label>
+						<div id="emoji-picker" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👍</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">❤️</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🔥</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🎉</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👏</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🙏</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">😊</span>
+							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🚀</span>
+						</div>
+						<input type="text" id="qa-author-emojis" class="qa-input" placeholder="點擊上方或自行輸入 Emoji" maxlength="20">
+					</div>
+					<div style="margin-bottom: 10px;">
+						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">留言內容 (必填)：</label>
+						<textarea id="qa-author-message" rows="3" style="width: 100%; padding: 8px; border: 2px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; resize: vertical; font-size: 15px;" placeholder="請輸入您想對作者說的話..."></textarea>
+					</div>
+					<button type="button" id="btn-submit-author-msg" style="width: 100%; padding: 10px; background: #0d9488; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">送出留言</button>
 				</div>
-				<button type="button" id="btn-submit-author-msg" style="width: 100%; padding: 10px; background: #0d9488; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px;">送出留言</button>
+
 			</div>
 		</div>
 	</div>
@@ -5596,9 +5613,12 @@
 			// 💡 關鍵修正：只要包含 NET 或不以 D/O 開頭，就認定為非標準商品（不套用濾鏡）
 			const isNonStandardSet = upperSetCode.includes('NET') || (upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O'));
 
-			// 1. 只有在「選擇了標準 D/O 官方商品」且「該商品本身沒設定 pic」時，才觸發 isFallbackPic 濾鏡
+			// 只有在明確選擇了「特定商品 (hasSelectedSet)」且該商品完全沒有專屬圖片時，借圖才顯示 no-pic 濾鏡
 			if (hasSelectedSet && !isNonStandardSet && validPicUrls.length === 0) {
 				isFallbackPic = true;
+			} else {
+				// 歷史紀錄與一般通用搜尋，只要能借到圖片就一律直接顯示原圖，不套用灰階濾鏡
+				isFallbackPic = false;
 			}
 
 			// 2. 當當前商品版本無圖片時（包含 NET 系列），開始尋找預設/全域圖片
