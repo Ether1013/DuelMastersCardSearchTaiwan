@@ -2630,7 +2630,8 @@
 		];
 		// 建立高頻常錯漢字對映表 (可持續擴充)
 		const KANJI_MAP = {
-			'黑': '黒', '龙': '竜',
+			'龍': '竜', '龙': '竜',
+			'黑': '黒',
 			'獸': '獣', '兽': '獣',
 			'靈': '霊', '灵': '霊',
 			'戰': '戦', '战': '戦',
@@ -4607,33 +4608,25 @@
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
 			
-			// 【第二次備援查詢】：若第一次查無結果，且卡名有輸入，嘗試轉換漢字後再查一次
+			// 【第二次備援查詢】：若第一次查無結果，且有輸入卡名，啟動漢字/異體字歸一化比對
 			if (filterResults.length === 0 && filterConfig.cardName) {
-				const normalizedName = normalizeJapaneseKanji(filterConfig.cardName);
-				
-				// 只有在轉換後字串確實有改變時才發動二次查詢
-				if (normalizedName !== filterConfig.cardName) {
-					// 複製一份過濾條件，並替換為轉換後的漢字卡名
-					const fallbackConfig = { ...filterConfig, cardName: normalizedName };
-					
-					let fallbackNickname = null;
-					if (isOnlyCardNameFiltered(fallbackConfig)) {
-						const directMatches = globalCardData.filter(c => c.name && c.name.includes(normalizedName));
-						if (directMatches.length === 0 && Array.isArray(rawNicknames)) {
-							const matchedNick = rawNicknames.find(n => 
-								Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === normalizedName)
-							);
-							if (matchedNick) fallbackNickname = matchedNick.realname;
-						}
-					}
+				const normalizedQuery = normalizeJapaneseKanji(filterConfig.cardName);
 
+				// 只要有需要轉換的字元（例如打了 龍/黑/戰 等等）才發動
+				if (normalizedQuery !== filterConfig.cardName) {
+					
 					filterResults = globalCardData.filter(card => {
-						return checkCardMatchesFilters(card, fallbackConfig, fallbackNickname);
+						// 複製一份過濾條件，並替換卡名關鍵字
+						const fallbackConfig = { ...filterConfig, cardName: normalizedQuery };
+
+						// 💡 關鍵點：在比對時，將資料庫裡的卡名也做一次 normalize (例如把 "龍竜ABC" 轉成 "竜竜ABC")
+						// 這樣玩家輸入 "竜龍ABC" (轉成 "竜竜ABC") 就能完全匹配命中！
+						const isMatch = checkCardMatchesFiltersWithNormalizedName(card, fallbackConfig, targetRealNameFromNickname);
+						return isMatch;
 					});
 
-					// 提示玩家自動進行了漢字轉換（選填，可讓體驗更透明）
 					if (filterResults.length > 0 && typeof showToast === 'function') {
-						showToast(`已自動將「${filterConfig.cardName}」對照轉換為「${normalizedName}」進行查詢`);
+						showToast(`已對照漢字/異體字「${filterConfig.cardName}」進行備援搜尋`);
 					}
 				}
 			}
@@ -4644,6 +4637,18 @@
 			// 3. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
 			renderCurrentResultsWithSort();
 		});
+		
+		// 建立一個支援歸一化卡名比對的 check 函式
+		function checkCardMatchesFiltersWithNormalizedName(card, cfg, targetNickname) {
+			// 建立一個臨時的 card 複本，把 card.name 也先轉成 normalized 格式來做 filter
+			const normalizedCard = {
+				...card,
+				name: card.name ? normalizeJapaneseKanji(card.name) : card.name
+			};
+			
+			// 使用原本現有的過濾演算法進行比對即可
+			return checkCardMatchesFilters(normalizedCard, cfg, targetNickname);
+		}
 		
 		function renderCurrentResultsWithSort() {
 			// 取得 Page 2 與 Page 3 的清單 DOM 容器
