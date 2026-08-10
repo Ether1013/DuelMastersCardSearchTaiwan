@@ -9,7 +9,7 @@ import time
 import copy
 from collections import OrderedDict
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from urllib.parse import quote, unquote
 
 import httpx
@@ -976,10 +976,10 @@ async def track_feature(request: Request):
 
 # 3. 查看統計數據與最新 50 筆 Detail 的 API
 @app.get("/api/track/stats", response_class=PrettyJSONResponse)
-async def get_feature_stats(admin: str = Query(..., description="user")):
-    # 驗證傳入的 admin 參數是否與系統設定相符
-    if admin != TRACK_STATS_USER:
-        raise HTTPException(status_code=403, detail="Permission denied")
+async def get_feature_stats(admin: Optional[str] = Query(None, description="admin")):
+    # 💡 沒帶 admin 參數，或是帶入的 user 參數與系統設定不符，統一回傳 404
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=404, detail="Not Found")
 
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     
