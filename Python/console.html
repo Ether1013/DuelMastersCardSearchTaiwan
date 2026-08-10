@@ -3,125 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Console Log Viewer</title>
+    <title>Track Stats Realtime Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Plugin CDN (用於在圖表上自動標示數值/人數) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-            margin: 0;
-        }
-
-        .log-container {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        /* 第一行：Header / Info */
-        .log-header-row {
-            background-color: #252526;
-            border-top: 1px solid #3c3c3c;
-        }
-
-        .log-header-row td {
-            padding: 8px 12px;
-            font-weight: bold;
-            color: #569cd6;
-        }
-
-        .log-timestamp {
-            color: #b5cea8;
-            font-weight: normal;
-            font-size: 0.9em;
-            margin-left: 10px;
-        }
-
-        /* 第二行：Detail Payload (不截斷、完全顯示) */
-        .log-payload-row {
-            background-color: #1e1e1e;
-            border-bottom: 1px solid #3c3c3c;
-        }
-
-        .log-payload-row td {
-            padding: 8px 12px 16px 24px;
-        }
-
-        .payload-block {
-            background-color: #0e0e0e;
-            border-left: 3px solid #007acc;
-            padding: 10px 14px;
-            color: #ce9178;
-            /* 關鍵設定：完全顯示不截斷，自動換行 */
-            white-space: pre-wrap;
-            word-break: break-all;
-            overflow-x: auto;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
     </style>
 </head>
-<body>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
 
-    <h2>Console Event Log (50 Records)</h2>
+    <!-- Header -->
+    <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Status Badge -->
+                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                    <span>Connecting...</span>
+                </div>
+                <button onclick="fetchInitialData()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </header>
 
-    <table class="log-container" id="logTable">
-        <!-- 資料將由 JS 動態生成 -->
-    </table>
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+
+        <!-- Top Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Total Events -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Events Recorded</p>
+                    <h3 id="totalEvents" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center text-indigo-400">
+                    <i class="fa-solid fa-bolt text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Total Features Tracked -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Feature Types</p>
+                    <h3 id="activeFeatures" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-cubes text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Active Countries -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Recent Active Countries</p>
+                    <h3 id="activeCountries" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center text-sky-400">
+                    <i class="fa-solid fa-globe text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Feature Bar Chart -->
+            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
+                </h2>
+                <div class="h-64">
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Country Doughnut Chart -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-earth-americas text-sky-400"></i> Country Distribution
+                </h2>
+                <div class="h-64 flex justify-center items-center">
+                    <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Logs Table -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-400"></i> Recent 50 Event Details
+                </h2>
+                <span class="text-xs text-gray-500">Auto-refresh via WebSocket</span>
+            </div>
+            
+            <div class="overflow-x-auto custom-scrollbar max-h-96">
+                <table class="w-full text-left text-sm text-gray-400 border-collapse">
+                    <thead class="text-xs uppercase bg-gray-800/60 text-gray-300 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3">Time (UTC+8)</th>
+                            <th class="px-4 py-3">Feature</th>
+                            <th class="px-4 py-3">Country</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
 
     <script>
-        // 模擬 50 則包含詳細 Payload 的資料
-        const generateLogs = () => {
-            const logs = [];
-            for (let i = 1; i <= 50; i++) {
-                logs.push({
-                    id: i,
-                    event: `EVENT_LOG_TYPE_${(i % 5) + 1}`,
-                    timestamp: new Date(Date.now() - (50 - i) * 60000).toISOString(),
-                    payload: {
-                        recordId: i,
-                        status: i % 2 === 0 ? "SUCCESS" : "PENDING",
-                        metadata: {
-                            user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                            ip_address: `192.168.1.${i}`,
-                            session_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-                            deep_nested_info: {
-                                retry_count: i % 3,
-                                trace_path: ["router", "auth_guard", "controller", "service_layer", "database_adapter"],
-                                raw_dump: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(i % 3 + 1)
+        // 註冊 ChartDataLabels 插件
+        Chart.register(ChartDataLabels);
+
+        // Parse Admin Parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminKey = urlParams.get('admin');
+
+        // Chart instances
+        let featureChart, countryChart;
+
+        // Initialize Charts
+        function initCharts() {
+            const ctxFeature = document.getElementById('featureChart').getContext('2d');
+            featureChart = new Chart(ctxFeature, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: { display: false } // 長條圖關閉內部標籤
+                    },
+                    scales: {
+                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+                        y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            const ctxCountry = document.getElementById('countryChart').getContext('2d');
+            countryChart = new Chart(ctxCountry, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#34d399', '#fbbf24']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: '#9ca3af' } },
+                        // 需求 1: 自動在國籍圓餅圖上標上人數
+                        datalabels: {
+                            color: '#ffffff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value) => {
+                                return value > 0 ? value + ' 人' : ''; // 顯示人數單位
+                            },
+                            anchor: 'center',
+                            align: 'center',
+                            dropShadow: {
+                                blur: 2,
+                                color: '#000000'
                             }
                         }
                     }
-                });
+                }
+            });
+        }
+
+        // Render UI with Payload
+        function updateDashboard(data) {
+            document.getElementById('totalEvents').innerText = data.total_events || 0;
+            document.getElementById('activeFeatures').innerText = Object.keys(data.stats || {}).length;
+            document.getElementById('activeCountries').innerText = Object.keys(data.recent_countries_summary || {}).length;
+
+            // 1. Update Feature Chart
+            const featureLabels = Object.keys(data.stats || {});
+            const featureData = Object.values(data.stats || {});
+            featureChart.data.labels = featureLabels;
+            featureChart.data.datasets[0].data = featureData;
+            featureChart.update();
+
+            // 2. Update Country Chart
+            const countryLabels = Object.keys(data.recent_countries_summary || {});
+            const countryData = Object.values(data.recent_countries_summary || {});
+            countryChart.data.labels = countryLabels;
+            countryChart.data.datasets[0].data = countryData;
+            countryChart.update();
+
+            // 3. Update Table
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+            
+            (data.recent_50_details || []).forEach((log, index) => {
+                // 第一行：基本資訊
+                const trHeader = document.createElement('tr');
+                trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
+                trHeader.innerHTML = `
+                    <td class="px-4 pt-3 pb-1 font-mono text-xs text-gray-400">${log.time}</td>
+                    <td class="px-4 pt-3 pb-1"><span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span></td>
+                    <td class="px-4 pt-3 pb-1"><span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium">${log.country || 'Unknown'}</span></td>
+                `;
+
+                // 需求 2: 將 Detail payload 放在第二行，並完全顯示其內容
+                const trDetail = document.createElement('tr');
+                trDetail.className = "hover:bg-gray-800/40 border-b border-gray-800/80";
+
+                let detailFormatted = '-';
+                if (log.detail) {
+                    detailFormatted = typeof log.detail === 'object' 
+                        ? JSON.stringify(log.detail, null, 2) 
+                        : log.detail;
+                }
+
+                trDetail.innerHTML = `
+                    <td colspan="3" class="px-4 pt-1 pb-3">
+                        <div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400">
+                            <div class="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-1">Detail Payload</div>
+                            <pre class="whitespace-pre-wrap break-all overflow-x-auto leading-relaxed">${detailFormatted}</pre>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(trHeader);
+                tbody.appendChild(trDetail);
+            });
+        }
+
+        // Fallback HTTP Fetch
+        async function fetchInitialData() {
+            try {
+                const response = await fetch(`/api/track/stats?admin=${encodeURIComponent(adminKey)}&format=json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data);
+                }
+            } catch (err) {
+                console.error("HTTP Fetch failed:", err);
             }
-            return logs;
-        };
+        }
 
-        const logTable = document.getElementById('logTable');
-        const logs = generateLogs();
+        // Setup WebSocket Realtime Listener
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/console?admin=${encodeURIComponent(adminKey)}`;
+            const ws = new WebSocket(wsUrl);
 
-        logs.forEach(log => {
-            // 第一行：標題與基本資訊
-            const headerRow = document.createElement('tr');
-            headerRow.className = 'log-header-row';
-            headerRow.innerHTML = `
-                <td>
-                    #${log.id} [${log.event}] 
-                    <span class="log-timestamp">${log.timestamp}</span>
-                </td>
-            `;
+            const badge = document.getElementById('statusBadge');
 
-            // 第二行：DETAIL PAYLOAD（放在該行下方，完全顯示不截斷）
-            const payloadRow = document.createElement('tr');
-            payloadRow.className = 'log-payload-row';
-            payloadRow.innerHTML = `
-                <td>
-                    <div class="payload-block">${JSON.stringify(log.payload, null, 2)}</div>
-                </td>
-            `;
+            ws.onopen = () => {
+                badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live Connected</span>`;
+            };
 
-            logTable.appendChild(headerRow);
-            logTable.appendChild(payloadRow);
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    updateDashboard(data);
+                } catch (e) {
+                    console.error("WebSocket message parsing error:", e);
+                }
+            };
+
+            ws.onclose = () => {
+                badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Disconnected</span>`;
+                // Reconnect retry after 3 seconds
+                setTimeout(initWebSocket, 3000);
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+        }
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            fetchInitialData();
+            initWebSocket();
         });
     </script>
 </body>
