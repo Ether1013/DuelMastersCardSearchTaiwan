@@ -3099,15 +3099,17 @@
             const abilText = document.getElementById('ability-text');
             if(abilText && abilText.value) tags.push({ label: `能力關鍵字: ${abilText.value}`, action: () => { abilText.value = ""; updateSummaryText(); } });
             
-            // 尋找處理 .ability-select 的區塊並替換為：
+			// 尋找處理 .ability-select 的區塊並替換為：
 			document.querySelectorAll('#ability-container .flex-input-row').forEach(row => {
 				const sel = row.querySelector('.ability-select');
 				const btnNative = row.querySelector('.btn-native-ability');
 				if (sel && sel.value) {
 					const isNative = btnNative && btnNative.classList.contains('active');
 					let displayText = sel.value;
-					if (sel.value === '__NO_ABILITY__') displayText = '[無能力]';
-					else if (sel.value === '__SEMI_VANILLA__') displayText = '[準バニラ]';
+					if (sel.value === '__NO_ABILITY__') displayText = '無能力';
+					else if (sel.value === '__SEMI_VANILLA__') displayText = '準バニラ';
+					else if (sel.value === '__SOUP__') displayText = 'SOUP'; // 💡 新增 SOUP 標籤名稱
+					
 					const nativeSuffix = isNative ? '(原生)' : '';
 					
 					tags.push({ 
@@ -3965,9 +3967,10 @@
 			let finalHtml = '<option value="">(請選擇)</option>';
 			if (popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
 			
-			// 💡 新增：在熱門選項與所有選項中間插入 [無能力] 與 [準バニラ]
-			finalHtml += '<option value="__NO_ABILITY__" style="font-weight:bold; color:#d32f2f;">[無能力]</option>';
-			finalHtml += '<option value="__SEMI_VANILLA__" style="font-weight:bold; color:#d32f2f;">[準バニラ]</option>';
+			// 💡 修正點：取消 [無能力] 與 [準バニラ] 的紅色 (color:#d32f2f)，並新增 [SOUP]
+			finalHtml += '<option value="__NO_ABILITY__" style="font-weight:bold;">無能力</option>';
+			finalHtml += '<option value="__SEMI_VANILLA__" style="font-weight:bold;">準バニラ</option>';
+			finalHtml += '<option value="__SOUP__" style="font-weight:bold;">SOUP</option>';
 			
 			finalHtml += normHtml;
 			return finalHtml;
@@ -5077,8 +5080,9 @@
 				return res;
 			};
 
-			const hasNoAbilitySelected = cfg.abilities.includes('__NO_ABILITY__');
+			const hasNoAbilitySelected = cfg.abilities.some(a => a.value === '__NO_ABILITY__');
 			const hasSemiVanillaSelected = cfg.abilities.some(a => a.value === '__SEMI_VANILLA__');
+			const hasSoupSelected = cfg.abilities.some(a => a.value === '__SOUP__'); // 💡 補上這一行宣告！
 
 			if (hasNoAbilitySelected) {
 				const hasSingleBlockNoAbility = card.wdata.some(w => {
@@ -5152,6 +5156,61 @@
 					if (!hasMatchedBlock) return false;
 				}
 
+			} else if (hasSoupSelected) {
+				// 💡 SOUP 判斷邏輯：有能力，且裡面的能力全都只是關鍵字能力 (不包含描述性文字與選項符號 '#')
+				const isOnlyKeywordSp = (spList) => {
+					if (!spList || spList.length === 0) return false;
+					
+					// 1. 先過濾掉 HINT: 輔助提示文字
+					const realSpList = spList.filter(sp => !sp.trim().startsWith('HINT:'));
+					if (realSpList.length === 0) return false;
+					
+					// 2. 建立關鍵字 Set
+					const keywordSet = new Set(rawAbilities.map(a => a.jap).filter(Boolean));
+					
+					return realSpList.every(sp => {
+						if (sp.includes('#')) return false; // 含有選項子選單 # 一律剔除
+						
+						// 徹底清理卡牌 sp 內容（去除開頭特殊圖示、標點符號與空白）
+						let cleanSp = sp.trim()
+							.replace(/^[✪⌂✚✡]\s*/, '') // 去除開頭圖示
+							.replace(/[。\.]$/, '')     // 去除末尾句號
+							.trim();
+							
+						return keywordSet.has(cleanSp);
+					});
+				};
+
+				const hasSingleBlockSoup = card.wdata.some(w => {
+					const wSp = getWdataSpList(w);
+					return isOnlyKeywordSp(wSp);
+				});
+
+				if (!hasSingleBlockSoup) return false;
+
+				if (cfg.isAbilityMix) {
+					const allTypes = card.wdata.flatMap(w => w.type || []);
+					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
+					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+					const allRaces = card.wdata.flatMap(w => w.race || []);
+
+					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
+					if (!checkCostMatchList(allCosts, cfg)) return false;
+					if (!checkPowerMatchList(allPowers, cfg)) return false;
+					if (!checkRaceMatchList(allRaces, cfg.races, cfg.raceLogic)) return false;
+				} else {
+					const hasMatchedBlock = card.wdata.some(w => {
+						const wSp = getWdataSpList(w);
+						if (!isOnlyKeywordSp(wSp)) return false;
+						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
+						if (!checkCostMatchSingle(w.cost, cfg)) return false;
+						if (!checkPowerMatchSingle(w.power, cfg)) return false;
+						if (!checkRaceMatchList(w.race || [], cfg.races, cfg.raceLogic)) return false;
+						return true;
+					});
+
+					if (!hasMatchedBlock) return false;
+				}
 			} else if (cfg.isAbilityMix) {
 				const allTypes = card.wdata.flatMap(w => w.type || []);
 				const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
