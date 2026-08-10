@@ -569,16 +569,37 @@
                 }
             }
 
-            if (picUrl) {
-                modalImgBox.innerHTML = `<img class="modal-img" src="${picUrl}" alt="Card Image" />`;
-            } else {
-                modalImgBox.innerHTML = `
-					<div class="loading-image-box">
+            // card.html
+			if (picUrl) {
+				// 1. 有網址，先填入「讀取中」佔位塊
+				modalImgBox.innerHTML = `
+					<div class="loading-image-box" id="card-loading-box">
 						<div class="card-img-spinner"></div>
 						<div>圖片讀取中...</div>
 					</div>
 				`;
-            }
+
+				// 2. 建立圖片進行預載
+				const img = document.createElement('img');
+				img.className = 'modal-img';
+				img.alt = card.name || 'Card Image';
+
+				// 3. 讀取完成 ➔ 顯示圖片
+				img.onload = () => {
+					modalImgBox.innerHTML = '';
+					modalImgBox.appendChild(img);
+				};
+
+				// 4. 讀取失敗 ➔ 顯示「無卡圖」
+				img.onerror = () => {
+					modalImgBox.innerHTML = `<div class="no-image-box">無卡圖</div>`;
+				};
+
+				img.src = picUrl;
+			} else {
+				// 5. 連圖都借不到 ➔ 直接顯示「無卡圖」
+				modalImgBox.innerHTML = `<div class="no-image-box">無卡圖</div>`;
+			}
 
             // 2. wdata 屬性區塊渲染
             if (card.wdata && Array.isArray(card.wdata) && card.wdata.length > 0) {

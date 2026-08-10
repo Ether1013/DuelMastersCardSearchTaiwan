@@ -365,6 +365,56 @@
 				font-size: 13px;
 			}
 		}
+		
+		/* 1. 圖片載入中 (Spinner + 藍色虛框) */
+		.loading-image-box {
+			width: 100%;
+			height: 100%;
+			min-height: 250px;
+			background: #f8f9fa;
+			color: #0284c7;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			font-weight: bold;
+			border-radius: 6px;
+			border: 2px dashed #0284c7;
+			font-size: 14px;
+			gap: 10px;
+			box-sizing: border-box;
+		}
+
+		.card-img-spinner {
+			border: 3px solid #e2e8f0;
+			border-top: 3px solid #0284c7;
+			border-radius: 50%;
+			width: 28px;
+			height: 28px;
+			animation: cardSpin 1s linear infinite;
+		}
+
+		@keyframes cardSpin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+
+		/* 2. 連借都借不到 / 載入失敗 (灰色虛框) */
+		.no-image-box {
+			width: 100%;
+			height: 100%;
+			min-height: 250px;
+			background: #e0e0e0;
+			color: #666;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-weight: bold;
+			border-radius: 6px;
+			border: 2px dashed #ccc;
+			font-size: 16px;
+			box-sizing: border-box;
+		}
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
@@ -1176,19 +1226,22 @@
                     htmlContent += `<div class="card-item">`;
                     htmlContent += `<div class="card-img-container" style="max-width: ${containerMaxWidth};">`;
 
-                    if (picUrl && picUrl.trim() !== '') {
-                        if (isDeckSet && cardCount > 1) {
-                            htmlContent += `<div class="stack-img-container${horizClass}">`;
-                            for (let c = 0; c < cardCount; c++) {
-                                htmlContent += `<img class="stacked-card-img${horizClass}" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" />`;
-                            }
-                            htmlContent += `</div>`;
-                        } else {
-                            htmlContent += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" />`;
-                        }
-                    } else {
-                        htmlContent += `<div class="card-img${horizClass}" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
-                    }
+                    // pop.html (圖文模式渲染)
+					if (picUrl && picUrl.trim() !== '') {
+						// 1. 有卡圖資料 ➔ 使用原本的 stacked-card-img 或 card-img，並掛上 onload/onerror
+						if (isDeckSet && cardCount > 1) {
+							htmlContent += `<div class="stack-img-container${horizClass}">`;
+							for (let c = 0; c < cardCount; c++) {
+								htmlContent += `<img class="stacked-card-img${horizClass}" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" onerror="this.outerHTML='<div class=\\'no-image-box\\'>無卡圖</div>'" />`;
+							}
+							htmlContent += `</div>`;
+						} else {
+							htmlContent += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" onerror="this.outerHTML='<div class=\\'no-image-box\\'>無卡圖</div>'" />`;
+						}
+					} else {
+						// 2. 連圖都借不到 ➔ 直接顯示「無卡圖」
+						htmlContent += `<div class="no-image-box${horizClass}">無卡圖</div>`;
+					}
 
                     htmlContent += `<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>`;
                     htmlContent += `</div>`;

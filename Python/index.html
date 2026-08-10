@@ -5640,8 +5640,21 @@
 			let cardImgElements = [];
 			let isAnimating = false;
 
+			// index.html
 			if (validPicUrls.length > 0) {
 				validPicUrls.forEach((url, idx) => {
+					// 1. 建立「圖片載入中」佔位 DOM
+					const loadingBox = document.createElement('div');
+					loadingBox.className = 'loading-image-box';
+					loadingBox.style.width = boxWidth;
+					loadingBox.style.height = boxHeight;
+					loadingBox.innerHTML = `
+						<div class="card-img-spinner"></div>
+						<div>圖片讀取中...</div>
+					`;
+					imgStackContainer.appendChild(loadingBox);
+
+					// 2. 建立實際圖片
 					const img = document.createElement('img');
 					img.className = 'modal-img modal-img-stack-item';
 					if (isFallbackPic) {
@@ -5649,18 +5662,40 @@
 					}
 					img.style.width = boxWidth;
 					img.style.height = boxHeight;
-					img.src = url;
+					img.style.display = 'none'; // 先隱藏圖片，等讀取完畢才顯示
 					img.dataset.versionIndex = idx;
 
-					img.onerror = () => {
-						img.style.display = 'none';
+					// 3. 圖片載入完成 ➔ 移除 Loading 佔位框，顯示圖片
+					img.onload = () => {
+						if (loadingBox.parentNode) {
+							loadingBox.parentNode.removeChild(loadingBox);
+						}
+						img.style.display = 'block';
 					};
 
+					// 4. 圖片載入失敗 (404等) ➔ 替換為「無卡圖」
+					img.onerror = () => {
+						if (loadingBox.parentNode) {
+							loadingBox.parentNode.removeChild(loadingBox);
+						}
+						const errorBox = document.createElement('div');
+						errorBox.className = 'no-image-box';
+						errorBox.style.width = boxWidth;
+						errorBox.style.height = boxHeight;
+						errorBox.innerText = '無卡圖';
+						imgStackContainer.appendChild(errorBox);
+						
+						// 從圖片陣列中移除
+						const imgIdx = cardImgElements.indexOf(img);
+						if (imgIdx !== -1) cardImgElements.splice(imgIdx, 1);
+						if (img.parentNode) img.parentNode.removeChild(img);
+					};
+
+					img.src = url;
 					imgStackContainer.appendChild(img);
 					cardImgElements.push(img);
 				});
 
-				// 若有指定商品且使用了備援卡圖，顯示 (No Pic) 標籤
 				if (isFallbackPic) {
 					const noPicBadge = document.createElement('div');
 					noPicBadge.className = 'no-pic-badge';
@@ -5668,12 +5703,12 @@
 					imgStackContainer.appendChild(noPicBadge);
 				}
 			} else {
-				// 💡 當完全沒有圖片資料時，改顯示 [無圖片] 方框而非 [讀取中]
+				// 5. 連圖都借不到 ➔ 直接顯示「無卡圖」
 				const noImgBox = document.createElement('div');
 				noImgBox.className = 'no-image-box';
 				noImgBox.style.width = boxWidth;
 				noImgBox.style.height = boxHeight;
-				noImgBox.innerText = '無圖片';
+				noImgBox.innerText = '無卡圖';
 				imgStackContainer.appendChild(noImgBox);
 			}
 
