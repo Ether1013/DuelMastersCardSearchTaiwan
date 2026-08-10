@@ -35,6 +35,8 @@ lz_compressor = LZString()
 load_dotenv()
 LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN", "你的_LINE_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID", "你的_LINE_USER_ID")
+# 新增 user 系統參數 (可從 .env 讀取，預設為 "admin")
+TRACK_STATS_USER = os.getenv("TRACK_STATS_USER", "admin")
 
 # GitHub 自動批次 Commit 設定
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
@@ -974,7 +976,11 @@ async def track_feature(request: Request):
 
 # 3. 查看統計數據與最新 50 筆 Detail 的 API
 @app.get("/api/track/stats", response_class=PrettyJSONResponse)
-async def get_feature_stats():
+async def get_feature_stats(admin: str = Query(..., description="user")):
+    # 驗證傳入的 admin 參數是否與系統設定相符
+    if admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     
     # 💡 統計最新 50 筆紀錄中的國家分佈
