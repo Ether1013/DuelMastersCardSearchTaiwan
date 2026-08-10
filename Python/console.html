@@ -21,27 +21,37 @@
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
 
-    <!-- Header -->
+    <!-- Header (已優化 RWD 排版) -->
     <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+        <!-- 💡 在這裡加入 flex-col sm:flex-row 讓手機版上下排列，並允許換行 -->
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            
+            <!-- 標題區 -->
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
-                <h1 class="text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
             </div>
-            <div class="flex items-center gap-4">
-                <!-- 新增單次Token按鈕 (預設隱藏，若以 admin 進入才顯示) -->
-                <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-key"></i> 新增單次Token
+            
+            <!-- 按鈕控制區 (加入 flex-wrap 允許按鈕換行，w-full 確保手機版佔滿寬度) -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto justify-start sm:justify-end">
+                
+                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
+                <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-key"></i> 產生單次Token
                 </button>
-                <!-- Status Badge -->
-                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                
+                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
+                <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                     <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
                     <span>Connecting...</span>
                 </div>
-                <button onclick="fetchInitialData()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
+                
+                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
+                <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
                     <i class="fa-solid fa-rotate"></i> Refresh
                 </button>
             </div>
+
         </div>
     </header>
 
@@ -135,7 +145,7 @@
         // 註冊 ChartDataLabels 插件
         Chart.register(ChartDataLabels);
 
-        // 💡 取得授權參數：支援 admin 或 token
+        // 取得授權參數：支援 admin 或 token
         const urlParams = new URLSearchParams(window.location.search);
         const adminKey = urlParams.get('admin');
         const tokenKey = urlParams.get('token');
@@ -185,7 +195,7 @@
                         datalabels: {
                             color: '#ffffff',
                             font: { weight: 'bold', size: 12 },
-                            formatter: (value) => value > 0 ? value + ' 次' : '',
+                            formatter: (value) => value > 0 ? value + ' 人' : '',
                             anchor: 'center',
                             align: 'center',
                             dropShadow: { blur: 2, color: '#000000' }
@@ -251,7 +261,6 @@
         async function fetchInitialData() {
             if (!authParam) return;
             try {
-                // 💡 使用動態 authParam
                 const response = await fetch(`/api/track/stats?${authParam}&format=json`);
                 if (response.ok) {
                     const data = await response.json();
@@ -265,13 +274,12 @@
         function initWebSocket() {
             if (!authParam) return;
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // 💡 使用動態 authParam
             const wsUrl = `${protocol}//${window.location.host}/ws/console?${authParam}`;
             const ws = new WebSocket(wsUrl);
             const badge = document.getElementById('statusBadge');
 
             ws.onopen = () => {
-                badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                badge.className = "whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
                 badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live Connected</span>`;
             };
 
@@ -285,7 +293,7 @@
             };
 
             ws.onclose = () => {
-                badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                badge.className = "whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
                 badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Disconnected</span>`;
                 setTimeout(initWebSocket, 3000);
             };
@@ -293,7 +301,7 @@
             ws.onerror = () => ws.close();
         }
 
-        // 💡 產生 Token 並分享/複製的功能
+        // 產生 Token 並分享/複製的功能
         async function generateToken() {
             try {
                 const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
