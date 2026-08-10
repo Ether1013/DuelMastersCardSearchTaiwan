@@ -1,5 +1,6 @@
 import os
 import json
+import gzip  # 👈 新增這一行
 import uuid  # 用來產生唯一 ID
 import asyncio
 import base64
@@ -15,6 +16,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from lzstring import LZString
 from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -26,6 +28,7 @@ from datetime import datetime, timezone, timedelta
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 lz_compressor = LZString()
 
 # 自動讀取同目錄下的 .env 檔案
@@ -52,6 +55,7 @@ TZ_UTC8 = timezone(timedelta(hours=8))
 
 # --- 全域緩存變數區 ---
 carddata_cache = []
+carddata_gzip_cache = b""  # 👈 新增：存放 carddata 壓縮檔
 card_types_cache = []
 races_cache = []
 abilities_cache = []
@@ -59,6 +63,7 @@ categoryname_cache = []
 nickname_cache = []
 diary_cache = []
 setlist_cache = {}
+setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
 # --- 在全域變數區新增參數化名單 ---
 EXCLUDED_COUNTRIES = ["JP", "TW"]
 
@@ -336,9 +341,14 @@ def load_all_setlists():
 
 @app.on_event("startup")
 def load_and_process_caches():
-    global carddata_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, diary_cache, tags_cache
+    # 👈 修改 global 宣告，補上 carddata_gzip_cache 與 setlist_gzip_cache
+    global carddata_cache, carddata_gzip_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, diary_cache, tags_cache
     try:
         carddata_cache = load_json_file("carddata.json")
+        # 👈 新增：預先壓縮 carddata
+        carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False).encode('utf-8')
+        carddata_gzip_cache = gzip.compress(carddata_json_bytes)
+
         card_types_cache = load_json_file("card_type.json")
         races_cache = load_json_file("races.json")
         abilities_cache = load_json_file("abilities.json")
@@ -346,7 +356,11 @@ def load_and_process_caches():
         nickname_cache = load_json_file("nickname.json")
         diary_cache = load_json_file("diary.json")
         load_english_names()
+        
         setlist_cache = load_all_setlists()
+        # 👈 新增：預先壓縮 setlist
+        setlist_json_bytes = json.dumps(setlist_cache, ensure_ascii=False).encode('utf-8')
+        setlist_gzip_cache = gzip.compress(setlist_json_bytes)
         
         # 新增 tags 載入
         loaded_tags = load_json_file("tags.json")
@@ -568,7 +582,13 @@ async def get_races(): return races_cache
 async def get_abilities(): return abilities_cache
 
 @app.get("/api/carddata")
-async def get_carddata(): return carddata_cache
+async def get_carddata(): 
+    # 👈 直接回傳記憶體中的壓縮 Bytes，附帶 gzip 標頭
+    return Response(
+        content=carddata_gzip_cache, 
+        media_type="application/json", 
+        headers={"Content-Encoding": "gzip"}
+    )
 
 @app.get("/api/categoryname")
 async def get_categoryname(): return categoryname_cache
@@ -577,7 +597,13 @@ async def get_categoryname(): return categoryname_cache
 async def get_nickname(): return nickname_cache
 
 @app.get("/api/setlist")
-async def get_setlist(): return setlist_cache
+async def get_setlist(): 
+    # 👈 直接回傳記憶體中的壓縮 Bytes，附帶 gzip 標頭
+    return Response(
+        content=setlist_gzip_cache, 
+        media_type="application/json", 
+        headers={"Content-Encoding": "gzip"}
+    )
 
 @app.get("/api/card_detail")
 @limiter.limit("6/minute")
