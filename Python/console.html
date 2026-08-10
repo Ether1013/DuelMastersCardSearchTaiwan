@@ -36,11 +36,6 @@
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto justify-start sm:justify-end">
                 
                 <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
-                <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-key"></i> 產生單次Token
-                </button>
-                
-                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
                 <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                     <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
                     <span>Connecting...</span>
@@ -50,6 +45,12 @@
                 <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
                     <i class="fa-solid fa-rotate"></i> Refresh
                 </button>
+
+                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
+                <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
+                    <i class="fa-solid fa-key"></i> 產生單次Token
+                </button>
+                
             </div>
 
         </div>
@@ -195,7 +196,7 @@
                         datalabels: {
                             color: '#ffffff',
                             font: { weight: 'bold', size: 12 },
-                            formatter: (value) => value > 0 ? value + ' 人' : '',
+                            formatter: (value) => value > 0 ? value + ' 次' : '',
                             anchor: 'center',
                             align: 'center',
                             dropShadow: { blur: 2, color: '#000000' }
