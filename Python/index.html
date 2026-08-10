@@ -3105,7 +3105,9 @@
 				const btnNative = row.querySelector('.btn-native-ability');
 				if (sel && sel.value) {
 					const isNative = btnNative && btnNative.classList.contains('active');
-					const displayText = sel.value === '__NO_ABILITY__' ? '[無能力]' : sel.value;
+					let displayText = sel.value;
+					if (sel.value === '__NO_ABILITY__') displayText = '[無能力]';
+					else if (sel.value === '__SEMI_VANILLA__') displayText = '[準バニラ]';
 					const nativeSuffix = isNative ? '(原生)' : '';
 					
 					tags.push({ 
@@ -3963,8 +3965,9 @@
 			let finalHtml = '<option value="">(請選擇)</option>';
 			if (popHtml !== '') finalHtml += popHtml + '<option disabled>──────────</option>';
 			
-			// 💡 新增：在熱門選項與所有選項中間插入 [無能力]
+			// 💡 新增：在熱門選項與所有選項中間插入 [無能力] 與 [準バニラ]
 			finalHtml += '<option value="__NO_ABILITY__" style="font-weight:bold; color:#d32f2f;">[無能力]</option>';
+			finalHtml += '<option value="__SEMI_VANILLA__" style="font-weight:bold; color:#d32f2f;">[準バニラ]</option>';
 			
 			finalHtml += normHtml;
 			return finalHtml;
@@ -5075,6 +5078,7 @@
 			};
 
 			const hasNoAbilitySelected = cfg.abilities.includes('__NO_ABILITY__');
+			const hasSemiVanillaSelected = cfg.abilities.some(a => a.value === '__SEMI_VANILLA__');
 
 			if (hasNoAbilitySelected) {
 				const hasSingleBlockNoAbility = card.wdata.some(w => {
@@ -5096,6 +5100,48 @@
 					if (!checkRaceMatchList(allRaces, cfg.races, cfg.raceLogic)) return false;
 				} else {
 					const hasMatchedBlock = card.wdata.some(w => {
+						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
+						if (!checkCostMatchSingle(w.cost, cfg)) return false;
+						if (!checkPowerMatchSingle(w.power, cfg)) return false;
+						if (!checkRaceMatchList(w.race || [], cfg.races, cfg.raceLogic)) return false;
+						return true;
+					});
+
+					if (!hasMatchedBlock) return false;
+				}
+
+			} else if (hasSemiVanillaSelected) {
+				// 💡 準バニラ 判斷邏輯：有能力，且所有能力「全都只是 Breaker 類型」
+				const isOnlyBreakerSp = (spList) => {
+					if (!spList || spList.length === 0) return false;
+					return spList.every(sp => {
+						const cleanSp = sp.trim();
+						// 只要結尾是 ブレイカー 或 シールド・ブレイカー，且不包含其他複雜的效果說明
+						return (cleanSp.endsWith('ブレイカー') || cleanSp.endsWith('ブレイカー。')) && !cleanSp.includes('#');
+					});
+				};
+
+				const hasSingleBlockSemiVanilla = card.wdata.some(w => {
+					const wSp = getWdataSpList(w);
+					return isOnlyBreakerSp(wSp);
+				});
+
+				if (!hasSingleBlockSemiVanilla) return false;
+
+				if (cfg.isAbilityMix) {
+					const allTypes = card.wdata.flatMap(w => w.type || []);
+					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
+					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+					const allRaces = card.wdata.flatMap(w => w.race || []);
+
+					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
+					if (!checkCostMatchList(allCosts, cfg)) return false;
+					if (!checkPowerMatchList(allPowers, cfg)) return false;
+					if (!checkRaceMatchList(allRaces, cfg.races, cfg.raceLogic)) return false;
+				} else {
+					const hasMatchedBlock = card.wdata.some(w => {
+						const wSp = getWdataSpList(w);
+						if (!isOnlyBreakerSp(wSp)) return false;
 						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 						if (!checkCostMatchSingle(w.cost, cfg)) return false;
 						if (!checkPowerMatchSingle(w.power, cfg)) return false;
