@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡牌詳細資料</title>
+    <style>
+        /* ================= 基礎設定與 UI 排版 ================= */
+        body { 
+            font-family: "微軟正黑體", sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f4f9; 
+            color: #111;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card-detail-wrapper {
+            background: #fff;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        /* 標頭 Header */
+        .modal-header {
+            padding: 14px 18px;
+            border-radius: 8px;
+            color: #111;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .card-id-text {
+            font-size: 13px;
+            font-weight: normal;
+            opacity: 0.85;
+        }
+        .modal-title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8); 
+        }
+
+        .modal-main-content { 
+            display: flex; 
+            gap: 20px; 
+            width: 100%;
+        }
+
+        .modal-img-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            width: 180px;
+        }
+
+        .modal-img { 
+            width: 100%; 
+            border-radius: 6px; 
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3); 
+            object-fit: contain; 
+        }
+
+        .no-image-box {
+            width: 100%;
+            height: 250px; 
+            background: #e0e0e0; 
+            color: #666; 
+            display: flex;
+            justify-content: center; 
+            align-items: center; 
+            font-weight: bold;
+            border-radius: 6px; 
+            border: 2px dashed #ccc; 
+            font-size: 16px;
+        }
+		
+		.loading-image-box {
+			width: 100%;
+			height: 250px; 
+			background: #f8f9fa; 
+			color: #0284c7; 
+			display: flex;
+			flex-direction: column;
+			justify-content: center; 
+			align-items: center; 
+			font-weight: bold;
+			border-radius: 6px; 
+			border: 2px dashed #0284c7; 
+			font-size: 14px;
+			gap: 10px;
+		}
+
+		.card-img-spinner {
+			border: 3px solid #e2e8f0;
+			border-top: 3px solid #0284c7;
+			border-radius: 50%;
+			width: 28px;
+			height: 28px;
+			animation: cardSpin 1s linear infinite;
+		}
+
+		@keyframes cardSpin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+
+        .modal-info-container { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+
+        /* 單卡 wdata 區塊 UI */
+        .wdata-block {
+            background: #f8f9fa; 
+            border: 1px solid #e9ecef; 
+            border-left: 4px solid #333;
+            padding: 12px 15px; 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
+        }
+        .card-attr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 14px; }
+        .attr-pill { background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; }
+        .attr-label { font-weight: bold; color: #555; margin-right: 4px; }
+        .attr-value { font-weight: bold; color: #111; }
+        .sp-ability-list { margin: 6px 0 0 0; padding-left: 20px; font-size: 14px; line-height: 1.5; color: #222; }
+        .sp-ability-list li { margin-bottom: 4px; }
+
+        /* 效果標籤 (Effect Tags) 樣式 */
+        .effect-tag { padding: 1px 4px; border-radius: 3px; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.15s ease; }
+        .effect-tag.tag-card-name { color: #b91c1c; background-color: #fee2e2; border: 1px solid #fca5a5; }
+        .effect-tag.tag-category-name { color: #c2410c; background-color: #ffedd5; border: 1px solid #fed7aa; }
+        .effect-tag.tag-race { color: #047857; background-color: #d1fae5; border: 1px solid #6ee7b7; }
+
+        /* 種族標籤樣式 */
+        .wdata-race-tag {
+            background: #e2e8f0;
+            color: #334155;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        /* 能力說明區塊 */
+        .abil-explain-box {
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #eef6ff;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* 收錄商品區塊 */
+        .set-list-block {
+            border-left-color: #009688;
+            margin-top: 10px;
+        }
+        .set-group-title {
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+            margin: 6px 0 4px 0;
+        }
+        .set-btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .btn-set-chip {
+            font-size: 11px;
+            padding: 3px 8px;
+            background-color: #e0f2f1;
+            color: #004d40;
+            border: 1px solid #b2dfdb;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Loading 遮罩 */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 9999; color: white; font-size: 18px; font-weight: bold;
+        }
+
+        /* 手機版 (RWD) 調整 */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .modal-main-content { flex-direction: column; align-items: center; }
+            .modal-img-container { width: 100%; margin-bottom: 15px; }
+            .modal-img { max-width: 220px; }
+            .modal-info-container { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div>資料查詢中...</div>
+    </div>
+
+    <div class="card-detail-wrapper" id="detail-wrapper" style="display: none;">
+        <div class="modal-header" id="modal-header">
+            <div class="card-id-text" id="modal-id"></div>
+            <div class="modal-title" id="modal-title"></div>
+        </div>
+
+        <div class="modal-main-content">
+            <div class="modal-img-container" id="modal-img-box"></div>
+            <div class="modal-info-container" id="modal-info-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let rawRaces = [];
+        let rawAbilities = [];
+        let rawCardData = [];
+		let rawCardTypes = [];
+		const specialIcons = ["✪", "⌂", "✚", "✡"];
+
+        const CIV_MAP = [
+            { bit: 16, name: '光' },
+            { bit: 8,  name: '水' },
+            { bit: 4,  name: '闇' },
+            { bit: 2,  name: '火' },
+            { bit: 1,  name: '自然' }
+        ];
+
+        function getCivText(civilVal) {
+            const civNum = parseInt(civilVal) || 0;
+            if (civNum === 0 || civNum === 32) return '無文明';
+            const names = [];
+            CIV_MAP.forEach(item => {
+                if (civNum & item.bit) names.push(item.name);
+            });
+            return names.length > 0 ? names.join(' / ') : '無文明';
+        }
+
+        function formatDisplayValue(val) {
+            if (val === null || val === undefined) return '';
+            const num = Number(val);
+            if (!isNaN(num) && num >= 9000000000000000) return '∞';
+            return String(val);
+        }
+
+        function formatDmId(rawId) {
+            if (!rawId) return '';
+            const strId = String(rawId).trim();
+            return strId.toUpperCase().startsWith('DM') ? strId : 'DM' + strId;
+        }
+
+        function getCivBackground(totalCiv) {
+            const colors = [];
+            if (totalCiv & 16) colors.push('#FFD54F'); // 光
+            if (totalCiv & 8)  colors.push('#4FC3F7'); // 水
+            if (totalCiv & 4)  colors.push('#9E9E9E'); // 闇
+            if (totalCiv & 2)  colors.push('#E57373'); // 火
+            if (totalCiv & 1)  colors.push('#81C784'); // 自
+            if (totalCiv & 32 || colors.length === 0) colors.push('#FAFAFA'); // 無
+
+            if (colors.length === 1) return colors[0];
+
+            const step = 100 / colors.length;
+            const gradientStops = [];
+            colors.forEach((color, i) => {
+                gradientStops.push(`${color} ${i * step}%`);
+                gradientStops.push(`${color} ${(i + 1) * step}%`);
+            });
+
+            return `linear-gradient(135deg, ${gradientStops.join(', ')})`;
+        }
+
+        function createAttrPill(label, value) {
+            const div = document.createElement('div');
+            div.className = 'attr-pill';
+            div.innerHTML = `<span class="attr-label">${label}:</span><span class="attr-value">${value}</span>`;
+            return div;
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 取得種族的 Tooltip 內容
+        function getRaceTooltipText(raceJap) {
+            if (!Array.isArray(rawRaces)) return raceJap;
+            const info = rawRaces.find(r => r.jap === raceJap);
+            if (!info) return raceJap;
+            
+            const parts = [];
+            if (info.jap) parts.push(`日文: ${info.jap}`);
+            const chiVal = info.chi || info.cht;
+            if (chiVal) parts.push(`中文: ${chiVal}`);
+            if (info.eng) parts.push(`英文: ${info.eng}`);
+            return parts.join('\n');
+        }
+
+        // 建立標籤字典庫
+        function buildTagDictionaries() {
+            const cleanName = (name) => {
+                if (!name) return "";
+                return name.replace(/（.*?）|\(.*?\)|＼\{.*?\}＼|\{.*?\}|｛.*?｝/g, '').trim();
+            };
+
+            const cardNames = Array.from(new Set(
+                rawCardData.map(c => cleanName(c.name)).filter(Boolean)
+            )).sort((a, b) => b.length - a.length);
+
+            const raceMap = new Map();
+            rawRaces.forEach(r => {
+                if (r.jap) raceMap.set(r.jap, r);
+            });
+            const raceKeys = Array.from(raceMap.keys()).sort((a, b) => b.length - a.length);
+
+            return { cardNames, raceKeys, raceMap };
+        }
+
+        // 標籤替換邏輯 (僅替換卡名與種族標籤)
+        function applyEffectTags(text) {
+            if (!text) return "";
+
+            const dicts = buildTagDictionaries();
+            const placeholders = [];
+            let processedText = text;
+
+            function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
+                if (keywords.length === 0) return;
+
+                let pattern;
+                if (requireBracket) {
+                    const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
+                    pattern = new RegExp(`《(${innerPattern})》`, 'g');
+                } else {
+                    const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
+                    pattern = new RegExp(innerPattern, 'g');
+                }
+
+                processedText = processedText.replace(pattern, (fullMatch, group1, offset) => {
+                    const matched = requireBracket ? group1 : fullMatch;
+
+                    const nonHeaderExcludes = ["進化", "クロスギア", "G城"];
+                    if (nonHeaderExcludes.includes(matched) && offset !== 0) {
+                        return fullMatch;
+                    }
+
+                    const placeholder = `___TAG_${placeholders.length}___`;
+                    const tooltipText = getTooltipFn ? getTooltipFn(matched) : '';
+                    
+                    placeholders.push({
+                        placeholder,
+                        fullMatch,
+                        matched,
+                        type,
+                        tooltipText,
+                        requireBracket
+                    });
+                    return placeholder;
+                });
+            }
+
+            // 1. 卡名標籤 (比對《》內部)
+            replaceKeywords(dicts.cardNames, 'card-name', null, true);
+
+            // 2. 種族標籤
+            replaceKeywords(dicts.raceKeys, 'race', (matched) => {
+                const info = dicts.raceMap.get(matched);
+                if (!info) return '';
+                const parts = [];
+                if (info.jap) parts.push(`日文: ${info.jap}`);
+                const chiVal = info.chi || info.cht;
+                if (chiVal) parts.push(`中文: ${chiVal}`);
+                if (info.eng) parts.push(`英文: ${info.eng}`);
+                return parts.join('\n');
+            }, false);
+
+            // 還原佔位符為包含 Title/Tooltip 的 HTML 標籤
+            placeholders.forEach(({ placeholder, matched, type, tooltipText, requireBracket }) => {
+                const titleAttr = tooltipText ? `title="${tooltipText.replace(/"/g, '&quot;')}" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}"` : '';
+                
+                const tagContent = `<span class="effect-tag tag-${type}" ${titleAttr} data-type="${type}">${matched}</span>`;
+                const finalHtml = requireBracket ? `《${tagContent}》` : tagContent;
+                
+                processedText = processedText.replace(placeholder, finalHtml);
+            });
+
+            return processedText;
+        }
+		
+		// 全域共用：針對指定卡牌的 sp 與 hypermode.sp 進行「或以上/或以下」替換
+		function processSpText(cards) {
+			if (!cards || !Array.isArray(cards)) return;
+			cards.forEach(card => {
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => {
+						// 處理一般 sp
+						if (w.sp && Array.isArray(w.sp)) {
+							w.sp = w.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+												  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+						// 處理超化模式 hypermode.sp
+						if (w.hypermode && w.hypermode.sp && Array.isArray(w.hypermode.sp)) {
+							w.hypermode.sp = w.hypermode.sp.map(s => s.replace(/以上/g, '或以上').replace(/或或以上/g, '或以上')
+																	  .replace(/以下/g, '或以下').replace(/或或以下/g, '或以下'));
+						}
+					});
+				}
+			});
+		}
+
+        function renderAbilityText(spStr) {
+            let formatted = formatDisplayValue(spStr);
+            if (formatted.startsWith('HINT:')) {
+                const hintContent = formatted.replace(/^HINT:\s*/, '');
+                return { isHint: true, html: `<div style="color: #666; font-style: italic; font-size: 13px; margin: 4px 0;">（${applyEffectTags(hintContent)}）</div>` };
+            }
+            if (formatted.includes('#')) {
+                const parts = formatted.split(/#+/).map(p => p.trim()).filter(Boolean);
+                if (parts.length > 0) {
+                    let html = `<div style="font-weight: bold; margin-bottom: 2px;">${applyEffectTags(parts[0])}</div><ul style="margin: 2px 0 6px 18px; padding-left: 0;">`;
+                    for (let i = 1; i < parts.length; i++) html += `<li>${applyEffectTags(parts[i])}</li>`;
+                    html += `</ul>`;
+                    return { isHint: false, html: html };
+                }
+            }
+            return { isHint: false, html: `<div>${applyEffectTags(formatted)}</div>` };
+        }
+
+        async function initPage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const p = urlParams.get('p');
+
+            if (!p) {
+                document.getElementById('loading-overlay').innerHTML = '<div style="color: #ff8a80;">錯誤：未提供 p 參數 (?p=卡名 或 ID)</div>';
+                return;
+            }
+
+            try {
+				// 🔽 將原本單一的 fetch 改為並行請求
+				const [resp, replaceRes] = await Promise.all([
+					fetch(`/api/card_detail?p=${encodeURIComponent(p)}`),
+					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
+				]);
+
+				if (!resp.ok) {
+					const errData = await resp.json();
+					throw new Error(errData.detail || '查無資料');
+				}
+
+				const data = await resp.json();
+				const replaceConfig = replaceRes; // 從上面的 Promise 中取得
+
+				// 🔽 新增這段判斷：取得單卡後立刻替換內文
+				if (replaceConfig && replaceConfig.need_replace && data.card) {
+					processSpText([data.card]);
+				}
+
+				rawRaces = data.races || [];
+                rawAbilities = data.abilities || [];
+                rawCardData = data.card ? [data.card] : [];
+				rawCardTypes = data.card_types || [];
+
+                renderCardDetail(data);
+
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('detail-wrapper').style.display = 'flex';
+
+            } catch (err) {
+                document.getElementById('loading-overlay').innerHTML = `<div style="color: #ff8a80;">${err.message}</div>`;
+            }
+        }
+
+        function renderCardDetail(data) {
+            const card = data.card;
+            const setdata = data.setdata;
+            const setList = data.set_list;
+            const matchedId = data.matched_id;
+
+            const modalHeader = document.getElementById('modal-header');
+            const modalId = document.getElementById('modal-id');
+            const modalTitle = document.getElementById('modal-title');
+            const modalImgBox = document.getElementById('modal-img-box');
+            const modalInfoContainer = document.getElementById('modal-info-container');
+
+            // 0. Header (當 p=卡名 時 matchedId 為空，不會顯示 ID)
+            let combinedCiv = 0;
+            if (card.wdata && Array.isArray(card.wdata)) {
+                card.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+            }
+            modalHeader.style.background = getCivBackground(combinedCiv);
+
+            if (matchedId) {
+                modalId.innerText = `( ${formatDmId(matchedId)} )`;
+                modalId.style.display = 'block';
+            } else {
+                modalId.style.display = 'none'; // 隱藏 ID 區塊
+            }
+            modalTitle.innerText = card.name || '未命名卡牌';
+
+            // 1. 圖片與 Flavor 處理
+            let picUrl = card.pic || "";
+            let flavorText = "";
+
+            // 僅在有指定特定商品 ID 時（setdata 存在），才取特定商品的圖片與 Flavor
+            if (setdata) {
+                const matchedIndex = data.matched_index || 0;
+                const cardList = setdata.setcardlist || setdata.cardlist || [];
+                
+                const sameNameItems = cardList.filter(i => {
+                    const itemName = (typeof i === 'object' && i !== null) ? i.name : i;
+                    return (itemName || '').trim() === (card.name || '').trim();
+                });
+
+                if (sameNameItems.length > 0) {
+                    let matchedItem = null;
+                    let picIdxToUse = 0;
+                    let currentOcc = 0;
+
+                    for (let i = 0; i < sameNameItems.length; i++) {
+                        const item = sameNameItems[i];
+                        let idsCount = (item && item.id) ? (Array.isArray(item.id) ? item.id.length : 1) : 1;
+
+                        if (matchedIndex >= currentOcc && matchedIndex < currentOcc + idsCount) {
+                            matchedItem = item;
+                            picIdxToUse = matchedIndex - currentOcc;
+                            break;
+                        }
+                        currentOcc += idsCount;
+                    }
+
+                    if (!matchedItem) {
+                        matchedItem = sameNameItems[0];
+                        picIdxToUse = 0;
+                    }
+
+                    if (matchedItem && typeof matchedItem === 'object') {
+                        if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) {
+                            picUrl = matchedItem.pic[picIdxToUse] || matchedItem.pic[0];
+                        } else if (typeof matchedItem.pic === 'string') {
+                            picUrl = matchedItem.pic;
+                        }
+
+                        if (Array.isArray(matchedItem.flavor) && matchedItem.flavor.length > 0) {
+                            flavorText = matchedItem.flavor[picIdxToUse] || matchedItem.flavor[0];
+                        } else if (typeof matchedItem.flavor === 'string') {
+                            flavorText = matchedItem.flavor;
+                        }
+                    }
+                }
+            }
+
+            // card.html
+			if (picUrl) {
+				// 1. 有網址，先填入「讀取中」佔位塊
+				modalImgBox.innerHTML = `
+					<div class="loading-image-box" id="card-loading-box">
+						<div class="card-img-spinner"></div>
+						<div>圖片讀取中...</div>
+					</div>
+				`;
+
+				// 2. 建立圖片進行預載
+				const img = document.createElement('img');
+				img.className = 'modal-img';
+				img.alt = card.name || 'Card Image';
+
+				// 3. 讀取完成 ➔ 顯示圖片
+				img.onload = () => {
+					modalImgBox.innerHTML = '';
+					modalImgBox.appendChild(img);
+				};
+
+				// 4. 讀取失敗 ➔ 顯示「無卡圖」
+				img.onerror = () => {
+					modalImgBox.innerHTML = `<div class="no-image-box">無卡圖</div>`;
+				};
+
+				img.src = picUrl;
+			} else {
+				// 5. 連圖都借不到 ➔ 直接顯示「無卡圖」
+				modalImgBox.innerHTML = `<div class="no-image-box">無卡圖</div>`;
+			}
+
+            // 2. wdata 屬性區塊渲染
+            if (card.wdata && Array.isArray(card.wdata) && card.wdata.length > 0) {
+                const abilityDictMap = new Map();
+                rawAbilities.forEach(a => { if (a.jap) abilityDictMap.set(a.jap, a); });
+
+                card.wdata.forEach(w => {
+                    const block = document.createElement('div');
+                    block.className = 'wdata-block';
+
+                    const grid = document.createElement('div');
+                    grid.className = 'card-attr-grid';
+
+                    const displayCardType = w.cardtype_chi || w.cardtype || w.card_type;
+                    if (displayCardType !== undefined && displayCardType !== null && displayCardType !== '') {
+                        grid.appendChild(createAttrPill('卡種', formatDisplayValue(displayCardType)));
+                    }
+
+                    // 1. 補上文明資訊
+                    if (w.civil !== undefined && w.civil !== null) {
+                        grid.appendChild(createAttrPill('文明', getCivText(w.civil)));
+                    }
+
+                    if (w.cost !== undefined && w.cost !== null) grid.appendChild(createAttrPill('費用', formatDisplayValue(w.cost)));
+                    if (w.power !== undefined && w.power !== null) grid.appendChild(createAttrPill('攻擊力', formatDisplayValue(w.power)));
+
+                    block.appendChild(grid);
+
+                    // 2. 把種族資料獨立自成一行
+                    if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+                        const raceRow = document.createElement('div');
+                        raceRow.style.cssText = 'margin-top: 8px; width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 14px;';
+                        
+                        const raceLabel = document.createElement('span');
+                        raceLabel.style.cssText = 'font-weight: bold; color: #555; flex-shrink: 0;';
+                        raceLabel.innerText = '種族:';
+                        raceRow.appendChild(raceLabel);
+
+                        const raceBox = document.createElement('div');
+                        raceBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 4px; align-items: center;';
+
+                        w.race.forEach(r => {
+                            const rTag = document.createElement('span');
+                            rTag.className = 'wdata-race-tag';
+                            rTag.innerText = r;
+                            
+                            const tooltipText = getRaceTooltipText(r);
+                            rTag.setAttribute('title', tooltipText);
+                            rTag.setAttribute('data-tooltip', tooltipText);
+
+                            raceBox.appendChild(rTag);
+                        });
+
+                        raceRow.appendChild(raceBox);
+                        block.appendChild(raceRow);
+                    }
+
+                    // 特殊能力
+					const spContainer = document.createElement('div');
+					spContainer.style.marginTop = '8px';
+
+					let currentSpList = Array.isArray(w.sp) ? [...w.sp] : [];
+					if (w.hypermode && Array.isArray(w.hypermode.sp)) {
+						currentSpList = currentSpList.concat(w.hypermode.sp);
+					}
+
+					if (currentSpList.length > 0) {
+						const ul = document.createElement('ul');
+						ul.className = 'sp-ability-list';
+						currentSpList.forEach(abilityStr => {
+							const result = renderAbilityText(abilityStr);
+							if (!result.isHint) {
+								const li = document.createElement('li');
+								li.innerHTML = result.html;
+
+								if (specialIcons.some(icon => abilityStr.startsWith(icon))) {
+									li.style.listStyleType = 'none';
+									li.style.marginLeft = '-1.2em'; 
+								}
+
+								ul.appendChild(li);
+							}
+						});
+						spContainer.appendChild(ul);
+					} else {
+						// 💡 新增：當沒有特殊能力時，印出 "( 無能力 )"
+						const noSpDiv = document.createElement('div');
+						noSpDiv.style.fontSize = '13px';
+						noSpDiv.style.color = '#777';
+						noSpDiv.style.fontStyle = 'italic';
+						noSpDiv.innerText = '( 無能力 )';
+						spContainer.appendChild(noSpDiv);
+					}
+					block.appendChild(spContainer);
+
+                    // 展開能力說明區塊
+                    const abilExplainBox = document.createElement('div');
+                    abilExplainBox.className = 'abil-explain-box';
+                    let hasExplain = false;
+
+                    if (currentSpList.length > 0) {
+                        const detectedKeys = new Set();
+                        currentSpList.forEach(sp => {
+                            rawAbilities.forEach(a => {
+                                if (a.jap && sp.includes(a.jap)) detectedKeys.add(a.jap);
+                            });
+                        });
+
+                        const filteredKeys = Array.from(detectedKeys).filter(key => {
+                            return !Array.from(detectedKeys).some(otherKey => otherKey !== key && otherKey.includes(key));
+                        });
+
+                        filteredKeys.forEach(key => {
+                            const info = abilityDictMap.get(key);
+                            if (info) {
+                                hasExplain = true;
+                                const itemDiv = document.createElement('div');
+                                itemDiv.style.cssText = 'margin-bottom: 6px; border-bottom: 1px dashed #90caf9; padding-bottom: 4px;';
+                                const descStr = info.descript || info.desc || info.text || '(無效果說明)';
+                                itemDiv.innerHTML = `<div style="font-weight: bold; color: #1565c0;">【${info.jap}】</div><div style="color: #333;">${descStr}</div>`;
+                                abilExplainBox.appendChild(itemDiv);
+                            }
+                        });
+                    }
+
+                    if (hasExplain) {
+                        block.appendChild(abilExplainBox);
+                    }
+
+                    modalInfoContainer.appendChild(block);
+                });
+            }
+
+            // Mana 區塊
+            if (card.mana !== null && card.mana !== undefined) {
+                const manaBlock = document.createElement('div');
+                manaBlock.className = 'wdata-block';
+                manaBlock.style.borderLeft = '4px solid #4caf50';
+                manaBlock.innerHTML = `<div><span class="attr-label">魔力供應: </span> <span class="attr-value">${card.mana}</span></div>`;
+                modalInfoContainer.appendChild(manaBlock);
+            }
+
+            // Flavor Text
+            if (flavorText) {
+                const flavorBlock = document.createElement('div');
+                flavorBlock.style.cssText = 'background:#fffbe6; border:1px solid #ffe58f; border-radius:6px; padding:8px 12px; font-size:13px; color:#873800; font-style:italic;';
+                flavorBlock.innerText = flavorText;
+                modalInfoContainer.appendChild(flavorBlock);
+            }
+
+            // 3. 收錄商品列表
+            if (setList) {
+                const setBlock = document.createElement('div');
+                setBlock.className = 'wdata-block set-list-block';
+
+                const renderSetGroup = (title, items) => {
+                    if (!items || items.length === 0) return;
+                    const groupDiv = document.createElement('div');
+                    groupDiv.innerHTML = `<div class="set-group-title">${title}</div>`;
+                    const btnContainer = document.createElement('div');
+                    btnContainer.className = 'set-btn-container';
+                    items.forEach(itemStr => {
+                        const chip = document.createElement('span');
+                        chip.className = 'btn-set-chip';
+                        chip.innerText = itemStr;
+                        btnContainer.appendChild(chip);
+                    });
+                    groupDiv.appendChild(btnContainer);
+                    setBlock.appendChild(groupDiv);
+                };
+
+                renderSetGroup('【台灣代理商品】', setList.tw);
+                renderSetGroup('【代理前日本商品】', setList.non_tw);
+                renderSetGroup('【台灣大賽使用牌組】', setList.net);
+
+                if (setBlock.children.length > 0) {
+                    modalInfoContainer.appendChild(setBlock);
+                }
+            }
+        }
+
+        // 全域點擊事件處理 (手機版點擊種族標籤與效果標籤時彈出 Tooltip 提示)
+        document.addEventListener('click', (e) => {
+            const tagEl = e.target.closest('.effect-tag, .wdata-race-tag');
+            if (!tagEl) return;
+
+            const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
+            if (isMobile) {
+                const tooltipText = tagEl.getAttribute('title') || tagEl.getAttribute('data-tooltip');
+                if (tooltipText && tooltipText.trim() !== '') {
+                    alert(tooltipText);
+                }
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
