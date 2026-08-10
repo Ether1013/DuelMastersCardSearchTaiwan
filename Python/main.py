@@ -90,6 +90,27 @@ class PrettyJSONResponse(JSONResponse):
             indent=2
         ).encode("utf-8")
 
+class ConsoleConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except:
+                pass
+
+console_manager = ConsoleConnectionManager()
+
 # --- 定義預設標籤結構 ---
 DEFAULT_TAGS = {
     "version": 1,
@@ -929,78 +950,114 @@ async def message_author(request: Request, payload: AuthorMessageModel, backgrou
     nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
     return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}
     
-# 2. 接收前端埋點 API (靜默接收，可選擇是否印在後端 Console)
 @app.post("/api/track")
 async def track_feature(request: Request):
     try:
-        # 💡 判斷是否為 Localhost，若是則直接跳過不記錄
         client_host = request.client.host if request.client else ""
         request_host = request.headers.get("host", "")
-        
+
         is_localhost = (
             client_host in ["127.0.0.1", "::1"] or 
             "localhost" in request_host or 
             "127.0.0.1" in request_host
         )
-        
+
         if is_localhost:
             return {"status": "skipped", "reason": "localhost environment"}
 
         data = await request.json()
         feature_name = data.get("feature")
         detail = data.get("detail")
-        
-        # 💡 取得使用者國籍
         country = get_client_country(request)
-        
+
         if feature_name:
             feature_counter[feature_name] += 1
-            
-            # 💡 取得 UTC+8 時間
             now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
-            
+
             entry = {
                 "feature": feature_name,
-                "country": country,  # 💡 紀錄國籍
+                "country": country,
                 "detail": detail,
                 "time": now_utc8
             }
-            
-            # 💡 若包含 detail，記錄最新 50 筆
+
             if detail:
                 action_details_log.appendleft(entry)
 
+            # 💡 數據更新後，即時廣播給所有連接在 WebSocket Console 的用戶
+            sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+            country_counts = defaultdict(int)
+            for log in action_details_log:
+                country_counts[log.get("country", "Unknown")] += 1
+
+            await console_manager.broadcast({
+                "total_events": sum(sorted_stats.values()),
+                "stats": sorted_stats,
+                "recent_countries_summary": dict(country_counts),
+                "recent_50_details": list(action_details_log)
+            })
+
     except Exception:
-        pass  # 隨緣統計，出現例外直接忽略
+        pass
     return {"status": "ok"}
 
-# 3. 查看統計數據與最新 50 筆 Detail 的 API
-@app.get("/api/track/stats", response_class=PrettyJSONResponse)
-async def get_feature_stats(admin: Optional[str] = Query(None, description="admin")):
-    # 💡 沒帶 admin 參數，或是帶入的 user 參數與系統設定不符，統一回傳 404
+@app.get("/api/track/stats")
+async def get_feature_stats(
+    request: Request, 
+    admin: Optional[str] = Query(None, description="admin"),
+    format: Optional[str] = Query(None)
+):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=404, detail="Not Found")
 
+    # 💡 判斷如果是瀏覽器直接點擊連結進入 (Accept 包含 text/html)，且沒有指定 format=json，回傳 Console UI
+    accept_header = request.headers.get("accept", "")
+    if "text/html" in accept_header and format != "json":
+        if Path("console.html").exists():
+            return FileResponse("console.html")
+
+    # 否則回傳原有 PrettyJSON 內容
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    
-    # 💡 統計最新 50 筆紀錄中的國家分佈
     country_counts = defaultdict(int)
     for log in action_details_log:
-        c = log.get("country", "Unknown")
-        country_counts[c] += 1
+        country_counts[log.get("country", "Unknown")] += 1
 
     result = {
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
-        "recent_countries_summary": dict(country_counts),  # 💡 國籍統計摘要
+        "recent_countries_summary": dict(country_counts),
         "recent_50_details": list(action_details_log)
     }
 
-    print("\n==================== [Feature Stats] ====================")
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    print("=========================================================\n")
+    return PrettyJSONResponse(content=result)
 
-    return result
+# 💡 新增 Console 即時 WebSocket 監聽點
+@app.websocket("/ws/console")
+async def websocket_console(websocket: WebSocket, admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        await websocket.close(code=4008)
+        return
+
+    await console_manager.connect(websocket)
+    # 建立連線時立即發送一次當前最新數據
+    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+    country_counts = defaultdict(int)
+    for log in action_details_log:
+        country_counts[log.get("country", "Unknown")] += 1
+
+    await websocket.send_json({
+        "total_events": sum(sorted_stats.values()),
+        "stats": sorted_stats,
+        "recent_countries_summary": dict(country_counts),
+        "recent_50_details": list(action_details_log)
+    })
+
+    try:
+        while True:
+            # 保持連線
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        console_manager.disconnect(websocket)
 
 def get_client_country(request: Request) -> str:
     """取得請求來源的國籍 ISO 代碼（含 localhost = TW 判斷）"""

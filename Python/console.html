@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Stats Realtime Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Status Badge -->
+                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                    <span>Connecting...</span>
+                </div>
+                <button onclick="fetchInitialData()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+
+        <!-- Top Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Total Events -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Events Recorded</p>
+                    <h3 id="totalEvents" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center text-indigo-400">
+                    <i class="fa-solid fa-bolt text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Total Features Tracked -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Feature Types</p>
+                    <h3 id="activeFeatures" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-cubes text-xl"></i>
+                </div>
+            </div>
+
+            <!-- Active Countries -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Recent Active Countries</p>
+                    <h3 id="activeCountries" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center text-sky-400">
+                    <i class="fa-solid fa-globe text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Feature Bar Chart -->
+            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
+                </h2>
+                <div class="h-64">
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Country Doughnut Chart -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-earth-americas text-sky-400"></i> Country Distribution
+                </h2>
+                <div class="h-64 flex justify-center items-center">
+                    <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Logs Table -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-400"></i> Recent 50 Event Details
+                </h2>
+                <span class="text-xs text-gray-500">Auto-refresh via WebSocket</span>
+            </div>
+            
+            <div class="overflow-x-auto custom-scrollbar max-h-96">
+                <table class="w-full text-left text-sm text-gray-400">
+                    <thead class="text-xs uppercase bg-gray-800/60 text-gray-300 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3">Time (UTC+8)</th>
+                            <th class="px-4 py-3">Feature</th>
+                            <th class="px-4 py-3">Country</th>
+                            <th class="px-4 py-3">Detail payload</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody" class="divide-y divide-gray-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Parse Admin Parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminKey = urlParams.get('admin');
+
+        // Chart instances
+        let featureChart, countryChart;
+
+        // Initialize Charts
+        function initCharts() {
+            const ctxFeature = document.getElementById('featureChart').getContext('2d');
+            featureChart = new Chart(ctxFeature, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+                        y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            const ctxCountry = document.getElementById('countryChart').getContext('2d');
+            countryChart = new Chart(ctxCountry, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#34d399', '#fbbf24']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+                }
+            });
+        }
+
+        // Render UI with Payload
+        function updateDashboard(data) {
+            document.getElementById('totalEvents').innerText = data.total_events || 0;
+            document.getElementById('activeFeatures').innerText = Object.keys(data.stats || {}).length;
+            document.getElementById('activeCountries').innerText = Object.keys(data.recent_countries_summary || {}).length;
+
+            // 1. Update Feature Chart
+            const featureLabels = Object.keys(data.stats || {});
+            const featureData = Object.values(data.stats || {});
+            featureChart.data.labels = featureLabels;
+            featureChart.data.datasets[0].data = featureData;
+            featureChart.update();
+
+            // 2. Update Country Chart
+            const countryLabels = Object.keys(data.recent_countries_summary || {});
+            const countryData = Object.values(data.recent_countries_summary || {});
+            countryChart.data.labels = countryLabels;
+            countryChart.data.datasets[0].data = countryData;
+            countryChart.update();
+
+            // 3. Update Table
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+            
+            (data.recent_50_details || []).forEach(log => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition";
+                
+                const detailStr = log.detail ? JSON.stringify(log.detail) : '<span class="text-gray-600">-</span>';
+                
+                tr.innerHTML = `
+                    <td class="px-4 py-2.5 font-mono text-xs text-gray-400">${log.time}</td>
+                    <td class="px-4 py-2.5"><span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span></td>
+                    <td class="px-4 py-2.5"><span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium">${log.country || 'Unknown'}</span></td>
+                    <td class="px-4 py-2.5 font-mono text-xs text-gray-300 truncate max-w-xs">${detailStr}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Fallback HTTP Fetch
+        async function fetchInitialData() {
+            try {
+                const response = await fetch(`/api/track/stats?admin=${encodeURIComponent(adminKey)}&format=json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data);
+                }
+            } catch (err) {
+                console.error("HTTP Fetch failed:", err);
+            }
+        }
+
+        // Setup WebSocket Realtime Listener
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/console?admin=${encodeURIComponent(adminKey)}`;
+            const ws = new WebSocket(wsUrl);
+
+            const badge = document.getElementById('statusBadge');
+
+            ws.onopen = () => {
+                badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live Connected</span>`;
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    updateDashboard(data);
+                } catch (e) {
+                    console.error("WebSocket message parsing error:", e);
+                }
+            };
+
+            ws.onclose = () => {
+                badge.className = "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Disconnected</span>`;
+                // Reconnect retry after 3 seconds
+                setTimeout(initWebSocket, 3000);
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+        }
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            fetchInitialData();
+            initWebSocket();
+        });
+    </script>
+</body>
+</html>
