@@ -2910,54 +2910,27 @@
 			const selectedId = (idList.length > 0) ? (idList[targetIdIndex] || idList[0]) : '';
 			const displayId = selectedId ? formatDmId(selectedId) : '';
 
-			// 💡 [新增] 1. 計算殿堂符號與訊息
-            let sanctuaryHtml = '';
-            if (card.sanctuary !== undefined && card.sanctuary !== null) {
-                let sSymbol = '';
-                let sMsg = '';
-                
-                // 判斷殿堂類型
-                if (Array.isArray(card.sanctuary)) {
-                    sSymbol = '★☆';
-                    sMsg = `組合殿堂：${card.sanctuary.join(',')}`;
-                } else if (Number(card.sanctuary) === 1) {
-                    sSymbol = '★';
-                    sMsg = '殿堂';
-                } else if (Number(card.sanctuary) === 0) {
-                    sSymbol = '☆';
-                    sMsg = '白金殿堂';
-                }
+			// 💡 整理後的漂亮頂欄結構
+			modalTitleEl.innerHTML = `
+				<div class="modal-header-top-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+					<!-- 左上：卡號 ID -->
+					<div class="card-id-display" style="font-size: 13px; font-weight: normal; opacity: 0.85;">
+						${displayId ? `( ${displayId} )` : ''}
+					</div>
+					
+					<!-- 右上：三合一按鈕區 ( 🇪/🇯 + 📋 + ✕ ) -->
+					<div class="modal-action-btns">
+						<button type="button" class="btn-copy-title action-circle-btn" title="複製卡名">📋</button>
+						<button type="button" class="btn-toggle-en-name action-circle-btn" title="${toggleIconTitle}">${toggleIconText}</button>
+						<div class="modal-close" id="modal-close-btn">&times;</div>
+					</div>
+				</div>
 
-                // 如果有符號，包成獨立的 span 標籤
-                if (sSymbol) {
-                    // title -> 桌機滑鼠移過去顯示訊息
-                    // onclick -> 手機/桌機點擊彈出 Alert
-                    // event.stopPropagation() -> 關鍵！防止點擊符號時觸發外層的複製卡名事件
-                    sanctuaryHtml = `<span class="sanctuary-icon" title="${sMsg}" onclick="event.stopPropagation(); alert('${sMsg}');" style="cursor:pointer; margin-right:4px;">${sSymbol}</span>`;
-                }
-            }
-
-            // 💡 2. 渲染 Modal 標題區塊（在卡名前面加上 ${sanctuaryHtml}）
-            modalTitleEl.innerHTML = `
-                <div class="modal-header-top-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <!-- 左上：卡號 ID -->
-                    <div class="card-id-display" style="font-size: 13px; font-weight: normal; opacity: 0.85;">
-                        ${displayId ? `( ${displayId} )` : ''}
-                    </div>
-                    
-                    <!-- 右上：三合一按鈕區 ( 🇪/🇯 + 📋 + ✕ ) -->
-                    <div class="modal-action-btns">
-                        <button type="button" class="btn-copy-title action-circle-btn" title="複製卡名">📋</button>
-                        <button type="button" class="btn-toggle-en-name action-circle-btn" title="${toggleIconTitle}">${toggleIconText}</button>
-                        <div class="modal-close" id="modal-close-btn">&times;</div>
-                    </div>
-                </div>
-
-                <!-- 下方：卡名主要區塊 (插入 sanctuaryHtml) -->
-                <div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
-                    ${sanctuaryHtml}<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
-                </div>
-            `;
+				<!-- 下方：卡名主要區塊 -->
+				<div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
+					<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
+				</div>
+			`;
 
 			// 綁定新關閉按鈕點擊事件
 			const newCloseBtn = modalTitleEl.querySelector('#modal-close-btn');
@@ -6953,29 +6926,7 @@
 				const displayId = selectedId ? formatDmId(selectedId) : '';
 				const idTag = displayId ? `<div style="font-size: 13px; font-weight: normal; opacity: 0.85;">( ${displayId} )</div>` : '';
 
-                // 💡 [新增] 1. 計算殿堂符號與訊息
-                let sanctuaryHtml = '';
-                if (card.sanctuary !== undefined && card.sanctuary !== null) {
-                    let sSymbol = '';
-                    let sMsg = '';
-                    
-                    if (Array.isArray(card.sanctuary)) {
-                        sSymbol = '★☆';
-                        sMsg = `組合殿堂：${card.sanctuary.join(',')}`;
-                    } else if (Number(card.sanctuary) === 1) {
-                        sSymbol = '★';
-                        sMsg = '殿堂';
-                    } else if (Number(card.sanctuary) === 0) {
-                        sSymbol = '☆';
-                        sMsg = '白金殿堂';
-                    }
-
-                    if (sSymbol) {
-                        sanctuaryHtml = `<span class="sanctuary-icon" title="${sMsg}" onclick="event.stopPropagation(); alert('${sMsg}');" style="cursor:pointer; margin-right:4px;">${sSymbol}</span>`;
-                    }
-                }
-
-                // 💡 2. 渲染雙欄標題區塊（在卡名前面加上 ${sanctuaryHtml}）
+                // 💡 使用與 Page 2 一致的三合一圓形按鈕佈局 (Page 3 雙欄不需 Modal 關閉按鈕，因此只放 📋 與 🇪/🇯)
                 titleDiv.innerHTML = `
                     <div class="modal-header-top-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <!-- 左上：卡號 ID -->
@@ -6990,9 +6941,9 @@
                         </div>
                     </div>
 
-                    <!-- 下方：卡名主要區塊 (插入 sanctuaryHtml) -->
+                    <!-- 下方：卡名主要區塊 -->
                     <div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
-                        ${sanctuaryHtml}<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
+                        <span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
                     </div>
                 `;
 
