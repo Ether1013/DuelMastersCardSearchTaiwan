@@ -1745,6 +1745,42 @@
             box-sizing: border-box; background: #f8fafc; transition: border-color 0.2s;
         }
         .qa-input:focus { border-color: #0284c7 !important; outline: none; background: #ffffff; }
+		/* ================= 聯絡作者 Modal 專用獨立排版修正 ================= */
+		#author-msg-modal .modal-card {
+			max-height: 85vh;
+			display: flex;
+			flex-direction: column;
+		}
+
+		#author-msg-modal .modal-body {
+			overflow-y: auto;
+			max-height: calc(85vh - 60px);
+			gap: 16px;
+			padding: 16px;
+		}
+
+		/* 解除 Modal 內抽屜的 sticky 浮動，維持文件流 */
+		#author-msg-modal .drawer-container {
+			position: static;
+			top: auto;
+			z-index: auto;
+			margin-bottom: 8px;
+			flex-shrink: 0; /* 💡 新增這行：防止展開時被 Flex 容器強制壓縮高度 */
+		}
+		
+		/* 💡 新增這段：確保作者留言板內的所有區塊 (包含表單) 都不會變形，自然撐出捲軸 */
+		#author-msg-modal .modal-body > div {
+			flex-shrink: 0;
+		}
+
+		/* 當抽屜擁有 .open 類別時展開並設為縱向 flex 佈局 */
+		#author-msg-modal #drawer-author-line.open #author-line-drawer-content,
+		#author-msg-modal #drawer-author-line.open .drawer-content {
+			display: flex;
+			flex-direction: column;
+			width: 100%;
+			box-sizing: border-box;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2351,6 +2387,15 @@
 					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">回報者名字：</label>
 					<input type="text" id="report-author-name" value="熱情的決鬥者" placeholder="請輸入名字">
 				</div>
+
+				<!-- 💡 新增：Email 欄位 (非必填) -->
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (選填)：</label>
+					<input type="email" id="report-author-email" class="qa-input" placeholder="如需回報進度請留下您的email" style="font-size: 16px;">
+					<!-- 💡 新增提示文字 -->
+					<small style="font-size: 11px; color: #64748b; display: block; margin-top: 2px;">Email僅供回覆用，絕不作為其他用途使用</small>
+				</div>
+
 				<div>
 					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">錯誤內容簡答 (選填)：</label>
 					<textarea id="report-desc" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-size: 16px;" placeholder="請簡述錯誤之處，不講也可以，但我可能會找半天…"></textarea>
@@ -2486,26 +2531,15 @@
 	<div class="modal-overlay" id="author-msg-modal">
 		<div class="modal-card" style="max-width: 480px;">
 			<div class="modal-header">
-				<div class="modal-title">💬 聯絡作者 / 意見回饋</div>
+				<!-- 💡 調整 1：標題明確強調無需加 LINE -->
+				<div class="modal-title">💬 給作者留言 (無需加 LINE)</div>
 				<div class="modal-close" id="author-msg-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" style="gap: 16px; padding: 16px; align-items: center;">
+			
+			<div class="modal-body">
 				
-				<!-- 💡 新增：LINE QR Code 與快速加好友區塊 -->
-				<div style="text-align: center; width: 100%; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; box-sizing: border-box;">
-					<p style="font-size: 13px; font-weight: bold; color: #334155; margin: 0 0 8px 0;">📱 掃描 QR Code 或點擊下方按鈕加 LINE 好友</p>
-					<!-- 根目錄的 EtherLineQRCode.jpg -->
-					<img src="./EtherLineQRCode.jpg" alt="Ether LINE QR Code" style="width: 140px; height: 140px; object-fit: contain; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; padding: 4px; box-sizing: border-box; margin-bottom: 8px;">
-					<div>
-						<!-- 💡 請將下方 href="https://line.me/ti/p/你的ID" 替換成你真正的 LINE 加好友連結 -->
-						<a href="https://line.me/ti/p/uDnD7usB5B" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 6px 14px; background: #06c755; color: white; font-size: 13px; font-weight: bold; border-radius: 4px; text-decoration: none;">
-							🔗 點我直接加 LINE 好友
-						</a>
-					</div>
-				</div>
-
-				<div style="width: 100%; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
-					<p style="font-size: 13px; font-weight: bold; color: #64748b; margin: 0 0 8px 0;">或是透過下方表單傳送訊息：</p>
+				<!-- 表單欄位區塊 (💡 調整 2：移至最上方，作為主要輸入途徑) -->
+				<div style="width: 100%;">
 					<div style="margin-bottom: 10px;">
 						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">暱稱 (必填)：</label>
 						<input type="text" id="qa-author-nickname" class="qa-input" value="使用者" placeholder="請輸入暱稱">
@@ -2513,6 +2547,7 @@
 					<div style="margin-bottom: 10px;">
 						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (非必填)：</label>
 						<input type="email" id="qa-author-email" class="qa-input" placeholder="example@email.com">
+						<small style="font-size: 11px; color: #64748b; display: block; margin-top: 2px;">Email僅供回覆用，絕不作為其他用途使用</small>
 					</div>
 					<div style="margin-bottom: 10px;">
 						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">表情 Emoji (非必填，最多 20 個)：</label>
@@ -2533,6 +2568,32 @@
 						<textarea id="qa-author-message" rows="3" style="width: 100%; padding: 8px; border: 2px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; resize: vertical; font-size: 15px;" placeholder="請輸入您想對作者說的話..."></textarea>
 					</div>
 					<button type="button" id="btn-submit-author-msg" style="width: 100%; padding: 10px; background: #0d9488; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">送出留言</button>
+				</div>
+
+				<!-- 分隔線/提示 -->
+				<div style="text-align: center; margin: 8px 0; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
+					<hr style="flex:1; border:0; border-top:1px dashed #cbd5e1;">
+					<span>或使用其他管道</span>
+					<hr style="flex:1; border:0; border-top:1px dashed #cbd5e1;">
+				</div>
+
+				<!-- LINE 抽屜區塊 (💡 調整 3：移至最下方，改為可選管道) -->
+				<div class="drawer-container" id="drawer-author-line">
+					<div class="drawer-handle" id="author-line-drawer-handle" style="padding: 10px 12px; background: #f0fdf4; color: #166534; border-radius: 6px;">
+						<span>📱 或是…加 LINE 一對一私訊 (選填)</span>
+						<span class="drawer-arrow" style="font-size: 10px;">▼</span>
+					</div>
+					<div class="drawer-content" id="author-line-drawer-content" style="padding: 14px; background: #f8fafc; border-top: 1px dashed #cbd5e1;">
+						<div style="text-align: center; width: 100%;">
+							<p style="font-size: 13px; font-weight: bold; color: #334155; margin: 0 0 8px 0;">若想即時對談交流，歡迎加 LINE 好友：</p>
+							<img src="./EtherLineQRCode.jpg" alt="Ether LINE QR Code" style="width: 150px; height: 150px; object-fit: contain; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; padding: 4px; box-sizing: border-box; margin-bottom: 8px;">
+							<div>
+								<a href="https://line.me/ti/p/uDnD7usB5B" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 16px; background: #06c755; color: white; font-size: 13px; font-weight: bold; border-radius: 4px; text-decoration: none;">
+									🔗 點我直接加 LINE 好友
+								</a>
+							</div>
+						</div>
+					</div>
 				</div>
 
 			</div>
@@ -7949,12 +8010,48 @@
 			const submitBtn = document.getElementById('btn-submit-author-msg');
 			const emojiInput = document.getElementById('qa-author-emojis');
 
-			// 開啟與關閉 Modal
+			// 💡 修正：LINE 抽屜點擊開關事件（展開時自動平滑捲動到底部）
+			const lineDrawerHandle = document.getElementById('author-line-drawer-handle');
+			if (lineDrawerHandle) {
+				lineDrawerHandle.addEventListener('click', () => {
+					const container = document.getElementById('drawer-author-line');
+					const arrow = container?.querySelector('.drawer-arrow');
+					
+					if (container) {
+						const isOpen = container.classList.toggle('open');
+						if (arrow) arrow.innerText = isOpen ? '▲' : '▼';
+
+						// 💡 新增：當抽屜展開時，自動將 modal-body 捲動到底部
+						if (isOpen) {
+							const modalBody = container.closest('.modal-body');
+							if (modalBody) {
+								// 預留 50ms 確保 DOM 動態展開完成後計算正確高度
+								setTimeout(() => {
+									modalBody.scrollTo({
+										top: modalBody.scrollHeight,
+										behavior: 'smooth' // 平滑捲動
+									});
+								}, 50);
+							}
+						}
+					}
+				});
+			}
+
+			// 開啟 Modal 時，重置輸入欄位並確保 LINE 抽屜預設為收合狀態 (.open 移除)
 			openBtn?.addEventListener('click', () => {
 				document.getElementById('qa-author-nickname').value = "使用者";
 				document.getElementById('qa-author-email').value = "";
 				document.getElementById('qa-author-emojis').value = "";
 				document.getElementById('qa-author-message').value = "";
+
+				const lineDrawerContainer = document.getElementById('drawer-author-line');
+				if (lineDrawerContainer) {
+					lineDrawerContainer.classList.remove('open');
+					const arrow = lineDrawerContainer.querySelector('.drawer-arrow');
+					if (arrow) arrow.innerText = '▼';
+				}
+
 				authorModal?.classList.add('active');
 			});
 
@@ -8030,23 +8127,20 @@
 			const reportModal = document.getElementById('report-modal');
 			if (!reportModal) return;
 
-			// 1. 取得卡名
 			const cardName = card.name || '未命名卡牌';
 
-			// 2. 取得卡號 ID（若有選擇特定商品且對應 item 含有 id 欄位）
 			let displayId = '';
 			if (matchedItem && matchedItem.id) {
 				const rawId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
 				if (rawId) displayId = formatDmId(rawId);
 			}
 
-			// 3. 填入 Input 表單預設值
 			document.getElementById('report-card-name').value = cardName;
 			document.getElementById('report-card-id').value = displayId || '(無對應卡號)';
 			document.getElementById('report-author-name').value = "熱情的決鬥者";
+			document.getElementById('report-author-email').value = ""; // 💡 新增：開啟時清空 Email 欄位
 			document.getElementById('report-desc').value = "";
 
-			// 4. 開啟 Modal
 			reportModal.classList.add('active');
 		}
 
@@ -8068,6 +8162,7 @@
 			const cardName = document.getElementById('report-card-name').value;
 			const cardId = document.getElementById('report-card-id').value;
 			const reporterName = document.getElementById('report-author-name').value.trim() || "熱情的決鬥者";
+			const reporterEmail = document.getElementById('report-author-email').value.trim(); // 💡 新增：讀取 Email
 			const errorDesc = document.getElementById('report-desc').value.trim();
 
 			if (!cardName) {
@@ -8086,6 +8181,7 @@
 						card_name: cardName,
 						card_id: cardId === '(無對應卡號)' ? '' : cardId,
 						reporter_name: reporterName,
+						email: reporterEmail, // 💡 新增：帶入 email 欄位
 						error_desc: errorDesc
 					})
 				});
@@ -8098,7 +8194,6 @@
 					}
 					document.getElementById('report-modal')?.classList.remove('active');
 				} else if (resp.status === 429) {
-					// 🛡️ 觸發連擊防禦時的提示
 					alert("⚠️ 您的回報頻率過高，請稍等 1 分鐘後再試，謝謝！");
 				} else {
 					alert("傳送失敗，請稍後再試。");

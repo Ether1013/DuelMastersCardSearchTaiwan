@@ -413,11 +413,12 @@ class LineNotificationModel(BaseModel):
     emojis: str = ""
     message: str = ""
     
-# 重構 ReportModel 繼承 Base 或獨立定義，此處展示獨立定義
+# 💡 新增 email 欄位 (預設為空字串，非必填)
 class ReportModel(BaseModel):
     card_name: str
     card_id: str = ""
     reporter_name: str = "熱情的決鬥者"
+    email: str = ""  # 👈 新增這行
     error_desc: str = ""
 
 class AuthorMessageModel(BaseModel):
@@ -449,10 +450,27 @@ def send_line_notification(report: ReportModel, base_url: str = ""):
     target_param = raw_id if raw_id else report.card_name.strip()
     card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
 
-    msg_text = (
-        f"🚨 【卡牌翻譯錯誤回報】\n\n📌 卡名：{report.card_name}\n🆔 卡號：{report.card_id or '未提供'}\n"
-        f"🔗 連結：\n{card_link}\n\n👤 回報者：{report.reporter_name}\n📝 錯誤內容：{report.error_desc or '（無簡答內容）'}"
-    )
+    # 動態組裝訊息行
+    lines = [
+        "🚨 【卡牌翻譯錯誤回報】\n",
+        f"📌 卡名：{report.card_name}"
+    ]
+
+    # 有卡號才顯示
+    if raw_id:
+        lines.append(f"🆔 卡號：{raw_id}")
+
+    lines.append(f"🔗 連結：\n{card_link}\n")
+    lines.append(f"👤 回報者：{report.reporter_name}")
+
+    # 有 Email 才顯示
+    clean_email = report.email.strip() if report.email else ""
+    if clean_email:
+        lines.append(f"📧 Email：{clean_email}")
+
+    lines.append(f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}")
+
+    msg_text = "\n".join(lines)
     push_line_message(msg_text)
 
 def send_author_message_notification(msg_data: AuthorMessageModel):
