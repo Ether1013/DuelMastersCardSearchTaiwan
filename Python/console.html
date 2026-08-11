@@ -35,14 +35,19 @@
                     <span>Connecting...</span>
                 </div>
                 
-                <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
-                    <i class="fa-solid fa-rotate"></i> Refresh
-                </button>
+                <button onclick="fetchInitialData()" class="...">
+					<i class="fa-solid fa-rotate"></i> Refresh
+				</button>
 
-                <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-key"></i> 產生Token
-                </button>
-            </div>
+				<!-- 💡 新增 Reset 重置按鈕 (僅 Admin 可見) -->
+				<button id="resetStatsBtn" onclick="openResetModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs rounded-lg transition border border-rose-500/30 flex items-center gap-1.5 shadow-lg">
+					<i class="fa-solid fa-trash-arrow-up"></i> Reset
+				</button>
+
+				<button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="...">
+					<i class="fa-solid fa-key"></i> 產生Token
+				</button>
+			</div>
         </div>
     </header>
 
@@ -159,6 +164,30 @@
 				</button>
 				<button onclick="confirmDeleteUserLogs()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium transition shadow-lg">
 					是 (刪除)
+				</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Reset Stats Modal -->
+	<div id="resetModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+			<div class="flex items-center gap-3 text-rose-500">
+				<i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+				<h3 class="text-lg font-bold text-gray-100">重置所有統計數據</h3>
+			</div>
+			<p class="text-sm text-gray-300">
+				確定要 <span class="font-bold text-rose-400">歸零並清空</span> 主機記憶體中的所有全域點擊統計、圓餅圖數據與 Recent 50 Logs 嗎？
+			</p>
+			<p class="text-xs text-rose-400/80 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+				⚠️ 此動作無法復原！
+			</p>
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeResetModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
+					否 (取消)
+				</button>
+				<button onclick="confirmResetStats()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium transition shadow-lg">
+					是 (確定重置)
 				</button>
 			</div>
 		</div>
@@ -465,19 +494,48 @@
 			}
 		}
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!authParam) {
-                alert('未提供認證參數 (需使用 ?admin= 或 ?token= 進入)');
-                return;
-            }
-            if (adminKey) {
-                document.getElementById('generateTokenBtn').style.display = 'flex';
-            }
+        // 顯示與隱藏 Reset 彈窗
+		function openResetModal() {
+			document.getElementById('resetModal').classList.remove('hidden');
+		}
 
-            initCharts();
-            fetchInitialData();
-            initWebSocket();
-        });
+		function closeResetModal() {
+			document.getElementById('resetModal').classList.add('hidden');
+		}
+
+		// 發送重置請求至後端 API
+		async function confirmResetStats() {
+			try {
+				const response = await fetch(`/api/track/reset?${authParam}`, {
+					method: 'DELETE'
+				});
+				
+				if (!response.ok) {
+					throw new Error('重置失敗，權限不足或伺服器錯誤');
+				}
+				
+				closeResetModal();
+			} catch (err) {
+				alert(err.message);
+				closeResetModal();
+			}
+		}
+
+		// 頁面初始化時，如果是 Admin 才顯示 Reset 按鈕
+		window.addEventListener('DOMContentLoaded', () => {
+			if (!authParam) {
+				alert('未提供認證參數 (需使用ADMIN帳號或TOKEN進入)');
+				return;
+			}
+			if (adminKey) {
+				document.getElementById('generateTokenBtn').style.display = 'flex';
+				document.getElementById('resetStatsBtn').style.display = 'flex'; // 👈 新增：只有 Admin 顯示 Reset 鍵
+			}
+
+			initCharts();
+			fetchInitialData();
+			initWebSocket();
+		});
     </script>
 </body>
 </html>

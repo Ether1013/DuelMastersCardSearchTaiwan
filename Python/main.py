@@ -1360,3 +1360,30 @@ async def delete_user_logs(
         "user_stats": sorted_user_stats,
         "recent_50_details": list(action_details_log)
     })
+    
+@app.delete("/api/track/reset")
+async def reset_track_stats(
+    admin: Optional[str] = Query(None)
+):
+    """管理者專用：重置主機記憶體中的所有點擊與統計數據"""
+    # 1. 權限驗證：僅允許 Admin 執行，Token 無權呼叫
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # 2. 清空所有全域計數器與佇列
+    global action_details_log
+    feature_counter.clear()
+    country_counter.clear()
+    user_counter.clear()
+    action_details_log.clear()
+
+    # 3. 重新計算並發送空的統計數據給所有連線中的 Console
+    await console_manager.broadcast({
+        "total_events": 0,
+        "stats": {},
+        "country_stats": {},
+        "user_stats": {},
+        "recent_50_details": []
+    })
+
+    return {"status": "success", "message": "所有統計數據已重置！"}
