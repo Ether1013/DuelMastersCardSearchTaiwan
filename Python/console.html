@@ -126,6 +126,30 @@
             </div>
         </div>
     </main>
+	
+	<!-- Delete User Logs Modal -->
+	<div id="deleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+			<div class="flex items-center gap-3 text-rose-500">
+				<i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+				<h3 class="text-lg font-bold text-gray-100">刪除使用者紀錄</h3>
+			</div>
+			<p class="text-sm text-gray-300">
+				確定要刪除使用者 <span id="modalTargetUser" class="font-mono font-bold text-sky-400"></span> 在主機記憶體中的所有 Detail 紀錄嗎？
+			</p>
+			<p class="text-xs text-gray-500">
+				* 僅會清除主機記憶體上的 log 畫面，該使用者的編號登記不會被重置。
+			</p>
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
+					否 (取消)
+				</button>
+				<button onclick="confirmDeleteUserLogs()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium transition shadow-lg">
+					是 (刪除)
+				</button>
+			</div>
+		</div>
+	</div>
 
     <script>
         Chart.register(ChartDataLabels);
@@ -144,6 +168,7 @@
         let currentLogs = [];
         let knownUsers = []; // 維護使用者的排序順序
         let sortMode = 'default';
+		let pendingDeleteUser = null;
 
         function changeSortMode() {
             sortMode = document.getElementById('sortMode').value;
@@ -209,78 +234,95 @@
         }
 
         function renderLogsTable() {
-            const container = document.getElementById('tableScrollContainer');
-            const tbody = document.getElementById('logsTableBody');
-            
-            // 紀錄畫面更新前的捲動狀態
-            const oldScrollTop = container.scrollTop;
-            const oldScrollHeight = container.scrollHeight;
-
-            let displayLogs = [];
-
-            if (sortMode === 'user') {
-                // 依照 knownUsers 排序 (新用戶在最上方，舊用戶在下方保持原本的連續順序)
-                knownUsers.forEach(u => {
-                    let userLogs = currentLogs.filter(log => (log.user || log.country || 'Unknown') === u);
-                    displayLogs.push(...userLogs);
-                });
-            } else {
-                // 預設按時間排序
-                displayLogs = [...currentLogs];
-            }
-
-            tbody.innerHTML = '';
-            
-            displayLogs.forEach((log) => {
+			const container = document.getElementById('tableScrollContainer');
+			const tbody = document.getElementById('logsTableBody');
 			
-                const trHeader = document.createElement('tr');
-                trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
-                
-                const userDisplay = log.user || log.country || 'Unknown';
+			// 判讀當前是否為 Admin 登入 (只有帶 ?admin= 的人才有 adminKey)
+			const isAdmin = Boolean(adminKey);
 
-                // 💡 修改 1：將 Time 獨立一行，Feature 與 User 放第二行，並支援自動換行 (flex-wrap)
-                trHeader.innerHTML = `
-                    <td class="px-4 pt-3 pb-1 align-top">
-                        <div class="font-mono text-xs text-gray-500 mb-1.5 flex items-center gap-1.5">
-                            <i class="fa-regular fa-clock"></i> ${log.time}
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span>
-                            <span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium"><i class="fa-solid fa-user-astronaut text-[10px] mr-1"></i>${userDisplay}</span>
-                        </div>
-                    </td>
-                `;
+			// 紀錄畫面更新前的捲動狀態
+			const oldScrollTop = container.scrollTop;
+			const oldScrollHeight = container.scrollHeight;
 
-                const trDetail = document.createElement('tr');
-                trDetail.className = "hover:bg-gray-800/40 border-b border-gray-800/80";
+			let displayLogs = [];
 
-                let detailFormatted = '';
-                if (log.detail) {
-                    detailFormatted = typeof log.detail === 'object' 
-                        ? JSON.stringify(log.detail, null, 2) 
-                        : log.detail;
-                }
+			if (sortMode === 'user') {
+				// 依照 knownUsers 排序 (新用戶在最上方，舊用戶在下方保持原本的連續順序)
+				knownUsers.forEach(u => {
+					let userLogs = currentLogs.filter(log => (log.user || log.country || 'Unknown') === u);
+					displayLogs.push(...userLogs);
+				});
+			} else {
+				// 預設按時間排序
+				displayLogs = [...currentLogs];
+			}
 
-                // 💡 修改 2：因為現在只有一個 td 欄位，所以移除 colspan="3"
-                trDetail.innerHTML = `
-                    <td class="px-4 pt-1 pb-3">
-                        <div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400 min-h-[40px]">
-                            <div class="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-1">Detail Payload</div>
-                            <pre class="whitespace-pre-wrap break-all overflow-x-auto leading-relaxed">${detailFormatted}</pre>
-                        </div>
-                    </td>
-                `;
+			tbody.innerHTML = '';
+			
+			displayLogs.forEach((log) => {
+				const trHeader = document.createElement('tr');
+				trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
+				
+				const userDisplay = log.user || log.country || 'Unknown';
 
-                tbody.appendChild(trHeader);
-                tbody.appendChild(trDetail);
-            });
+				// 根據 isAdmin 決定使用「可點擊的互動 Badge」還是「純顯示的 Badge」
+				let userBadgeHtml = '';
+				if (isAdmin) {
+					userBadgeHtml = `
+						<span onclick="openDeleteModal('${userDisplay}')" class="px-2 py-0.5 bg-sky-500/10 text-sky-400 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 rounded border border-sky-500/20 text-xs font-medium cursor-pointer transition flex items-center gap-1" title="點擊刪除此使用者的紀錄">
+							<i class="fa-solid fa-user-astronaut text-[10px]"></i>
+							${userDisplay}
+						</span>`;
+				} else {
+					// Token 使用者：無 onclick、無手勢指標 (cursor-pointer)、無 hover 變色效果
+					userBadgeHtml = `
+						<span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium flex items-center gap-1">
+							<i class="fa-solid fa-user-astronaut text-[10px]"></i>
+							${userDisplay}
+						</span>`;
+				}
 
-            // 如果在使用「使用者別」模式下，且原本的卷軸有往下拉，我們利用高度差校正卷軸位置
-            const newScrollHeight = container.scrollHeight;
-            if (sortMode === 'user' && oldScrollTop > 0) {
-                container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
-            }
-        }
+				trHeader.innerHTML = `
+					<td class="px-4 pt-3 pb-1 align-top">
+						<div class="font-mono text-xs text-gray-500 mb-1.5 flex items-center gap-1.5">
+							<i class="fa-regular fa-clock"></i> ${log.time}
+						</div>
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span>
+							${userBadgeHtml}
+						</div>
+					</td>
+				`;
+
+				const trDetail = document.createElement('tr');
+				trDetail.className = "hover:bg-gray-800/40 border-b border-gray-800/80";
+
+				let detailFormatted = '';
+				if (log.detail) {
+					detailFormatted = typeof log.detail === 'object' 
+						? JSON.stringify(log.detail, null, 2) 
+						: log.detail;
+				}
+
+				trDetail.innerHTML = `
+					<td class="px-4 pt-1 pb-3">
+						<div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400 min-h-[40px]">
+							<div class="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-1">Detail Payload</div>
+							<pre class="whitespace-pre-wrap break-all overflow-x-auto leading-relaxed">${detailFormatted}</pre>
+						</div>
+					</td>
+				`;
+
+				tbody.appendChild(trHeader);
+				tbody.appendChild(trDetail);
+			});
+
+			// 如果在使用「使用者別」模式下，且原本的卷軸有往下拉，利用高度差校正卷軸位置
+			const newScrollHeight = container.scrollHeight;
+			if (sortMode === 'user' && oldScrollTop > 0) {
+				container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
+			}
+		}
 
         async function fetchInitialData() {
             if (!authParam) return;
@@ -353,6 +395,36 @@
                 alert(err.message);
             }
         }
+		
+		function openDeleteModal(user) {
+			pendingDeleteUser = user;
+			document.getElementById('modalTargetUser').innerText = user;
+			document.getElementById('deleteModal').classList.remove('hidden');
+		}
+
+		function closeDeleteModal() {
+			pendingDeleteUser = null;
+			document.getElementById('deleteModal').classList.add('hidden');
+		}
+
+		async function confirmDeleteUserLogs() {
+			if (!pendingDeleteUser) return;
+			
+			try {
+				const response = await fetch(`/api/track/delete_user_logs?user_id=${encodeURIComponent(pendingDeleteUser)}&${authParam}`, {
+					method: 'DELETE'
+				});
+				
+				if (!response.ok) {
+					throw new Error('刪除失敗，權限不足或伺服器錯誤');
+				}
+				
+				closeDeleteModal();
+			} catch (err) {
+				alert(err.message);
+				closeDeleteModal();
+			}
+		}
 
         window.addEventListener('DOMContentLoaded', () => {
             if (!authParam) {

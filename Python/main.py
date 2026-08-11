@@ -1332,3 +1332,32 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
     wiki_url_cache[clean_name] = {"data": result_data, "timestamp": now}
 
     return result_data
+    
+@app.delete("/api/track/delete_user_logs")
+async def delete_user_logs(
+    user_id: str = Query(..., description="要刪除 Log 的使用者代稱，例如 TW-A"),
+    admin: Optional[str] = Query(None)
+):
+    # 權限驗證：僅允許 Admin 執行刪除，Token 無權呼叫
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # 1. 局部刪除主機記憶體 action_details_log 中的該使用者紀錄
+    global action_details_log
+    filtered_logs = [log for log in action_details_log if (log.get("user") or log.get("country") or "Unknown") != user_id]
+    action_details_log = deque(filtered_logs, maxlen=50)
+
+    # 2. 重新計算統計數據與國籍彙整並廣播給 console manager
+    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+    country_counts = defaultdict(int)
+    for log in action_details_log:
+        country_counts[log.get("country", "Unknown")] += 1
+
+    await console_manager.broadcast({
+        "total_events": sum(sorted_stats.values()),
+        "stats": sorted_stats,
+        "recent_countries_summary": dict(country_counts),
+        "recent_50_details": list(action_details_log)
+    })
+
+    return {"status": "success", "deleted_user": user_id}
