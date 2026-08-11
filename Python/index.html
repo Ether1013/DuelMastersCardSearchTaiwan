@@ -2628,7 +2628,7 @@
 			{ bit: 2,  name: '火' },
 			{ bit: 1,  name: '自然' }
 		];
-		// 建立高頻常錯漢字對映表 (可持續擴充)
+		// 建立常錯漢字對映表 (可持續擴充)
 		const KANJI_MAP = {
 			'龍': '竜', '龙': '竜',
 			'鬪': '闘', '來': '来',
@@ -2636,7 +2636,7 @@
 			'獸': '獣', '兽': '獣',
 			'靈': '霊', '灵': '霊',
 			'戰': '戦', '战': '戦',
-			'國': '国', '惡': '悪', 
+			'國': '国', '惡': '悪',
 			'鐵': '鉄', '铁': '鉄',
 			'絕': '絶', '绝': '絶',
 			'關': '関', '关': '関',
@@ -4599,12 +4599,14 @@
 				twinpect: filterConfig.twinpect !== 'all' ? filterConfig.twinpect : undefined
 			};
 			
-			if (isQuickDrawerOpen) {
-				trackFeature('搜尋(計算機)', activeFiltersDetail);   // 1. 使用計算機面板搜尋
-			} else if (isAdvMode) {
-				trackFeature('搜尋(進階)', activeFiltersDetail); // 3. 使用進階面板搜尋
-			} else {
-				trackFeature('搜尋(標準)', activeFiltersDetail);    // 2. 使用基礎面板搜尋
+			if (e && e.isTrusted) {
+				if (isQuickDrawerOpen) {
+					trackFeature('搜尋(計算機)', activeFiltersDetail);
+				} else if (isAdvMode) {
+					trackFeature('搜尋(進階)', activeFiltersDetail);
+				} else {
+					trackFeature('搜尋(標準)', activeFiltersDetail);
+				}
 			}
 		
 			hasSearched = true;
@@ -6739,16 +6741,16 @@
 			wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
 			wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
 
-			// 💡 [日文 Wiki] 直連精準頁面按鈕 (轉換符號為全形 + 僅去除符號前後的空白)
+			// 💡 [日文 Wiki] 按鈕：經後端預先檢查，頁面存在即直連，失敗（404/錯誤頁）則自動退回 Google 搜尋
 			const jpWikiBtn = document.createElement('button');
 			jpWikiBtn.type = 'button';
 			jpWikiBtn.className = 'ext-link-btn wiki-btn';
 			jpWikiBtn.innerHTML = `🌐 日文 Wiki <span style="font-size:9px; opacity:0.7;">↗</span>`;
-			jpWikiBtn.onclick = (e) => {
+			jpWikiBtn.onclick = async (e) => {
 				e.preventDefault();
 				if (!rawCardName) return;
 				
-				// 1. 清理括號與備註文字
+				// 1. 基本清理
 				let cleanName = cleanCardName(rawCardName);
 
 				// 2. 符號轉全形 (大寫)
@@ -6758,15 +6760,33 @@
 					.replace(/\!/g, '！')  // 驚嘆號 ! 轉 ！
 					.replace(/\?/g, '？')  // 問號 ? 轉 ？
 					.replace(/\:/g, '：')  // 冒號 : 轉 ：
-					.replace(/\~/g, '〜'); // 波浪號 ~ 轉 〜
+					.replace(/\~/g, '〜'), // 波浪號 ~ 轉 〜
 
-				// 3. 關鍵訂正：僅去除「常見符號前後」的半形與全形空白（保留文字間的正常空格）
+				// 3. 僅去除符號前後空白
 				cleanName = cleanName.replace(/[\s\u3000]*([／＝！？：〜－・「」《》])[\s\u3000]*/g, '$1').trim();
 
-				// 4. 產出 DM Wiki 標準頁面直連網址：《卡名》
-				const directWikiUrl = `https://dmwiki.net/《${encodeURIComponent(cleanName)}》`;
+				// 開啟 Toast 提示
+				if (typeof showToast === 'function') {
+					showToast('檢查 Wiki 頁面中...');
+				}
 
-				window.open(directWikiUrl, '_blank', 'noopener,noreferrer');
+				try {
+					// 4. 呼叫後端 API 預先檢查直連網址是否有效
+					const res = await fetch(`/api/check_wiki_url?card_name=${encodeURIComponent(cleanName)}`);
+					if (res.ok) {
+						const data = await res.json();
+						// 5. 開啟後端判斷後最佳的目標網址 (direct 或 fallback)
+						window.open(data.target_url, '_blank', 'noopener,noreferrer');
+					} else {
+						// 備援保底
+						const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(cleanName + ' site:dmwiki.net')}`;
+						window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+					}
+				} catch (err) {
+					console.error("Wiki 檢查失敗，使用 Google 搜尋備援:", err);
+					const fallbackUrl = `https://www.google.com/search?q=${encodeURIComponent(cleanName + ' site:dmwiki.net')}`;
+					window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+				}
 			};
 			wikiGrid.appendChild(jpWikiBtn);
 
