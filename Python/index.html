@@ -2347,6 +2347,23 @@
 		</div>
 	</div>
 	
+	<!-- 系統公告 Modal (內容比對機制) -->
+	<div class="modal-overlay" id="system-notice-modal">
+		<div class="modal-card" style="max-width: 450px;">
+			<div class="modal-header" style="background: #0284c7; color: white;">
+				<div class="modal-title">📢 系統提示</div>
+			</div>
+			<div class="modal-body" style="padding: 16px; gap: 12px;">
+				<!-- 公告內容，由 JS 動態填入 -->
+				<div id="system-notice-content" style="font-size: 14px; line-height: 1.6; color: #333;"></div>
+				
+				<button type="button" id="btn-notice-understand" style="width: 100%; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px;">
+					我知道了
+				</button>
+			</div>
+		</div>
+	</div>
+	
 	<!-- 卡號搜尋彈窗 Modal -->
 	<div id="id-search-modal" class="id-search-modal-backdrop" style="display: none;">
 		<div class="id-search-modal-content">
@@ -2648,6 +2665,13 @@
 		// 英文卡名切換專用全域變數
 		let currentCardLang = 'jp';  // 預設 'jp'，可切換為 'en'
 		let fetchedEnNameMap = JSON.parse(localStorage.getItem('dm_en_name_cache') || '{}');
+		// ==========================================
+		// 📢 系統公告設定區 (直接修改陣列內容，空陣列則不顯示)
+		// ==========================================
+		const SYS_NOTICE_DATA = [
+			"<b style='color:#d32f2f;'>【重要更新與提示】</b>",
+			"系統常態性更新及測試新功能，若遇到操作異常，請嘗試刷新網站，若刷新數次依然無法運作則表示改壞了，請過一陣子之後再使用"
+		];
 
 		function getCivText(civilVal) {
 			const civNum = parseInt(civilVal) || 0;
@@ -3795,6 +3819,7 @@
 				initDiaryUI();
 			} finally {
 				hideInitialLoading();
+				checkSystemNotice();
 			}
 		}
 
@@ -9690,6 +9715,27 @@
 			});
 		}
 
+		// 檢查與比對內容的函式
+		function checkSystemNotice() {
+			// 1. 如果是空陣列，直接略過不顯示
+			if (!SYS_NOTICE_DATA || SYS_NOTICE_DATA.length === 0) {
+				return;
+			}
+
+			const storedContent = localStorage.getItem('dm_acknowledged_notice_content');
+			const currentContentStr = JSON.stringify(SYS_NOTICE_DATA);
+
+			// 2. 如果儲存的內容跟現在的陣列內容「不同」，才顯示
+			if (storedContent !== currentContentStr) {
+				// 將陣列內容轉為列表 HTML
+				const contentHtml = SYS_NOTICE_DATA.map(text => `<li style="margin-bottom:4px;">${text}</li>`).join('');
+				document.getElementById('system-notice-content').innerHTML = `<ul style="margin: 0; padding-left: 20px;">${contentHtml}</ul>`;
+				
+				// 顯示 Modal
+				document.getElementById('system-notice-modal').classList.add('active');
+			}
+		}
+
 		// 事件綁定：Modal 與頁籤切換
 		document.addEventListener('DOMContentLoaded', () => {
 			const reportModal = document.getElementById('championship-report-modal');
@@ -9784,6 +9830,15 @@
                 if (!textarea || !textarea.value) return;
                 copyTextToClipboard(textarea.value);
             });
+			
+			// 綁定「我知道了」按鈕
+			document.getElementById('btn-notice-understand')?.addEventListener('click', () => {
+				// 將當前看到的陣列內容轉為字串存入 localStorage
+				localStorage.setItem('dm_acknowledged_notice_content', JSON.stringify(SYS_NOTICE_DATA));
+				// 關閉視窗
+				document.getElementById('system-notice-modal').classList.remove('active');
+			});
+
 		});
 		
 		// 💡 2. 當卡牌 Modal 關閉時，將 z-index 重置恢復預設值
