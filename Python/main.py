@@ -70,6 +70,11 @@ setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
 EXCLUDED_COUNTRIES = ["JP", "TW"]
 one_time_tokens = {}
 
+# 💡 Wiki 網址檢查快取配置 (最多快取 500 筆卡片判斷結果，快取 3 天)
+wiki_url_cache = OrderedDict()
+WIKI_CACHE_MAX_SIZE = 500
+WIKI_CACHE_TTL = 3 * 86400
+
 ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
 has_unsynced_en_names = False
@@ -79,6 +84,9 @@ file_write_lock = asyncio.Lock()
 feature_counter = defaultdict(int)
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
+# 新增：紀錄各國籍目前的發放編號數，以及 IP 對應的編號
+ip_counter_by_country = defaultdict(int)
+ip_to_user_id = {}
 
 class PrettyJSONResponse(JSONResponse):
     # 💡 增加 media_type，確保 Response Header 包含 utf-8 編碼宣告
@@ -239,6 +247,22 @@ async def tag_debounce_timer():
     except Exception as e:
         print(f"[Tag Debounce Error]: {e}")
 
+def get_user_id_by_ip(ip: str, country: str) -> str:
+    if ip not in ip_to_user_id:
+        count = ip_counter_by_country[country]
+        ip_counter_by_country[country] += 1
+        
+        # 將數字轉為 A, B, C ... Z, AA, AB 編碼
+        letters = ""
+        n = count
+        while True:
+            letters = chr(65 + (n % 26)) + letters
+            n = n // 26 - 1
+            if n < 0:
+                break
+        ip_to_user_id[ip] = f"{country}-{letters}"
+    return ip_to_user_id[ip]
+    
 def trigger_tag_sync():
     """每次異動時呼叫，重置 60 秒倒數計時器"""
     global tag_sync_task
@@ -970,6 +994,12 @@ async def track_feature(request: Request):
         feature_name = data.get("feature")
         detail = data.get("detail")
         country = get_client_country(request)
+        
+        # 💡 新增：取得真實 IP 並生成 User ID
+        client_ip = request.headers.get("cf-connecting-ip") or request.headers.get("x-forwarded-for") or client_host
+        if client_ip and "," in client_ip:
+            client_ip = client_ip.split(",")[0].strip()
+        user_id = get_user_id_by_ip(client_ip, country)
 
         if feature_name:
             feature_counter[feature_name] += 1
@@ -978,14 +1008,15 @@ async def track_feature(request: Request):
             entry = {
                 "feature": feature_name,
                 "country": country,
+                "user": user_id,  # 👈 新增 user 欄位
                 "detail": detail,
                 "time": now_utc8
             }
 
-            if detail:
-                action_details_log.appendleft(entry)
+            # 💡 移除原本的 if detail: 條件，無 Payload 一樣寫入 Queue
+            action_details_log.appendleft(entry)
 
-            # 💡 數據更新後，即時廣播給所有連接在 WebSocket Console 的用戶
+            # 廣播給所有連接在 WebSocket Console 的用戶
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
             country_counts = defaultdict(int)
             for log in action_details_log:
@@ -1238,3 +1269,66 @@ async def generate_console_token(admin: str = Query(...)):
         "html_accessed": False             # 記錄是否已經被讀取過網頁 HTML
     }
     return {"status": "success", "token": new_token}
+    
+    
+@app.get("/api/check_wiki_url")
+async def check_wiki_url(card_name: str = Query(..., description="處理後的卡名")):
+    clean_name = card_name.strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="請提供卡名")
+
+    now = time.time()
+
+    # 1. 優先從記憶體快取讀取結果 (0 流量、秒回)
+    if clean_name in wiki_url_cache:
+        item = wiki_url_cache[clean_name]
+        if now - item["timestamp"] < WIKI_CACHE_TTL:
+            wiki_url_cache.move_to_end(clean_name)
+            return item["data"]
+        else:
+            del wiki_url_cache[clean_name]
+
+    direct_url = f"https://dmwiki.net/《{quote(clean_name)}》"
+    fallback_google_url = f"https://www.google.com/search?q={quote(clean_name + ' site:dmwiki.net')}"
+
+    # 模擬更完整的瀏覽器 Header，降低被防護機制誤判的機率
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "ja,zh-TW;q=0.9,en;q=0.8"
+    }
+    result_data = {"target_url": fallback_google_url, "type": "fallback"}
+
+    try:
+        # 2. 超時限制設為 2.5 秒，讀取前 8KB 進行判定
+        async with httpx.AsyncClient(timeout=2.5, follow_redirects=True) as client:
+            async with client.stream("GET", direct_url, headers=headers) as resp:
+                if resp.status_code == 200:
+                    chunk_text = ""
+                    async for chunk in resp.aiter_text():
+                        chunk_text += chunk
+                        if len(chunk_text) >= 8192:
+                            break  # 判定資訊已足夠，主動中斷傳輸
+                    
+                    # 💡 關鍵修復：擴充無效頁面與錯誤訊息的判斷關鍵字
+                    invalid_keywords = [
+                        "は存在しません", 
+                        "ページ名変更", 
+                        "Spam check failed", 
+                        "Runtime error", 
+                        "Match:ipcountry"
+                    ]
+                    
+                    # 只要不包含任何錯誤關鍵字，才判定為正常的直連頁面
+                    if not any(kw in chunk_text for kw in invalid_keywords):
+                        result_data = {"target_url": direct_url, "type": "direct"}
+
+    except Exception as e:
+        print(f"[Wiki Check Exception/Timeout] {e}")
+
+    # 3. 寫入快取，保護伺服器與 Wiki 流量
+    if len(wiki_url_cache) >= WIKI_CACHE_MAX_SIZE:
+        wiki_url_cache.popitem(last=False)
+    wiki_url_cache[clean_name] = {"data": result_data, "timestamp": now}
+
+    return result_data

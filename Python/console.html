@@ -21,45 +21,34 @@
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
 
-    <!-- Header (已優化 RWD 排版) -->
     <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
-        <!-- 💡 在這裡加入 flex-col sm:flex-row 讓手機版上下排列，並允許換行 -->
         <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             
-            <!-- 標題區 -->
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
                 <h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
             </div>
             
-            <!-- 按鈕控制區 (加入 flex-wrap 允許按鈕換行，w-full 確保手機版佔滿寬度) -->
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto justify-start sm:justify-end">
-                
-                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
                 <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                     <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
                     <span>Connecting...</span>
                 </div>
                 
-                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
                 <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
                     <i class="fa-solid fa-rotate"></i> Refresh
                 </button>
 
-                <!-- 💡 加入 whitespace-nowrap 確保文字不會斷行 -->
                 <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
                     <i class="fa-solid fa-key"></i> 產生單次Token
                 </button>
-                
             </div>
-
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         <!-- Top Metrics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Total Events -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
                     <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Events Recorded</p>
@@ -70,7 +59,6 @@
                 </div>
             </div>
 
-            <!-- Total Features Tracked -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
                     <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Feature Types</p>
@@ -81,7 +69,6 @@
                 </div>
             </div>
 
-            <!-- Active Countries -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
                     <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Recent Active Countries</p>
@@ -95,7 +82,6 @@
 
         <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Feature Bar Chart -->
             <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
@@ -105,7 +91,6 @@
                 </div>
             </div>
 
-            <!-- Country Doughnut Chart -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-earth-americas text-sky-400"></i> Country Distribution
@@ -118,20 +103,26 @@
 
         <!-- Recent Logs Table -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                 <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
                     <i class="fa-solid fa-clock-rotate-left text-purple-400"></i> Recent 50 Event Details
                 </h2>
-                <span class="text-xs text-gray-500">Auto-refresh via WebSocket</span>
+                <div class="flex items-center gap-3">
+                    <select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
+                        <option value="default">預設排序 (最新事件優先)</option>
+                        <option value="user">使用者別 (新用戶置頂，不擾亂當前視覺)</option>
+                    </select>
+                    <span class="text-xs text-gray-500">Auto-refresh via WS</span>
+                </div>
             </div>
             
-            <div class="overflow-x-auto custom-scrollbar max-h-96">
-                <table class="w-full text-left text-sm text-gray-400 border-collapse">
-                    <thead class="text-xs uppercase bg-gray-800/60 text-gray-300 sticky top-0 z-10">
+            <div id="tableScrollContainer" class="overflow-x-auto custom-scrollbar max-h-[500px]">
+                <table class="w-full text-left text-sm text-gray-400 border-collapse min-w-[600px]">
+                    <thead class="text-xs uppercase bg-gray-800 text-gray-300 sticky top-0 z-10 shadow-md">
                         <tr>
-                            <th class="px-4 py-3">Time (UTC+8)</th>
-                            <th class="px-4 py-3">Feature</th>
-                            <th class="px-4 py-3">Country</th>
+                            <th class="px-4 py-3 w-40">Time (UTC+8)</th>
+                            <th class="px-4 py-3 w-64">Feature</th>
+                            <th class="px-4 py-3">User</th>
                         </tr>
                     </thead>
                     <tbody id="logsTableBody">
@@ -143,10 +134,8 @@
     </main>
 
     <script>
-        // 註冊 ChartDataLabels 插件
         Chart.register(ChartDataLabels);
 
-        // 取得授權參數：支援 admin 或 token
         const urlParams = new URLSearchParams(window.location.search);
         const adminKey = urlParams.get('admin');
         const tokenKey = urlParams.get('token');
@@ -155,22 +144,26 @@
         if (adminKey) authParam = `admin=${encodeURIComponent(adminKey)}`;
         else if (tokenKey) authParam = `token=${encodeURIComponent(tokenKey)}`;
 
-        // Chart instances
         let featureChart, countryChart;
 
-        // Initialize Charts
+        // 全局狀態控制表格
+        let currentLogs = [];
+        let knownUsers = []; // 維護使用者的排序順序
+        let sortMode = 'default';
+
+        function changeSortMode() {
+            sortMode = document.getElementById('sortMode').value;
+            renderLogsTable();
+        }
+
         function initCharts() {
             const ctxFeature = document.getElementById('featureChart').getContext('2d');
             featureChart = new Chart(ctxFeature, {
                 type: 'bar',
                 data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: { display: false }
-                    },
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, datalabels: { display: false } },
                     scales: {
                         x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
                         y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' }, beginAtZero: true }
@@ -181,26 +174,12 @@
             const ctxCountry = document.getElementById('countryChart').getContext('2d');
             countryChart = new Chart(ctxCountry, {
                 type: 'doughnut',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        data: [],
-                        backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#34d399', '#fbbf24']
-                    }]
-                },
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#34d399', '#fbbf24'] }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { 
                         legend: { position: 'bottom', labels: { color: '#9ca3af' } },
-                        datalabels: {
-                            color: '#ffffff',
-                            font: { weight: 'bold', size: 12 },
-                            formatter: (value) => value > 0 ? value + ' 次' : '',
-                            anchor: 'center',
-                            align: 'center',
-                            dropShadow: { blur: 2, color: '#000000' }
-                        }
+                        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 12 }, formatter: (value) => value > 0 ? value + ' 次' : '', anchor: 'center', align: 'center' }
                     }
                 }
             });
@@ -211,34 +190,69 @@
             document.getElementById('activeFeatures').innerText = Object.keys(data.stats || {}).length;
             document.getElementById('activeCountries').innerText = Object.keys(data.recent_countries_summary || {}).length;
 
-            const featureLabels = Object.keys(data.stats || {});
-            const featureData = Object.values(data.stats || {});
-            featureChart.data.labels = featureLabels;
-            featureChart.data.datasets[0].data = featureData;
+            featureChart.data.labels = Object.keys(data.stats || {});
+            featureChart.data.datasets[0].data = Object.values(data.stats || {});
             featureChart.update();
 
-            const countryLabels = Object.keys(data.recent_countries_summary || {});
-            const countryData = Object.values(data.recent_countries_summary || {});
-            countryChart.data.labels = countryLabels;
-            countryChart.data.datasets[0].data = countryData;
+            countryChart.data.labels = Object.keys(data.recent_countries_summary || {});
+            countryChart.data.datasets[0].data = Object.values(data.recent_countries_summary || {});
             countryChart.update();
 
+            // 更新 Log 資料庫
+            currentLogs = data.recent_50_details || [];
+            
+            // 找出不在 knownUsers 中的新使用者，將他們推到前面
+            let newUsers = [];
+            currentLogs.forEach(log => {
+                let u = log.user || log.country || 'Unknown';
+                if (!knownUsers.includes(u) && !newUsers.includes(u)) {
+                    newUsers.push(u);
+                }
+            });
+            knownUsers = [...newUsers, ...knownUsers];
+
+            renderLogsTable();
+        }
+
+        function renderLogsTable() {
+            const container = document.getElementById('tableScrollContainer');
             const tbody = document.getElementById('logsTableBody');
+            
+            // 紀錄畫面更新前的捲動狀態
+            const oldScrollTop = container.scrollTop;
+            const oldScrollHeight = container.scrollHeight;
+
+            let displayLogs = [];
+
+            if (sortMode === 'user') {
+                // 依照 knownUsers 排序 (新用戶在最上方，舊用戶在下方保持原本的連續順序)
+                knownUsers.forEach(u => {
+                    let userLogs = currentLogs.filter(log => (log.user || log.country || 'Unknown') === u);
+                    displayLogs.push(...userLogs);
+                });
+            } else {
+                // 預設按時間排序
+                displayLogs = [...currentLogs];
+            }
+
             tbody.innerHTML = '';
             
-            (data.recent_50_details || []).forEach((log) => {
+            displayLogs.forEach((log) => {
                 const trHeader = document.createElement('tr');
                 trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
+                
+                const userDisplay = log.user || log.country || 'Unknown';
+
                 trHeader.innerHTML = `
-                    <td class="px-4 pt-3 pb-1 font-mono text-xs text-gray-400">${log.time}</td>
-                    <td class="px-4 pt-3 pb-1"><span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span></td>
-                    <td class="px-4 pt-3 pb-1"><span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium">${log.country || 'Unknown'}</span></td>
+                    <td class="px-4 pt-3 pb-1 font-mono text-xs text-gray-400 whitespace-nowrap align-top">${log.time}</td>
+                    <td class="px-4 pt-3 pb-1 w-64 break-all align-top"><span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span></td>
+                    <td class="px-4 pt-3 pb-1 align-top"><span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium">${userDisplay}</span></td>
                 `;
 
                 const trDetail = document.createElement('tr');
                 trDetail.className = "hover:bg-gray-800/40 border-b border-gray-800/80";
 
-                let detailFormatted = '-';
+                let detailFormatted = '';
                 if (log.detail) {
                     detailFormatted = typeof log.detail === 'object' 
                         ? JSON.stringify(log.detail, null, 2) 
@@ -247,7 +261,7 @@
 
                 trDetail.innerHTML = `
                     <td colspan="3" class="px-4 pt-1 pb-3">
-                        <div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400">
+                        <div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400 min-h-[40px]">
                             <div class="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-1">Detail Payload</div>
                             <pre class="whitespace-pre-wrap break-all overflow-x-auto leading-relaxed">${detailFormatted}</pre>
                         </div>
@@ -257,6 +271,12 @@
                 tbody.appendChild(trHeader);
                 tbody.appendChild(trDetail);
             });
+
+            // 如果在使用「使用者別」模式下，且原本的卷軸有往下拉，我們利用高度差校正卷軸位置
+            const newScrollHeight = container.scrollHeight;
+            if (sortMode === 'user' && oldScrollTop > 0) {
+                container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
+            }
         }
 
         async function fetchInitialData() {
@@ -302,7 +322,6 @@
             ws.onerror = () => ws.close();
         }
 
-        // 產生 Token 並分享/複製的功能
         async function generateToken() {
             try {
                 const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
@@ -311,7 +330,6 @@
                 const data = await response.json();
                 const link = `${window.location.origin}${window.location.pathname}?token=${data.token}`;
                 
-                // 嘗試使用手機原生的分享 API (Web Share API)
                 if (navigator.share) {
                     try {
                         await navigator.share({
@@ -319,15 +337,12 @@
                             text: '1小時內有效，單次使用的 Console 連結 (重新整理即失效)',
                             url: link
                         });
-                        return; // 分享成功，直接結束
+                        return;
                     } catch (err) {
-                        // 使用者手動取消分享，無需顯示錯誤
                         if (err.name === 'AbortError') return; 
-                        console.error('Share failed', err);
                     }
                 }
                 
-                // 降級方案：若不支援 Share API 或分享失敗，則複製到剪貼簿
                 await navigator.clipboard.writeText(link);
                 alert(`已複製單次 Token 連結至剪貼簿！\n\n${link}`);
 
@@ -336,13 +351,11 @@
             }
         }
 
-        // Init App
         window.addEventListener('DOMContentLoaded', () => {
             if (!authParam) {
                 alert('未提供認證參數 (需使用 ?admin= 或 ?token= 進入)');
                 return;
             }
-            // 只有用 admin 進入時，才顯示「新增單次Token」按鈕
             if (adminKey) {
                 document.getElementById('generateTokenBtn').style.display = 'flex';
             }
