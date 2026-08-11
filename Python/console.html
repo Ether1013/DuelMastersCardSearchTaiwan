@@ -40,7 +40,7 @@
                 </button>
 
                 <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
-                    <i class="fa-solid fa-key"></i> 產生單次Token
+                    <i class="fa-solid fa-key"></i> 產生Token
                 </button>
             </div>
         </div>
@@ -117,14 +117,8 @@
             </div>
             
             <div id="tableScrollContainer" class="overflow-x-auto custom-scrollbar max-h-[500px]">
-                <table class="w-full text-left text-sm text-gray-400 border-collapse table-fixed">
-					<thead class="text-xs uppercase bg-gray-800 text-gray-300 sticky top-0 z-10 shadow-md">
-						<tr>
-							<th class="px-2 py-3 w-[25%] sm:w-[20%] break-words">Time</th>
-							<th class="px-2 py-3 w-[50%] sm:w-[60%] break-words">Feature</th>
-							<th class="px-2 py-3 w-[25%] sm:w-[20%] break-words">User</th>
-						</tr>
-					</thead>
+                <table class="w-full text-left text-sm text-gray-400 border-collapse">
+                    <!-- 💡 已移除 thead，改用更適合手機與小螢幕的上下層單欄排版 -->
                     <tbody id="logsTableBody">
                         <!-- Dynamic Rows -->
                     </tbody>
@@ -238,15 +232,23 @@
             tbody.innerHTML = '';
             
             displayLogs.forEach((log) => {
+			
                 const trHeader = document.createElement('tr');
                 trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
                 
                 const userDisplay = log.user || log.country || 'Unknown';
 
+                // 💡 修改 1：將 Time 獨立一行，Feature 與 User 放第二行，並支援自動換行 (flex-wrap)
                 trHeader.innerHTML = `
-                    <td class="px-4 pt-3 pb-1 font-mono text-xs text-gray-400 whitespace-nowrap align-top">${log.time}</td>
-                    <td class="px-4 pt-3 pb-1 w-64 break-all align-top"><span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span></td>
-                    <td class="px-4 pt-3 pb-1 align-top"><span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium">${userDisplay}</span></td>
+                    <td class="px-4 pt-3 pb-1 align-top">
+                        <div class="font-mono text-xs text-gray-500 mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-regular fa-clock"></i> ${log.time}
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span>
+                            <span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium"><i class="fa-solid fa-user-astronaut text-[10px] mr-1"></i>${userDisplay}</span>
+                        </div>
+                    </td>
                 `;
 
                 const trDetail = document.createElement('tr');
@@ -259,8 +261,9 @@
                         : log.detail;
                 }
 
+                // 💡 修改 2：因為現在只有一個 td 欄位，所以移除 colspan="3"
                 trDetail.innerHTML = `
-                    <td colspan="3" class="px-4 pt-1 pb-3">
+                    <td class="px-4 pt-1 pb-3">
                         <div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400 min-h-[40px]">
                             <div class="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-1">Detail Payload</div>
                             <pre class="whitespace-pre-wrap break-all overflow-x-auto leading-relaxed">${detailFormatted}</pre>
