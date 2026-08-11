@@ -4794,8 +4794,8 @@
 			// 💡 取得當前 UI 過濾條件作為 detail 側錄
 			const filterConfig = getFilterConfigFromUI();
 			const activeFiltersDetail = {
+				...getCivAndTypeFiltersDetail(),
 				cardName: filterConfig.cardName || undefined,
-				seriesBig: filterConfig.seriesBig || undefined,
 				seriesSmall: filterConfig.seriesSmall || undefined,
 				cost: (filterConfig.cost1 || filterConfig.cost2) ? `${filterConfig.cost1}~${filterConfig.cost2}` : undefined,
 				power: (filterConfig.power1 || filterConfig.power2) ? `${filterConfig.power1}~${filterConfig.power2}` : undefined,
@@ -5219,6 +5219,37 @@
 				seriesBig, 
 				seriesSmall
 			};			
+		}
+		
+		// 💡 參考 Footer (updateSummaryText) 邏輯，提取當前選擇的卡種與文明過濾條件
+		function getCivAndTypeFiltersDetail() {
+			const details = {};
+
+			// 1. 卡種提取
+			const allCardTypes = document.querySelectorAll('.chk-cardtype');
+			const checkedCT = Array.from(allCardTypes).filter(cb => cb.checked);
+			
+			if (checkedCT.length > 0 && checkedCT.length < allCardTypes.length) {
+				// 若有選取特定卡種（且非全選），轉為中文/顯示名稱陣列
+				details.cardTypes = checkedCT.map(cb => cb.parentNode.textContent.trim());
+			}
+
+			// 2. 許可文明 (Permit Civs) 提取
+			const allPermitBoxes = document.querySelectorAll('#civ-permit .civ-box');
+			const activePermitBoxes = Array.from(document.querySelectorAll('#civ-permit .civ-box.active'));
+			if (activePermitBoxes.length < allPermitBoxes.length) {
+				details.permitCivs = activePermitBoxes.map(box => box.textContent.trim());
+			}
+
+			// 3. 必須文明 (Require Civs) 提取
+			const activeRequire = Array.from(document.querySelectorAll('#civ-require .civ-box.active:not([data-val="and"]):not([data-val="or"])'));
+			if (activeRequire.length > 0) {
+				const isOrActive = document.querySelector('#civ-require .civ-box[data-val="or"]')?.classList.contains('active');
+				details.requireCivs = activeRequire.map(box => box.textContent.trim());
+				details.requireCivLogic = isOrActive ? 'OR' : 'AND';
+			}
+
+			return details;
 		}
 
 		function isOnlyCardNameFiltered(cfg) {
