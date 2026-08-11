@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>大邱轉機半日遊：實用韓文對話手冊</title>
+    <style>
+        /* 共用與桌面版基礎樣式 */
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Microsoft JhengHei', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px; /* 預留底部 Footer 的空間，避免內容被遮擋 */
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .intro-text {
+            background: #eaf2f8;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #2980b9;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 35px;
+            border-left: 5px solid #3498db;
+            padding-left: 12px;
+            font-size: 1.4rem;
+        }
+        
+        /* 表格桌面版樣式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f1f8ff;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background-color: #fcfcfc;
+        }
+        
+        /* 文字與按鈕樣式 */
+        .korean-text {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 1.15em;
+        }
+        .phonetics {
+            color: #7f8c8d;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.4);
+        }
+        button:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+        
+        /* 萬用神句高亮 */
+        .highlight-row {
+            background-color: #fff9db;
+        }
+        .highlight-row:hover {
+            background-color: #fff3b0;
+        }
+
+        /* 底部急救區塊 */
+        .emergency-box {
+            background-color: white;
+            border-top: 4px solid #e74c3c;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .emergency-box h3 {
+            margin-top: 0;
+            color: #c0392b;
+        }
+        .emergency-box ul {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .emergency-box li {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .emergency-box li:last-child {
+            border-bottom: none;
+        }
+        .emergency-box li .korean-text {
+            margin: 0 10px;
+        }
+        .emergency-box li button {
+            padding: 6px 12px;
+            margin-left: auto;
+        }
+
+        /* =========================================
+           搜尋與高亮樣式
+           ========================================= */
+        mark.search-match {
+            background-color: #ffeaa7;
+            color: #2d3436;
+            border-radius: 2px;
+        }
+        mark.active-match {
+            background-color: #fdcb6e;
+            color: #d63031;
+            font-weight: bold;
+            border: 2px solid #e17055;
+            border-radius: 4px;
+            padding: 0 2px;
+            box-shadow: 0 0 5px rgba(225, 112, 85, 0.5);
+        }
+
+        /* 固定底部搜尋列 */
+        #search-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border-top: 1px solid #dcdde1;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.1);
+            padding: 12px;
+            box-sizing: border-box;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* 適應 iOS 安全底部區域 */
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        }
+        #searchInput {
+            flex-grow: 1;
+            min-width: 0;
+            font-size: 16px; /* 關鍵：16px 可防止 iOS 手機自動 Zoom-in */
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px;
+            outline: none;
+        }
+        #searchInput:focus {
+            border-color: #3498db;
+        }
+        #search-controls {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .footer-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: 1px solid #bdc3c7;
+            box-shadow: none;
+            padding: 8px 10px;
+            font-size: 0.9rem;
+        }
+        .footer-btn:hover {
+            background: #dfe6e9;
+        }
+        .btn-clear {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            box-shadow: none;
+            padding: 8px 10px;
+            white-space: nowrap;
+        }
+        .btn-clear:hover {
+            background: #c0392b;
+        }
+        #search-count {
+            font-size: 0.9em;
+            color: #636e72;
+            margin: 0 4px;
+            font-weight: bold;
+        }
+
+        /* =========================================
+           手機版 RWD 樣式 (小於 768px 時觸發)
+           ========================================= */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                padding-bottom: 120px; /* 手機版底部空間抓多一點 */
+            }
+            h1 { font-size: 1.5rem; }
+            
+            table, thead, tbody, th, td, tr {
+                display: block;
+                width: 100%;
+            }
+            thead { display: none; }
+            table {
+                background-color: transparent;
+                box-shadow: none;
+            }
+            tr {
+                background-color: white;
+                margin-bottom: 16px;
+                border-radius: 12px;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+                border: 1px solid #eaeaea;
+                padding: 16px;
+            }
+            td {
+                border: none;
+                padding: 4px 0;
+                text-align: left;
+            }
+            td:nth-child(1) {
+                font-size: 1.05rem;
+                font-weight: 700;
+                color: #2c3e50;
+                border-bottom: 1px solid #f0f0f0;
+                padding-bottom: 8px;
+                margin-bottom: 8px;
+            }
+            td:nth-child(2) { font-size: 1.3rem; margin-bottom: 2px; }
+            td:nth-child(3) { font-size: 0.9rem; margin-bottom: 12px; }
+            td:nth-child(4) { padding-top: 10px; }
+            td:nth-child(4) button {
+                width: 100%;
+                padding: 14px;
+                font-size: 1.1rem;
+                border-radius: 8px;
+            }
+            .highlight-row { border: 2px solid #f1c40f; background-color: #fffdf5; }
+            .emergency-box li button { margin-top: 10px; width: 100%; padding: 12px; }
+            .emergency-box li { flex-direction: column; align-items: flex-start; padding: 15px 0; }
+            .emergency-box li span, .emergency-box li .korean-text { margin-left: 0; }
+            
+            /* 手機板搜尋列排版調整 */
+            #search-footer {
+                flex-wrap: wrap;
+            }
+            #searchInput {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            #search-controls {
+                flex-grow: 1;
+                justify-content: flex-start;
+            }
+            .btn-clear {
+                margin-left: auto; /* 清除按鈕靠右 */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🇰🇷 大邱機場轉機半日遊：實用韓文對話手冊</h1>
+    <div class="intro-text">
+        💡 <b>專用快閃路線提示：</b>本手冊專為大邱國際機場（TAE）轉機設計。採用最適合日常消費、搭車的「自然禮貌體（요）」。點擊「發音」按鈕即可讓手機直接朗讀韓文！<br>
+        🔍 <b>新功能：</b>可以使用底部的搜尋框來尋找需要的中文句子。
+    </div>
+
+    <!-- 0. 基本問候用語 -->
+    <h2>👋 0. 基本問候用語</h2>
+    <table>
+        <thead>
+            <tr><th>中文情境</th><th>韓文原文</th><th>英文拼音</th><th>語音</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>你好</td><td class="korean-text">안녕하세요.</td><td class="phonetics">An-nyeong-ha-se-yo.</td><td><button onclick="speak('안녕하세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>謝謝</td><td class="korean-text">감사합니다.</td><td class="phonetics">Gam-sa-ham-ni-da.</td><td><button onclick="speak('감사합니다.')">🔊 點擊發音</button></td></tr>
+            <tr><td>對不起</td><td class="korean-text">죄송합니다.</td><td class="phonetics">Joe-song-ham-ni-da.</td><td><button onclick="speak('죄송합니다.')">🔊 點擊發音</button></td></tr>
+            <tr><td>不好意思 (勞駕/借過)</td><td class="korean-text">실례합니다.</td><td class="phonetics">Sil-rye-ham-ni-da.</td><td><button onclick="speak('실례합니다.')">🔊 點擊發音</button></td></tr>
+        </tbody>
+    </table>
+
+    <!-- 1. 計程車與交通地名對話 -->
+    <h2>🚕 1. 計程車與交通地名對話</h2>
+    <table>
+        <thead>
+            <tr><th>中文情境</th><th>韓文原文</th><th>英文拼音</th><th>語音</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>請帶我到這裡 (出示手機)</td><td class="korean-text">여기 로 가주세요.</td><td class="phonetics">Yeo-gi-ro ga-ju-se-yo.</td><td><button onclick="speak('여기 로 가주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請帶我去 Greenville 汗蒸幕</td><td class="korean-text">그린빌 사우나 로 가주세요.</td><td class="phonetics">Geu-rin-bil sa-u-na-ro ga-ju-se-yo.</td><td><button onclick="speak('그린빌 사우나 로 가주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請帶我去半月堂站 1 號出口</td><td class="korean-text">반월당역 1번 출구 로 가주세요.</td><td class="phonetics">Ban-wol-dang-yeok il-beon chul-gu-ro ga-ju-se-yo.</td><td><button onclick="speak('반월당역 1번 출구 로 가주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請帶我去西門市場</td><td class="korean-text">서문시장 으로 가주세요.</td><td class="phonetics">Seo-mun-si-jang-eu-ro ga-ju-se-yo.</td><td><button onclick="speak('서문시장 으로 가주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請帶我去現代百貨大邱店</td><td class="korean-text">더현대 대구 로 가주세요.</td><td class="phonetics">Deo-hyeon-dae Dae-gu-ro ga-ju-se-yo.</td><td><button onclick="speak('더현대 대구 로 가주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請帶我去大邱國際機場</td><td class="korean-text">대구국제공항 으로 가주세요.</td><td class="phonetics">Dae-gu guk-je-gong-hang-eu-ro ga-ju-se-yo.</td><td><button onclick="speak('대구국제공항 으로 가주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問需要多久時間？</td><td class="korean-text">얼마나 걸려요?</td><td class="phonetics">Eol-ma-na geol-ryeo-yo?</td><td><button onclick="speak('얼마나 걸려요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>我可以刷信用卡付款嗎？</td><td class="korean-text">카드로 결제할 수 있나요?</td><td class="phonetics">Ka-deu-ro gyeol-je-hal su in-na-yo?</td><td><button onclick="speak('카드로 결제할 수 있나요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請給我收據，謝謝</td><td class="korean-text">영수증 주세요.</td><td class="phonetics">Yeong-su-jeung ju-se-yo.</td><td><button onclick="speak('영수증 주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請在這裡讓我下車</td><td class="korean-text">여기서 내려주세요.</td><td class="phonetics">Yeo-gi-seow nae-ryeo-ju-se-yo.</td><td><button onclick="speak('여기서 내려주세요.')">🔊 點擊發音</button></td></tr>
+        </tbody>
+    </table>
+
+    <!-- 2. Greenville 汗蒸幕補眠與消費 -->
+    <h2>♨️ 2. Greenville 汗蒸幕補眠與消費</h2>
+    <table>
+        <thead>
+            <tr><th>中文情境</th><th>韓文原文</th><th>英文拼音</th><th>語音</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>我想使用汗蒸幕與洗澡</td><td class="korean-text">찜질방 이용할게요.</td><td class="phonetics">Jjim-jil-bang i-yong-hal-ge-yo.</td><td><button onclick="speak('찜질방 이용할게요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問可以刷卡嗎？</td><td class="korean-text">카드 결제 돼요?</td><td class="phonetics">Ka-deu gyeol-je dwae-yo?</td><td><button onclick="speak('카드 결제 돼요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問行李箱可以寄放在櫃檯嗎？</td><td class="korean-text">캐리어 보관할 수 있나요?</td><td class="phonetics">Kae-ri-eo bo-gwan-hal su in-na-yo?</td><td><button onclick="speak('캐리어 보관할 수 있나요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問休息區/睡眠區在哪裡？</td><td class="korean-text">수면실이 어디예요?</td><td class="phonetics">Su-myeon-sil-i eo-di-ye-yo?</td><td><button onclick="speak('수면실이 어디예요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問有充電的地方嗎？</td><td class="korean-text">충전할 수 있는 곳이 있나요?</td><td class="phonetics">Chung-jeon-hal su in-neun gos-i in-na-yo?</td><td><button onclick="speak('충전할 수 있는 곳이 있나요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請給我一瓶甜米露</td><td class="korean-text">식혜 하나 주세요.</td><td class="phonetics">Sik-hye ha-na ju-se-yo.</td><td><button onclick="speak('식혜 하나 주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請給我兩個烤雞蛋</td><td class="korean-text">맥반석 계란 두 개 주세요.</td><td class="phonetics">Maek-ban-seok gye-ran du gae ju-se-yo.</td><td><button onclick="speak('맥반석 계란 두 개 주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問退房/離開時間是幾點？</td><td class="korean-text">몇 시까지 나가야 돼요?</td><td class="phonetics">Myeot si-kka-ji na-ga-ya dwae-yo?</td><td><button onclick="speak('몇 시까지 나가야 돼요?')">🔊 點擊發音</button></td></tr>
+        </tbody>
+    </table>
+
+    <!-- 3. 西門市場小吃點餐與詢價 -->
+    <h2>🥢 3. 西門市場小吃點餐與詢價</h2>
+    <table>
+        <thead>
+            <tr><th>中文情境</th><th>韓文原文</th><th>英文拼音</th><th>語音</th></tr>
+        </thead>
+        <tbody>
+            <tr class="highlight-row">
+                <td>👉 (萬用神句) 請給我這個</td>
+                <td class="korean-text">이거 주세요.</td>
+                <td class="phonetics">I-geo ju-se-yo.</td>
+                <td><button onclick="speak('이거 주세요.')">🔊 點擊發音</button></td>
+            </tr>
+            <tr><td>請給我一份扁餃子</td><td class="korean-text">납작만두 하나 주세요.</td><td class="phonetics">Nap-jak-man-du ha-na ju-se-yo.</td><td><button onclick="speak('납작만두 하나 주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請給我一份刀削麵</td><td class="korean-text">칼국수 하나 주세요.</td><td class="phonetics">Kal-guk-su ha-na ju-se-yo.</td><td><button onclick="speak('칼국수 하나 주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問這個多少錢？</td><td class="korean-text">이거 얼마예요?</td><td class="phonetics">I-geo eol-ma-ye-yo?</td><td><button onclick="speak('이거 얼마예요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問只能付現金嗎？</td><td class="korean-text">현금만 돼요?</td><td class="phonetics">Hyeon-geum-man dwae-yo?</td><td><button onclick="speak('현금만 돼요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>這裡有現金</td><td class="korean-text">현금으로 할게요.</td><td class="phonetics">Hyeon-geum-eu-ro hal-ge-yo.</td><td><button onclick="speak('현금으로 할게요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請不要太辣</td><td class="korean-text">덜 맵게 해주세요.</td><td class="phonetics">Deol maep-ge hae-ju-se-yo.</td><td><button onclick="speak('덜 맵게 해주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>完全不要辣，謝謝</td><td class="korean-text">안 맵게 해주세요.</td><td class="phonetics">An maep-ge hae-ju-se-yo.</td><td><button onclick="speak('안 맵게 해주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請包裝 / 我要外帶</td><td class="korean-text">포장해 주세요.</td><td class="phonetics">Po-jang-hae ju-se-yo.</td><td><button onclick="speak('포장해 주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>很好吃，謝謝！</td><td class="korean-text">맛있어요, 감사합니다!</td><td class="phonetics">Ma-sin-neo-yo, gam-sa-ham-ni-da!</td><td><button onclick="speak('맛있어요, 감사합니다!')">🔊 點擊發音</button></td></tr>
+        </tbody>
+    </table>
+
+    <!-- 4. 購物、退稅與實用問路 -->
+    <h2>🛍️ 4. 購物、退稅與實用問路</h2>
+    <table>
+        <thead>
+            <tr><th>中文情境</th><th>韓文原文</th><th>英文拼音</th><th>語音</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>我可以試穿嗎？</td><td class="korean-text">입어봐도 돼요?</td><td class="phonetics">I-beo-bwa-do dwae-yo?</td><td><button onclick="speak('입어봐도 돼요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問有新的 / 現貨嗎？</td><td class="korean-text">새 제품 있나요?</td><td class="phonetics">Sae je-pum in-na-yo?</td><td><button onclick="speak('새 제품 있나요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問可以退稅嗎？</td><td class="korean-text">택스 리펀 돼요?</td><td class="phonetics">Taek-seu ri-peon dwae-yo?</td><td><button onclick="speak('택스 리펀 돼요?')">🔊 點擊發音</button></td></tr>
+            <tr><td>請給我護照</td><td class="korean-text">여권 여기 있습니다.</td><td class="phonetics">Yeo-gwon yeo-gi is-seum-ni-da.</td><td><button onclick="speak('여권 여기 있습니다.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請幫我分開裝</td><td class="korean-text">따로 담아주세요.</td><td class="phonetics">Tta-ro dam-a-ju-se-yo.</td><td><button onclick="speak('따로 담아주세요.')">🔊 點擊發音</button></td></tr>
+            <tr><td>請問洗手間在哪裡？</td><td class="korean-text">화장실이 어디예요?</td><td class="phonetics">Hwa-jang-sil-i eo-di-ye-yo?</td><td><button onclick="speak('화장실이 어디예요?')">🔊 點擊發音</button></td></tr>
+        </tbody>
+    </table>
+
+    <!-- 5. 常用數字速查與緊急求助 -->
+    <h2>🔢 5. 常用數字速查與緊急求助</h2>
+    <div class="emergency-box">
+        <h3>常用數量詞</h3>
+        <ul>
+            <li><span>1 個：</span><span class="korean-text">하나</span> (Ha-na) <button onclick="speak('하나')">🔊 點擊發音</button></li>
+            <li><span>2 個：</span><span class="korean-text">두 개</span> (Du gae) <button onclick="speak('두 개')">🔊 點擊發音</button></li>
+            <li><span>3 個：</span><span class="korean-text">세 개</span> (Se gae) <button onclick="speak('세 개')">🔊 點擊發音</button></li>
+            <li><span>1,000 韓元：</span><span class="korean-text">천 원</span> (Cheon won) <button onclick="speak('천 원')">🔊 點擊發音</button></li>
+            <li><span>10,000 韓元：</span><span class="korean-text">만 원</span> (Man won) <button onclick="speak('만 원')">🔊 點擊發音</button></li>
+        </ul>
+        <h3 style="margin-top: 25px;">求助與緊急對話</h3>
+        <ul>
+            <li><span>請幫幫我：</span><span class="korean-text">도와주세요</span> (Do-wa-ju-se-yo) <button onclick="speak('도와주세요')">🔊 點擊發音</button></li>
+            <li><span>我不懂韓文：</span><span class="korean-text">한국어 못해요</span> (Han-guk-eo mot-hae-yo) <button onclick="speak('한국어 못해요')">🔊 點擊發音</button></li>
+            <li><span>請說英文：</span><span class="korean-text">영어 할 수 있나요?</span> (Yeong-eo hal su in-na-yo?) <button onclick="speak('영어 할 수 있나요?')">🔊 點擊發音</button></li>
+            <li><span style="color: #c0392b; font-weight: bold;">📞 旅遊翻譯專線：手機直撥 1330（有中文服務）</span></li>
+        </ul>
+    </div>
+
+    <!-- 底部搜尋 Footer -->
+    <div id="search-footer">
+        <input type="text" id="searchInput" placeholder="搜尋情境或文字..." autocomplete="off">
+        <div id="search-controls">
+            <span id="search-count">0 / 0</span>
+            <button class="footer-btn" onclick="prevMatch()">上一個</button>
+            <button class="footer-btn" onclick="nextMatch()">下一個</button>
+        </div>
+        <button class="btn-clear" onclick="clearSearch()">清除</button>
+    </div>
+
+    <!-- 腳本區域 -->
+    <script>
+        // --- 語音功能 ---
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ko-KR';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('抱歉，您的手機/瀏覽器不支援語音朗讀功能。');
+            }
+        }
+
+        // --- 網頁內文搜尋與高亮功能 ---
+        let searchResults = [];
+        let currentSearchIndex = -1;
+        let searchTimeout;
+
+        const searchInput = document.getElementById('searchInput');
+        const searchControls = document.getElementById('search-controls');
+        const searchCount = document.getElementById('search-count');
+
+        // 當輸入框內容改變時觸發 (帶有防手震 debounce)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 300);
+        });
+
+        // 也可以透過按下 Enter 鍵搜尋下一筆
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextMatch();
+            }
+        });
+
+        // 跳脫正規表達式特殊字元
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 清除所有高亮
+        function clearHighlights() {
+            const marks = document.querySelectorAll('mark.search-match');
+            marks.forEach(mark => {
+                const parent = mark.parentNode;
+                // 用原本的文字節點取代 mark 標籤
+                parent.replaceChild(document.createTextNode(mark.textContent), mark);
+                parent.normalize(); // 合併相鄰的文字節點
+            });
+            searchResults = [];
+            currentSearchIndex = -1;
+            updateUI();
+        }
+
+        // 執行搜尋
+        function performSearch() {
+            clearHighlights();
+            const keyword = searchInput.value.trim();
+            if (!keyword) return;
+
+            const regex = new RegExp(escapeRegExp(keyword), 'gi');
+            
+            // 使用 TreeWalker 遍歷所有文字節點
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: function(node) {
+                        const parent = node.parentNode;
+                        // 忽略 script, style, 按鈕內文 以及搜尋 Footer 內的文字
+                        if (parent.tagName === 'SCRIPT' || 
+                            parent.tagName === 'STYLE' || 
+                            parent.tagName === 'BUTTON' ||
+                            parent.closest('#search-footer')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        if (regex.test(node.nodeValue)) {
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                        return NodeFilter.FILTER_SKIP;
+                    }
+                }
+            );
+
+            let nodesToReplace = [];
+            let node;
+            while (node = walker.nextNode()) {
+                nodesToReplace.push(node);
+            }
+
+            // 對找到的文字節點進行分割與插入 <mark>
+            nodesToReplace.forEach(node => {
+                const fragment = document.createDocumentFragment();
+                const text = node.nodeValue;
+                let lastIdx = 0;
+                regex.lastIndex = 0; // 重置正規表達式的指針
+                let match;
+                
+                while ((match = regex.exec(text)) !== null) {
+                    if (match.index > lastIdx) {
+                        fragment.appendChild(document.createTextNode(text.substring(lastIdx, match.index)));
+                    }
+                    const mark = document.createElement('mark');
+                    mark.className = 'search-match';
+                    mark.textContent = match[0];
+                    fragment.appendChild(mark);
+                    searchResults.push(mark);
+                    lastIdx = regex.lastIndex;
+                }
+                if (lastIdx < text.length) {
+                    fragment.appendChild(document.createTextNode(text.substring(lastIdx)));
+                }
+                node.parentNode.replaceChild(fragment, node);
+            });
+
+            if (searchResults.length > 0) {
+                currentSearchIndex = 0;
+                focusMatch(0);
+            }
+            updateUI();
+        }
+
+        // 聚焦並滾動到指定的高亮結果
+        function focusMatch(index) {
+            searchResults.forEach(m => m.classList.remove('active-match'));
+            if (searchResults[index]) {
+                searchResults[index].classList.add('active-match');
+                // 平滑滾動到畫面中間
+                searchResults[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            updateUI();
+        }
+
+        // 上一個結果
+        function prevMatch() {
+            if (searchResults.length === 0) return;
+            currentSearchIndex = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+            focusMatch(currentSearchIndex);
+        }
+
+        // 下一個結果
+        function nextMatch() {
+            if (searchResults.length === 0) return;
+            currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
+            focusMatch(currentSearchIndex);
+        }
+
+        // 清除按鈕功能
+        function clearSearch() {
+            searchInput.value = '';
+            clearHighlights();
+            searchInput.focus();
+        }
+
+        // 更新 UI (顯示數量、切換按鈕區域)
+        function updateUI() {
+            if (searchResults.length > 0) {
+                searchControls.style.display = 'flex';
+                searchCount.textContent = `${currentSearchIndex + 1} / ${searchResults.length}`;
+            } else {
+                // 如果輸入框有字但沒結果，顯示 0/0，否則完全隱藏控制列
+                if (searchInput.value.trim() !== '') {
+                    searchControls.style.display = 'flex';
+                    searchCount.textContent = `0 / 0`;
+                } else {
+                    searchControls.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
