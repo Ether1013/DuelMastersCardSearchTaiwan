@@ -431,7 +431,7 @@
     <script>
         const INFINITY_THRESHOLD = 9000000000000000;
         const NEGATIVE_INFINITY = -999999999;
-        const specialIcons = ["✪", "⌂", "✚", "✡"];
+        const specialIcons = ["[白金殿堂]", "⌂", "✚", "✡"];
 		// 文明 Bitmask 對應設定
 		const CIV_MAP = [
 			{ bit: 16, name: '光' },
@@ -1253,9 +1253,31 @@
                         countPrefix = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px;">${cardCount} ⅹ </span>`;
                     }
 
-                    const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
+                    let sanctuarySymbol = '';
+					let sanctuaryMsg = '';
+					if (card.sanctuary !== undefined && card.sanctuary !== null) {
+						if (card.sanctuary == 1) {
+							sanctuarySymbol = '[殿堂]';
+							sanctuaryMsg = '殿堂';
+						} else if (card.sanctuary == 0) {
+							sanctuarySymbol = '[白金殿堂]';
+							sanctuaryMsg = '白金殿堂';
+						} else if (Array.isArray(card.sanctuary) && card.sanctuary.length > 0) {
+							sanctuarySymbol = '[組合殿堂]';
+							sanctuaryMsg = `組合殿堂：${card.sanctuary.join(',')}`;
+						}
+					}
 
-                    htmlContent += `<div class="card-title">${indexPrefix}${countPrefix}${setCardId ? `[${formatDmId(setCardId)}] ` : ''}${cleanName}</div>`;
+					let sanctuaryHtml = '';
+					if (sanctuarySymbol) {
+						const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
+						const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
+						sanctuaryHtml = `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>`;
+					}
+
+					// ✅ 正確程式碼
+					const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
+					htmlContent += `<div class="card-title">${sanctuaryHtml}${indexPrefix}${countPrefix}${setCardId ? `[${formatDmId(setCardId)}] ` : ''}${cleanName}</div>`;
 
                     const newAbilitiesForThisCard = [];
 

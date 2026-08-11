@@ -237,7 +237,7 @@
         let rawAbilities = [];
         let rawCardData = [];
 		let rawCardTypes = [];
-		const specialIcons = ["✪", "⌂", "✚", "✡"];
+		const specialIcons = ["[白金殿堂]", "⌂", "✚", "✡"];
 
         const CIV_MAP = [
             { bit: 16, name: '光' },
@@ -515,7 +515,35 @@
             } else {
                 modalId.style.display = 'none'; // 隱藏 ID 區塊
             }
-            modalTitle.innerText = card.name || '未命名卡牌';
+            const baseName = card.name || '未命名卡牌';
+			let sanctuarySymbol = '';
+			let sanctuaryMsg = '';
+
+			// 判斷殿堂狀態
+			if (card.sanctuary !== undefined && card.sanctuary !== null) {
+				if (card.sanctuary == 1) {
+					sanctuarySymbol = '[殿堂]';
+					sanctuaryMsg = '殿堂';
+				} else if (card.sanctuary == 0) {
+					sanctuarySymbol = '[白金殿堂]';
+					sanctuaryMsg = '白金殿堂';
+				} else if (Array.isArray(card.sanctuary) && card.sanctuary.length > 0) {
+					sanctuarySymbol = '[組合殿堂]';
+					sanctuaryMsg = `組合殿堂：${card.sanctuary.join(',')}`;
+				}
+			}
+
+			// 組合 UI
+			if (sanctuarySymbol) {
+				// 防呆處理：跳脫字元避免 HTML 破圖或 JS 報錯
+				const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
+				const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
+				
+				// 使用 innerHTML 將符號獨立包裝，並利用 title 提供桌機 hover、onclick 提供手機點擊
+				modalTitle.innerHTML = `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span><span>${baseName}</span>`;
+			} else {
+				modalTitle.innerText = baseName;
+			}
 
             // 1. 圖片與 Flavor 處理
             let picUrl = card.pic || "";

@@ -2613,7 +2613,7 @@
 		let rawSetlist = {}; // 系列快取變數
 		// 全域快取當前過濾後的原始結果
 		let currentFilterResults = [];
-		const specialIcons = ["✪", "⌂", "✚", "✡"];
+		const specialIcons = ["[白金殿堂]", "⌂", "✚", "✡"];
 		// ==========================================
 		// 1. LocalStorage 自訂牌組管理（含 7 天未選用自動清理機制）
 		// ==========================================
@@ -2631,6 +2631,7 @@
 		// 建立高頻常錯漢字對映表 (可持續擴充)
 		const KANJI_MAP = {
 			'龍': '竜', '龙': '竜',
+			'鬪': '闘', '來': '来',
 			'黑': '黒', '戀': '恋',
 			'獸': '獣', '兽': '獣',
 			'靈': '霊', '灵': '霊',
@@ -2896,6 +2897,24 @@
 			}
 
 			const jpName = card.name || '未命名卡牌';
+			let sanctuarySymbol = '';
+			let sanctuaryMsg = '';
+			if (card.sanctuary !== undefined && card.sanctuary !== null) {
+				if (card.sanctuary == 1) {
+					sanctuarySymbol = '[殿堂]';
+					sanctuaryMsg = '殿堂';
+				} else if (card.sanctuary == 0) {
+					sanctuarySymbol = '[白金殿堂]';
+					sanctuaryMsg = '白金殿堂';
+				} else if (Array.isArray(card.sanctuary) && card.sanctuary.length > 0) {
+					sanctuarySymbol = '[組合殿堂]';
+					sanctuaryMsg = `組合殿堂：${card.sanctuary.join(',')}`;
+				}
+			}
+
+			const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
+			const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
+			const sanctuaryHtml = sanctuarySymbol ? `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>` : '';
 			const cleanJpName = cleanCardName(jpName);
 			const enName = fetchedEnNameMap[jpName] || null;
 
@@ -2927,7 +2946,7 @@
 
 				<!-- 下方：卡名主要區塊 -->
 				<div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
-					<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
+					${sanctuaryHtml}<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
 				</div>
 			`;
 
@@ -5302,7 +5321,7 @@
 						
 						// 徹底清理卡牌 sp 內容（去除開頭特殊圖示、標點符號與空白）
 						let cleanSp = sp.trim()
-							.replace(/^[✪⌂✚✡]\s*/, '') // 去除開頭圖示
+							.replace(/^[[白金殿堂]⌂✚✡]\s*/, '') // 去除開頭圖示
 							.replace(/[。\.]$/, '')     // 去除末尾句號
 							.trim();
 							
@@ -6719,7 +6738,7 @@
 			wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
 			wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
 
-			// 💡 [日文 Wiki] 直連精準頁面按鈕 (帶《》網址格式)
+			// 💡 [日文 Wiki] 直連精準頁面按鈕 (轉換符號為全形 + 僅去除符號前後的空白)
 			const jpWikiBtn = document.createElement('button');
 			jpWikiBtn.type = 'button';
 			jpWikiBtn.className = 'ext-link-btn wiki-btn';
@@ -6727,9 +6746,25 @@
 			jpWikiBtn.onclick = (e) => {
 				e.preventDefault();
 				if (!rawCardName) return;
-				const cleanName = cleanCardName(rawCardName);
-				// DM Wiki 的標準頁面網址格式為：《卡名》
+				
+				// 1. 清理括號與備註文字
+				let cleanName = cleanCardName(rawCardName);
+
+				// 2. 符號轉全形 (大寫)
+				cleanName = cleanName
+					.replace(/\=/g, '＝')  // 等號 = 轉 ＝
+					.replace(/\//g, '／')  // 斜線 / 轉 ／
+					.replace(/\!/g, '！')  // 驚嘆號 ! 轉 ！
+					.replace(/\?/g, '？')  // 問號 ? 轉 ？
+					.replace(/\:/g, '：')  // 冒號 : 轉 ：
+					.replace(/\~/g, '〜'); // 波浪號 ~ 轉 〜
+
+				// 3. 關鍵訂正：僅去除「常見符號前後」的半形與全形空白（保留文字間的正常空格）
+				cleanName = cleanName.replace(/[\s\u3000]*([／＝！？：〜－・「」《》])[\s\u3000]*/g, '$1').trim();
+
+				// 4. 產出 DM Wiki 標準頁面直連網址：《卡名》
 				const directWikiUrl = `https://dmwiki.net/《${encodeURIComponent(cleanName)}》`;
+
 				window.open(directWikiUrl, '_blank', 'noopener,noreferrer');
 			};
 			wikiGrid.appendChild(jpWikiBtn);
@@ -6905,6 +6940,24 @@
                 }
 
                 const jpName = card.name || '未命名卡牌';
+				let sanctuarySymbol = '';
+				let sanctuaryMsg = '';
+				if (card.sanctuary !== undefined && card.sanctuary !== null) {
+					if (card.sanctuary == 1) {
+						sanctuarySymbol = '[殿堂]';
+						sanctuaryMsg = '殿堂';
+					} else if (card.sanctuary == 0) {
+						sanctuarySymbol = '[白金殿堂]';
+						sanctuaryMsg = '白金殿堂';
+					} else if (Array.isArray(card.sanctuary) && card.sanctuary.length > 0) {
+						sanctuarySymbol = '[組合殿堂]';
+						sanctuaryMsg = `組合殿堂：${card.sanctuary.join(',')}`;
+					}
+				}
+
+				const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
+				const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
+				const sanctuaryHtml = sanctuarySymbol ? `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>` : '';
                 const cleanJpName = cleanCardName(jpName);
                 const enName = fetchedEnNameMap[jpName] || null;
 
@@ -6936,8 +6989,8 @@
 
                     <!-- 下方：卡名主要區塊 -->
                     <div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
-                        <span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
-                    </div>
+						${sanctuaryHtml}<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
+					</div>
                 `;
 
                 // 綁定 🇪 / 🇯 切換事件
@@ -9920,22 +9973,9 @@
 			showToast(`✅ 牌組 ${newCode} 匯入成功！`);
 		});
 		
-		// 💡 新增：API 側錄防護鎖 (避免連鎖點擊造成重複觸發)
-		let isTrackingLocked = false;
-
 		// 全域統計工具 (發送即後不理，使用 sendBeacon 零延遲)
 		function trackFeature(featureName, extraData = null) {
 			if (!featureName) return;
-
-			// 💡 如果目前正在上鎖狀態，代表這是程式連動觸發的二次動作，直接忽略不發送 API
-			if (isTrackingLocked) return;
-
-			// 💡 通過檢查後立刻上鎖，並設定 200 毫秒後解鎖
-			isTrackingLocked = true;
-			setTimeout(() => {
-				isTrackingLocked = false;
-			}, 200);
-
 			const url = '/api/track';
 			const payload = JSON.stringify({ 
 				feature: featureName,
