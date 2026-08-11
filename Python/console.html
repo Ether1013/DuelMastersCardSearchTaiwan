@@ -71,7 +71,7 @@
 
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Recent Active Countries</p>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Users</p>
                     <h3 id="activeCountries" class="text-3xl font-extrabold text-white mt-1">0</h3>
                 </div>
                 <div class="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center text-sky-400">
@@ -81,8 +81,10 @@
         </div>
 
         <!-- Charts Grid -->
+        <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <!-- 長條圖：觸發次數 -->
+            <div class="lg:col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
                 </h2>
@@ -91,12 +93,23 @@
                 </div>
             </div>
 
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <!-- 圓餅圖 1：國籍分佈 (Total Event Recorded) -->
+            <div class="lg:col-span-1 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-earth-americas text-sky-400"></i> Country Distribution
+                    <i class="fa-solid fa-earth-americas text-sky-400"></i> Country Distribution (Total)
                 </h2>
                 <div class="h-64 flex justify-center items-center">
                     <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 圓餅圖 2：使用者分佈 (Users) -->
+            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-user-astronaut text-purple-400"></i> User Distribution (Total)
+                </h2>
+                <div class="h-64 flex justify-center items-center">
+                    <canvas id="userChart"></canvas>
                 </div>
             </div>
         </div>
@@ -162,7 +175,7 @@
         if (adminKey) authParam = `admin=${encodeURIComponent(adminKey)}`;
         else if (tokenKey) authParam = `token=${encodeURIComponent(tokenKey)}`;
 
-        let featureChart, countryChart;
+        let featureChart, countryChart, userChart; // 👈 增加 userChart
 
         // 全局狀態控制表格
         let currentLogs = [];
@@ -202,20 +215,46 @@
                     }
                 }
             });
+
+            // 👈 新增：使用者圓餅圖初始化
+            const ctxUser = document.getElementById('userChart').getContext('2d');
+            userChart = new Chart(ctxUser, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#c084fc', '#f472b6', '#38bdf8', '#34d399', '#fbbf24', '#818cf8', '#a7f3d0'] }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: '#9ca3af' } },
+                        datalabels: { 
+                            color: '#ffffff', 
+                            font: { weight: 'bold', size: 11 }, 
+                            formatter: (value) => value > 0 ? value + ' 次' : '', 
+                            anchor: 'center', 
+                            align: 'center' 
+                        }
+                    }
+                }
+            });
         }
 
         function updateDashboard(data) {
             document.getElementById('totalEvents').innerText = data.total_events || 0;
             document.getElementById('activeFeatures').innerText = Object.keys(data.stats || {}).length;
-            document.getElementById('activeCountries').innerText = Object.keys(data.recent_countries_summary || {}).length;
+            document.getElementById('activeUsers').innerText = Object.keys(data.user_stats || {}).length; // 👈 更新為全域 Users 數量
 
             featureChart.data.labels = Object.keys(data.stats || {});
             featureChart.data.datasets[0].data = Object.values(data.stats || {});
             featureChart.update();
 
-            countryChart.data.labels = Object.keys(data.recent_countries_summary || {});
-            countryChart.data.datasets[0].data = Object.values(data.recent_countries_summary || {});
+            // 👈 國籍圓餅圖更新為全域 country_stats
+            countryChart.data.labels = Object.keys(data.country_stats || {});
+            countryChart.data.datasets[0].data = Object.values(data.country_stats || {});
             countryChart.update();
+
+            // 👈 新增：使用者圓餅圖更新為全域 user_stats
+            userChart.data.labels = Object.keys(data.user_stats || {});
+            userChart.data.datasets[0].data = Object.values(data.user_stats || {});
+            userChart.update();
 
             // 更新 Log 資料庫
             currentLogs = data.recent_50_details || [];

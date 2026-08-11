@@ -82,6 +82,8 @@ file_write_lock = asyncio.Lock()
 
 # 1. 記憶體計數器 (Render 重啟後自動歸零)
 feature_counter = defaultdict(int)
+country_counter = defaultdict(int)  # 👈 新增：全域國籍次數統計
+user_counter = defaultdict(int)     # 👈 新增：全域使用者次數統計
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
 # 新增：紀錄各國籍目前的發放編號數，以及 IP 對應的編號
@@ -1003,29 +1005,30 @@ async def track_feature(request: Request):
 
         if feature_name:
             feature_counter[feature_name] += 1
+            country_counter[country] += 1       # 👈 新增：全域國籍次數累加
+            user_counter[user_id] += 1         # 👈 新增：全域使用者次數累加
             now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
 
             entry = {
                 "feature": feature_name,
                 "country": country,
-                "user": user_id,  # 👈 新增 user 欄位
+                "user": user_id,
                 "detail": detail,
                 "time": now_utc8
             }
 
-            # 💡 移除原本的 if detail: 條件，無 Payload 一樣寫入 Queue
             action_details_log.appendleft(entry)
 
             # 廣播給所有連接在 WebSocket Console 的用戶
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-            country_counts = defaultdict(int)
-            for log in action_details_log:
-                country_counts[log.get("country", "Unknown")] += 1
+            sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+            sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
             await console_manager.broadcast({
                 "total_events": sum(sorted_stats.values()),
                 "stats": sorted_stats,
-                "recent_countries_summary": dict(country_counts),
+                "country_stats": sorted_country_stats,  # 👈 新增：全域國籍統計
+                "user_stats": sorted_user_stats,        # 👈 新增：全域使用者統計
                 "recent_50_details": list(action_details_log)
             })
 
@@ -1071,17 +1074,17 @@ async def get_feature_stats(
 
     # 否則回傳原有 JSON 統計資料
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    country_counts = defaultdict(int)
-    for log in action_details_log:
-        country_counts[log.get("country", "Unknown")] += 1
+    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
     result = {
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
-        "recent_countries_summary": dict(country_counts),
+        "country_stats": sorted_country_stats,  # 👈 新增全域資料
+        "user_stats": sorted_user_stats,        # 👈 新增全域資料
         "recent_50_details": list(action_details_log)
     }
-    return PrettyJSONResponse(content=result)
+    return PrettyJSONResponse(content=result)  # 👈 請補上這一行
 
 @app.websocket("/ws/console")
 async def websocket_console(
@@ -1104,22 +1107,16 @@ async def websocket_console(
     await console_manager.connect(websocket)
     # 建立連線時立即發送一次當前最新數據
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    country_counts = defaultdict(int)
-    for log in action_details_log:
-        country_counts[log.get("country", "Unknown")] += 1
+    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
     await websocket.send_json({
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
-        "recent_countries_summary": dict(country_counts),
+        "country_stats": sorted_country_stats,  # 👈 新增全域資料
+        "user_stats": sorted_user_stats,        # 👈 新增全域資料
         "recent_50_details": list(action_details_log)
     })
-
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        console_manager.disconnect(websocket)
 
 def get_client_country(request: Request) -> str:
     """取得請求來源的國籍 ISO 代碼（含 localhost = TW 判斷）"""
@@ -1347,17 +1344,19 @@ async def delete_user_logs(
     filtered_logs = [log for log in action_details_log if (log.get("user") or log.get("country") or "Unknown") != user_id]
     action_details_log = deque(filtered_logs, maxlen=50)
 
-    # 2. 重新計算統計數據與國籍彙整並廣播給 console manager
+    # 1.5 扣除/重置該使用者的累計計數
+    if user_id in user_counter:
+        del user_counter[user_id]
+
+    # 2. 重新計算統計數據並廣播給 console manager
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    country_counts = defaultdict(int)
-    for log in action_details_log:
-        country_counts[log.get("country", "Unknown")] += 1
+    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
     await console_manager.broadcast({
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
-        "recent_countries_summary": dict(country_counts),
+        "country_stats": sorted_country_stats,
+        "user_stats": sorted_user_stats,
         "recent_50_details": list(action_details_log)
     })
-
-    return {"status": "success", "deleted_user": user_id}
