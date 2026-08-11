@@ -1781,6 +1781,128 @@
 			width: 100%;
 			box-sizing: border-box;
 		}
+		
+		/* ================= 組牌購物車專用樣式 ================= */
+		.floating-cart-btn {
+			position: fixed;
+			right: 20px;
+			top: 65vh;
+			width: 56px;
+			height: 56px;
+			background-color: #0284c7;
+			color: white;
+			border-radius: 50%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-size: 24px;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+			cursor: pointer;
+			z-index: 900; /* 高於浮動按鈕，低於 Modal */
+			transition: transform 0.2s, opacity 0.2s;
+			display: none; /* 預設隱藏，有卡片才顯示 */
+		}
+		.floating-cart-btn:hover { transform: scale(1.08); background-color: #0369a1; }
+		.floating-cart-btn:active { transform: scale(0.95); }
+		.cart-badge {
+			position: absolute;
+			top: -5px;
+			right: -5px;
+			background-color: #ef4444;
+			color: white;
+			font-size: 11px;
+			font-weight: bold;
+			padding: 2px 6px;
+			border-radius: 10px;
+			border: 2px solid #fff;
+		}
+		/* 購物車列表總容器：單組卡牌之間向底對齊 */
+		.cart-list-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			padding: 10px;
+			align-items: flex-end; /* 💡 關鍵：向底對齊 */
+		}
+		/* 購物車單一卡牌群組容器 */
+		.cart-item-group {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			background: #ffffff;
+			padding: 10px;
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			border: 1px solid #e2e8f0;
+		}
+		/* 支援同一張卡多列並排的容器：列與列之間向底對齊 */
+		.cart-card-rows-container {
+			display: flex;
+			flex-direction: row;
+			gap: 12px;
+			align-items: flex-end; /* 💡 關鍵：向底對齊 */
+			margin-bottom: 8px;
+		}
+		.cart-stack-wrapper {
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			position: relative;
+			/* cursor: pointer;  👈 可以把這行刪除或註解掉 */
+			padding-top: 36px;
+			min-height: 196px;
+			width: 140px;
+		}
+		.cart-stack-wrapper img, .cart-stack-wrapper .cart-no-img {
+			width: 140px;
+			border-radius: 6px;
+			box-shadow: 0 -2px 5px rgba(0,0,0,0.25);
+			transition: transform 0.2s;
+			object-fit: contain;
+		}
+		.cart-stack-wrapper .cart-no-img {
+			height: 196px;
+			background: #f1f5f9;
+			color: #475569;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-weight: bold;
+			border: 2px dashed #cbd5e1;
+			font-size: 13px;
+			text-align: center;
+			padding: 8px;
+			box-sizing: border-box;
+		}
+		.cart-stack-wrapper img:hover { 
+			transform: translateY(-4px); 
+		}
+		.cart-controls {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			background: #f1f5f9;
+			padding: 4px 8px;
+			border-radius: 12px;
+		}
+		.cart-controls button {
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			border: none;
+			background: #0284c7;
+			color: white;
+			font-weight: bold;
+			cursor: pointer;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.cart-controls button:hover { background: #0369a1; }
+		.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
+
+		/* 截圖時隱藏購物車加入按鈕 */
+		.is-capturing .cart-add-btn-overlay { display: none !important; }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2327,6 +2449,40 @@
             </div>
         </div>
     </div>
+	
+	<!-- 浮動購物車入口 -->
+    <div id="floating-cart-btn" class="floating-cart-btn">
+        🛒<div id="cart-total-badge" class="cart-badge">0</div>
+    </div>
+
+    <!-- 購物車 Modal -->
+    <div class="modal-overlay" id="cart-modal">
+		<div class="modal-card" style="max-width: 800px; max-height: 90vh;">
+			<!-- 1. 藍色 Header -->
+			<div class="modal-header" style="background: #0284c7; color: white;">
+				<div class="modal-title">🛒 購物車式組牌器</div>
+				<div class="modal-close" id="cart-modal-close">&times;</div>
+			</div>
+
+			<!-- 2. 💡 固定控制列：從 modal-body 移到這裡，緊貼藍色 Header，完全無縫！ -->
+			<div style="background: #ffffff; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding: 12px 16px; flex-shrink: 0;">
+				<div style="font-size: 16px; font-weight: bold;">總張數：<span id="cart-total-count" style="color: #d32f2f; font-size: 20px;">0</span> 張</div>
+				<button id="btn-clear-cart" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">🗑️ 清空全部</button>
+			</div>
+
+			<!-- 3. 滾動區域 (modal-body) -->
+			<div class="modal-body" style="padding: 16px; overflow-y: auto;">
+				<div id="cart-list-container" class="cart-list-container">
+					<!-- 動態縮排陳列於此 -->
+				</div>
+			</div>
+
+			<!-- 4. 綠色按鈕 Footer -->
+			<div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; flex-shrink: 0;">
+				<button id="btn-submit-cart" style="width: 100%; background: #16a34a; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer;">✅ 確認送出並建立個人牌組(不會跑去商店)</button>
+			</div>
+		</div>
+	</div>
 
     <!-- 新增：全域處理中 Loading 畫面 -->
     <div class="loading-overlay" id="loading-overlay">
@@ -3812,6 +3968,10 @@
 				renderLatestSetButtons();
 				renderQaLatestSetButtons(); // 👈 💡 在這裡補上這行！資料下載完後自動渲染按鈕
 				initStatsSelects(statsData);
+				// 💡 確保 API 全域資料載入完畢後，重新觸發一次購物車 UI 渲染以繪製卡圖
+                if (typeof updateCartUI === 'function') {
+                    updateCartUI();
+                }
 
 			} catch (error) {
 				console.error("資料載入發生錯誤，將使用預設資料渲染 UI:", error);
@@ -4868,6 +5028,7 @@
 				// 生成 Page 2 的 Node 並綁定 Modal 彈窗事件
 				const res2 = createCardListItem(card);
 				res2.itemDiv.addEventListener('click', () => {
+					window.isOpenedFromCart = false;
 					recordCardHistory(card.name); // 寫入歷史紀錄
 					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
 					res2.itemDiv.classList.add('selected');
@@ -5778,6 +5939,29 @@
 				shareBtn.innerText = '🔗';
 				imgStackContainer.appendChild(shareBtn);
 			}
+			// 💡 購物車 +1 按鈕 (懸浮於分享 Icon 正下方)
+            let cartAddBtn = imgStackContainer.querySelector('.cart-add-btn-overlay');
+            if (!cartAddBtn) {
+                cartAddBtn = document.createElement('div');
+                cartAddBtn.className = 'modal-btn-icon cart-add-btn-overlay';
+                cartAddBtn.title = '加入組牌購物車';
+                cartAddBtn.innerText = '🛒';
+                // 偏移量放在相機(top:0)與分享(top:34px)下方
+                cartAddBtn.style.cssText = 'position: absolute !important; right: -36px !important; left: auto !important; z-index: 30; margin: 0; top: 68px !important;';
+                imgStackContainer.appendChild(cartAddBtn);
+            }
+
+            // Req 8 & 9：如果從購物車打開，或是非 Modal 模式，則隱藏這個按鈕
+            if (isModal && !window.isOpenedFromCart) {
+                cartAddBtn.style.display = 'flex';
+                cartAddBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    modifyCart(card.name, 1);
+                    showToast(`已將 ${card.name} 加入購物車`);
+                };
+            } else {
+                cartAddBtn.style.display = 'none';
+            }
 
 			// 彙整所有可用的圖片網址與備援標記判定
 			let validPicUrls = picList.filter(p => p && p.trim() !== '');
@@ -10112,6 +10296,297 @@
 
 		document.getElementById('deck-import-modal-close')?.addEventListener('click', () => {
 			document.getElementById('deck-import-modal').classList.remove('active');
+		});
+		
+		
+		// ==========================================
+		// 🛒 組牌購物車系統 (Shopping Cart)
+		// ==========================================
+		let shoppingCart = JSON.parse(localStorage.getItem('dm_shopping_cart') || '{}');
+		window.isOpenedFromCart = false; // 判定 detail modal 是否由購物車開啟
+
+		// 判斷卡牌的連動關係 (多面卡 vs 合體卡)
+		function getLinkageInfo(cardName) {
+			const cleanName = cleanCardName(cardName);
+			const card = globalCardData.find(c => cleanCardName(c.name) === cleanName);
+			if (!card || !card.back || card.back.length === 0) return null;
+
+			const backNames = card.back.map(cleanCardName);
+			const group = [cleanName, ...backNames];
+
+			// 1. 檢查是否為「多面卡」(群組內每一張的 back 都包含其他所有人)
+			let isMulti = true;
+			for (let name of group) {
+				const member = globalCardData.find(c => cleanCardName(c.name) === name);
+				if (!member || !member.back) { isMulti = false; break; }
+				const memberBacks = member.back.map(cleanCardName);
+				const expectedOthers = group.filter(n => n !== name);
+				const hasAll = expectedOthers.every(eb => memberBacks.includes(eb));
+				if (!hasAll) { isMulti = false; break; }
+			}
+			if (isMulti) return { type: 'multi', group };
+
+			// 2. 檢查是否為「合體卡」(找出 parent：它的 back 包含其他所有人，而其他人的 back 只指向它)
+			let parent = null;
+			let children = [];
+			for (let name of group) {
+				const member = globalCardData.find(c => cleanCardName(c.name) === name);
+				if (!member || !member.back) continue;
+				const memberBacks = member.back.map(cleanCardName);
+				const otherGroupMembers = group.filter(n => n !== name);
+				
+				// 如果這個 member 的 back 包含了所有其他卡，他就是合體後的卡 (Parent)
+				const hasAllOthers = otherGroupMembers.every(eb => memberBacks.includes(eb));
+				if (hasAllOthers && memberBacks.length === otherGroupMembers.length) {
+					parent = name;
+					children = otherGroupMembers;
+					break;
+				}
+			}
+			if (parent) return { type: 'combine', parent, children };
+			
+			return null;
+		}
+
+		// 變更購物車數量 (支援連動演算法)
+		function modifyCart(cardName, delta, isManualAction = true) {
+			const cleanName = cleanCardName(cardName);
+			const link = getLinkageInfo(cleanName);
+
+			// 基礎增減函式（加上上限 60 張邏輯）
+			const updateCount = (name, d) => {
+				const current = shoppingCart[name] || 0;
+				let nextCount = current + d;
+				if (nextCount > 60) nextCount = 60; // 限制單張最多 60 張
+				
+				if (nextCount <= 0) {
+					delete shoppingCart[name];
+				} else {
+					shoppingCart[name] = nextCount;
+				}
+			};
+
+			if (!link) {
+				updateCount(cleanName, delta);
+			} else if (link.type === 'multi') {
+				// 多面卡：牽一髮動全身
+				link.group.forEach(name => updateCount(name, delta));
+			} else if (link.type === 'combine') {
+				if (cleanName === link.parent && isManualAction) {
+					// 手動改變合體卡，元件全數跟著改變
+					updateCount(link.parent, delta);
+					link.children.forEach(child => updateCount(child, delta));
+				} else {
+					// 手動改變元件
+					updateCount(cleanName, delta);
+					// 重新計算合體卡張數 = 所有元件張數的最小值
+					let minChildCount = Infinity;
+					link.children.forEach(child => {
+						minChildCount = Math.min(minChildCount, shoppingCart[child] || 0);
+					});
+					
+					if (minChildCount > 0) {
+						shoppingCart[link.parent] = Math.min(minChildCount, 60);
+					} else {
+						delete shoppingCart[link.parent];
+					}
+				}
+			}
+
+			localStorage.setItem('dm_shopping_cart', JSON.stringify(shoppingCart));
+			updateCartUI();
+		}
+
+		// 取得借圖 URL (不套用灰階，與原版相同邏輯)
+		function getCartImageUrl(cardName) {
+			const cleanName = cleanCardName(cardName);
+			const card = globalCardData.find(c => cleanCardName(c.name) === cleanName);
+			if (!card) return null;
+
+			if (card.pic && card.pic.trim() !== '') return card.pic;
+
+			for (const setObj of Object.values(rawSetlist)) {
+				const cardList = setObj.setcardlist || setObj.cardlist;
+				if (Array.isArray(cardList)) {
+					const foundItem = cardList.find(item => {
+						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+						return typeof itemName === 'string' && itemName.trim() === cleanName;
+					});
+					if (foundItem) {
+						if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) return foundItem.pic[0];
+						else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') return foundItem.pic;
+					}
+				}
+			}
+			return null;
+		}
+
+		// 渲染與更新購物車 UI
+		function updateCartUI() {
+			const totalCount = Object.values(shoppingCart).reduce((a, b) => a + b, 0);
+			const badge = document.getElementById('cart-total-badge');
+			const floatBtn = document.getElementById('floating-cart-btn');
+			const totalSpan = document.getElementById('cart-total-count');
+			const container = document.getElementById('cart-list-container');
+
+			// 1. 更新統計數字與浮動入口
+			badge.innerText = totalCount;
+			if (totalSpan) totalSpan.innerText = totalCount;
+
+			if (totalCount > 0) {
+				floatBtn.style.display = 'flex';
+			} else {
+				floatBtn.style.display = 'none';
+				document.getElementById('cart-modal')?.classList.remove('active'); // 清空自動關閉
+			}
+
+			// 渲染購物車內容 (支援 4 張分列：如 11 張拆為 4 + 4 + 3)
+			if (container) {
+				container.innerHTML = '';
+				Object.entries(shoppingCart).forEach(([name, count]) => {
+					const groupDiv = document.createElement('div');
+					groupDiv.className = 'cart-item-group';
+
+					// 1. 建立該張卡牌所有列的橫向容器
+					const rowsContainer = document.createElement('div');
+					rowsContainer.className = 'cart-card-rows-container';
+
+					// 2. 將 count 按 4 張為一組進行切分 (例: 11 -> [4, 4, 3])
+					const rowDistribution = [];
+					let tempCount = count;
+					while (tempCount > 0) {
+						const currentChunk = Math.min(tempCount, 4);
+						rowDistribution.push(currentChunk);
+						tempCount -= currentChunk;
+					}
+
+					const imgUrl = getCartImageUrl(name);
+
+					// 3. 逐列繪製堆疊效果
+					rowDistribution.forEach((chunkSize) => {
+						const stackWrapper = document.createElement('div');
+						stackWrapper.className = 'cart-stack-wrapper';
+
+						// 在該列繪製 chunkSize (1~4) 張卡片
+						for (let i = 0; i < chunkSize; i++) {
+							if (imgUrl) {
+								const img = document.createElement('img');
+								img.src = imgUrl;
+								img.style.zIndex = i + 1;
+								if (i > 0) img.style.marginTop = '-175px'; // 向上疊加
+								stackWrapper.appendChild(img);
+							} else {
+								const noImg = document.createElement('div');
+								noImg.className = 'cart-no-img';
+								noImg.innerText = name;
+								noImg.style.zIndex = i + 1;
+								if (i > 0) noImg.style.marginTop = '-175px';
+								stackWrapper.appendChild(noImg);
+							}
+						}
+
+						rowsContainer.appendChild(stackWrapper);
+					});
+
+					groupDiv.appendChild(rowsContainer);
+
+					// 4. 底部共用單一控制器 (+ / -)
+					const controls = document.createElement('div');
+					controls.className = 'cart-controls';
+					controls.innerHTML = `
+						<button onclick="modifyCart('${name}', -1)">-</button>
+						<span>${count}</span>
+						<button onclick="modifyCart('${name}', 1)">+</button>
+					`;
+					groupDiv.appendChild(controls);
+
+					container.appendChild(groupDiv);
+				});
+			}
+		}
+
+		// 綁定購物車 Modal 開關與操作
+		document.addEventListener('DOMContentLoaded', () => {
+			updateCartUI(); // 初始化
+
+			document.getElementById('floating-cart-btn')?.addEventListener('click', () => {
+				document.getElementById('cart-modal').classList.add('active');
+			});
+
+			document.getElementById('cart-modal-close')?.addEventListener('click', () => {
+				document.getElementById('cart-modal').classList.remove('active');
+				window.isOpenedFromCart = false;
+			});
+
+			document.getElementById('btn-clear-cart')?.addEventListener('click', () => {
+				if (confirm('確定要清空組牌購物車嗎？')) {
+					shoppingCart = {};
+					localStorage.setItem('dm_shopping_cart', JSON.stringify(shoppingCart));
+					updateCartUI();
+				}
+			});
+
+			// 送出建立 NET-90X 牌組
+			document.getElementById('btn-submit-cart')?.addEventListener('click', () => {
+				const totalCount = Object.values(shoppingCart).reduce((a, b) => a + b, 0);
+				if (totalCount === 0) return;
+
+				// 💡 加上側錄事件（標題為 [購物車組牌]，不需要 detail payload）
+				if (typeof trackFeature === 'function') {
+					trackFeature('購物車組牌');
+				}
+
+				const targetCode = getNextNetCode();
+				const setCardList = Object.entries(shoppingCart).map(([name, count]) => ({ name, count }));
+				
+				const now = Date.now();
+				const updatedSetObj = {
+					setcode: targetCode,
+					setname: `購物車自訂牌組 (${targetCode})`,
+					isdeck: true,
+					istw: true,
+					createdTime: now,
+					lastUsed: now,
+					setcardlist: setCardList
+				};
+
+				const customDecks = getValidCustomDecks();
+				customDecks[targetCode] = updatedSetObj;
+				localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(customDecks));
+				rawSetlist[targetCode] = updatedSetObj;
+				
+				initSeriesDropdown();
+				
+				// 清空購物車
+				shoppingCart = {};
+				localStorage.setItem('dm_shopping_cart', JSON.stringify(shoppingCart));
+				updateCartUI();
+				document.getElementById('cart-modal').classList.remove('active');
+				
+				showToast(`✅ 已成功建立牌組：${targetCode}`);
+				
+				// 自動切換到該牌組查詢
+				const bigSelect = document.getElementById('series-big');
+				const smallSelect = document.getElementById('series-small');
+				if (bigSelect && smallSelect) {
+					document.getElementById('btn-reset').click();
+					bigSelect.value = "";
+					bigSelect.dispatchEvent(new Event('change'));
+					smallSelect.value = targetCode;
+					document.getElementById('btn-search').click();
+				}
+			});
+			
+			// 關閉 Modal 時還原預設 z-index
+			const resetModalZIndex = () => {
+				const cardModalEl = document.getElementById('card-modal');
+				if (cardModalEl) cardModalEl.style.zIndex = '';
+			};
+
+			document.getElementById('modal-close')?.addEventListener('click', resetModalZIndex);
+			document.getElementById('card-modal')?.addEventListener('click', (e) => {
+				if (e.target.id === 'card-modal') resetModalZIndex();
+			});
 		});
 
 
