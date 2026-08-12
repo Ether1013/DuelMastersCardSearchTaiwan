@@ -621,7 +621,17 @@ def get_card_set_list(card_name: str):
 
     return {"tw": tw_sets, "non_tw": non_tw_sets, "net": net_sets}
 
-
+def get_country_user_counts() -> Dict[str, int]:
+    """統計各國籍目前擁有多少位不重複使用者 (人數)"""
+    counts = defaultdict(int)
+    for user_id in ip_to_user_id.values():
+        # user_id 格式為 "TW-A", "JP-B"，以 "-" 切割即可取得國籍
+        country = user_id.split("-")[0] if "-" in user_id else "Unknown"
+        counts[country] += 1
+    # 依人數降冪排序
+    return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
+    
+    
 # ----------------------------------------------------
 # 路由區
 # ----------------------------------------------------
@@ -1005,8 +1015,8 @@ async def track_feature(request: Request):
 
         if feature_name:
             feature_counter[feature_name] += 1
-            country_counter[country] += 1       # 👈 新增：全域國籍次數累加
-            user_counter[user_id] += 1         # 👈 新增：全域使用者次數累加
+            country_counter[country] += 1
+            user_counter[user_id] += 1
             now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
 
             entry = {
@@ -1022,13 +1032,12 @@ async def track_feature(request: Request):
             # 廣播給所有連接在 WebSocket Console 的用戶
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
             sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
-            sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
             await console_manager.broadcast({
                 "total_events": sum(sorted_stats.values()),
                 "stats": sorted_stats,
-                "country_stats": sorted_country_stats,  # 👈 新增：全域國籍統計
-                "user_stats": sorted_user_stats,        # 👈 新增：全域使用者統計
+                "country_stats": sorted_country_stats,
+                "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
                 "recent_50_details": list(action_details_log)
             })
 
@@ -1080,11 +1089,11 @@ async def get_feature_stats(
     result = {
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
-        "country_stats": sorted_country_stats,  # 👈 新增全域資料
-        "user_stats": sorted_user_stats,        # 👈 新增全域資料
+        "country_stats": sorted_country_stats,
+        "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
         "recent_50_details": list(action_details_log)
     }
-    return PrettyJSONResponse(content=result)  # 👈 請補上這一行
+    return PrettyJSONResponse(content=result)
 
 @app.websocket("/ws/console")
 async def websocket_console(
@@ -1113,8 +1122,8 @@ async def websocket_console(
     await websocket.send_json({
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
-        "country_stats": sorted_country_stats,  # 👈 新增全域資料
-        "user_stats": sorted_user_stats,        # 👈 新增全域資料
+        "country_stats": sorted_country_stats,
+        "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
         "recent_50_details": list(action_details_log)
     })
 
@@ -1352,6 +1361,11 @@ async def delete_user_logs(
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
+    
+    # 刪除 ip_to_user_id 中對應此 user_id 的項目
+    to_delete_ips = [ip for ip, u_id in ip_to_user_id.items() if u_id == user_id]
+    for ip in to_delete_ips:
+        del ip_to_user_id[ip]
 
     await console_manager.broadcast({
         "total_events": sum(sorted_stats.values()),

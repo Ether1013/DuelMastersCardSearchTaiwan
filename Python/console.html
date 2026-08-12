@@ -29,25 +29,31 @@
                 <h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
             </div>
             
-            <div class="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto justify-start sm:justify-end">
-                <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
-                    <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-                    <span>Connecting...</span>
+            <!-- 按鈕控制區域 -->
+            <div class="flex flex-col gap-2 w-full sm:w-auto items-end">
+                <!-- 第一行：Connected 狀態標籤 (自己一行) -->
+                <div class="w-full flex justify-start sm:justify-end">
+                    <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                        <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                        <span>Connecting...</span>
+                    </div>
                 </div>
                 
-                <button onclick="fetchInitialData()" class="...">
-					<i class="fa-solid fa-rotate"></i> Refresh
-				</button>
+                <!-- 第二行：另外三個按鍵 (放在下一行) -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+                    <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
 
-				<!-- 💡 新增 Reset 重置按鈕 (僅 Admin 可見) -->
-				<button id="resetStatsBtn" onclick="openResetModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs rounded-lg transition border border-rose-500/30 flex items-center gap-1.5 shadow-lg">
-					<i class="fa-solid fa-trash-arrow-up"></i> Reset
-				</button>
+                    <button id="resetStatsBtn" onclick="openResetModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs rounded-lg transition border border-rose-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-trash-arrow-up"></i> Reset
+                    </button>
 
-				<button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="...">
-					<i class="fa-solid fa-key"></i> 產生Token
-				</button>
-			</div>
+                    <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-key"></i> 產生Token
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -108,10 +114,10 @@
                 </div>
             </div>
 
-            <!-- 圓餅圖 2：使用者分佈 (Users) -->
+            <!-- 圓餅圖 2：各國使用者人數分佈 -->
             <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-user-astronaut text-purple-400"></i> User Distribution (Total)
+                    <i class="fa-solid fa-users text-purple-400"></i> Users per Country (Total)
                 </h2>
                 <div class="h-64 flex justify-center items-center">
                     <canvas id="userChart"></canvas>
@@ -246,6 +252,7 @@
             });
 
             // 👈 新增：使用者圓餅圖初始化
+            // 使用者人數圓餅圖初始化
             const ctxUser = document.getElementById('userChart').getContext('2d');
             userChart = new Chart(ctxUser, {
                 type: 'doughnut',
@@ -257,7 +264,7 @@
                         datalabels: { 
                             color: '#ffffff', 
                             font: { weight: 'bold', size: 11 }, 
-                            formatter: (value) => value > 0 ? value + ' 次' : '', 
+                            formatter: (value) => value > 0 ? value + ' 人' : '',  // 👈 單位改為 "人"
                             anchor: 'center', 
                             align: 'center' 
                         }
@@ -267,38 +274,64 @@
         }
 
         function updateDashboard(data) {
-            document.getElementById('totalEvents').innerText = data.total_events || 0;
-            document.getElementById('activeFeatures').innerText = Object.keys(data.stats || {}).length;
-            document.getElementById('activeUsers').innerText = Object.keys(data.user_stats || {}).length; // 👈 更新為全域 Users 數量
+            try {
+                // 1. 取得 DOM 頂部 Metrics 卡片元素
+                const totalElem = document.getElementById('totalEvents');
+                const featElem = document.getElementById('activeFeatures');
+                const userElem = document.getElementById('activeUsers');
 
-            featureChart.data.labels = Object.keys(data.stats || {});
-            featureChart.data.datasets[0].data = Object.values(data.stats || {});
-            featureChart.update();
+                // 2. 取得數據源
+                const featureStats = data.stats || {};
+                const countryStats = data.country_stats || {};
+                const countryUserCounts = data.country_user_counts || {};
 
-            // 👈 國籍圓餅圖更新為全域 country_stats
-            countryChart.data.labels = Object.keys(data.country_stats || {});
-            countryChart.data.datasets[0].data = Object.values(data.country_stats || {});
-            countryChart.update();
+                // 計算全站總不重複使用者人數（各國人數累加）
+                const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
 
-            // 👈 新增：使用者圓餅圖更新為全域 user_stats
-            userChart.data.labels = Object.keys(data.user_stats || {});
-            userChart.data.datasets[0].data = Object.values(data.user_stats || {});
-            userChart.update();
+                // 3. 更新頂部 Metrics 卡片數值
+                if (totalElem) totalElem.innerText = data.total_events || 0;
+                if (featElem) featElem.innerText = Object.keys(featureStats).length;
+                if (userElem) userElem.innerText = totalUsersCount;
 
-            // 更新 Log 資料庫
-            currentLogs = data.recent_50_details || [];
-            
-            // 找出不在 knownUsers 中的新使用者，將他們推到前面
-            let newUsers = [];
-            currentLogs.forEach(log => {
-                let u = log.user || log.country || 'Unknown';
-                if (!knownUsers.includes(u) && !newUsers.includes(u)) {
-                    newUsers.push(u);
+                // 4. 更新長條圖：Feature Trigger Count (操作次數)
+                if (featureChart) {
+                    featureChart.data.labels = Object.keys(featureStats);
+                    featureChart.data.datasets[0].data = Object.values(featureStats);
+                    featureChart.update();
                 }
-            });
-            knownUsers = [...newUsers, ...knownUsers];
 
-            renderLogsTable();
+                // 5. 更新第一個圓餅圖：Country Distribution (全域國籍操作次數，單位：次)
+                if (countryChart) {
+                    countryChart.data.labels = Object.keys(countryStats);
+                    countryChart.data.datasets[0].data = Object.values(countryStats);
+                    countryChart.update();
+                }
+
+                // 6. 更新第二個圓餅圖：Users per Country (各國不重複使用者人數，單位：人)
+                if (userChart) {
+                    userChart.data.labels = Object.keys(countryUserCounts);
+                    userChart.data.datasets[0].data = Object.values(countryUserCounts);
+                    userChart.update();
+                }
+
+                // 7. 更新 Recent 50 Details 資料庫與 Known Users 清單
+                currentLogs = data.recent_50_details || [];
+                
+                let newUsers = [];
+                currentLogs.forEach(log => {
+                    let u = log.user || log.country || 'Unknown';
+                    if (!knownUsers.includes(u) && !newUsers.includes(u)) {
+                        newUsers.push(u);
+                    }
+                });
+                knownUsers = [...newUsers, ...knownUsers];
+
+                // 8. 重新繪製 Log 表格
+                renderLogsTable();
+
+            } catch (err) {
+                console.error("Dashboard render error:", err);
+            }
         }
 
         function renderLogsTable() {
