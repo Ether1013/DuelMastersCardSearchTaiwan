@@ -7020,13 +7020,23 @@
 				}
 			});
 
-			const createExtBtn = (label, url, extraClass = "") => {
+			const createExtBtn = (label, url, extraClass = "", siteName = "") => {
 				const a = document.createElement('a');
 				a.className = `ext-link-btn ${extraClass}`;
 				a.href = url;
 				a.target = '_blank';
 				a.rel = 'noopener noreferrer';
 				a.innerHTML = `${label} <span style="font-size:9px; opacity:0.7;">↗</span>`;
+
+				// 💡 新增：點擊外部連結時觸發側錄
+				a.onclick = () => {
+					if (typeof trackFeature === 'function') {
+						trackFeature('開啟外部連結', {
+							card_name: card.name || '未命名卡牌',
+							site: siteName || label
+						});
+					}
+				};
 				return a;
 			};
 
@@ -7037,10 +7047,10 @@
 
 			const shopGrid = document.createElement('div');
 			shopGrid.className = 'ext-btn-grid';
-			shopGrid.appendChild(createExtBtn('📈 Torekakaku', urlTorekakaku, 'shop-btn'));
-			shopGrid.appendChild(createExtBtn('🛍️ Card Rush', urlCardRush, 'shop-btn'));
-			shopGrid.appendChild(createExtBtn('📦 遊遊亭', urlYuyutei, 'shop-btn'));
-			shopGrid.appendChild(createExtBtn('🛒 露天拍賣', urlRuten, 'shop-btn'));
+			shopGrid.appendChild(createExtBtn('📈 Torekakaku', urlTorekakaku, 'shop-btn', 'torekakaku'));
+			shopGrid.appendChild(createExtBtn('🛍️ Card Rush', urlCardRush, 'shop-btn', 'cardrush'));
+			shopGrid.appendChild(createExtBtn('📦 遊遊亭', urlYuyutei, 'shop-btn', 'yuyutei'));
+			shopGrid.appendChild(createExtBtn('🛒 露天拍賣', urlRuten, 'shop-btn', 'ruten'));
 			extBody.appendChild(shopGrid);
 
 			const wikiGroupTitle = document.createElement('div');
@@ -7050,8 +7060,8 @@
 
 			const wikiGrid = document.createElement('div');
 			wikiGrid.className = 'ext-btn-grid';
-			wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn'));
-			wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn'));
+			wikiGrid.appendChild(createExtBtn('📖 官方卡庫', urlOfficial, 'wiki-btn', 'official'));
+			wikiGrid.appendChild(createExtBtn('❓ 官方 Q&A', urlOfficialQA, 'wiki-btn', 'official qa'));
 
 			// 💡 [日文 Wiki] 按鈕：經後端預先檢查，頁面存在即直連，失敗（404/錯誤頁）則自動退回 Google 搜尋
 			const jpWikiBtn = document.createElement('button');
@@ -7061,6 +7071,14 @@
 			jpWikiBtn.onclick = async (e) => {
 				e.preventDefault();
 				if (!rawCardName) return;
+				
+				// 💡 新增：日文 Wiki 側錄
+				if (typeof trackFeature === 'function') {
+					trackFeature('開啟外部連結', {
+						card_name: card.name || '未命名卡牌',
+						site: 'jp wiki'
+					});
+				}
 				
 				// 1. 基本清理
 				let cleanName = cleanCardName(rawCardName);
@@ -7111,6 +7129,14 @@
 				e.preventDefault();
 				if (!rawCardName) return;
 
+				// 💡 新增：英文 Wiki 側錄
+				if (typeof trackFeature === 'function') {
+					trackFeature('開啟外部連結', {
+						card_name: card.name || '未命名卡牌',
+						site: 'en wiki'
+					});
+				}
+				
 				const targetJpName = rawCardName.trim();
 				const cleanName = cleanCardName(targetJpName);
 
