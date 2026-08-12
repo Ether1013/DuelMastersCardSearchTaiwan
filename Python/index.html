@@ -2553,19 +2553,25 @@
 		</div>
 	</div>
 	
-	<!-- 系統公告 Modal (內容比對機制) -->
+	<!-- 系統公告 / 通用確認對話框 Modal -->
 	<div class="modal-overlay" id="system-notice-modal">
 		<div class="modal-card" style="max-width: 450px;">
 			<div class="modal-header" style="background: #0284c7; color: white;">
-				<div class="modal-title">📢 系統提示</div>
+				<div class="modal-title" id="system-notice-title">📢 系統提示</div>
 			</div>
 			<div class="modal-body" style="padding: 16px; gap: 12px;">
 				<!-- 公告內容，由 JS 動態填入 -->
 				<div id="system-notice-content" style="font-size: 14px; line-height: 1.6; color: #333;"></div>
 				
-				<button type="button" id="btn-notice-understand" style="width: 100%; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px;">
-					我知道了
-				</button>
+				<!-- 雙按鈕容器 (供 confirm 對話框使用) -->
+				<div id="system-notice-actions" style="display: flex; gap: 8px; margin-top: 10px;">
+					<button type="button" id="btn-notice-cancel" style="flex: 1; padding: 10px; background: #94a3b8; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; display: none;">
+						不包含
+					</button>
+					<button type="button" id="btn-notice-understand" style="flex: 1; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">
+						我知道了
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -2864,6 +2870,8 @@
 		let rawSetlist = {}; // 系列快取變數
 		// 全域快取當前過濾後的原始結果
 		let currentFilterResults = [];
+		let currentExactResults = []; // 💡 新增：完全比對結果快取
+		let currentFuzzyResults = []; // 💡 新增：模糊建議結果快取
 		const specialIcons = ["[白金殿堂]", "⌂", "✚", "✡"];
 		// ==========================================
 		// 1. LocalStorage 自訂牌組管理（含 7 天未選用自動清理機制）
@@ -4912,12 +4920,15 @@
         // =========================================
 		// 搜尋過濾核心演算法 (整合後)
 		// =========================================
-		btnSearch.addEventListener('click', (e) => { // 👈 加上參數 e
+		// =========================================
+		// 搜尋過濾核心演算法 (整合後)
+		// =========================================
+		btnSearch.addEventListener('click', (e) => {
 		
 			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.classList.contains('open');
 			const isAdvMode = document.body.classList.contains('advanced-mode');
 			
-			// 💡 取得當前 UI 過濾條件作為 detail 側錄
+			// 取得當前 UI 過濾條件作為 detail 側錄
 			const filterConfig = getFilterConfigFromUI();
 			const activeFiltersDetail = {
 				...getCivAndTypeFiltersDetail(),
@@ -4957,17 +4968,45 @@
 				}
 			}
 
-			// 1. 執行第一次正常條件過濾（使用者輸入卡名時，已先進行過一次漢字轉換）
-			let filterResults = globalCardData.filter(card => {
+			// 💡 1. 條件轉化預處理 (Fuzzy Expansion)
+			function expandFuzzyAbilityText(text) {
+				// 若為空或已經包含 +-，則不進行自動補全
+				if (!text || /[+-]/.test(text)) return null;
+				let newText = text
+					.replace(/(\d+)以上/g, '$1-以上')
+					.replace(/(\d+)以下/g, '$1+以下')
+					.replace(/(不能超過|不得超過|不可超過|不可以超過)(\d+)/g, '$1$2+')
+					// 💡 追加：文明+數字自動補全為 "文明+數字-" (例如：光水火5 -> 光水火5-)
+					// 使用 (?![+\-以]) 確保後面沒有已經接上 +- 或以上/以下等字眼
+					.replace(/([光水闇暗火自然自無ゼロ]+)(\d+)(?![+\-以])/g, '$1$2-');
+				
+				return (newText !== text) ? newText : null;
+			}
+
+			const fuzzyAbilityText = expandFuzzyAbilityText(filterConfig.abilityText);
+
+			// 💡 2. 執行第一次正常條件過濾 (完全比對)
+			let exactResults = globalCardData.filter(card => {
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
+
+			// 💡 3. 執行模糊比對過濾 (數字模糊比對建議)
+			let fuzzyResults = [];
+			if (fuzzyAbilityText) {
+				const fuzzyConfig = { ...filterConfig, abilityText: fuzzyAbilityText };
+				fuzzyResults = globalCardData.filter(card => {
+					// 必須符合模糊條件，且尚未存在於完全比對區
+					if (exactResults.some(e => e.name === card.name)) return false;
+					return checkCardMatchesFilters(card, fuzzyConfig, targetRealNameFromNickname);
+				});
+			}
 			
-			// 2. 【第二次備援查詢】：若第一次查無結果且有輸入卡名，啟動全方位歸一化比對
-			if (filterResults.length === 0 && filterConfig.cardName) {
+			// 💡 4. 【備援查詢】：若精確與模糊都無結果且有輸入卡名，啟動全方位歸一化比對
+			if (exactResults.length === 0 && fuzzyResults.length === 0 && filterConfig.cardName) {
 				const userNormalized = normalizeCardNameFull(filterConfig.cardName);
 
 				if (userNormalized) {
-					filterResults = globalCardData.filter(card => {
+					exactResults = globalCardData.filter(card => {
 						// 檢查預先生成好的 normalizedName 是否包含使用者歸一化後的搜尋詞
 						const isNameMatch = card.normalizedName && card.normalizedName.includes(userNormalized);
 						
@@ -4978,16 +5017,20 @@
 						return checkCardMatchesFilters(card, dummyConfig, targetRealNameFromNickname);
 					});
 
-					if (filterResults.length > 0 && typeof showToast === 'function') {
+					if (exactResults.length > 0 && typeof showToast === 'function') {
 						showToast(`已自動校正漢字、符號大小寫與空白進行備援搜尋`);
 					}
 				}
 			}
 
-			// 3. 將過濾出來的原始資料存入全域快取
-			currentFilterResults = filterResults;
+			// 💡 5. 將過濾出來的資料存入全域快取，分離完全比對與建議區
+			currentExactResults = exactResults;
+			currentFuzzyResults = fuzzyResults;
+			
+			// 維持 currentFilterResults 供匯出與其他外部功能相容
+			currentFilterResults = [...exactResults, ...fuzzyResults];
 
-			// 4. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
+			// 💡 6. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
 			renderCurrentResultsWithSort();
 		});
 		
@@ -5008,8 +5051,9 @@
 				rightPanelPage3.innerHTML = '<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>';
 			}
 
-			// 1. 取得排序後的資料列表
-			const sortedResults = getSortedResults(currentFilterResults);
+			// 💡 1. 取得排序後的資料列表 (完全比對區 與 模糊建議區 分別獨立排序)
+			const sortedExact = getSortedResults(currentExactResults);
+			const sortedFuzzy = getSortedResults(currentFuzzyResults);
 
 			// 2. 取得當前 UI 的商品（Setcode）狀態，以便處理商品卡號/組牌張數與多版本底線標記
 			const filterConfig = getFilterConfigFromUI();
@@ -5024,7 +5068,7 @@
 				isDeckSet = (currentSetObj.isdeck === true);
 			}
 
-			// 💡 判斷是否「過濾條件只有商品」
+			// 判斷是否「過濾條件只有商品」
 			const hasOtherFilters = Boolean(
 				filterConfig.cardName ||
 				filterConfig.twinpect !== 'all' ||
@@ -5037,25 +5081,22 @@
 				(filterConfig.checkedCardTypes && filterConfig.checkedCardTypes.length > 0 && !filterConfig.isAllCardTypesChecked)
 			);
 
-			// 💡 動態控制與渲染抽屜工具列中的 [✏️ 修改自訂卡表] 按鈕
+			// 動態控制與渲染抽屜工具列中的 [✏️ 修改自訂卡表] 按鈕
 			document.querySelectorAll('#drawer-tab2 .drawer-row, #drawer-tab3 .drawer-row').forEach(row => {
 				const label = row.querySelector('label');
 				if (label && label.innerText.includes('自訂')) {
-					// 取得按鈕專屬的 group 容器
 					const btnGroup = row.querySelector('.drawer-btn-group') || row;
 					let btnEdit = btnGroup.querySelector('.btn-edit-deck-action');
 					
-					// 條件：過濾條件只有商品 + 為 NET-900 起的自訂牌組
 					if (isCustomNetDeck && !hasOtherFilters) {
 						if (!btnEdit) {
 							btnEdit = document.createElement('button');
 							btnEdit.type = 'button';
 							btnEdit.className = 'btn-drawer-action btn-edit-deck-action';
-							btnEdit.style.backgroundColor = '#eab308'; // 黃色醒目按鈕
+							btnEdit.style.backgroundColor = '#eab308';
 							btnEdit.style.color = '#ffffff';
 							btnEdit.innerText = '✏️ 修改自訂卡表';
 							
-							// 插入在 [手動匯入卡表] 按鈕之後
 							const btnImport = btnGroup.querySelector('.btn-open-deck-import-action');
 							if (btnImport) {
 								btnImport.after(btnEdit);
@@ -5064,7 +5105,6 @@
 							}
 						}
 						
-						// 綁定修改點擊事件
 						btnEdit.onclick = () => {
 							closeAllDrawers();
 							openDeckImportForEdit(selectedSetKey);
@@ -5076,8 +5116,8 @@
 				}
 			});
 
-			// 若無搜尋結果，顯示查無資料
-			if (!currentFilterResults || currentFilterResults.length === 0) {
+			// 若精確區與建議區皆無結果，顯示查無資料
+			if (sortedExact.length === 0 && sortedFuzzy.length === 0) {
 				listContainerPage2.innerHTML = '<div class="empty-state">查無資料</div>';
 				listContainerPage3.innerHTML = '<div class="empty-state">查無資料</div>';
 				return;
@@ -5096,7 +5136,7 @@
 				
 				const cleanName = cleanCardName(card.name);
 				let matchedItem = null;
-				let prefixHtml = ''; // 存放 ID 或 張數 的 HTML
+				let prefixHtml = '';
 
 				if (currentSetObj) {
 					const cardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
@@ -5136,30 +5176,45 @@
 				return { itemDiv, combinedCiv, matchedItem };
 			}
 
-			// 4. 迴圈渲染排序後的卡牌項目並綁定點擊事件
-			sortedResults.forEach(card => {
-				// 生成 Page 2 的 Node 並綁定 Modal 彈窗事件
-				const res2 = createCardListItem(card);
-				res2.itemDiv.addEventListener('click', () => {
-					window.isOpenedFromCart = false;
-					recordCardHistory(card.name); // 寫入歷史紀錄
-					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
-					res2.itemDiv.classList.add('selected');
-					openCardModal(card, res2.combinedCiv, res2.matchedItem);
-				});
+			// 💡 4. 共用的卡牌列表渲染邏輯，支援插入分隔線
+			function renderCardList(cards, isFuzzyZone) {
+				if (isFuzzyZone && cards.length > 0) {
+					// 插入中間分隔 UI
+					const dividerDiv = document.createElement('div');
+					dividerDiv.style.cssText = 'width: 100%; text-align: center; color: #64748b; font-size: 14px; font-weight: bold; padding: 12px 0; border-top: 2px dashed #cbd5e1; border-bottom: 2px dashed #cbd5e1; margin: 10px 0; background: #f8fafc; grid-column: 1 / -1; box-sizing: border-box;';
+					dividerDiv.innerText = '--- 以下為數字模糊比對建議區 ---';
+					
+					listContainerPage2.appendChild(dividerDiv);
+					listContainerPage3.appendChild(dividerDiv.cloneNode(true));
+				}
 
-				listContainerPage2.appendChild(res2.itemDiv);
+				cards.forEach(card => {
+					// 生成 Page 2 的 Node
+					const res2 = createCardListItem(card);
+					res2.itemDiv.addEventListener('click', () => {
+						window.isOpenedFromCart = false;
+						recordCardHistory(card.name);
+						document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
+						res2.itemDiv.classList.add('selected');
+						openCardModal(card, res2.combinedCiv, res2.matchedItem);
+					});
+					listContainerPage2.appendChild(res2.itemDiv);
 
-				// 生成 Page 3 的 Node 並綁定右側 Split Detail 渲染事件
-				const res3 = createCardListItem(card);
-				res3.itemDiv.addEventListener('click', () => {
-					recordCardHistory(card.name); // 寫入歷史紀錄
-					document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
-					res3.itemDiv.classList.add('selected');
-					renderSplitDetail(card, res3.combinedCiv, res3.matchedItem);
+					// 生成 Page 3 的 Node
+					const res3 = createCardListItem(card);
+					res3.itemDiv.addEventListener('click', () => {
+						recordCardHistory(card.name);
+						document.querySelectorAll('.card-list-item').forEach(el => el.classList.remove('selected'));
+						res3.itemDiv.classList.add('selected');
+						renderSplitDetail(card, res3.combinedCiv, res3.matchedItem);
+					});
+					listContainerPage3.appendChild(res3.itemDiv);
 				});
-				listContainerPage3.appendChild(res3.itemDiv);
-			});
+			}
+
+			// 💡 依序渲染 完全比對區 與 模糊建議區
+			renderCardList(sortedExact, false);
+			renderCardList(sortedFuzzy, true);
 		}
 		
 		// 💡 收合所有功能抽屜的輔助函式
@@ -5213,6 +5268,8 @@
 
 			// 將過濾結果寫入全域快取並重新繪製列表
 			currentFilterResults = historyResults;
+			currentExactResults = currentFilterResults;
+			currentFuzzyResults = [];
 			renderCurrentResultsWithSort();
 		}
 
@@ -5951,34 +6008,57 @@
 			}
 
 			// 🔽 替換這裡：字串串聯數值比較 (支援 "コスト5-", "2+隻", "攻擊力2000+", 或純數字 "7")
-			const mixMatch = cond.match(/^(.*?)(\d+)([+-])?(.*?)$/);
-			
-			// 觸發條件：必須有 +- 號才啟用數值邏輯，否則必須是純數字(如 "7")
-			// (如果只是純粹的 "コスト5"，保留給最後的字串包含比對會更精準)
-			if (mixMatch && (mixMatch[3] || (!mixMatch[1] && !mixMatch[4]))) {
-				const prefix = mixMatch[1];
-				const targetNum = Number(mixMatch[2]);
-				const op = mixMatch[3];
-				const suffix = mixMatch[4];
+			let prefix = "", targetNum = null, op = "", suffix = "";
+			let isMixMatch = false;
+
+			// 優先尋找帶有 +- 號的數字，這樣當字串有多個數字時（如 "破壞1隻攻擊力5000+"），能精準鎖定目標數字
+			const opMatch = cond.match(/^(.*?)(\d+)([+-])(.*)$/);
+			if (opMatch) {
+				prefix = opMatch[1];
+				targetNum = Number(opMatch[2]);
+				op = opMatch[3];
+				suffix = opMatch[4];
+				isMixMatch = true;
+			} else {
+				// 若沒有 +- 號，判斷是否為純數字 (如 "7")
+				const pureNumMatch = cond.match(/^(\d+)$/);
+				if (pureNumMatch) {
+					targetNum = Number(pureNumMatch[1]);
+					isMixMatch = true;
+				}
+			}
+
+			if (isMixMatch) {
 				const isPowerType = targetNum >= 500;
+				const escapedPrefix = prefix ? escapeRegExp(prefix) : '';
+				const escapedSuffix = suffix ? escapeRegExp(suffix) : '';
+				const pattern = new RegExp(`${escapedPrefix}(\\d+)${escapedSuffix}`, 'g');
 
 				return spList.some(sp => {
-					// 若有串聯前綴或後綴字串，同一條能力內必須包含該字串
-					if (prefix && !sp.includes(prefix)) return false;
-					if (suffix && !sp.includes(suffix)) return false;
+					let match;
+					let foundMatch = false;
+					pattern.lastIndex = 0;
 
-					const cleanedSp = sp.replace(/1[個張隻枚個]/g, ' ');
-					const numbersInSp = (cleanedSp.match(/\d+/g) || []).map(Number);
+					while ((match = pattern.exec(sp)) !== null) {
+						// 這裡抽出來的 match[1] 就是卡牌敘述裡，夾在 prefix 與 suffix 中間的那個數字
+						const spNum = Number(match[1]);
+						
+						// 防呆：攻擊力與一般數值不互相干擾
+						if (isPowerType && spNum < 500) continue;
+						if (!isPowerType && spNum >= 500) continue;
 
-					return numbersInSp.some(spNum => {
-                        // 防呆：攻擊力與一般數值不互相干擾
-						if (isPowerType && spNum < 500) return false;
-						if (!isPowerType && spNum >= 500) return false;
-
-						if (op === '+') return spNum >= targetNum;
-						if (op === '-') return spNum <= targetNum;
-						return spNum === targetNum;
-					});
+						if (op === '+') {
+							if (spNum >= targetNum) foundMatch = true;
+						} else if (op === '-') {
+							if (spNum <= targetNum) foundMatch = true;
+						} else {
+							if (spNum === targetNum) foundMatch = true;
+						}
+						
+						if (foundMatch) break;
+					}
+					
+					return foundMatch;
 				});
 			}
 
@@ -7016,6 +7096,8 @@
 							currentFilterResults = globalCardData.filter(c => {
 								return checkCardMatchesFilters(c, filterConfig, null);
 							});
+							currentExactResults = currentFilterResults;
+							currentFuzzyResults = [];
 
 							// 4. 重新渲染當前視圖的卡牌列表 (Page 2 或 Page 3)
 							renderCurrentResultsWithSort();
@@ -7327,6 +7409,51 @@
             toast.style.opacity = '1';
             setTimeout(() => { toast.style.opacity = '0'; }, 2000);
         }
+		
+		// 通用式 Modal Confirm 對話框 (套用既有 #system-notice-modal)
+		function showNoticeModalConfirm({ title = "📢 系統提示", message = "", confirmText = "確定", cancelText = "取消" }) {
+			return new Promise((resolve) => {
+				const modal = document.getElementById('system-notice-modal');
+				const titleEl = document.getElementById('system-notice-title');
+				const contentEl = document.getElementById('system-notice-content');
+				const btnConfirm = document.getElementById('btn-notice-understand');
+				const btnCancel = document.getElementById('btn-notice-cancel');
+
+				if (!modal || !contentEl || !btnConfirm || !btnCancel) {
+					resolve(false);
+					return;
+				}
+
+				// 填入標題與內容
+				if (titleEl) titleEl.innerText = title;
+				contentEl.innerHTML = message;
+
+				// 設定按鈕文字與顯示狀態
+				btnConfirm.innerText = confirmText;
+				btnCancel.innerText = cancelText;
+				btnCancel.style.display = 'block'; // 顯示取消按鈕
+
+				// 清除舊事件綁定，避免重複處發
+				const newConfirm = btnConfirm.cloneNode(true);
+				const newCancel = btnCancel.cloneNode(true);
+				btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+				btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+				// 綁定「確定」點擊
+				newConfirm.addEventListener('click', () => {
+					modal.classList.remove('active');
+					resolve(true); // 使用者按確定 (true)
+				});
+
+				// 綁定「取消」點擊
+				newCancel.addEventListener('click', () => {
+					modal.classList.remove('active');
+					resolve(false); // 使用者按取消 (false)
+				});
+
+				modal.classList.add('active');
+			});
+		}
 		
 		// 💡 自動為 id 補上 DM 前綴的 Helper 函式
 		function formatDmId(rawId) {
@@ -7857,6 +7984,8 @@
 			currentFilterResults = globalCardData.filter(c => {
 				return checkCardMatchesFilters(c, filterConfig, null);
 			});
+			currentExactResults = currentFilterResults;
+			currentFuzzyResults = [];
 
 			// 4. 重新繪製列表（此時頁面在背景完成渲染，不會有二次刷新閃爍）
 			renderCurrentResultsWithSort();
@@ -8949,6 +9078,8 @@
 
 			// 將最終結果快取至全域並切換渲染列表
 			currentFilterResults = finalResults.map(res => res.cardData);
+			currentExactResults = currentFilterResults;
+			currentFuzzyResults = [];
 			navigateToResultPage();
 			renderCurrentResultsWithSort();
 
@@ -9179,6 +9310,8 @@
 
 			// 6. 重置全域結果快取與畫面清空
 			currentFilterResults = [];
+			currentExactResults = [];
+			currentFuzzyResults = [];
 
 			// 清空 Page 2 列表視圖
 			const listContainerPage2 = document.getElementById('list-container');
