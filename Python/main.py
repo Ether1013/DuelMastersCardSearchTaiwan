@@ -1,3 +1,4 @@
+import hashlib
 import os
 import json
 import gzip  # 👈 新增這一行
@@ -281,20 +282,27 @@ async def tag_debounce_timer():
         print(f"[Tag Debounce Error]: {e}")
 
 def get_user_id_by_ip(ip: str, country: str) -> str:
-    if ip not in ip_to_user_id:
+    # 1. 將 IP 進行 SHA256 雜湊處理（隱碼化，記憶體不留明碼 IP）
+    ip_hash = hashlib.sha256(ip.encode('utf-8')).hexdigest()[:16]
+
+    # 2. 若該雜湊 IP 尚未紀錄，則配發新流水號
+    if ip_hash not in ip_to_user_id:
         count = ip_counter_by_country[country]
         ip_counter_by_country[country] += 1
-        
-        # 將數字轉為 A, B, C ... Z, AA, AB 編碼
+
+        # 將計數轉為小寫字母 a, b, c ... z, aa, ab ...
         letters = ""
         n = count
         while True:
-            letters = chr(65 + (n % 26)) + letters
+            letters = chr(97 + (n % 26)) + letters  # 97 為 ASCII 中的 'a'
             n = n // 26 - 1
             if n < 0:
                 break
-        ip_to_user_id[ip] = f"{country}-{letters}"
-    return ip_to_user_id[ip]
+
+        # 組合新格式：國籍 + 小寫字母 (例如: HKa, TWq)
+        ip_to_user_id[ip_hash] = f"{country}{letters}"
+
+    return ip_to_user_id[ip_hash]
     
 def trigger_tag_sync():
     """每次異動時呼叫，重置 60 秒倒數計時器"""
@@ -669,8 +677,8 @@ def get_country_user_counts() -> Dict[str, int]:
     """統計各國籍目前擁有多少位不重複使用者 (人數)"""
     counts = defaultdict(int)
     for user_id in ip_to_user_id.values():
-        # user_id 格式為 "TW-A", "JP-B"，以 "-" 切割即可取得國籍
-        country = user_id.split("-")[0] if "-" in user_id else "Unknown"
+        # user_id 格式為 "HKa", "TWq"，前 2 碼即為 ISO 國籍代碼
+        country = user_id[:2] if len(user_id) >= 2 else "Unknown"
         counts[country] += 1
     # 依人數降冪排序
     return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
@@ -1422,31 +1430,27 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
     
 @app.delete("/api/track/delete_user_logs")
 async def delete_user_logs(
-    user_id: str = Query(..., description="要刪除 Log 的使用者代稱，例如 TW-A"),
+    user_id: str = Query(..., description="要刪除 Log 的使用者代稱，例如 TWa"),
     admin: Optional[str] = Query(None)
 ):
-    # 權限驗證：僅允許 Admin 執行刪除，Token 無權呼叫
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    # 1. 局部刪除主機記憶體 action_details_log 中的該使用者紀錄
     global action_details_log
-    filtered_logs = [log for log in action_details_log if (log.get("user") or log.get("country") or "Unknown") != user_id]
+    filtered_logs = [log for log in action_details_log if log.get("user") != user_id]
     action_details_log = deque(filtered_logs, maxlen=50)
 
-    # 1.5 扣除/重置該使用者的累計計數
     if user_id in user_counter:
         del user_counter[user_id]
 
-    # 2. 重新計算統計數據並廣播給 console manager
+    # 刪除 ip_to_user_id 中對應此 user_id 的雜湊項目
+    to_delete_ips = [ip_hash for ip_hash, u_id in ip_to_user_id.items() if u_id == user_id]
+    for ip_hash in to_delete_ips:
+        del ip_to_user_id[ip_hash]
+
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
-    
-    # 刪除 ip_to_user_id 中對應此 user_id 的項目
-    to_delete_ips = [ip for ip, u_id in ip_to_user_id.items() if u_id == user_id]
-    for ip in to_delete_ips:
-        del ip_to_user_id[ip]
 
     await console_manager.broadcast({
         "total_events": sum(sorted_stats.values()),
@@ -1455,6 +1459,8 @@ async def delete_user_logs(
         "user_stats": sorted_user_stats,
         "recent_50_details": list(action_details_log)
     })
+    
+    return {"status": "success", "message": f"已刪除使用者 {user_id} 的紀錄"}
     
 @app.delete("/api/track/reset")
 async def reset_track_stats(
