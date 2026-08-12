@@ -22,13 +22,24 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen">
 
     <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-            
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
-                <h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
-            </div>
-            
+		<div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+			
+			<!-- 將標題與時間區間包在一起 -->
+			<div class="flex flex-col gap-1">
+				<div class="flex items-center gap-3">
+					<i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
+					<h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+				</div>
+				<!-- 統計區間顯示 -->
+				<div class="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-1 mt-0.5">
+					<i class="fa-regular fa-clock text-indigo-400"></i>
+					<span>統計區間：</span>
+					<span id="startTimeStr" class="text-gray-200">----/--/-- --:--:--</span>
+					<span>~</span>
+					<span id="currentTimeStr" class="text-gray-200">----/--/-- --:--:--</span>
+					<span class="text-indigo-400 font-semibold ml-1">（共計 <span id="durationStr">0 小時 0 分</span>）</span>
+				</div>
+			</div>
             <!-- 按鈕控制區域 -->
             <div class="flex flex-col gap-2 w-full sm:w-auto items-end">
                 <!-- 第一行：Connected 狀態標籤 (自己一行) -->
@@ -222,11 +233,42 @@
         let knownUsers = []; // 維護使用者的排序順序
         let sortMode = 'default';
 		let pendingDeleteUser = null;
+		let startTimeObj = null;
+		let timerInterval = null;
 
         function changeSortMode() {
             sortMode = document.getElementById('sortMode').value;
             renderLogsTable();
         }
+		
+		// 格式化為 YYYY/MM/DD HH:mm:ss (24小時制)
+		function formatDateTime(d) {
+			const pad = (n) => String(n).padStart(2, '0');
+			return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+		}
+
+		// 每秒刷新「現在時間」與「總時長」
+		function updateTimeAndDuration() {
+			const now = new Date();
+			document.getElementById('currentTimeStr').innerText = formatDateTime(now);
+
+			if (startTimeObj) {
+				const diffMs = Math.max(0, now - startTimeObj);
+				const totalMinutes = Math.floor(diffMs / (1000 * 60));
+				const hours = Math.floor(totalMinutes / 60);
+				const mins = totalMinutes % 60;
+
+				document.getElementById('durationStr').innerText = `${hours} 小時 ${mins} 分`;
+			}
+		}
+
+		// 啟動 1 秒 Timer (只初始化一次)
+		function initUptimeTimer() {
+			if (!timerInterval) {
+				updateTimeAndDuration();
+				timerInterval = setInterval(updateTimeAndDuration, 1000);
+			}
+		}
 
         function initCharts() {
             const ctxFeature = document.getElementById('featureChart').getContext('2d');
@@ -280,6 +322,14 @@
 
         function updateDashboard(data) {
             try {
+			
+				// 更新統計開始時間
+				if (data.start_time) {
+					startTimeObj = new Date(data.start_time);
+					document.getElementById('startTimeStr').innerText = formatDateTime(startTimeObj);
+					updateTimeAndDuration(); // 立即計算一次
+				}
+				
                 // 1. 取得 DOM 頂部 Metrics 卡片元素
                 const totalElem = document.getElementById('totalEvents');
                 const featElem = document.getElementById('activeFeatures');
@@ -614,6 +664,7 @@
 			initCharts();
 			fetchInitialData();
 			initWebSocket();
+			initUptimeTimer(); // 👈 啟動每秒定時器
 		});
     </script>
 </body>

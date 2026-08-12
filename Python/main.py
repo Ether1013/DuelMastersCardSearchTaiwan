@@ -55,6 +55,9 @@ CACHE_TTL_SECONDS = 7 * 86400 # 圖片快取有效期限：7 天
 proxy_cache = OrderedDict()
 SERVER_INSTANCE_ID = str(uuid.uuid4())
 TZ_UTC8 = timezone(timedelta(hours=8))
+SERVER_START_TIME = datetime.now(TZ_UTC8).isoformat()
+last_reset_time = SERVER_START_TIME  # 預設起算時間為啟動時間
+
 
 # --- 全域緩存變數區 ---
 carddata_cache = []
@@ -1103,8 +1106,9 @@ async def track_feature(request: Request):
                 "total_events": sum(sorted_stats.values()),
                 "stats": sorted_stats,
                 "country_stats": sorted_country_stats,
-                "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
-                "recent_50_details": list(action_details_log)
+                "country_user_counts": get_country_user_counts(),
+                "recent_50_details": list(action_details_log),
+                "start_time": last_reset_time  # 👈 新增
             })
 
     except Exception:
@@ -1156,8 +1160,9 @@ async def get_feature_stats(
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
         "country_stats": sorted_country_stats,
-        "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
-        "recent_50_details": list(action_details_log)
+        "country_user_counts": get_country_user_counts(),
+        "recent_50_details": list(action_details_log),
+        "start_time": last_reset_time  # 👈 新增
     }
     return PrettyJSONResponse(content=result)
 
@@ -1189,8 +1194,9 @@ async def websocket_console(
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
         "country_stats": sorted_country_stats,
-        "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
-        "recent_50_details": list(action_details_log)
+        "country_user_counts": get_country_user_counts(),
+        "recent_50_details": list(action_details_log),
+        "start_time": last_reset_time  # 👈 新增
     })
 
 # ---------------- 新增：前端網頁連入的 WebSocket 路由 ----------------
@@ -1478,28 +1484,26 @@ async def delete_user_logs(
     return {"status": "success", "message": f"已刪除使用者 {user_id} 的紀錄"}
     
 @app.delete("/api/track/reset")
-async def reset_track_stats(
-    admin: Optional[str] = Query(None)
-):
-    """管理者專用：重置主機記憶體中的所有點擊與統計數據"""
-    # 1. 權限驗證：僅允許 Admin 執行，Token 無權呼叫
+async def reset_track_stats(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    # 2. 清空所有全域計數器與佇列
-    global action_details_log
+    global action_details_log, last_reset_time
     feature_counter.clear()
     country_counter.clear()
     user_counter.clear()
     action_details_log.clear()
 
-    # 3. 重新計算並發送空的統計數據給所有連線中的 Console
+    # 👈 重置時間更新為當前時間
+    last_reset_time = datetime.now(TZ_UTC8).isoformat()
+
     await console_manager.broadcast({
         "total_events": 0,
         "stats": {},
         "country_stats": {},
         "user_stats": {},
-        "recent_50_details": []
+        "recent_50_details": [],
+        "start_time": last_reset_time  # 👈 廣播新開始時間
     })
 
     return {"status": "success", "message": "所有統計數據已重置！"}
