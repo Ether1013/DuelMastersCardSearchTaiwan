@@ -152,6 +152,7 @@ client_manager = ClientConnectionManager()
 # 用來接收 Console 廣播內容的 Model
 class BroadcastModel(BaseModel):
     message: str
+    code: str  # 👈 新增驗證碼欄位
 # -----------------------------------------------------------
 
 # --- 定義預設標籤結構 ---
@@ -1212,6 +1213,20 @@ async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(N
     
     if not payload.message:
         raise HTTPException(status_code=400, detail="廣播訊息不可為空")
+
+    # --- 新增驗證碼比對邏輯 ---
+    now_utc8 = datetime.now(TZ_UTC8)
+    
+    # 計算允許的時間格式 (考慮傳輸時可能的 1 秒時間差，比對 當前秒數 與 前1秒)
+    valid_codes = [
+        now_utc8.strftime("%Y%m%d%H%S"),
+        (now_utc8 - timedelta(seconds=1)).strftime("%Y%m%d%H%S"),
+        (now_utc8 + timedelta(seconds=1)).strftime("%Y%m%d%H%S")
+    ]
+
+    if payload.code.strip() not in valid_codes:
+        raise HTTPException(status_code=400, detail="驗證碼錯誤或已過期，請重新嘗試！")
+    # ---------------------------
 
     await client_manager.broadcast(payload.message)
     return {"status": "success", "receivers": len(client_manager.active_connections)}

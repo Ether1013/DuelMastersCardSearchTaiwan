@@ -559,26 +559,43 @@
 			}
 		}
 		
-		// 發送廣播功能
+		// 發送廣播功能 (含二次驗證碼)
 		async function sendBroadcast() {
 			const msg = prompt("📢 請輸入要廣播給全站線上使用者的訊息：\n(若不發送請按取消)");
 			if (!msg || !msg.trim()) return;
+
+			// 計算當前 UTC+8 的提示文字（方便操作者查看）
+			const now = new Date();
+			// 轉為 UTC+8 時間
+			const utc8Date = new Date(now.getTime() + (now.getTimezoneOffset() + 480) * 60000);
+			const pad = (n) => String(n).padStart(2, '0');
+			const hintCode = `${utc8Date.getFullYear()}${pad(utc8Date.getMonth() + 1)}${pad(utc8Date.getDate())}${pad(utc8Date.getHours())}${pad(utc8Date.getSeconds())}`;
+
+			const code = prompt(`🔒 為防止誤觸，請輸入動態驗證碼`);
+			if (!code || !code.trim()) {
+				alert("⚠️ 已取消廣播：未輸入驗證碼");
+				return;
+			}
 
 			try {
 				const response = await fetch(`/api/console/broadcast?admin=${encodeURIComponent(adminKey)}`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ message: msg.trim() })
+					body: JSON.stringify({ 
+						message: msg.trim(),
+						code: code.trim()
+					})
 				});
 				
+				const data = await response.json();
+
 				if (!response.ok) {
-					throw new Error('廣播發送失敗，權限不足或伺服器錯誤');
+					throw new Error(data.detail || '廣播發送失敗，權限不足或驗證碼錯誤');
 				}
 				
-				const data = await response.json();
 				alert(`✅ 廣播發送成功！共即時送達給 ${data.receivers} 位線上使用者。`);
 			} catch (err) {
-				alert(err.message);
+				alert(`❌ ${err.message}`);
 			}
 		}
 
