@@ -2491,17 +2491,18 @@
 		<div id="loading-text">資料讀取中……</div>
 	</div>
 	
-	<!-- 隱私聲明與更新日誌 Modal -->
+	<!-- 隱私聲明、更新日誌與作者資料 Modal -->
 	<div class="modal-overlay" id="diary-modal">
 		<div class="modal-card" style="max-width: 520px;">
 			<div class="modal-header">
-				<div class="modal-title">📜 條款與日誌</div>
+				<div class="modal-title">📜 條款、日誌與作者</div>
 				<div class="modal-close" id="diary-modal-close">&times;</div>
 			</div>
-			<!-- 切換頁籤 -->
+			<!-- 切換頁籤（三個頁籤） -->
 			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer;">🛡️ 隱私權聲明</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer;">📖 更新日誌</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px 4px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer; font-size: 13px;">🛡️ 隱私聲明</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">📖 更新日誌</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-author" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">👤 作者資料</button>
 			</div>
 			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
 				<!-- 視圖 1：隱私權聲明 (預設顯示) -->
@@ -2516,10 +2517,21 @@
 					</ul>
 				</div>
 
-				<!-- 視圖 2：更新日誌 (預設隱藏) -->
+				<!-- 視圖 2：更新日誌 -->
 				<div id="diary-view-changelog" style="display: none;">
 					<div id="diary-modal-body" style="display: flex; flex-direction: column; gap: 15px;">
 						<!-- 日誌內容由 JS 動態渲染 -->
+					</div>
+				</div>
+
+				<!-- 視圖 3：作者資料 (新增) -->
+				<div id="diary-view-author" style="display: none; line-height: 1.6; color: #334155;">
+					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">👤 作者與開發資訊</h4>
+					<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 14px; display: flex; flex-direction: column; gap: 10px;">
+						<div><b>作者：</b>Ether</div>
+						<div><b>TCG經歷：</b>PTCG(1996)、ZBCG、DM(2002)</div>
+						<div><b>程式設計：</b>Gemini Pro</div>
+						<div><b>電子信箱：</b><a href="mailto:tairandodx@msn.com" style="color: #0284c7; text-decoration: none; font-weight: bold;">tairandodx@msn.com</a></div>
 					</div>
 				</div>
 			</div>
@@ -2882,6 +2894,29 @@
 			'斷': '断',
 			'裝': '装', '會': '会'
 		};
+		// 1. 自動將繁/簡體字替換為對應的日文常用漢字
+		function normalizeJapaneseKanji(str) {
+			if (!str) return '';
+			let result = str;
+			for (const [fromChar, toChar] of Object.entries(KANJI_MAP)) {
+				result = result.replace(new RegExp(fromChar, 'g'), toChar);
+			}
+			return result;
+		}
+
+		// 2. 全方位歸一化函式：漢字轉換 + 全形轉半形(保留・) + 英數小寫 + 空白收攏
+		function normalizeCardNameFull(str) {
+			if (!str) return '';
+			// A. 漢字與異體字對照轉換
+			let s = normalizeJapaneseKanji(str);
+			// B. 使用 NFKC 標準將全形英數與全形標點符號轉換為半形（日文・符號會被完美保留）
+			s = s.normalize('NFKC');
+			// C. 英文字母全小寫化
+			s = s.toLowerCase();
+			// D. 將所有全形與半形空白（包含連續多個空白）壓縮成單一半形空白，並去除頭尾空白
+			s = s.replace(/[\s\u3000]+/g, ' ').trim();
+			return s;
+		}
 		// 英文卡名切換專用全域變數
 		let currentCardLang = 'jp';  // 預設 'jp'，可切換為 'en'
 		let fetchedEnNameMap = JSON.parse(localStorage.getItem('dm_en_name_cache') || '{}');
@@ -3986,7 +4021,13 @@
 					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
 				]);
 
-				globalCardData = cardData || [];
+				globalCardData = (cardData || []).map(card => {
+					return {
+						...card,
+						// 預先生成歸一化卡名，提升後續備援比對效能
+						normalizedName: card.name ? normalizeCardNameFull(card.name) : ''
+					};
+				});
 				rawCardTypes = ctData || [];
 				rawRaces = raceData || [];
 				rawAbilities = abilData || [];
@@ -4002,7 +4043,13 @@
 				if (replaceConfig && replaceConfig.need_replace && cardData) {
 					processSpText(cardData);
 				}
-				globalCardData = cardData || [];
+				globalCardData = (cardData || []).map(card => {
+					return {
+						...card,
+						// 預先生成歸一化卡名，提升後續備援比對效能
+						normalizedName: card.name ? normalizeCardNameFull(card.name) : ''
+					};
+				});
 
 				// 💡 修正 1：資料載入後，先將 localStorage 內的自訂套牌載入 rawSetlist 中
 				loadCustomDecksIntoSetlist();
@@ -4883,52 +4930,39 @@
 				}
 			}
 
-			// 1. 執行條件過濾
+			// 1. 執行第一次正常條件過濾（使用者輸入卡名時，已先進行過一次漢字轉換）
 			let filterResults = globalCardData.filter(card => {
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
 			
-			// 【第二次備援查詢】：若第一次查無結果，且有輸入卡名，啟動漢字/異體字歸一化比對
+			// 2. 【第二次備援查詢】：若第一次查無結果且有輸入卡名，啟動全方位歸一化比對
 			if (filterResults.length === 0 && filterConfig.cardName) {
-				const normalizedQuery = normalizeJapaneseKanji(filterConfig.cardName);
+				const userNormalized = normalizeCardNameFull(filterConfig.cardName);
 
-				// 只要有需要轉換的字元（例如打了 龍/黑/戰 等等）才發動
-				if (normalizedQuery !== filterConfig.cardName) {
-					
+				if (userNormalized) {
 					filterResults = globalCardData.filter(card => {
-						// 複製一份過濾條件，並替換卡名關鍵字
-						const fallbackConfig = { ...filterConfig, cardName: normalizedQuery };
+						// 檢查預先生成好的 normalizedName 是否包含使用者歸一化後的搜尋詞
+						const isNameMatch = card.normalizedName && card.normalizedName.includes(userNormalized);
+						
+						if (!isNameMatch) return false;
 
-						// 💡 關鍵點：在比對時，將資料庫裡的卡名也做一次 normalize (例如把 "龍竜ABC" 轉成 "竜竜ABC")
-						// 這樣玩家輸入 "竜龍ABC" (轉成 "竜竜ABC") 就能完全匹配命中！
-						const isMatch = checkCardMatchesFiltersWithNormalizedName(card, fallbackConfig, targetRealNameFromNickname);
-						return isMatch;
+						// 確保卡牌同時符合其他過濾條件（如文明、費用、攻擊力等）
+						const dummyConfig = { ...filterConfig, cardName: '' };
+						return checkCardMatchesFilters(card, dummyConfig, targetRealNameFromNickname);
 					});
 
 					if (filterResults.length > 0 && typeof showToast === 'function') {
-						showToast(`已對照漢字/異體字「${filterConfig.cardName}」進行備援搜尋`);
+						showToast(`已自動校正漢字、符號大小寫與空白進行備援搜尋`);
 					}
 				}
 			}
 
-			// 2. 將過濾出來的原始資料存入全域快取
+			// 3. 將過濾出來的原始資料存入全域快取
 			currentFilterResults = filterResults;
 
-			// 3. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
+			// 4. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
 			renderCurrentResultsWithSort();
 		});
-		
-		// 建立一個支援歸一化卡名比對的 check 函式
-		function checkCardMatchesFiltersWithNormalizedName(card, cfg, targetNickname) {
-			// 建立一個臨時的 card 複本，把 card.name 也先轉成 normalized 格式來做 filter
-			const normalizedCard = {
-				...card,
-				name: card.name ? normalizeJapaneseKanji(card.name) : card.name
-			};
-			
-			// 使用原本現有的過濾演算法進行比對即可
-			return checkCardMatchesFilters(normalizedCard, cfg, targetNickname);
-		}
 		
 		function renderCurrentResultsWithSort() {
 			// 取得 Page 2 與 Page 3 的清單 DOM 容器
@@ -5323,37 +5357,52 @@
 
 			const btnTabPrivacy = document.getElementById('btn-diary-tab-privacy');
 			const btnTabChangelog = document.getElementById('btn-diary-tab-changelog');
+			const btnTabAuthor = document.getElementById('btn-diary-tab-author');
+
 			const viewPrivacy = document.getElementById('diary-view-privacy');
 			const viewChangelog = document.getElementById('diary-view-changelog');
+			const viewAuthor = document.getElementById('diary-view-author');
 
 			if (!diaryBtn) return;
 
-			// 頁籤切換邏輯
+			// 三頁籤切換邏輯
 			function switchDiaryTab(target) {
+				// 重置所有按鈕樣式
+				[btnTabPrivacy, btnTabChangelog, btnTabAuthor].forEach(btn => {
+					if (btn) {
+						btn.style.background = '#e2e8f0';
+						btn.style.color = '#334155';
+					}
+				});
+				// 隱藏所有視圖
+				[viewPrivacy, viewChangelog, viewAuthor].forEach(v => {
+					if (v) v.style.display = 'none';
+				});
+
+				// 高亮點選的頁籤並顯示對應視圖
 				if (target === 'privacy') {
 					btnTabPrivacy.style.background = '#0284c7';
 					btnTabPrivacy.style.color = '#ffffff';
-					btnTabChangelog.style.background = '#e2e8f0';
-					btnTabChangelog.style.color = '#334155';
 					viewPrivacy.style.display = 'block';
-					viewChangelog.style.display = 'none';
-				} else {
+				} else if (target === 'changelog') {
 					btnTabChangelog.style.background = '#0284c7';
 					btnTabChangelog.style.color = '#ffffff';
-					btnTabPrivacy.style.background = '#e2e8f0';
-					btnTabPrivacy.style.color = '#334155';
-					viewPrivacy.style.display = 'none';
 					viewChangelog.style.display = 'block';
+				} else if (target === 'author') {
+					btnTabAuthor.style.background = '#0284c7';
+					btnTabAuthor.style.color = '#ffffff';
+					viewAuthor.style.display = 'block';
 				}
 			}
 
-			if (btnTabPrivacy && btnTabChangelog) {
+			if (btnTabPrivacy && btnTabChangelog && btnTabAuthor) {
 				btnTabPrivacy.onclick = () => switchDiaryTab('privacy');
 				btnTabChangelog.onclick = () => switchDiaryTab('changelog');
+				btnTabAuthor.onclick = () => switchDiaryTab('author');
 			}
 
 			diaryBtn.onclick = () => {
-				// 每次點開時，預設顯示「隱私權聲明」頁籤
+				// 每次點開時，預設顯示「隱私聲明」頁籤
 				switchDiaryTab('privacy');
 
 				// 首次點擊時渲染更新日誌內容
@@ -5368,7 +5417,7 @@
 
 						sortedDiary.forEach(item => {
 							const entryBlock = document.createElement('div');
-							entryBlock.style.background = '#f8f9fa';
+							entryBlock.style.background = '#f8fafc';
 							entryBlock.style.borderLeft = '4px solid #d32f2f';
 							entryBlock.style.padding = '10px 14px';
 							entryBlock.style.borderRadius = '6px';
@@ -6795,21 +6844,6 @@
 
 			// 收錄商品與外部連結
 			renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal);
-		}
-		
-		/**
-		 * 自動將輸入的繁體/簡體字替換為對應的日文常用漢字
-		 * @param {string} str 玩家輸入的卡名或關鍵字
-		 * @returns {string} 修正後的搜尋字串
-		 */
-		function normalizeJapaneseKanji(str) {
-			if (!str) return '';
-			let result = str;
-			for (const [fromChar, toChar] of Object.entries(KANJI_MAP)) {
-				// 使用全域全取代
-				result = result.replace(new RegExp(fromChar, 'g'), toChar);
-			}
-			return result;
 		}
 		
 		function renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal) {
