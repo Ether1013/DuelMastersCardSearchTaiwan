@@ -126,6 +126,33 @@ class ConsoleConnectionManager:
 
 console_manager = ConsoleConnectionManager()
 
+# ---------------- 新增：一般使用者廣播連線管理器 ----------------
+class ClientConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json({"type": "BROADCAST", "message": message})
+            except:
+                pass
+
+client_manager = ClientConnectionManager()
+
+# 用來接收 Console 廣播內容的 Model
+class BroadcastModel(BaseModel):
+    message: str
+# -----------------------------------------------------------
+
 # --- 定義預設標籤結構 ---
 DEFAULT_TAGS = {
     "version": 1,
@@ -1156,6 +1183,30 @@ async def websocket_console(
         "country_user_counts": get_country_user_counts(),  # 👈 改傳各國使用者人數
         "recent_50_details": list(action_details_log)
     })
+
+# ---------------- 新增：前端網頁連入的 WebSocket 路由 ----------------
+@app.websocket("/ws/broadcast")
+async def websocket_broadcast(websocket: WebSocket):
+    await client_manager.connect(websocket)
+    try:
+        while True:
+            # 靜態掛起，不主動發訊息，斷線會拋出例外
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        client_manager.disconnect(websocket)
+
+# ---------------- 新增：Console 發送廣播用的 API ----------------
+@app.post("/api/console/broadcast")
+async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(None)):
+    # 僅允許 Admin 觸發廣播
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    if not payload.message:
+        raise HTTPException(status_code=400, detail="廣播訊息不可為空")
+
+    await client_manager.broadcast(payload.message)
+    return {"status": "success", "receivers": len(client_manager.active_connections)}
 
 def get_client_country(request: Request) -> str:
     """取得請求來源的國籍 ISO 代碼（含 localhost = TW 判斷）"""

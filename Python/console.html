@@ -53,6 +53,11 @@
                         <i class="fa-solid fa-key"></i> 產生Token
                     </button>
                 </div>
+				
+				<!-- 新增：廣播按鈕 (預設隱藏，僅 Admin 顯示) -->
+				<button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
+					<i class="fa-solid fa-bullhorn"></i> 廣播
+				</button>
             </div>
         </div>
     </header>
@@ -553,6 +558,29 @@
 				closeResetModal();
 			}
 		}
+		
+		// 發送廣播功能
+		async function sendBroadcast() {
+			const msg = prompt("📢 請輸入要廣播給全站線上使用者的訊息：\n(若不發送請按取消)");
+			if (!msg || !msg.trim()) return;
+
+			try {
+				const response = await fetch(`/api/console/broadcast?admin=${encodeURIComponent(adminKey)}`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ message: msg.trim() })
+				});
+				
+				if (!response.ok) {
+					throw new Error('廣播發送失敗，權限不足或伺服器錯誤');
+				}
+				
+				const data = await response.json();
+				alert(`✅ 廣播發送成功！共即時送達給 ${data.receivers} 位線上使用者。`);
+			} catch (err) {
+				alert(err.message);
+			}
+		}
 
 		// 頁面初始化時，如果是 Admin 才顯示 Reset 按鈕
 		window.addEventListener('DOMContentLoaded', () => {
@@ -562,7 +590,8 @@
 			}
 			if (adminKey) {
 				document.getElementById('generateTokenBtn').style.display = 'flex';
-				document.getElementById('resetStatsBtn').style.display = 'flex'; // 👈 新增：只有 Admin 顯示 Reset 鍵
+				document.getElementById('resetStatsBtn').style.display = 'flex';
+				document.getElementById('broadcastBtn').style.display = 'flex'; // 👈 新增這行顯示按鈕
 			}
 
 			initCharts();

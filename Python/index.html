@@ -7449,6 +7449,50 @@
             if (infoContainer) infoContainer.scrollTop = 0;
         }
 		
+		// ================= 全站即時廣播接收器 =================
+		function initBroadcastListener() {
+			// 建立一次性連線，不設置心跳與重連
+			const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+			const wsUrl = `${protocol}//${window.location.host}/ws/broadcast`;
+			const ws = new WebSocket(wsUrl);
+
+			// 接收廣播訊息
+			ws.onmessage = (event) => {
+				try {
+					const data = JSON.parse(event.data);
+					if (data.type === "BROADCAST" && data.message) {
+						const modal = document.getElementById('system-notice-modal');
+						const contentEl = document.getElementById('system-notice-content');
+						
+						if (modal && contentEl) {
+							// 使用 innerText 避免 XSS 攻擊
+							contentEl.innerText = data.message;
+							modal.classList.add('active');
+						}
+					}
+				} catch (e) {
+					console.error("Broadcast msg parsing error:", e);
+				}
+			};
+
+			// 若斷線則自然放生，不實作 ws.onclose 重新連線
+		}
+
+		// 綁定現有 Modal 的「我知道了」按鈕關閉事件
+		document.addEventListener('DOMContentLoaded', () => {
+			initBroadcastListener();
+			
+			// 綁定關閉按鈕，點擊後隱藏並不會留存
+			const btnUnderstand = document.getElementById('btn-notice-understand');
+			const noticeModal = document.getElementById('system-notice-modal');
+			
+			if (btnUnderstand && noticeModal) {
+				btnUnderstand.addEventListener('click', () => {
+					noticeModal.classList.remove('active');
+				});
+			}
+		});
+		
 		// 💡 將 DataURL 轉換為標準 Blob 檔案
 		function dataURLtoBlob(dataurl) {
 			const arr = dataurl.split(',');
