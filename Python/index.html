@@ -1901,8 +1901,9 @@
 		.cart-controls button:hover { background: #0369a1; }
 		.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
 
-		/* 截圖時隱藏購物車加入按鈕 */
-		.is-capturing .cart-add-btn-overlay { display: none !important; }
+		/* 截圖時隱藏購物車加入與申請暱稱按鈕 */
+		.is-capturing .cart-add-btn-overlay,
+		.is-capturing .nickname-apply-btn-overlay { display: none !important; }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2574,6 +2575,34 @@
 					<textarea id="report-desc" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-size: 16px;" placeholder="請簡述錯誤之處，不講也可以，但我可能會找半天…"></textarea>
 				</div>
 				<button type="button" id="btn-submit-report" style="width: 100%; padding: 10px; background: #d32f2f; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px;">送出回報</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 申請暱稱 Modal 彈窗 -->
+	<div class="modal-overlay" id="nickname-modal">
+		<div class="modal-card" style="max-width: 440px;">
+			<div class="modal-header" style="background: #0d9488; color: white;">
+				<div class="modal-title">🏷️ 申請卡牌暱稱</div>
+				<div class="modal-close" id="nickname-modal-close">&times;</div>
+			</div>
+			<div class="modal-body" style="gap: 12px; padding: 16px;">
+				<div>
+					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">目標卡牌：</label>
+					<input type="text" id="nickname-target-card" readonly style="background: #f1f5f9; cursor: not-allowed; color: #475569; font-weight: bold; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+				</div>
+				
+				<div id="nickname-input-list" style="display: flex; flex-direction: column; gap: 8px;">
+					<!-- 動態輸入框生成區 -->
+				</div>
+				<button type="button" id="btn-add-nickname" style="width: 100%; padding: 8px; background: #f0fdfa; color: #0f766e; border: 1px dashed #0d9488; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 5px;">+ 新增一個暱稱</button>
+				
+				<div id="nickname-error-msg" style="color: #ef4444; font-size: 13px; font-weight: bold; display: none; margin-top: 5px;"></div>
+
+				<div style="display: flex; gap: 8px; margin-top: 10px;">
+					<button type="button" id="btn-check-nickname" style="flex: 1; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">🔍 檢查</button>
+					<button type="button" id="btn-submit-nickname" disabled style="flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; opacity: 0.5;">✅ 送出申請</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -5944,7 +5973,7 @@
 			if (!camBtn) {
 				camBtn = document.createElement('div');
 				camBtn.className = 'modal-btn-icon cam-btn-overlay';
-				camBtn.title = '截圖 DETAIL';
+				camBtn.title = '截圖';
 				camBtn.innerText = '📷';
 				imgStackContainer.appendChild(camBtn);
 			}
@@ -5980,6 +6009,27 @@
                 // 偏移量放在相機(top:0)與分享(top:34px)下方
                 cartAddBtn.style.cssText = 'position: absolute !important; right: -36px !important; left: auto !important; z-index: 30; margin: 0; top: 68px !important;';
                 imgStackContainer.appendChild(cartAddBtn);
+            }
+			
+			// 💡 申請暱稱按鈕 (懸浮於購物車 Icon 正下方，推算 68px + 34px = 102px)
+            let nicknameApplyBtn = imgStackContainer.querySelector('.nickname-apply-btn-overlay');
+            if (!nicknameApplyBtn) {
+                nicknameApplyBtn = document.createElement('div');
+                nicknameApplyBtn.className = 'modal-btn-icon nickname-apply-btn-overlay';
+                nicknameApplyBtn.title = '申請暱稱';
+                nicknameApplyBtn.innerText = '🏷️';
+                nicknameApplyBtn.style.cssText = 'position: absolute !important; right: -36px !important; left: auto !important; z-index: 30; margin: 0; top: 102px !important;';
+                imgStackContainer.appendChild(nicknameApplyBtn);
+            }
+
+            if (isModal) {
+                nicknameApplyBtn.style.display = 'flex';
+                nicknameApplyBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openNicknameModal(card.name);
+                };
+            } else {
+                nicknameApplyBtn.style.display = 'none';
             }
 
             // Req 8 & 9：如果從購物車打開，或是非 Modal 模式，則隱藏這個按鈕
@@ -10620,6 +10670,225 @@
 			});
 		});
 
+		// ================= 申請暱稱 Modal 與核心邏輯 =================
+		
+		// 💡 核心驗證函式：雙向子字串包含 (indexOf != -1 邏輯)
+		function isOverlap(str1, str2) {
+			if (!str1 || !str2) return false;
+			const norm1 = normalizeJapaneseKanji(str1); // 使用現有的漢字轉換字典
+			const norm2 = normalizeJapaneseKanji(str2);
+			return norm1.includes(norm2) || norm2.includes(norm1);
+		}
+
+		let currentNicknameInputs = ['']; // 初始至少一個空字串
+		let isNicknameChecked = false;
+
+		function renderNicknameInputs() {
+			const listContainer = document.getElementById('nickname-input-list');
+			listContainer.innerHTML = '';
+			
+			currentNicknameInputs.forEach((val, idx) => {
+				const row = document.createElement('div');
+				row.style.display = 'flex';
+				row.style.alignItems = 'center';
+				row.style.gap = '6px';
+				
+				const input = document.createElement('input');
+				input.type = 'text';
+				input.className = 'qa-input';
+				input.value = val;
+				input.placeholder = '請輸入您想申請的暱稱';
+				input.style.flex = '1';
+				input.style.fontSize = '15px';
+				
+				// 💡 一旦修改了文字，就必須重新檢查 (封鎖送出按鈕)
+				input.addEventListener('input', (e) => {
+					currentNicknameInputs[idx] = e.target.value;
+					resetNicknameCheckStatus();
+				});
+
+				const statusIcon = document.createElement('span');
+				statusIcon.id = `nick-status-${idx}`;
+				statusIcon.style.minWidth = '24px';
+				statusIcon.style.textAlign = 'center';
+				statusIcon.style.fontWeight = 'bold';
+				
+				const delBtn = document.createElement('button');
+				delBtn.innerText = '🗑️';
+				delBtn.className = 'btn-icon';
+				delBtn.style.padding = '8px';
+				delBtn.style.background = '#f1f5f9';
+				delBtn.style.border = '1px solid #cbd5e1';
+				
+				// 刪除按鈕邏輯：最少要留 1 個
+				delBtn.onclick = () => {
+					if (currentNicknameInputs.length > 1) {
+						currentNicknameInputs.splice(idx, 1);
+						resetNicknameCheckStatus();
+						renderNicknameInputs();
+					} else {
+						showToast('最少需保留一個暱稱！');
+					}
+				};
+
+				row.appendChild(input);
+				row.appendChild(statusIcon);
+				row.appendChild(delBtn);
+				listContainer.appendChild(row);
+			});
+		}
+
+		function resetNicknameCheckStatus() {
+			isNicknameChecked = false;
+			const btnSubmit = document.getElementById('btn-submit-nickname');
+			btnSubmit.disabled = true;
+			btnSubmit.style.opacity = '0.5';
+			document.getElementById('nickname-error-msg').style.display = 'none';
+			
+			currentNicknameInputs.forEach((_, idx) => {
+				const icon = document.getElementById(`nick-status-${idx}`);
+				if (icon) icon.innerText = '';
+			});
+		}
+
+		// 開啟彈窗觸發器
+		window.openNicknameModal = function(cardName) {
+			document.getElementById('nickname-target-card').value = cardName || '未命名卡牌';
+			currentNicknameInputs = [''];
+			resetNicknameCheckStatus();
+			renderNicknameInputs();
+			document.getElementById('nickname-modal').classList.add('active');
+		};
+
+		// 關閉 Modal
+		document.getElementById('nickname-modal-close')?.addEventListener('click', () => {
+			document.getElementById('nickname-modal').classList.remove('active');
+		});
+
+		// 新增一列
+		document.getElementById('btn-add-nickname')?.addEventListener('click', () => {
+			currentNicknameInputs.push('');
+			resetNicknameCheckStatus();
+			renderNicknameInputs();
+		});
+
+		// 💡 預檢按鈕 [檢查]
+		document.getElementById('btn-check-nickname')?.addEventListener('click', () => {
+			let allPassed = true;
+			let errorMsg = '';
+			
+			// 排除全部留白的情況
+			const validInputs = currentNicknameInputs.map(s => s.trim()).filter(Boolean);
+			if (validInputs.length === 0) {
+				showToast('請至少輸入一個有效的暱稱！');
+				return;
+			}
+
+			// 展開所有既有暱稱以便比對
+			const allExistingNicks = [];
+			if (Array.isArray(rawNicknames)) {
+				rawNicknames.forEach(n => {
+					if (Array.isArray(n.nicknames)) {
+						allExistingNicks.push(...n.nicknames);
+					}
+				});
+			}
+
+			currentNicknameInputs.forEach((inputVal, idx) => {
+				const statusIcon = document.getElementById(`nick-status-${idx}`);
+				const cleanInput = inputVal.trim();
+				
+				if (!cleanInput) {
+					statusIcon.innerText = '';
+					return;
+				}
+
+				let hasError = false;
+
+				// 1. 檢查既有暱稱重疊
+				for (const existingNick of allExistingNicks) {
+					if (isOverlap(cleanInput, existingNick)) {
+						hasError = true;
+						errorMsg = '很抱歉，已有類似暱稱';
+						break;
+					}
+				}
+
+				// 2. 檢查既有卡名重疊
+				if (!hasError) {
+					for (const card of globalCardData) {
+						if (card.name && isOverlap(cleanInput, card.name)) {
+							hasError = true;
+							errorMsg = `很抱歉，已經有卡牌用到「${cleanInput}」了`;
+							break;
+						}
+					}
+				}
+
+				if (hasError) {
+					statusIcon.innerText = '❌';
+					statusIcon.style.color = '#ef4444';
+					allPassed = false;
+				} else {
+					statusIcon.innerText = '√';
+					statusIcon.style.color = '#16a34a';
+				}
+			});
+
+			const errorDiv = document.getElementById('nickname-error-msg');
+			const btnSubmit = document.getElementById('btn-submit-nickname');
+			
+			if (!allPassed) {
+				errorDiv.innerText = errorMsg;
+				errorDiv.style.display = 'block';
+				btnSubmit.disabled = true;
+				btnSubmit.style.opacity = '0.5';
+			} else {
+				errorDiv.style.display = 'none';
+				btnSubmit.disabled = false;
+				btnSubmit.style.opacity = '1';
+				isNicknameChecked = true;
+				showToast('✅ 檢查通過，可送出申請！');
+			}
+		});
+
+		// 💡 送出按鈕 [送出申請]
+		document.getElementById('btn-submit-nickname')?.addEventListener('click', async () => {
+			if (!isNicknameChecked) return;
+			
+			const btnSubmit = document.getElementById('btn-submit-nickname');
+			const cardName = document.getElementById('nickname-target-card').value;
+			const nicks = currentNicknameInputs.map(s => s.trim()).filter(Boolean);
+			
+			btnSubmit.disabled = true;
+			btnSubmit.innerText = "傳送中...";
+
+			try {
+				const resp = await fetch('/api/apply_nickname', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						card_name: cardName,
+						nicknames: nicks
+					})
+				});
+
+				if (resp.ok) {
+					showToast("✅ 暱稱申請已成功送出，感謝您的熱心參與！");
+					document.getElementById('nickname-modal').classList.remove('active');
+				} else if (resp.status === 429) {
+					alert("⚠️ 您的申請頻率過高，請稍等 1 小時後再試，謝謝！");
+				} else {
+					alert("傳送失敗，請稍後再試。");
+				}
+			} catch (e) {
+				console.error("申請失敗:", e);
+				alert("網路請求發生錯誤，請重試");
+			} finally {
+				btnSubmit.disabled = false;
+				btnSubmit.innerText = "✅ 送出申請";
+			}
+		});
 
 		// ==========================================
 		// 4. 分享連結功能 (取得連結) - 同時綁定 Page 2 與 Page 3

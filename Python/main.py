@@ -90,6 +90,10 @@ action_details_log = deque(maxlen=50)
 ip_counter_by_country = defaultdict(int)
 ip_to_user_id = {}
 
+class NicknameApplyModel(BaseModel):
+    card_name: str
+    nicknames: List[str]
+    
 class PrettyJSONResponse(JSONResponse):
     # 💡 增加 media_type，確保 Response Header 包含 utf-8 編碼宣告
     media_type = "application/json; charset=utf-8"
@@ -534,6 +538,19 @@ def send_author_message_notification(msg_data: AuthorMessageModel):
     )
     push_line_message(msg_text)
 
+def send_nickname_application_notification(payload: NicknameApplyModel, country: str):
+    """處理申請暱稱的 LINE 通知格式"""
+    lines = [
+        "🏷️ 【新暱稱申請通知】",
+        f"🌐 國籍：{country}",
+        f"📌 目標卡名：{payload.card_name}",
+        "📝 申請暱稱："
+    ]
+    for i, nick in enumerate(payload.nicknames, 1):
+        lines.append(f"  {i}. {nick}")
+    
+    push_line_message("\n".join(lines))
+    
 async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
     global has_unsynced_en_names
     jp_name_clean = jp_name.strip()
@@ -970,6 +987,19 @@ async def report_error(request: Request, report: ReportModel, background_tasks: 
     name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
     return {"status": "success", "message": f"回報成功！感謝{name}！"}
 
+@app.post("/api/apply_nickname")
+@limiter.limit("12/hour")
+async def apply_nickname(request: Request, payload: NicknameApplyModel, background_tasks: BackgroundTasks):
+    if not payload.nicknames:
+        raise HTTPException(status_code=400, detail="申請的暱稱不可為空")
+    
+    # 取得請求來源的國籍
+    country = get_client_country(request)
+    
+    # 背景執行 LINE 通知發送
+    background_tasks.add_task(send_nickname_application_notification, payload, country)
+    return {"status": "success", "message": "暱稱申請已成功送出！"}
+    
 @app.get("/api/get_all_english_names")
 async def get_all_english_names(): return english_name_cache
 
