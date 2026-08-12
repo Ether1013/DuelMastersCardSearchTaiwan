@@ -150,7 +150,6 @@
                 <div class="flex items-center gap-3">
                     <select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
                         <option value="default">預設排序 (最新事件優先)</option>
-                        <option value="user">使用者別 (新用戶置頂，不擾亂當前視覺)</option>
                     </select>
                     <span class="text-xs text-gray-500">Auto-refresh via WS</span>
                 </div>
@@ -235,6 +234,44 @@
 		let pendingDeleteUser = null;
 		let startTimeObj = null;
 		let timerInterval = null;
+		
+		// 1. 建立固定的國家顏色 Map，常見國家固定色，其餘動態指派
+		const COUNTRY_COLOR_MAP = {
+			'TW': '#38bdf8', // 台灣 (天空藍)[cite: 1, 2]
+			'HK': '#fbbf24', // 香港 (琥珀黃)[cite: 1, 2]
+			'MO': '#34d399', // 澳門 (翡翠綠)
+			'CN': '#f87171', // 中國 (珊瑚紅)[cite: 2]
+			'JP': '#f472b6', // 日本 (櫻花粉)[cite: 1, 2]
+			'KR': '#c084fc', // 韓國 (紫羅蘭)[cite: 2]
+			'SG': '#2dd4bf', // 新加坡 (湖水綠)
+			'MY': '#fb923c', // 馬來西亞 (橙色)
+			'US': '#60a5fa', // 美國 (寶藍)[cite: 2]
+			'GB': '#a78bfa', // 英國 (薰衣草紫)
+			'UK': '#a78bfa', // 英國 (備用代碼)
+			'FR': '#818cf8', // 法國 (靛藍)
+			'Unknown': '#9ca3af' // 未知 (灰色)[cite: 1, 2]
+		};
+		
+		// 根據國家字串名稱 (如 'DE', 'AU') 自動計算出固定的 HSL 顏色
+		function stringToHslColor(str) {
+			let hash = 0;
+			for (let i = 0; i < str.length; i++) {
+				hash = str.charCodeAt(i) + ((hash << 5) - hash);
+			}
+			const h = Math.abs(hash) % 360; // 360度色相
+			return `hsl(${h}, 70%, 60%)`;   // 固定飽和度與亮度，確保顏色好看
+		}
+
+		function getCountryColors(countryLabels) {
+			return countryLabels.map((country) => {
+				// 1. 優先找固定配置色
+				if (COUNTRY_COLOR_MAP[country]) {
+					return COUNTRY_COLOR_MAP[country];
+				}
+				// 2. 找不到則根據國家代碼字串算出唯一的 HSL 顏色
+				return stringToHslColor(country);
+			});
+		}
 
         function changeSortMode() {
             sortMode = document.getElementById('sortMode').value;
@@ -272,18 +309,35 @@
 
         function initCharts() {
             const ctxFeature = document.getElementById('featureChart').getContext('2d');
-            featureChart = new Chart(ctxFeature, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, datalabels: { display: false } },
-                    scales: {
-                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
-                        y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' }, beginAtZero: true }
-                    }
-                }
-            });
+			featureChart = new Chart(ctxFeature, {
+				type: 'bar',
+				data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
+				options: {
+					responsive: true, maintainAspectRatio: false,
+					plugins: { 
+						legend: { display: false }, 
+						datalabels: { display: false },
+						tooltip: {
+							callbacks: {
+								label: function(context) {
+									const label = context.label || '';
+									const val = context.raw;
+									// 如果移到「其他 (Other)」，顯示包含的明細內容
+									if (label === 'Other' || label.startsWith('其他')) {
+										const details = featureChart.otherDetails || [];
+										return [`總計: ${val} 次`, '----------------', ...details];
+									}
+									return `觸發: ${val} 次`;
+								}
+							}
+						}
+					},
+					scales: {
+						x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+						y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' }, beginAtZero: true }
+					}
+				}
+			});
 
             const ctxCountry = document.getElementById('countryChart').getContext('2d');
             countryChart = new Chart(ctxCountry, {
@@ -321,100 +375,148 @@
         }
 
         function updateDashboard(data) {
-            try {
-			
-				// 更新統計開始時間
+			try {
 				if (data.start_time) {
 					startTimeObj = new Date(data.start_time);
 					document.getElementById('startTimeStr').innerText = formatDateTime(startTimeObj);
-					updateTimeAndDuration(); // 立即計算一次
+					updateTimeAndDuration();
 				}
 				
-                // 1. 取得 DOM 頂部 Metrics 卡片元素
-                const totalElem = document.getElementById('totalEvents');
-                const featElem = document.getElementById('activeFeatures');
-                const userElem = document.getElementById('activeUsers');
+				const totalElem = document.getElementById('totalEvents');
+				const featElem = document.getElementById('activeFeatures');
+				const userElem = document.getElementById('activeUsers');
 
-                // 2. 取得數據源
-                const featureStats = data.stats || {};
-                const countryStats = data.country_stats || {};
-                const countryUserCounts = data.country_user_counts || {};
+				const featureStats = data.stats || {};
+				const countryStats = data.country_stats || {};
+				const countryUserCounts = data.country_user_counts || {};
 
-                // 計算全站總不重複使用者人數（各國人數累加）
-                const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
+				const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
 
-                // 3. 更新頂部 Metrics 卡片數值
-                if (totalElem) totalElem.innerText = data.total_events || 0;
-                if (featElem) featElem.innerText = Object.keys(featureStats).length;
-                if (userElem) userElem.innerText = totalUsersCount;
+				if (totalElem) totalElem.innerText = data.total_events || 0;
+				if (featElem) featElem.innerText = Object.keys(featureStats).length;
+				if (userElem) userElem.innerText = totalUsersCount;
 
-                // 4. 更新長條圖：Feature Trigger Count (操作次數)
-                if (featureChart) {
-                    featureChart.data.labels = Object.keys(featureStats);
-                    featureChart.data.datasets[0].data = Object.values(featureStats);
-                    featureChart.update();
-                }
+				// 4. 更新長條圖：Feature Trigger Count (動態門檻：允許第5名同分者一併上榜)
+				if (featureChart) {
+					// 💡 關鍵修復：先依觸發次數「由大到小 (DESC)」排序
+					const rawEntries = Object.entries(featureStats).sort((a, b) => b[1] - a[1]);
+					const BASE_TOP_N = 5; // 預設基礎名額為前 5 名
 
-                // 5. 更新第一個圓餅圖：Country Distribution (全域國籍操作次數，單位：次)
-                if (countryChart) {
-                    countryChart.data.labels = Object.keys(countryStats);
-                    countryChart.data.datasets[0].data = Object.values(countryStats);
-                    countryChart.update();
-                }
+					let displayLabels = [];
+					let displayData = [];
+					let otherDetails = [];
 
-                // 6. 更新第二個圓餅圖：Users per Country (各國不重複使用者人數，單位：人)
-                if (userChart) {
-                    userChart.data.labels = Object.keys(countryUserCounts);
-                    userChart.data.datasets[0].data = Object.values(countryUserCounts);
-                    userChart.update();
-                }
+					if (rawEntries.length > BASE_TOP_N) {
+						// 確保取到的 rawEntries[4][1] 必定是真實的「第 5 名次數」
+						const thresholdCount = rawEntries[BASE_TOP_N - 1][1];
 
-                // 7. 更新 Recent 50 Details 資料庫與 Known Users 清單
-                currentLogs = data.recent_50_details || [];
-                
-                let newUsers = [];
-                currentLogs.forEach(log => {
-                    let u = log.user || log.country || 'Unknown';
-                    if (!knownUsers.includes(u) && !newUsers.includes(u)) {
-                        newUsers.push(u);
-                    }
-                });
-                knownUsers = [...newUsers, ...knownUsers];
+						let otherSum = 0;
 
-                // 8. 重新繪製 Log 表格
-                renderLogsTable();
+						rawEntries.forEach(([feat, count]) => {
+							// 只要次數 >= 第5名的門檻，就一併上榜 (包含同分者)
+							if (count >= thresholdCount) {
+								displayLabels.push(feat);
+								displayData.push(count);
+							} else {
+								otherSum += count;
+								otherDetails.push(`${feat}: ${count}次`);
+							}
+						});
 
-            } catch (err) {
-                console.error("Dashboard render error:", err);
-            }
-        }
+						if (otherSum > 0) {
+							displayLabels.push('其他 (Other)');
+							displayData.push(otherSum);
+						}
+					} else {
+						// 功能總數 <= 5 時直接全部顯示
+						displayLabels = rawEntries.map(e => e[0]);
+						displayData = rawEntries.map(e => e[1]);
+					}
 
-        function renderLogsTable() {
+					featureChart.otherDetails = otherDetails;
+					featureChart.data.labels = displayLabels;
+					featureChart.data.datasets[0].data = displayData;
+					featureChart.update();
+				}
+
+				// 2. 圓餅圖 1 (Country Distribution) - 保留帶有 getCountryColors 的這組即可
+				if (countryChart) {
+					const labels = Object.keys(countryStats);
+					countryChart.data.labels = labels;
+					countryChart.data.datasets[0].data = Object.values(countryStats);
+					countryChart.data.datasets[0].backgroundColor = getCountryColors(labels);
+					countryChart.update();
+				}
+
+				// 3. 圓餅圖 2 (Users per Country)
+				if (userChart) {
+					const labels = Object.keys(countryUserCounts);
+					userChart.data.labels = labels;
+					userChart.data.datasets[0].data = Object.values(countryUserCounts);
+					userChart.data.datasets[0].backgroundColor = getCountryColors(labels);
+					userChart.update();
+				}
+
+				// 4. 更新 Recent 50 Details 與下拉選單
+				currentLogs = data.recent_50_details || [];
+				updateUserDropdown();
+				renderLogsTable();
+
+			} catch (err) {
+				console.error("Dashboard render error:", err);
+			}
+		}
+		
+		// 更新使用者下拉選單
+		function updateUserDropdown() {
+			const selectElem = document.getElementById('sortMode');
+			const currentValue = selectElem.value;
+
+			// 從目前 50 筆 log 收集所有 present 的 user (已自動過濾過期/消失用戶)
+			const presentUsers = Array.from(new Set(
+				currentLogs.map(log => log.user || log.country || 'Unknown')
+			)).sort(); // 預設字母 + ASC 排序 (如: HKa, HKb, TWa)
+
+			// 重構下拉選單選項
+			selectElem.innerHTML = `<option value="default">預設排序 (最新事件優先)</option>`;
+			
+			presentUsers.forEach(u => {
+				const option = document.createElement('option');
+				option.value = u;
+				option.innerText = `使用者：${u}`;
+				selectElem.appendChild(option);
+			});
+
+			// 若先前選取的用戶還在 50 筆內，維持選擇；若已被擠出 50 筆外則切回 default
+			if (presentUsers.includes(currentValue)) {
+				selectElem.value = currentValue;
+			} else {
+				selectElem.value = 'default';
+			}
+		}
+
+        // 渲染 Log 表格
+		function renderLogsTable() {
 			const container = document.getElementById('tableScrollContainer');
 			const tbody = document.getElementById('logsTableBody');
-			
-			// 判讀當前是否為 Admin 登入 (只有帶 ?admin= 的人才有 adminKey)
+			const selectedMode = document.getElementById('sortMode').value;
 			const isAdmin = Boolean(adminKey);
 
-			// 紀錄畫面更新前的捲動狀態
+			// 💡 補上卷軸高度紀錄
 			const oldScrollTop = container.scrollTop;
 			const oldScrollHeight = container.scrollHeight;
 
 			let displayLogs = [];
 
-			if (sortMode === 'user') {
-				// 依照 knownUsers 排序 (新用戶在最上方，舊用戶在下方保持原本的連續順序)
-				knownUsers.forEach(u => {
-					let userLogs = currentLogs.filter(log => (log.user || log.country || 'Unknown') === u);
-					displayLogs.push(...userLogs);
-				});
-			} else {
-				// 預設按時間排序
+			if (selectedMode === 'default') {
 				displayLogs = [...currentLogs];
+			} else {
+				// 點選特定使用者，僅過濾該使用者的軌跡
+				displayLogs = currentLogs.filter(log => (log.user || log.country || 'Unknown') === selectedMode);
 			}
 
 			tbody.innerHTML = '';
-			
+
 			displayLogs.forEach((log) => {
 				const trHeader = document.createElement('tr');
 				trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
@@ -475,7 +577,7 @@
 
 			// 如果在使用「使用者別」模式下，且原本的卷軸有往下拉，利用高度差校正卷軸位置
 			const newScrollHeight = container.scrollHeight;
-			if (sortMode === 'user' && oldScrollTop > 0) {
+			if (selectedMode !== 'default' && oldScrollTop > 0) {
 				container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
 			}
 		}
