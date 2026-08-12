@@ -184,10 +184,25 @@
 			box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
 		}
 
-		/* ---------------- 需求 2：[查詢衍生卡種] 專用按鈕高亮樣式 ---------------- */
+		/* ---------------- 需求 2：[查詢衍生卡種] 專用按鈕高亮樣式 (防抖動零重排版) ---------------- */
 		.btn-icon.active {
-			background-color: #0284c7;
-			color: #ffffff;
+			background-color: #0284c7 !important;
+			color: #ffffff !important;
+			font-weight: bold !important;
+			
+			/* 1. 使用外外發光 + 內陰影，打造明顯的「按下沉入感」，完全不改變按鈕實體大小 */
+			box-shadow: 0 0 0 2px #0369a1, inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+			
+			/* 2. 嚴格鎖定內部邊距與邊框，絕不觸發 Flex 容器重排抖動 */
+			border: none !important;
+			transform: none !important;
+			transition: background-color 0.15s ease, box-shadow 0.15s ease;
+		}
+
+		/* Hover 時微調背景色與發光效果 */
+		.btn-icon.active:hover {
+			background-color: #0369a1 !important;
+			box-shadow: 0 0 0 2px #075985, inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 		}
 
 
@@ -3976,12 +3991,24 @@
 
 				if (currentServerId) {
 					const cachedServerId = localStorage.getItem('dm_server_instance_id');
-					if (currentServerId !== cachedServerId) {
-						console.log("伺服器已重啟或首次進入，清空舊快取...");
-						try {
-							await caches.delete(CACHE_NAME);
-						} catch (e) { console.warn("清空 Cache 失敗:", e); }
+					
+					// 第一次打開網頁，先記錄 ID
+					if (!cachedServerId) {
 						localStorage.setItem('dm_server_instance_id', currentServerId);
+					} 
+					// 發現 Server ID 變了（代表你部署了新版或 Render 重啟）
+					else if (currentServerId !== cachedServerId) {
+						console.log("偵測到伺服器已更新，清空快取並重新載入網頁...");
+						
+						// 1. 寫入最新的 ID
+						localStorage.setItem('dm_server_instance_id', currentServerId);
+						
+						// 2. 清空 Cache API
+						try { await caches.delete(CACHE_NAME); } catch (e) {}
+						
+						// 3. 🎯 核心補強：直接命令瀏覽器重載全頁，讓 HTML/JS 一併更新到最新版！
+						window.location.reload(true);
+						return; // 中斷後續執行，讓頁面直接刷新
 					}
 				}
 
