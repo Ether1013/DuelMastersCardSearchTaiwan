@@ -2423,7 +2423,7 @@
 				<!-- 右邊：^ 展開按鈕 -->
 				<div class="expand-icon" id="toggle-summary">▲</div>
 				<!-- 💡 日記 Icon -->
-				<div id="diary-btn" style="cursor: pointer; font-size: 20px; user-select: none;" title="更新日誌">📖</div>
+				<div id="diary-btn" style="cursor: pointer; font-size: 20px; user-select: none;" title="條款與更新日誌">📖</div>
 			</div>
         </div>
     </div>
@@ -2491,15 +2491,37 @@
 		<div id="loading-text">資料讀取中……</div>
 	</div>
 	
-	<!-- 更新日誌 Modal -->
+	<!-- 隱私聲明與更新日誌 Modal -->
 	<div class="modal-overlay" id="diary-modal">
-		<div class="modal-card" style="max-width: 500px;">
+		<div class="modal-card" style="max-width: 520px;">
 			<div class="modal-header">
-				<div class="modal-title">📖 更新日誌</div>
+				<div class="modal-title">📜 條款與日誌</div>
 				<div class="modal-close" id="diary-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" id="diary-modal-body" style="gap: 15px;">
-				<!-- 日誌內容動態渲染 -->
+			<!-- 切換頁籤 -->
+			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer;">🛡️ 隱私權聲明</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer;">📖 更新日誌</button>
+			</div>
+			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
+				<!-- 視圖 1：隱私權聲明 (預設顯示) -->
+				<div id="diary-view-privacy" style="line-height: 1.6; color: #334155;">
+					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">🛡️ 使用者隱私與體驗優化聲明</h4>
+					<ul style="padding-left: 20px; font-size: 14px; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+						<li><b>連續操作紀錄</b>：本網站會紀錄單一使用者的連續操作軌跡，並進行國籍整理，純粹用於提升與優化使用者體驗。</li>
+						<li><b>完全匿名性</b>：後臺與管理者<b>無法識別</b>您實際上是誰。</li>
+						<li><b>不收集 IP</b>：您的 IP 位址<b>不會被管理者知道或紀錄</b>。</li>
+						<li><b>僅供人工優化</b>：操作紀錄僅由開發人員進行人工辨識與介面改善參考，絕不作商業分析或廣告用途。</li>
+						<li><b>不留底機制</b>：所有紀錄僅於記憶體暫存，<b>伺服器每次重開機紀錄即自動消失、完全不留底</b>。</li>
+					</ul>
+				</div>
+
+				<!-- 視圖 2：更新日誌 (預設隱藏) -->
+				<div id="diary-view-changelog" style="display: none;">
+					<div id="diary-modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+						<!-- 日誌內容由 JS 動態渲染 -->
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -5299,10 +5321,42 @@
 			const diaryModalClose = document.getElementById('diary-modal-close');
 			const diaryModalBody = document.getElementById('diary-modal-body');
 
+			const btnTabPrivacy = document.getElementById('btn-diary-tab-privacy');
+			const btnTabChangelog = document.getElementById('btn-diary-tab-changelog');
+			const viewPrivacy = document.getElementById('diary-view-privacy');
+			const viewChangelog = document.getElementById('diary-view-changelog');
+
 			if (!diaryBtn) return;
 
+			// 頁籤切換邏輯
+			function switchDiaryTab(target) {
+				if (target === 'privacy') {
+					btnTabPrivacy.style.background = '#0284c7';
+					btnTabPrivacy.style.color = '#ffffff';
+					btnTabChangelog.style.background = '#e2e8f0';
+					btnTabChangelog.style.color = '#334155';
+					viewPrivacy.style.display = 'block';
+					viewChangelog.style.display = 'none';
+				} else {
+					btnTabChangelog.style.background = '#0284c7';
+					btnTabChangelog.style.color = '#ffffff';
+					btnTabPrivacy.style.background = '#e2e8f0';
+					btnTabPrivacy.style.color = '#334155';
+					viewPrivacy.style.display = 'none';
+					viewChangelog.style.display = 'block';
+				}
+			}
+
+			if (btnTabPrivacy && btnTabChangelog) {
+				btnTabPrivacy.onclick = () => switchDiaryTab('privacy');
+				btnTabChangelog.onclick = () => switchDiaryTab('changelog');
+			}
+
 			diaryBtn.onclick = () => {
-				// 💡 只有第一次點開時進行 DOM 組裝，之後開啟皆為 0 毫秒極速彈出
+				// 每次點開時，預設顯示「隱私權聲明」頁籤
+				switchDiaryTab('privacy');
+
+				// 首次點擊時渲染更新日誌內容
 				if (!isDiaryRendered) {
 					diaryModalBody.innerHTML = '';
 
@@ -5310,7 +5364,7 @@
 						diaryModalBody.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無更新日誌</div>';
 					} else {
 						const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
-						const fragment = document.createDocumentFragment(); // 一次性掛載，避免頻繁 Repaint
+						const fragment = document.createDocumentFragment();
 
 						sortedDiary.forEach(item => {
 							const entryBlock = document.createElement('div');
@@ -5338,8 +5392,6 @@
 							listItems.forEach(text => {
 								const li = document.createElement('li');
 								li.style.marginBottom = '3px';
-								
-								// 💡 關鍵修正：取消 applyEffectTags 標籤化，直接輸出原始文字
 								li.innerText = text;
 
 								if (typeof specialIcons !== 'undefined' && specialIcons.some(icon => text.startsWith(icon))) {
@@ -5362,7 +5414,7 @@
 				diaryModal.classList.add('active');
 			};
 
-			// 判斷今日 Icon 顯示邏輯 (兩天內顯示 📝，超過顯示 📖)
+			// 判斷今日 Icon 顯示邏輯
 			if (rawDiary && rawDiary.length > 0) {
 				const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
 				const latestEntry = sortedDiary[0];
