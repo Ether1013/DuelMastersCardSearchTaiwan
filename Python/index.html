@@ -2352,7 +2352,10 @@
                 <!-- 1-2 -->
                 <button type="button" class="qa-btn-lv2" data-target="qa-sub-1-2">🔤 我有卡名</button>
                 <div class="qa-content-lv2" id="qa-sub-1-2">
-                    <input type="text" id="qa-input-name" class="qa-input" placeholder="請輸入精確卡名或關鍵字" autocomplete="off">
+                    <div class="flex-input-row" style="margin-bottom: 0;">
+                        <input type="text" id="qa-input-name" class="qa-input" placeholder="請輸入精確卡名或關鍵字" autocomplete="off" style="margin-bottom: 0;">
+                        <button type="button" id="qa-btn-insert-dot" class="btn-icon" style="white-space: nowrap; padding: 12px 14px; background: #0284c7; color: white; border: none; border-radius: 6px;">・</button>
+                    </div>
                     <div class="action-btn-group">
                         <button type="button" class="btn-drawer-action" id="qa-btn-name-view">👀 看效果</button>
                         <button type="button" class="btn-drawer-action" id="qa-btn-name-share" style="background:#16a34a;">🔗 拷貝連結</button>
@@ -4959,13 +4962,36 @@
 			navigateToResultPage();
 
 			let targetRealNameFromNickname = null;
+			let isNoDotMatchMode = false; // 標記是否進入「雙向無視・」比對模式
+
 			if (filterConfig.cardName && isOnlyCardNameFiltered(filterConfig)) {
-				const directMatches = globalCardData.filter(c => c.name && c.name.includes(filterConfig.cardName));
+				const inputName = filterConfig.cardName;
+				
+				// Step 1-1: 原本的完全比對 + 綽號
+				const directMatches = globalCardData.filter(c => c.name && c.name.includes(inputName));
 				if (directMatches.length === 0 && Array.isArray(rawNicknames)) {
 					const matchedNick = rawNicknames.find(n => 
-						Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === filterConfig.cardName)
+						Array.isArray(n.nicknames) && n.nicknames.some(nick => nick === inputName)
 					);
 					if (matchedNick) targetRealNameFromNickname = matchedNick.realname;
+				}
+
+				// Step 1-2: 若第一階段找不到，啟動「雙向無視・」比對 (使用者輸入與資料庫卡名均移除・)
+				if (directMatches.length === 0 && !targetRealNameFromNickname) {
+					const cleanInputName = inputName.replace(/・/g, '');
+					
+					// 比對資料庫卡名（移除・）是否包含使用者輸入（移除・）
+					const noDotMatches = globalCardData.filter(c => c.name && c.name.replace(/・/g, '').includes(cleanInputName));
+					
+					if (noDotMatches.length > 0) {
+						isNoDotMatchMode = true;
+					} else if (Array.isArray(rawNicknames)) {
+						// 綽號也同步移除・進行完全比對
+						const matchedNickNoDot = rawNicknames.find(n => 
+							Array.isArray(n.nicknames) && n.nicknames.some(nick => nick.replace(/・/g, '') === cleanInputName)
+						);
+						if (matchedNickNoDot) targetRealNameFromNickname = matchedNickNoDot.realname;
+					}
 				}
 			}
 
@@ -4988,8 +5014,18 @@
 
 			const fuzzyAbilityText = expandFuzzyAbilityText(filterConfig.abilityText);
 
-			// 💡 2. 執行第一次正常條件過濾 (完全比對)
+			// 💡 2. 執行第一次正常條件過濾 (完全比對 / 雙向無視中點比對)
 			let exactResults = globalCardData.filter(card => {
+				if (isNoDotMatchMode) {
+					// 雙向拿掉「・」進行包含比對
+					const cleanInput = filterConfig.cardName.replace(/・/g, '');
+					const cleanCardNameVal = (card.name || '').replace(/・/g, '');
+					if (!cleanCardNameVal.includes(cleanInput)) return false;
+					
+					// 帶入卡名以外的其他條件過濾
+					const dummyConfig = { ...filterConfig, cardName: '' };
+					return checkCardMatchesFilters(card, dummyConfig, targetRealNameFromNickname);
+				}
 				return checkCardMatchesFilters(card, filterConfig, targetRealNameFromNickname);
 			});
 
@@ -8750,6 +8786,18 @@
 				if (typeof updateSummaryText === 'function') {
 					updateSummaryText();
 				}
+			});
+			
+			// 「今天我要」卡名輸入框新增 [・] 按鈕功能
+			document.getElementById('qa-btn-insert-dot')?.addEventListener('click', () => {
+				const cardNameInput = document.getElementById('qa-input-name');
+				if (!cardNameInput) return;
+
+				cardNameInput.value += '・';
+				cardNameInput.focus();
+
+				const len = cardNameInput.value.length;
+				cardNameInput.setSelectionRange(len, len);
 			});
 		});
 		
