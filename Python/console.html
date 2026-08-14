@@ -143,17 +143,17 @@
 
         <!-- Recent Logs Table -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-purple-400"></i> Recent 50 Event Details
-                </h2>
-                <div class="flex items-center gap-3">
-                    <select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
-                        <option value="default">預設排序 (最新事件優先)</option>
-                    </select>
-                    <span class="text-xs text-gray-500">Auto-refresh via WS</span>
-                </div>
-            </div>
+            <div class="flex items-center gap-3">
+				<!-- 新增：主動作類型下拉選單 -->
+				<select id="featureFilter" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
+					<option value="all">所有動作類型</option>
+				</select>
+				
+				<select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
+					<option value="default">預設排序 (最新事件優先)</option>
+				</select>
+				<span class="text-xs text-gray-500">Auto-refresh via WS</span>
+			</div>
             
             <div id="tableScrollContainer" class="overflow-x-auto custom-scrollbar max-h-[500px]">
                 <table class="w-full text-left text-sm text-gray-400 border-collapse">
@@ -213,7 +213,70 @@
 			</div>
 		</div>
 	</div>
+	<!-- Broadcast Modal -->
+	<div id="broadcastModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+			<div class="flex items-center justify-between border-b border-gray-800 pb-3">
+				<div class="flex items-center gap-2 text-emerald-400">
+					<i class="fa-solid fa-bullhorn text-xl"></i>
+					<h3 class="text-base font-bold text-gray-100">全站即時訊息廣播</h3>
+				</div>
+				<button onclick="closeBroadcastModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+			</div>
 
+			<div class="space-y-3">
+				<!-- 廣播對象設定 -->
+				<div>
+					<label class="text-xs font-semibold text-gray-300 block mb-1">廣播對象：</label>
+					<div class="flex gap-4 text-xs">
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="bcTargetType" value="all" checked onchange="handleTargetTypeChange()" class="text-emerald-500">
+							<span>所有人 (全域)</span>
+						</label>
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="bcTargetType" value="country" onchange="handleTargetTypeChange()" class="text-emerald-500">
+							<span>指定國家</span>
+						</label>
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="bcTargetType" value="user" onchange="handleTargetTypeChange()" class="text-emerald-500">
+							<span>指定在線使用者</span>
+						</label>
+					</div>
+				</div>
+
+				<!-- 動態目標選擇區 -->
+				<div id="bcTargetSelectionContainer" class="hidden bg-gray-950 p-3 rounded-lg border border-gray-800 max-h-32 overflow-y-auto custom-scrollbar">
+					<div id="bcTargetList" class="flex flex-wrap gap-2 text-xs">
+						<!-- 動態渲染在線使用者或國家 checkbox -->
+					</div>
+				</div>
+
+				<!-- 廣播訊息輸入 -->
+				<div>
+					<label class="text-xs font-semibold text-gray-300 block mb-1">訊息內容：</label>
+					<textarea id="bcMessageInput" rows="3" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs text-gray-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder-gray-600" placeholder="請輸入欲發送給使用者的彈窗訊息..."></textarea>
+				</div>
+
+				<!-- 動態驗證碼輸入 -->
+				<div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 space-y-1">
+					<div class="flex justify-between items-center text-xs">
+						<span class="text-gray-400">當前動態驗證碼：</span>
+						<span id="bcCodeHint" class="font-mono font-bold text-emerald-400">------</span>
+					</div>
+					<input type="text" id="bcCodeInput" class="w-full bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-center font-mono text-white tracking-widest outline-none focus:border-emerald-500" placeholder="請輸入上方動態驗證碼">
+				</div>
+			</div>
+
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeBroadcastModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
+					取消
+				</button>
+				<button id="btnSubmitBroadcast" onclick="submitBroadcastModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow-lg flex items-center gap-1.5">
+					<i class="fa-solid fa-paper-plane"></i> 確認送出
+				</button>
+			</div>
+		</div>
+	</div>
     <script>
         Chart.register(ChartDataLabels);
 
@@ -229,11 +292,12 @@
 
         // 全局狀態控制表格
         let currentLogs = [];
-        let knownUsers = []; // 維護使用者的排序順序
         let sortMode = 'default';
 		let pendingDeleteUser = null;
 		let startTimeObj = null;
 		let timerInterval = null;
+		let bcCodeInterval = null;
+		let onlineUserData = { users: [], countries: [] };
 		
 		// 1. 建立固定的國家顏色 Map，常見國家固定色，其餘動態指派
 		const COUNTRY_COLOR_MAP = {
@@ -304,6 +368,137 @@
 			if (!timerInterval) {
 				updateTimeAndDuration();
 				timerInterval = setInterval(updateTimeAndDuration, 1000);
+			}
+		}
+		
+		function updateBroadcastCodeHint() {
+			const now = new Date();
+			const pad = (n) => String(n).padStart(2, '0');
+			const code = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getSeconds())}`;
+			const el = document.getElementById('bcCodeHint');
+			if (el) el.innerText = code;
+		}
+		
+		async function sendBroadcast() {
+			// 1. 取得最新在線名單
+			try {
+				const resp = await fetch(`/api/console/online_users?${authParam}`);
+				if (resp.ok) {
+					onlineUserData = await resp.json();
+				}
+			} catch(e) {
+				console.warn("無法取得在線使用者", e);
+			}
+
+			document.getElementById('bcMessageInput').value = '';
+			document.getElementById('bcCodeInput').value = '';
+			document.querySelector('input[name="bcTargetType"][value="all"]').checked = true;
+			handleTargetTypeChange();
+
+			updateBroadcastCodeHint();
+			if (bcCodeInterval) clearInterval(bcCodeInterval);
+			bcCodeInterval = setInterval(updateBroadcastCodeHint, 1000);
+
+			document.getElementById('broadcastModal').classList.remove('hidden');
+		}
+
+		function closeBroadcastModal() {
+			if (bcCodeInterval) clearInterval(bcCodeInterval);
+			document.getElementById('broadcastModal').classList.add('hidden');
+		}
+
+		function handleTargetTypeChange() {
+			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
+			const container = document.getElementById('bcTargetSelectionContainer');
+			const listEl = document.getElementById('bcTargetList');
+			listEl.innerHTML = '';
+
+			if (targetType === 'all') {
+				container.classList.add('hidden');
+				return;
+			}
+
+			container.classList.remove('hidden');
+
+			if (targetType === 'country') {
+				if (onlineUserData.countries.length === 0) {
+					listEl.innerHTML = '<span class="text-gray-500">目前無在線國家</span>';
+					return;
+				}
+				onlineUserData.countries.forEach(c => {
+					const lbl = document.createElement('label');
+					lbl.className = 'flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-gray-700 cursor-pointer hover:border-emerald-500';
+					lbl.innerHTML = `<input type="checkbox" value="${c}" class="bc-target-chk text-emerald-500"> <span>${c}</span>`;
+					listEl.appendChild(lbl);
+				});
+			} else if (targetType === 'user') {
+				if (onlineUserData.users.length === 0) {
+					listEl.innerHTML = '<span class="text-gray-500">目前無在線使用者</span>';
+					return;
+				}
+				onlineUserData.users.forEach(u => {
+					const lbl = document.createElement('label');
+					lbl.className = 'flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-gray-700 cursor-pointer hover:border-emerald-500';
+					lbl.innerHTML = `<input type="checkbox" value="${u}" class="bc-target-chk text-emerald-500"> <span>${u}</span>`;
+					listEl.appendChild(lbl);
+				});
+			}
+		}
+
+		async function submitBroadcastModal() {
+			const msg = document.getElementById('bcMessageInput').value.trim();
+			const code = document.getElementById('bcCodeInput').value.trim();
+			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
+
+			if (!msg) {
+				alert("請輸入廣播內容！");
+				return;
+			}
+			if (!code) {
+				alert("請輸入驗證碼！");
+				return;
+			}
+
+			const targets = [];
+			if (targetType !== 'all') {
+				document.querySelectorAll('.bc-target-chk:checked').forEach(cb => {
+					targets.push(cb.value);
+				});
+				if (targets.length === 0) {
+					alert("請至少選擇一個廣播目標！");
+					return;
+				}
+			}
+
+			const btn = document.getElementById('btnSubmitBroadcast');
+			btn.disabled = true;
+			btn.innerText = "發送中...";
+
+			try {
+				const response = await fetch(`/api/console/broadcast?${authParam}`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						message: msg,
+						code: code,
+						timezone_offset: new Date().getTimezoneOffset(), // 💡 傳遞本地時區
+						target_type: targetType,
+						targets: targets
+					})
+				});
+
+				const data = await response.json();
+				if (!response.ok) {
+					throw new Error(data.detail || '發送失敗');
+				}
+
+				alert(`✅ 廣播已送出！在線接收端：${data.receivers} 人`);
+				closeBroadcastModal();
+			} catch (err) {
+				alert(`❌ ${err.message}`);
+			} finally {
+				btn.disabled = false;
+				btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 確認送出`;
 			}
 		}
 
@@ -467,31 +662,48 @@
 			}
 		}
 		
-		// 更新使用者下拉選單
+		// 更新使用者與動作類型下拉選單
 		function updateUserDropdown() {
 			const selectElem = document.getElementById('sortMode');
+			const featureElem = document.getElementById('featureFilter');
+			
 			const currentValue = selectElem.value;
+			const currentFeature = featureElem.value;
 
-			// 從目前 50 筆 log 收集所有 present 的 user (已自動過濾過期/消失用戶)
+			// 1. 從 50 筆 log 收集並重構使用者下拉選單
 			const presentUsers = Array.from(new Set(
 				currentLogs.map(log => log.user || log.country || 'Unknown')
-			)).sort(); // 預設字母 + ASC 排序 (如: HKa, HKb, TWa)
+			)).sort();
 
-			// 重構下拉選單選項
 			selectElem.innerHTML = `<option value="default">預設排序 (最新事件優先)</option>`;
-			
 			presentUsers.forEach(u => {
 				const option = document.createElement('option');
 				option.value = u;
 				option.innerText = `使用者：${u}`;
 				selectElem.appendChild(option);
 			});
-
-			// 若先前選取的用戶還在 50 筆內，維持選擇；若已被擠出 50 筆外則切回 default
 			if (presentUsers.includes(currentValue)) {
 				selectElem.value = currentValue;
 			} else {
 				selectElem.value = 'default';
+			}
+
+			// 2. 收集並重構動作類型下拉選單
+			const presentFeatures = Array.from(new Set(
+				currentLogs.map(log => log.feature || 'Unknown')
+			)).sort();
+			
+			featureElem.innerHTML = `<option value="all">所有動作類型</option>`;
+			presentFeatures.forEach(f => {
+				const option = document.createElement('option');
+				option.value = f;
+				option.innerText = `動作：${f}`;
+				featureElem.appendChild(option);
+			});
+			if (presentFeatures.includes(currentFeature)) {
+				featureElem.value = currentFeature;
+			} else {
+				featureElem.value = 'all';
 			}
 		}
 
@@ -500,22 +712,28 @@
 			const container = document.getElementById('tableScrollContainer');
 			const tbody = document.getElementById('logsTableBody');
 			const selectedMode = document.getElementById('sortMode').value;
+			const selectedFeature = document.getElementById('featureFilter').value; // 👈 讀取 Feature 篩選器
 			const isAdmin = Boolean(adminKey);
 
-			// 💡 補上卷軸高度紀錄
 			const oldScrollTop = container.scrollTop;
 			const oldScrollHeight = container.scrollHeight;
 
-			let displayLogs = [];
+			// 💡 雙重條件過濾
+			let displayLogs = currentLogs.filter(log => {
+				const userDisplay = log.user || log.country || 'Unknown';
+				const featureDisplay = log.feature || 'Unknown';
+				
+				// 條件 1: 使用者過濾
+				if (selectedMode !== 'default' && userDisplay !== selectedMode) return false;
+				
+				// 條件 2: 動作類型過濾
+				if (selectedFeature !== 'all' && featureDisplay !== selectedFeature) return false;
 
-			if (selectedMode === 'default') {
-				displayLogs = [...currentLogs];
-			} else {
-				// 點選特定使用者，僅過濾該使用者的軌跡
-				displayLogs = currentLogs.filter(log => (log.user || log.country || 'Unknown') === selectedMode);
-			}
+				return true;
+			});
 
 			tbody.innerHTML = '';
+			//... 保持下方渲染邏輯不變
 
 			displayLogs.forEach((log) => {
 				const trHeader = document.createElement('tr');
@@ -708,46 +926,6 @@
 			} catch (err) {
 				alert(err.message);
 				closeResetModal();
-			}
-		}
-		
-		// 發送廣播功能 (含二次驗證碼)
-		async function sendBroadcast() {
-			const msg = prompt("📢 請輸入要廣播給全站線上使用者的訊息：\n(若不發送請按取消)");
-			if (!msg || !msg.trim()) return;
-
-			// 計算當前 UTC+8 的提示文字（方便操作者查看）
-			const now = new Date();
-			// 轉為 UTC+8 時間
-			const utc8Date = new Date(now.getTime() + (now.getTimezoneOffset() + 480) * 60000);
-			const pad = (n) => String(n).padStart(2, '0');
-			const hintCode = `${utc8Date.getFullYear()}${pad(utc8Date.getMonth() + 1)}${pad(utc8Date.getDate())}${pad(utc8Date.getHours())}${pad(utc8Date.getSeconds())}`;
-
-			const code = prompt(`🔒 為防止誤觸，請輸入動態驗證碼`);
-			if (!code || !code.trim()) {
-				alert("⚠️ 已取消廣播：未輸入驗證碼");
-				return;
-			}
-
-			try {
-				const response = await fetch(`/api/console/broadcast?admin=${encodeURIComponent(adminKey)}`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ 
-						message: msg.trim(),
-						code: code.trim()
-					})
-				});
-				
-				const data = await response.json();
-
-				if (!response.ok) {
-					throw new Error(data.detail || '廣播發送失敗，權限不足或驗證碼錯誤');
-				}
-				
-				alert(`✅ 廣播發送成功！共即時送達給 ${data.receivers} 位線上使用者。`);
-			} catch (err) {
-				alert(`❌ ${err.message}`);
 			}
 		}
 

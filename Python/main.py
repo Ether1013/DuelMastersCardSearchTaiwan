@@ -130,32 +130,48 @@ class ConsoleConnectionManager:
 
 console_manager = ConsoleConnectionManager()
 
-# ---------------- 新增：一般使用者廣播連線管理器 ----------------
+# ---------------- 連線管理器與廣播 Model 升級 ----------------
 class ClientConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        # 結構: { websocket: {"user": user_id, "country": country} }
+        self.active_connections: Dict[WebSocket, Dict[str, str]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, user_id: str, country: str):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.active_connections[websocket] = {"user": user_id, "country": country}
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+            del self.active_connections[websocket]
 
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json({"type": "BROADCAST", "message": message})
-            except:
-                pass
+    async def broadcast(self, message: str, target_type: str = "all", targets: List[str] = []):
+        """
+        target_type: 'all' | 'country' | 'user'
+        targets: 國家代碼清單 (例 ['TW', 'HK']) 或 User ID 清單 (例 ['TWa', 'HKb'])
+        """
+        for ws, info in list(self.active_connections.items()):
+            should_send = False
+            if target_type == "all":
+                should_send = True
+            elif target_type == "country" and info.get("country") in targets:
+                should_send = True
+            elif target_type == "user" and info.get("user") in targets:
+                should_send = True
+
+            if should_send:
+                try:
+                    await ws.send_json({"type": "BROADCAST", "message": message})
+                except:
+                    self.disconnect(ws)
 
 client_manager = ClientConnectionManager()
 
-# 用來接收 Console 廣播內容的 Model
 class BroadcastModel(BaseModel):
     message: str
-    code: str  # 👈 新增驗證碼欄位
+    code: str
+    timezone_offset: int = -480  # 預設 UTC+8 (分鐘差)
+    target_type: str = "all"     # 'all' | 'country' | 'user'
+    targets: List[str] = []
 # -----------------------------------------------------------
 
 # --- 定義預設標籤結構 ---
@@ -1278,40 +1294,68 @@ async def websocket_console(
 # ---------------- 新增：前端網頁連入的 WebSocket 路由 ----------------
 @app.websocket("/ws/broadcast")
 async def websocket_broadcast(websocket: WebSocket):
-    await client_manager.connect(websocket)
+    # 取得連線的 IP 與 Country
+    client_host = websocket.client.host if websocket.client else ""
+    country = websocket.headers.get("cf-ipcountry") or websocket.headers.get("x-country-code")
+    if not country or country.upper() == "XX":
+        country = "TW" if client_host in ["127.0.0.1", "::1", "localhost"] else "Unknown"
+    else:
+        country = country.upper()
+
+    user_id = get_user_id_by_ip(client_host, country)
+    await client_manager.connect(websocket, user_id, country)
     try:
         while True:
-            # 靜態掛起，不主動發訊息，斷線會拋出例外
             await websocket.receive_text()
     except WebSocketDisconnect:
         client_manager.disconnect(websocket)
 
-# ---------------- 新增：Console 發送廣播用的 API ----------------
 @app.post("/api/console/broadcast")
 async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(None)):
-    # 僅允許 Admin 觸發廣播
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
     
-    if not payload.message:
+    if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="廣播訊息不可為空")
 
-    # --- 新增驗證碼比對邏輯 ---
-    now_utc8 = datetime.now(TZ_UTC8)
-    
-    # 計算允許的時間格式 (考慮傳輸時可能的 1 秒時間差，比對 當前秒數 與 前1秒)
+    # 依前端傳入的 timezone_offset 動態計算當地時間
+    # JS 的 getTimezoneOffset() 回傳值：UTC-8 為 -480 分鐘
+    user_tz = timezone(timedelta(minutes=-payload.timezone_offset))
+    now_user_time = datetime.now(user_tz)
+
     valid_codes = [
-        now_utc8.strftime("%Y%m%d%H%S"),
-        (now_utc8 - timedelta(seconds=1)).strftime("%Y%m%d%H%S"),
-        (now_utc8 + timedelta(seconds=1)).strftime("%Y%m%d%H%S")
+        now_user_time.strftime("%Y%m%d%H%S"),
+        (now_user_time - timedelta(seconds=1)).strftime("%Y%m%d%H%S"),
+        (now_user_time + timedelta(seconds=1)).strftime("%Y%m%d%H%S")
     ]
 
     if payload.code.strip() not in valid_codes:
-        raise HTTPException(status_code=400, detail="驗證碼錯誤或已過期，請重新嘗試！")
-    # ---------------------------
+        raise HTTPException(status_code=400, detail="驗證碼錯誤或已過期，請重新輸入當前秒數！")
 
-    await client_manager.broadcast(payload.message)
+    await client_manager.broadcast(
+        message=payload.message.strip(),
+        target_type=payload.target_type,
+        targets=payload.targets
+    )
     return {"status": "success", "receivers": len(client_manager.active_connections)}
+
+# 提供給 Console 取得目前在線使用者的 API
+@app.get("/api/console/online_users")
+async def get_online_users(admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    users = []
+    countries = set()
+    for info in client_manager.active_connections.values():
+        users.append(info["user"])
+        countries.add(info["country"])
+    
+    return {
+        "users": sorted(list(set(users))),
+        "countries": sorted(list(countries)),
+        "total_online": len(client_manager.active_connections)
+    }
 
 def get_client_country(request: Request) -> str:
     """取得請求來源的國籍 ISO 代碼（含 localhost = TW 判斷）"""
@@ -1564,22 +1608,26 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    global action_details_log, last_reset_time
+    global action_details_log, last_reset_time, ip_counter_by_country, ip_to_user_id
     feature_counter.clear()
     country_counter.clear()
     user_counter.clear()
     action_details_log.clear()
 
-    # 👈 重置時間更新為當前時間
+    # 👈 徹底清空國籍人數登記
+    ip_counter_by_country.clear()
+    ip_to_user_id.clear()
+
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 
     await console_manager.broadcast({
         "total_events": 0,
         "stats": {},
         "country_stats": {},
+        "country_user_counts": {},
         "user_stats": {},
         "recent_50_details": [],
-        "start_time": last_reset_time  # 👈 廣播新開始時間
+        "start_time": last_reset_time
     })
 
-    return {"status": "success", "message": "所有統計數據已重置！"}
+    return {"status": "success", "message": "所有統計數據與國籍計數已徹底重置！"}

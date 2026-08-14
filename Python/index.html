@@ -4921,9 +4921,6 @@
 			showToast(`✅ 牌組 ${targetCode} 已成功覆蓋並更新結果！`);
 		});
 
-        // =========================================
-		// 搜尋過濾核心演算法 (整合後)
-		// =========================================
 		// =========================================
 		// 搜尋過濾核心演算法 (整合後)
 		// =========================================
@@ -5440,27 +5437,36 @@
 			};			
 		}
 		
-		// 💡 參考 Footer (updateSummaryText) 邏輯，提取當前選擇的卡種與文明過濾條件
+		// 💡 升級後的過濾條件提取函式 (需求 3：文明與單多色分離，且預設全選時不送出)
 		function getCivAndTypeFiltersDetail() {
 			const details = {};
 
-			// 1. 卡種提取
+			// 1. 卡種 (若非全選才送出)
 			const allCardTypes = document.querySelectorAll('.chk-cardtype');
 			const checkedCT = Array.from(allCardTypes).filter(cb => cb.checked);
-			
 			if (checkedCT.length > 0 && checkedCT.length < allCardTypes.length) {
-				// 若有選取特定卡種（且非全選），轉為中文/顯示名稱陣列
 				details.cardTypes = checkedCT.map(cb => cb.parentNode.textContent.trim());
 			}
 
-			// 2. 許可文明 (Permit Civs) 提取
-			const allPermitBoxes = document.querySelectorAll('#civ-permit .civ-box');
-			const activePermitBoxes = Array.from(document.querySelectorAll('#civ-permit .civ-box.active'));
-			if (activePermitBoxes.length < allPermitBoxes.length) {
-				details.permitCivs = activePermitBoxes.map(box => box.textContent.trim());
+			// 2. 許可文明 (光, 水, 闇, 火, 自, 無) 與 單色/多色 分開處理
+			const allCivBoxes = Array.from(document.querySelectorAll('#civ-permit .civ-box'));
+			const basicCivBoxes = allCivBoxes.filter(b => !['mono', 'multi'].includes(b.dataset.val));
+			const specCivBoxes = allCivBoxes.filter(b => ['mono', 'multi'].includes(b.dataset.val));
+
+			const activeBasic = basicCivBoxes.filter(b => b.classList.contains('active'));
+			const activeSpec = specCivBoxes.filter(b => b.classList.contains('active'));
+
+			// 若基礎文明不是全選（預設值為全選 6 種），才送出
+			if (activeBasic.length < basicCivBoxes.length) {
+				details.permitCivs = activeBasic.map(b => b.textContent.trim());
 			}
 
-			// 3. 必須文明 (Require Civs) 提取
+			// 若單色/多色不是全選（預設值為全選 2 種），才送出
+			if (activeSpec.length < specCivBoxes.length) {
+				details.permitColorType = activeSpec.map(b => b.textContent.trim());
+			}
+
+			// 3. 必須文明
 			const activeRequire = Array.from(document.querySelectorAll('#civ-require .civ-box.active:not([data-val="and"]):not([data-val="or"])'));
 			if (activeRequire.length > 0) {
 				const isOrActive = document.querySelector('#civ-require .civ-box[data-val="or"]')?.classList.contains('active');
