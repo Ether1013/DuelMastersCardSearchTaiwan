@@ -4931,12 +4931,28 @@
 			
 			// 取得當前 UI 過濾條件作為 detail 側錄
 			const filterConfig = getFilterConfigFromUI();
+			// 💡 調整 1：若為基本過濾（非進階面板），數字一律不帶 ~ 符號；只有進階模式或計算機範圍才帶 ~
+			const formatFilterRange = (v1, v2, isAdv) => {
+				if (!v1 && !v2) return undefined;
+				
+				// 基本面板：只取第一個值，絕不加 ~
+				if (!isAdv) {
+					return v1 ? String(v1) : (v2 ? String(v2) : undefined);
+				}
+				
+				// 進階模式下：有雙邊、左邊、右邊等範圍格式
+				if (v1 && v2) return `${v1}~${v2}`;
+				if (v1) return `${v1}~`;
+				if (v2) return `~${v2}`;
+				return undefined;
+			};
+
 			const activeFiltersDetail = {
 				...getCivAndTypeFiltersDetail(),
 				cardName: filterConfig.cardName || undefined,
 				seriesSmall: filterConfig.seriesSmall || undefined,
-				cost: (filterConfig.cost1 || filterConfig.cost2) ? `${filterConfig.cost1}~${filterConfig.cost2}` : undefined,
-				power: (filterConfig.power1 || filterConfig.power2) ? `${filterConfig.power1}~${filterConfig.power2}` : undefined,
+				cost: formatFilterRange(filterConfig.cost1, filterConfig.cost2, isAdvMode),
+				power: formatFilterRange(filterConfig.power1, filterConfig.power2, isAdvMode),
 				races: filterConfig.races.length > 0 ? filterConfig.races : undefined,
 				abilities: filterConfig.abilities.length > 0 ? filterConfig.abilities : undefined,
 				abilityText: filterConfig.abilityText || undefined,
