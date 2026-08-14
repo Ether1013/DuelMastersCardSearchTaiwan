@@ -4958,9 +4958,6 @@
 		
 			hasSearched = true;
 			
-			// 跳轉至結果頁籤
-			navigateToResultPage();
-
 			let targetRealNameFromNickname = null;
 			let isNoDotMatchMode = false; // 標記是否進入「雙向無視・」比對模式
 
@@ -5069,7 +5066,20 @@
 			// 維持 currentFilterResults 供匯出與其他外部功能相容
 			currentFilterResults = [...exactResults, ...fuzzyResults];
 
-			// 💡 6. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製
+			// 💡 判斷是否跳轉或顯示無資料彈窗
+			if (exactResults.length === 0 && fuzzyResults.length === 0) {
+				showNoticeModalConfirm({
+					title: "🔍 查無資料",
+					message: "找不到符合條件的卡牌，請嘗試放寬搜尋條件或減少限制。",
+					confirmText: "我知道了",
+					showCancel: false
+				});
+			} else {
+				// 有資料才跳轉至結果頁籤
+				navigateToResultPage();
+			}
+
+			// 💡 6. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製 (維持背景渲染狀態)
 			renderCurrentResultsWithSort();
 		});
 		
@@ -7450,7 +7460,7 @@
         }
 		
 		// 通用式 Modal Confirm 對話框 (套用既有 #system-notice-modal)
-		function showNoticeModalConfirm({ title = "📢 系統提示", message = "", confirmText = "確定", cancelText = "取消" }) {
+		function showNoticeModalConfirm({ title = "📢 系統提示", message = "", confirmText = "確定", cancelText = "取消", showCancel = true }) {
 			return new Promise((resolve) => {
 				const modal = document.getElementById('system-notice-modal');
 				const titleEl = document.getElementById('system-notice-title');
@@ -7470,7 +7480,7 @@
 				// 設定按鈕文字與顯示狀態
 				btnConfirm.innerText = confirmText;
 				btnCancel.innerText = cancelText;
-				btnCancel.style.display = 'block'; // 顯示取消按鈕
+				btnCancel.style.display = showCancel ? 'block' : 'none'; // 👈 依參數決定是否顯示取消按鈕
 
 				// 清除舊事件綁定，避免重複處發
 				const newConfirm = btnConfirm.cloneNode(true);

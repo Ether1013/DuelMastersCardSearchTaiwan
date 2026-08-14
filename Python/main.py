@@ -270,7 +270,13 @@ async def push_tags_to_github():
     except Exception as e:
         print(f"[Tags GitHub Sync 網路/系統錯誤]: {e}")
 
-
+def get_clean_recent_logs():
+    """將內部使用的隱藏欄位 (以 _ 開頭) 過濾掉，再回傳給前端"""
+    return [
+        {k: v for k, v in log.items() if not k.startswith('_')}
+        for log in action_details_log
+    ]
+    
 async def tag_debounce_timer():
     await asyncio.sleep(60)  # 等待 60 秒防抖
     try:
@@ -1076,27 +1082,97 @@ async def track_feature(request: Request):
         detail = data.get("detail")
         country = get_client_country(request)
         
-        # 💡 新增：取得真實 IP 並生成 User ID
         client_ip = request.headers.get("cf-connecting-ip") or request.headers.get("x-forwarded-for") or client_host
         if client_ip and "," in client_ip:
             client_ip = client_ip.split(",")[0].strip()
         user_id = get_user_id_by_ip(client_ip, country)
 
         if feature_name:
-            feature_counter[feature_name] += 1
-            country_counter[country] += 1
-            user_counter[user_id] += 1
             now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
 
-            entry = {
-                "feature": feature_name,
-                "country": country,
-                "user": user_id,
-                "detail": detail,
-                "time": now_utc8
-            }
+            # ================= 需求 1: Diff-Chain 與 Skip 邏輯 =================
+            last_user_log = None
+            for log in action_details_log:
+                if log.get("user") == user_id:
+                    last_user_log = log
+                    break
 
-            action_details_log.appendleft(entry)
+            is_skip = False
+            is_merge = False
+            chained_key = None
+
+            if last_user_log and last_user_log.get("feature") == feature_name:
+                old_raw = last_user_log.get("_raw_detail")
+                new_raw = detail
+
+                if old_raw == new_raw:
+                    is_skip = True
+                elif isinstance(old_raw, dict) and isinstance(new_raw, dict):
+                    # 確保新舊屬性 Key 完全相同
+                    if set(old_raw.keys()) == set(new_raw.keys()):
+                        diff_keys = [k for k in old_raw.keys() if old_raw[k] != new_raw[k]]
+                        # 只有一個屬性不同
+                        if len(diff_keys) == 1:
+                            changed_k = diff_keys[0]
+                            last_chained_key = last_user_log.get("_chained_key")
+
+                            # 若是第一次變更，或變更的屬性跟上一次相同，則啟動合併
+                            if last_chained_key is None or last_chained_key == changed_k:
+                                is_merge = True
+                                chained_key = changed_k
+                                
+                                current_display_detail = copy.deepcopy(last_user_log["detail"])
+                                old_disp_val = str(current_display_detail[changed_k])
+                                new_raw_val = str(new_raw[changed_k])
+                                current_display_detail[changed_k] = f"{old_disp_val} > {new_raw_val}"
+
+                                last_user_log["detail"] = current_display_detail
+                                last_user_log["_raw_detail"] = copy.deepcopy(new_raw)
+                                last_user_log["_chained_key"] = changed_k
+                                last_user_log["time"] = now_utc8
+                                
+                                # 更新後移至最頂端
+                                action_details_log.remove(last_user_log)
+                                action_details_log.appendleft(last_user_log)
+
+                elif isinstance(old_raw, str) and isinstance(new_raw, str):
+                    # 若為純字串，直接進行合併
+                    last_chained_key = last_user_log.get("_chained_key")
+                    if last_chained_key is None or last_chained_key == "_string_chain":
+                        is_merge = True
+                        chained_key = "_string_chain"
+                        
+                        old_disp_val = str(last_user_log["detail"])
+                        new_raw_val = str(new_raw)
+                        last_user_log["detail"] = f"{old_disp_val} > {new_raw_val}"
+                        last_user_log["_raw_detail"] = new_raw
+                        last_user_log["_chained_key"] = chained_key
+                        last_user_log["time"] = now_utc8
+                        
+                        action_details_log.remove(last_user_log)
+                        action_details_log.appendleft(last_user_log)
+
+            # 處理全域計數與寫入
+            if is_skip or is_merge:
+                # 依據需求，Skip 與 Merge 不累加全域計數，也不新增一筆獨立紀錄
+                pass
+            else:
+                # 視為全新動作，正常計數與新增
+                feature_counter[feature_name] += 1
+                country_counter[country] += 1
+                user_counter[user_id] += 1
+
+                entry = {
+                    "feature": feature_name,
+                    "country": country,
+                    "user": user_id,
+                    "detail": copy.deepcopy(detail),
+                    "_raw_detail": copy.deepcopy(detail), # 儲存原始版本供下次比對
+                    "_chained_key": None,
+                    "time": now_utc8
+                }
+                action_details_log.appendleft(entry)
+            # ================================================================
 
             # 廣播給所有連接在 WebSocket Console 的用戶
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
@@ -1107,8 +1183,8 @@ async def track_feature(request: Request):
                 "stats": sorted_stats,
                 "country_stats": sorted_country_stats,
                 "country_user_counts": get_country_user_counts(),
-                "recent_50_details": list(action_details_log),
-                "start_time": last_reset_time  # 👈 新增
+                "recent_50_details": get_clean_recent_logs(), # 👈 改用輔助函式
+                "start_time": last_reset_time
             })
 
     except Exception:
@@ -1161,7 +1237,7 @@ async def get_feature_stats(
         "stats": sorted_stats,
         "country_stats": sorted_country_stats,
         "country_user_counts": get_country_user_counts(),
-        "recent_50_details": list(action_details_log),
+        "recent_50_details": get_clean_recent_logs(),
         "start_time": last_reset_time  # 👈 新增
     }
     return PrettyJSONResponse(content=result)
@@ -1195,7 +1271,7 @@ async def websocket_console(
         "stats": sorted_stats,
         "country_stats": sorted_country_stats,
         "country_user_counts": get_country_user_counts(),
-        "recent_50_details": list(action_details_log),
+        "recent_50_details": get_clean_recent_logs(),
         "start_time": last_reset_time  # 👈 新增
     })
 
@@ -1478,7 +1554,7 @@ async def delete_user_logs(
         "stats": sorted_stats,
         "country_stats": sorted_country_stats,
         "user_stats": sorted_user_stats,
-        "recent_50_details": list(action_details_log)
+        "recent_50_details": get_clean_recent_logs()
     })
     
     return {"status": "success", "message": f"已刪除使用者 {user_id} 的紀錄"}
