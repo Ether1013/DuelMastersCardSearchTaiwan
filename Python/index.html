@@ -1798,127 +1798,153 @@
 		}
 		
 		/* ================= 組牌購物車專用樣式 ================= */
-		.floating-cart-btn {
-			position: fixed;
-			right: 20px;
-			top: 65vh;
-			width: 56px;
-			height: 56px;
-			background-color: #0284c7;
-			color: white;
-			border-radius: 50%;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			font-size: 24px;
-			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-			cursor: pointer;
-			z-index: 900; /* 高於浮動按鈕，低於 Modal */
-			transition: transform 0.2s, opacity 0.2s;
-			display: none; /* 預設隱藏，有卡片才顯示 */
-		}
-		.floating-cart-btn:hover { transform: scale(1.08); background-color: #0369a1; }
-		.floating-cart-btn:active { transform: scale(0.95); }
-		.cart-badge {
-			position: absolute;
-			top: -5px;
-			right: -5px;
-			background-color: #ef4444;
-			color: white;
-			font-size: 11px;
-			font-weight: bold;
-			padding: 2px 6px;
-			border-radius: 10px;
-			border: 2px solid #fff;
-		}
-		/* 購物車列表總容器：單組卡牌之間向底對齊 */
-		.cart-list-container {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 15px;
-			padding: 10px;
-			align-items: flex-end; /* 💡 關鍵：向底對齊 */
-		}
-		/* 購物車單一卡牌群組容器 */
-		.cart-item-group {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			background: #ffffff;
-			padding: 10px;
-			border-radius: 8px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-			border: 1px solid #e2e8f0;
-		}
-		/* 支援同一張卡多列並排的容器：列與列之間向底對齊 */
-		.cart-card-rows-container {
-			display: flex;
-			flex-direction: row;
-			gap: 12px;
-			align-items: flex-end; /* 💡 關鍵：向底對齊 */
-			margin-bottom: 8px;
-		}
-		.cart-stack-wrapper {
-			display: flex;
-			flex-direction: column;
-			justify-content: flex-end;
-			position: relative;
-			/* cursor: pointer;  👈 可以把這行刪除或註解掉 */
-			padding-top: 36px;
-			min-height: 196px;
-			width: 140px;
-		}
-		.cart-stack-wrapper img, .cart-stack-wrapper .cart-no-img {
-			width: 140px;
-			border-radius: 6px;
-			box-shadow: 0 -2px 5px rgba(0,0,0,0.25);
-			transition: transform 0.2s;
-			object-fit: contain;
-		}
-		.cart-stack-wrapper .cart-no-img {
-			height: 196px;
-			background: #f1f5f9;
-			color: #475569;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			font-weight: bold;
-			border: 2px dashed #cbd5e1;
-			font-size: 13px;
-			text-align: center;
-			padding: 8px;
-			box-sizing: border-box;
-		}
-		.cart-stack-wrapper img:hover { 
-			transform: translateY(-4px); 
-		}
-		.cart-controls {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			background: #f1f5f9;
-			padding: 4px 8px;
-			border-radius: 12px;
-		}
-		.cart-controls button {
-			width: 24px;
-			height: 24px;
-			border-radius: 50%;
-			border: none;
-			background: #0284c7;
-			color: white;
-			font-weight: bold;
-			cursor: pointer;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-		.cart-controls button:hover { background: #0369a1; }
-		.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
+		/* ================= 組牌購物車專用樣式 ================= */
+.floating-cart-btn {
+    position: fixed;
+    right: 20px;
+    top: 65vh;
+    width: 56px;
+    height: 56px;
+    background-color: #0284c7;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    z-index: 900;
+    transition: transform 0.2s, opacity 0.2s;
+    display: none;
+}
+.floating-cart-btn:hover { transform: scale(1.08); background-color: #0369a1; }
+.floating-cart-btn:active { transform: scale(0.95); }
+.cart-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 2px solid #fff;
+}
 
-		/* 截圖時隱藏購物車加入與申請暱稱按鈕 */
-		.is-capturing .cart-add-btn-overlay,
-		.is-capturing .nickname-apply-btn-overlay { display: none !important; }
+/* 購物車總列表容器 */
+.cart-list-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 10px;
+    align-items: flex-end;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 單張卡牌（群組）容器 */
+.cart-item-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 多疊並排容器：支援自動換行 */
+.cart-card-rows-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 10px;
+    max-width: 100%;
+}
+
+/* 💡 卡牌堆疊外框：留出頂部給 4 張卡片展開的總高度 (約 236px) */
+.cart-stack-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    width: 126px;
+    min-height: 236px;  /* 👈 基礎 176px + 3張卡片各往上露20px (60px) = 236px */
+    flex-shrink: 0;
+}
+
+/* 基礎卡圖尺寸（縮小 10%） */
+.cart-stack-wrapper img, 
+.cart-stack-wrapper .cart-no-img {
+    width: 126px !important;
+    height: 176px !important;
+    border-radius: 6px;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+    object-fit: contain;
+    background-color: #fff;
+    flex-shrink: 0;
+}
+
+/* 💡 核心展開效果：第 2、3、4 張卡片精確往後上方階梯式位移 */
+.cart-stack-wrapper img:not(:first-child),
+.cart-stack-wrapper .cart-no-img:not(:first-child) {
+    margin-top: -156px !important; /* 176px - 20px = 露出上方 20px 邊框與卡名 */
+}
+
+.cart-stack-wrapper .cart-no-img {
+    background: #f1f5f9;
+    color: #475569;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    border: 2px dashed #cbd5e1;
+    font-size: 12px;
+    text-align: center;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.cart-stack-wrapper img:hover { 
+    transform: translateY(-4px); 
+}
+
+.cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+.cart-controls button {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: #0284c7;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.cart-controls button:hover { background: #0369a1; }
+.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
+
+/* 截圖時隱藏購物車加入與申請暱稱按鈕 */
+.is-capturing .cart-add-btn-overlay,
+.is-capturing .nickname-apply-btn-overlay { display: none !important; }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2170,6 +2196,7 @@
                 <h3>系列大編號</h3>
                 <select id="series-big">
                     <option value="">全部</option>
+					<option value="__DECK_ONLY__">📦 官方牌組</option>
                     <option value="DM26-SD1">DM26-SD1</option>
                     <option value="DM26">DM26</option>
                     <option value="DM25-">DM25</option>
@@ -4436,6 +4463,7 @@
 		}
 		
 		// --- 系列選單連動邏輯 ---
+		// --- 系列選單連動邏輯 ---
 		function initSeriesDropdown() {
 			const bigSelect = document.getElementById('series-big');
 			const smallSelect = document.getElementById('series-small');
@@ -4452,21 +4480,31 @@
 
 				let matchCount = 0;
 
-				/* ================= 修改後 ================= */
 				// 1. 將物件轉為陣列並整理 setcode 欄位
 				const setListArray = Object.entries(rawSetlist).map(([key, setInfo]) => {
 					const setcode = setInfo.setcode || setInfo.code || setInfo.id || key;
 					const setname = setInfo.setname || setInfo.name || setcode;
-					return { key, setcode, setname };
+					const isdeck = Boolean(setInfo.isdeck === true); // 💡 提取 isdeck 屬性
+					return { key, setcode, setname, isdeck };
 				});
 
-				// 2. 依照 setcode (即 value) 進行降冪排序（字串+數字混合，越新的商品排前面）
-				// 如果希望舊的排前面，可改為: a.setcode.localeCompare(b.setcode, undefined, { numeric: true, sensitivity: 'base' })
+				// 2. 依照 setcode 進行降冪排序（新商品排前面）
 				setListArray.sort((a, b) => a.setcode.localeCompare(b.setcode, undefined, { numeric: true, sensitivity: 'base' }));
 
-				// 3. 依序填入下拉選單
-				setListArray.forEach(({ key, setcode, setname }) => {
-					const isMatch = !selectedBigValue || setcode.startsWith(selectedBigValue);
+				// 3. 依序填入下拉選單 (已修正 isMatch 判定)
+				setListArray.forEach(({ key, setcode, setname, isdeck }) => {
+					let isMatch = false;
+					const upperCode = String(setcode).trim().toUpperCase();
+
+					if (!selectedBigValue) {
+						isMatch = true; // 全部
+					} else if (selectedBigValue === '__DECK_ONLY__') {
+						// 💡 限制：isdeck 為 true，且商品編號開頭必須是 'O' 或 'D'
+						const isODPrefix = upperCode.startsWith('O') || upperCode.startsWith('D');
+						isMatch = isdeck && isODPrefix;
+					} else {
+						isMatch = setcode.startsWith(selectedBigValue);
+					}
 
 					if (isMatch) {
 						const opt = document.createElement('option');
@@ -5682,7 +5720,15 @@
 				const cleanCardName = card.name ? card.name.trim() : "";
 
 				for (const [setcode, setObj] of Object.entries(rawSetlist)) {
-					if (setcode.startsWith(cfg.seriesBig)) {
+					const upperCode = String(setcode).trim().toUpperCase();
+					const isODPrefix = upperCode.startsWith('O') || upperCode.startsWith('D');
+
+					// 💡 限制：選「牌組」時需為 isdeck 且 O/D 開頭
+					const isBigMatch = (cfg.seriesBig === '__DECK_ONLY__') 
+						? (setObj?.isdeck === true && isODPrefix) 
+						: setcode.startsWith(cfg.seriesBig);
+
+					if (isBigMatch) {
 						const cardList = setObj?.setcardlist || setObj?.cardlist;
 						if (Array.isArray(cardList)) {
 							const isMatch = cardList.some(item => {
@@ -5699,7 +5745,7 @@
 				}
 
 				if (!isInAnySet) return false;
-			}			
+			}		
 			
 			if (targetRealNameFromNickname) {
 				if (card.name !== targetRealNameFromNickname) return false;
