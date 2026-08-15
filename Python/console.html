@@ -146,29 +146,26 @@
             </div>
         </div>
 
-        <!-- Recent Logs Table -->
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <div class="flex items-center gap-3">
-				<!-- 新增：主動作類型下拉選單 -->
+        <!-- 修改後的排版結構 -->
+		<div class="flex justify-between items-center mb-4 gap-3">
+			<!-- 左側容器：兩個下拉選單一上一下排列 -->
+			<div class="flex flex-col gap-2">
+				<!-- 上層：主動作類型下拉選單 -->
 				<select id="featureFilter" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
 					<option value="all">所有動作類型</option>
 				</select>
 				
+				<!-- 下層：使用者別下拉選單 -->
 				<select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
 					<option value="default">預設排序 (最新事件優先)</option>
 				</select>
-				<span class="text-xs text-gray-500">Auto-refresh via WS</span>
 			</div>
-            
-            <div id="tableScrollContainer" class="overflow-x-auto custom-scrollbar max-h-[500px]">
-                <table class="w-full text-left text-sm text-gray-400 border-collapse">
-                    <!-- 💡 已移除 thead，改用更適合手機與小螢幕的上下層單欄排版 -->
-                    <tbody id="logsTableBody">
-                        <!-- Dynamic Rows -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+			
+			<!-- 右側：說明文字靠右並自動上下置中 -->
+			<div class="flex items-center">
+				<span class="text-xs text-gray-500 whitespace-nowrap">Auto-refresh via WS</span>
+			</div>
+		</div>
     </main>
 	
 	<!-- Delete User Logs Modal -->

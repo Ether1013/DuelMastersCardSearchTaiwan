@@ -2114,12 +2114,11 @@
         </div>
 
 		<!-- 新增 row-flex 包裹容器，讓種族與能力在桌機並排、手機版一上一下 -->
-        <div class="row-flex">
+		<div class="row-flex">
 			<!-- D/F. 種族設定 -->
 			<div class="col" id="section-race">
 				<h3>
 					<span>種族設定</span>
-					<!-- 💡 加上 advanced-only 與 advanced-only-flex 讓按鈕在基礎過濾時自動隱藏 -->
 					<div id="race-logic-group" class="race-logic-group advanced-only advanced-only-flex">
 						<button type="button" class="btn-race-logic active" data-logic="AND">全部包含</button>
 						<button type="button" class="btn-race-logic" data-logic="OR">滿足任一</button>
@@ -2127,8 +2126,9 @@
 				</h3>
 				<div id="race-container">
 					<div class="flex-input-row">
-						<select class="race-select"></select>
-						<button class="btn-icon advanced-only btn-add-race">+</button>
+						<!-- 💡 調整：按鈕移至最左側，保留 advanced-only (進階模式才顯示) -->
+						<button type="button" class="btn-icon advanced-only btn-add-race" style="padding: 8px 12px; font-weight: bold;">+</button>
+						<select class="race-select" style="margin-bottom: 0;"></select>
 					</div>
 				</div>
 			</div>
@@ -2143,9 +2143,10 @@
 				</div>
 				<div id="ability-container">
 					<div class="flex-input-row">
-						<select class="ability-select"></select>
+						<!-- 💡 調整：按鈕移至最左側，無 advanced-only (基本與進階皆可使用) -->
+						<button type="button" class="btn-icon btn-add-ability" style="padding: 8px 12px; font-weight: bold;">+</button>
+						<select class="ability-select" style="margin-bottom: 0;"></select>
 						<button type="button" class="btn-native-ability" data-native="false">原生能力</button>
-						<button class="btn-icon advanced-only btn-add-ability">+</button>
 					</div>
 				</div>
 				<div class="advanced-only" style="margin-top: 10px; width: 100%;">
@@ -4635,10 +4636,11 @@
 			});
         }
 
-        // 在 initDropdownData 處將 bindAddRemoveEvents 對能力選單的綁定調整，或直接修改 bindAddRemoveEvents 內部邏輯：
-		function bindAddRemoveEvents(btnAddSelector, containerSelector, selectClass, optionsHtml) {
+        function bindAddRemoveEvents(btnAddSelector, containerSelector, selectClass, optionsHtml) {
 			const container = document.querySelector(containerSelector);
 			const oldBtn = document.querySelector(btnAddSelector);
+			if (!oldBtn || !container) return;
+
 			const newBtn = oldBtn.cloneNode(true);
 			oldBtn.parentNode.replaceChild(newBtn, oldBtn);
 
@@ -4646,18 +4648,21 @@
 				const row = document.createElement('div');
 				row.className = 'flex-input-row';
 				
-				// 判斷是否為能力過濾容器
 				const isAbility = containerSelector === '#ability-container';
-				// 動態生成能力橫列時
+				const isRace = containerSelector === '#race-container';
+
+				// 判斷是否為進階模式才顯示的刪除按鈕 (種族橫列需帶有 advanced-only)
+				const advClass = isRace ? 'advanced-only' : '';
 				const nativeBtnHtml = isAbility ? `<button type="button" class="btn-native-ability" data-native="false">原生能力</button>` : '';
 
+				// 💡 統一將 [-] 按鈕放在最前面 (左側)
 				row.innerHTML = `
-					<select class="${selectClass}">${optionsHtml}</select>
+					<button type="button" class="btn-icon btn-remove ${advClass}" style="padding: 8px 12px; background: #fee2e2; color: #b91c1c; font-weight: bold;">-</button>
+					<select class="${selectClass}" style="margin-bottom: 0;">${optionsHtml}</select>
 					${nativeBtnHtml}
-					<button class="btn-icon btn-remove">-</button>
 				`;
 
-				// 綁定動態新增項目的移除事件
+				// 綁定動態刪除事件
 				row.querySelector('.btn-remove').addEventListener('click', function() {
 					row.remove();
 					updateSummaryText(); 
