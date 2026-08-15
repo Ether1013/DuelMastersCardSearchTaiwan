@@ -63,6 +63,11 @@
                     <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-key"></i> 產生Token
                     </button>
+					
+					<!-- 一鍵匯出按鈕 (所有角色皆可使用，或依需要加 style="display: none;" 僅限 Admin) -->
+					<button onclick="exportDashboardDataForAI()" class="whitespace-nowrap px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white text-xs rounded-lg transition border border-purple-500/30 flex items-center gap-1.5 shadow-lg">
+						<i class="fa-solid fa-file-export"></i> 匯出AI分析JSON
+					</button>
                 </div>
 				
 				<!-- 新增：廣播按鈕 (預設隱藏，僅 Admin 顯示) -->
@@ -873,6 +878,103 @@
                 alert(err.message);
             }
         }
+		
+		// ==========================================
+		// 📋 一鍵匯出 Console 當前所有可見數據供 AI 分析
+		// ==========================================
+		async function exportDashboardDataForAI() {
+			// 1. 取得當前畫面上經過篩選後的 Log 清單
+			const selectedMode = document.getElementById('sortMode').value;
+			const selectedFeature = document.getElementById('featureFilter').value;
+
+			const filteredLogs = currentLogs.filter(log => {
+				const userDisplay = log.user || log.country || 'Unknown';
+				const featureDisplay = log.feature || 'Unknown';
+				
+				if (selectedMode !== 'default' && userDisplay !== selectedMode) return false;
+				if (selectedFeature !== 'all' && featureDisplay !== selectedFeature) return false;
+
+				return true;
+			});
+
+			// 2. 收集各圖表與頂部指標的當前數據
+			const featureStats = featureChart ? Object.fromEntries(
+				featureChart.data.labels.map((l, i) => [l, featureChart.data.datasets[0].data[i]])
+			) : {};
+
+			const countryStats = countryChart ? Object.fromEntries(
+				countryChart.data.labels.map((l, i) => [l, countryChart.data.datasets[0].data[i]])
+			) : {};
+
+			const userCountryStats = userChart ? Object.fromEntries(
+				userChart.data.labels.map((l, i) => [l, userChart.data.datasets[0].data[i]])
+			) : {};
+
+			// 3. 組裝結構化 JSON
+			const exportPayload = {
+				meta: {
+					title: "DM Card Search API Tracking Report",
+					exported_at: new Date().toISOString(),
+					exported_at_local: formatDateTime(new Date()),
+					monitoring_period: {
+						start_time: document.getElementById('startTimeStr')?.innerText || '',
+						current_time: document.getElementById('currentTimeStr')?.innerText || '',
+						duration: document.getElementById('durationStr')?.innerText || ''
+					}
+				},
+				overview: {
+					total_events_recorded: parseInt(document.getElementById('totalEvents')?.innerText || '0', 10),
+					active_feature_types: parseInt(document.getElementById('activeFeatures')?.innerText || '0', 10),
+					total_users: parseInt(document.getElementById('activeUsers')?.innerText || '0', 10)
+				},
+				feature_ranking: featureStats,
+				country_distribution: countryStats,
+				user_distribution_by_country: userCountryStats,
+				current_view_filter: {
+					selected_feature: selectedFeature,
+					selected_user: selectedMode,
+					displayed_log_count: filteredLogs.length
+				},
+				recent_action_logs: filteredLogs
+			};
+
+			const jsonString = JSON.stringify(exportPayload, null, 2);
+
+			// 4. 跨平台安全複製至剪貼簿
+			const isSuccess = await copyTextToClipboardSafe(jsonString);
+			if (isSuccess) {
+				alert(`✅ 已成功將所有 Console 分析資料複製到剪貼簿（共 ${filteredLogs.length} 筆 Log）！\n可以直接貼給 AI 進行分析。`);
+			} else {
+				alert("⚠️ 複製失敗，請檢查瀏覽器剪貼簿存取權限。");
+			}
+		}
+
+		// 跨平台（桌機 / 手機 iOS & Android）剪貼簿複製輔助函式
+		async function copyTextToClipboardSafe(text) {
+			if (!text) return false;
+			try {
+				if (navigator.clipboard && window.isSecureContext) {
+					await navigator.clipboard.writeText(text);
+					return true;
+				} else {
+					// 備援：適用非 HTTPS 或部分行動裝置
+					const textArea = document.createElement("textarea");
+					textArea.value = text;
+					textArea.style.position = "fixed";
+					textArea.style.left = "-9999px";
+					textArea.style.top = "-9999px";
+					document.body.appendChild(textArea);
+					textArea.focus();
+					textArea.select();
+					const successful = document.execCommand('copy');
+					document.body.removeChild(textArea);
+					return successful;
+				}
+			} catch (err) {
+				console.error("剪貼簿寫入失敗:", err);
+				return false;
+			}
+		}
 		
 		function openDeleteModal(user) {
 			pendingDeleteUser = user;
