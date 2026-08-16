@@ -16,7 +16,7 @@ from urllib.parse import quote, unquote
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from lzstring import LZString
 from pydantic import BaseModel
@@ -710,6 +710,70 @@ def get_country_user_counts() -> Dict[str, int]:
     return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
     
     
+def normalize_search_id(s: str) -> str:
+    """全域輔助函式：將 ID 轉為大寫半形並去除非英數字"""
+    if not s:
+        return ""
+    res = []
+    for ch in str(s):
+        code = ord(ch)
+        if 0xFF01 <= code <= 0xFF5E:
+            res.append(chr(code - 0xfee0))
+        else:
+            res.append(ch)
+    import re
+    return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
+
+def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
+    """
+    OG 預覽圖借圖演算法
+    - 嚴格模式 (D/O 開頭商品)：只找該商品圖，不借圖。
+    - 寬鬆模式 (其他商品/文字卡表/單卡名)：商品圖 -> carddata本尊 -> 全域借圖。
+    """
+    clean_name = card_name.strip()
+    is_strict = False
+    
+    if set_code:
+        upper_code = str(set_code).strip().upper()
+        if upper_code.startswith('D') or upper_code.startswith('O'):
+            is_strict = True
+
+    # 1. 如果有指定商品，先從該商品找
+    if set_code and set_code in setlist_cache:
+        set_obj = setlist_cache[set_code]
+        card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+        for item in card_list:
+            item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
+            if item_name == clean_name:
+                if isinstance(item, dict) and item.get("pic"):
+                    pics = item["pic"]
+                    found_pic = pics[0] if isinstance(pics, list) and len(pics) > 0 else pics
+                    if found_pic:
+                        return found_pic
+        
+    # 嚴格模式：如果在官方商品沒找到圖，直接放棄，不往外借圖
+    if is_strict:
+        return ""
+
+    # 2. 寬鬆模式：找 carddata 本尊
+    for card in carddata_cache:
+        if card.get("name", "").strip() == clean_name and card.get("pic"):
+            return card["pic"]
+
+    # 3. 寬鬆模式：全域借圖
+    for set_info in setlist_cache.values():
+        card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+        for item in card_list:
+            item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
+            if item_name == clean_name:
+                if isinstance(item, dict) and item.get("pic"):
+                    pics = item["pic"]
+                    if isinstance(pics, list) and len(pics) > 0 and pics[0]:
+                        return pics[0]
+                    elif isinstance(pics, str) and pics:
+                        return pics
+    return ""
+
 # ----------------------------------------------------
 # 路由區
 # ----------------------------------------------------
@@ -717,10 +781,145 @@ def get_country_user_counts() -> Dict[str, int]:
 async def serve_index(): return FileResponse("index.html")
 
 @app.get("/pop.html")
-async def get_pop_page(): return FileResponse("pop.html")
+async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList: Optional[str] = None):
+    html_path = BASE_DIR / "pop.html"
+    if not html_path.exists():
+        return HTMLResponse("File not found", status_code=404)
+        
+    html_content = html_path.read_text(encoding="utf-8")
+    meta_tags = ""
+    
+    if setCode:
+        # 情境 1：商品代碼查詢
+        set_code = setCode.strip()
+        set_obj = setlist_cache.get(set_code)
+        if set_obj:
+            set_name = set_obj.get("setname") or set_obj.get("name") or set_code
+            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+            
+            first_card_name = ""
+            if card_list:
+                first_item = card_list[0]
+                first_card_name = first_item.get("name", "").strip() if isinstance(first_item, dict) else str(first_item).strip()
+            
+            og_image = get_og_image(first_card_name, set_code) if first_card_name else ""
+            
+            # 💡 商品名稱優先：有商品名稱就顯示「商品名稱 (商品代碼)」，沒有就退回只顯示代碼
+            if set_name and set_name != set_code:
+                display_title = f"{set_name} ({set_code}) - 卡表總覽"
+            else:
+                display_title = f"{set_code} - 卡表總覽"
+
+            meta_tags = f"""
+            <meta property="og:title" content="{display_title}">
+            <meta property="og:description" content="點擊查看完整商品卡表與詳細內容。">
+            """
+            if og_image:
+                meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
+                meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
+                
+    elif deckList:
+        # 情境 2：自訂文字卡表 (解壓縮)
+        compressed = deckList.strip()
+        decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed) or compressed
+        raw_items = decompressed.split(',')
+        
+        first_card_name = ""
+        og_image = ""
+        
+        # 遍歷卡表，尋找第一張借得到圖的卡片
+        for item in raw_items:
+            item = item.strip()
+            if not item: continue
+            cname = item.split('*', 1)[1].strip() if '*' in item else item
+            
+            if not first_card_name:
+                first_card_name = cname
+                
+            img = get_og_image(cname)
+            if img:
+                og_image = img
+                break  # 找到圖就跳出
+        
+        title = f"自訂分享卡表 - {first_card_name}...等" if first_card_name else "自訂分享卡表"
+        meta_tags = f"""
+        <meta property="og:title" content="{title}">
+        <meta property="og:description" content="點擊查看完整自訂牌組/卡表內容。">
+        """
+        if og_image:
+            meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
+            meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
+
+    # 如果有產生 Meta，就塞進 <head> 的最前面
+    if meta_tags:
+        html_content = html_content.replace("<head>", f"<head>\n{meta_tags}", 1)
+
+    return HTMLResponse(content=html_content)
 
 @app.get("/card.html")
-async def get_card_page(): return FileResponse("card.html")
+async def get_card_page(request: Request, p: Optional[str] = None):
+    html_path = BASE_DIR / "card.html"
+    if not html_path.exists():
+        return HTMLResponse("File not found", status_code=404)
+    
+    html_content = html_path.read_text(encoding="utf-8")
+    
+    if not p:
+        return HTMLResponse(content=html_content)
+
+    query_str = p.strip()
+    clean_query = normalize_search_id(query_str)
+    
+    target_card_name = ""
+    target_set_code = None
+    
+    # 邏輯 A：找卡名或綽號
+    for card in carddata_cache:
+        if card.get("name", "").strip() == query_str:
+            target_card_name = query_str
+            break
+    
+    if not target_card_name and isinstance(nickname_cache, list):
+        for nick_item in nickname_cache:
+            if query_str in nick_item.get("nicknames", []):
+                target_card_name = nick_item.get("realname", "")
+                break
+                
+    # 邏輯 B：找 ID
+    if not target_card_name:
+        def search_id(tgt_id):
+            for s_code, s_info in setlist_cache.items():
+                c_list = s_info.get("setcardlist") or s_info.get("cardlist") or []
+                for item in c_list:
+                    if isinstance(item, dict) and "id" in item:
+                        ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                        for single_id in ids:
+                            if normalize_search_id(single_id) == tgt_id:
+                                return item.get("name", "").strip(), s_code
+            return "", None
+            
+        target_card_name, target_set_code = search_id(clean_query)
+        # 如果是 DM 開頭的 ID 且第一次沒找到，拔掉 DM 再找一次
+        if not target_card_name and query_str.upper().startswith("DM"):
+            stripped = query_str[2:].strip()
+            if stripped:
+                target_card_name, target_set_code = search_id(normalize_search_id(stripped))
+                
+    # 若有找到目標卡名，產生 Meta Tags 進行塞入
+    if target_card_name:
+        og_image = get_og_image(target_card_name, target_set_code)
+        
+        meta_tags = f"""
+        <meta property="og:title" content="【{target_card_name}】卡牌詳細資料">
+        <meta property="og:description" content="點擊查看卡牌的詳細數值、效果與收錄商品。">
+        """
+        if og_image:
+            meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
+            meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
+            
+        html_content = html_content.replace("<head>", f"<head>\n{meta_tags}", 1)
+
+    return HTMLResponse(content=html_content)
 
 @app.get("/relationship.html")
 async def get_relationship_page(): return FileResponse("relationship.html")
