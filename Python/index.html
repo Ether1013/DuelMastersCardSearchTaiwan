@@ -2594,10 +2594,13 @@
 				<!-- 公告內容，由 JS 動態填入 -->
 				<div id="system-notice-content" style="font-size: 14px; line-height: 1.6; color: #333;"></div>
 				
-				<!-- 雙按鈕容器 (供 confirm 對話框使用) -->
+				<!-- 💡 新增：通用輸入框 (預設隱藏) -->
+				<input type="text" id="system-notice-input" class="qa-input" style="display: none; width: 100%; box-sizing: border-box; margin-top: 5px;" autocomplete="off">
+
+				<!-- 雙按鈕容器 (供 confirm / prompt 對話框使用) -->
 				<div id="system-notice-actions" style="display: flex; gap: 8px; margin-top: 10px;">
 					<button type="button" id="btn-notice-cancel" style="flex: 1; padding: 10px; background: #94a3b8; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; display: none;">
-						不包含
+						取消
 					</button>
 					<button type="button" id="btn-notice-understand" style="flex: 1; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">
 						我知道了
@@ -7532,48 +7535,61 @@
             setTimeout(() => { toast.style.opacity = '0'; }, 2000);
         }
 		
-		// 通用式 Modal Confirm 對話框 (套用既有 #system-notice-modal)
-		function showNoticeModalConfirm({ title = "📢 系統提示", message = "", confirmText = "確定", cancelText = "取消", showCancel = true }) {
+		// 💡 通用式 Modal Prompt 對話框 (支援文字輸入)
+		function showNoticeModalPrompt({ title = "📝 自訂名稱", message = "", placeholder = "", confirmText = "確定", cancelText = "略過" }) {
 			return new Promise((resolve) => {
 				const modal = document.getElementById('system-notice-modal');
 				const titleEl = document.getElementById('system-notice-title');
 				const contentEl = document.getElementById('system-notice-content');
+				const inputEl = document.getElementById('system-notice-input');
 				const btnConfirm = document.getElementById('btn-notice-understand');
 				const btnCancel = document.getElementById('btn-notice-cancel');
 
-				if (!modal || !contentEl || !btnConfirm || !btnCancel) {
-					resolve(false);
+				if (!modal || !contentEl || !inputEl || !btnConfirm || !btnCancel) {
+					resolve("");
 					return;
 				}
 
-				// 填入標題與內容
 				if (titleEl) titleEl.innerText = title;
 				contentEl.innerHTML = message;
+				inputEl.value = "";
+				inputEl.placeholder = placeholder;
+				inputEl.style.display = 'block';
 
-				// 設定按鈕文字與顯示狀態
 				btnConfirm.innerText = confirmText;
 				btnCancel.innerText = cancelText;
-				btnCancel.style.display = showCancel ? 'block' : 'none'; // 👈 依參數決定是否顯示取消按鈕
+				btnCancel.style.display = 'block';
 
-				// 清除舊事件綁定，避免重複處發
 				const newConfirm = btnConfirm.cloneNode(true);
 				const newCancel = btnCancel.cloneNode(true);
 				btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
 				btnCancel.parentNode.replaceChild(newCancel, btnCancel);
 
-				// 綁定「確定」點擊
-				newConfirm.addEventListener('click', () => {
+				const cleanup = () => {
+					inputEl.style.display = 'none';
 					modal.classList.remove('active');
-					resolve(true); // 使用者按確定 (true)
+				};
+
+				newConfirm.addEventListener('click', () => {
+					const val = inputEl.value.trim();
+					cleanup();
+					resolve(val);
 				});
 
-				// 綁定「取消」點擊
 				newCancel.addEventListener('click', () => {
-					modal.classList.remove('active');
-					resolve(false); // 使用者按取消 (false)
+					cleanup();
+					resolve("");
 				});
+
+				inputEl.onkeydown = (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						newConfirm.click();
+					}
+				};
 
 				modal.classList.add('active');
+				setTimeout(() => inputEl.focus(), 100);
 			});
 		}
 		
@@ -11416,6 +11432,15 @@
 						return;
 					}
 
+					// 💡 插入：自訂卡表時跳出 Modal 詢問名稱
+					const customTitle = await showNoticeModalPrompt({
+						title: "🏷️ 設定卡表名稱",
+						message: "請輸入這份卡表的自訂名稱（選填，若不填寫將使用預設名稱）：",
+						placeholder: "例如：火闇快攻第3版、大賽冠軍牌組...",
+						confirmText: "產生連結",
+						cancelText: "直接產生"
+					});
+
 					const sortedResults = getSortedResults(currentFilterResults);
 					const currentSetObj = selectedSetKey ? rawSetlist[selectedSetKey] : null;
 
@@ -11443,6 +11468,11 @@
 
 					const compressed = LZString.compressToEncodedURIComponent(rawStr);
 					shareUrl = `${window.location.origin}/pop.html?deckList=${compressed}`;
+
+					// 💡 若有輸入自訂名稱，追加至 URL 參數
+					if (customTitle && customTitle.trim() !== '') {
+						shareUrl += `&title=${encodeURIComponent(customTitle.trim())}`;
+					}
 				}
 
 				// 💡【側錄區域】：在 shareUrl 確定產出後，進行解碼並記錄至後端

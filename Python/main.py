@@ -781,13 +781,19 @@ def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
 async def serve_index(): return FileResponse("index.html")
 
 @app.get("/pop.html")
-async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList: Optional[str] = None):
+async def get_pop_page(
+    request: Request, 
+    setCode: Optional[str] = None, 
+    deckList: Optional[str] = None, 
+    title: Optional[str] = None
+):
     html_path = BASE_DIR / "pop.html"
     if not html_path.exists():
         return HTMLResponse("File not found", status_code=404)
         
     html_content = html_path.read_text(encoding="utf-8")
     meta_tags = ""
+    custom_title_clean = title.strip().replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;') if title else ""
     
     if setCode:
         # 情境 1：商品代碼查詢
@@ -804,8 +810,9 @@ async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList
             
             og_image = get_og_image(first_card_name, set_code) if first_card_name else ""
             
-            # 💡 商品名稱優先：有商品名稱就顯示「商品名稱 (商品代碼)」，沒有就退回只顯示代碼
-            if set_name and set_name != set_code:
+            if custom_title_clean:
+                display_title = f"{custom_title_clean} - 卡表總覽"
+            elif set_name and set_name != set_code:
                 display_title = f"{set_name} ({set_code}) - 卡表總覽"
             else:
                 display_title = f"{set_code} - 卡表總覽"
@@ -827,7 +834,6 @@ async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList
         first_card_name = ""
         og_image = ""
         
-        # 遍歷卡表，尋找第一張借得到圖的卡片
         for item in raw_items:
             item = item.strip()
             if not item: continue
@@ -839,11 +845,17 @@ async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList
             img = get_og_image(cname)
             if img:
                 og_image = img
-                break  # 找到圖就跳出
+                break
         
-        title = f"自訂分享卡表 - {first_card_name}...等" if first_card_name else "自訂分享卡表"
+        if custom_title_clean:
+            display_title = f"{custom_title_clean} - 卡表總覽"
+        elif first_card_name:
+            display_title = f"自訂分享卡表 - {first_card_name}...等"
+        else:
+            display_title = "自訂分享卡表"
+
         meta_tags = f"""
-        <meta property="og:title" content="{title}">
+        <meta property="og:title" content="{display_title}">
         <meta property="og:description" content="點擊查看完整自訂牌組/卡表內容。">
         """
         if og_image:

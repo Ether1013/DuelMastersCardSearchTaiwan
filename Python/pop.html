@@ -1070,6 +1070,7 @@
             const setCode = urlParams.get('setCode');
             const deckListParam = urlParams.get('deckList');
             const sortParam = urlParams.get('sort');
+            const customTitleParam = urlParams.get('title');
 
             if (sessionKey) {
                 const rawPayload = sessionStorage.getItem(sessionKey);
@@ -1143,7 +1144,15 @@
 
                 const displayTitleCode = currentSetObj.setcode || setCode || '自訂牌組';
                 const setName = currentSetObj.setname || currentSetObj.name || displayTitleCode;
-                document.getElementById('page-title').innerText = `${displayTitleCode} ${setName} - 卡表總覽`;
+
+                if (customTitleParam && customTitleParam.trim() !== '') {
+                    const cleanTitle = customTitleParam.trim();
+                    document.title = `${cleanTitle} - 卡表總覽`;
+                    document.getElementById('page-title').innerText = `${cleanTitle} - 卡表總覽`;
+                } else {
+                    document.title = `${displayTitleCode} ${setName} - 卡表總覽`;
+                    document.getElementById('page-title').innerText = `${displayTitleCode} ${setName} - 卡表總覽`;
+                }
 
                 const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
                 if (!Array.isArray(setCardList) || setCardList.length === 0) {
