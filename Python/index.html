@@ -2558,6 +2558,7 @@
 			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
 				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px 4px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer; font-size: 13px;">🛡️ 隱私聲明</button>
 				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">📖 更新日誌</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-recent" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">🆕 最近新增的卡</button>
 				<button type="button" class="diary-tab-btn" id="btn-diary-tab-author" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">👤 作者資料</button>
 			</div>
 			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
@@ -2577,6 +2578,14 @@
 				<div id="diary-view-changelog" style="display: none;">
 					<div id="diary-modal-body" style="display: flex; flex-direction: column; gap: 15px;">
 						<!-- 日誌內容由 JS 動態渲染 -->
+					</div>
+				</div>
+				
+				<!-- 💡 新增 視圖 3：最近新增的卡 -->
+				<div id="diary-view-recent" style="display: none;">
+					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">🆕 最近零星新增卡牌 (最新 10 張)</h4>
+					<div id="recent-cards-list-container" style="display: flex; flex-direction: column; gap: 8px;">
+						<!-- 由 JS 動態渲染 -->
 					</div>
 				</div>
 
@@ -3304,7 +3313,9 @@
 			const newCloseBtn = modalTitleEl.querySelector('#modal-close-btn');
 			if (newCloseBtn) {
 				newCloseBtn.onclick = () => {
-					document.getElementById('card-modal').classList.remove('active');
+					const cardModal = document.getElementById('card-modal');
+					cardModal.classList.remove('active');
+					cardModal.style.zIndex = ''; // 💡 還原 z-index
 				};
 			}
 
@@ -5596,6 +5607,91 @@
 		
 		let isDiaryRendered = false; // 標記是否已渲染，避免重複操作 DOM
 
+		// 💡 取得最新的 10 張零星卡牌 (未被任何 O/D 開頭商品收錄)
+		function getRecentStandaloneCards(limit = 10) {
+			if (!globalCardData || globalCardData.length === 0) return [];
+
+			// 1. 建立所有 O/D 開頭商品收錄的卡名快取 Set (不分大小寫)
+			const odSetCardNames = new Set();
+			if (typeof rawSetlist === 'object' && rawSetlist !== null) {
+				Object.entries(rawSetlist).forEach(([key, setObj]) => {
+					const setCode = String(setObj.setcode || setObj.code || setObj.id || key).trim().toUpperCase();
+					if (setCode.startsWith('O') || setCode.startsWith('D')) {
+						const cardList = setObj.setcardlist || setObj.cardlist;
+						if (Array.isArray(cardList)) {
+							cardList.forEach(item => {
+								const rawName = (typeof item === 'object' && item !== null) ? item.name : item;
+								if (typeof rawName === 'string') {
+									odSetCardNames.add(cleanCardName(rawName).trim().toLowerCase());
+								}
+							});
+						}
+					}
+				});
+			}
+
+			// 2. 從 globalCardData 的底部往前遊歷，找出前 limit 張未被收錄的卡牌
+			const recentCards = [];
+			for (let i = globalCardData.length - 1; i >= 0; i--) {
+				const card = globalCardData[i];
+				if (!card || !card.name) continue;
+
+				const cleanName = cleanCardName(card.name).trim().toLowerCase();
+				if (!odSetCardNames.has(cleanName)) {
+					recentCards.push(card);
+					if (recentCards.length >= limit) {
+						break;
+					}
+				}
+			}
+
+			return recentCards;
+		}
+
+		// 💡 渲染最近新增的卡牌列表
+		function renderRecentCardsList() {
+			const container = document.getElementById('recent-cards-list-container');
+			if (!container) return;
+
+			container.innerHTML = '';
+			const cards = getRecentStandaloneCards(10);
+
+			if (cards.length === 0) {
+				container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無符合條件的零星新增卡牌</div>';
+				return;
+			}
+
+			cards.forEach(card => {
+				let combinedCiv = 0;
+				if (card.wdata && Array.isArray(card.wdata)) {
+					card.wdata.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
+				}
+
+				const itemDiv = document.createElement('div');
+				itemDiv.className = 'card-list-item';
+				itemDiv.style.background = getCivBackground(combinedCiv);
+				itemDiv.style.padding = '10px 14px';
+
+				const displayName = cleanCardName(card.name);
+				itemDiv.innerHTML = `
+					<div class="card-name" style="font-size: 14px;">
+						<span class="card-name-text">${displayName}</span>
+					</div>
+				`;
+
+				// 💡 點擊卡牌：暫時提升 z-index，開啟卡牌 Detail Modal
+				itemDiv.addEventListener('click', () => {
+					recordCardHistory(card.name);
+					const cardModal = document.getElementById('card-modal');
+					if (cardModal) {
+						cardModal.style.zIndex = '1050'; // 暫時給予最高層級
+					}
+					openCardModal(card, combinedCiv, null);
+				});
+
+				container.appendChild(itemDiv);
+			});
+		}
 		function initDiaryUI() {
 			const diaryBtn = document.getElementById('diary-btn');
 			const diaryModal = document.getElementById('diary-modal');
@@ -5604,25 +5700,27 @@
 
 			const btnTabPrivacy = document.getElementById('btn-diary-tab-privacy');
 			const btnTabChangelog = document.getElementById('btn-diary-tab-changelog');
+			const btnTabRecent = document.getElementById('btn-diary-tab-recent');
 			const btnTabAuthor = document.getElementById('btn-diary-tab-author');
 
 			const viewPrivacy = document.getElementById('diary-view-privacy');
 			const viewChangelog = document.getElementById('diary-view-changelog');
+			const viewRecent = document.getElementById('diary-view-recent');
 			const viewAuthor = document.getElementById('diary-view-author');
 
 			if (!diaryBtn) return;
 
-			// 三頁籤切換邏輯
+			// 四頁籤切換邏輯
 			function switchDiaryTab(target) {
 				// 重置所有按鈕樣式
-				[btnTabPrivacy, btnTabChangelog, btnTabAuthor].forEach(btn => {
+				[btnTabPrivacy, btnTabChangelog, btnTabRecent, btnTabAuthor].forEach(btn => {
 					if (btn) {
 						btn.style.background = '#e2e8f0';
 						btn.style.color = '#334155';
 					}
 				});
 				// 隱藏所有視圖
-				[viewPrivacy, viewChangelog, viewAuthor].forEach(v => {
+				[viewPrivacy, viewChangelog, viewRecent, viewAuthor].forEach(v => {
 					if (v) v.style.display = 'none';
 				});
 
@@ -5635,6 +5733,11 @@
 					btnTabChangelog.style.background = '#0284c7';
 					btnTabChangelog.style.color = '#ffffff';
 					viewChangelog.style.display = 'block';
+				} else if (target === 'recent') {
+					btnTabRecent.style.background = '#0284c7';
+					btnTabRecent.style.color = '#ffffff';
+					viewRecent.style.display = 'block';
+					renderRecentCardsList(); // 每次點開該頁籤時即時重新運算渲染
 				} else if (target === 'author') {
 					btnTabAuthor.style.background = '#0284c7';
 					btnTabAuthor.style.color = '#ffffff';
@@ -5642,14 +5745,15 @@
 				}
 			}
 
-			if (btnTabPrivacy && btnTabChangelog && btnTabAuthor) {
+			if (btnTabPrivacy && btnTabChangelog && btnTabRecent && btnTabAuthor) {
 				btnTabPrivacy.onclick = () => switchDiaryTab('privacy');
 				btnTabChangelog.onclick = () => switchDiaryTab('changelog');
+				btnTabRecent.onclick = () => switchDiaryTab('recent');
 				btnTabAuthor.onclick = () => switchDiaryTab('author');
 			}
 
 			diaryBtn.onclick = () => {
-				// 每次點開時，預設顯示「隱私聲明」頁籤
+				// 每次點開時預設顯示「隱私聲明」頁籤
 				switchDiaryTab('privacy');
 
 				// 首次點擊時渲染更新日誌內容
@@ -7929,6 +8033,16 @@
 			if (btnUnderstand && noticeModal) {
 				btnUnderstand.addEventListener('click', () => {
 					noticeModal.classList.remove('active');
+				});
+			}
+			
+			const cardModal = document.getElementById('card-modal');
+			if (cardModal) {
+				cardModal.addEventListener('click', (e) => {
+					if (e.target === cardModal) {
+						cardModal.classList.remove('active');
+						cardModal.style.zIndex = ''; // 💡 還原 z-index
+					}
 				});
 			}
 		});
