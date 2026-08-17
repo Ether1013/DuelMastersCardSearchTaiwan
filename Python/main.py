@@ -74,6 +74,9 @@ setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
 EXCLUDED_COUNTRIES = ["JP", "TW"]
 one_time_tokens = {}
 
+setlist_gzip_cache = b""
+etag_cache = {}  # 👈 新增：用來存放各個 API 的 MD5 Hash (ETag)
+
 # 💡 Wiki 網址檢查快取配置 (最多快取 500 筆卡片判斷結果，快取 3 天)
 wiki_url_cache = OrderedDict()
 WIKI_CACHE_MAX_SIZE = 500
@@ -337,6 +340,31 @@ def trigger_tag_sync():
         tag_sync_task.cancel()
     tag_sync_task = asyncio.create_task(tag_debounce_timer())
     
+def generate_etag(data) -> str:
+    """將資料轉為 JSON Bytes 並計算 MD5 Hash 作為 ETag，加上雙引號符合 HTTP 標準"""
+    json_bytes = json.dumps(data, ensure_ascii=False).encode('utf-8')
+    hash_str = hashlib.md5(json_bytes).hexdigest()
+    return f'"{hash_str}"'  # 👈 加上雙引號
+
+def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_bytes: bytes = None):
+    """共用的 ETag 判斷與 Response 生成器"""
+    client_etag = request.headers.get("If-None-Match")
+    server_etag = etag_cache.get(data_key, "")
+
+    # 如果前端傳來的 Hash 跟伺服器目前的一樣，強制回傳 304 讓前端用自己的快取
+    if client_etag and client_etag == server_etag:
+        return Response(status_code=304)
+
+    headers = {"ETag": server_etag}
+
+    # 如果有預先壓縮的 Bytes，直接回傳 Gzip
+    if gzip_cache_bytes:
+        headers["Content-Encoding"] = "gzip"
+        return Response(content=gzip_cache_bytes, media_type="application/json", headers=headers)
+
+    # 一般的 JSON 回傳
+    json_str = json.dumps(cache_obj, ensure_ascii=False)
+    return Response(content=json_str, media_type="application/json", headers=headers)
     
 class CustomDeckModel(BaseModel):
     deck_list: str
@@ -456,8 +484,7 @@ def load_all_setlists():
 
 @app.on_event("startup")
 def load_and_process_caches():
-    # 👈 修改 global 宣告，補上 carddata_gzip_cache 與 setlist_gzip_cache
-    global carddata_cache, carddata_gzip_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, diary_cache, tags_cache
+    global carddata_cache, carddata_gzip_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, diary_cache, tags_cache, etag_cache
     try:
         carddata_cache = load_json_file("carddata.json")
         # 👈 新增：預先壓縮 carddata
@@ -491,7 +518,19 @@ def load_and_process_caches():
             with open(TAGS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(tags_cache, f, ensure_ascii=False, indent=2)
                 
-
+        # 👈 新增：在這裡為所有資料計算 ETag
+        etag_cache["carddata"] = f'"{hashlib.md5(carddata_json_bytes).hexdigest()}"'
+        etag_cache["setlist"] = f'"{hashlib.md5(setlist_json_bytes).hexdigest()}"'
+        etag_cache["card_types"] = generate_etag(card_types_cache)
+        etag_cache["races"] = generate_etag(races_cache)
+        etag_cache["abilities"] = generate_etag(abilities_cache)
+        etag_cache["card_stats"] = generate_etag(card_stats_cache)
+        etag_cache["categoryname"] = generate_etag(categoryname_cache)
+        etag_cache["nickname"] = generate_etag(nickname_cache)
+        etag_cache["diary"] = generate_etag(diary_cache)
+        etag_cache["english_names"] = generate_etag(english_name_cache)
+        
+        
         powers, costs = set(), set()
         for card_dict in carddata_cache:
             wdata_list = card_dict.get("wdata", [])
@@ -613,7 +652,8 @@ def send_nickname_application_notification(payload: NicknameApplyModel, country:
     push_line_message("\n".join(lines))
     
 async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
-    global has_unsynced_en_names
+    global has_unsynced_en_names, etag_cache # 👈 記得補上 etag_cache 全域宣告
+    
     jp_name_clean = jp_name.strip()
     if not jp_name_clean:
         return jp_name
@@ -634,6 +674,10 @@ async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient
                     english_name_cache[jp_name_clean] = en_title
                     await save_english_names_async()
                     has_unsynced_en_names = True
+                    
+                    # 💡 補上這行：動態更新英文卡名的 ETag！
+                    etag_cache["english_names"] = generate_etag(english_name_cache)
+                    
                     return en_title
     except Exception as e:
         print(f"[Fandom Fetch Error] {jp_name_clean} -> {e}")
@@ -940,37 +984,33 @@ async def get_relationship_page(): return FileResponse("relationship.html")
 async def get_server_id(): return {"server_id": SERVER_INSTANCE_ID}
 
 @app.get("/api/card_types")
-async def get_card_types(): return card_types_cache
+async def get_card_types(request: Request): 
+    return get_etag_response(request, "card_types", card_types_cache)
 
 @app.get("/api/races")
-async def get_races(): return races_cache
+async def get_races(request: Request): 
+    return get_etag_response(request, "races", races_cache)
 
 @app.get("/api/abilities")
-async def get_abilities(): return abilities_cache
+async def get_abilities(request: Request): 
+    return get_etag_response(request, "abilities", abilities_cache)
 
 @app.get("/api/carddata")
-async def get_carddata(): 
-    # 👈 直接回傳記憶體中的壓縮 Bytes，附帶 gzip 標頭
-    return Response(
-        content=carddata_gzip_cache, 
-        media_type="application/json", 
-        headers={"Content-Encoding": "gzip"}
-    )
+async def get_carddata(request: Request): 
+    # 帶入 gzip_cache_bytes 參數
+    return get_etag_response(request, "carddata", carddata_cache, carddata_gzip_cache)
 
 @app.get("/api/categoryname")
-async def get_categoryname(): return categoryname_cache
+async def get_categoryname(request: Request): 
+    return get_etag_response(request, "categoryname", categoryname_cache)
 
 @app.get("/api/nickname")
-async def get_nickname(): return nickname_cache
+async def get_nickname(request: Request): 
+    return get_etag_response(request, "nickname", nickname_cache)
 
 @app.get("/api/setlist")
-async def get_setlist(): 
-    # 👈 直接回傳記憶體中的壓縮 Bytes，附帶 gzip 標頭
-    return Response(
-        content=setlist_gzip_cache, 
-        media_type="application/json", 
-        headers={"Content-Encoding": "gzip"}
-    )
+async def get_setlist(request: Request): 
+    return get_etag_response(request, "setlist", setlist_cache, setlist_gzip_cache)
 
 @app.get("/api/card_detail")
 @limiter.limit("6/minute")
@@ -1220,7 +1260,8 @@ async def get_pop_custom_data(payload: CustomDeckModel):
     }
 
 @app.get("/api/card_stats")
-def get_card_stats(): return card_stats_cache
+def get_card_stats(request: Request): 
+    return get_etag_response(request, "card_stats", card_stats_cache)
 
 @app.get("/api/proxy-image")
 @limiter.limit("5/minute")
@@ -1249,7 +1290,8 @@ async def proxy_image(request: Request, url: str = Query(...)):
         raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
 
 @app.get("/api/diary")
-async def get_diary(): return diary_cache
+async def get_diary(request: Request): 
+    return get_etag_response(request, "diary", diary_cache)
 
 @app.post("/api/report_error")
 @limiter.limit("3/minute")
@@ -1273,7 +1315,8 @@ async def apply_nickname(request: Request, payload: NicknameApplyModel, backgrou
     return {"status": "success", "message": "暱稱申請已成功送出！"}
     
 @app.get("/api/get_all_english_names")
-async def get_all_english_names(): return english_name_cache
+async def get_all_english_names(request: Request): 
+    return get_etag_response(request, "english_names", english_name_cache)
 
 @app.post("/api/message_author")
 @limiter.limit("3/minute")

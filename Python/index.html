@@ -2993,7 +2993,7 @@
 		// ==========================================
 		const SYS_NOTICE_DATA = [
 			"<b style='color:#d32f2f;'>【重要更新與提示】</b>",
-			"系統常態性更新及測試新功能，若遇到操作異常，請嘗試刷新網站，若刷新數次依然無法運作則表示改壞了，請過一陣子之後再使用"
+			"感謝大家的厚愛，但我剛剛發現程式寫太爛導致流量要爆掉了(我的問題)，如果這次修改失敗了，可能會突然有無法使用的狀態，萬一真的發生了我也會盡早處理，請多包涵"
 		];
 
 		function getCivText(civilVal) {
@@ -4065,23 +4065,57 @@
 					}
 				}
 
-				// 獨立的安全 Fetch 快取函式（避免 Cache API 在不支援環境報錯掛掉）
+				// 獨立的安全 Fetch 快取函式（替換原有的版本）
 				async function fetchWithCache(url) {
+					const cacheKey = 'dm_data_' + url;
+					const etagKey = 'dm_etag_' + url;
+
+					// 從 localStorage 讀取先前的快取資料與 Hash
+					const cachedData = localStorage.getItem(cacheKey);
+					const cachedEtag = localStorage.getItem(etagKey);
+
+					const headers = {};
+					if (cachedEtag && cachedData) {
+						// 如果有舊 Hash，把它放在 Request Header 傳給伺服器比對
+						headers['If-None-Match'] = cachedEtag;
+					}
+
 					try {
-						if ('caches' in window) {
-							const cache = await caches.open(CACHE_NAME);
-							let response = await cache.match(url);
-							if (response) {
-								return await response.json();
-							} else {
-								response = await fetch(url);
-								if (response.ok) cache.put(url, response.clone());
-								return await response.json();
+						const response = await fetch(url, { headers });
+
+						// 伺服器比對 Hash 相同，強制回傳 304 Not Modified
+						if (response.status === 304) {
+							console.log(`[Cache Hit] 304 Not Modified: ${url}`);
+							return JSON.parse(cachedData); // 強制使用 localStorage 的資料
+						}
+
+						// Hash 不同或第一次請求，伺服器回傳全新資料與新 Hash (ETag)
+						if (response.ok) {
+							const data = await response.json();
+							const newEtag = response.headers.get('ETag');
+
+							try {
+								// 將新資料與新 Hash 寫入 localStorage
+								localStorage.setItem(cacheKey, JSON.stringify(data));
+								if (newEtag) {
+									localStorage.setItem(etagKey, newEtag);
+								}
+							} catch (storageErr) {
+								console.warn(`⚠️ LocalStorage 空間不足，無法寫入快取: ${url}`, storageErr);
+								// 空間不足時不強求，直接回傳本次取得的資料即可
 							}
+
+							return data;
 						}
 					} catch (e) {
-						console.warn(`[Cache Miss/Error] 從網路重新抓取 ${url}:`, e);
+						console.warn(`[Fetch Error] 讀取 ${url} 發生網路錯誤，嘗試退回使用本地快取:`, e);
+						// 如果網路斷線但本地有舊資料，作為保底回傳
+						if (cachedData) {
+							return JSON.parse(cachedData);
+						}
 					}
+
+					// 最終備援方案
 					const directRes = await fetch(url);
 					return await directRes.json();
 				}
@@ -7547,79 +7581,78 @@
             setTimeout(() => { toast.style.opacity = '0'; }, 2000);
         }
 		
-		// 💡 通用式 Modal Prompt 對話框 (支援文字輸入)
 		// 💡 通用式 Modal 對話框 (支援 Prompt / Confirm / Alert)
-function showNoticeModalPrompt({ 
-    title = "📢 系統提示", 
-    message = "", 
-    placeholder = "", 
-    confirmText = "我知道了", 
-    cancelText = "取消", 
-    showInput = true,     // 👈 是否顯示輸入框
-    showCancel = true     // 👈 是否顯示取消按鈕
-}) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('system-notice-modal');
-        const titleEl = document.getElementById('system-notice-title');
-        const contentEl = document.getElementById('system-notice-content');
-        const inputEl = document.getElementById('system-notice-input');
-        const btnConfirm = document.getElementById('btn-notice-understand');
-        const btnCancel = document.getElementById('btn-notice-cancel');
+		function showNoticeModalPrompt({ 
+			title = "📢 系統提示", 
+			message = "", 
+			placeholder = "", 
+			confirmText = "我知道了", 
+			cancelText = "取消", 
+			showInput = true,     // 👈 是否顯示輸入框
+			showCancel = true     // 👈 是否顯示取消按鈕
+		}) {
+			return new Promise((resolve) => {
+				const modal = document.getElementById('system-notice-modal');
+				const titleEl = document.getElementById('system-notice-title');
+				const contentEl = document.getElementById('system-notice-content');
+				const inputEl = document.getElementById('system-notice-input');
+				const btnConfirm = document.getElementById('btn-notice-understand');
+				const btnCancel = document.getElementById('btn-notice-cancel');
 
-        if (!modal || !contentEl || !inputEl || !btnConfirm || !btnCancel) {
-            alert(message);
-            resolve(showInput ? "" : true);
-            return;
-        }
+				if (!modal || !contentEl || !inputEl || !btnConfirm || !btnCancel) {
+					alert(message);
+					resolve(showInput ? "" : true);
+					return;
+				}
 
-        if (titleEl) titleEl.innerText = title;
-        contentEl.innerHTML = message;
-        
-        // 依據參數決定是否顯示輸入框與取消按鈕
-        inputEl.value = "";
-        inputEl.placeholder = placeholder;
-        inputEl.style.display = showInput ? 'block' : 'none';
+				if (titleEl) titleEl.innerText = title;
+				contentEl.innerHTML = message;
+				
+				// 依據參數決定是否顯示輸入框與取消按鈕
+				inputEl.value = "";
+				inputEl.placeholder = placeholder;
+				inputEl.style.display = showInput ? 'block' : 'none';
 
-        btnConfirm.innerText = confirmText;
-        btnCancel.innerText = cancelText;
-        btnCancel.style.display = showCancel ? 'block' : 'none';
+				btnConfirm.innerText = confirmText;
+				btnCancel.innerText = cancelText;
+				btnCancel.style.display = showCancel ? 'block' : 'none';
 
-        // 重新綁定事件避免重複觸發
-        const newConfirm = btnConfirm.cloneNode(true);
-        const newCancel = btnCancel.cloneNode(true);
-        btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
-        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+				// 重新綁定事件避免重複觸發
+				const newConfirm = btnConfirm.cloneNode(true);
+				const newCancel = btnCancel.cloneNode(true);
+				btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+				btnCancel.parentNode.replaceChild(newCancel, btnCancel);
 
-        const cleanup = () => {
-            inputEl.style.display = 'none';
-            modal.classList.remove('active');
-        };
+				const cleanup = () => {
+					inputEl.style.display = 'none';
+					modal.classList.remove('active');
+				};
 
-        newConfirm.addEventListener('click', () => {
-            const val = inputEl.value.trim();
-            cleanup();
-            // 若為輸入模式回傳輸入字串，純提示模式則回傳 true
-            resolve(showInput ? val : true);
-        });
+				newConfirm.addEventListener('click', () => {
+					const val = inputEl.value.trim();
+					cleanup();
+					// 若為輸入模式回傳輸入字串，純提示模式則回傳 true
+					resolve(showInput ? val : true);
+				});
 
-        newCancel.addEventListener('click', () => {
-            cleanup();
-            resolve(showInput ? "" : false);
-        });
+				newCancel.addEventListener('click', () => {
+					cleanup();
+					resolve(showInput ? "" : false);
+				});
 
-        inputEl.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                newConfirm.click();
-            }
-        };
+				inputEl.onkeydown = (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						newConfirm.click();
+					}
+				};
 
-        modal.classList.add('active');
-        if (showInput) {
-            setTimeout(() => inputEl.focus(), 100);
-        }
-    });
-}
+				modal.classList.add('active');
+				if (showInput) {
+					setTimeout(() => inputEl.focus(), 100);
+				}
+			});
+		}
 
 		
 		// 💡 自動為 id 補上 DM 前綴的 Helper 函式
@@ -10490,22 +10523,28 @@ function showNoticeModalPrompt({
 
 		// 檢查與比對內容的函式
 		function checkSystemNotice() {
-			// 1. 如果是空陣列，直接略過不顯示
-			if (!SYS_NOTICE_DATA || SYS_NOTICE_DATA.length === 0) {
-				return;
-			}
+			if (!Array.isArray(SYS_NOTICE_DATA) || SYS_NOTICE_DATA.length === 0) return;
 
-			const storedContent = localStorage.getItem('dm_acknowledged_notice_content');
-			const currentContentStr = JSON.stringify(SYS_NOTICE_DATA);
+			// 1. 將公告內容轉為字串作為版本比對特徵
+			const currentNoticeStr = SYS_NOTICE_DATA.join('\n');
+			const cachedNoticeStr = localStorage.getItem('dm_read_sys_notice');
 
-			// 2. 如果儲存的內容跟現在的陣列內容「不同」，才顯示
-			if (storedContent !== currentContentStr) {
-				// 將陣列內容轉為列表 HTML
-				const contentHtml = SYS_NOTICE_DATA.map(text => `<li style="margin-bottom:4px;">${text}</li>`).join('');
-				document.getElementById('system-notice-content').innerHTML = `<ul style="margin: 0; padding-left: 20px;">${contentHtml}</ul>`;
-				
-				// 顯示 Modal
-				document.getElementById('system-notice-modal').classList.add('active');
+			// 2. 若本次公告與上次紀錄不同，則彈窗提示
+			if (currentNoticeStr !== cachedNoticeStr) {
+				const messageHtml = SYS_NOTICE_DATA.map(line => `<div>${line}</div>`).join('<div style="height:6px;"></div>');
+
+				if (typeof showNoticeModalPrompt === 'function') {
+					showNoticeModalPrompt({
+						title: "📢 系統重要公告",
+						message: messageHtml,
+						confirmText: "我知道了",
+						showInput: false,
+						showCancel: false
+					}).then(() => {
+						// 3. 使用者點擊「我知道了」後記錄至 localStorage，下次不再重複提示
+						localStorage.setItem('dm_read_sys_notice', currentNoticeStr);
+					});
+				}
 			}
 		}
 
