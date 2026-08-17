@@ -640,7 +640,7 @@ def push_line_message(msg_text: str):
     except Exception as e:
         print(f"[LINE Push 網路錯誤]: {e}")
         
-def send_line_notification(report: ReportModel, base_url: str = ""):
+def send_line_notification(report: ReportModel, base_url: str = "", country: str = "Unknown"):
     raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
     target_param = raw_id if raw_id else report.card_name.strip()
     card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
@@ -648,6 +648,7 @@ def send_line_notification(report: ReportModel, base_url: str = ""):
     # 動態組裝訊息行
     lines = [
         "🚨 【卡牌翻譯錯誤回報】\n",
+        f"🌐 國籍：{country}",  # 👈 新增國籍資訊
         f"📌 卡名：{report.card_name}"
     ]
 
@@ -668,10 +669,11 @@ def send_line_notification(report: ReportModel, base_url: str = ""):
     msg_text = "\n".join(lines)
     push_line_message(msg_text)
 
-def send_author_message_notification(msg_data: AuthorMessageModel):
+def send_author_message_notification(msg_data: AuthorMessageModel, country: str = "Unknown"):
     """處理留言給作者的 LINE 通知格式"""
     msg_text = (
         f"💬 【收到給作者的新留言】\n\n"
+        f"🌐 國籍：{country}\n"  # 👈 新增國籍資訊
         f"👤 暱稱：{msg_data.nickname or '使用者'}\n"
         f"📧 Email：{msg_data.email or '未提供'}\n"
         f"😀 表情：{msg_data.emojis or '無'}\n\n"
@@ -1334,11 +1336,15 @@ async def proxy_image(request: Request, url: str = Query(...)):
 async def get_diary(request: Request): 
     return get_etag_response(request, "diary", diary_cache)
 
+# --- 尋找 /api/report_error 路由並修改 ---
 @app.post("/api/report_error")
 @limiter.limit("3/minute")
 async def report_error(request: Request, report: ReportModel, background_tasks: BackgroundTasks):
     if not report.card_name: raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
-    background_tasks.add_task(send_line_notification, report, str(request.base_url))
+    
+    country = get_client_country(request)  # 👈 取得國籍
+    background_tasks.add_task(send_line_notification, report, str(request.base_url), country) # 👈 帶入 country
+    
     name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
     return {"status": "success", "message": f"回報成功！感謝{name}！"}
 
@@ -1359,6 +1365,7 @@ async def apply_nickname(request: Request, payload: NicknameApplyModel, backgrou
 async def get_all_english_names(request: Request): 
     return get_etag_response(request, "english_names", english_name_cache)
 
+# --- 尋找 /api/message_author 路由並修改 ---
 @app.post("/api/message_author")
 @limiter.limit("3/minute")
 async def message_author(request: Request, payload: AuthorMessageModel, background_tasks: BackgroundTasks):
@@ -1369,7 +1376,9 @@ async def message_author(request: Request, payload: AuthorMessageModel, backgrou
     if len(payload.emojis) > 20:
         raise HTTPException(status_code=400, detail="表情符號最多選擇 20 個")
 
-    background_tasks.add_task(send_author_message_notification, payload)
+    country = get_client_country(request)  # 👈 取得國籍
+    background_tasks.add_task(send_author_message_notification, payload, country) # 👈 帶入 country
+    
     nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
     return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}
     
