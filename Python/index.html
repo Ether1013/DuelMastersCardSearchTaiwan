@@ -5136,17 +5136,19 @@
 			currentFilterResults = [...exactResults, ...fuzzyResults];
 
 			// 💡 判斷是否跳轉或顯示無資料彈窗
-			if (exactResults.length === 0 && fuzzyResults.length === 0) {
-				showNoticeModalConfirm({
-					title: "🔍 查無資料",
-					message: "找不到符合條件的卡牌，請嘗試放寬搜尋條件或減少限制。",
-					confirmText: "我知道了",
-					showCancel: false
-				});
-			} else {
-				// 有資料才跳轉至結果頁籤
-				navigateToResultPage();
-			}
+            if (exactResults.length === 0 && fuzzyResults.length === 0) {
+                showNoticeModalPrompt({
+                    title: "🔍 查無資料",
+                    message: "找不到符合條件的卡牌，請嘗試放寬搜尋條件或減少限制。",
+                    confirmText: "我知道了",
+                    showInput: false,   // 👈 關閉輸入框
+                    showCancel: false   // 👈 關閉取消按鈕
+                });
+            } else {
+                // 有資料才跳轉至結果頁籤
+                navigateToResultPage();
+            }
+
 
 			// 💡 6. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製 (維持背景渲染狀態)
 			renderCurrentResultsWithSort();
