@@ -25,6 +25,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from collections import defaultdict, deque
 from datetime import datetime, timezone, timedelta
+import logging
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -96,6 +97,12 @@ action_details_log = deque(maxlen=50)
 # 新增：紀錄各國籍目前的發放編號數，以及 IP 對應的編號
 ip_counter_by_country = defaultdict(int)
 ip_to_user_id = {}
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger("api_cache")
 
 class NicknameApplyModel(BaseModel):
     card_name: str
@@ -310,6 +317,27 @@ async def tag_debounce_timer():
     except Exception as e:
         print(f"[Tag Debounce Error]: {e}")
 
+def mask_ip(ip: str) -> str:
+    """將 IPv4 / IPv6 進行部分遮罩打碼處理"""
+    if not ip or ip in ["unknown", "::1"]:
+        return ip
+
+    # 處理 IPv4 (例: 123.45.67.89 -> 123.*.*.89)
+    if "." in ip:
+        parts = ip.split(".")
+        if len(parts) == 4:
+            return f"{parts[0]}.*.*.{parts[3]}"
+        return f"{parts[0]}.*.*"
+
+    # 處理 IPv6 (例: 2001:db8:... -> 2001:db8:***:7334)
+    if ":" in ip:
+        parts = ip.split(":")
+        if len(parts) >= 4:
+            return f"{parts[0]}:{parts[1]}:***:{parts[-1]}"
+        return f"{parts[0]}:***"
+
+    return "***"
+    
 def get_user_id_by_ip(ip: str, country: str) -> str:
     # 1. 將 IP 進行 SHA256 雜湊處理（隱碼化，記憶體不留明碼 IP）
     ip_hash = hashlib.sha256(ip.encode('utf-8')).hexdigest()[:16]
@@ -351,11 +379,24 @@ def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_byt
     client_etag = request.headers.get("If-None-Match")
     server_etag = etag_cache.get(data_key, "")
 
-    # 如果前端傳來的 Hash 跟伺服器目前的一樣，強制回傳 304 讓前端用自己的快取
+    # 取得原始 IP 並打碼
+    raw_ip = request.headers.get("cf-connecting-ip") or request.headers.get("x-forwarded-for") or (request.client.host if request.client else "unknown")
+    if "," in raw_ip:
+        raw_ip = raw_ip.split(",")[0].strip()
+    client_ip = mask_ip(raw_ip)
+
+    # 1. 命中本地 Cache (回傳 304)
     if client_etag and client_etag == server_etag:
+        if data_key in ["carddata", "setlist"]:
+            logger.info(f"[{data_key.upper()}] 命中快取 - 使用者使用本地 Cache (304 Not Modified) | IP: {client_ip} | ETag: {client_etag}")
         return Response(status_code=304)
 
+    # 2. 未命中或初次請求 (回傳 200 與完整檔案)
     headers = {"ETag": server_etag}
+
+    if data_key in ["carddata", "setlist"]:
+        resp_type = "Gzip 壓縮檔" if gzip_cache_bytes else "JSON 檔案"
+        logger.info(f"[{data_key.upper()}] 未命中快取 - 重新回送 {resp_type} (200 OK) | IP: {client_ip} | Client ETag: {client_etag} -> Server ETag: {server_etag}")
 
     # 如果有預先壓縮的 Bytes，直接回傳 Gzip
     if gzip_cache_bytes:
