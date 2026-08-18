@@ -394,14 +394,21 @@ def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_byt
     client_etag = request.headers.get("If-None-Match")
     server_etag = etag_cache.get(data_key, "")
 
+    # 💡 核心補強：加上 Cache-Control: no-cache
+    # 這會告訴瀏覽器：你可以快取檔案，但在使用前「必須」帶 ETag 來問伺服器有沒有更新
+    headers = {
+        "ETag": server_etag,
+        "Cache-Control": "no-cache"
+    }
+
     # 1. 命中本地 Cache (304 Not Modified)
     if client_etag and client_etag == server_etag:
         data_transfer_stats[data_key]["cache"] += 1
-        return Response(status_code=304)
+        # 304 回應一樣要帶上 headers 規範
+        return Response(status_code=304, headers=headers)
 
     # 2. 未命中或初次請求 (200 OK，重傳資料)
     data_transfer_stats[data_key]["fetch"] += 1
-    headers = {"ETag": server_etag}
 
     if gzip_cache_bytes:
         headers["Content-Encoding"] = "gzip"

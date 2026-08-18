@@ -1971,6 +1971,8 @@
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+	<!-- 💡 新增：引入 localForage 處理大容量快取 -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 </head>
 <body>
 
@@ -4089,8 +4091,9 @@
 						// 1. 寫入最新的 ID
 						localStorage.setItem('dm_server_instance_id', currentServerId);
 						
-						// 2. 清空 Cache API
+						// 2. 清空 Cache API 與 IndexedDB 大檔快取
 						try { await caches.delete(CACHE_NAME); } catch (e) {}
+						try { await localforage.clear(); } catch (e) {} // 💡 新增：清空 localForage
 						
 						// 3. 🎯 核心補強：直接命令瀏覽器重載全頁，讓 HTML/JS 一併更新到最新版！
 						window.location.reload(true);
@@ -4098,14 +4101,25 @@
 					}
 				}
 
-				// 獨立的安全 Fetch 快取函式（替換原有的版本）
+				// 💡 獨立的安全 Fetch 快取函式（混合 localStorage 與 localForage）
 				async function fetchWithCache(url) {
 					const cacheKey = 'dm_data_' + url;
 					const etagKey = 'dm_etag_' + url;
 
-					// 從 localStorage 讀取先前的快取資料與 Hash
-					const cachedData = localStorage.getItem(cacheKey);
-					const cachedEtag = localStorage.getItem(etagKey);
+					// 💡 判斷是否為大容量檔案 (大檔用 localForage，小檔維持 localStorage)
+					const isLargeFile = url.includes('/api/carddata') || url.includes('/api/setlist');
+
+					let cachedData, cachedEtag;
+
+					// 依照檔案類型從對應的儲存空間讀取
+					if (isLargeFile) {
+						cachedData = await localforage.getItem(cacheKey);
+						cachedEtag = await localforage.getItem(etagKey);
+					} else {
+						const rawData = localStorage.getItem(cacheKey);
+						cachedData = rawData ? JSON.parse(rawData) : null;
+						cachedEtag = localStorage.getItem(etagKey);
+					}
 
 					const headers = {};
 					if (cachedEtag && cachedData) {
@@ -4119,7 +4133,7 @@
 						// 伺服器比對 Hash 相同，強制回傳 304 Not Modified
 						if (response.status === 304) {
 							console.log(`[Cache Hit] 304 Not Modified: ${url}`);
-							return JSON.parse(cachedData); // 強制使用 localStorage 的資料
+							return cachedData; // 已經是解析好的 JS 物件，直接回傳
 						}
 
 						// Hash 不同或第一次請求，伺服器回傳全新資料與新 Hash (ETag)
@@ -4128,23 +4142,24 @@
 							const newEtag = response.headers.get('ETag');
 
 							try {
-								// 將新資料與新 Hash 寫入 localStorage
-								localStorage.setItem(cacheKey, JSON.stringify(data));
-								if (newEtag) {
-									localStorage.setItem(etagKey, newEtag);
+								// 將新資料與新 Hash 寫入對應的儲存空間
+								if (isLargeFile) {
+									await localforage.setItem(cacheKey, data);
+									if (newEtag) await localforage.setItem(etagKey, newEtag);
+								} else {
+									localStorage.setItem(cacheKey, JSON.stringify(data));
+									if (newEtag) localStorage.setItem(etagKey, newEtag);
 								}
 							} catch (storageErr) {
-								console.warn(`⚠️ LocalStorage 空間不足，無法寫入快取: ${url}`, storageErr);
-								// 空間不足時不強求，直接回傳本次取得的資料即可
+								console.warn(`⚠️ 快取寫入失敗: ${url}`, storageErr);
 							}
 
 							return data;
 						}
 					} catch (e) {
 						console.warn(`[Fetch Error] 讀取 ${url} 發生網路錯誤，嘗試退回使用本地快取:`, e);
-						// 如果網路斷線但本地有舊資料，作為保底回傳
 						if (cachedData) {
-							return JSON.parse(cachedData);
+							return cachedData;
 						}
 					}
 
