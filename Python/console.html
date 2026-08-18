@@ -112,7 +112,20 @@
             </div>
         </div>
 
-        <!-- Charts Grid -->
+		<!-- 💡 新增：資料傳輸與快取狀態 (手動 Refresh 更新) -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-server text-emerald-400"></i> 資料傳輸狀態 (重傳 / 快取)
+                </h2>
+                <span class="text-xs text-gray-500 font-mono">點擊 Refresh 時更新</span>
+            </div>
+            <div id="dataTransferStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-xs">
+                <!-- 由 JS fetchInitialData 動態填入 -->
+                <div class="text-gray-500 col-span-full">載入中...</div>
+            </div>
+        </div>
+
         <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- 長條圖：觸發次數 -->
@@ -822,10 +835,44 @@
                 if (response.ok) {
                     const data = await response.json();
                     updateDashboard(data);
+                    
+                    // 💡 僅在主動拉取時渲染「資料傳輸狀態」
+                    renderDataTransferStats(data.data_transfer_stats || {});
                 }
             } catch (err) {
                 console.error("HTTP Fetch failed:", err);
             }
+        }
+
+        // 💡 新增：資料傳輸狀態渲染函式
+        function renderDataTransferStats(statsMap) {
+			window.latestDataTransferStats = statsMap; // 👈 補上這行，供 AI 匯出使用
+            const container = document.getElementById('dataTransferStatsGrid');
+            if (!container) return;
+
+            const entries = Object.entries(statsMap);
+            if (entries.length === 0) {
+                container.innerHTML = '<span class="text-gray-500 col-span-full">尚無傳輸紀錄</span>';
+                return;
+            }
+
+            container.innerHTML = '';
+            entries.forEach(([name, countObj]) => {
+                const fetchCount = countObj.fetch || 0;
+                const cacheCount = countObj.cache || 0;
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "bg-gray-950/70 border border-gray-800/80 rounded-lg p-2.5 flex flex-col justify-between";
+                itemDiv.innerHTML = `
+                    <span class="text-gray-400 font-medium truncate mb-1" title="${name}">${name}</span>
+                    <div class="flex items-center justify-between font-mono mt-1">
+                        <span class="text-rose-400 font-bold" title="重傳次數">${fetchCount}</span>
+                        <span class="text-gray-600">/</span>
+                        <span class="text-emerald-400 font-bold" title="快取命中次數">${cacheCount}</span>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
         }
 
         function initWebSocket() {
@@ -935,6 +982,7 @@
 					active_feature_types: parseInt(document.getElementById('activeFeatures')?.innerText || '0', 10),
 					total_users: parseInt(document.getElementById('activeUsers')?.innerText || '0', 10)
 				},
+				data_transfer_status: window.latestDataTransferStats || {}, // 👈 匯出時包含資料傳輸狀態
 				feature_ranking: featureStats,
 				country_distribution: countryStats,
 				user_distribution_by_country: userCountryStats,

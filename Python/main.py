@@ -92,6 +92,21 @@ file_write_lock = asyncio.Lock()
 feature_counter = defaultdict(int)
 country_counter = defaultdict(int)  # 👈 新增：全域國籍次數統計
 user_counter = defaultdict(int)     # 👈 新增：全域使用者次數統計
+# 💡 新增：紀錄各靜態資料的「重傳 (fetch)」與「快取 (cache)」次數
+data_transfer_stats = defaultdict(lambda: {"fetch": 0, "cache": 0})
+
+DATA_NAME_MAP = {
+    "carddata": "卡牌資料",
+    "setlist": "系列與商品資料",
+    "card_types": "卡種資料",
+    "races": "種族資料",
+    "abilities": "能力資料",
+    "card_stats": "數值統計資料",
+    "categoryname": "分類名稱資料",
+    "nickname": "暱稱資料",
+    "diary": "更新日誌資料",
+    "english_names": "英文卡名資料"
+}
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
 # 新增：紀錄各國籍目前的發放編號數，以及 IP 對應的編號
@@ -375,35 +390,23 @@ def generate_etag(data) -> str:
     return f'"{hash_str}"'  # 👈 加上雙引號
 
 def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_bytes: bytes = None):
-    """共用的 ETag 判斷與 Response 生成器"""
+    """共用的 ETag 判斷與 Response 生成器（移除了 log，改為記憶體側錄統計）"""
     client_etag = request.headers.get("If-None-Match")
     server_etag = etag_cache.get(data_key, "")
 
-    # 取得原始 IP 並打碼
-    raw_ip = request.headers.get("cf-connecting-ip") or request.headers.get("x-forwarded-for") or (request.client.host if request.client else "unknown")
-    if "," in raw_ip:
-        raw_ip = raw_ip.split(",")[0].strip()
-    client_ip = mask_ip(raw_ip)
-
-    # 1. 命中本地 Cache (回傳 304)
+    # 1. 命中本地 Cache (304 Not Modified)
     if client_etag and client_etag == server_etag:
-        if data_key in ["carddata", "setlist"]:
-            logger.info(f"[{data_key.upper()}] 命中快取 - 使用者使用本地 Cache (304 Not Modified) | IP: {client_ip} | ETag: {client_etag}")
+        data_transfer_stats[data_key]["cache"] += 1
         return Response(status_code=304)
 
-    # 2. 未命中或初次請求 (回傳 200 與完整檔案)
+    # 2. 未命中或初次請求 (200 OK，重傳資料)
+    data_transfer_stats[data_key]["fetch"] += 1
     headers = {"ETag": server_etag}
 
-    if data_key in ["carddata", "setlist"]:
-        resp_type = "Gzip 壓縮檔" if gzip_cache_bytes else "JSON 檔案"
-        logger.info(f"[{data_key.upper()}] 未命中快取 - 重新回送 {resp_type} (200 OK) | IP: {client_ip} | Client ETag: {client_etag} -> Server ETag: {server_etag}")
-
-    # 如果有預先壓縮的 Bytes，直接回傳 Gzip
     if gzip_cache_bytes:
         headers["Content-Encoding"] = "gzip"
         return Response(content=gzip_cache_bytes, media_type="application/json", headers=headers)
 
-    # 一般的 JSON 回傳
     json_str = json.dumps(cache_obj, ensure_ascii=False)
     return Response(content=json_str, media_type="application/json", headers=headers)
     
@@ -1552,13 +1555,19 @@ async def get_feature_stats(
     sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
+    # 將內部 key 轉換為中文名稱再打包回傳
+    formatted_data_stats = {
+        DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items()
+    }
+
     result = {
         "total_events": sum(sorted_stats.values()),
         "stats": sorted_stats,
         "country_stats": sorted_country_stats,
         "country_user_counts": get_country_user_counts(),
         "recent_50_details": get_clean_recent_logs(),
-        "start_time": last_reset_time  # 👈 新增
+        "data_transfer_stats": formatted_data_stats,  # 👈 新增此行
+        "start_time": last_reset_time
     }
     return PrettyJSONResponse(content=result)
 
@@ -1696,6 +1705,44 @@ def find_node(node_list, target_id):
             if found: return found
     return None
 
+
+@app.on_event("shutdown")
+def on_shutdown():
+    """伺服器重啟或終止前，自動謄寫完整統計日誌"""
+    now_str = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
+    total_events = sum(feature_counter.values())
+    total_users = len(ip_to_user_id)  # 👈 與前端畫面的 Total Users 完全吻合
+    
+    top_features = sorted(feature_counter.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_countries = sorted(country_counter.items(), key=lambda x: x[1], reverse=True)[:5]
+    
+    report_lines = [
+        "\n" + "=" * 55,
+        "📊 【SERVER SHUTDOWN SUMMARY REPORT - 伺服器關機結算報告】",
+        f"📅 統計起訖：{last_reset_time} ~ {now_str}",
+        f"⚡ 總事件數：{total_events} 次 | 👥 總使用者：{total_users} 人",
+        "-" * 55,
+        "🏆 【功能觸發 TOP 5】:"
+    ]
+    for rank, (feat, count) in enumerate(top_features, 1):
+        report_lines.append(f"  {rank}. {feat}: {count} 次")
+        
+    report_lines.append("\n🌐 【國籍分佈 TOP 5】:")
+    for country, count in top_countries:
+        report_lines.append(f"  * {country}: {count} 次")
+
+    report_lines.append("\n📦 【資料傳輸與快取統計 (重傳 / 快取 / 快取率)】:")
+    for key, name in DATA_NAME_MAP.items():
+        stats = data_transfer_stats.get(key, {"fetch": 0, "cache": 0})
+        fetch_cnt = stats["fetch"]
+        cache_cnt = stats["cache"]
+        total_req = fetch_cnt + cache_cnt
+        cache_rate = (cache_cnt / total_req * 100) if total_req > 0 else 0.0
+        report_lines.append(f"  * {name}：{fetch_cnt} / {cache_cnt} ({cache_rate:.1f}% 快取)")
+
+    report_lines.append("=" * 55 + "\n")
+    logger.info("\n".join(report_lines))
+    
 @app.get("/tags.html")
 async def get_tags_page(): 
     return FileResponse("tags.html")
@@ -1917,6 +1964,7 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     country_counter.clear()
     user_counter.clear()
     action_details_log.clear()
+    data_transfer_stats.clear()  # 👈 新增這行
 
     # 👈 徹底清空國籍人數登記
     ip_counter_by_country.clear()
