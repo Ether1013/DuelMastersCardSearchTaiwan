@@ -382,7 +382,15 @@
             // 1. 卡名標籤 (比對《》內部)
             replaceKeywords(dicts.cardNames, 'card-name', null, true);
 
-            // 2. 種族標籤
+            // 🔽【新增】：將剩餘未被標記為卡名的《...》保護起來，避免被後續的種族標籤匹配
+            const bracketShields = [];
+            processedText = processedText.replace(/《[^》]+》/g, (match) => {
+                const shieldKey = `___SHIELD_BRACKET_${bracketShields.length}___`;
+                bracketShields.push({ key: shieldKey, text: match });
+                return shieldKey;
+            });
+
+            // 2. 種族標籤 (此時《》已被保護，不會被比對)
             replaceKeywords(dicts.raceKeys, 'race', (matched) => {
                 const info = dicts.raceMap.get(matched);
                 if (!info) return '';
@@ -393,6 +401,11 @@
                 if (info.eng) parts.push(`英文: ${info.eng}`);
                 return parts.join('\n');
             }, false);
+
+            // 🔽【新增】：還原受保護的《...》區塊
+            bracketShields.forEach(({ key, text }) => {
+                processedText = processedText.replace(key, text);
+            });
 
             // 還原佔位符為包含 Title/Tooltip 的 HTML 標籤
             placeholders.forEach(({ placeholder, matched, type, tooltipText, requireBracket }) => {
@@ -731,11 +744,12 @@
                     if (currentSpList.length > 0) {
                         const detectedKeys = new Set();
                         currentSpList.forEach(sp => {
+                            // 🔽【修改】：先過濾掉《》內容，再進行能力關鍵字匹配
+                            const cleanSp = sp.replace(/《.*?》/g, '');
                             rawAbilities.forEach(a => {
-                                if (a.jap && sp.includes(a.jap)) detectedKeys.add(a.jap);
+                                if (a.jap && cleanSp.includes(a.jap)) detectedKeys.add(a.jap);
                             });
                         });
-
                         const filteredKeys = Array.from(detectedKeys).filter(key => {
                             return !Array.from(detectedKeys).some(otherKey => otherKey !== key && otherKey.includes(key));
                         });

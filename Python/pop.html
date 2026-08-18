@@ -26,40 +26,6 @@
             font-size: 20px; 
             margin-top: 0;
         }
-		
-		/* ================= 固定頂部頁籤 (手機友善) ================= */
-		.header-tabs {
-			position: sticky;
-			top: 0;
-			z-index: 200;
-			display: flex;
-			background: #1e293b;
-			color: #fff;
-			width: 100vw;
-			margin-left: -10px; /* 抵銷 body 的 10px padding */
-			margin-top: -20px;  /* 抵銷 body 的 20px padding */
-			margin-bottom: 15px;
-			overflow-x: auto;
-			-webkit-overflow-scrolling: touch;
-			scrollbar-width: none; /* Firefox 隱藏滾動條 */
-		}
-		.header-tabs::-webkit-scrollbar { display: none; } /* Chrome/Safari 隱藏滾動條 */
-
-		.tab {
-			flex: 1;
-			min-width: 85px; /* 確保手機版不會過度擠壓文字 */
-			text-align: center;
-			padding: 12px 10px;
-			cursor: pointer;
-			font-size: 14px;
-			font-weight: bold;
-			user-select: none;
-			transition: all 0.2s;
-			border-bottom: 3px solid transparent;
-			white-space: nowrap;
-		}
-		.tab:hover { background: #334155; }
-		.tab.active { color: #38bdf8; border-bottom: 3px solid #38bdf8; background: #0f172a; }
 
         /* ================= 模式 1：僅匯出圖片 (響應式卡牌寬度) ================= */
         body.mode-img-only {
@@ -454,13 +420,6 @@
 </head>
 <body>
 
-	<div class="header-tabs">
-		<div class="tab" data-mode="img_unfold">🖼️ 展開純圖</div>
-		<div class="tab" data-mode="img_only">🖼️ 同卡縮排</div>
-		<div class="tab" data-mode="img_text">🖼️+📝 圖文模式</div>
-		<div class="tab" data-mode="text_only">📝 純文字</div>
-	</div>
-
     <div class="loading-overlay" id="loading">
         <div class="loading-spinner"></div>
         <div id="loading-text">資料讀取與卡表生成中...</div>
@@ -472,8 +431,6 @@
     <script>
         const INFINITY_THRESHOLD = 9000000000000000;
         const NEGATIVE_INFINITY = -999999999;
-		// 全域資料容器：統一所有來源的卡牌清單
-		let globalExportData = null;
         const specialIcons = ["[白金殿堂]", "⌂", "✚", "✡"];
 		// 文明 Bitmask 對應設定
 		const CIV_MAP = [
@@ -511,23 +468,6 @@
             const strId = String(rawId).trim();
             return strId.toUpperCase().startsWith('DM') ? strId : 'DM' + strId;
         }
-		
-		// 頁籤切換與渲染中心
-		function switchMode(newMode) {
-			if (!globalExportData) return;
-			
-			// 1. 切換 UI 亮燈狀態
-			document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-			document.querySelector(`.tab[data-mode="${newMode}"]`)?.classList.add('active');
-			
-			// 2. 無刷新更新網址參數 (讓使用者可以直接複製當下模式的網址)
-			const url = new URL(window.location);
-			url.searchParams.set('mode', newMode);
-			window.history.replaceState({}, '', url);
-
-			// 3. 呼叫渲染引擎
-			renderExportView(newMode);
-		}
 
         function renderSpItemHtml(spRaw) {
             let formatted = formatDisplayValue(spRaw);
@@ -654,99 +594,101 @@
 			document.body.style.setProperty('--card-gap', `${gap}px`);
 		}
 
-        // ================= 統一視圖渲染引擎 =================
-		function renderExportView(mode) {
-			const container = document.getElementById('card-list-container');
-			if (!globalExportData) return;
+        // 渲染匯出 payload 格式 (Session 模式專用)
+        function renderExportPayload(payload) {
+            const container = document.getElementById('card-list-container');
+            const { mode, items, isDeckSet, cardTypes } = payload;
 
-			// 1. 從全域變數取出統一好的資料
-			const { items, isDeckSet, cardTypes, pageTitle } = globalExportData;
+            function getCardTypeText(typeVal) {
+                if (!cardTypes || !Array.isArray(cardTypes)) return typeVal;
+                const match = cardTypes.find(ct => ct.value === typeVal);
+                return match ? match.text : typeVal;
+            }
 
-			// 2. 清理舊模式的樣式
-			document.body.classList.remove('mode-img-only', 'mode-img-unfold');
-			
-			// 3. 根據模式設定動態標題
-			let currentTitle = pageTitle || `卡牌列表匯出結果 (${items.length}張)`;
-			if (mode === 'img_only') currentTitle = `僅圖片模式 (同卡縮排) - ${items.length}種卡牌`;
-			if (mode === 'img_unfold') currentTitle = `展開式純圖模式 - ${items.length}種卡牌`;
-			if (mode === 'text_only') currentTitle = `純文字模式 - ${items.length}種卡牌`;
-			
-			document.title = currentTitle;
-			document.getElementById('page-title').innerText = currentTitle;
+            // ================= 模式 1：僅匯出圖片 (Image Only) =================
+            if (mode === 'img_only') {
+                document.body.classList.add('mode-img-only');
+                document.title = `匯出結果 - 僅圖片模式 (${items.length}種卡牌)`;
+                document.getElementById('page-title').innerText = `僅圖片模式 (${items.length}種卡牌)`;
 
-			// 輔助函式：取得卡種中文名稱
-			function getCardTypeText(typeVal) {
-				if (!cardTypes || !Array.isArray(cardTypes)) return typeVal;
-				const match = cardTypes.find(ct => ct.value === typeVal);
-				return match ? match.text : typeVal;
-			}
+                // 💡 僅圖片模式動態切換 Viewport 為裝置寬度，以利精準響應式計算圖片
+                let metaViewport = document.querySelector('meta[name="viewport"]');
+                if (metaViewport) {
+                    metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes');
+                }
 
-			let html = '';
+                // 依據原始需求：依卡牌種類數量固定計算列數與單列行數
+                function calculateRowDistribution(totalCards) {
+                    if (totalCards <= 0) return [];
+                    if (totalCards === 9) return [5, 4];
+                    if (totalCards <= 8) return [totalCards];
+                    let rows = Math.ceil(totalCards / 8);
+                    let baseItems = Math.floor(totalCards / rows);
+                    let remainder = totalCards % rows;
+                    let dist = [];
+                    for (let i = 0; i < rows; i++) {
+                        dist.push(baseItems + (i < remainder ? 1 : 0));
+                    }
+                    return dist;
+                }
 
-			// ================= 模式 1：僅匯出圖片 (同卡縮排) =================
-			if (mode === 'img_only') {
-				document.body.classList.add('mode-img-only');
-				
-				// 計算排版列數
-				function calculateRowDistribution(totalCards) {
-					if (totalCards <= 0) return [];
-					if (totalCards === 9) return [5, 4];
-					if (totalCards <= 8) return [totalCards];
-					let rows = Math.ceil(totalCards / 8);
-					let baseItems = Math.floor(totalCards / rows);
-					let remainder = totalCards % rows;
-					let dist = [];
-					for (let i = 0; i < rows; i++) {
-						dist.push(baseItems + (i < remainder ? 1 : 0));
-					}
-					return dist;
-				}
+                currentImgOnlyRowDist = calculateRowDistribution(items.length);
 
-				currentImgOnlyRowDist = calculateRowDistribution(items.length);
+                let html = '<div class="img-grid-container">';
+                let currIdx = 0;
 
-				html += '<div class="img-grid-container">';
-				let currIdx = 0;
-
-				currentImgOnlyRowDist.forEach(countInRow => {
-					html += '<div class="img-grid-row">';
-					for (let i = 0; i < countInRow; i++) {
-						const item = items[currIdx];
-						if (item) {
-							html += '<div class="img-card-col"><div class="img-stack-box">';
-							if (item.picUrl) {
-								for (let c = 0; c < item.count; c++) {
-									const zIndex = c + 1;
-									html += `<img class="img-only-card" style="z-index:${zIndex};" src="${item.picUrl}" alt="${item.name}" />`;
-								}
-							} else {
-								for (let c = 0; c < item.count; c++) {
+                currentImgOnlyRowDist.forEach(countInRow => {
+                    html += '<div class="img-grid-row">';
+                    for (let i = 0; i < countInRow; i++) {
+                        const item = items[currIdx];
+                        if (item) {
+                            html += '<div class="img-card-col">';
+                            html += '<div class="img-stack-box">';
+                            
+                            if (item.picUrl) {
+                                for (let c = 0; c < item.count; c++) {
+                                    const zIndex = c + 1; // 畫面最下方(最後一張) z-index 最高
+                                    html += `<img class="img-only-card" style="z-index:${zIndex};" src="${item.picUrl}" alt="${item.name}" />`;
+                                }
+                            } else {
+                                for (let c = 0; c < item.count; c++) {
 									const zIndex = c + 1;
 									const isTop = (c === item.count - 1);
 									const boxContent = isTop ? `<div class="pop-img-spinner"></div><div>Loading...</div>` : '';
 									html += `<div class="loading-img-box" style="z-index:${zIndex};">${boxContent}</div>`;
 								}
-							}
-							html += '</div></div>';
-						}
-						currIdx++;
-					}
-					html += '</div>';
+                            }
+                            
+                            html += '</div></div>';
+                        }
+                        currIdx++;
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+                // 💡 確保 DOM 渲染完畢後執行尺寸計算
+				requestAnimationFrame(() => {
+					updateImgOnlyScale();
 				});
-				html += '</div>';
-				container.innerHTML = html;
-
-				// 觸發自適應尺寸計算
-				requestAnimationFrame(() => updateImgOnlyScale());
-				return;
-			}
-
-			// ================= 模式 4：展開式純圖 (40張攤開) =================
+                return;
+            }
+			
+			// ================= 模式 4：展開式純圖 (img_unfold) =================
 			if (mode === 'img_unfold') {
 				document.body.classList.add('mode-img-unfold');
+				document.title = `匯出結果 - 展開式純圖模式 (${items.length}種卡牌)`;
+				document.getElementById('page-title').innerText = `展開式純圖模式 (${items.length}種卡牌)`;
 
-				// 使用原本就有的合成演算法
-				const unfoldedCards = computeUnfoldLayout(items); 
-				html += '<div class="img-unfold-grid">';
+				let metaViewport = document.querySelector('meta[name="viewport"]');
+				if (metaViewport) {
+					metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes');
+				}
+
+				const unfoldedCards = computeUnfoldLayout(items);
+
+				let html = '<div class="img-unfold-grid">';
 				unfoldedCards.forEach(card => {
 					if (card.picUrl) {
 						html += `<img class="img-unfold-card" src="${card.picUrl}" alt="${card.name}" title="${card.name}" />`;
@@ -755,92 +697,68 @@
 					}
 				});
 				html += '</div>';
+
 				container.innerHTML = html;
 
-				// 觸發自適應尺寸計算
-				requestAnimationFrame(() => updateImgUnfoldScale());
+				requestAnimationFrame(() => {
+					updateImgUnfoldScale();
+				});
+
+				// 綁定 Resize 與 螢幕旋轉事件
+				window.addEventListener('resize', updateImgUnfoldScale);
+				window.addEventListener('orientationchange', () => setTimeout(updateImgUnfoldScale, 200));
 				return;
 			}
 
-			// ================= 模式 2 & 3：圖+效果 (img_text) 與 只要效果 (text_only) =================
-			// 只要不是 text_only (純文字)，就顯示圖片
-			const includeImage = (mode !== 'text_only'); 
+            // ================= 模式 2 & 3：圖+效果 (img_text) 與 只要效果 (text_only) =================
+            document.title = `卡牌列表匯出結果 (${items.length}張)`;
+            document.getElementById('page-title').innerText = `卡牌列表匯出結果 (${items.length}張)`;
+            const includeImage = (mode === 'img_text');
+            let html = '';
 
-			items.forEach((item, idx) => {
-				const cleanName = item.name || '未命名卡牌';
-				const picUrl = item.picUrl || '';
-				const flavorText = item.flavorText || '';
-				const setCardId = item.setCardId || '';
-				const cardCount = item.count || 1;
-				const isHorizontal = item.isHorizontal || false;
-				const horizClass = isHorizontal ? ' is-horizontal' : '';
+            items.forEach((item, idx) => {
+                const cleanName = item.name || '未命名卡牌';
+                const picUrl = item.picUrl || '';
+                const flavorText = item.flavorText || '';
+                const setCardId = item.setCardId || '';
+                const cardCount = item.count || 1;
+                const isHorizontal = item.isHorizontal || false;
+                const horizClass = isHorizontal ? ' is-horizontal' : '';
 
-				html += '<div class="card-item">';
+                html += '<div class="card-item">';
 
-				// --- 左側：圖片區塊 ---
-				if (includeImage) {
-					const containerMaxWidth = isHorizontal ? '35%' : '25%';
-					html += `<div class="card-img-container${horizClass}" style="max-width:${containerMaxWidth};">`;
-					
-					if (picUrl) {
-						if (isDeckSet && cardCount > 1) {
-							// 同卡多張堆疊
-							html += `<div class="stack-img-container${horizClass}">`;
-							for (let c = 0; c < cardCount; c++) {
-								html += `<img class="stacked-card-img${horizClass}" style="z-index:${cardCount - c};" src="${picUrl}" alt="${cleanName}" onerror="this.outerHTML='<div class=\\'no-image-box\\'>無卡圖</div>'" />`;
-							}
-							html += '</div>';
-						} else {
-							// 單張
-							html += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" onerror="this.outerHTML='<div class=\\'no-image-box\\'>無卡圖</div>'" />`;
-						}
-					} else {
-						html += `<div class="no-image-box${horizClass}">無卡圖</div>`;
-					}
+                if (includeImage) {
+                    const containerMaxWidth = isHorizontal ? '35%' : '25%';
+                    html += `<div class="card-img-container${horizClass}" style="max-width:${containerMaxWidth};">`;
+                    
+                    if (picUrl) {
+                        if (isDeckSet && cardCount > 1) {
+                            html += `<div class="stack-img-container${horizClass}">`;
+                            for (let c = 0; c < cardCount; c++) {
+                                html += `<img class="stacked-card-img${horizClass}" style="z-index:${cardCount - c};" src="${picUrl}" alt="${cleanName}" />`;
+                            }
+                            html += '</div>';
+                        } else {
+                            html += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" />`;
+                        }
+                    } else {
+                        html += `<div class="card-img${horizClass}" style="display:flex;align-items:center;justify-content:center;color:#888;">No Image</div>`;
+                    }
 
-					html += '<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>';
-					html += '</div>';
-				}
+                    html += '<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>';
+                    html += '</div>';
+                }
 
-				// --- 右側：文字效果區塊 ---
-				html += '<div class="card-detail">';
-				
-				// 1. 處理殿堂標記
-				let sanctuarySymbol = '';
-				let sanctuaryMsg = '';
-				if (item.sanctuary !== undefined && item.sanctuary !== null) {
-					if (item.sanctuary == 1) {
-						sanctuarySymbol = '[殿堂]';
-						sanctuaryMsg = '殿堂';
-					} else if (item.sanctuary == 0) {
-						sanctuarySymbol = '[白金殿堂]';
-						sanctuaryMsg = '白金殿堂';
-					} else if (Array.isArray(item.sanctuary) && item.sanctuary.length > 0) {
-						sanctuarySymbol = '[組合殿堂]';
-						sanctuaryMsg = `組合殿堂：${item.sanctuary.join(',')}`;
-					}
-				}
+                html += '<div class="card-detail">';
+                
+                let countPrefix = '';
+                if (isDeckSet && (!includeImage || !picUrl)) {
+                    countPrefix = `<span style="font-weight:bold; color:#d32f2f; margin-right:6px;">${cardCount} ⅹ </span>`;
+                }
+                const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
+                html += `<div class="card-title">${indexPrefix}${countPrefix}${setCardId ? `[DM${setCardId}] ` : ''}${cleanName}</div>`;
 
-				let sanctuaryHtml = '';
-				if (sanctuarySymbol) {
-					const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
-					const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
-					sanctuaryHtml = `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>`;
-				}
-
-				// 2. 處理張數與編號
-				let countPrefix = '';
-				if (isDeckSet && (!includeImage || !picUrl)) {
-					// 在純文字模式中，或是圖片讀不到時，文字補上「張數」
-					countPrefix = `<span style="font-weight:bold; color:#d32f2f; margin-right:6px;">${cardCount} ⅹ </span>`;
-				}
-				
-				// 如果是自訂牌組，不需要流水號 (#1, #2)
-				const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
-				html += `<div class="card-title">${sanctuaryHtml}${indexPrefix}${countPrefix}${setCardId ? `[${formatDmId(setCardId)}] ` : ''}${cleanName}</div>`;
-
-				// 3. 處理 wdata (屬性與能力)
-				if (item.wdata && Array.isArray(item.wdata)) {
+                if (item.wdata && Array.isArray(item.wdata)) {
 					item.wdata.forEach(w => {
 						const typeText = (w.type && Array.isArray(w.type)) ? w.type.map(t => getCardTypeText(t)).join(', ') : '';
 						let displayPower = w.power ?? '-';
@@ -850,30 +768,41 @@
 
 						html += '<div class="wdata-box">';
 
-						// 第一行 (卡種 | 文明 | 費用 | 攻擊力)
+						// 1. 第一行欄位 (卡種 | 文明 | 費用 | 攻擊力)
 						const metaRow = [];
-						if (typeText) metaRow.push(`<b>卡種:</b> ${typeText}`);
-						if (w.civil !== undefined && w.civil !== null && w.civil !== '') metaRow.push(`<b>文明:</b> ${getCivText(w.civil)}`);
-						if (w.cost !== undefined && w.cost !== null) metaRow.push(`<b>費用:</b> ${w.cost}`);
-						if (displayPower !== '-' && displayPower !== undefined && displayPower !== null) metaRow.push(`<b>攻擊力:</b> ${displayPower}`);
+						if (typeText) {
+							metaRow.push(`<b>卡種:</b> ${typeText}`);
+						}
+						if (w.civil !== undefined && w.civil !== null && w.civil !== '') {
+							metaRow.push(`<b>文明:</b> ${getCivText(w.civil)}`);
+						}
+						if (w.cost !== undefined && w.cost !== null) {
+							metaRow.push(`<b>費用:</b> ${w.cost}`);
+						}
+						if (displayPower !== '-' && displayPower !== undefined && displayPower !== null) {
+							metaRow.push(`<b>攻擊力:</b> ${displayPower}`);
+						}
 
-						if (metaRow.length > 0) html += `<div>${metaRow.join(' | ')}</div>`;
+						if (metaRow.length > 0) {
+							html += `<div>${metaRow.join(' | ')}</div>`;
+						}
 
-						// 種族
+						// 2. 種族獨立一行 (無資料則完全不輸出)
 						if (w.race && Array.isArray(w.race) && w.race.length > 0) {
 							html += `<div style="margin-top: 4px;"><b>種族:</b> ${w.race.join(', ')}</div>`;
 						}
 
-						// 能力 SP (呼叫全域的 renderSpItemHtml 函式)
+						// 💡 3.【能力 SP 渲染】
 						if (w.sp && Array.isArray(w.sp) && w.sp.length > 0) {
 							html += `<ul class="sp-list">`;
 							w.sp.forEach(s => html += renderSpItemHtml(s));
 							html += `</ul>`;
 						} else {
+							// 💡 若無特殊能力，顯示 ( 無能力 )
 							html += `<div style="font-size:13px; color:#777; font-style:italic; margin-top:4px;">( 無能力 )</div>`;
 						}
 
-						// Hyper Mode SP
+						// 💡 4.【補回被遺漏的 Hyper Mode SP 渲染】
 						if (w.hypermode && w.hypermode.sp && Array.isArray(w.hypermode.sp) && w.hypermode.sp.length > 0) {
 							html += '<div class="hyper-divider">Hyper Mode</div>';
 							html += `<ul class="sp-list">`;
@@ -885,32 +814,29 @@
 					});
 				}
 
-				// 4. 魔力
-				if (item.mana !== null && item.mana !== undefined) {
-					html += `<div style="background:#f1f8e9; border-left:3px solid #4caf50; padding:6px 10px; font-size:13px; font-weight:bold; color:#33691e; border-radius:4px; margin-top:8px;">魔力供應: ${item.mana}</div>`;
-				}
+                if (item.mana !== null && item.mana !== undefined) {
+                    html += `<div style="background:#f1f8e9; border-left:3px solid #4caf50; padding:6px 10px; font-size:13px; font-weight:bold; color:#33691e; border-radius:4px; margin-top:8px;">魔力供應: ${item.mana}</div>`;
+                }
 
-				// 5. Flavor (背景故事)
-				if (flavorText) {
-					html += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
-				}
+                if (flavorText) {
+                    html += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
+                }
 
-				// 6. 效果字典解釋
-				if (item.explainedAbilities && item.explainedAbilities.length > 0) {
-					html += '<div class="ability-explain-box">';
-					item.explainedAbilities.forEach(abil => {
-						const headerLine = [abil.jap, abil.chi || abil.cht, abil.eng].filter(Boolean).join(' / ');
-						const descStr = abil.descript || abil.desc || abil.text || abil.detail || '(無效果說明)';
-						html += `<div class="ability-explain-item"><span class="ability-title">【${headerLine}】</span>: ${descStr}</div>`;
-					});
-					html += '</div>';
-				}
+                if (item.explainedAbilities && item.explainedAbilities.length > 0) {
+                    html += '<div class="ability-explain-box">';
+                    item.explainedAbilities.forEach(abil => {
+                        const headerLine = [abil.jap, abil.chi || abil.cht, abil.eng].filter(Boolean).join(' / ');
+                        const descStr = abil.descript || abil.desc || abil.text || abil.detail || '(無效果說明)';
+                        html += `<div class="ability-explain-item"><span class="ability-title">【${headerLine}】</span>: ${descStr}</div>`;
+                    });
+                    html += '</div>';
+                }
 
-				html += '</div></div>';
-			});
+                html += '</div></div>';
+            });
 
-			container.innerHTML = html;
-		}
+            container.innerHTML = html;
+        }
 		
 		// A. 響應式動態計算卡片寬度 (--card-w)
 		function updateImgUnfoldScale() {
@@ -1139,125 +1065,136 @@
 		}
 
         async function initPopPage() {
-			const urlParams = new URLSearchParams(window.location.search);
-			const sessionKey = urlParams.get('session');
-			const setCode = urlParams.get('setCode');
-			const deckListParam = urlParams.get('deckList');
-			const sortParam = urlParams.get('sort');
-			const customTitleParam = urlParams.get('title');
-			const initialMode = urlParams.get('mode'); // 優先讀取網址指定的模式
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionKey = urlParams.get('session');
+            const setCode = urlParams.get('setCode');
+            const deckListParam = urlParams.get('deckList');
+            const sortParam = urlParams.get('sort');
+            const customTitleParam = urlParams.get('title');
 
-			// 綁定頁籤點擊事件
-			document.querySelectorAll('.tab').forEach(tab => {
-				tab.addEventListener('click', (e) => {
-					switchMode(e.target.getAttribute('data-mode'));
-				});
-			});
+            if (sessionKey) {
+                const rawPayload = sessionStorage.getItem(sessionKey);
+                if (!rawPayload) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('page-title').innerText = "⚠️ 匯出資料已過期或不存在！";
+                    document.getElementById('card-list-container').innerHTML = '<p style="color:#666; text-align:center;">請返回搜尋器頁面重新進行匯出。</p>';
+                    return;
+                }
 
-			// 1. Session 模式載入
-			if (sessionKey) {
-				const rawPayload = sessionStorage.getItem(sessionKey);
-				if (!rawPayload) {
-					document.getElementById('loading').style.display = 'none';
-					document.getElementById('page-title').innerText = "⚠️ 匯出資料已過期或不存在！";
-					document.getElementById('card-list-container').innerHTML = '<p style="color:#666; text-align:center;">請返回搜尋器頁面重新進行匯出。</p>';
-					return;
-				}
-				
-				try {
-					const payload = JSON.parse(rawPayload);
-					globalExportData = payload; // 塞入全域
-					
-					// 優先順序：網址參數 > session當下指定的模式 > 預設圖文
-					switchMode(initialMode || payload.mode || 'img_text'); 
-					
-					if (customTitleParam && customTitleParam.trim() !== '') {
-						document.title = `${customTitleParam.trim()} - 卡表總覽`;
-						document.getElementById('page-title').innerText = `${customTitleParam.trim()} - 卡表總覽`;
-					}
-				} catch (err) {
-					console.error("解析匯出資料失敗:", err);
-					document.getElementById('page-title').innerText = "❌ 匯出資料解析錯誤！";
-				} finally {
-					document.getElementById('loading').style.display = 'none';
-				}
-				return;
-			}
+                try {
+                    const payload = JSON.parse(rawPayload);
+                    renderExportPayload(payload);
+                } catch (err) {
+                    console.error("解析匯出資料失敗:", err);
+                    document.getElementById('page-title').innerText = "❌ 匯出資料解析錯誤！";
+                } finally {
+                    document.getElementById('loading').style.display = 'none';
+                }
+                return;
+            }
 
-			// 2. API 模式載入 (setCode / deckList)
-			if (!setCode && !deckListParam) {
-				document.getElementById('loading').style.display = 'none';
-				document.getElementById('page-title').innerText = "❌ 錯誤：未在 URL 中指定 session、setCode 或 deckList 參數！";
-				return;
-			}
+            if (!setCode && !deckListParam) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('page-title').innerText = "❌ 錯誤：未在 URL 中指定 session、setCode 或 deckList 參數！";
+                return;
+            }
 
-			try {
-				const [ctData, abilData, setlistData, replaceConfig] = await Promise.all([
+            try {
+                const [ctData, abilData, setlistData, replaceConfig] = await Promise.all([
 					fetch('/api/card_types').then(r => r.json()).catch(() => []),
 					fetch('/api/abilities').then(r => r.json()).catch(() => []),
 					fetch('/api/setlist').then(r => r.json()).catch(() => ({})),
+					// 🔽 新增這行去取得替換旗標
 					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
 				]);
-				
-				const rawCardTypes = ctData || [];
-				const rawAbilities = abilData || [];
-				const rawSetlist = setlistData || {};
 
-				let popRes;
-				if (deckListParam) {
-					popRes = await fetch('/api/pop_custom', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ deck_list: deckListParam })
-					});
-				} else {
-					popRes = await fetch(`/api/pop/${encodeURIComponent(setCode)}`);
-				}
+                const rawCardTypes = ctData || [];
+                const rawAbilities = abilData || [];
+                const rawSetlist = setlistData || {};
 
-				if (!popRes.ok) {
-					document.getElementById('loading').style.display = 'none';
-					document.getElementById('page-title').innerText = `❌ 錯誤：找不到代碼為「${setCode || '自訂'}」的商品資料！`;
-					return;
-				}
+                let popRes;
+                if (deckListParam) {
+                    popRes = await fetch('/api/pop_custom', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ deck_list: deckListParam })
+                    });
+                } else {
+                    popRes = await fetch(`/api/pop/${encodeURIComponent(setCode)}`);
+                }
 
-				const { set_info: currentSetObj, cards: fetchedCards } = await popRes.json();
+                if (!popRes.ok) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('page-title').innerText = `❌ 錯誤：找不到代碼為「${setCode || '自訂'}」的商品資料！`;
+                    return;
+                }
+
+                const { set_info: currentSetObj, cards: fetchedCards } = await popRes.json();
+				// 🔽 新增這段判斷：在排序與渲染前先處理卡牌內文
 				if (replaceConfig && replaceConfig.need_replace && fetchedCards) {
 					processSpText(fetchedCards);
 				}
 
 				const filteredCards = sortCardList(fetchedCards, sortParam);
-				const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
-				const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
-				
-				// 💡 關鍵重構：將 API 資料統一封裝
-				const itemsPayload = [];
-				const globalAppearedAbilities = new Set();
 
-				filteredCards.forEach((card, idx) => {
-					const cleanName = card.name || '未命名卡牌';
-					let picUrl = '';
-					let flavorText = '';
-					let setCardId = '';
-					let cardCount = 1;
+                const getCardTypeText = (typeVal) => {
+                    const match = rawCardTypes.find(ct => ct.value === typeVal);
+                    return match ? match.text : typeVal;
+                };
 
-					const matchedItem = setCardList.find(item => {
-						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-						return typeof itemName === 'string' && itemName.trim() === cleanName.trim();
-					});
+                const displayTitleCode = currentSetObj.setcode || setCode || '自訂牌組';
+                const setName = currentSetObj.setname || currentSetObj.name || displayTitleCode;
 
-					if (matchedItem && typeof matchedItem === 'object') {
-						if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) picUrl = matchedItem.pic[0];
-						else if (typeof matchedItem.pic === 'string') picUrl = matchedItem.pic;
+                if (customTitleParam && customTitleParam.trim() !== '') {
+                    const cleanTitle = customTitleParam.trim();
+                    document.title = `${cleanTitle} - 卡表總覽`;
+                    document.getElementById('page-title').innerText = `${cleanTitle} - 卡表總覽`;
+                } else {
+                    document.title = `${displayTitleCode} ${setName} - 卡表總覽`;
+                    document.getElementById('page-title').innerText = `${displayTitleCode} ${setName} - 卡表總覽`;
+                }
 
-						if (Array.isArray(matchedItem.flavor) && matchedItem.flavor.length > 0) flavorText = matchedItem.flavor[0];
-						else if (typeof matchedItem.flavor === 'string') flavorText = matchedItem.flavor;
+                const setCardList = currentSetObj.setcardlist || currentSetObj.cardlist || [];
+                if (!Array.isArray(setCardList) || setCardList.length === 0) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('card-list-container').innerHTML = '<div>目前商品無收錄卡牌資料。</div>';
+                    return;
+                }
 
-						if (matchedItem.id) setCardId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
-						if (matchedItem.count !== undefined && matchedItem.count !== null) cardCount = Number(matchedItem.count);
+                const globalAppearedAbilities = new Set();
+                const container = document.getElementById('card-list-container');
+                let htmlContent = '';
+
+                const isDeckSet = currentSetObj && currentSetObj.isdeck === true;
+
+                filteredCards.forEach((card, idx) => {
+                    const cleanName = card.name || '未命名卡牌';
+                    let picUrl = '';
+                    let flavorText = '';
+                    let setCardId = '';
+                    let cardCount = 1;
+
+                    const matchedItem = setCardList.find(item => {
+                        const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
+                        return typeof itemName === 'string' && itemName.trim() === cleanName.trim();
+                    });
+
+                    if (matchedItem && typeof matchedItem === 'object') {
+                        if (Array.isArray(matchedItem.pic) && matchedItem.pic.length > 0) picUrl = matchedItem.pic[0];
+                        else if (typeof matchedItem.pic === 'string') picUrl = matchedItem.pic;
+
+                        if (Array.isArray(matchedItem.flavor) && matchedItem.flavor.length > 0) flavorText = matchedItem.flavor[0];
+                        else if (typeof matchedItem.flavor === 'string') flavorText = matchedItem.flavor;
+
+                        if (matchedItem.id) setCardId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
+                        if (matchedItem.count !== undefined && matchedItem.count !== null) cardCount = Number(matchedItem.count);
+                    }
+
+                    // 修正後：若單卡無 pic，嘗試從全域 setlist 資料庫尋找備援卡圖
+					if (!picUrl || picUrl.trim() === '') {
+						picUrl = card.pic || '';
 					}
 
-					// 備用圖片尋找邏輯
-					if (!picUrl || picUrl.trim() === '') picUrl = card.pic || '';
 					if (!picUrl || picUrl.trim() === '') {
 						const cleanTargetName = cleanName.trim();
 						if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
@@ -1268,11 +1205,14 @@
 										const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
 										return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
 									});
+
 									if (foundItem && foundItem.pic) {
 										if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0 && foundItem.pic[0]) {
-											picUrl = foundItem.pic[0]; break;
+											picUrl = foundItem.pic[0];
+											break;
 										} else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') {
-											picUrl = foundItem.pic; break;
+											picUrl = foundItem.pic;
+											break;
 										}
 									}
 								}
@@ -1280,76 +1220,199 @@
 						}
 					}
 
-					let isHorizontal = false;
-					if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
-						const firstTypeVal = card.wdata[0].type[0];
-						const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
-						if (matchedType && matchedType.horizontal === true) isHorizontal = true;
+                    let isHorizontal = false;
+                    if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
+                        const firstTypeVal = card.wdata[0].type[0];
+                        const matchedType = rawCardTypes.find(ct => ct.value === firstTypeVal);
+                        if (matchedType && matchedType.horizontal === true) {
+                            isHorizontal = true;
+                        }
+                    }
+
+                    const horizClass = isHorizontal ? ' is-horizontal' : '';
+                    const containerMaxWidth = isHorizontal ? '35%' : '25%';
+
+                    htmlContent += `<div class="card-item">`;
+                    htmlContent += `<div class="card-img-container" style="max-width: ${containerMaxWidth};">`;
+
+                    // pop.html (圖文模式渲染)
+					if (picUrl && picUrl.trim() !== '') {
+						// 1. 有卡圖資料 ➔ 使用原本的 stacked-card-img 或 card-img，並掛上 onload/onerror
+						if (isDeckSet && cardCount > 1) {
+							htmlContent += `<div class="stack-img-container${horizClass}">`;
+							for (let c = 0; c < cardCount; c++) {
+								htmlContent += `<img class="stacked-card-img${horizClass}" style="z-index: ${cardCount - c};" src="${picUrl}" alt="${cleanName}" onerror="this.outerHTML='<div class=\\'no-image-box\\'>無卡圖</div>'" />`;
+							}
+							htmlContent += `</div>`;
+						} else {
+							htmlContent += `<img class="card-img${horizClass}" src="${picUrl}" alt="${cleanName}" onerror="this.outerHTML='<div class=\\'no-image-box\\'>無卡圖</div>'" />`;
+						}
+					} else {
+						// 2. 連圖都借不到 ➔ 直接顯示「無卡圖」
+						htmlContent += `<div class="no-image-box${horizClass}">無卡圖</div>`;
 					}
 
-					const newAbilitiesForThisCard = [];
-					if (card.wdata && Array.isArray(card.wdata)) {
-						const sortedRawAbilities = [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length);
-						const checkAndCollectAbilities = (spList) => {
-							if (!spList || !Array.isArray(spList)) return;
-							spList.forEach(spText => {
-								if (!spText) return;
-								sortedRawAbilities.forEach(abil => {
-									if (spText.includes(abil.jap) && !globalAppearedAbilities.has(abil.jap)) {
-										globalAppearedAbilities.add(abil.jap);
-										newAbilitiesForThisCard.push(abil);
-									}
-								});
-							});
-						};
-						card.wdata.forEach(w => {
-							if (w.sp) checkAndCollectAbilities(w.sp);
-							if (w.hypermode && w.hypermode.sp) checkAndCollectAbilities(w.hypermode.sp);
-						});
+                    htmlContent += `<div class="export-disclaimer">圖片來源：官方/網路公開直鏈</div>`;
+                    htmlContent += `</div>`;
+
+                    htmlContent += `<div class="card-detail">`;
+                    
+                    let countPrefix = '';
+                    if (isDeckSet && (!picUrl || picUrl.trim() === '')) {
+                        countPrefix = `<span style="font-weight: bold; color: #d32f2f; margin-right: 6px;">${cardCount} ⅹ </span>`;
+                    }
+
+                    let sanctuarySymbol = '';
+					let sanctuaryMsg = '';
+					if (card.sanctuary !== undefined && card.sanctuary !== null) {
+						if (card.sanctuary == 1) {
+							sanctuarySymbol = '[殿堂]';
+							sanctuaryMsg = '殿堂';
+						} else if (card.sanctuary == 0) {
+							sanctuarySymbol = '[白金殿堂]';
+							sanctuaryMsg = '白金殿堂';
+						} else if (Array.isArray(card.sanctuary) && card.sanctuary.length > 0) {
+							sanctuarySymbol = '[組合殿堂]';
+							sanctuaryMsg = `組合殿堂：${card.sanctuary.join(',')}`;
+						}
 					}
 
-					// 存入陣列 (包含 sanctuary 殿堂屬性)
-					itemsPayload.push({
-						name: cleanName,
-						picUrl: picUrl,
-						flavorText: flavorText,
-						setCardId: setCardId,
-						count: cardCount,
-						isHorizontal: isHorizontal,
-						wdata: card.wdata || [],
-						mana: card.mana,
-						explainedAbilities: newAbilitiesForThisCard,
-						sanctuary: card.sanctuary // 👈 加入殿堂判斷
-					});
-				});
+					let sanctuaryHtml = '';
+					if (sanctuarySymbol) {
+						const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
+						const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
+						sanctuaryHtml = `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>`;
+					}
 
-				// 3. 寫入全域資料並渲染
-				globalExportData = {
-					isDeckSet: isDeckSet,
-					cardTypes: rawCardTypes,
-					items: itemsPayload
-				};
-				
-				const displayTitleCode = currentSetObj.setcode || setCode || '自訂牌組';
-				const setName = currentSetObj.setname || currentSetObj.name || displayTitleCode;
-				let finalTitle = `${displayTitleCode} ${setName} - 卡表總覽`;
+					// ✅ 正確程式碼
+					const indexPrefix = isDeckSet ? '' : `#${idx + 1} `;
+					htmlContent += `<div class="card-title">${sanctuaryHtml}${indexPrefix}${countPrefix}${setCardId ? `[${formatDmId(setCardId)}] ` : ''}${cleanName}</div>`;
 
-				if (customTitleParam && customTitleParam.trim() !== '') {
-					finalTitle = `${customTitleParam.trim()} - 卡表總覽`;
-				}
+                    const newAbilitiesForThisCard = [];
 
-				// 把 Title 也存進去讓切換模式時可以沿用
-				globalExportData.pageTitle = finalTitle; 
-				
-				switchMode(initialMode || 'img_text');
+                    if (card.wdata && Array.isArray(card.wdata)) {
+                        card.wdata.forEach(w => {
+                            htmlContent += `<div class="wdata-box">`;
+                            const metaFields = [];
 
-			} catch (err) {
-				console.error("載入發生錯誤:", err);
-				document.getElementById('page-title').innerText = "❌ 載入失敗，請確認網路或 API 狀態。";
-			} finally {
-				document.getElementById('loading').style.display = 'none';
-			}
-		}
+							if (w.type && Array.isArray(w.type) && w.type.length > 0) {
+								const typeText = w.type.map(t => getCardTypeText(t)).join(', ');
+								if (typeText) metaFields.push(`<b>卡種:</b> ${typeText}`);
+							}
+
+							// 💡 只有文明有資料時才加入
+							if (w.civil !== undefined && w.civil !== null && w.civil !== '') {
+								metaFields.push(`<b>文明:</b> ${getCivText(w.civil)}`);
+							}
+
+							if (w.cost !== undefined && w.cost !== null) {
+								metaFields.push(`<b>費用:</b> ${formatDisplayValue(w.cost)}`);
+							}
+
+							let powerText = '';
+							if (w.power !== undefined && w.power !== null) {
+								powerText = formatDisplayValue(w.power);
+							}
+							if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
+								const hyperPower = formatDisplayValue(w.hypermode.power);
+								powerText = powerText ? `${powerText} / ${hyperPower}` : hyperPower;
+							}
+							if (powerText) {
+								metaFields.push(`<b>攻擊力:</b> ${powerText}`);
+							}
+
+							// 第一行：只印出有資料的欄位
+							if (metaFields.length > 0) {
+								htmlContent += `<div>${metaFields.join(' | ')}</div>`;
+							}
+
+							// 💡 種族獨立一行：若沒種族資料，完全不輸出整行與 Title
+							if (w.race && Array.isArray(w.race) && w.race.length > 0) {
+								htmlContent += `<div style="margin-top: 4px;"><b>種族:</b> ${w.race.join(', ')}</div>`;
+							}
+
+                            const sortedRawAbilities = [...rawAbilities].filter(a => a && a.jap).sort((a, b) => b.jap.length - a.jap.length);
+
+                            const checkAndCollectAbilities = (spList) => {
+                                if (!spList || !Array.isArray(spList)) return;
+                                spList.forEach(spText => {
+                                    if (!spText) return;
+                                    // 🔽【修改】：先移除《》卡名內容，再進行能力匹配
+                                    let tempSpText = spText.replace(/《.*?》/g, '');
+                                    sortedRawAbilities.forEach(abil => {
+                                        const keyword = abil.jap;
+                                        if (tempSpText.includes(keyword)) {
+                                            if (!globalAppearedAbilities.has(keyword)) {
+                                                globalAppearedAbilities.add(keyword);
+                                                newAbilitiesForThisCard.push(abil);
+                                            }
+                                            const regex = new RegExp(escapeRegExp(keyword), 'g');
+                                            tempSpText = tempSpText.replace(regex, '___MATCHED___');
+                                        }
+                                    });
+                                });
+                            };
+
+                            if (w.sp && w.sp.length > 0) {
+								checkAndCollectAbilities(w.sp);
+								htmlContent += `<ul class="sp-list">`;
+								w.sp.forEach(s => htmlContent += renderSpItemHtml(s));
+								htmlContent += `</ul>`;
+							} else {
+								// 💡 若無特殊能力，顯示 ( 無能力 )
+								htmlContent += `<div style="font-size:13px; color:#777; font-style:italic; margin-top:4px;">( 無能力 )</div>`;
+							}
+
+                            if (w.hypermode && w.hypermode.sp && w.hypermode.sp.length > 0) {
+                                checkAndCollectAbilities(w.hypermode.sp);
+                                htmlContent += `<div class="hyper-divider">Hyper Mode</div>`;
+                                htmlContent += `<ul class="sp-list">`;
+                                w.hypermode.sp.forEach(hs => htmlContent += renderSpItemHtml(hs));
+                                htmlContent += `</ul>`;
+                            }
+
+                            htmlContent += `</div>`;
+                        });
+                    }
+
+                    if (card.mana !== null && card.mana !== undefined) {
+                        htmlContent += `
+                            <div style="background: #f1f8e9; border-left: 3px solid #4caf50; padding: 6px 10px; font-size: 13px; font-weight: bold; color: #33691e; border-radius: 4px; margin-top: 8px;">
+                                魔力供應 ${card.mana}
+                            </div>
+                        `;
+                    }
+
+                    if (flavorText) {
+                        htmlContent += `<div class="card-flavor">Flavor: ${flavorText}</div>`;
+                    }
+
+                    if (newAbilitiesForThisCard.length > 0) {
+                        htmlContent += `<div class="ability-explain-box">`;
+                        newAbilitiesForThisCard.forEach(abil => {
+                            const headerLine = [abil.jap, abil.chi || abil.cht, abil.eng].filter(Boolean).join(' / ');
+                            const descStr = abil.descript || abil.desc || abil.text || abil.detail || '(無效果說明)';
+                            htmlContent += `
+                                <div class="ability-explain-item">
+                                    <span class="ability-title">【${headerLine}】</span>: ${descStr}
+                                </div>
+                            `;
+                        });
+                        htmlContent += `</div>`;
+                    }
+
+                    htmlContent += `</div></div>`;
+                });
+
+                container.innerHTML = htmlContent;
+
+            } catch (err) {
+                console.error("載入發生錯誤:", err);
+                document.getElementById('page-title').innerText = "❌ 載入失敗，請確認網路或 API 狀態。";
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
 
         // 💡 監聽螢幕旋轉與 Resize 事件：手機轉橫向時即時重新調整純圖片模式的大小
         let resizeTimer;
