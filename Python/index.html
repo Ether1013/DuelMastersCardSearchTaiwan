@@ -445,15 +445,6 @@
 			position: relative !important;
 		}
 
-		/* 💡 相機按鈕：懸浮於卡圖右上方外側（不遮擋卡牌） */
-		.modal-img-container .cam-btn-overlay {
-			position: absolute;
-			top: 0px;
-			/* 計算算式：置中點 (50%) + 卡圖半寬 (var/2) + 額外外移邊距 (6px) */
-			left: calc(50% + (var(--stack-w, 180px) / 2) + 6px);
-			z-index: 30;
-			margin: 0;
-		}
         /* ================= 卡圖點擊放大相關樣式 ================= */
 		/* 卡圖基本樣式與動畫 */
 		.modal-img { 
@@ -1414,20 +1405,6 @@
 			margin: 0;
 		}
 
-		.card-stack-container .share-btn-overlay {
-			position: absolute !important;
-			top: 45px !important; /* 排在相機 Icon (30px高) 下方 */
-			right: -36px !important;
-			left: auto !important;
-			z-index: 30;
-			margin: 0;
-		}
-
-		/* 截圖時同時隱藏截圖與分享 Icon */
-		.is-capturing .cam-btn-overlay,
-		.is-capturing .share-btn-overlay {
-			display: none !important;
-		}
 		/* 原生能力切換按鈕 (高度與尺寸跟使用技巧對齊) */
 		.btn-native-ability {
 			cursor: pointer;
@@ -1799,152 +1776,197 @@
 		
 		/* ================= 組牌購物車專用樣式 ================= */
 		/* ================= 組牌購物車專用樣式 ================= */
-.floating-cart-btn {
-    position: fixed;
-    right: 20px;
-    top: 65vh;
-    width: 56px;
-    height: 56px;
-    background-color: #0284c7;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-    z-index: 900;
-    transition: transform 0.2s, opacity 0.2s;
-    display: none;
-}
-.floating-cart-btn:hover { transform: scale(1.08); background-color: #0369a1; }
-.floating-cart-btn:active { transform: scale(0.95); }
-.cart-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #ef4444;
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 10px;
-    border: 2px solid #fff;
-}
+		.floating-cart-btn {
+			position: fixed;
+			right: 20px;
+			top: 65vh;
+			width: 56px;
+			height: 56px;
+			background-color: #0284c7;
+			color: white;
+			border-radius: 50%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-size: 24px;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+			cursor: pointer;
+			z-index: 900;
+			transition: transform 0.2s, opacity 0.2s;
+			display: none;
+		}
+		.floating-cart-btn:hover { transform: scale(1.08); background-color: #0369a1; }
+		.floating-cart-btn:active { transform: scale(0.95); }
+		.cart-badge {
+			position: absolute;
+			top: -5px;
+			right: -5px;
+			background-color: #ef4444;
+			color: white;
+			font-size: 11px;
+			font-weight: bold;
+			padding: 2px 6px;
+			border-radius: 10px;
+			border: 2px solid #fff;
+		}
 
-/* 購物車總列表容器 */
-.cart-list-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding: 10px;
-    align-items: flex-end;
-    width: 100%;
-    box-sizing: border-box;
-}
+		/* 購物車總列表容器 */
+		.cart-list-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 16px;
+			padding: 10px;
+			align-items: flex-end;
+			width: 100%;
+			box-sizing: border-box;
+		}
 
-/* 單張卡牌（群組）容器 */
-.cart-item-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #ffffff;
-    padding: 12px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid #e2e8f0;
-    max-width: 100%;
-    box-sizing: border-box;
-}
+		/* 單張卡牌（群組）容器 */
+		.cart-item-group {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			background: #ffffff;
+			padding: 12px;
+			border-radius: 10px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			border: 1px solid #e2e8f0;
+			max-width: 100%;
+			box-sizing: border-box;
+		}
 
-/* 多疊並排容器：支援自動換行 */
-.cart-card-rows-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    align-items: flex-end;
-    margin-bottom: 10px;
-    max-width: 100%;
-}
+		/* 多疊並排容器：支援自動換行 */
+		.cart-card-rows-container {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 12px;
+			align-items: flex-end;
+			margin-bottom: 10px;
+			max-width: 100%;
+		}
 
-/* 💡 卡牌堆疊外框：留出頂部給 4 張卡片展開的總高度 (約 236px) */
-.cart-stack-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    position: relative;
-    width: 126px;
-    min-height: 236px;  /* 👈 基礎 176px + 3張卡片各往上露20px (60px) = 236px */
-    flex-shrink: 0;
-}
+		/* 💡 卡牌堆疊外框：留出頂部給 4 張卡片展開的總高度 (約 236px) */
+		.cart-stack-wrapper {
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			position: relative;
+			width: 126px;
+			min-height: 236px;  /* 👈 基礎 176px + 3張卡片各往上露20px (60px) = 236px */
+			flex-shrink: 0;
+		}
 
-/* 基礎卡圖尺寸（縮小 10%） */
-.cart-stack-wrapper img, 
-.cart-stack-wrapper .cart-no-img {
-    width: 126px !important;
-    height: 176px !important;
-    border-radius: 6px;
-    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
-    object-fit: contain;
-    background-color: #fff;
-    flex-shrink: 0;
-}
+		/* 基礎卡圖尺寸（縮小 10%） */
+		.cart-stack-wrapper img, 
+		.cart-stack-wrapper .cart-no-img {
+			width: 126px !important;
+			height: 176px !important;
+			border-radius: 6px;
+			box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+			transition: transform 0.2s;
+			object-fit: contain;
+			background-color: #fff;
+			flex-shrink: 0;
+		}
 
-/* 💡 核心展開效果：第 2、3、4 張卡片精確往後上方階梯式位移 */
-.cart-stack-wrapper img:not(:first-child),
-.cart-stack-wrapper .cart-no-img:not(:first-child) {
-    margin-top: -156px !important; /* 176px - 20px = 露出上方 20px 邊框與卡名 */
-}
+		/* 💡 核心展開效果：第 2、3、4 張卡片精確往後上方階梯式位移 */
+		.cart-stack-wrapper img:not(:first-child),
+		.cart-stack-wrapper .cart-no-img:not(:first-child) {
+			margin-top: -156px !important; /* 176px - 20px = 露出上方 20px 邊框與卡名 */
+		}
 
-.cart-stack-wrapper .cart-no-img {
-    background: #f1f5f9;
-    color: #475569;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    border: 2px dashed #cbd5e1;
-    font-size: 12px;
-    text-align: center;
-    padding: 6px;
-    box-sizing: border-box;
-}
+		.cart-stack-wrapper .cart-no-img {
+			background: #f1f5f9;
+			color: #475569;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-weight: bold;
+			border: 2px dashed #cbd5e1;
+			font-size: 12px;
+			text-align: center;
+			padding: 6px;
+			box-sizing: border-box;
+		}
 
-.cart-stack-wrapper img:hover { 
-    transform: translateY(-4px); 
-}
+		.cart-stack-wrapper img:hover { 
+			transform: translateY(-4px); 
+		}
 
-.cart-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f1f5f9;
-    padding: 4px 8px;
-    border-radius: 12px;
-}
-.cart-controls button {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: none;
-    background: #0284c7;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.cart-controls button:hover { background: #0369a1; }
-.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
+		.cart-controls {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			background: #f1f5f9;
+			padding: 4px 8px;
+			border-radius: 12px;
+		}
+		.cart-controls button {
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			border: none;
+			background: #0284c7;
+			color: white;
+			font-weight: bold;
+			cursor: pointer;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.cart-controls button:hover { background: #0369a1; }
+		.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
+		
+		/* ================= 卡圖右側 4 功能按鈕佈局整合 ================= */
 
-/* 截圖時隱藏購物車加入與申請暱稱按鈕 */
-.is-capturing .cart-add-btn-overlay,
-.is-capturing .nickname-apply-btn-overlay { display: none !important; }
+		/* 1. 四個按鈕的通用定位基底（直向卡：外浮於卡圖右側） */
+		.card-stack-container .cam-btn-overlay,
+		.card-stack-container .share-btn-overlay,
+		.card-stack-container .cart-add-btn-overlay,
+		.card-stack-container .nickname-apply-btn-overlay {
+			position: absolute !important;
+			right: -36px !important; /* 直向卡：向外懸浮 36px */
+			left: auto !important;
+			z-index: 30;
+			margin: 0;
+			width: 28px;
+			height: 28px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		/* 2. 由上而下的垂直排列高度 (Top 偏移) */
+		.card-stack-container .cam-btn-overlay            { top: 0px !important; }
+		.card-stack-container .share-btn-overlay          { top: 40px !important; }
+		.card-stack-container .cart-add-btn-overlay       { top: 80px !important; }
+		.card-stack-container .nickname-apply-btn-overlay { top: 120px !important; }
+
+		/* 3. 橫向卡專用修正：收回靠齊卡圖右上內側，不再爆出遮擋右側欄位 */
+		/* 利用一般狀態的高 180px，以及放大狀態的寬 350px 來嚴格鎖定橫卡 */
+		.card-stack-container[style*="height: 180px"] .cam-btn-overlay,
+		.card-stack-container[style*="height: 180px"] .share-btn-overlay,
+		.card-stack-container[style*="height: 180px"] .cart-add-btn-overlay,
+		.card-stack-container[style*="height: 180px"] .nickname-apply-btn-overlay,
+		.card-stack-container[style*="width: 350px"] .cam-btn-overlay,
+		.card-stack-container[style*="width: 350px"] .share-btn-overlay,
+		.card-stack-container[style*="width: 350px"] .cart-add-btn-overlay,
+		.card-stack-container[style*="width: 350px"] .nickname-apply-btn-overlay {
+			right: 8px !important; /* 改為貼齊卡片右內側邊緣 */
+			background: rgba(255, 255, 255, 0.9) !important;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+		}
+
+		/* 4. 截圖時統一隱藏全部 4 個按鈕 */
+		.is-capturing .cam-btn-overlay,
+		.is-capturing .share-btn-overlay,
+		.is-capturing .cart-add-btn-overlay,
+		.is-capturing .nickname-apply-btn-overlay {
+			display: none !important;
+		}
+		
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -6452,7 +6474,6 @@
 			imgStackContainer.style.width = boxWidth;
 			imgStackContainer.style.height = boxHeight;
 			
-			// 💡 相機按鈕 (截圖)
 			let camBtn = imgStackContainer.querySelector('.cam-btn-overlay');
 			if (!camBtn) {
 				camBtn = document.createElement('div');
@@ -6474,7 +6495,7 @@
 				}
 			};
 
-			// 💡 分享按鈕 (懸浮於相機 Icon 正下方)
+			// 2. 分享按鈕
 			let shareBtn = imgStackContainer.querySelector('.share-btn-overlay');
 			if (!shareBtn) {
 				shareBtn = document.createElement('div');
@@ -6483,28 +6504,25 @@
 				shareBtn.innerText = '🔗';
 				imgStackContainer.appendChild(shareBtn);
 			}
-			// 💡 購物車 +1 按鈕 (懸浮於分享 Icon 正下方)
-            let cartAddBtn = imgStackContainer.querySelector('.cart-add-btn-overlay');
-            if (!cartAddBtn) {
-                cartAddBtn = document.createElement('div');
-                cartAddBtn.className = 'modal-btn-icon cart-add-btn-overlay';
-                cartAddBtn.title = '加入組牌購物車';
-                cartAddBtn.innerText = '🛒';
-                // 偏移量放在相機(top:0)與分享(top:34px)下方
-                cartAddBtn.style.cssText = 'position: absolute !important; right: -36px !important; left: auto !important; z-index: 30; margin: 0; top: 90px !important;';
-                imgStackContainer.appendChild(cartAddBtn);
-            }
+			// 3. 購物車按鈕 (💡 移除 style.cssText)
+			let cartAddBtn = imgStackContainer.querySelector('.cart-add-btn-overlay');
+			if (!cartAddBtn) {
+				cartAddBtn = document.createElement('div');
+				cartAddBtn.className = 'modal-btn-icon cart-add-btn-overlay';
+				cartAddBtn.title = '加入組牌購物車';
+				cartAddBtn.innerText = '🛒';
+				imgStackContainer.appendChild(cartAddBtn);
+			}
 			
-			// 💡 申請暱稱按鈕 (懸浮於購物車 Icon 正下方，推算 68px + 34px = 102px)
-            let nicknameApplyBtn = imgStackContainer.querySelector('.nickname-apply-btn-overlay');
-            if (!nicknameApplyBtn) {
-                nicknameApplyBtn = document.createElement('div');
-                nicknameApplyBtn.className = 'modal-btn-icon nickname-apply-btn-overlay';
-                nicknameApplyBtn.title = '申請暱稱';
-                nicknameApplyBtn.innerText = '🏷️';
-                nicknameApplyBtn.style.cssText = 'position: absolute !important; right: -36px !important; left: auto !important; z-index: 30; margin: 0; top: 135px !important;';
-                imgStackContainer.appendChild(nicknameApplyBtn);
-            }
+			// 4. 申請暱稱按鈕 (💡 移除 style.cssText)
+			let nicknameApplyBtn = imgStackContainer.querySelector('.nickname-apply-btn-overlay');
+			if (!nicknameApplyBtn) {
+				nicknameApplyBtn = document.createElement('div');
+				nicknameApplyBtn.className = 'modal-btn-icon nickname-apply-btn-overlay';
+				nicknameApplyBtn.title = '申請暱稱';
+				nicknameApplyBtn.innerText = '🏷️';
+				imgStackContainer.appendChild(nicknameApplyBtn);
+			}
 
             if (isModal) {
                 nicknameApplyBtn.style.display = 'flex';
@@ -8388,35 +8406,44 @@
 
 			function replaceKeywords(keywords, type, getTooltipFn, requireBracket = false) {
 				if (keywords.length === 0) return;
-
 				let pattern;
 				if (requireBracket) {
 					const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
 					pattern = new RegExp(`《(${innerPattern})》`, 'g');
 				} else {
 					const innerPattern = keywords.map(k => escapeRegExp(k)).join('|');
-					pattern = new RegExp(innerPattern, 'g');
+					// 💡 排除《...》區塊：先匹配《...》並原樣保留，只對《》外部的關鍵字進行比對
+					pattern = new RegExp(`(《[^》]*》)|(${innerPattern})`, 'g');
 				}
 
-				processedText = processedText.replace(pattern, (fullMatch, group1, offset) => {
-					const matched = requireBracket ? group1 : fullMatch;
+				processedText = processedText.replace(pattern, (fullMatch, bracketContent, matchedKeyword, offset) => {
+					// 1. 若為 requireBracket (卡名/分類)，此時 group1 為括號內文字
+					if (requireBracket) {
+						const matched = bracketContent; // 即原本的 group1
+						const nonHeaderExcludes = ["進化", "クロスギア", "G城"];
+						if (nonHeaderExcludes.includes(matched) && offset !== 0) {
+							return fullMatch;
+						}
+						const placeholder = `___TAG_${placeholders.length}___`;
+						const tooltipText = getTooltipFn ? getTooltipFn(matched) : '';
+						placeholders.push({ placeholder, fullMatch, matched, type, tooltipText, requireBracket });
+						return placeholder;
+					}
 
+					// 2. 若為能力/種族：若命中《...》內容，直接原樣回傳，不做任何標籤化
+					if (bracketContent) {
+						return bracketContent;
+					}
+
+					// 3. 處理《》外部命中的能力或種族關鍵字
+					const matched = matchedKeyword;
 					const nonHeaderExcludes = ["進化", "クロスギア", "G城"];
 					if (nonHeaderExcludes.includes(matched) && offset !== 0) {
 						return fullMatch;
 					}
-
 					const placeholder = `___TAG_${placeholders.length}___`;
 					const tooltipText = getTooltipFn ? getTooltipFn(matched) : '';
-					
-					placeholders.push({
-						placeholder,
-						fullMatch,
-						matched,
-						type,
-						tooltipText,
-						requireBracket
-					});
+					placeholders.push({ placeholder, fullMatch, matched, type, tooltipText, requireBracket });
 					return placeholder;
 				});
 			}
