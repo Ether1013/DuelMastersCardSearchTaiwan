@@ -782,17 +782,6 @@ def get_card_set_list(card_name: str):
                         non_tw_sets.append(display_str)
 
     return {"tw": tw_sets, "non_tw": non_tw_sets, "net": net_sets}
-
-def get_country_user_counts() -> Dict[str, int]:
-    """統計各國籍目前擁有多少位不重複使用者 (人數)"""
-    counts = defaultdict(int)
-    for user_id in ip_to_user_id.values():
-        # user_id 格式為 "HKa", "TWq"，前 2 碼即為 ISO 國籍代碼
-        country = user_id[:2] if len(user_id) >= 2 else "Unknown"
-        counts[country] += 1
-    # 依人數降冪排序
-    return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
-    
     
 def normalize_search_id(s: str) -> str:
     """全域輔助函式：將 ID 轉為大寫半形並去除非英數字"""
@@ -1944,11 +1933,6 @@ async def delete_user_logs(
     if user_id in user_counter:
         del user_counter[user_id]
 
-    # 刪除 ip_to_user_id 中對應此 user_id 的雜湊項目
-    to_delete_ips = [ip_hash for ip_hash, u_id in ip_to_user_id.items() if u_id == user_id]
-    for ip_hash in to_delete_ips:
-        del ip_to_user_id[ip_hash]
-
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
@@ -1968,16 +1952,12 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    global action_details_log, last_reset_time, ip_counter_by_country, ip_to_user_id
+    global action_details_log, last_reset_time
     feature_counter.clear()
     country_counter.clear()
     user_counter.clear()
     action_details_log.clear()
     data_transfer_stats.clear()  # 👈 新增這行
-
-    # 👈 徹底清空國籍人數登記
-    ip_counter_by_country.clear()
-    ip_to_user_id.clear()
 
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 
