@@ -2580,10 +2580,10 @@
 			</div>
 			<!-- 切換頁籤（三個頁籤） -->
 			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px 4px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer; font-size: 13px;">🛡️ 隱私聲明</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">📖 更新日誌</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-recent" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">🆕 最近新增的卡</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-author" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">👤 作者資料</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px 4px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer; font-size: 13px;">隱私聲明</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">更新日誌</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-recent" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">最近新增的卡</button>
+				<button type="button" class="diary-tab-btn" id="btn-diary-tab-author" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">作者資料</button>
 			</div>
 			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
 				<!-- 視圖 1：隱私權聲明 (預設顯示) -->
@@ -8100,8 +8100,16 @@
 		
 		// ================= 全站即時廣播接收器 =================
 		function initBroadcastListener() {
-			// 建立一次性連線，不設置心跳與重連
+			// 1. 從 LocalStorage 取得目前使用者的 ID 與國籍
+			const clientInfo = JSON.parse(localStorage.getItem('dm_client_info') || '{}');
+			const userId = clientInfo.user_id || 'Unknown';
+			const country = clientInfo.primary_country || 'Unknown';
+
+			// 2. 建立正確的 WebSocket 網址，並帶上參數
 			const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+			const wsUrl = `${protocol}//${window.location.host}/ws/broadcast?user_id=${userId}&primary_country=${country}`;
+			
+			// 3. 建立一次性連線，不設置心跳與重連
 			const ws = new WebSocket(wsUrl);
 
 			// 接收廣播訊息

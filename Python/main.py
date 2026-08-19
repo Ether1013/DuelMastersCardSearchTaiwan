@@ -1593,10 +1593,10 @@ async def websocket_console(
         return
 
     await console_manager.connect(websocket)
-    # 建立連線時立即發送一次當前最新數據
+    
+    # 建立連線時發送一次當前最新數據
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
-    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
 
     await websocket.send_json({
         "total_events": sum(sorted_stats.values()),
@@ -1604,8 +1604,17 @@ async def websocket_console(
         "country_stats": sorted_country_stats,
         "country_user_counts": get_country_user_counts(),
         "recent_50_details": get_clean_recent_logs(),
-        "start_time": last_reset_time  # 👈 新增
+        "start_time": last_reset_time
     })
+
+    # 💡 加入以下維持連線的無窮迴圈，防止連線被直接關閉
+    try:
+        while True:
+            await websocket.receive_text()  # 持續監聽/保持連線
+    except WebSocketDisconnect:
+        console_manager.disconnect(websocket)
+    except Exception:
+        console_manager.disconnect(websocket)
 
 @app.websocket("/ws/broadcast")
 async def websocket_broadcast(
