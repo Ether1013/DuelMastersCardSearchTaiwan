@@ -88,6 +88,8 @@ ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
 has_unsynced_en_names = False
 file_write_lock = asyncio.Lock()
+# 詳細資料的獨立快取，避免重複請求 Fandom
+wiki_details_cache = {}
 
 # 1. 記憶體計數器 (Render 重啟後自動歸零)
 feature_counter = defaultdict(int)
@@ -351,6 +353,78 @@ def mask_ip(ip: str) -> str:
 
     return "***"
 
+# =====================================================================
+# Fandom Wiki 詳細資料抓取與解析 (支援英日文效果文、雙極卡、Flavor)
+# =====================================================================
+
+def extract_wiki_params(wikitext: str) -> dict:
+    """從 Fandom 的 {{Cardtable ...}} 中萃取出鍵值對字典"""
+    data = {}
+    start = wikitext.find('{{Cardtable')
+    if start == -1: return data
+    
+    # 使用正則表達式萃取 | key = value (支援多行 value，直到下一個 \n| 或結束的 }})
+    pattern = re.compile(r'\n\|\s*([a-zA-Z0-9_]+)\s*=\s*(.*?)(?=\n\|\s*[a-zA-Z0-9_]+\s*=|^\}\})', re.MULTILINE | re.DOTALL)
+    matches = pattern.findall(wikitext[start:])
+    for key, val in matches:
+        data[key.strip().lower()] = val.strip()
+    return data
+
+def clean_wikitext_sp(text: str) -> list:
+    if not text:
+        return []
+    
+    # 1. 移除註解
+    text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
+    # 2. 移除內部連結
+    text = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]', r'\1', text)
+    # 3. 處理模板
+    text = re.sub(r'\{\{([^|}]*)[^}]*\}\}', r'\1', text)
+    # 4. 子選項換行符號替換
+    text = text.replace(':▶', '##').replace('▶', '##')
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    
+    # 5. 標準化換行符號
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    
+    # 6. 切分雙換行
+    raw_blocks = re.split(r'\n{2,}', text)
+    result = []
+    
+    for block in raw_blocks:
+        block_str = block.strip()
+        if not block_str:
+            continue
+            
+        lines = [l.strip() for l in block_str.split('\n') if l.strip()]
+        combined_ability = ""
+        
+        for line in lines:
+            clean_line = re.sub(r'^[■\s]+', '', line).strip()
+            if not clean_line:
+                continue
+                
+            if not combined_ability:
+                combined_ability = clean_line
+            else:
+                if clean_line.startswith('##'):
+                    combined_ability += clean_line
+                else:
+                    combined_ability += " " + clean_line
+                    
+        if combined_ability:
+            result.append(combined_ability.strip())
+            
+    return result
+
+def clean_flavor_text(text: str) -> str:
+    """清洗風味敘述"""
+    if not text: return ""
+    text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
+    text = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]', r'\1', text)
+    text = re.sub(r'<br\s*/?>', ' ', text, flags=re.IGNORECASE)
+    return text.strip()
+    
 # ==========================================
 # B. 統計函式修改
 # ==========================================
@@ -1981,3 +2055,78 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     })
 
     return {"status": "success", "message": "所有統計數據與國籍計數已徹底重置！"}
+    
+@app.get("/api/get_wiki_card_details")
+@limiter.limit("20/minute")
+async def get_wiki_card_details(request: Request, name: str = Query(..., description="日文卡名")):
+    jp_name = name.strip()
+    if not jp_name:
+        raise HTTPException(status_code=400, detail="請提供日文卡名")
+
+    # 優先讀取記憶體快取 (秒開)
+    if jp_name in wiki_details_cache:
+        return {"status": "success", "data": wiki_details_cache[jp_name]}
+
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+        # 1. 使用現有邏輯取得精確的 Fandom 頁面標題 (這步會利用到你原有的 english_name_cache)
+        en_title = await fetch_english_name_from_fandom(jp_name, client)
+        if not en_title or en_title == jp_name:
+            raise HTTPException(status_code=404, detail="找不到對應的 Fandom 頁面")
+
+        # 2. 呼叫 Revisions API 取得原始維基代碼 (Wikitext)
+        rev_url = f"https://duelmasters.fandom.com/api.php?action=query&prop=revisions&titles={quote(en_title)}&rvprop=content&rvslots=main&format=json"
+
+        try:
+            # 加上 User-Agent 避免被阻擋
+            resp = await client.get(rev_url, headers={"User-Agent": "DuelMastersCardSearchBot/2.0"})
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Fandom API 請求失敗: {str(e)}")
+
+        pages = data.get("query", {}).get("pages", {})
+        page = list(pages.values())[0] if pages else {}
+
+        if "revisions" not in page:
+            raise HTTPException(status_code=404, detail="Fandom 頁面內容為空")
+
+        wikitext = page["revisions"][0]["slots"]["main"]["*"]
+
+        # 3. 解析與清洗資料
+        params = extract_wiki_params(wikitext)
+
+        sp_en = []
+        sp_jp = []
+
+        # 處理生物效果 (或雙極卡上方)
+        if "engtext" in params or "jptext" in params:
+            sp_en.append(clean_wikitext_sp(params.get("engtext", "")))
+            sp_jp.append(clean_wikitext_sp(params.get("jptext", "")))
+
+        # 處理咒文效果 (雙極卡下方)
+        if "engtext2" in params or "jptext2" in params:
+            sp_en.append(clean_wikitext_sp(params.get("engtext2", "")))
+            sp_jp.append(clean_wikitext_sp(params.get("jptext2", "")))
+
+        # 處理風味敘述 (Flavor Text)
+        flavors = []
+        for k in ["flavor", "flavor2", "flavor3", "flavor4", "flavor5"]:
+            if k in params and params[k]:
+                flavors.append(clean_flavor_text(params[k]))
+
+        # 組裝完整的英文卡名 (支援雙極卡斜線處理)
+        name1 = params.get("name", en_title)
+        name2 = params.get("name2", "")
+        en_full_name = f'{name1} / {name2}' if name2 else name1
+
+        result_data = {
+            "en_name": en_full_name,
+            "sp_en": sp_en,
+            "sp_jp": sp_jp,
+            "flavors": flavors
+        }
+
+        # 寫入快取，下次同一張卡就不用再等了
+        wiki_details_cache[jp_name] = result_data
+
+        return {"status": "success", "data": result_data}
