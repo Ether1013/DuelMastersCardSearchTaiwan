@@ -2575,7 +2575,7 @@
 	<div class="modal-overlay" id="diary-modal">
 		<div class="modal-card" style="max-width: 520px;">
 			<div class="modal-header">
-				<div class="modal-title">📜 條款、日誌與作者</div>
+				<div class="modal-title">條款、日誌與作者</div>
 				<div class="modal-close" id="diary-modal-close">&times;</div>
 			</div>
 			<!-- 切換頁籤（三個頁籤） -->
@@ -2588,7 +2588,7 @@
 			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
 				<!-- 視圖 1：隱私權聲明 (預設顯示) -->
 				<div id="diary-view-privacy" style="line-height: 1.6; color: #334155;">
-					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">🛡️ 使用者隱私與體驗優化聲明</h4>
+					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">使用者隱私與體驗優化聲明</h4>
 					<ul style="padding-left: 20px; font-size: 14px; margin: 0; display: flex; flex-direction: column; gap: 8px;">
 						<li><b>連續操作紀錄</b>：本網站會紀錄單一使用者的連續操作軌跡，並進行國籍整理，純粹用於提升與優化使用者體驗。</li>
 						<li><b>完全匿名性</b>：後臺與管理者<b>無法識別</b>您實際上是誰。</li>
@@ -2607,7 +2607,7 @@
 				
 				<!-- 💡 新增 視圖 3：最近新增的卡 -->
 				<div id="diary-view-recent" style="display: none;">
-					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">🆕 最近零星新增卡牌 (最新 10 張)</h4>
+					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">最近零星新增卡牌(最新10張)</h4>
 					<div id="recent-cards-list-container" style="display: flex; flex-direction: column; gap: 8px;">
 						<!-- 由 JS 動態渲染 -->
 					</div>
@@ -2615,7 +2615,7 @@
 
 				<!-- 視圖 3：作者資料 (新增) -->
 				<div id="diary-view-author" style="display: none; line-height: 1.6; color: #334155;">
-					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">👤 作者與開發資訊</h4>
+					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">作者與開發資訊</h4>
 					<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 14px; display: flex; flex-direction: column; gap: 10px;">
 						<div><b>作者：</b>Ether</div>
 						<div><b>TCG經歷：</b>PTCG(1996)、ZBCG、DM(2002)</div>
@@ -2957,6 +2957,7 @@
 		const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 		// 全域變數：紀錄目前正在編輯/覆蓋的自訂牌組代碼 (例如 'NET-900')，若為 null 則代表新增
 		let editingDeckCode = null;
+		const CLIENT_INFO_KEY = 'dm_client_info';
 		const CIV_MAP = [
 			{ bit: 16, name: '光' },
 			{ bit: 8,  name: '水' },
@@ -3701,6 +3702,76 @@
 			}
 
 			localStorage.setItem('dm_card_click_history', JSON.stringify(cardClickHistory));
+		}
+		
+		// 系統啟動時呼叫的 Handshake 函式
+		async function initHandshake() {
+			let clientInfo = JSON.parse(localStorage.getItem(CLIENT_INFO_KEY) || '{}');
+			let clientIdParam = clientInfo.user_id ? `?client_id=${clientInfo.user_id}` : '';
+			
+			try {
+				const res = await fetch(`/api/server_id${clientIdParam}`);
+				if (res.ok) {
+					const data = await res.json();
+					const ipCountry = data.ip_country;
+					
+					// 1. 初次配發 (新用戶)
+					if (!clientInfo.user_id) {
+						clientInfo = {
+							user_id: data.client_id,
+							primary_country: ipCountry,
+							country_history: [ipCountry],
+							is_vpn: false,
+							real_ip_country: ipCountry
+						};
+						localStorage.setItem(CLIENT_INFO_KEY, JSON.stringify(clientInfo));
+						return clientInfo;
+					}
+					
+					// 2. 更新歷史國籍 (FIFO 最大 20 筆)
+					if (!clientInfo.country_history) clientInfo.country_history = [];
+					clientInfo.country_history.push(ipCountry);
+					if (clientInfo.country_history.length > 20) {
+						clientInfo.country_history.shift(); 
+					}
+					
+					// 3. 統計出現頻率，計算出真正的主要國籍 (primary_country)
+					const frequency = {};
+					let maxFreq = 0;
+					let primary = clientInfo.primary_country;
+					
+					clientInfo.country_history.forEach(c => {
+						frequency[c] = (frequency[c] || 0) + 1;
+						if (frequency[c] > maxFreq) {
+							maxFreq = frequency[c];
+							primary = c;
+						}
+					});
+					
+					clientInfo.primary_country = primary;
+					
+					// 4. VPN 判定：當下 IP 不等於歷史最常出現的國籍
+					clientInfo.is_vpn = (ipCountry !== primary);
+					clientInfo.real_ip_country = ipCountry;
+					
+					// 5. 連線地長期變動校正 (20次連續皆為相同的新國籍)
+					const originalCountry = clientInfo.user_id.split('-')[0];
+					const isAllSame = clientInfo.country_history.length === 20 && 
+									  clientInfo.country_history.every(c => c === ipCountry);
+									  
+					if (isAllSame && ipCountry !== originalCountry) {
+						console.log("偵測到長期改變連線國家，重新配發裝置 ID...");
+						localStorage.removeItem(CLIENT_INFO_KEY);
+						return await initHandshake(); // 遞迴重新配發
+					}
+					
+					localStorage.setItem(CLIENT_INFO_KEY, JSON.stringify(clientInfo));
+					return clientInfo;
+				}
+			} catch (e) {
+				console.error("Handshake error:", e);
+			}
+			return clientInfo;
 		}
 
         // --- 下拉選單產生與無限符號轉化 ---
@@ -8030,7 +8101,6 @@
 		function initBroadcastListener() {
 			// 建立一次性連線，不設置心跳與重連
 			const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-			const wsUrl = `${protocol}//${window.location.host}/ws/broadcast`;
 			const ws = new WebSocket(wsUrl);
 
 			// 接收廣播訊息
@@ -11032,27 +11102,22 @@
 			showToast(`✅ 牌組 ${newCode} 匯入成功！`);
 		});
 		
-		// 全域統計工具 (發送即後不理，使用 sendBeacon 零延遲)
-		function trackFeature(featureName, extraData = null) {
-			if (!featureName) return;
-			const url = '/api/track';
-			const payload = JSON.stringify({ 
-				feature: featureName,
-				detail: extraData,
-				timestamp: Date.now()
-			});
-
-			if (navigator.sendBeacon) {
-				const blob = new Blob([payload], { type: 'application/json' });
-				navigator.sendBeacon(url, blob);
-			} else {
-				fetch(url, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: payload,
-					keepalive: true
-				}).catch(() => {});
-			}
+		// 修改原有的追蹤紀錄函式
+		function trackFeature(featureName, detail = null) {
+			const clientInfo = JSON.parse(localStorage.getItem(CLIENT_INFO_KEY) || '{}');
+			
+			fetch('/api/track', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					feature: featureName,
+					detail: detail,
+					user_id: clientInfo.user_id || 'Unknown',
+					primary_country: clientInfo.primary_country || 'Unknown',
+					is_vpn: clientInfo.is_vpn || false,
+					real_ip_country: clientInfo.real_ip_country || 'Unknown'
+				})
+			}).catch(e => console.warn(e));
 		}
 
 		// 彈窗開關綁定 (同時支援 Page 2 ID 與兩頁共通 Class)

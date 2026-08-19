@@ -767,18 +767,23 @@
 				const trHeader = document.createElement('tr');
 				trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
 				
-				const userDisplay = log.user || log.country || 'Unknown';
+				const rawUser = log.user || log.country || 'Unknown';
+				let userDisplay = rawUser;
+				
+				// 如果是 VPN 連線，動態補上黃色醒目的提示標籤
+				if (log.is_vpn) {
+					userDisplay += ` <span class="text-[10px] text-yellow-500 bg-yellow-500/10 px-1 py-0.5 rounded border border-yellow-500/20" title="實際連線地">[VPN: ${log.real_ip_country}]</span>`;
+				}
 
-				// 根據 isAdmin 決定使用「可點擊的互動 Badge」還是「純顯示的 Badge」
 				let userBadgeHtml = '';
 				if (isAdmin) {
+					// 注意 openDeleteModal 必須傳入未加工的 ID (rawUser) 以確保後端能正確比對刪除
 					userBadgeHtml = `
-						<span onclick="openDeleteModal('${userDisplay}')" class="px-2 py-0.5 bg-sky-500/10 text-sky-400 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 rounded border border-sky-500/20 text-xs font-medium cursor-pointer transition flex items-center gap-1" title="點擊刪除此使用者的紀錄">
+						<span onclick="openDeleteModal('${rawUser}')" class="px-2 py-0.5 bg-sky-500/10 text-sky-400 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 rounded border border-sky-500/20 text-xs font-medium cursor-pointer transition flex items-center gap-1" title="點擊刪除此使用者的紀錄">
 							<i class="fa-solid fa-user-astronaut text-[10px]"></i>
 							${userDisplay}
 						</span>`;
 				} else {
-					// Token 使用者：無 onclick、無手勢指標 (cursor-pointer)、無 hover 變色效果
 					userBadgeHtml = `
 						<span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium flex items-center gap-1">
 							<i class="fa-solid fa-user-astronaut text-[10px]"></i>

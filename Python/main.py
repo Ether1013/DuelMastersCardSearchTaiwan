@@ -26,6 +26,7 @@ from slowapi.util import get_remote_address
 from collections import defaultdict, deque
 from datetime import datetime, timezone, timedelta
 import logging
+import random, string
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -109,9 +110,6 @@ DATA_NAME_MAP = {
 }
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
-# 新增：紀錄各國籍目前的發放編號數，以及 IP 對應的編號
-ip_counter_by_country = defaultdict(int)
-ip_to_user_id = {}
 
 logging.basicConfig(
     level=logging.INFO,
@@ -352,29 +350,18 @@ def mask_ip(ip: str) -> str:
         return f"{parts[0]}:***"
 
     return "***"
-    
-def get_user_id_by_ip(ip: str, country: str) -> str:
-    # 1. 將 IP 進行 SHA256 雜湊處理（隱碼化，記憶體不留明碼 IP）
-    ip_hash = hashlib.sha256(ip.encode('utf-8')).hexdigest()[:16]
 
-    # 2. 若該雜湊 IP 尚未紀錄，則配發新流水號
-    if ip_hash not in ip_to_user_id:
-        count = ip_counter_by_country[country]
-        ip_counter_by_country[country] += 1
-
-        # 將計數轉為小寫字母 a, b, c ... z, aa, ab ...
-        letters = ""
-        n = count
-        while True:
-            letters = chr(97 + (n % 26)) + letters  # 97 為 ASCII 中的 'a'
-            n = n // 26 - 1
-            if n < 0:
-                break
-
-        # 組合新格式：國籍 + 小寫字母 (例如: HKa, TWq)
-        ip_to_user_id[ip_hash] = f"{country}{letters}"
-
-    return ip_to_user_id[ip_hash]
+# ==========================================
+# B. 統計函式修改
+# ==========================================
+def get_country_user_counts() -> Dict[str, int]:
+    """統計各國籍目前擁有多少位不重複使用者 (改由計算 user_counter)"""
+    counts = defaultdict(int)
+    for user_id in user_counter.keys():
+        # user_id 格式為 "TW-260819-a1b2"，前綴即為主要國籍
+        country = user_id.split('-')[0] if '-' in user_id else "Unknown"
+        counts[country] += 1
+    return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
     
 def trigger_tag_sync():
     """每次異動時呼叫，重置 60 秒倒數計時器"""
@@ -1034,7 +1021,20 @@ async def get_card_page(request: Request, p: Optional[str] = None):
 async def get_relationship_page(): return FileResponse("relationship.html")
 
 @app.get("/api/server_id")
-async def get_server_id(): return {"server_id": SERVER_INSTANCE_ID}
+async def get_server_id(request: Request, client_id: Optional[str] = Query(None)):
+    country = get_client_country(request)
+    
+    # 若前端無 ID (新用戶)，則直接以當下時區生成一個全新且去中心化的流水號
+    if not client_id:
+        date_str = datetime.now(TZ_UTC8).strftime("%y%m%d")
+        rand_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+        client_id = f"{country}-{date_str}-{rand_str}"
+        
+    return {
+        "server_id": SERVER_INSTANCE_ID,
+        "client_id": client_id,
+        "ip_country": country
+    }
 
 @app.get("/api/card_types")
 async def get_card_types(request: Request): 
@@ -1404,18 +1404,21 @@ async def track_feature(request: Request):
             "127.0.0.1" in request_host
         )
 
+        # 保持防護：本地端開發不寫入正式統計
         if is_localhost:
             return {"status": "skipped", "reason": "localhost environment"}
 
         data = await request.json()
         feature_name = data.get("feature")
         detail = data.get("detail")
-        country = get_client_country(request)
         
-        client_ip = request.headers.get("cf-connecting-ip") or request.headers.get("x-forwarded-for") or client_host
-        if client_ip and "," in client_ip:
-            client_ip = client_ip.split(",")[0].strip()
-        user_id = get_user_id_by_ip(client_ip, country)
+        # =======================================================
+        # 💡 新增：完全信任 Client 端傳來的裝置 ID 與 VPN 校正狀態
+        # =======================================================
+        user_id = data.get("user_id", "Unknown")
+        country = data.get("primary_country", "Unknown")
+        is_vpn = data.get("is_vpn", False)
+        real_ip_country = data.get("real_ip_country", "Unknown")
 
         if feature_name:
             now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
@@ -1484,7 +1487,7 @@ async def track_feature(request: Request):
 
             # 處理全域計數與寫入
             if is_skip or is_merge:
-                # 依據需求，Skip 與 Merge 不累加全域計數，也不新增一筆獨立紀錄
+                # Skip 與 Merge 不累加全域計數，也不新增一筆獨立紀錄
                 pass
             else:
                 # 視為全新動作，正常計數與新增
@@ -1492,12 +1495,15 @@ async def track_feature(request: Request):
                 country_counter[country] += 1
                 user_counter[user_id] += 1
 
+                # 💡 將 is_vpn 與 real_ip_country 一併存入 Log，供 Console 顯示 Badge
                 entry = {
                     "feature": feature_name,
                     "country": country,
                     "user": user_id,
+                    "is_vpn": is_vpn,
+                    "real_ip_country": real_ip_country,
                     "detail": copy.deepcopy(detail),
-                    "_raw_detail": copy.deepcopy(detail), # 儲存原始版本供下次比對
+                    "_raw_detail": copy.deepcopy(detail), 
                     "_chained_key": None,
                     "time": now_utc8
                 }
@@ -1513,11 +1519,12 @@ async def track_feature(request: Request):
                 "stats": sorted_stats,
                 "country_stats": sorted_country_stats,
                 "country_user_counts": get_country_user_counts(),
-                "recent_50_details": get_clean_recent_logs(), # 👈 改用輔助函式
+                "recent_50_details": get_clean_recent_logs(),
                 "start_time": last_reset_time
             })
 
-    except Exception:
+    except Exception as e:
+        # 可以改為 print(e) 輔助錯誤排除
         pass
     return {"status": "ok"}
 
@@ -1611,19 +1618,14 @@ async def websocket_console(
         "start_time": last_reset_time  # 👈 新增
     })
 
-# ---------------- 新增：前端網頁連入的 WebSocket 路由 ----------------
 @app.websocket("/ws/broadcast")
-async def websocket_broadcast(websocket: WebSocket):
-    # 取得連線的 IP 與 Country
-    client_host = websocket.client.host if websocket.client else ""
-    country = websocket.headers.get("cf-ipcountry") or websocket.headers.get("x-country-code")
-    if not country or country.upper() == "XX":
-        country = "TW" if client_host in ["127.0.0.1", "::1", "localhost"] else "Unknown"
-    else:
-        country = country.upper()
-
-    user_id = get_user_id_by_ip(client_host, country)
-    await client_manager.connect(websocket, user_id, country)
+async def websocket_broadcast(
+    websocket: WebSocket,
+    user_id: str = Query("Unknown"),
+    primary_country: str = Query("Unknown")
+):
+    # 直接從 Query Params 獲取 Client ID 與校正國籍，無需再算雜湊
+    await client_manager.connect(websocket, user_id, primary_country)
     try:
         while True:
             await websocket.receive_text()
