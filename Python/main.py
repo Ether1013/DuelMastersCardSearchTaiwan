@@ -107,8 +107,7 @@ DATA_NAME_MAP = {
     "card_stats": "數值統計資料",
     "categoryname": "分類名稱資料",
     "nickname": "暱稱資料",
-    "diary": "更新日誌資料",
-    "english_names": "英文卡名資料"
+    "diary": "更新日誌資料"
 }
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
@@ -500,74 +499,6 @@ def load_json_file(filename: str):
         print(f"警告: 找不到檔案 {file_path}，將回傳空陣列。")
         return []
 
-def load_english_names():
-    global english_name_cache
-    if ENGLISH_NAME_FILE.exists():
-        try:
-            with open(ENGLISH_NAME_FILE, 'r', encoding='utf-8') as f:
-                english_name_cache = json.load(f)
-        except Exception as e:
-            english_name_cache = {}
-    else:
-        english_name_cache = {}
-        save_english_names_sync()
-
-def save_english_names_sync():
-    tmp_file = ENGLISH_NAME_FILE.with_suffix(".tmp")
-    try:
-        with open(tmp_file, 'w', encoding='utf-8') as f:
-            json.dump(english_name_cache, f, ensure_ascii=False, indent=2)
-        os.replace(tmp_file, ENGLISH_NAME_FILE)
-    except Exception as e:
-        if tmp_file.exists():
-            os.remove(tmp_file)
-
-async def save_english_names_async():
-    async with file_write_lock:
-        tmp_file = ENGLISH_NAME_FILE.with_suffix(".tmp")
-        try:
-            def _write():
-                with open(tmp_file, 'w', encoding='utf-8') as f:
-                    json.dump(english_name_cache, f, ensure_ascii=False, indent=2)
-                os.replace(tmp_file, ENGLISH_NAME_FILE)
-            await asyncio.to_thread(_write)
-        except Exception as e:
-            if tmp_file.exists():
-                os.remove(tmp_file)
-
-def push_english_names_to_github():
-    if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
-        return
-
-    file_path = "englishname.json"
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
-    headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "FastAPI-AutoCommit"
-    }
-
-    try:
-        with httpx.Client() as client:
-            get_resp = client.get(url, headers=headers, timeout=10.0)
-            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
-
-            with open(ENGLISH_NAME_FILE, 'r', encoding='utf-8') as f:
-                content_str = f.read()
-
-            content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
-            payload = {
-                "message": "auto: batch update englishname.json [skip ci]",
-                "content": content_base64,
-                "branch": "main"
-            }
-            if sha:
-                payload["sha"] = sha
-
-            client.put(url, headers=headers, json=payload, timeout=10.0)
-    except Exception as e:
-        print(f"[GitHub Sync 網路錯誤]: {e}")
-
 def load_all_setlists():
     merged_setlist = {}
     setlist_dir = BASE_DIR / "setlist"
@@ -610,7 +541,6 @@ def load_and_process_caches():
         categoryname_cache = load_json_file("categoryname.json")
         nickname_cache = load_json_file("nickname.json")
         diary_cache = load_json_file("diary.json")
-        load_english_names()
         
         setlist_cache = load_all_setlists()
         # 👈 新增：預先壓縮 setlist
@@ -641,7 +571,6 @@ def load_and_process_caches():
         etag_cache["categoryname"] = generate_etag(categoryname_cache)
         etag_cache["nickname"] = generate_etag(nickname_cache)
         etag_cache["diary"] = generate_etag(diary_cache)
-        etag_cache["english_names"] = generate_etag(english_name_cache)
         
         
         powers, costs = set(), set()
@@ -660,15 +589,6 @@ def load_and_process_caches():
                             
         card_stats_cache = {"powers": sorted(list(powers)), "costs": sorted(list(costs))}
 
-        async def periodic_github_sync_loop():
-            global has_unsynced_en_names
-            while True:
-                await asyncio.sleep(10800)
-                if has_unsynced_en_names:
-                    push_english_names_to_github()
-                    has_unsynced_en_names = False
-
-        asyncio.create_task(periodic_github_sync_loop())
     except Exception as e:
         print(f"載入緩存失敗: {e}")
 
@@ -767,12 +687,11 @@ def send_nickname_application_notification(payload: NicknameApplyModel, country:
     push_line_message("\n".join(lines))
     
 async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
-    global has_unsynced_en_names, etag_cache # 👈 記得補上 etag_cache 全域宣告
-    
     jp_name_clean = jp_name.strip()
     if not jp_name_clean:
         return jp_name
 
+    # 查記憶體快取
     if jp_name_clean in english_name_cache:
         return english_name_cache[jp_name_clean]
 
@@ -787,12 +706,6 @@ async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient
                 en_title = search_results[0].get("title", "").strip()
                 if en_title:
                     english_name_cache[jp_name_clean] = en_title
-                    await save_english_names_async()
-                    has_unsynced_en_names = True
-                    
-                    # 💡 補上這行：動態更新英文卡名的 ETag！
-                    etag_cache["english_names"] = generate_etag(english_name_cache)
-                    
                     return en_title
     except Exception as e:
         print(f"[Fandom Fetch Error] {jp_name_clean} -> {e}")
@@ -1467,12 +1380,6 @@ async def apply_nickname(request: Request, payload: NicknameApplyModel, backgrou
     # 背景執行 LINE 通知發送
     background_tasks.add_task(send_nickname_application_notification, payload, country)
     return {"status": "success", "message": "暱稱申請已成功送出！"}
-    
-@app.get("/api/get_all_english_names")
-@app.get("/api/v2/get_all_english_names")
-async def get_all_english_names(request: Request): 
-    if poison := poison_legacy_route(request, "/api/get_all_english_names"): return poison
-    return get_etag_response(request, "english_names", english_name_cache)
 
 # --- 尋找 /api/message_author 路由並修改 ---
 @app.post("/api/message_author")

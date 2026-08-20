@@ -4286,7 +4286,7 @@
 				}
 
 				// 並行發送所有請求 (指向 v2 新路由)
-                const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, enNamesData, replaceConfig] = await Promise.all([
+                const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, replaceConfig] = await Promise.all([
                     fetchWithCache('/api/v2/carddata'),
                     fetchWithCache('/api/v2/card_types'),
                     fetchWithCache('/api/v2/races'),
@@ -4296,7 +4296,6 @@
                     fetchWithCache('/api/v2/nickname'),
                     fetchWithCache('/api/v2/setlist'),
                     fetchWithCache('/api/v2/diary'),
-                    fetchWithCache('/api/v2/get_all_english_names'),
                     fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
                 ]);
 
@@ -4314,10 +4313,7 @@
 				rawNicknames = nicknameData || [];
 				rawSetlist = setlistData || {};
 				rawDiary = diaryData || [];
-				if (enNamesData && typeof enNamesData === 'object') {
-					fetchedEnNameMap = { ...fetchedEnNameMap, ...enNamesData };
-					localStorage.setItem('dm_en_name_cache', JSON.stringify(fetchedEnNameMap));
-				}
+				
 				// 🔽 新增這段判斷：若需要替換，就在寫入 globalCardData 之前先行處理
 				if (replaceConfig && replaceConfig.need_replace && cardData) {
 					processSpText(cardData);
