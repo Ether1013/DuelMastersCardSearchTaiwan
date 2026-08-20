@@ -446,9 +446,10 @@ def trigger_tag_sync():
     
 def generate_etag(data) -> str:
     """將資料轉為 JSON Bytes 並計算 MD5 Hash 作為 ETag，加上雙引號符合 HTTP 標準"""
-    json_bytes = json.dumps(data, ensure_ascii=False).encode('utf-8')
+    # 💡 加上 sort_keys=True 強制排序
+    json_bytes = json.dumps(data, ensure_ascii=False, sort_keys=True).encode('utf-8')
     hash_str = hashlib.md5(json_bytes).hexdigest()
-    return f'"{hash_str}"'  # 👈 加上雙引號
+    return f'"{hash_str}"'
 
 def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_bytes: bytes = None):
     """共用的 ETag 判斷與 Response 生成器（移除了 log，改為記憶體側錄統計）"""
@@ -600,7 +601,7 @@ def load_and_process_caches():
     try:
         carddata_cache = load_json_file("carddata.json")
         # 👈 新增：預先壓縮 carddata
-        carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False).encode('utf-8')
+        carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
         carddata_gzip_cache = gzip.compress(carddata_json_bytes)
 
         card_types_cache = load_json_file("card_type.json")
@@ -613,7 +614,7 @@ def load_and_process_caches():
         
         setlist_cache = load_all_setlists()
         # 👈 新增：預先壓縮 setlist
-        setlist_json_bytes = json.dumps(setlist_cache, ensure_ascii=False).encode('utf-8')
+        setlist_json_bytes = json.dumps(setlist_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
         setlist_gzip_cache = gzip.compress(setlist_json_bytes)
         
         # 新增 tags 載入
@@ -1099,33 +1100,62 @@ async def get_server_id(request: Request, client_id: Optional[str] = Query(None)
         "ip_country": country
     }
 
+# ----------------------------------------------------
+# 💡 API 路由區 (包含舊路由餵毒與新路由 v2)
+# ----------------------------------------------------
+def poison_legacy_route(request: Request, legacy_path: str):
+    """
+    舊 API 餵毒專用檢查器：
+    若請求來自舊 API，回傳 HTTP 410 (Gone)，並強制塞入 Clear-Site-Data 快取清除標頭！
+    """
+    if request.url.path == legacy_path:
+        return JSONResponse(
+            status_code=410,
+            content={"error": "API deprecated. Forcing cache clear."},
+            headers={"Clear-Site-Data": '"cache"'}
+        )
+    return None
+    
 @app.get("/api/card_types")
+@app.get("/api/v2/card_types")
 async def get_card_types(request: Request): 
+    if poison := poison_legacy_route(request, "/api/card_types"): return poison
     return get_etag_response(request, "card_types", card_types_cache)
 
 @app.get("/api/races")
+@app.get("/api/v2/races")
 async def get_races(request: Request): 
+    if poison := poison_legacy_route(request, "/api/races"): return poison
     return get_etag_response(request, "races", races_cache)
 
 @app.get("/api/abilities")
+@app.get("/api/v2/abilities")
 async def get_abilities(request: Request): 
+    if poison := poison_legacy_route(request, "/api/abilities"): return poison
     return get_etag_response(request, "abilities", abilities_cache)
 
 @app.get("/api/carddata")
+@app.get("/api/v2/carddata")
 async def get_carddata(request: Request): 
-    # 帶入 gzip_cache_bytes 參數
+    if poison := poison_legacy_route(request, "/api/carddata"): return poison
     return get_etag_response(request, "carddata", carddata_cache, carddata_gzip_cache)
 
 @app.get("/api/categoryname")
+@app.get("/api/v2/categoryname")
 async def get_categoryname(request: Request): 
+    if poison := poison_legacy_route(request, "/api/categoryname"): return poison
     return get_etag_response(request, "categoryname", categoryname_cache)
 
 @app.get("/api/nickname")
+@app.get("/api/v2/nickname")
 async def get_nickname(request: Request): 
+    if poison := poison_legacy_route(request, "/api/nickname"): return poison
     return get_etag_response(request, "nickname", nickname_cache)
 
 @app.get("/api/setlist")
+@app.get("/api/v2/setlist")
 async def get_setlist(request: Request): 
+    if poison := poison_legacy_route(request, "/api/setlist"): return poison
     return get_etag_response(request, "setlist", setlist_cache, setlist_gzip_cache)
 
 @app.get("/api/card_detail")
@@ -1376,7 +1406,9 @@ async def get_pop_custom_data(payload: CustomDeckModel):
     }
 
 @app.get("/api/card_stats")
+@app.get("/api/v2/card_stats")
 def get_card_stats(request: Request): 
+    if poison := poison_legacy_route(request, "/api/card_stats"): return poison
     return get_etag_response(request, "card_stats", card_stats_cache)
 
 @app.get("/api/proxy-image")
@@ -1406,7 +1438,9 @@ async def proxy_image(request: Request, url: str = Query(...)):
         raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
 
 @app.get("/api/diary")
+@app.get("/api/v2/diary")
 async def get_diary(request: Request): 
+    if poison := poison_legacy_route(request, "/api/diary"): return poison
     return get_etag_response(request, "diary", diary_cache)
 
 # --- 尋找 /api/report_error 路由並修改 ---
@@ -1435,7 +1469,9 @@ async def apply_nickname(request: Request, payload: NicknameApplyModel, backgrou
     return {"status": "success", "message": "暱稱申請已成功送出！"}
     
 @app.get("/api/get_all_english_names")
+@app.get("/api/v2/get_all_english_names")
 async def get_all_english_names(request: Request): 
+    if poison := poison_legacy_route(request, "/api/get_all_english_names"): return poison
     return get_etag_response(request, "english_names", english_name_cache)
 
 # --- 尋找 /api/message_author 路由並修改 ---

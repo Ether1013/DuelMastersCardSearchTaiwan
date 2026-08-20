@@ -3056,7 +3056,9 @@
 		// ==========================================
 		const SYS_NOTICE_DATA = [
 			"<b style='color:#d32f2f;'>【重要更新與提示】</b>",
-			"今天將原先取得英文卡名的功能升級成能力文語系切換，但因API的串接不夠完善，可能會串接到錯誤的別張卡，暫時還請各位自行確認內容"
+			"1.今天將原先取得英文卡名的功能升級成能力文語系切換，但因API的串接不夠完善，可能會串接到錯誤的別張卡，暫時還請各位自行確認內容",
+			"2.系統進行強制升級，如果您身邊有朋友突然無法使用，重新整理網頁或是改用隱密模式即可",
+			"3.本系統並未包含所有卡牌內容，有想要新增的卡牌可以留言給我"
 		];
 
 		function getCivText(civilVal) {
@@ -4168,6 +4170,9 @@
             const loadingOverlay = document.getElementById('loading-overlay');
 			const loadingText = document.getElementById('loading-text');
 
+			// 💡 1. 新增一個狀態標記變數
+			let isReloading = false;
+			
 			// 確保 Loading 文字正確且呈現顯示狀態
 			if (loadingOverlay) {
 				if (loadingText) loadingText.innerText = '資料讀取中……';
@@ -4203,6 +4208,9 @@
 						// 2. 清空 Cache API 與 IndexedDB 大檔快取
 						try { await caches.delete(CACHE_NAME); } catch (e) {}
 						try { await localforage.clear(); } catch (e) {} // 💡 新增：清空 localForage
+						
+						// 💡 2. 確定要重整時，將狀態標記設為 true
+						isReloading = true;
 						
 						// 3. 🎯 核心補強：直接命令瀏覽器重載全頁，讓 HTML/JS 一併更新到最新版！
 						window.location.reload(true);
@@ -4277,20 +4285,20 @@
 					return await directRes.json();
 				}
 
-				// 並行發送所有請求
-				const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, enNamesData, replaceConfig] = await Promise.all([
-					fetchWithCache('/api/carddata'),
-					fetchWithCache('/api/card_types'),
-					fetchWithCache('/api/races'),
-					fetchWithCache('/api/abilities'),
-					fetchWithCache('/api/card_stats'),
-					fetchWithCache('/api/categoryname'),
-					fetchWithCache('/api/nickname'),
-					fetchWithCache('/api/setlist'),
-					fetchWithCache('/api/diary'),
-					fetchWithCache('/api/get_all_english_names'),
-					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
-				]);
+				// 並行發送所有請求 (指向 v2 新路由)
+                const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, enNamesData, replaceConfig] = await Promise.all([
+                    fetchWithCache('/api/v2/carddata'),
+                    fetchWithCache('/api/v2/card_types'),
+                    fetchWithCache('/api/v2/races'),
+                    fetchWithCache('/api/v2/abilities'),
+                    fetchWithCache('/api/v2/card_stats'),
+                    fetchWithCache('/api/v2/categoryname'),
+                    fetchWithCache('/api/v2/nickname'),
+                    fetchWithCache('/api/v2/setlist'),
+                    fetchWithCache('/api/v2/diary'),
+                    fetchWithCache('/api/v2/get_all_english_names'),
+                    fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
+                ]);
 
 				globalCardData = (cardData || []).map(card => {
 					return {
@@ -4360,8 +4368,14 @@
 				initStatsSelects(null);
 				initDiaryUI();
 			} finally {
-				hideInitialLoading();
-				checkSystemNotice();
+				// 💡 3. 將原本的 finally 內容包在 if 判斷內
+				// 只有在「沒有要重整」的情況下，才關閉 Loading 畫面並檢查公告
+				if (!isReloading) {
+					hideInitialLoading();
+					if (typeof checkSystemNotice === 'function') {
+						checkSystemNotice();
+					}
+				}
 			}
 		}
 

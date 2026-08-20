@@ -850,8 +850,9 @@
         }
 
         // 💡 新增：資料傳輸狀態渲染函式
+        // 💡 新增/修改：資料傳輸狀態渲染函式 (加入快取率計算與獨立底色)
         function renderDataTransferStats(statsMap) {
-			window.latestDataTransferStats = statsMap; // 👈 補上這行，供 AI 匯出使用
+            window.latestDataTransferStats = statsMap;
             const container = document.getElementById('dataTransferStatsGrid');
             if (!container) return;
 
@@ -865,11 +866,26 @@
             entries.forEach(([name, countObj]) => {
                 const fetchCount = countObj.fetch || 0;
                 const cacheCount = countObj.cache || 0;
+                
+                // 1. 計算快取百分比
+                const total = fetchCount + cacheCount;
+                const cacheRate = total > 0 ? ((cacheCount / total) * 100).toFixed(1) : "0.0";
+
+                // 2. 決定動態底色
+                let bgClass = "bg-gray-950/70 border-gray-800/80"; // 預設底色
+                if (name === '卡牌資料') {
+                    bgClass = "bg-blue-900/40 border-blue-800/60";  // carddata: 藍色系
+                } else if (name === '系列與商品資料') {
+                    bgClass = "bg-purple-900/40 border-purple-800/60"; // setlist: 紫色系
+                }
 
                 const itemDiv = document.createElement('div');
-                itemDiv.className = "bg-gray-950/70 border border-gray-800/80 rounded-lg p-2.5 flex flex-col justify-between";
+                itemDiv.className = `${bgClass} border rounded-lg p-2.5 flex flex-col justify-between`;
                 itemDiv.innerHTML = `
-                    <span class="text-gray-400 font-medium truncate mb-1" title="${name}">${name}</span>
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-gray-300 font-medium truncate" title="${name}">${name}</span>
+                        <span class="text-[10px] font-bold ${cacheRate > 50 ? 'text-emerald-400' : 'text-yellow-400'}">${cacheRate}%</span>
+                    </div>
                     <div class="flex items-center justify-between font-mono mt-1">
                         <span class="text-rose-400 font-bold" title="重傳次數">${fetchCount}</span>
                         <span class="text-gray-600">/</span>

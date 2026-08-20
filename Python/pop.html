@@ -1101,9 +1101,9 @@
 
             try {
                 const [ctData, abilData, setlistData, replaceConfig] = await Promise.all([
-					fetch('/api/card_types').then(r => r.json()).catch(() => []),
-					fetch('/api/abilities').then(r => r.json()).catch(() => []),
-					fetch('/api/setlist').then(r => r.json()).catch(() => ({})),
+					fetch('/api/v2/card_types').then(r => r.json()).catch(() => []),
+					fetch('/api/v2/abilities').then(r => r.json()).catch(() => []),
+					fetch('/api/v2/setlist').then(r => r.json()).catch(() => ({})),
 					// 🔽 新增這行去取得替換旗標
 					fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
 				]);
