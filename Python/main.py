@@ -1792,7 +1792,7 @@ def on_shutdown():
     """伺服器重啟或終止前，自動謄寫完整統計日誌"""
     now_str = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
     total_events = sum(feature_counter.values())
-    total_users = len(ip_to_user_id)  # 👈 與前端畫面的 Total Users 完全吻合
+    total_users = len(user_counter)  # 👈 改用 user_counter 計算總使用者數
     
     top_features = sorted(feature_counter.items(), key=lambda x: x[1], reverse=True)[:5]
     top_countries = sorted(country_counter.items(), key=lambda x: x[1], reverse=True)[:5]
