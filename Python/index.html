@@ -3047,11 +3047,22 @@
 			s = s.replace(/[\s\u3000]+/g, ' ').trim();
 			return s;
 		}
+        
+        // 💡 強制清除舊版錯誤的 Wiki 快取 (設定版本號)
+		const WIKI_CACHE_VERSION = 'v2_exact_match';
+		if (localStorage.getItem('dm_wiki_cache_version') !== WIKI_CACHE_VERSION) {
+			// 只刪除翻譯與維基快取，絕對不碰玩家的自訂牌組 (dm_custom_decks)
+			localStorage.removeItem('dm_en_name_cache');
+			localStorage.removeItem('dm_wiki_details_cache');
+			localStorage.setItem('dm_wiki_cache_version', WIKI_CACHE_VERSION);
+			console.log("🧹 已自動清除舊版 Wiki 翻譯快取，升級至 " + WIKI_CACHE_VERSION);
+		}
+
 		// 英文卡名與維基擴充資訊快取專用全域變數
 		let currentCardLang = 'zh';  // 預設 'zh'(中)，可切換為 'en'(英) 或 'jp'(日)
 		let fetchedEnNameMap = JSON.parse(localStorage.getItem('dm_en_name_cache') || '{}');
 		let fetchedWikiDetailsMap = JSON.parse(localStorage.getItem('dm_wiki_details_cache') || '{}');
-		// ==========================================
+        // ==========================================
 		// 📢 系統公告設定區 (直接修改陣列內容，空陣列則不顯示)
 		// ==========================================
 		const SYS_NOTICE_DATA = [
