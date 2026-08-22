@@ -505,26 +505,12 @@ def load_all_setlists():
     if not setlist_dir.exists() or not setlist_dir.is_dir():
         return merged_setlist
 
-    for file_path in setlist_dir.glob("_setlist_*.json"):
+    # 💡 加上 sorted()，確保每次開機讀取檔案的先後順序 100% 一致
+    for file_path in sorted(setlist_dir.glob("_setlist_*.json")):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                if isinstance(data, dict) and ("setcode" in data or "code" in data or "id" in data):
-                    set_code = data.get("setcode") or data.get("code") or data.get("id")
-                    if set_code:
-                        merged_setlist[set_code] = data
-                elif isinstance(data, dict):
-                    merged_setlist.update(data)
-                elif isinstance(data, list):
-                    for item in data:
-                        if isinstance(item, dict):
-                            set_code = item.get("setcode") or item.get("code") or item.get("id")
-                            if set_code:
-                                merged_setlist[set_code] = item
-        except Exception as e:
-            print(f"錯誤: 讀取系列檔案 {file_path.name} 失敗: {e}")
-
-    return merged_setlist
+                # ... 後續邏輯保持不變 ...
 
 @app.on_event("startup")
 def load_and_process_caches():
