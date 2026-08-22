@@ -510,7 +510,22 @@ def load_all_setlists():
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                # ... 後續邏輯保持不變 ...
+                if isinstance(data, dict) and ("setcode" in data or "code" in data or "id" in data):
+                    set_code = data.get("setcode") or data.get("code") or data.get("id")
+                    if set_code:
+                        merged_setlist[set_code] = data
+                elif isinstance(data, dict):
+                    merged_setlist.update(data)
+                elif isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict):
+                            set_code = item.get("setcode") or item.get("code") or item.get("id")
+                            if set_code:
+                                merged_setlist[set_code] = item
+        except Exception as e:
+            print(f"錯誤: 讀取系列檔案 {file_path.name} 失敗: {e}")
+
+    return merged_setlist
 
 @app.on_event("startup")
 def load_and_process_caches():
@@ -677,47 +692,26 @@ async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient
     if not jp_name_clean:
         return jp_name
 
-    # 查記憶體快取 (你已經移除了實體檔案)
+    # 查記憶體快取
     if jp_name_clean in english_name_cache:
         return english_name_cache[jp_name_clean]
 
-    clean_search_name = re.sub(r'（.*?）|\(.*?\)|《.*?》', '', jp_name_clean).strip() or jp_name_clean
-    
-    # 💡 核心升級：先嘗試「雙引號精確比對」，失敗再用「模糊比對」
-    search_queries = [
-        f'"{clean_search_name}"',  # 優先：強制字串必須完全連在一起
-        clean_search_name          # 備援：原本的模糊搜尋
-    ]
+    clean_search_name = re.sub(r'（.*?）|\(.*?\)|《.*?》|＜.*?＞', '', jp_name_clean).strip() or jp_name_clean
+    search_url = f"https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch={quote(clean_search_name)}&format=json"
 
-    for query_str in search_queries:
-        search_url = f"https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch={quote(query_str)}&format=json"
-
-        try:
-            resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0"})
-            if resp.status_code == 200:
-                search_results = resp.json().get("query", {}).get("search", [])
-                
-                if search_results:
-                    # 💡 進階篩選：優先排除明顯不是卡牌的頁面 (例如 Lore 或 Set 頁面)
-                    # 尋找標題沒有 "Duel Masters" (通常是系列包) 或 "Lore" 的結果
-                    valid_results = [
-                        res for res in search_results 
-                        if "Duel Masters" not in res.get("title", "") and "Lore" not in res.get("title", "")
-                    ]
-                    
-                    # 如果過濾後有結果就用過濾後的，否則就盲拿第一個
-                    best_result = valid_results[0] if valid_results else search_results[0]
-                    en_title = best_result.get("title", "").strip()
-                    
-                    if en_title:
-                        english_name_cache[jp_name_clean] = en_title
-                        return en_title
-                        
-        except Exception as e:
-            print(f"[Fandom Fetch Error] {jp_name_clean} (query: {query_str}) -> {e}")
+    try:
+        resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0"})
+        if resp.status_code == 200:
+            search_results = resp.json().get("query", {}).get("search", [])
+            if search_results:
+                en_title = search_results[0].get("title", "").strip()
+                if en_title:
+                    english_name_cache[jp_name_clean] = en_title
+                    return en_title
+    except Exception as e:
+        print(f"[Fandom Fetch Error] {jp_name_clean} -> {e}")
 
     return jp_name_clean
-
 
 # ----------------------------------------------------
 # 工具函式區（必須放在 API 路由宣告的「上方」）
