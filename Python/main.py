@@ -1670,6 +1670,10 @@ async def track_feature(request: Request):
                 country_counter[country] += 1
                 user_counter[user_id] += 1
 
+                # 👇 新增這兩行：同步累加「國家專屬」計數器
+                country_feature_counter[country][feature_name] += 1
+                country_user_counter[country][user_id] += 1
+
                 # 💡 將 is_vpn 與 real_ip_country 一併存入 Log，供 Console 顯示 Badge
                 entry = {
                     "feature": feature_name,
@@ -2172,6 +2176,11 @@ async def delete_user_logs(
 
     if user_id in user_counter:
         del user_counter[user_id]
+        
+    # 👇 建議補上：同步清理國家專屬的使用者數量紀錄
+    country = user_id.split("-")[0].upper() if "-" in user_id else "Unknown"
+    if country in country_user_counter and user_id in country_user_counter[country]:
+        del country_user_counter[country][user_id]
 
     sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
     sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
