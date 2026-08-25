@@ -311,10 +311,12 @@
         const urlParams = new URLSearchParams(window.location.search);
         const adminKey = urlParams.get('admin');
         const tokenKey = urlParams.get('token');
+		const countryKey = urlParams.get('country'); // 👈 新增解析國家參數
         
         let authParam = '';
         if (adminKey) authParam = `admin=${encodeURIComponent(adminKey)}`;
         else if (tokenKey) authParam = `token=${encodeURIComponent(tokenKey)}`;
+		else if (countryKey) authParam = `country=${encodeURIComponent(countryKey)}`; // 👈 帶入國家參數做為驗證
 
         let featureChart, countryChart, userChart; // 👈 增加 userChart
 
@@ -1111,21 +1113,37 @@
 		}
 
 		// 頁面初始化時，如果是 Admin 才顯示 Reset 按鈕
+		// 頁面初始化
 		window.addEventListener('DOMContentLoaded', () => {
 			if (!authParam) {
-				alert('未提供認證參數 (需使用ADMIN帳號或TOKEN進入)');
+				alert('未提供認證參數 (需使用 ADMIN、TOKEN 或 COUNTRY 進入)');
 				return;
 			}
+			
+			// Admin 最高權限：顯示所有管理按鈕
 			if (adminKey) {
 				document.getElementById('generateTokenBtn').style.display = 'flex';
 				document.getElementById('resetStatsBtn').style.display = 'flex';
-				document.getElementById('broadcastBtn').style.display = 'flex'; // 👈 新增這行顯示按鈕
+				document.getElementById('broadcastBtn').style.display = 'flex';
+			}
+
+			// 💡 新增：若是國家特定視角，調整畫面顯示
+			if (countryKey) {
+				// 修改左上角標題，明確標示這是一個受限視角
+				const titleEl = document.querySelector('h1');
+				if (titleEl) titleEl.innerHTML = `API Track Console - <span class="text-sky-400 font-mono">${countryKey.toUpperCase()} 專屬視角</span>`;
+				
+				// 隱藏兩個圓餅圖容器 (因為單一國家不需要國籍分佈圖)
+				const countryCanvas = document.getElementById('countryChart');
+				const userCanvas = document.getElementById('userChart');
+				if (countryCanvas) countryCanvas.closest('.bg-gray-900').style.display = 'none';
+				if (userCanvas) userCanvas.closest('.bg-gray-900').style.display = 'none';
 			}
 
 			initCharts();
 			fetchInitialData();
 			initWebSocket();
-			initUptimeTimer(); // 👈 啟動每秒定時器
+			initUptimeTimer(); 
 		});
     </script>
 </body>

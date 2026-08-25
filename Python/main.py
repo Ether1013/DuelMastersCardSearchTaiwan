@@ -72,6 +72,13 @@ nickname_cache = []
 diary_cache = []
 setlist_cache = {}
 setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
+# ================= 新增：日誌儲存相關變數 =================
+RECORD_DIR = BASE_DIR / "record"
+RECORD_DIR.mkdir(exist_ok=True)
+
+current_daily_date = ""      # 紀錄當下正在寫入的日期字串
+current_daily_logs = []      # 紀錄當天所有的 Log 陣列
+record_sync_task = None      # 2 分鐘防抖的背景 Task
 # --- 在全域變數區新增參數化名單 ---
 EXCLUDED_COUNTRIES = ["JP", "TW"]
 one_time_tokens = {}
@@ -530,7 +537,52 @@ def load_all_setlists():
 @app.on_event("startup")
 def load_and_process_caches():
     global carddata_cache, carddata_gzip_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, diary_cache, tags_cache, etag_cache
+    # 加入宣告這三個需要重建的 global
+    global action_details_log, current_daily_logs, current_daily_date 
+
     try:
+        # ================= 新增：回溯 48 小時重建 Console 數據 =================
+        now = datetime.now(TZ_UTC8)
+        current_daily_date = now.strftime("%Y%m%d")
+        
+        dates_to_load = [
+            (now - timedelta(days=2)).strftime("%Y%m%d"),
+            (now - timedelta(days=1)).strftime("%Y%m%d"),
+            current_daily_date
+        ]
+        
+        all_records = []
+        for d in dates_to_load:
+            fpath = RECORD_DIR / f"record_{d}.json"
+            if fpath.exists():
+                try:
+                    with open(fpath, 'r', encoding='utf-8') as f:
+                        day_logs = json.load(f)
+                        all_records.extend(day_logs)
+                        # 如果是今天的檔案，同步載入到記憶體中準備接續寫入
+                        if d == current_daily_date:
+                            current_daily_logs = day_logs
+                except Exception as e:
+                    print(f"載入 {fpath.name} 失敗: {e}")
+        
+        # 依時間順序 (舊到新) 排序
+        all_records.sort(key=lambda x: x.get("time", ""))
+        
+        # 清空並重建計數器與 Deque
+        feature_counter.clear()
+        country_counter.clear()
+        user_counter.clear()
+        action_details_log.clear()
+
+        for entry in all_records:
+            feature_counter[entry["feature"]] += 1
+            country_counter[entry["country"]] += 1
+            user_counter[entry["user"]] += 1
+            # 依序使用 appendleft 塞入，最後最新的會在 index 0
+            action_details_log.appendleft(entry)
+        # ==================================================================
+
+        # 以下為你原本載入 JSON 檔案的邏輯，維持不變...
         carddata_cache = load_json_file("carddata.json")
         # 👈 新增：預先壓縮 carddata
         carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
@@ -835,6 +887,67 @@ def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
                     elif isinstance(pics, str) and pics:
                         return pics
     return ""
+
+# ================= 新增：Record 日誌本地寫入與 GitHub 同步功能 =================
+async def push_record_to_github(date_str: str, file_path: Path):
+    if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
+        return
+
+    repo_path = f"record/record_{date_str}.json"
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{repo_path}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "FastAPI-AutoCommit"
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            get_resp = await client.get(url, headers=headers)
+            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
+
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content_str = f.read()
+
+            content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
+            payload = {
+                "message": f"auto: sync record {date_str} [skip ci]",
+                "content": content_base64,
+                "branch": "main"
+            }
+            if sha:
+                payload["sha"] = sha
+
+            put_resp = await client.put(url, headers=headers, json=payload)
+            if put_resp.status_code in [200, 201]:
+                print(f"[Record] 成功 Commit {repo_path} 至 GitHub！")
+            else:
+                print(f"[Record GitHub Sync 失敗]: HTTP {put_resp.status_code}")
+    except Exception as e:
+        print(f"[Record GitHub Sync 網路錯誤]: {e}")
+
+async def record_debounce_timer(date_str: str):
+    await asyncio.sleep(120)  # 停止動作後 2 分鐘才執行 (防抖)
+    try:
+        file_path = RECORD_DIR / f"record_{date_str}.json"
+        # 1. 寫入本地端 (確保資料落地)
+        def _write():
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(current_daily_logs, f, ensure_ascii=False, indent=2)
+        await asyncio.to_thread(_write)
+
+        # 2. 推送至 GitHub
+        await push_record_to_github(date_str, file_path)
+    except Exception as e:
+        print(f"[Record Debounce Error]: {e}")
+
+def trigger_record_sync(date_str: str):
+    """每次收到新 Log 時呼叫，重置 2 分鐘倒數計時器"""
+    global record_sync_task
+    if record_sync_task:
+        record_sync_task.cancel()
+    record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
+# =========================================================================
 
 # ----------------------------------------------------
 # 路由區
@@ -1516,6 +1629,56 @@ async def track_feature(request: Request):
                 }
                 action_details_log.appendleft(entry)
             # ================================================================
+            
+            # 處理全域計數與寫入
+            if is_skip or is_merge:
+                # Skip 與 Merge 不累加全域計數，也不新增一筆獨立紀錄
+                pass
+            else:
+                # 視為全新動作，正常計數與新增
+                feature_counter[feature_name] += 1
+                country_counter[country] += 1
+                user_counter[user_id] += 1
+
+                entry = {
+                    "feature": feature_name,
+                    "country": country,
+                    "user": user_id,
+                    "is_vpn": is_vpn,
+                    "real_ip_country": real_ip_country,
+                    "detail": copy.deepcopy(detail),
+                    "_raw_detail": copy.deepcopy(detail), 
+                    "_chained_key": None,
+                    "time": now_utc8
+                }
+                action_details_log.appendleft(entry)
+
+            # ================= 新增：日常分檔與觸發存檔 =================
+            global current_daily_date, current_daily_logs
+            now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
+
+            # 跨日偵測：如果到了明天，重置記憶體陣列，開新檔
+            if now_date_str != current_daily_date:
+                current_daily_date = now_date_str
+                current_daily_logs = []
+
+            if not is_skip:
+                if is_merge:
+                    # Python 字典特性：is_merge 時 last_user_log 已被修改。
+                    # 只要確保這筆 log 存在今天的名單內，存檔時就會是最新合併後的狀態。
+                    if last_user_log not in current_daily_logs:
+                        current_daily_logs.append(last_user_log)
+                else:
+                    # 全新動作，加入今日名單
+                    current_daily_logs.append(entry)
+
+                # 觸發 2 分鐘防抖寫入本地 + Push 到 GitHub
+                trigger_record_sync(now_date_str)
+            # =========================================================
+
+            # (原有的 廣播給所有連接在 WebSocket Console 的用戶 邏輯...)
+            sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+            # ...下略
 
             # 廣播給所有連接在 WebSocket Console 的用戶
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
