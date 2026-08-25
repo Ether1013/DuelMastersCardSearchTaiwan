@@ -74,6 +74,11 @@
 				<button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
 					<i class="fa-solid fa-bullhorn"></i> 廣播
 				</button>
+				
+				<!-- 👇 新增：手動存檔按鈕 (預設隱藏，僅 Admin 顯示) -->
+				<button id="manualSaveBtn" onclick="forceManualSave()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs rounded-lg transition border border-blue-500/30 flex items-center gap-1.5 shadow-lg">
+					<i class="fa-solid fa-cloud-arrow-up"></i> 手動存檔
+				</button>
             </div>
         </div>
     </header>
@@ -113,7 +118,7 @@
         </div>
 
 		<!-- 💡 新增：資料傳輸與快取狀態 (手動 Refresh 更新) -->
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+        <div id="dataTransferContainer" class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
                     <i class="fa-solid fa-server text-emerald-400"></i> 資料傳輸狀態 (重傳 / 快取)
@@ -529,6 +534,27 @@
 			} finally {
 				btn.disabled = false;
 				btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 確認送出`;
+			}
+		}
+		
+		async function forceManualSave() {
+			const btn = document.getElementById('manualSaveBtn');
+			btn.disabled = true;
+			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 儲存中...`;
+
+			try {
+				const response = await fetch(`/api/console/manual_save?${authParam}`, {
+					method: 'POST'
+				});
+				const data = await response.json();
+				
+				if (!response.ok) throw new Error(data.detail || '存檔失敗');
+				alert(`✅ ${data.message}`);
+			} catch (err) {
+				alert(`❌ 錯誤：${err.message}`);
+			} finally {
+				btn.disabled = false;
+				btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> 手動存檔`;
 			}
 		}
 
@@ -1125,9 +1151,11 @@
 				document.getElementById('generateTokenBtn').style.display = 'flex';
 				document.getElementById('resetStatsBtn').style.display = 'flex';
 				document.getElementById('broadcastBtn').style.display = 'flex';
+				// 👇 新增：解開手動存檔按鈕的隱藏
+				document.getElementById('manualSaveBtn').style.display = 'flex';
 			}
 
-			// 💡 新增：若是國家特定視角，調整畫面顯示
+			// 若是國家特定視角，調整畫面顯示
 			if (countryKey) {
 				// 修改左上角標題，明確標示這是一個受限視角
 				const titleEl = document.querySelector('h1');
@@ -1138,6 +1166,10 @@
 				const userCanvas = document.getElementById('userChart');
 				if (countryCanvas) countryCanvas.closest('.bg-gray-900').style.display = 'none';
 				if (userCanvas) userCanvas.closest('.bg-gray-900').style.display = 'none';
+
+				// 👇 新增：隱藏資料傳輸與快取狀態區塊
+				const dataTransferContainer = document.getElementById('dataTransferContainer');
+				if (dataTransferContainer) dataTransferContainer.style.display = 'none';
 			}
 
 			initCharts();

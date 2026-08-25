@@ -1894,6 +1894,34 @@ async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(N
     )
     return {"status": "success", "receivers": len(client_manager.active_connections)}
 
+@app.post("/api/console/manual_save")
+async def force_manual_save(admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    try:
+        # 1. 強制儲存與 Push Tags
+        def _write_tags():
+            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+        await asyncio.to_thread(_write_tags)
+        await push_tags_to_github()
+
+        # 2. 強制儲存與 Push Record
+        global current_daily_date, current_daily_logs
+        if current_daily_date and current_daily_logs:
+            file_path = RECORD_DIR / f"record_{current_daily_date}.json"
+            def _write_records():
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(current_daily_logs, f, ensure_ascii=False, indent=2)
+            await asyncio.to_thread(_write_records)
+            await push_record_to_github(current_daily_date, file_path)
+
+        return {"status": "success", "message": "手動存檔成功！已強制推播 Tags 與 Record 至 GitHub。"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"儲存失敗: {str(e)}")
+        
+        
 # 提供給 Console 取得目前在線使用者的 API
 @app.get("/api/console/online_users")
 async def get_online_users(admin: Optional[str] = Query(None)):
