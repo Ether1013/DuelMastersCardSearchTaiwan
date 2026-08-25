@@ -1967,6 +1967,86 @@
 			display: none !important;
 		}
 		
+		/* ================= 列表上方獨立固定工具列 (Page 2 & 3) ================= */
+		.tab-sticky-toolbar {
+			position: sticky;
+			top: 78px; /* 緊隨在收合抽屜下方固定 */
+			z-index: 85;
+			display: flex;
+			justify-content: flex-end; /* 靠右對齊 */
+			align-items: center;
+			padding: 2px 0 6px 0;
+			background: #f4f4f9;
+		}
+
+		#drawer-tab2, #drawer-tab3 {
+			margin-bottom: 4px; /* 縮小與下方按鈕的間距 */
+		}
+		
+		/* ================= 查詢結果上方：抽屜與匯出按鈕同列容器 ================= */
+		.tab-sticky-row {
+			position: sticky;
+			top: 50px; /* 避開頂部黑色 Header (約 48px~50px) */
+			z-index: 90;
+			display: flex;
+			align-items: flex-start; /* 頂部對齊，抽屜展開時不影響按鈕高度 */
+			gap: 8px;
+			margin-bottom: 10px;
+		}
+
+		/* 讓橫排內的抽屜佔滿左側剩餘寬度，並由外層容器負責置頂 */
+		.tab-sticky-row .drawer-container {
+			flex: 1;
+			min-width: 0;
+			position: static !important; /* 解除內部自己的 sticky，交由外層容器統一 sticky */
+			margin-bottom: 0 !important;
+		}
+
+		/* 讓手把與匯出按鈕的高度與排版一致 */
+		.tab-sticky-row .drawer-handle {
+			height: 32px;
+			box-sizing: border-box;
+		}
+
+		/* 右側匯出按鈕樣式 */
+		.tab-sticky-row .btn-export-top {
+			height: 32px;
+			padding: 0 12px;
+			background: #0284c7;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			font-size: 12px;
+			font-weight: bold;
+			cursor: pointer;
+			white-space: nowrap;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0; /* 絕不被擠壓 */
+			transition: background-color 0.15s ease;
+		}
+
+		.tab-sticky-row .btn-export-top:hover {
+			background: #0369a1;
+		}
+		
+		@media (max-width: 768px) {
+			/* 讓抽屜內的按鈕群組與下拉選單直向排列並撐滿寬度 */
+			.drawer-row .drawer-btn-group {
+				flex-direction: column;
+				width: 100%;
+			}
+
+			/* 強制下拉選單與所有操作按鈕為 100% 等寬 */
+			.drawer-row select,
+			.drawer-row .btn-drawer-action {
+				width: 100% !important;
+				box-sizing: border-box;
+				text-align: center;
+				justify-content: center;
+			}
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2230,7 +2310,7 @@
                 <h3>系列大編號</h3>
                 <select id="series-big">
                     <option value="">全部</option>
-					<option value="__DECK_ONLY__">📦 官方牌組</option>
+					<option value="__DECK_ONLY__">官方牌組</option>
                     <option value="DM26-SD1">DM26-SD1</option>
                     <option value="DM26">DM26</option>
                     <option value="DM25-">DM25</option>
@@ -2272,55 +2352,55 @@
     <!-- 第二個頁籤：查詢結果 (列表) -->
 	<div id="tab-list" class="tab-content">
 		
-		<!-- 第二頁籤 抽屜工具列 -->
-		<div class="drawer-container" id="drawer-tab2">
-			<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
-				<span>⚙️ 排序與列表匯出工具</span>
-				<span class="drawer-arrow" style="font-size: 10px;">▼</span>
-			</div>
-			<div class="drawer-content">
-				<!-- 1. 排序區塊 -->
-				<div class="drawer-row">
-					<label>排序：</label>
-					<div class="drawer-btn-group">
-						<select id="sort-select">
-							<option value="default" selected>預設</option>
-							<option value="name_asc">卡名 (升冪 A→Z)</option>
-							<option value="name_desc">卡名 (降冪 Z→A)</option>
-							<option value="cost_asc">費用 (升冪 低→高)</option>
-							<option value="cost_desc">費用 (降冪 高→低)</option>
-							<option value="power_asc">攻擊力 (升冪 低→高)</option>
-							<option value="power_desc">攻擊力 (降冪 高→低)</option>
-							<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
-						</select>
-					</div>
+		<!-- 💡 抽屜與匯出按鈕「同一橫排」置頂列 -->
+		<div class="tab-sticky-row">
+			<!-- 左側：抽屜主體 -->
+			<div class="drawer-container" id="drawer-tab2">
+				<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
+					<span>⚙️ 排序與列表工具</span>
+					<span class="drawer-arrow" style="font-size: 10px;">▼</span>
 				</div>
-				<!-- 2. 匯出區塊 -->
-				<div class="drawer-row">
-					<label>匯出：</label>
-					<div class="drawer-btn-group">
-						<button type="button" class="btn-drawer-action" id="btn-export-list">📄 匯出文字與圖片至新分頁</button>
+				<div class="drawer-content">
+					<!-- 1. 排序區塊 -->
+					<div class="drawer-row">
+						<label>排序：</label>
+						<div class="drawer-btn-group">
+							<select id="sort-select">
+								<option value="default" selected>預設</option>
+								<option value="name_asc">卡名 (升冪 A→Z)</option>
+								<option value="name_desc">卡名 (降冪 Z→A)</option>
+								<option value="cost_asc">費用 (升冪 低→高)</option>
+								<option value="cost_desc">費用 (降冪 高→低)</option>
+								<option value="power_asc">攻擊力 (升冪 低→高)</option>
+								<option value="power_desc">攻擊力 (降冪 高→低)</option>
+								<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+							</select>
+						</div>
 					</div>
-				</div>
-				<!-- 3. 歷史區塊 -->
-				<div class="drawer-row">
-					<label>歷史：</label>
-					<div class="drawer-btn-group">
-						<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
-						<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
+					<!-- 2. 歷史區塊 -->
+					<div class="drawer-row">
+						<label>歷史：</label>
+						<div class="drawer-btn-group">
+							<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+							<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
+						</div>
 					</div>
-				</div>
-				<!-- 4. 自訂區塊 (按鈕全部放入 group 容器內) -->
-				<div class="drawer-row">
-					<label>自訂：</label>
-					<div class="drawer-btn-group">
-						<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
-						<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
+					<!-- 3. 自訂區塊 -->
+					<div class="drawer-row">
+						<label>自訂：</label>
+						<div class="drawer-btn-group">
+							<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
+							<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
+						</div>
 					</div>
 				</div>
 			</div>
+
+			<!-- 右側：同排的匯出按鈕 -->
+			<button type="button" class="btn-export-top" id="btn-export-list">📄 匯出文字與圖片</button>
 		</div>
 
+		<!-- 下方：卡片列表 -->
 		<div id="list-container">
 			<div class="empty-state">尚無資料</div>
 		</div>
@@ -2331,53 +2411,53 @@
 		<div class="split-layout-container">
 			<!-- 左邊列表區域 -->
 			<div class="split-left-panel">
-				<!-- Page 3 抽屜工具列 (#drawer-tab3) -->
-				<div class="drawer-container" id="drawer-tab3">
-					<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
-						<span>⚙️ 排序與列表匯出工具</span>
-						<span class="drawer-arrow" style="font-size: 10px;">▼</span>
-					</div>
-					<div class="drawer-content">
-						<!-- 1. 排序區塊 -->
-						<div class="drawer-row">
-							<label>排序：</label>
-							<div class="drawer-btn-group">
-								<select class="sort-select-input" id="sort-select-split">
-									<option value="default" selected>預設</option>
-									<option value="name_asc">卡名 (升冪 A→Z)</option>
-									<option value="name_desc">卡名 (降冪 Z→A)</option>
-									<option value="cost_asc">費用 (升冪 低→高)</option>
-									<option value="cost_desc">費用 (降冪 高→低)</option>
-									<option value="power_asc">攻擊力 (升冪 低→高)</option>
-									<option value="power_desc">攻擊力 (降冪 高→低)</option>
-									<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
-								</select>
-							</div>
+				
+				<!-- 💡 抽屜與匯出按鈕「同一橫排」置頂列 -->
+				<div class="tab-sticky-row">
+					<!-- 左側：抽屜主體 -->
+					<div class="drawer-container" id="drawer-tab3">
+						<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
+							<span>⚙️ 排序與列表工具</span>
+							<span class="drawer-arrow" style="font-size: 10px;">▼</span>
 						</div>
-						<!-- 2. 匯出區塊 -->
-						<div class="drawer-row">
-							<label>匯出：</label>
-							<div class="drawer-btn-group">
-								<button type="button" class="btn-drawer-action btn-export-action">📄 匯出文字與圖片至新分頁</button>
+						<div class="drawer-content">
+							<!-- 1. 排序區塊 -->
+							<div class="drawer-row">
+								<label>排序：</label>
+								<div class="drawer-btn-group">
+									<select class="sort-select-input" id="sort-select-split">
+										<option value="default" selected>預設</option>
+										<option value="name_asc">卡名 (升冪 A→Z)</option>
+										<option value="name_desc">卡名 (降冪 Z→A)</option>
+										<option value="cost_asc">費用 (升冪 低→高)</option>
+										<option value="cost_desc">費用 (降冪 高→低)</option>
+										<option value="power_asc">攻擊力 (升冪 低→高)</option>
+										<option value="power_desc">攻擊力 (降冪 高→低)</option>
+										<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+									</select>
+								</div>
 							</div>
-						</div>
-						<!-- 3. 歷史區塊 -->
-						<div class="drawer-row">
-							<label>歷史：</label>
-							<div class="drawer-btn-group">
-								<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
-								<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
+							<!-- 2. 歷史區塊 -->
+							<div class="drawer-row">
+								<label>歷史：</label>
+								<div class="drawer-btn-group">
+									<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
+									<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
+								</div>
 							</div>
-						</div>
-						<!-- 4. 自訂區塊 -->
-						<div class="drawer-row">
-							<label>自訂：</label>
-							<div class="drawer-btn-group">
-								<button type="button" class="btn-drawer-action btn-open-deck-import-action">📥 手動匯入卡表</button>
-								<button type="button" class="btn-drawer-action btn-share-deck-link-action" style="background: #16a34a;">🔗 取得連結</button>
+							<!-- 3. 自訂區塊 -->
+							<div class="drawer-row">
+								<label>自訂：</label>
+								<div class="drawer-btn-group">
+									<button type="button" class="btn-drawer-action btn-open-deck-import-action">📥 手動匯入卡表</button>
+									<button type="button" class="btn-drawer-action btn-share-deck-link-action" style="background: #16a34a;">🔗 取得連結</button>
+								</div>
 							</div>
 						</div>
 					</div>
+
+					<!-- 右側：同排的匯出按鈕 -->
+					<button type="button" class="btn-export-top btn-export-action">📄 匯出文字與圖片</button>
 				</div>
 
 				<!-- 卡牌列表容器 -->
@@ -2433,9 +2513,11 @@
                 <!-- 2-1 -->
 				<button type="button" class="qa-btn-lv2" data-target="qa-sub-2-1">📦 指定商品 / 預組代號</button>
 				<div class="qa-content-lv2" id="qa-sub-2-1">
-					<input type="text" id="qa-input-set" class="qa-input" placeholder="請輸入商品代碼 (例: DM26-EX3)" style="margin-bottom: 5px;" autocomplete="off">
+					<!-- 💡 修改：加入 list 屬性並綁定下方 datalist -->
+					<input type="text" id="qa-input-set" list="qa-set-datalist" class="qa-input" placeholder="請輸入或選擇商品代碼/名稱..." style="margin-bottom: 5px;" autocomplete="off">
+					<datalist id="qa-set-datalist"></datalist>
 					
-					<!-- 💡 新增：最新兩個商品的快捷按鈕容器 -->
+					<!-- 最新商品快捷按鈕容器 -->
 					<div id="qa-latest-sets-container" style="display: flex; gap: 6px; margin-bottom: 8px;"></div>
 
 					<div class="action-btn-group">
@@ -3047,22 +3129,11 @@
 			s = s.replace(/[\s\u3000]+/g, ' ').trim();
 			return s;
 		}
-        
-        // 💡 強制清除舊版錯誤的 Wiki 快取 (設定版本號)
-		const WIKI_CACHE_VERSION = 'v2_exact_match';
-		if (localStorage.getItem('dm_wiki_cache_version') !== WIKI_CACHE_VERSION) {
-			// 只刪除翻譯與維基快取，絕對不碰玩家的自訂牌組 (dm_custom_decks)
-			localStorage.removeItem('dm_en_name_cache');
-			localStorage.removeItem('dm_wiki_details_cache');
-			localStorage.setItem('dm_wiki_cache_version', WIKI_CACHE_VERSION);
-			console.log("🧹 已自動清除舊版 Wiki 翻譯快取，升級至 " + WIKI_CACHE_VERSION);
-		}
-
 		// 英文卡名與維基擴充資訊快取專用全域變數
 		let currentCardLang = 'zh';  // 預設 'zh'(中)，可切換為 'en'(英) 或 'jp'(日)
 		let fetchedEnNameMap = JSON.parse(localStorage.getItem('dm_en_name_cache') || '{}');
 		let fetchedWikiDetailsMap = JSON.parse(localStorage.getItem('dm_wiki_details_cache') || '{}');
-        // ==========================================
+		// ==========================================
 		// 📢 系統公告設定區 (直接修改陣列內容，空陣列則不顯示)
 		// ==========================================
 		const SYS_NOTICE_DATA = [
@@ -3962,9 +4033,25 @@
 			// ----------------------------------------------------
 			// [看內容 (商品)]
 			document.getElementById('qa-btn-set-view').addEventListener('click', () => {
-				const setKey = document.getElementById('qa-input-set').value.trim().toUpperCase();
-				if (!setKey) { showToast("請輸入商品代碼"); return; }
-				if (!rawSetlist[setKey]) { showToast(`⚠️ 找不到商品代碼：${setKey}`); return; }
+				let rawVal = document.getElementById('qa-input-set').value.trim();
+				if (!rawVal) { showToast("請輸入商品代碼或名稱"); return; }
+				
+				let setKey = rawVal.toUpperCase();
+				
+				// 💡 若使用者輸入的不是精確 key，嘗試從 rawSetlist 比對名稱或代號
+				if (!rawSetlist[setKey]) {
+					const foundEntry = Object.entries(rawSetlist).find(([k, v]) => {
+						const code = (v.setcode || v.code || k).toUpperCase();
+						const name = (v.setname || v.name || '').toUpperCase();
+						return code === setKey || name.includes(rawVal.toUpperCase()) || `${code} - ${name}`.toUpperCase().includes(rawVal.toUpperCase());
+					});
+					if (foundEntry) {
+						setKey = foundEntry[0];
+					} else {
+						showToast(`⚠️ 找不到商品：${rawVal}`);
+						return;
+					}
+				}
 				
 				document.getElementById('btn-reset').click();
 				
@@ -3976,7 +4063,7 @@
 					smallSelect.value = setKey;
 				}
 				document.getElementById('btn-search').click();
-				trackFeature('索引－輸入商品代號', { set_code: setKey }); // 💡 補上商品代碼
+				trackFeature('索引－輸入商品代號', { set_code: setKey });
 			});
 
 			// [分享連結 (商品)]
@@ -4688,10 +4775,10 @@
 		}
 		
 		// --- 系列選單連動邏輯 ---
-		// --- 系列選單連動邏輯 ---
 		function initSeriesDropdown() {
 			const bigSelect = document.getElementById('series-big');
 			const smallSelect = document.getElementById('series-small');
+			const qaDatalist = document.getElementById('qa-set-datalist'); // 💡 取得 qa-set-datalist
 
 			if (!bigSelect || !smallSelect) return;
 
@@ -4709,22 +4796,33 @@
 				const setListArray = Object.entries(rawSetlist).map(([key, setInfo]) => {
 					const setcode = setInfo.setcode || setInfo.code || setInfo.id || key;
 					const setname = setInfo.setname || setInfo.name || setcode;
-					const isdeck = Boolean(setInfo.isdeck === true); // 💡 提取 isdeck 屬性
+					const isdeck = Boolean(setInfo.isdeck === true);
 					return { key, setcode, setname, isdeck };
 				});
 
-				// 2. 依照 setcode 進行降冪排序（新商品排前面）
+				// 2. 依照 setcode 進行降冪排序
 				setListArray.sort((a, b) => a.setcode.localeCompare(b.setcode, undefined, { numeric: true, sensitivity: 'base' }));
 
-				// 3. 依序填入下拉選單 (已修正 isMatch 判定)
+				// 💡 3. 同步填入「今天我要」的 datalist (只在初始全部渲染或需要時更新)
+				if (qaDatalist) {
+					qaDatalist.innerHTML = '';
+					setListArray.forEach(({ key, setcode, setname }) => {
+						const opt = document.createElement('option');
+						// value 放 key (如 DM26-EX3)，label/提示放商品名稱
+						opt.value = key;
+						opt.textContent = `${setcode} - ${setname}`;
+						qaDatalist.appendChild(opt);
+					});
+				}
+
+				// 4. 依序填入原本的 series-small 下拉選單
 				setListArray.forEach(({ key, setcode, setname, isdeck }) => {
 					let isMatch = false;
 					const upperCode = String(setcode).trim().toUpperCase();
 
 					if (!selectedBigValue) {
-						isMatch = true; // 全部
+						isMatch = true;
 					} else if (selectedBigValue === '__DECK_ONLY__') {
-						// 💡 限制：isdeck 為 true，且商品編號開頭必須是 'O' 或 'D'
 						const isODPrefix = upperCode.startsWith('O') || upperCode.startsWith('D');
 						isMatch = isdeck && isODPrefix;
 					} else {
