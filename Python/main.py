@@ -608,12 +608,23 @@ def load_and_process_caches():
         feature_counter.clear()
         country_counter.clear()
         user_counter.clear()
+        country_feature_counter.clear()  # 👈 清空國家分類
+        country_user_counter.clear()     # 👈 清空國家用戶
         action_details_log.clear()
 
         for entry in all_records:
-            feature_counter[entry["feature"]] += 1
-            country_counter[entry["country"]] += 1
-            user_counter[entry["user"]] += 1
+            feat = entry.get("feature")
+            c = entry.get("country", "Unknown")
+            u = entry.get("user", "Unknown")
+
+            feature_counter[feat] += 1
+            country_counter[c] += 1
+            user_counter[u] += 1
+            
+            # 💡 補上這兩行，將歷史資料灌入國家專屬計數器中
+            country_feature_counter[c][feat] += 1
+            country_user_counter[c][u] += 1
+            
             # 依序使用 appendleft 塞入，最後最新的會在 index 0
             action_details_log.appendleft(entry)
         # ==================================================================
