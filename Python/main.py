@@ -142,22 +142,55 @@ class PrettyJSONResponse(JSONResponse):
 
 class ConsoleConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        # 結構改為 Dict，儲存每個連線的權限等級與國家
+        self.active_connections: Dict[WebSocket, dict] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, auth_level: str, country: str = None):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.active_connections[websocket] = {"auth_level": auth_level, "country": country}
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
+            del self.active_connections[websocket]
 
-    async def broadcast(self, message: dict):
-        for connection in self.active_connections:
+    async def broadcast(self):
+        # 1. 準備全域通用數據 (給 Admin / Token)
+        sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+        sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+        recent_logs = get_clean_recent_logs()
+        
+        admin_payload = {
+            "total_events": sum(sorted_stats.values()),
+            "stats": sorted_stats,
+            "country_stats": sorted_country_stats,
+            "country_user_counts": get_country_user_counts(),
+            "recent_50_details": recent_logs,
+            "start_time": last_reset_time
+        }
+
+        # 2. 針對每條連線，依照權限派發不同資料
+        for connection, info in list(self.active_connections.items()):
             try:
-                await connection.send_json(message)
+                if info["auth_level"] in ["admin", "token"]:
+                    await connection.send_json(admin_payload)
+                elif info["auth_level"] == "country":
+                    c = info["country"]
+                    # 計算該國專屬數據與專屬 Log
+                    c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
+                    c_users = country_user_counter[c]
+                    c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
+                    
+                    c_payload = {
+                        "total_events": sum(c_stats.values()),
+                        "stats": c_stats,
+                        "country_stats": {c: country_counter[c]}, 
+                        "country_user_counts": {c: len(c_users)},
+                        "recent_50_details": c_logs,
+                        "start_time": last_reset_time
+                    }
+                    await connection.send_json(c_payload)
             except:
-                pass
+                self.disconnect(connection)
 
 console_manager = ConsoleConnectionManager()
 
