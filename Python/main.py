@@ -1736,15 +1736,24 @@ async def track_feature(request: Request):
         pass
     return {"status": "ok"}
 
+# 💡 增加獨立的 /console.html 路由支援直接開啟
+@app.get("/console.html")
 @app.get("/api/track/stats")
 async def get_feature_stats(
     request: Request, 
     admin: Optional[str] = Query(None, description="admin"),
     token: Optional[str] = Query(None, description="token"),
-    country: Optional[str] = Query(None, description="country"), # 👈 新增參數
+    country: Optional[str] = Query(None, description="country"),
     format: Optional[str] = Query(None)
 ):
     accept_header = request.headers.get("accept", "")
+    user_agent = request.headers.get("user-agent", "").lower()
+    
+    # 判斷是否為常見爬蟲 (避免 LINE/Discord/FB 預覽抓取時消耗 Token)
+    is_crawler = any(bot in user_agent for bot in [
+        "bot", "crawler", "spider", "facebookexternalhit", "line-poker", "discordbot", "slackbot"
+    ])
+    
     is_html = "text/html" in accept_header and format != "json"
 
     # 清理已過期的 Token
@@ -1756,24 +1765,32 @@ async def get_feature_stats(
     # 權限驗證邏輯
     authorized = False
     auth_level = ""
+    
     if admin and admin == TRACK_STATS_USER:
         authorized = True
         auth_level = "admin"
     elif token and token in one_time_tokens:
-        if is_html:
-            if one_time_tokens[token]["html_accessed"]:
-                raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效")
+        if is_html and not is_crawler:
+            # 只有真人造訪且不是爬蟲時才檢查
+            if one_time_tokens[token].get("html_accessed", False):
+                raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效 (不可重新整理)")
             one_time_tokens[token]["html_accessed"] = True
+            
         authorized = True
-        # 👇 關鍵判斷：如果帶有 country 參數，權限等級就切換為 country 視角
         auth_level = "country" if country else "token"
 
     if not authorized:
         raise HTTPException(status_code=404, detail="Not Found")
 
+    # 💡 修正：使用 BASE_DIR 尋找檔案，確保 Render 任何工作路徑都能精確找到 console.html
     if is_html:
-        if Path("console.html").exists():
+        html_file = BASE_DIR / "console.html"
+        if html_file.exists():
+            return FileResponse(html_file)
+        elif Path("console.html").exists():
             return FileResponse("console.html")
+        else:
+            raise HTTPException(status_code=500, detail="找不到 console.html 檔案")
 
     formatted_data_stats = { DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items() }
     recent_logs = get_clean_recent_logs()

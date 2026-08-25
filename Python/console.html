@@ -1088,8 +1088,9 @@
 				
 				const data = await response.json();
 				
-				// 根據選擇決定連結參數
-				let link = `${window.location.origin}${window.location.pathname}?token=${data.token}`;
+				// 💡 確保網址使用標準的 pathname
+				const basePath = window.location.pathname.endsWith('.html') ? window.location.pathname : '/api/track/stats';
+				let link = `${window.location.origin}${basePath}?token=${data.token}`;
 				if (scope === 'country' && countryVal) {
 					link += `&country=${encodeURIComponent(countryVal)}`;
 				}
