@@ -1765,7 +1765,8 @@ async def get_feature_stats(
                 raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效")
             one_time_tokens[token]["html_accessed"] = True
         authorized = True
-        auth_level = "token"
+        # 👇 關鍵判斷：如果帶有 country 參數，權限等級就切換為 country 視角
+        auth_level = "country" if country else "token"
     elif country: # 👈 國家參數驗證
         authorized = True
         auth_level = "country"
@@ -1829,7 +1830,8 @@ async def websocket_console(
     elif token and token in one_time_tokens:
         if one_time_tokens[token]["expires_at"] >= now:
             authorized = True
-            auth_level = "token"
+            # 👇 關鍵判斷：如果帶有 country 參數，WebSocket 也給予 country 視角
+            auth_level = "country" if country else "token"
     elif country: 
         authorized = True
         auth_level = "country"

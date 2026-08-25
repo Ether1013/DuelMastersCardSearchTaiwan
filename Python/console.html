@@ -244,6 +244,55 @@
 			</div>
 		</div>
 	</div>
+	<!-- Token Generation Modal -->
+	<div id="tokenModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+			<div class="flex items-center justify-between border-b border-gray-800 pb-3">
+				<div class="flex items-center gap-2 text-indigo-400">
+					<i class="fa-solid fa-key text-xl"></i>
+					<h3 class="text-base font-bold text-gray-100">產生一次性 Console 連結</h3>
+				</div>
+				<button onclick="closeTokenModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+			</div>
+
+			<div class="space-y-3">
+				<div>
+					<label class="text-xs font-semibold text-gray-300 block mb-1">存取權限範圍：</label>
+					<div class="flex gap-4 text-xs">
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="tokenScope" value="all" checked onchange="toggleCountrySelect(false)" class="text-indigo-500">
+							<span>全域 (無限制)</span>
+						</label>
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="tokenScope" value="country" onchange="toggleCountrySelect(true)" class="text-indigo-500">
+							<span>指定國籍</span>
+						</label>
+					</div>
+				</div>
+
+				<!-- 選擇指定國籍 (改為下拉選單) -->
+				<div id="countryInputContainer" class="hidden space-y-1">
+					<label class="text-xs font-semibold text-gray-400 block">選擇指定國籍：</label>
+					<select id="tokenCountrySelect" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-xs font-mono text-white outline-none focus:border-indigo-500 cursor-pointer">
+						<!-- 將由 JS 自動填入選項 -->
+					</select>
+				</div>
+
+				<p class="text-[11px] text-gray-500">
+					* 產生的連結在 1 小時內有效，重新整理即失效。
+				</p>
+			</div>
+
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeTokenModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
+					取消
+				</button>
+				<button id="btnSubmitGenerateToken" onclick="submitGenerateToken()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition shadow-lg flex items-center gap-1.5">
+					<i class="fa-solid fa-link"></i> 產生並複製連結
+				</button>
+			</div>
+		</div>
+	</div>
 	<!-- Broadcast Modal -->
 	<div id="broadcastModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
 		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
@@ -319,9 +368,16 @@
 		const countryKey = urlParams.get('country'); // 👈 新增解析國家參數
         
         let authParam = '';
-        if (adminKey) authParam = `admin=${encodeURIComponent(adminKey)}`;
-        else if (tokenKey) authParam = `token=${encodeURIComponent(tokenKey)}`;
-		else if (countryKey) authParam = `country=${encodeURIComponent(countryKey)}`; // 👈 帶入國家參數做為驗證
+        if (adminKey) {
+            authParam = `admin=${encodeURIComponent(adminKey)}`;
+        } else if (tokenKey) {
+            authParam = `token=${encodeURIComponent(tokenKey)}`;
+            if (countryKey) {
+                authParam += `&country=${encodeURIComponent(countryKey)}`; // 👈 兩者並存時一併帶入
+            }
+        } else if (countryKey) {
+            authParam = `country=${encodeURIComponent(countryKey)}`;
+        }
 
         let featureChart, countryChart, userChart; // 👈 增加 userChart
 
@@ -953,35 +1009,118 @@
 
             ws.onerror = () => ws.close();
         }
+		
+		// 常用預設國家清單 (若當前畫面上還沒有紀錄時的備援)
+		const DEFAULT_COUNTRY_LIST = [
+			{ code: 'TW', name: 'TW (台灣)' },
+			{ code: 'HK', name: 'HK (香港)' },
+			{ code: 'MO', name: 'MO (澳門)' },
+			{ code: 'JP', name: 'JP (日本)' },
+			{ code: 'CN', name: 'CN (中國)' },
+			{ code: 'KR', name: 'KR (韓國)' },
+			{ code: 'SG', name: 'SG (新加坡)' },
+			{ code: 'MY', name: 'MY (馬來西亞)' },
+			{ code: 'US', name: 'US (美國)' },
+			{ code: 'GB', name: 'GB (英國)' }
+		];
 
-        async function generateToken() {
-            try {
-                const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
-                if (!response.ok) throw new Error('產生失敗，權限不足或伺服器錯誤');
-                
-                const data = await response.json();
-                const link = `${window.location.origin}${window.location.pathname}?token=${data.token}`;
-                
-                if (navigator.share) {
-                    try {
-                        await navigator.share({
-                            title: 'Console 單次登入連結',
-                            text: '1小時內有效，單次使用的 Console 連結 (重新整理即失效)',
-                            url: link
-                        });
-                        return;
-                    } catch (err) {
-                        if (err.name === 'AbortError') return; 
-                    }
-                }
-                
-                await navigator.clipboard.writeText(link);
-                alert(`已複製單次 Token 連結至剪貼簿！\n\n${link}`);
+		// 動態組合下拉選單選項 (優先抓取當前已上線/記錄過的國家)
+		function populateCountryOptions() {
+			const selectEl = document.getElementById('tokenCountrySelect');
+			if (!selectEl) return;
 
-            } catch (err) {
-                alert(err.message);
-            }
-        }
+			// 1. 從目前的 countryChart (或 currentLogs) 中收集現有的所有國家
+			const activeCountries = countryChart ? countryChart.data.labels : [];
+			
+			// 2. 合併預設清單，確保不重複
+			const countrySet = new Set(activeCountries);
+			DEFAULT_COUNTRY_LIST.forEach(c => countrySet.add(c.code));
+
+			selectEl.innerHTML = '';
+			countrySet.forEach(code => {
+				if (!code || code === 'Unknown') return;
+				const option = document.createElement('option');
+				option.value = code;
+				
+				// 若有對應的中文名稱就顯示，否則顯示代碼
+				const matched = DEFAULT_COUNTRY_LIST.find(c => c.code === code);
+				option.innerText = matched ? matched.name : `${code} (其他)`;
+				selectEl.appendChild(option);
+			});
+		}
+
+		// 開啟 Token Modal
+		function generateToken() {
+			document.querySelector('input[name="tokenScope"][value="all"]').checked = true;
+			toggleCountrySelect(false);
+			populateCountryOptions(); // 👈 動態生成最新國籍選項
+			document.getElementById('tokenModal').classList.remove('hidden');
+		}
+
+		function closeTokenModal() {
+			document.getElementById('tokenModal').classList.add('hidden');
+		}
+
+		function toggleCountrySelect(isCountry) {
+			const container = document.getElementById('countryInputContainer');
+			if (isCountry) {
+				container.classList.remove('hidden');
+			} else {
+				container.classList.add('hidden');
+			}
+		}
+
+		// 確認產生 Token
+		async function submitGenerateToken() {
+			const scope = document.querySelector('input[name="tokenScope"]:checked').value;
+			const countryVal = document.getElementById('tokenCountrySelect').value;
+
+			if (scope === 'country' && !countryVal) {
+				alert("請選擇指定的國籍！");
+				return;
+			}
+
+			const btn = document.getElementById('btnSubmitGenerateToken');
+			btn.disabled = true;
+			btn.innerText = "產生中...";
+
+			try {
+				const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
+				if (!response.ok) throw new Error('產生失敗，權限不足或伺服器錯誤');
+				
+				const data = await response.json();
+				
+				// 根據選擇決定連結參數
+				let link = `${window.location.origin}${window.location.pathname}?token=${data.token}`;
+				if (scope === 'country' && countryVal) {
+					link += `&country=${encodeURIComponent(countryVal)}`;
+				}
+				
+				closeTokenModal();
+
+				if (navigator.share) {
+					try {
+						await navigator.share({
+							title: 'Console 單次登入連結',
+							text: '1小時內有效，單次使用的 Console 連結 (重新整理即失效)',
+							url: link
+						});
+						return;
+					} catch (err) {
+						if (err.name === 'AbortError') return; 
+					}
+				}
+				
+				await copyTextToClipboardSafe(link);
+				alert(`✅ 已複製單次 Token 連結至剪貼簿！\n\n${link}`);
+
+			} catch (err) {
+				alert(`❌ ${err.message}`);
+			} finally {
+				btn.disabled = false;
+				btn.innerHTML = `<i class="fa-solid fa-link"></i> 產生並複製連結`;
+			}
+		}
 		
 		// ==========================================
 		// 📋 一鍵匯出 Console 當前所有可見數據供 AI 分析
