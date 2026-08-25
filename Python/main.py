@@ -312,7 +312,8 @@ async def push_tags_to_github():
         print("[Tags GitHub Sync 警告]: GITHUB_TOKEN 或 GITHUB_REPO 未設定/為預設值，跳過 Commit")
         return
 
-    file_path = "tags.json"
+    # 👇 若 tags.json 也在 Python 目錄下，請改成 "Python/tags.json"
+    file_path = "Python/tags.json"
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -945,7 +946,8 @@ async def push_record_to_github(date_str: str, file_path: Path):
     if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
         return
 
-    repo_path = f"record/record_{date_str}.json"
+    # 👇 修正這裡：加上 Python/ 前綴
+    repo_path = f"Python/record/record_{date_str}.json"
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{repo_path}"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
