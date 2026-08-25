@@ -1736,7 +1736,6 @@ async def track_feature(request: Request):
         pass
     return {"status": "ok"}
 
-# 💡 增加獨立的 /console.html 路由支援直接開啟
 @app.get("/console.html")
 @app.get("/api/track/stats")
 async def get_feature_stats(
@@ -1749,15 +1748,15 @@ async def get_feature_stats(
     accept_header = request.headers.get("accept", "")
     user_agent = request.headers.get("user-agent", "").lower()
     
-    # 判斷是否為常見爬蟲 (避免 LINE/Discord/FB 預覽抓取時消耗 Token)
+    # 判斷是否為常見爬蟲
     is_crawler = any(bot in user_agent for bot in [
         "bot", "crawler", "spider", "facebookexternalhit", "line-poker", "discordbot", "slackbot"
     ])
     
     is_html = "text/html" in accept_header and format != "json"
+    now = time.time()
 
     # 清理已過期的 Token
-    now = time.time()
     for k in list(one_time_tokens.keys()):
         if one_time_tokens[k]["expires_at"] < now:
             del one_time_tokens[k]
@@ -1770,19 +1769,26 @@ async def get_feature_stats(
         authorized = True
         auth_level = "admin"
     elif token and token in one_time_tokens:
+        token_info = one_time_tokens[token]
+        
+        # 💡 關鍵修復：如果是真人打開 HTML 網頁
         if is_html and not is_crawler:
-            # 只有真人造訪且不是爬蟲時才檢查
-            if one_time_tokens[token].get("html_accessed", False):
-                raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效 (不可重新整理)")
-            one_time_tokens[token]["html_accessed"] = True
-            
+            # 若從未被打開過，標記已啟用，並將過期時間縮短至 5 分鐘 (足夠本機連線與使用)
+            if not token_info.get("is_activated", False):
+                token_info["is_activated"] = True
+                token_info["expires_at"] = min(token_info["expires_at"], now + 300) # 5分鐘後作廢
+            else:
+                # 若已經啟用且超過了寬限期
+                if now > token_info["expires_at"]:
+                    raise HTTPException(status_code=403, detail="此 Token 已過期失效")
+        
         authorized = True
         auth_level = "country" if country else "token"
 
     if not authorized:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 💡 修正：使用 BASE_DIR 尋找檔案，確保 Render 任何工作路徑都能精確找到 console.html
+    # 回傳 HTML 檔案
     if is_html:
         html_file = BASE_DIR / "console.html"
         if html_file.exists():
@@ -2131,14 +2137,13 @@ async def check_sp_replace(request: Request):
     
 @app.post("/api/console/generate_token")
 async def generate_console_token(admin: str = Query(...)):
-    # 只有真正的 Admin 才能產生 Token
     if admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
     
     new_token = uuid.uuid4().hex
     one_time_tokens[new_token] = {
-        "expires_at": time.time() + 3600,  # 1 小時後過期
-        "html_accessed": False             # 記錄是否已經被讀取過網頁 HTML
+        "expires_at": time.time() + 3600,  # 產生後未打開前 1 小時有效
+        "is_activated": False              # 標記是否已被真人點開
     }
     return {"status": "success", "token": new_token}
     
