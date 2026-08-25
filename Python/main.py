@@ -337,7 +337,7 @@ async def push_tags_to_github():
 
             content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
             payload = {
-                "message": "auto: sync tags.json [skip ci]",
+                "message": "auto: sync tags.json [skip render] [skip ci]",  # 👈 加入 [skip render]
                 "content": content_base64,
                 "branch": "main"
             }
@@ -965,7 +965,7 @@ async def push_record_to_github(date_str: str, file_path: Path):
 
             content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
             payload = {
-                "message": f"auto: sync record {date_str} [skip ci]",
+                "message": f"auto: sync record {date_str} [skip render] [skip ci]",  # 👈 加入 [skip render]
                 "content": content_base64,
                 "branch": "main"
             }
