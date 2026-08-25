@@ -1629,29 +1629,6 @@ async def track_feature(request: Request):
                 }
                 action_details_log.appendleft(entry)
             # ================================================================
-            
-            # 處理全域計數與寫入
-            if is_skip or is_merge:
-                # Skip 與 Merge 不累加全域計數，也不新增一筆獨立紀錄
-                pass
-            else:
-                # 視為全新動作，正常計數與新增
-                feature_counter[feature_name] += 1
-                country_counter[country] += 1
-                user_counter[user_id] += 1
-
-                entry = {
-                    "feature": feature_name,
-                    "country": country,
-                    "user": user_id,
-                    "is_vpn": is_vpn,
-                    "real_ip_country": real_ip_country,
-                    "detail": copy.deepcopy(detail),
-                    "_raw_detail": copy.deepcopy(detail), 
-                    "_chained_key": None,
-                    "time": now_utc8
-                }
-                action_details_log.appendleft(entry)
 
             # ================= 新增：日常分檔與觸發存檔 =================
             global current_daily_date, current_daily_logs
