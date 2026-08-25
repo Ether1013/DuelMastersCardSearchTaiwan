@@ -2668,44 +2668,73 @@
 				<button type="button" class="diary-tab-btn" id="btn-diary-tab-author" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">作者資料</button>
 			</div>
 			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
-				<!-- 視圖 1：隱私權聲明 (預設顯示) -->
-				<div id="diary-view-privacy" style="line-height: 1.6; color: #334155;">
-					<h3 style="margin-bottom: 8px; color: #0f172a; font-size: 1.15rem; font-weight: 600;">隱私權聲明與使用條款 (Privacy Policy &amp; Terms)</h3>
-					<p style="margin-bottom: 16px; font-size: 0.95rem;">
-					感謝您使用「DM 卡片搜尋工具」（以下簡稱「本站」）。為了保障您的權益並讓您安心使用本站各項服務，特此說明本站的資訊收集、資料快取、免責聲明及第三方服務連結規範。
-					</p>
+				<!-- 視圖 1：隱私權聲明與資料來源 (優化升級版) -->
+				<div id="diary-view-privacy" style="line-height: 1.6; color: #334155; font-size: 0.92rem;">
+					
+					<!-- 頂部引言卡片 -->
+					<div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px 14px; border-radius: 6px; margin-bottom: 14px;">
+						<div style="font-weight: bold; color: #0f172a; font-size: 1rem; margin-bottom: 4px;">
+							🛡️ 隱私權聲明與服務條款 (Privacy & Terms)
+						</div>
+						<div style="color: #64748b; font-size: 0.85rem; line-height: 1.5;">
+							感謝您使用「DM 卡片搜尋工具」。本站致力於保護使用者隱私，所有功能均以去識別化方式運作，特此說明資料收集、持久化留存與第三方服務規範。
+						</div>
+					</div>
 
-					<h4 style="margin-top: 14px; margin-bottom: 6px; color: #1e293b; font-size: 1rem; font-weight: 600;">一、 資料收集與分析記錄 (Data Collection)</h4>
-					<ul style="margin: 0 0 16px 20px; padding: 0; font-size: 0.92rem;">
-						<li>本站僅會記錄去識別化的操作事件（如：搜尋條件、功能點擊、匯出操作及國家/地區統計），用於改善檢索效能與使用者體驗。</li>
-						<li>本站不會收集、儲存任何可辨識個人身分的敏感資訊（如姓名、電子郵件、精確 GPS 定位等）。</li>
-					</ul>
+					<div style="display: flex; flex-direction: column; gap: 12px;">
 
-					<h4 style="margin-top: 14px; margin-bottom: 6px; color: #1e293b; font-size: 1rem; font-weight: 600;">二、 本地快取技術 (Local Storage &amp; Cache)</h4>
-					<ul style="margin: 0 0 16px 20px; padding: 0; font-size: 0.92rem;">
-						<li>為提供高速檢索體驗並節省您的網路頻寬，本站會將卡牌資料庫、種族清單與基礎字典暫存於您的瀏覽器快取（Cache / LocalStorage）中。</li>
-						<li>您可以隨時透過瀏覽器設定清除網站快取與暫存資料。</li>
-					</ul>
+						<!-- 區塊 1：操作日誌與持久化統計 -->
+						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+								<span style="color: #0284c7;">📊</span> 一、 資料收集與持久化統計
+							</div>
+							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+								<li><b>去識別化統計：</b>本站僅會記錄去中心化的匿名操作事件（如：搜尋條件、功能點擊、國家/地區分佈），用於改善檢索效能與熱門趨勢分析。</li>
+								<li><b>伺服器日誌留存：</b>為確保服務穩定性與跨日趨勢銜接，操作統計會進行<b>近 3 天（約 48 小時）的定期安全備份</b>，伺服器重啟時亦能平滑載入，歷史舊檔逾期自動歸檔。</li>
+								<li><b>絕不收集個資：</b>本站絕不會記錄任何可辨識個人身分的敏感資訊（如姓名、精確 GPS、密碼或非公開私人資料）。</li>
+							</ul>
+						</div>
 
-					<h4 style="margin-top: 14px; margin-bottom: 6px; color: #1e293b; font-size: 1rem; font-weight: 600;">三、 第三方資料來源與外部連結 (Third-Party Sources &amp; Links)</h4>
-					<ul style="margin: 0 0 16px 20px; padding: 0; font-size: 0.92rem;">
-						<li>
-						<strong>外部連結聲明：</strong>為提供更全面的卡牌情報，本站部分功能提供前往第三方網站的超連結（包括但不限於 <strong>Duel Masters Fandom Wiki</strong>、TAKARA TOMY 官方資料庫、Cardrush、遊々亭、露天拍賣等）。
-						</li>
-					<li>
-					<strong>第三方政策適用：</strong>當您點擊並前往上述第三方網站（如 Fandom）時，您將受該網站自身的服務條款、Cookie 政策與隱私權規範約束。本站無法控管第三方網站之內容、追蹤機制或資料收集行為，亦不對其負擔任何法律責任。
-					</li>
-					</ul>
+						<!-- 區塊 2：本地快取技術 -->
+						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+								<span style="color: #10b981;">⚡</span> 二、 瀏覽器本地快取技術 (Cache)
+							</div>
+							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+								<li>為達成<b>毫秒級秒開檢索</b>並節省您的手機網路頻寬，卡牌資料庫、種族清單與基礎字典會暫存於您的瀏覽器本地（LocalStorage / IndexedDB）。</li>
+								<li>當官方資料庫更新時系統會自動比對 ETag 刷新，您亦可隨時透過瀏覽器設定手動清除網站暫存。</li>
+							</ul>
+						</div>
 
-					<h4 style="margin-top: 14px; margin-bottom: 6px; color: #1e293b; font-size: 1rem; font-weight: 600;">四、 智慧財產權與非官方免責 (Disclaimer &amp; Copyright)</h4>
-					<ul style="margin: 0 0 16px 20px; padding: 0; font-size: 0.92rem;">
-						<li>本站為玩家愛好者自製的非官方社群檢索工具，與 TAKARA TOMY、Wizards of the Coast 或 Fandom (Wikia, Inc.) 無任何商業合作、官方贊助或附屬關係。</li>
-						<li>本站引用之卡牌名稱、卡面圖檔及數值資料版權均屬原官方所有；部分英文卡名與國際版效果對照引自 <a href="https://duelmasters.fandom.com/" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">Duel Masters Fandom Wiki</a>，版權歸原貢獻者及 Fandom 平台所有。</li>
-					</ul>
+						<!-- 區塊 3：第三方資料來源與外部連結 -->
+						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+								<span style="color: #f59e0b;">🌐</span> 三、 第三方資料來源與外鏈責任
+							</div>
+							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+								<li><b>外部情報檢索：</b>本站整合了 <strong>Duel Masters Fandom Wiki</strong>、TAKARA TOMY 官方資料庫、Cardrush、遊々亭、露天拍賣等公開資源連結。</li>
+								<li><b>第三方規範適用：</b>當您點擊並造訪上述第三方網站時，將適用該網站自身的服務條款與 Cookie 政策，本站不對第三方平台之內容與行為負擔連帶責任。</li>
+							</ul>
+						</div>
 
-					<p style="margin-top: 16px; margin-bottom: 0; font-size: 0.85rem; color: #64748b; text-align: right;">
-					最後更新日期：2026 年 8 月
-					</p>
+						<!-- 區塊 4：智慧財產權與免責聲明 -->
+						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+								<span style="color: #6366f1;">⚖️</span> 四、 智慧財產權與非官方免責
+							</div>
+							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+								<li>本工具為<b>非營利性質之社群愛好者自製檢索工具</b>，與 TAKARA TOMY、Wizards of the Coast 或 Fandom (Wikia, Inc.) 無官方附屬或商業合作關係。</li>
+								<li>卡牌名稱、卡面圖像與數值著作權均屬原版權方所有；英文對照資料引自 <a href="https://duelmasters.fandom.com/" target="_blank" rel="noopener noreferrer" style="color: #0284c7; text-decoration: underline;">Duel Masters Fandom Wiki</a>。</li>
+							</ul>
+						</div>
+
+					</div>
+
+					<!-- 底部更新時間標註 -->
+					<div style="margin-top: 14px; font-size: 0.8rem; color: #94a3b8; text-align: right; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+						最後修訂日期：2026 年 8 月
+					</div>
+
 				</div>
 
 				<!-- 視圖 2：更新日誌 -->
