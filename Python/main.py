@@ -104,7 +104,10 @@ country_counter = defaultdict(int)  # 👈 新增：全域國籍次數統計
 user_counter = defaultdict(int)     # 👈 新增：全域使用者次數統計
 # 💡 新增：紀錄各靜態資料的「重傳 (fetch)」與「快取 (cache)」次數
 data_transfer_stats = defaultdict(lambda: {"fetch": 0, "cache": 0})
-
+# ================= 補上這兩行：國家專屬的細部分類計數器 =================
+country_feature_counter = defaultdict(lambda: defaultdict(int))
+country_user_counter = defaultdict(lambda: defaultdict(int))
+# ====================================================================
 DATA_NAME_MAP = {
     "carddata": "卡牌資料",
     "setlist": "系列與商品資料",
