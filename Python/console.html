@@ -375,8 +375,6 @@
             if (countryKey) {
                 authParam += `&country=${encodeURIComponent(countryKey)}`; // 👈 兩者並存時一併帶入
             }
-        } else if (countryKey) {
-            authParam = `country=${encodeURIComponent(countryKey)}`;
         }
 
         let featureChart, countryChart, userChart; // 👈 增加 userChart
@@ -1284,7 +1282,11 @@
 				alert('未提供認證參數 (需使用 ADMIN、TOKEN 或 COUNTRY 進入)');
 				return;
 			}
-			
+			// 若沒有 Admin 且沒有 Token，直接擋下
+			if (!adminKey && !tokenKey) {
+				alert('未提供合法認證 (進入 Console 必須具備 ADMIN 權限或有效的 TOKEN 連結)');
+				return;
+			}
 			// Admin 最高權限：顯示所有管理按鈕
 			if (adminKey) {
 				document.getElementById('generateTokenBtn').style.display = 'flex';

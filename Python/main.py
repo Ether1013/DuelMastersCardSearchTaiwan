@@ -1767,9 +1767,6 @@ async def get_feature_stats(
         authorized = True
         # 👇 關鍵判斷：如果帶有 country 參數，權限等級就切換為 country 視角
         auth_level = "country" if country else "token"
-    elif country: # 👈 國家參數驗證
-        authorized = True
-        auth_level = "country"
 
     if not authorized:
         raise HTTPException(status_code=404, detail="Not Found")
@@ -1832,9 +1829,6 @@ async def websocket_console(
             authorized = True
             # 👇 關鍵判斷：如果帶有 country 參數，WebSocket 也給予 country 視角
             auth_level = "country" if country else "token"
-    elif country: 
-        authorized = True
-        auth_level = "country"
 
     if not authorized:
         await websocket.close(code=4008)
