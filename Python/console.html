@@ -445,10 +445,18 @@
 			if (startTimeObj) {
 				const diffMs = Math.max(0, now - startTimeObj);
 				const totalMinutes = Math.floor(diffMs / (1000 * 60));
-				const hours = Math.floor(totalMinutes / 60);
+				
+				const days = Math.floor(totalMinutes / (60 * 24));
+				const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
 				const mins = totalMinutes % 60;
 
-				document.getElementById('durationStr').innerText = `${hours} 小時 ${mins} 分`;
+				let durationText = '';
+				if (days > 0) {
+					durationText += `${days} 天 `;
+				}
+				durationText += `${hours} 小時 ${mins} 分`;
+
+				document.getElementById('durationStr').innerText = durationText;
 			}
 		}
 

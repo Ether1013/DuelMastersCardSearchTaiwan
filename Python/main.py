@@ -574,11 +574,11 @@ def load_all_setlists():
 @app.on_event("startup")
 def load_and_process_caches():
     global carddata_cache, carddata_gzip_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, diary_cache, tags_cache, etag_cache
-    # 加入宣告這三個需要重建的 global
-    global action_details_log, current_daily_logs, current_daily_date 
+    # 加入宣告 last_reset_time
+    global action_details_log, current_daily_logs, current_daily_date, last_reset_time
 
     try:
-        # ================= 新增：回溯 48 小時重建 Console 數據 =================
+        # ================= 回溯 48 小時重建 Console 數據 =================
         now = datetime.now(TZ_UTC8)
         current_daily_date = now.strftime("%Y%m%d")
         
@@ -596,7 +596,6 @@ def load_and_process_caches():
                     with open(fpath, 'r', encoding='utf-8') as f:
                         day_logs = json.load(f)
                         all_records.extend(day_logs)
-                        # 如果是今天的檔案，同步載入到記憶體中準備接續寫入
                         if d == current_daily_date:
                             current_daily_logs = day_logs
                 except Exception as e:
@@ -609,15 +608,14 @@ def load_and_process_caches():
         feature_counter.clear()
         country_counter.clear()
         user_counter.clear()
-        country_feature_counter.clear()  # 👈 清空國家分類
-        country_user_counter.clear()     # 👈 清空國家用戶
+        country_feature_counter.clear()
+        country_user_counter.clear()
         action_details_log.clear()
 
         for entry in all_records:
             feat = entry.get("feature")
             u = entry.get("user", "Unknown")
             
-            # 💡 歷史資料防呆校正
             c = str(entry.get("country", "Unknown")).upper()
             if c == "UNKNOWN" and u != "Unknown" and "-" in u:
                 c = u.split("-")[0].upper()
@@ -626,12 +624,16 @@ def load_and_process_caches():
             country_counter[c] += 1
             user_counter[u] += 1
             
-            # 確保歷史資料灌入國家專屬計數器中
             country_feature_counter[c][feat] += 1
             country_user_counter[c][u] += 1
             
-            # 依序使用 appendleft 塞入
             action_details_log.appendleft(entry)
+
+        # 👇 關鍵修改：將起算時間設為最舊紀錄的時間（若完全沒紀錄則以 2 天前起算）
+        if all_records and all_records[0].get("time"):
+            last_reset_time = all_records[0]["time"]
+        else:
+            last_reset_time = (now - timedelta(days=2)).strftime("%Y-%m-%d 00:00:00")
 
         # ==================================================================
 
