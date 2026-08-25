@@ -1680,95 +1680,113 @@ async def get_feature_stats(
     request: Request, 
     admin: Optional[str] = Query(None, description="admin"),
     token: Optional[str] = Query(None, description="token"),
+    country: Optional[str] = Query(None, description="country"), # 👈 新增參數
     format: Optional[str] = Query(None)
 ):
     accept_header = request.headers.get("accept", "")
     is_html = "text/html" in accept_header and format != "json"
 
-    # 💡 清理已過期的 Token
+    # 清理已過期的 Token
     now = time.time()
     for k in list(one_time_tokens.keys()):
         if one_time_tokens[k]["expires_at"] < now:
             del one_time_tokens[k]
 
-    # 💡 權限驗證邏輯
+    # 權限驗證邏輯
     authorized = False
+    auth_level = ""
     if admin and admin == TRACK_STATS_USER:
         authorized = True
+        auth_level = "admin"
     elif token and token in one_time_tokens:
         if is_html:
-            # 如果是載入網頁 (F5 或首次進入)，檢查是否已被存取過 HTML
             if one_time_tokens[token]["html_accessed"]:
-                raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效 (重新整理即失效)")
+                raise HTTPException(status_code=403, detail="此 Token 已被使用或已失效")
             one_time_tokens[token]["html_accessed"] = True
         authorized = True
+        auth_level = "token"
+    elif country: # 👈 國家參數驗證
+        authorized = True
+        auth_level = "country"
 
     if not authorized:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 若為瀏覽器網頁請求，回傳 console.html
     if is_html:
         if Path("console.html").exists():
             return FileResponse("console.html")
 
-    # 否則回傳原有 JSON 統計資料
-    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
-    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
+    formatted_data_stats = { DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items() }
+    recent_logs = get_clean_recent_logs()
 
-    # 將內部 key 轉換為中文名稱再打包回傳
-    formatted_data_stats = {
-        DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items()
-    }
+    # 依權限回傳資料
+    if auth_level in ["admin", "token"]:
+        sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+        sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+        
+        result = {
+            "total_events": sum(sorted_stats.values()),
+            "stats": sorted_stats,
+            "country_stats": sorted_country_stats,
+            "country_user_counts": get_country_user_counts(),
+            "recent_50_details": recent_logs,
+            "data_transfer_stats": formatted_data_stats,
+            "start_time": last_reset_time
+        }
+    else:
+        c = country.upper()
+        c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
+        c_users = country_user_counter[c]
+        c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
+        
+        result = {
+            "total_events": sum(c_stats.values()),
+            "stats": c_stats,
+            "country_stats": {c: country_counter[c]}, 
+            "country_user_counts": {c: len(c_users)},
+            "recent_50_details": c_logs,
+            "data_transfer_stats": formatted_data_stats,
+            "start_time": last_reset_time
+        }
 
-    result = {
-        "total_events": sum(sorted_stats.values()),
-        "stats": sorted_stats,
-        "country_stats": sorted_country_stats,
-        "country_user_counts": get_country_user_counts(),
-        "recent_50_details": get_clean_recent_logs(),
-        "data_transfer_stats": formatted_data_stats,  # 👈 新增此行
-        "start_time": last_reset_time
-    }
     return PrettyJSONResponse(content=result)
 
 @app.websocket("/ws/console")
 async def websocket_console(
     websocket: WebSocket, 
     admin: Optional[str] = Query(None),
-    token: Optional[str] = Query(None)
+    token: Optional[str] = Query(None),
+    country: Optional[str] = Query(None) # 👈 新增參數
 ):
     now = time.time()
     authorized = False
+    auth_level = ""
+    
     if admin and admin == TRACK_STATS_USER:
         authorized = True
+        auth_level = "admin"
     elif token and token in one_time_tokens:
         if one_time_tokens[token]["expires_at"] >= now:
             authorized = True
+            auth_level = "token"
+    elif country: 
+        authorized = True
+        auth_level = "country"
 
     if not authorized:
         await websocket.close(code=4008)
         return
 
-    await console_manager.connect(websocket)
+    # 連線時帶入權限等級與國家參數
+    c_val = country.upper() if country else None
+    await console_manager.connect(websocket, auth_level, c_val)
     
-    # 建立連線時發送一次當前最新數據
-    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+    # 建立連線時，利用 manager 的廣播機制主動推播一次最新專屬數據
+    await console_manager.broadcast()
 
-    await websocket.send_json({
-        "total_events": sum(sorted_stats.values()),
-        "stats": sorted_stats,
-        "country_stats": sorted_country_stats,
-        "country_user_counts": get_country_user_counts(),
-        "recent_50_details": get_clean_recent_logs(),
-        "start_time": last_reset_time
-    })
-
-    # 💡 加入以下維持連線的無窮迴圈，防止連線被直接關閉
     try:
         while True:
-            await websocket.receive_text()  # 持續監聽/保持連線
+            await websocket.receive_text()
     except WebSocketDisconnect:
         console_manager.disconnect(websocket)
     except Exception:
