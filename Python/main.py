@@ -614,19 +614,24 @@ def load_and_process_caches():
 
         for entry in all_records:
             feat = entry.get("feature")
-            c = entry.get("country", "Unknown")
             u = entry.get("user", "Unknown")
+            
+            # 💡 歷史資料防呆校正
+            c = str(entry.get("country", "Unknown")).upper()
+            if c == "UNKNOWN" and u != "Unknown" and "-" in u:
+                c = u.split("-")[0].upper()
 
             feature_counter[feat] += 1
             country_counter[c] += 1
             user_counter[u] += 1
             
-            # 💡 補上這兩行，將歷史資料灌入國家專屬計數器中
+            # 確保歷史資料灌入國家專屬計數器中
             country_feature_counter[c][feat] += 1
             country_user_counter[c][u] += 1
             
-            # 依序使用 appendleft 塞入，最後最新的會在 index 0
+            # 依序使用 appendleft 塞入
             action_details_log.appendleft(entry)
+
         # ==================================================================
 
         # 以下為你原本載入 JSON 檔案的邏輯，維持不變...
@@ -1579,11 +1584,14 @@ async def track_feature(request: Request):
         feature_name = data.get("feature")
         detail = data.get("detail")
         
-        # =======================================================
-        # 💡 新增：完全信任 Client 端傳來的裝置 ID 與 VPN 校正狀態
-        # =======================================================
         user_id = data.get("user_id", "Unknown")
-        country = data.get("primary_country", "Unknown")
+        
+        # 💡 增強解析：支援多種 key，並且若是 Unknown 則從 user_id 推斷
+        raw_country = data.get("primary_country") or data.get("country") or "Unknown"
+        country = str(raw_country).upper()
+        if country == "UNKNOWN" and user_id != "Unknown" and "-" in user_id:
+            country = user_id.split("-")[0].upper()
+
         is_vpn = data.get("is_vpn", False)
         real_ip_country = data.get("real_ip_country", "Unknown")
 
