@@ -1,0 +1,44 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - 'Python/record/**'    # 👈 當 record 更新時，不觸發 GitHub Pages 發布
+      - 'Python/tags.json'    # 👈 若 tags 更新也不需要重發前端，可一併忽略
+  # 允許從 Actions 頁面手動點擊按鈕觸發發布
+  workflow_dispatch:
+
+# 設定權限以允許部署至 GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一時間只允許一個部署排隊
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 根目錄 (若你的 html/js 靜態檔案都在 root，就填 '.')
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
