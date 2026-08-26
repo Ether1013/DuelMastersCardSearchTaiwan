@@ -595,9 +595,11 @@ def load_and_process_caches():
                 try:
                     with open(fpath, 'r', encoding='utf-8') as f:
                         day_logs = json.load(f)
-                        all_records.extend(day_logs)
-                        if d == current_daily_date:
-                            current_daily_logs = day_logs
+                        if isinstance(day_logs, list):
+                            all_records.extend(day_logs)
+                            # 💡 確保今天如果已經有檔案，記憶體要完整接續，而不是開新空陣列
+                            if d == current_daily_date:
+                                current_daily_logs = day_logs
                 except Exception as e:
                     print(f"載入 {fpath.name} 失敗: {e}")
         
@@ -986,13 +988,42 @@ async def record_debounce_timer(date_str: str):
     await asyncio.sleep(120)  # 停止動作後 2 分鐘才執行 (防抖)
     try:
         file_path = RECORD_DIR / f"record_{date_str}.json"
-        # 1. 寫入本地端 (確保資料落地)
-        def _write():
+        
+        def _safe_write_and_merge():
+            global current_daily_logs
+            existing_logs = []
+            
+            # 1. 如果本地已經有該日期的舊檔案，先安全讀取進來
+            if file_path.exists():
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = json.load(f)
+                        if isinstance(content, list):
+                            existing_logs = content
+                except Exception as e:
+                    print(f"讀取現有 record 檔案失敗: {e}")
+
+            # 2. 將現有檔案與記憶體中的 logs 進行合併，並以 (user + time + feature) 作為唯一 key 去重
+            combined_map = {}
+            for log in existing_logs + current_daily_logs:
+                # 產生一個簡易的唯一識別 key 避免重複
+                unique_key = f"{log.get('user')}_{log.get('time')}_{log.get('feature')}"
+                combined_map[unique_key] = log
+
+            # 3. 轉回陣列並依時間排序
+            merged_logs = list(combined_map.values())
+            merged_logs.sort(key=lambda x: x.get("time", ""))
+
+            # 4. 同步更新記憶體陣列
+            current_daily_logs = merged_logs
+
+            # 5. 安全寫入本地
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(current_daily_logs, f, ensure_ascii=False, indent=2)
-        await asyncio.to_thread(_write)
 
-        # 2. 推送至 GitHub
+        await asyncio.to_thread(_safe_write_and_merge)
+
+        # 6. 推送至 GitHub
         await push_record_to_github(date_str, file_path)
     except Exception as e:
         print(f"[Record Debounce Error]: {e}")
