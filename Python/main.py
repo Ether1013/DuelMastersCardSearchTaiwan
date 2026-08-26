@@ -28,6 +28,10 @@ from datetime import datetime, timezone, timedelta
 import logging
 import random, string
 
+# 👇 新增 Firebase 套件
+import firebase_admin
+from firebase_admin import credentials, firestore
+
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI()
@@ -36,6 +40,19 @@ lz_compressor = LZString()
 
 # 自動讀取同目錄下的 .env 檔案
 load_dotenv()
+
+# 👇 新增 Firebase 初始化邏輯
+firebase_cred_path = os.getenv("FIREBASE_CRED_PATH", "firebase-key.json")
+db = None
+try:
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(firebase_cred_path)
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("✅ Firebase 初始化成功！")
+except Exception as e:
+    print(f"❌ Firebase 初始化失敗，請檢查金鑰設定: {e}")
+    
 LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN", "你的_LINE_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID", "你的_LINE_USER_ID")
 # 新增 user 系統參數 (可從 .env 讀取，預設為 "admin")
@@ -589,19 +606,20 @@ def load_and_process_caches():
         ]
         
         all_records = []
-        for d in dates_to_load:
-            fpath = RECORD_DIR / f"record_{d}.json"
-            if fpath.exists():
+        if db:
+            for d in dates_to_load:
                 try:
-                    with open(fpath, 'r', encoding='utf-8') as f:
-                        day_logs = json.load(f)
+                    doc_ref = db.collection('daily_records').document(d)
+                    doc = doc_ref.get()
+                    if doc.exists:
+                        day_logs = doc.to_dict().get("logs", [])
                         if isinstance(day_logs, list):
                             all_records.extend(day_logs)
-                            # 💡 確保今天如果已經有檔案，記憶體要完整接續，而不是開新空陣列
+                            # 💡 確保今天如果已經有資料，記憶體要完整接續，而不是開新空陣列
                             if d == current_daily_date:
                                 current_daily_logs = day_logs
                 except Exception as e:
-                    print(f"載入 {fpath.name} 失敗: {e}")
+                    print(f"載入 Firebase 紀錄 {d} 失敗: {e}")
         
         # 依時間順序 (舊到新) 排序
         all_records.sort(key=lambda x: x.get("time", ""))
@@ -945,89 +963,32 @@ def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
                         return pics
     return ""
 
-# ================= 新增：Record 日誌本地寫入與 GitHub 同步功能 =================
-async def push_record_to_github(date_str: str, file_path: Path):
-    if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
-        return
-
-    # 👇 修正這裡：加上 Python/ 前綴
-    repo_path = f"Python/record/record_{date_str}.json"
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{repo_path}"
-    headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "FastAPI-AutoCommit"
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            get_resp = await client.get(url, headers=headers)
-            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
-
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content_str = f.read()
-
-            content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
-            payload = {
-                "message": f"auto: sync record {date_str} [skip render] [skip ci]",  # 👈 加入 [skip render]
-                "content": content_base64,
-                "branch": "main"
-            }
-            if sha:
-                payload["sha"] = sha
-
-            put_resp = await client.put(url, headers=headers, json=payload)
-            if put_resp.status_code in [200, 201]:
-                print(f"[Record] 成功 Commit {repo_path} 至 GitHub！")
-            else:
-                print(f"[Record GitHub Sync 失敗]: HTTP {put_resp.status_code}")
-    except Exception as e:
-        print(f"[Record GitHub Sync 網路錯誤]: {e}")
-
+# ================= 新增：Record 日誌 Firebase 寫入功能 =================
 async def record_debounce_timer(date_str: str):
     await asyncio.sleep(120)  # 停止動作後 2 分鐘才執行 (防抖)
     try:
-        file_path = RECORD_DIR / f"record_{date_str}.json"
-        
-        def _safe_write_and_merge():
+        def _safe_write_to_firestore():
             global current_daily_logs
-            existing_logs = []
-            
-            # 1. 如果本地已經有該日期的舊檔案，先安全讀取進來
-            if file_path.exists():
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = json.load(f)
-                        if isinstance(content, list):
-                            existing_logs = content
-                except Exception as e:
-                    print(f"讀取現有 record 檔案失敗: {e}")
+            if db:
+                doc_ref = db.collection('daily_records').document(date_str)
+                # 將今日記憶體內的陣列直接覆寫至 Firebase (效率極高)
+                doc_ref.set({
+                    "logs": current_daily_logs,
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                }, merge=True)
 
-            # 2. 將現有檔案與記憶體中的 logs 進行合併，並以 (user + time + feature) 作為唯一 key 去重
-            combined_map = {}
-            for log in existing_logs + current_daily_logs:
-                # 產生一個簡易的唯一識別 key 避免重複
-                unique_key = f"{log.get('user')}_{log.get('time')}_{log.get('feature')}"
-                combined_map[unique_key] = log
-
-            # 3. 轉回陣列並依時間排序
-            merged_logs = list(combined_map.values())
-            merged_logs.sort(key=lambda x: x.get("time", ""))
-
-            # 4. 同步更新記憶體陣列
-            current_daily_logs = merged_logs
-
-            # 5. 安全寫入本地
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(current_daily_logs, f, ensure_ascii=False, indent=2)
-
-        await asyncio.to_thread(_safe_write_and_merge)
-
-        # 6. 推送至 GitHub
-        await push_record_to_github(date_str, file_path)
+        await asyncio.to_thread(_safe_write_to_firestore)
+        print(f"[Record] 成功同步 {date_str} 日誌至 Firebase！")
     except Exception as e:
         print(f"[Record Debounce Error]: {e}")
-        
+
+def trigger_record_sync(date_str: str):
+    """每次收到新 Log 時呼叫，重置 2 分鐘倒數計時器"""
+    global record_sync_task
+    if record_sync_task:
+        record_sync_task.cancel()
+    record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
+# =========================================================================
 
 def trigger_record_sync(date_str: str):
     """每次收到新 Log 時呼叫，重置 2 分鐘倒數計時器"""
@@ -1971,24 +1932,25 @@ async def force_manual_save(admin: Optional[str] = Query(None)):
         raise HTTPException(status_code=403, detail="Forbidden")
     
     try:
-        # 1. 強制儲存與 Push Tags
+        # 1. 強制儲存與 Push Tags (Tags 仍保留 GitHub 機制)
         def _write_tags():
             with open(TAGS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(tags_cache, f, ensure_ascii=False, indent=2)
         await asyncio.to_thread(_write_tags)
         await push_tags_to_github()
 
-        # 2. 強制儲存與 Push Record
+        # 2. 強制儲存 Record 到 Firebase
         global current_daily_date, current_daily_logs
-        if current_daily_date and current_daily_logs:
-            file_path = RECORD_DIR / f"record_{current_daily_date}.json"
+        if db and current_daily_date and current_daily_logs:
             def _write_records():
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump(current_daily_logs, f, ensure_ascii=False, indent=2)
+                doc_ref = db.collection('daily_records').document(current_daily_date)
+                doc_ref.set({
+                    "logs": current_daily_logs,
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                }, merge=True)
             await asyncio.to_thread(_write_records)
-            await push_record_to_github(current_daily_date, file_path)
 
-        return {"status": "success", "message": "手動存檔成功！已強制推播 Tags 與 Record 至 GitHub。"}
+        return {"status": "success", "message": "手動存檔成功！已強制推播 Tags(GitHub) 與 Record(Firebase)。"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"儲存失敗: {str(e)}")
         
@@ -2069,7 +2031,6 @@ async def get_historical_report(
         raise HTTPException(status_code=400, detail="開始日期不可晚於結束日期")
 
     # 3. 準備存放聚合資料的資料結構
-    # 格式: { 國籍代碼: { "users": Set, "events": 0, "features": {}, "hourly": {} } }
     aggregated = defaultdict(lambda: {
         "users": set(),
         "events": 0,
@@ -2078,54 +2039,30 @@ async def get_historical_report(
     })
 
     # 4. 定義逐日抓取與處理的非同步任務
-    async def fetch_and_process_date(d_str: str, client: httpx.AsyncClient):
-        file_path = RECORD_DIR / f"record_{d_str}.json"
+    async def fetch_and_process_date(d_str: str):
         logs = []
         
-        # [步驟 A] 檢查本地有沒有檔案
-        if file_path.exists():
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    logs = json.load(f)
-            except Exception as e:
-                print(f"讀取本地歷史紀錄 {d_str} 失敗: {e}")
-        else:
-            # [步驟 B] 本地沒有，嘗試從 GitHub 下載
-            if GITHUB_TOKEN and GITHUB_REPO and "你的_" not in GITHUB_TOKEN:
-                repo_path = f"Python/record/record_{d_str}.json"
-                url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{repo_path}"
-                headers = {
-                    "Authorization": f"Bearer {GITHUB_TOKEN}",
-                    "Accept": "application/vnd.github.v3+json",
-                    "User-Agent": "FastAPI"
-                }
-                try:
-                    resp = await client.get(url, headers=headers, timeout=10.0)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        content_b64 = data.get("content", "")
-                        if content_b64:
-                            # 解碼 Base64 並存回本地 (作為未來的快取)
-                            decoded_str = base64.b64decode(content_b64).decode('utf-8')
-                            logs = json.loads(decoded_str)
-                            
-                            # 非同步寫入本地檔案
-                            def _save_to_local():
-                                with open(file_path, 'w', encoding='utf-8') as f:
-                                    f.write(decoded_str)
-                            await asyncio.to_thread(_save_to_local)
-                except Exception as e:
-                    print(f"從 GitHub 抓取歷史紀錄 {d_str} 失敗: {e}")
+        # [步驟 A] 從 Firebase 拉取當日陣列
+        def _fetch_from_firestore():
+            if db:
+                doc = db.collection('daily_records').document(d_str).get()
+                if doc.exists:
+                    return doc.to_dict().get("logs", [])
+            return []
 
-        # [步驟 C] 若有資料，進行聚合運算
+        try:
+            logs = await asyncio.to_thread(_fetch_from_firestore)
+        except Exception as e:
+            print(f"從 Firebase 抓取歷史紀錄 {d_str} 失敗: {e}")
+
+        # [步驟 B] 若有資料，進行聚合運算
         if isinstance(logs, list):
             for log in logs:
                 time_str = log.get("time", "")
                 if not time_str or len(time_str) < 13:
                     continue
                 
-                # 👇 調整：擷取 'HH' (第 11 到 12 字元) 作為小時級距的 Key (例如 '10')
-                # 原始格式為 'YYYY-MM-DD HH:MM:SS'，這樣就會把不同天的同時段加總在一起
+                # 擷取 'HH' 作為小時級距的 Key (例如 '10')
                 hour_key = time_str[11:13]
                 
                 user = log.get("user", "Unknown")
@@ -2148,8 +2085,6 @@ async def get_historical_report(
                 aggregated["ALL"]["events"] += 1
                 aggregated["ALL"]["features"][feat] += 1
                 aggregated["ALL"]["hourly"][hour_key] += 1
-                
-        # 函式結束時 logs 變數被釋放，GC 會自動回收記憶體 (防 OOM)
 
     # 5. 產生日期清單
     current_dt = start_dt
@@ -2158,14 +2093,13 @@ async def get_historical_report(
         date_list.append(current_dt.strftime("%Y%m%d"))
         current_dt += timedelta(days=1)
 
-    # 6. 併發處理所有日期 (使用 Semaphore 限制同時最多發出 5 個請求，避免踩到 GitHub 限制)
-    sem = asyncio.Semaphore(5)
-    async with httpx.AsyncClient() as client:
-        async def bounded_fetch(d):
-            async with sem:
-                await fetch_and_process_date(d, client)
-                
-        await asyncio.gather(*(bounded_fetch(d) for d in date_list))
+    # 6. 併發處理所有日期 (向 Firebase 要資料極快，限制 10 個連線同時發送)
+    sem = asyncio.Semaphore(10)
+    async def bounded_fetch(d):
+        async with sem:
+            await fetch_and_process_date(d)
+            
+    await asyncio.gather(*(bounded_fetch(d) for d in date_list))
 
     # 7. 轉換格式 (將 Set 轉為長度，並對字典進行排序)
     result = {}
@@ -2174,7 +2108,7 @@ async def get_historical_report(
             "total_users": len(data["users"]),
             "total_events": data["events"],
             "features": dict(sorted(data["features"].items(), key=lambda x: x[1], reverse=True)),
-            "hourly": dict(sorted(data["hourly"].items())) # 依時間字串順序排列
+            "hourly": dict(sorted(data["hourly"].items()))
         }
 
     return {"status": "success", "data": result}
