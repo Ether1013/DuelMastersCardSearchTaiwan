@@ -1776,7 +1776,6 @@ async def get_feature_stats(
     request: Request, 
     admin: Optional[str] = Query(None, description="admin"),
     token: Optional[str] = Query(None, description="token"),
-    country: Optional[str] = Query(None, description="country"),
     format: Optional[str] = Query(None)
 ):
     accept_header = request.headers.get("accept", "")
@@ -1799,11 +1798,20 @@ async def get_feature_stats(
     authorized = False
     auth_level = ""
     
+    # 拆解 token
+    real_token = token
+    country = None
+    if token and len(token) == 34:
+        c1 = token[0].upper()
+        c2 = token[-1].upper()
+        country = f"{c1}{c2}"
+        real_token = token[1:-1]
+
     if admin and admin == TRACK_STATS_USER:
         authorized = True
         auth_level = "admin"
-    elif token and token in one_time_tokens:
-        token_info = one_time_tokens[token]
+    elif real_token and real_token in one_time_tokens:
+        token_info = one_time_tokens[real_token]
         
         # 💡 關鍵修復：如果是真人打開 HTML 網頁
         if is_html and not is_crawler:
@@ -1871,18 +1879,26 @@ async def get_feature_stats(
 async def websocket_console(
     websocket: WebSocket, 
     admin: Optional[str] = Query(None),
-    token: Optional[str] = Query(None),
-    country: Optional[str] = Query(None) # 👈 新增參數
+    token: Optional[str] = Query(None)
 ):
     now = time.time()
     authorized = False
     auth_level = ""
     
+    # 拆解 token
+    real_token = token
+    country = None
+    if token and len(token) == 34:
+        c1 = token[0].upper()
+        c2 = token[-1].upper()
+        country = f"{c1}{c2}"
+        real_token = token[1:-1]
+        
     if admin and admin == TRACK_STATS_USER:
         authorized = True
         auth_level = "admin"
-    elif token and token in one_time_tokens:
-        if one_time_tokens[token]["expires_at"] >= now:
+    elif real_token and real_token in one_time_tokens:
+        if one_time_tokens[real_token]["expires_at"] >= now:
             authorized = True
             # 👇 關鍵判斷：如果帶有 country 參數，WebSocket 也給予 country 視角
             auth_level = "country" if country else "token"

@@ -165,7 +165,7 @@
         </div>
 
         <!-- 修改後的排版結構 -->
-		<div class="flex justify-between items-center mb-4 gap-3">
+		<div id="detailFiltersContainer" class="flex justify-between items-center mb-4 gap-3">
 			<!-- 左側容器：兩個下拉選單一上一下排列 -->
 			<div class="flex flex-col gap-2">
 				<!-- 上層：主動作類型下拉選單 -->
@@ -186,7 +186,7 @@
 		</div>
 		
 		<!-- 💡 補回下方遺失的 Table 容器 -->
-		<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+		<div id="detailTableContainer" class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
 			<div id="tableScrollContainer" class="max-h-[600px] overflow-y-auto custom-scrollbar">
 				<table class="w-full text-left border-collapse">
 					<tbody id="logsTableBody" class="divide-y divide-gray-800/80">
@@ -365,15 +365,17 @@
         const urlParams = new URLSearchParams(window.location.search);
         const adminKey = urlParams.get('admin');
         const tokenKey = urlParams.get('token');
-		const countryKey = urlParams.get('country'); // 👈 新增解析國家參數
         
         let authParam = '';
+        let countryKey = null;
+
         if (adminKey) {
             authParam = `admin=${encodeURIComponent(adminKey)}`;
         } else if (tokenKey) {
             authParam = `token=${encodeURIComponent(tokenKey)}`;
-            if (countryKey) {
-                authParam += `&country=${encodeURIComponent(countryKey)}`; // 👈 兩者並存時一併帶入
+            // 判斷 token 內是否含有國碼 (長度為 32 + 2 = 34)
+            if (tokenKey.length === 34) {
+                countryKey = (tokenKey.charAt(0) + tokenKey.charAt(33)).toUpperCase();
             }
         }
 
@@ -1096,12 +1098,16 @@
 				
 				const data = await response.json();
 				
-				// 💡 確保網址使用標準的 pathname
-				const basePath = window.location.pathname.endsWith('.html') ? window.location.pathname : '/api/track/stats';
-				let link = `${window.location.origin}${basePath}?token=${data.token}`;
+				let tokenStr = data.token;
 				if (scope === 'country' && countryVal) {
-					link += `&country=${encodeURIComponent(countryVal)}`;
+					// 國碼拆開成第一碼跟第二碼、並以小寫拼接在token的頭與尾
+					const c1 = countryVal.charAt(0).toLowerCase();
+					const c2 = countryVal.charAt(1).toLowerCase();
+					tokenStr = `${c1}${tokenStr}${c2}`;
 				}
+				
+				const basePath = window.location.pathname.endsWith('.html') ? window.location.pathname : '/api/track/stats';
+				let link = `${window.location.origin}${basePath}?token=${tokenStr}`;
 				
 				closeTokenModal();
 
@@ -1306,6 +1312,7 @@
 			}
 
 			// 若是國家特定視角，調整畫面顯示
+			// 若是國家特定視角，調整畫面顯示
 			if (countryKey) {
 				// 修改左上角標題，明確標示這是一個受限視角
 				const titleEl = document.querySelector('h1');
@@ -1317,9 +1324,15 @@
 				if (countryCanvas) countryCanvas.closest('.bg-gray-900').style.display = 'none';
 				if (userCanvas) userCanvas.closest('.bg-gray-900').style.display = 'none';
 
-				// 👇 新增：隱藏資料傳輸與快取狀態區塊
+				// 隱藏資料傳輸與快取狀態區塊
 				const dataTransferContainer = document.getElementById('dataTransferContainer');
 				if (dataTransferContainer) dataTransferContainer.style.display = 'none';
+                
+                // 👇 當token帶有國碼時，不顯示下面的detail區(含對應的下拉式選單)
+                const detailFilters = document.getElementById('detailFiltersContainer');
+                if (detailFilters) detailFilters.style.display = 'none';
+                const detailTable = document.getElementById('detailTableContainer');
+                if (detailTable) detailTable.style.display = 'none';
 			}
 
 			initCharts();
