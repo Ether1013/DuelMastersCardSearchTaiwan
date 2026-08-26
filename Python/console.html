@@ -498,19 +498,20 @@
 		
 		// 1. 建立固定的國家顏色 Map，常見國家固定色，其餘動態指派
 		const COUNTRY_COLOR_MAP = {
-			'TW': '#38bdf8', // 台灣 (天空藍)[cite: 1, 2]
-			'HK': '#fbbf24', // 香港 (琥珀黃)[cite: 1, 2]
-			'MO': '#34d399', // 澳門 (翡翠綠)
-			'CN': '#f87171', // 中國 (珊瑚紅)[cite: 2]
-			'JP': '#f472b6', // 日本 (櫻花粉)[cite: 1, 2]
-			'KR': '#c084fc', // 韓國 (紫羅蘭)[cite: 2]
-			'SG': '#2dd4bf', // 新加坡 (湖水綠)
-			'MY': '#fb923c', // 馬來西亞 (橙色)
-			'US': '#60a5fa', // 美國 (寶藍)[cite: 2]
-			'GB': '#a78bfa', // 英國 (薰衣草紫)
-			'UK': '#a78bfa', // 英國 (備用代碼)
-			'FR': '#818cf8', // 法國 (靛藍)
-			'Unknown': '#9ca3af' // 未知 (灰色)[cite: 1, 2]
+			'TW': '#38bdf8',
+			'HK': '#fbbf24',
+			'MO': '#34d399',
+			'CN': '#f87171',
+			'JP': '#f472b6',
+			'KR': '#c084fc',
+			'SG': '#2dd4bf',
+			'MY': '#fb923c',
+			'US': '#60a5fa',
+			'GB': '#a78bfa',
+			'UK': '#a78bfa',
+			'FR': '#818cf8',
+			'其他 (Other)': '#64748b', // 👈 新增「其他」專用顏色
+			'Unknown': '#9ca3af'
 		};
 		
 		// 根據國家字串名稱 (如 'DE', 'AU') 自動計算出固定的 HSL 顏色
@@ -521,6 +522,56 @@
 			}
 			const h = Math.abs(hash) % 360; // 360度色相
 			return `hsl(${h}, 70%, 60%)`;   // 固定飽和度與亮度，確保顏色好看
+		}
+		
+		// 聚合低用量國籍：過濾 Unknown、取前 Top N，其餘封裝為「其他」並記錄細節
+		// 純動態聚合：不預設任何國籍名單，純從後端回傳數據提煉
+		function processCountryDistribution(rawStats, topN = 5, unit = '次') {
+			if (!rawStats || typeof rawStats !== 'object') {
+				return { labels: [], data: [], otherDetails: [], allValidCountries: [] };
+			}
+
+			// 1. 純過濾 Unknown / 無效值，其餘全世界所有國碼一律保留
+			const validEntries = Object.entries(rawStats)
+				.filter(([country, count]) => {
+					if (!country) return false;
+					const c = String(country).trim().toUpperCase();
+					return c !== 'UNKNOWN' && c !== 'XX' && c !== 'NULL' && count > 0;
+				})
+				.sort((a, b) => b[1] - a[1]);
+
+			// 當前所有有效國家的代碼清單 (如 ['TW', 'JP', 'VN', 'DE', ...])
+			const allValidCountries = validEntries.map(([c]) => c);
+
+			let labels = [];
+			let data = [];
+			let otherDetails = [];
+
+			if (validEntries.length > topN) {
+				const topEntries = validEntries.slice(0, topN);
+				const otherEntries = validEntries.slice(topN);
+
+				topEntries.forEach(([country, val]) => {
+					labels.push(country);
+					data.push(val);
+				});
+
+				let otherSum = 0;
+				otherEntries.forEach(([country, val]) => {
+					otherSum += val;
+					otherDetails.push(`${country}: ${val} ${unit}`);
+				});
+
+				if (otherSum > 0) {
+					labels.push('其他 (Other)');
+					data.push(otherSum);
+				}
+			} else {
+				labels = validEntries.map(e => e[0]);
+				data = validEntries.map(e => e[1]);
+			}
+
+			return { labels, data, otherDetails, allValidCountries };
 		}
 
 		function getCountryColors(countryLabels) {
@@ -776,22 +827,34 @@
             const ctxCountry = document.getElementById('countryChart').getContext('2d');
             countryChart = new Chart(ctxCountry, {
                 type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#34d399', '#fbbf24'] }] },
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { 
                         legend: { position: 'bottom', labels: { color: '#9ca3af' } },
-                        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 12 }, formatter: (value) => value > 0 ? value + ' 次' : '', anchor: 'center', align: 'center' }
+                        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 12 }, formatter: (value) => value > 0 ? value + ' 次' : '', anchor: 'center', align: 'center' },
+                        tooltip: {
+							callbacks: {
+								label: function(context) {
+									const label = context.label || '';
+									const val = context.raw;
+									if (label.includes('其他') || label.includes('Other')) {
+										const details = context.chart.otherDetails || [];
+										if (details.length === 0) return `總計: ${val}`;
+										return [`總計: ${val}`, '──────────────', ...details];
+									}
+									return `${label}: ${val}`;
+								}
+							}
+						}
                     }
                 }
             });
 
-            // 👈 新增：使用者圓餅圖初始化
-            // 使用者人數圓餅圖初始化
             const ctxUser = document.getElementById('userChart').getContext('2d');
             userChart = new Chart(ctxUser, {
                 type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#c084fc', '#f472b6', '#38bdf8', '#34d399', '#fbbf24', '#818cf8', '#a7f3d0'] }] },
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { 
@@ -799,10 +862,24 @@
                         datalabels: { 
                             color: '#ffffff', 
                             font: { weight: 'bold', size: 11 }, 
-                            formatter: (value) => value > 0 ? value + ' 人' : '',  // 👈 單位改為 "人"
+                            formatter: (value) => value > 0 ? value + ' 人' : '',
                             anchor: 'center', 
                             align: 'center' 
-                        }
+                        },
+                        tooltip: {
+							callbacks: {
+								label: function(context) {
+									const label = context.label || '';
+									const val = context.raw;
+									if (label.includes('其他') || label.includes('Other')) {
+										const details = context.chart.otherDetails || [];
+										if (details.length === 0) return `總計: ${val}`;
+										return [`總計: ${val}`, '──────────────', ...details];
+									}
+									return `${label}: ${val}`;
+								}
+							}
+						}
                     }
                 }
             });
@@ -873,21 +950,26 @@
 					featureChart.update();
 				}
 
-				// 2. 圓餅圖 1 (Country Distribution) - 保留帶有 getCountryColors 的這組即可
+				// 2. 圓餅圖 1 (Country Distribution)
 				if (countryChart) {
-					const labels = Object.keys(countryStats);
-					countryChart.data.labels = labels;
-					countryChart.data.datasets[0].data = Object.values(countryStats);
-					countryChart.data.datasets[0].backgroundColor = getCountryColors(labels);
+					const result = processCountryDistribution(countryStats, 5, '次');
+					countryChart.otherDetails = result.otherDetails;
+					countryChart.data.labels = result.labels;
+					countryChart.data.datasets[0].data = result.data;
+					countryChart.data.datasets[0].backgroundColor = getCountryColors(result.labels);
 					countryChart.update();
+
+					// 💡 將後端即時出現過的「所有真實國家」存入全域變數
+					window.allDynamicCountries = result.allValidCountries;
 				}
 
 				// 3. 圓餅圖 2 (Users per Country)
 				if (userChart) {
-					const labels = Object.keys(countryUserCounts);
-					userChart.data.labels = labels;
-					userChart.data.datasets[0].data = Object.values(countryUserCounts);
-					userChart.data.datasets[0].backgroundColor = getCountryColors(labels);
+					const result = processCountryDistribution(countryUserCounts, 5, '人');
+					userChart.otherDetails = result.otherDetails;
+					userChart.data.labels = result.labels;
+					userChart.data.datasets[0].data = result.data;
+					userChart.data.datasets[0].backgroundColor = getCountryColors(result.labels);
 					userChart.update();
 				}
 
@@ -1151,27 +1233,29 @@
 			{ code: 'GB', name: 'GB (英國)' }
 		];
 
-		// 動態組合下拉選單選項 (優先抓取當前已上線/記錄過的國家)
+		// 100% 純動態組合下拉選單 (無任何寫死陣列)
 		function populateCountryOptions() {
 			const selectEl = document.getElementById('tokenCountrySelect');
 			if (!selectEl) return;
 
-			// 1. 從目前的 countryChart (或 currentLogs) 中收集現有的所有國家
-			const activeCountries = countryChart ? countryChart.data.labels : [];
+			// 💡 直接讀取由後端動態數據萃取出的所有國家名單
+			const activeCountries = window.allDynamicCountries || [];
 			
-			// 2. 合併預設清單，確保不重複
-			const countrySet = new Set(activeCountries);
-			DEFAULT_COUNTRY_LIST.forEach(c => countrySet.add(c.code));
-
 			selectEl.innerHTML = '';
-			countrySet.forEach(code => {
-				if (!code || code === 'Unknown') return;
+
+			if (activeCountries.length === 0) {
+				const option = document.createElement('option');
+				option.value = '';
+				option.innerText = '目前尚無任何國籍紀錄';
+				selectEl.appendChild(option);
+				return;
+			}
+
+			// 按照字母 A-Z 排序呈現
+			activeCountries.sort().forEach(code => {
 				const option = document.createElement('option');
 				option.value = code;
-				
-				// 若有對應的中文名稱就顯示，否則顯示代碼
-				const matched = DEFAULT_COUNTRY_LIST.find(c => c.code === code);
-				option.innerText = matched ? matched.name : `${code} (其他)`;
+				option.innerText = code; // 純動態顯示國碼，不依賴中文翻譯表
 				selectEl.appendChild(option);
 			});
 		}
