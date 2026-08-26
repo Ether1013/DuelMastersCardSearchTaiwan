@@ -743,7 +743,6 @@
 								label: function(context) {
 									const label = context.label || '';
 									const val = context.raw;
-									// 如果移到「其他 (Other)」，顯示包含的明細內容
 									if (label === 'Other' || label.startsWith('其他')) {
 										const details = featureChart.otherDetails || [];
 										return [`總計: ${val} 次`, '----------------', ...details];
@@ -755,7 +754,21 @@
 					},
 					scales: {
 						x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
-						y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' }, beginAtZero: true }
+						y: { 
+							// 👇 關鍵修改：將 type 改為 'logarithmic' (對數刻度)
+							type: 'logarithmic',
+							ticks: { 
+								color: '#9ca3af',
+								// 👇 自訂標籤顯示：因為對數會產生很多密集刻度，我們只顯示 1, 10, 100, 1000 等量級的數字讓畫面保持乾淨
+								callback: function(value, index, ticks) {
+									if (value === 0 || value === 1 || value === 10 || value === 100 || value === 1000 || value === 10000 || value === 100000) {
+										return value;
+									}
+									return null; // 隱藏零碎的過渡刻度數字
+								}
+							}, 
+							grid: { color: '#1f2937' }
+						}
 					}
 				}
 			});
@@ -1506,10 +1519,30 @@
 				type: 'bar',
 				data: { labels: fLabels, datasets: [{ label: '次數', data: fData, backgroundColor: '#c084fc', borderRadius: 4 }] },
 				options: {
-					indexAxis: 'y', // 改為橫向長條圖，文字才不會擠在一起
+					indexAxis: 'y', // 橫向長條圖
 					responsive: true, maintainAspectRatio: false,
 					plugins: { legend: { display: false }, datalabels: { display: false } },
-					scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#9ca3af', font: { size: 10 } }, grid: { display: false } } }
+					scales: { 
+						x: { 
+							// 👇 數值在 X 軸，所以這裡設定為對數刻度
+							type: 'logarithmic',
+							ticks: { 
+								color: '#9ca3af',
+								// 過濾顯示的刻度，保持畫面乾淨
+								callback: function(value, index, ticks) {
+									if (value === 0 || value === 1 || value === 10 || value === 100 || value === 1000 || value === 10000 || value === 100000) {
+										return value;
+									}
+									return null;
+								}
+							}, 
+							grid: { color: '#1f2937' } 
+						}, 
+						y: { 
+							ticks: { color: '#9ca3af', font: { size: 10 } }, 
+							grid: { display: false } 
+						} 
+					}
 				}
 			});
 
