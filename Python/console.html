@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 👇 新增 html2canvas，用於將報表轉為圖片 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Chart.js DataLabels Plugin CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <!-- FontAwesome CDN -->
@@ -50,7 +52,7 @@
                     </div>
                 </div>
                 
-                <!-- 第二行：另外三個按鍵 (放在下一行) -->
+                <!-- 第二行：一般操作按鍵 -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
                     <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate"></i> Refresh
@@ -64,21 +66,26 @@
                         <i class="fa-solid fa-key"></i> 產生Token
                     </button>
 					
-					<!-- 一鍵匯出按鈕 (所有角色皆可使用，或依需要加 style="display: none;" 僅限 Admin) -->
+					<!-- 一鍵匯出按鈕 -->
 					<button onclick="exportDashboardDataForAI()" class="whitespace-nowrap px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white text-xs rounded-lg transition border border-purple-500/30 flex items-center gap-1.5 shadow-lg">
 						<i class="fa-solid fa-file-export"></i> 匯出AI分析JSON
 					</button>
                 </div>
 				
-				<!-- 新增：廣播按鈕 (預設隱藏，僅 Admin 顯示) -->
-				<button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
-					<i class="fa-solid fa-bullhorn"></i> 廣播
-				</button>
-				
-				<!-- 👇 新增：手動存檔按鈕 (預設隱藏，僅 Admin 顯示) -->
-				<button id="manualSaveBtn" onclick="forceManualSave()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs rounded-lg transition border border-blue-500/30 flex items-center gap-1.5 shadow-lg">
-					<i class="fa-solid fa-cloud-arrow-up"></i> 手動存檔
-				</button>
+				<!-- 第三行：Admin 專屬進階功能 (橫向排開、靠右對齊) -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+                    <button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-bullhorn"></i> 廣播
+                    </button>
+                    
+                    <button id="historyReportBtn" onclick="openHistoryModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white text-xs rounded-lg transition border border-cyan-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-chart-pie"></i> 歷史報表
+                    </button>
+                    
+                    <button id="manualSaveBtn" onclick="forceManualSave()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs rounded-lg transition border border-blue-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> 手動存檔
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -356,6 +363,105 @@
 				<button id="btnSubmitBroadcast" onclick="submitBroadcastModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow-lg flex items-center gap-1.5">
 					<i class="fa-solid fa-paper-plane"></i> 確認送出
 				</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 👇 新增：歷史報表 Modal -->
+	<div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-2 sm:p-4">
+		<div class="bg-gray-950 border border-gray-700 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+			<!-- Modal Header -->
+			<div class="flex items-center justify-between border-b border-gray-800 p-4 bg-gray-900/50">
+				<div class="flex items-center gap-2 text-cyan-400">
+					<i class="fa-solid fa-chart-line text-xl"></i>
+					<h3 class="text-lg font-bold text-gray-100">歷史統計報表</h3>
+				</div>
+				<button onclick="closeHistoryModal()" class="text-gray-400 hover:text-white text-xl p-1">✕</button>
+			</div>
+
+			<!-- Modal Body (可滾動) -->
+			<div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+				
+				<!-- 控制面板 -->
+				<div class="flex flex-col sm:flex-row gap-4 items-end bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-inner">
+					<div class="flex-1 flex flex-col sm:flex-row gap-3 w-full">
+						<div class="flex flex-col gap-1 w-full sm:w-auto">
+							<label class="text-xs text-gray-400 font-semibold">開始日期</label>
+							<input type="date" id="historyStartDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5 outline-none focus:border-cyan-500">
+						</div>
+						<div class="flex flex-col gap-1 w-full sm:w-auto">
+							<label class="text-xs text-gray-400 font-semibold">結束日期</label>
+							<input type="date" id="historyEndDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5 outline-none focus:border-cyan-500">
+						</div>
+					</div>
+					<div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+						<button id="btnGenerateHistory" onclick="fetchHistoricalReport()" class="flex-1 sm:flex-none px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition shadow flex items-center justify-center gap-2">
+							<i class="fa-solid fa-magnifying-glass"></i> 產生報表
+						</button>
+					</div>
+				</div>
+
+				<!-- 報表呈現區塊 (這是截圖的範圍) -->
+				<div id="reportCaptureArea" class="bg-gray-950 border border-gray-800 p-4 sm:p-6 rounded-xl hidden flex-col gap-6 relative">
+					
+					<!-- 截圖浮水印/報表抬頭 (僅在此區塊顯示) -->
+					<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-3 gap-3">
+						<div>
+							<h2 class="text-xl font-bold text-gray-100">API 流量歷史分析</h2>
+							<p id="reportDateRangeText" class="text-xs text-gray-400 font-mono mt-1">2024/05/27 ~ 2024/06/27</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="text-xs text-gray-400 font-semibold">資料視角：</span>
+							<select id="historyCountrySelect" onchange="renderHistoryCharts()" class="bg-gray-800 text-sm font-bold text-cyan-400 border border-gray-700 rounded-lg px-3 py-1 outline-none cursor-pointer">
+								<option value="ALL">🌍 全世界 (ALL)</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- 數字總覽卡片 -->
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+						<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+							<p class="text-xs text-gray-500 uppercase tracking-wide">總不重複使用者</p>
+							<h4 id="repTotalUsers" class="text-2xl font-black text-sky-400 mt-1">0</h4>
+						</div>
+						<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+							<p class="text-xs text-gray-500 uppercase tracking-wide">總事件觸發數</p>
+							<h4 id="repTotalEvents" class="text-2xl font-black text-indigo-400 mt-1">0</h4>
+						</div>
+					</div>
+
+					<!-- 圖表區 -->
+					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+						<!-- 動作排行榜 (長條圖) -->
+						<div class="lg:col-span-1 bg-gray-900 border border-gray-800 p-4 rounded-lg">
+							<h4 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+								<i class="fa-solid fa-list-ol text-purple-400"></i> 功能使用排行
+							</h4>
+							<div class="h-64 relative">
+								<canvas id="historyFeatureChart"></canvas>
+							</div>
+						</div>
+
+						<!-- 趨勢圖 (折線圖) -->
+						<div class="lg:col-span-2 bg-gray-900 border border-gray-800 p-4 rounded-lg">
+							<h4 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+								<i class="fa-solid fa-wave-square text-emerald-400"></i> 每小時流量趨勢
+							</h4>
+							<div class="h-64 relative">
+								<canvas id="historyHourlyChart"></canvas>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+				<!-- 截圖區塊結束 -->
+
+				<!-- 匯出按鈕 (放在截圖範圍外面) -->
+				<div id="exportBtnContainer" class="flex justify-end hidden">
+					<button id="exportImgBtn" onclick="exportHistoryImage()" class="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-sm font-medium rounded-lg transition border border-emerald-500/30 flex items-center gap-2 shadow-lg">
+						<i class="fa-solid fa-camera-retro"></i> 輸出報表圖片
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -1271,6 +1377,241 @@
 		function closeResetModal() {
 			document.getElementById('resetModal').classList.add('hidden');
 		}
+		
+		// ==========================================
+		// 📊 歷史報表功能 (Admin 專用)
+		// ==========================================
+		let historyReportData = null; // 存放後端大包的 JSON，供前端瞬間切換
+		let hFeatureChartInstance = null;
+		let hHourlyChartInstance = null;
+
+		function openHistoryModal() {
+			document.getElementById('historyModal').classList.remove('hidden');
+			
+			// 預設日期設定：過去 30 天 ~ 今天
+			const endDateInput = document.getElementById('historyEndDate');
+			const startDateInput = document.getElementById('historyStartDate');
+			
+			const today = new Date();
+			const thirtyDaysAgo = new Date();
+			thirtyDaysAgo.setDate(today.getDate() - 30);
+			
+			// 轉成 YYYY-MM-DD 供 input type="date" 使用
+			const formatForInput = (d) => {
+				const pad = (n) => String(n).padStart(2, '0');
+				return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+			};
+			
+			if (!endDateInput.value) endDateInput.value = formatForInput(today);
+			if (!startDateInput.value) startDateInput.value = formatForInput(thirtyDaysAgo);
+		}
+
+		function closeHistoryModal() {
+			document.getElementById('historyModal').classList.add('hidden');
+		}
+
+		async function fetchHistoricalReport() {
+			const startDateRaw = document.getElementById('historyStartDate').value;
+			const endDateRaw = document.getElementById('historyEndDate').value;
+			
+			if (!startDateRaw || !endDateRaw) {
+				alert("請選擇完整的起訖日期！");
+				return;
+			}
+
+			// 轉換為 YYYYMMDD 給 API
+			const startStr = startDateRaw.replace(/-/g, '');
+			const endStr = endDateRaw.replace(/-/g, '');
+			
+			const btn = document.getElementById('btnGenerateHistory');
+			btn.disabled = true;
+			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 讀取與運算中...`;
+
+			try {
+				const response = await fetch(`/api/console/historical_report?admin=${encodeURIComponent(adminKey)}&start_date=${startStr}&end_date=${endStr}`);
+				const result = await response.json();
+				
+				if (!response.ok) throw new Error(result.detail || '取得報表失敗');
+				
+				historyReportData = result.data;
+				
+				// 顯示區塊
+				document.getElementById('reportCaptureArea').classList.remove('hidden');
+				document.getElementById('reportCaptureArea').classList.add('flex');
+				document.getElementById('exportBtnContainer').classList.remove('hidden');
+				
+				// 更新標題文字
+				document.getElementById('reportDateRangeText').innerText = `${startDateRaw.replace(/-/g, '/')} ~ ${endDateRaw.replace(/-/g, '/')}`;
+				
+				// 動態更新國籍下拉選單
+				const selectEl = document.getElementById('historyCountrySelect');
+				selectEl.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>'; // 預設保留 ALL
+				
+				// 篩選出除了 ALL 以外，資料量 > 0 的國家
+				const countryKeys = Object.keys(historyReportData).filter(k => k !== 'ALL' && historyReportData[k].total_events > 0);
+				// 依照事件總數大到小排序國家
+				countryKeys.sort((a, b) => historyReportData[b].total_events - historyReportData[a].total_events);
+				
+				countryKeys.forEach(c => {
+					const opt = document.createElement('option');
+					opt.value = c;
+					opt.innerText = `${c} (共 ${historyReportData[c].total_events} 次)`;
+					selectEl.appendChild(opt);
+				});
+
+				// 切換至預設的 ALL 並渲染圖表
+				selectEl.value = 'ALL';
+				renderHistoryCharts();
+
+			} catch (err) {
+				alert(`❌ 報表產生失敗：${err.message}`);
+			} finally {
+				btn.disabled = false;
+				btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> 產生報表`;
+			}
+		}
+
+		function renderHistoryCharts() {
+			if (!historyReportData) return;
+			
+			const selectedCountry = document.getElementById('historyCountrySelect').value;
+			const targetData = historyReportData[selectedCountry];
+			
+			if (!targetData) return;
+
+			// 1. 更新數字卡片
+			document.getElementById('repTotalUsers').innerText = targetData.total_users;
+			document.getElementById('repTotalEvents').innerText = targetData.total_events;
+
+			// 2. 準備排行榜資料 (取前 10 名)
+			const featureEntries = Object.entries(targetData.features).slice(0, 10);
+			const fLabels = featureEntries.map(e => e[0]);
+			const fData = featureEntries.map(e => e[1]);
+
+			// 3. 準備每小時趨勢資料 (合併不同天的相同時段，並確保 24 小時全顯示)
+			const hLabels = [];
+			const hData = [];
+			
+			// 產生 00 到 23 的固定 X 軸，若該時段無資料則補 0
+			for (let i = 0; i < 24; i++) {
+				const hourStr = String(i).padStart(2, '0');
+				hLabels.push(`${hourStr}:00`);
+				hData.push(targetData.hourly[hourStr] || 0);
+			}
+
+			// 4. 繪製 Feature 圓餅圖/長條圖
+			const ctxF = document.getElementById('historyFeatureChart').getContext('2d');
+			if (hFeatureChartInstance) hFeatureChartInstance.destroy();
+			hFeatureChartInstance = new Chart(ctxF, {
+				type: 'bar',
+				data: { labels: fLabels, datasets: [{ label: '次數', data: fData, backgroundColor: '#c084fc', borderRadius: 4 }] },
+				options: {
+					indexAxis: 'y', // 改為橫向長條圖，文字才不會擠在一起
+					responsive: true, maintainAspectRatio: false,
+					plugins: { legend: { display: false }, datalabels: { display: false } },
+					scales: { x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } }, y: { ticks: { color: '#9ca3af', font: { size: 10 } }, grid: { display: false } } }
+				}
+			});
+
+			// 5. 繪製 Hourly 折線圖
+			const ctxH = document.getElementById('historyHourlyChart').getContext('2d');
+			if (hHourlyChartInstance) hHourlyChartInstance.destroy();
+			hHourlyChartInstance = new Chart(ctxH, {
+				type: 'line',
+				data: {
+					labels: hLabels,
+					datasets: [{
+						label: '觸發次數', data: hData,
+						borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)',
+						borderWidth: 2, pointRadius: 2, fill: true, tension: 0.3
+					}]
+				},
+				options: {
+					responsive: true, maintainAspectRatio: false,
+					plugins: { legend: { display: false }, datalabels: { display: false } },
+					// 👇 調整：X軸標籤角度改平 (maxRotation: 0)，因為現在只有 24 個固定的短標籤
+					scales: { x: { ticks: { color: '#9ca3af', maxRotation: 0, minRotation: 0, font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } } }
+				}
+			});
+		}
+
+		async function exportHistoryImage() {
+			const captureArea = document.getElementById('reportCaptureArea');
+			const scrollParent = captureArea.parentElement; // 具有 overflow-y-auto 的容器
+			const modalContainer = scrollParent.parentElement; // 具有 max-h-[95vh] 的主容器
+			
+			const btn = document.getElementById('exportImgBtn');
+			const originalHtml = btn.innerHTML;
+			
+			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 處理圖片中...`;
+			btn.disabled = true;
+
+			// 1. 紀錄原始樣式與捲軸位置
+			const origScrollTop = scrollParent.scrollTop;
+			const origOverflow = scrollParent.style.overflow;
+			const origModalMaxHeight = modalContainer.style.maxHeight;
+			
+			// 2. 暫時解除高度與捲軸限制，讓 DOM 完整展開不被遮蔽
+			scrollParent.style.overflow = 'visible';
+			modalContainer.style.maxHeight = 'none';
+
+			try {
+				// 使用 html2canvas 產生 Canvas
+				const canvas = await html2canvas(captureArea, {
+					backgroundColor: '#030712', // Tailwind gray-950
+					scale: window.devicePixelRatio > 1 ? 2 : 1, // 高解析度
+					useCORS: true,
+					scrollY: 0 // 避免滾動造成的頂部空白
+				});
+
+				canvas.toBlob(async (blob) => {
+					if (!blob) throw new Error("Canvas 轉換 Blob 失敗");
+					
+					const dateStr = document.getElementById('historyStartDate').value.replace(/-/g, '');
+					const fileName = `API_Report_${dateStr}.png`;
+					const file = new File([blob], fileName, { type: 'image/png' });
+
+					// 判斷是否為行動裝置 (簡易 User-Agent 偵測)
+					const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+					// 若為「行動裝置」且支援 Web Share API，才走系統分享選單
+					if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+						try {
+							await navigator.share({
+								title: 'API Track Historical Report',
+								files: [file]
+							});
+							return; // 分享成功即中斷
+						} catch (shareErr) {
+							console.log("使用者取消分享，或環境限制", shareErr);
+							// 若分享失敗或取消，繼續走下方的下載 Fallback
+						}
+					}
+
+					// 桌機版 / 或行動版取消分享：一律觸發自動下載
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = fileName;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+					
+				}, 'image/png');
+
+			} catch (err) {
+				alert(`❌ 匯出失敗：${err.message}`);
+			} finally {
+				// 3. 恢復原始樣式與捲軸位置
+				scrollParent.style.overflow = origOverflow;
+				modalContainer.style.maxHeight = origModalMaxHeight;
+				scrollParent.scrollTop = origScrollTop;
+				
+				btn.innerHTML = originalHtml;
+				btn.disabled = false;
+			}
+		}
 
 		// 發送重置請求至後端 API
 		async function confirmResetStats() {
@@ -1309,6 +1650,8 @@
 				document.getElementById('broadcastBtn').style.display = 'flex';
 				// 👇 新增：解開手動存檔按鈕的隱藏
 				document.getElementById('manualSaveBtn').style.display = 'flex';
+				// 👇 解開歷史報表按鈕的隱藏
+				document.getElementById('historyReportBtn').style.display = 'flex';
 			}
 
 			// 若是國家特定視角，調整畫面顯示

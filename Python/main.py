@@ -2046,7 +2046,140 @@ def find_node(node_list, target_id):
             if found: return found
     return None
 
+@app.get("/api/console/historical_report")
+async def get_historical_report(
+    admin: str = Query(...),
+    start_date: str = Query(..., description="開始日期 YYYYMMDD"),
+    end_date: str = Query(..., description="結束日期 YYYYMMDD")
+):
+    # 1. 權限驗證
+    if admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
+    # 2. 解析日期與範圍限制 (最多允許查詢 60 天，防 OOM)
+    try:
+        start_dt = datetime.strptime(start_date, "%Y%m%d")
+        end_dt = datetime.strptime(end_date, "%Y%m%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="日期格式錯誤，請使用 YYYYMMDD")
+
+    if (end_dt - start_dt).days > 60:
+        raise HTTPException(status_code=400, detail="查詢區間不可超過 60 天")
+    if start_dt > end_dt:
+        raise HTTPException(status_code=400, detail="開始日期不可晚於結束日期")
+
+    # 3. 準備存放聚合資料的資料結構
+    # 格式: { 國籍代碼: { "users": Set, "events": 0, "features": {}, "hourly": {} } }
+    aggregated = defaultdict(lambda: {
+        "users": set(),
+        "events": 0,
+        "features": defaultdict(int),
+        "hourly": defaultdict(int)
+    })
+
+    # 4. 定義逐日抓取與處理的非同步任務
+    async def fetch_and_process_date(d_str: str, client: httpx.AsyncClient):
+        file_path = RECORD_DIR / f"record_{d_str}.json"
+        logs = []
+        
+        # [步驟 A] 檢查本地有沒有檔案
+        if file_path.exists():
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    logs = json.load(f)
+            except Exception as e:
+                print(f"讀取本地歷史紀錄 {d_str} 失敗: {e}")
+        else:
+            # [步驟 B] 本地沒有，嘗試從 GitHub 下載
+            if GITHUB_TOKEN and GITHUB_REPO and "你的_" not in GITHUB_TOKEN:
+                repo_path = f"Python/record/record_{d_str}.json"
+                url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{repo_path}"
+                headers = {
+                    "Authorization": f"Bearer {GITHUB_TOKEN}",
+                    "Accept": "application/vnd.github.v3+json",
+                    "User-Agent": "FastAPI"
+                }
+                try:
+                    resp = await client.get(url, headers=headers, timeout=10.0)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        content_b64 = data.get("content", "")
+                        if content_b64:
+                            # 解碼 Base64 並存回本地 (作為未來的快取)
+                            decoded_str = base64.b64decode(content_b64).decode('utf-8')
+                            logs = json.loads(decoded_str)
+                            
+                            # 非同步寫入本地檔案
+                            def _save_to_local():
+                                with open(file_path, 'w', encoding='utf-8') as f:
+                                    f.write(decoded_str)
+                            await asyncio.to_thread(_save_to_local)
+                except Exception as e:
+                    print(f"從 GitHub 抓取歷史紀錄 {d_str} 失敗: {e}")
+
+        # [步驟 C] 若有資料，進行聚合運算
+        if isinstance(logs, list):
+            for log in logs:
+                time_str = log.get("time", "")
+                if not time_str or len(time_str) < 13:
+                    continue
+                
+                # 👇 調整：擷取 'HH' (第 11 到 12 字元) 作為小時級距的 Key (例如 '10')
+                # 原始格式為 'YYYY-MM-DD HH:MM:SS'，這樣就會把不同天的同時段加總在一起
+                hour_key = time_str[11:13]
+                
+                user = log.get("user", "Unknown")
+                feat = log.get("feature", "Unknown")
+                
+                # 推斷國籍
+                raw_country = log.get("country", "Unknown")
+                c = str(raw_country).upper()
+                if c == "UNKNOWN" and user != "Unknown" and "-" in user:
+                    c = user.split("-")[0].upper()
+                    
+                # (1) 累加該國籍專屬數據
+                aggregated[c]["users"].add(user)
+                aggregated[c]["events"] += 1
+                aggregated[c]["features"][feat] += 1
+                aggregated[c]["hourly"][hour_key] += 1
+                
+                # (2) 累加全域 (ALL) 數據
+                aggregated["ALL"]["users"].add(user)
+                aggregated["ALL"]["events"] += 1
+                aggregated["ALL"]["features"][feat] += 1
+                aggregated["ALL"]["hourly"][hour_key] += 1
+                
+        # 函式結束時 logs 變數被釋放，GC 會自動回收記憶體 (防 OOM)
+
+    # 5. 產生日期清單
+    current_dt = start_dt
+    date_list = []
+    while current_dt <= end_dt:
+        date_list.append(current_dt.strftime("%Y%m%d"))
+        current_dt += timedelta(days=1)
+
+    # 6. 併發處理所有日期 (使用 Semaphore 限制同時最多發出 5 個請求，避免踩到 GitHub 限制)
+    sem = asyncio.Semaphore(5)
+    async with httpx.AsyncClient() as client:
+        async def bounded_fetch(d):
+            async with sem:
+                await fetch_and_process_date(d, client)
+                
+        await asyncio.gather(*(bounded_fetch(d) for d in date_list))
+
+    # 7. 轉換格式 (將 Set 轉為長度，並對字典進行排序)
+    result = {}
+    for c, data in aggregated.items():
+        result[c] = {
+            "total_users": len(data["users"]),
+            "total_events": data["events"],
+            "features": dict(sorted(data["features"].items(), key=lambda x: x[1], reverse=True)),
+            "hourly": dict(sorted(data["hourly"].items())) # 依時間字串順序排列
+        }
+
+    return {"status": "success", "data": result}
+    
+    
 @app.on_event("shutdown")
 def on_shutdown():
     """伺服器重啟或終止前，自動謄寫完整統計日誌"""
