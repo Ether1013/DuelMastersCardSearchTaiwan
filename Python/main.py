@@ -1027,6 +1027,7 @@ async def record_debounce_timer(date_str: str):
         await push_record_to_github(date_str, file_path)
     except Exception as e:
         print(f"[Record Debounce Error]: {e}")
+        
 
 def trigger_record_sync(date_str: str):
     """每次收到新 Log 時呼叫，重置 2 分鐘倒數計時器"""
