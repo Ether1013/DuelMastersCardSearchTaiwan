@@ -1655,7 +1655,7 @@
 		async function exportHistoryImage() {
 			const captureArea = document.getElementById('reportCaptureArea');
 			const scrollParent = captureArea.parentElement; // 具有 overflow-y-auto 的容器
-			const modalContainer = scrollParent.parentElement; // 具有 max-h-[95vh] 的主容器
+			const modalContainer = scrollParent.parentElement; // 具有 max-h-[95vh], overflow-hidden 的主容器
 			
 			const btn = document.getElementById('exportImgBtn');
 			const originalHtml = btn.innerHTML;
@@ -1663,32 +1663,42 @@
 			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 處理圖片中...`;
 			btn.disabled = true;
 
-			// 1. 紀錄原始樣式與捲軸位置
+			// 1. 紀錄原始狀態
 			const origScrollTop = scrollParent.scrollTop;
+			const origScrollLeft = scrollParent.scrollLeft;
 			const origOverflow = scrollParent.style.overflow;
 			const origModalMaxHeight = modalContainer.style.maxHeight;
+			const origModalOverflow = modalContainer.style.overflow;
+			
+			// 💡 針對 `<select>` 渲染破圖的修復：紀錄原始寬度
+			const selectEl = document.getElementById('historyCountrySelect');
+			const origSelectWidth = selectEl.style.width;
 
 			try {
-				// 💡 關鍵修正一：先將內部容器捲軸強制歸零，避免截圖座標基準點偏移
+				// 確保水平與垂直捲軸強制歸零
 				scrollParent.scrollTop = 0;
+				scrollParent.scrollLeft = 0;
 
-				// 2. 暫時解除高度與捲軸限制，讓 DOM 完整展開不被遮蔽
+				// 2. 暫時解除高度與所有遮蔽 (overflow) 限制
 				scrollParent.style.overflow = 'visible';
 				modalContainer.style.maxHeight = 'none';
+				modalContainer.style.overflow = 'visible'; // 💡 確保外層 modal 不會把內容切掉
 
-				// 💡 關鍵修正二：給予瀏覽器足夠的時間進行 Reflow 與 Repaint
-				// 圖表與字體重新排版需要時間，設定 300ms 可以解決 99% 的截斷問題
+				// 💡 鎖定 select 寬度：讀取瀏覽器當下計算的實際 px，加上 15px 緩衝值直接寫死，防止 html2canvas 算錯
+				if (selectEl) {
+					selectEl.style.width = (selectEl.offsetWidth + 15) + 'px';
+				}
+
+				// 3. 給予瀏覽器足夠的時間進行 Reflow (重要)
 				await new Promise(resolve => setTimeout(resolve, 300));
 
-				// 3. 使用 html2canvas 產生 Canvas
+				// 4. 產生 Canvas
 				const canvas = await html2canvas(captureArea, {
-					backgroundColor: '#030712', // Tailwind gray-950
-					scale: window.devicePixelRatio > 1 ? 2 : 1, // 高解析度
+					backgroundColor: '#030712', 
+					scale: window.devicePixelRatio > 1 ? 2 : 1,
 					useCORS: true,
-					// 💡 關鍵修正三：強制抵銷外部 Window 捲軸的干擾，避免畫面錯位
-					scrollY: -window.scrollY, 
-					windowWidth: document.documentElement.scrollWidth,
-					windowHeight: document.documentElement.scrollHeight
+					scrollY: -window.scrollY,
+					scrollX: -window.scrollX // 💡 抵銷全域水平偏移
 				});
 
 				canvas.toBlob(async (blob) => {
@@ -1726,12 +1736,17 @@
 			} catch (err) {
 				alert(`❌ 匯出失敗：${err.message}`);
 			} finally {
-				// 4. 恢復原始樣式與捲軸位置 (放在 finally 確保即使出錯也能復原畫面)
+				// 5. 恢復所有原始樣式與捲軸位置
 				scrollParent.style.overflow = origOverflow;
 				modalContainer.style.maxHeight = origModalMaxHeight;
+				modalContainer.style.overflow = origModalOverflow;
 				
-				// 💡 確保畫面恢復後，捲軸回到使用者原本瀏覽的位置
+				if (selectEl) {
+					selectEl.style.width = origSelectWidth; // 💡 恢復原狀
+				}
+				
 				scrollParent.scrollTop = origScrollTop;
+				scrollParent.scrollLeft = origScrollLeft;
 				
 				btn.innerHTML = originalHtml;
 				btn.disabled = false;
