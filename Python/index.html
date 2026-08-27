@@ -2278,7 +2278,7 @@
 				<h3>能力過濾</h3>
 				<!-- 自由輸入框 + [使用技巧] 按鈕容器 -->
 				<div class="flex-input-row" style="margin-bottom: 10px;">
-					<input type="text" id="ability-text" placeholder="自由輸入" style="margin-bottom: 0;">
+					<input type="text" id="ability-text" placeholder="自由輸入，以空格表示多項條件，不適用自然語" style="margin-bottom: 0;">
 					<button type="button" id="btn-ability-tips" class="btn-icon" style="white-space: nowrap; padding: 8px 12px; background: #0284c7; color: white; border: none;">使用技巧</button>
 				</div>
 				<div id="ability-container">
@@ -6517,7 +6517,7 @@
 			const andTokens = inputText.split(/\s+/).filter(Boolean);
 
 			return andTokens.every(token => {
-				const orConditions = token.split(/[/／|＼\\,]/).filter(Boolean);
+				const orConditions = token.split(/[/／|｜＼\\,]/).filter(Boolean);
 				return orConditions.some(cond => checkSingleConditionInSp(spList, cond));
 			});
 		}
