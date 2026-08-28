@@ -80,11 +80,7 @@
                     
                     <button id="historyReportBtn" onclick="openHistoryModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white text-xs rounded-lg transition border border-cyan-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-chart-pie"></i> 歷史報表
-                    </button>
-                    
-                    <button id="manualSaveBtn" onclick="forceManualSave()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs rounded-lg transition border border-blue-500/30 flex items-center gap-1.5 shadow-lg">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> 手動存檔
-                    </button>
+                    </button>            
                 </div>
             </div>
         </div>
@@ -755,27 +751,6 @@
 			} finally {
 				btn.disabled = false;
 				btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 確認送出`;
-			}
-		}
-		
-		async function forceManualSave() {
-			const btn = document.getElementById('manualSaveBtn');
-			btn.disabled = true;
-			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 儲存中...`;
-
-			try {
-				const response = await fetch(`/api/console/manual_save?${authParam}`, {
-					method: 'POST'
-				});
-				const data = await response.json();
-				
-				if (!response.ok) throw new Error(data.detail || '存檔失敗');
-				alert(`✅ ${data.message}`);
-			} catch (err) {
-				alert(`❌ 錯誤：${err.message}`);
-			} finally {
-				btn.disabled = false;
-				btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> 手動存檔`;
 			}
 		}
 
@@ -1788,8 +1763,6 @@
 				document.getElementById('generateTokenBtn').style.display = 'flex';
 				document.getElementById('resetStatsBtn').style.display = 'flex';
 				document.getElementById('broadcastBtn').style.display = 'flex';
-				// 👇 新增：解開手動存檔按鈕的隱藏
-				document.getElementById('manualSaveBtn').style.display = 'flex';
 				// 👇 解開歷史報表按鈕的隱藏
 				document.getElementById('historyReportBtn').style.display = 'flex';
 			}
