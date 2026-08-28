@@ -1848,21 +1848,22 @@
 		}
 
 		/* 💡 卡牌堆疊外框：按比例縮小為寬 90px，留出頂部給 4 張卡片展開的總高度 (約 171px) */
+		/* 💡 卡牌堆疊外框：再縮小約 10% 為寬 80px，留出頂部給 4 張卡片展開的總高度 (約 154px) */
 		.cart-stack-wrapper {
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-end;
 			position: relative;
-			width: 90px;
-			min-height: 171px;  /* 👈 基礎 126px + 3張卡片各往上露15px (45px) = 171px */
+			width: 80px;
+			min-height: 154px;  /* 👈 基礎 112px + 3張卡片各往上露14px (42px) = 154px */
 			flex-shrink: 0;
 		}
 
-		/* 基礎卡圖尺寸（維持 126:176 原始等比 -> 90:126） */
+		/* 基礎卡圖尺寸（維持 126:176 比例 -> 80:112） */
 		.cart-stack-wrapper img, 
 		.cart-stack-wrapper .cart-no-img {
-			width: 90px !important;
-			height: 126px !important;
+			width: 80px !important;
+			height: 112px !important;
 			border-radius: 4px;
 			box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.25);
 			transition: transform 0.2s;
@@ -1874,7 +1875,7 @@
 		/* 💡 核心展開效果：第 2、3、4 張卡片精確往後上方階梯式位移 */
 		.cart-stack-wrapper img:not(:first-child),
 		.cart-stack-wrapper .cart-no-img:not(:first-child) {
-			margin-top: -111px !important; /* 126px - 15px = 露出上方 15px 邊框與卡名 */
+			margin-top: -98px !important; /* 112px - 14px = 露出上方 14px 邊框與卡名 */
 		}
 
 		.cart-stack-wrapper .cart-no-img {
@@ -1885,9 +1886,9 @@
 			align-items: center;
 			font-weight: bold;
 			border: 2px dashed #cbd5e1;
-			font-size: 11px;
+			font-size: 10px;
 			text-align: center;
-			padding: 4px;
+			padding: 2px;
 			box-sizing: border-box;
 		}
 
