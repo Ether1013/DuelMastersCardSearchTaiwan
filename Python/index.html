@@ -1821,13 +1821,24 @@
 			box-sizing: border-box;
 		}
 
-		/* 單張卡牌（群組）容器 */
+		/* 購物車總列表容器：縮小單位與單位之間的間距與內邊距 */
+		.cart-list-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px; /* 原本 10px -> 縮小至 6px */
+			padding: 6px; /* 原本 8px -> 縮小至 6px */
+			align-items: flex-end;
+			width: 100%;
+			box-sizing: border-box;
+		}
+
+		/* 單張卡牌（群組）容器：微調左右內邊距以釋放更多水平空間 */
 		.cart-item-group {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			background: #ffffff;
-			padding: 8px 6px;
+			padding: 6px 4px; /* 原本 8px 6px -> 縮小至 6px 4px */
 			border-radius: 8px;
 			box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 			border: 1px solid #e2e8f0;
@@ -1835,15 +1846,15 @@
 			box-sizing: border-box;
 		}
 
-		/* 多疊並排容器：支援自動換行 */
+		/* 多疊並排容器：縮小內部多疊卡片之間的水平間距 */
 		.cart-card-rows-container {
 			display: flex;
 			flex-direction: row;
 			flex-wrap: wrap;
 			justify-content: center;
-			gap: 8px;
+			gap: 4px; /* 原本 8px -> 縮小至 4px */
 			align-items: flex-end;
-			margin-bottom: 8px;
+			margin-bottom: 6px;
 			max-width: 100%;
 		}
 
