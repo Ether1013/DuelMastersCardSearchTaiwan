@@ -8734,7 +8734,6 @@
 			}
 		}
 
-		// 4. 按下 ENTER 鍵，將 numBuffer 打包成標籤 (含前導零攻擊力判定與有效數值檢核)
 		function commitNumBuffer() {
 			if (!numBuffer) return;
 
@@ -8787,14 +8786,14 @@
 				return;
 			}
 
-			// 若為範圍輸入 (包含 ~)，檢核左邊是否小於等於右邊
-			if (text.includes('~')) {
+			// 💡 4. 大小範圍檢核：只有「攻擊力」限制左邊不能大於右邊（費用則允許 5~2 逆向輸入）
+			if (isPower && text.includes('~')) {
 				const parts = text.split('~').map(p => p.trim());
 				if (parts[0] !== "" && parts[1] !== "") {
 					const num1 = Number(parts[0]);
 					const num2 = Number(parts[1]);
 					if (num1 > num2) {
-						showNumBufferError(`⚠️ 範圍錯誤: ${num1} 不能大於 ${num2}`);
+						showNumBufferError(`⚠️ 攻擊力範圍錯誤: ${num1} 不能大於 ${num2}`);
 						return;
 					}
 				}
