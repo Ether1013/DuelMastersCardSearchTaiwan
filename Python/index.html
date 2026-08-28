@@ -1814,8 +1814,8 @@
 		.cart-list-container {
 			display: flex;
 			flex-wrap: wrap;
-			gap: 16px;
-			padding: 10px;
+			gap: 10px;
+			padding: 8px;
 			align-items: flex-end;
 			width: 100%;
 			box-sizing: border-box;
@@ -1827,9 +1827,9 @@
 			flex-direction: column;
 			align-items: center;
 			background: #ffffff;
-			padding: 12px;
-			border-radius: 10px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+			padding: 8px 6px;
+			border-radius: 8px;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 			border: 1px solid #e2e8f0;
 			max-width: 100%;
 			box-sizing: border-box;
@@ -1841,30 +1841,30 @@
 			flex-direction: row;
 			flex-wrap: wrap;
 			justify-content: center;
-			gap: 12px;
+			gap: 8px;
 			align-items: flex-end;
-			margin-bottom: 10px;
+			margin-bottom: 8px;
 			max-width: 100%;
 		}
 
-		/* 💡 卡牌堆疊外框：留出頂部給 4 張卡片展開的總高度 (約 236px) */
+		/* 💡 卡牌堆疊外框：按比例縮小為寬 90px，留出頂部給 4 張卡片展開的總高度 (約 171px) */
 		.cart-stack-wrapper {
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-end;
 			position: relative;
-			width: 126px;
-			min-height: 236px;  /* 👈 基礎 176px + 3張卡片各往上露20px (60px) = 236px */
+			width: 90px;
+			min-height: 171px;  /* 👈 基礎 126px + 3張卡片各往上露15px (45px) = 171px */
 			flex-shrink: 0;
 		}
 
-		/* 基礎卡圖尺寸（縮小 10%） */
+		/* 基礎卡圖尺寸（維持 126:176 原始等比 -> 90:126） */
 		.cart-stack-wrapper img, 
 		.cart-stack-wrapper .cart-no-img {
-			width: 126px !important;
-			height: 176px !important;
-			border-radius: 6px;
-			box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+			width: 90px !important;
+			height: 126px !important;
+			border-radius: 4px;
+			box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.25);
 			transition: transform 0.2s;
 			object-fit: contain;
 			background-color: #fff;
@@ -1874,7 +1874,7 @@
 		/* 💡 核心展開效果：第 2、3、4 張卡片精確往後上方階梯式位移 */
 		.cart-stack-wrapper img:not(:first-child),
 		.cart-stack-wrapper .cart-no-img:not(:first-child) {
-			margin-top: -156px !important; /* 176px - 20px = 露出上方 20px 邊框與卡名 */
+			margin-top: -111px !important; /* 126px - 15px = 露出上方 15px 邊框與卡名 */
 		}
 
 		.cart-stack-wrapper .cart-no-img {
@@ -1885,27 +1885,27 @@
 			align-items: center;
 			font-weight: bold;
 			border: 2px dashed #cbd5e1;
-			font-size: 12px;
+			font-size: 11px;
 			text-align: center;
-			padding: 6px;
+			padding: 4px;
 			box-sizing: border-box;
 		}
 
 		.cart-stack-wrapper img:hover { 
-			transform: translateY(-4px); 
+			transform: translateY(-3px); 
 		}
 
 		.cart-controls {
 			display: flex;
 			align-items: center;
-			gap: 8px;
+			gap: 6px;
 			background: #f1f5f9;
-			padding: 4px 8px;
-			border-radius: 12px;
+			padding: 3px 6px;
+			border-radius: 10px;
 		}
 		.cart-controls button {
-			width: 24px;
-			height: 24px;
+			width: 22px;
+			height: 22px;
 			border-radius: 50%;
 			border: none;
 			background: #0284c7;
@@ -1915,9 +1915,10 @@
 			display: flex;
 			justify-content: center;
 			align-items: center;
+			font-size: 12px;
 		}
 		.cart-controls button:hover { background: #0369a1; }
-		.cart-controls span { font-weight: bold; font-size: 14px; min-width: 16px; text-align: center; }
+		.cart-controls span { font-weight: bold; font-size: 13px; min-width: 14px; text-align: center; }
 		
 		/* ================= 卡圖右側 4 功能按鈕佈局整合 ================= */
 
@@ -6427,8 +6428,16 @@
 			if (!cfg.isAdv) {
 				if (cfg.cost1 !== "" && c !== Number(cfg.cost1)) return false;
 			} else {
-				if (cfg.cost1 !== "" && c < Number(cfg.cost1)) return false;
-				if (cfg.cost2 !== "" && c > Number(cfg.cost2)) return false;
+				// 進階模式下，若起訖皆有且前大後小，單面卡直接視為不匹配
+				if (cfg.cost1 !== "" && cfg.cost2 !== "") {
+					const minC = Number(cfg.cost1);
+					const maxC = Number(cfg.cost2);
+					if (minC > maxC) return false; // 逆向輸入由 checkCostMatchList / checkCardMatchesFilters 處理
+					if (c < minC || c > maxC) return false;
+				} else {
+					if (cfg.cost1 !== "" && c < Number(cfg.cost1)) return false;
+					if (cfg.cost2 !== "" && c > Number(cfg.cost2)) return false;
+				}
 			}
 			return true;
 		}
@@ -6436,6 +6445,25 @@
 		function checkCostMatchList(costs, cfg) {
 			if (cfg.cost1 === "" && cfg.cost2 === "") return true;
 			if (!costs || costs.length === 0) return false;
+
+			// 💡 特殊處理：進階模式下，費用起訖皆有且「前大後小」(例如 5~2)
+			if (cfg.isAdv && cfg.cost1 !== "" && cfg.cost2 !== "") {
+				const bigCost = Number(cfg.cost1);
+				const smallCost = Number(cfg.cost2);
+				if (bigCost > smallCost) {
+					// 必須是多面卡 (wdata.length > 1) 才能滿足交叉條件
+					if (costs.length > 1) {
+						const c0 = Number(costs[0]);
+						const c1 = Number(costs[1]);
+						const matchNormal = (c0 >= bigCost && c1 <= smallCost);
+						const matchReverse = (c0 <= smallCost && c1 >= bigCost);
+						return matchNormal || matchReverse;
+					}
+					return false;
+				}
+			}
+
+			// 一般正常區間或單邊條件
 			return costs.some(c => checkCostMatchSingle(c, cfg));
 		}
 
