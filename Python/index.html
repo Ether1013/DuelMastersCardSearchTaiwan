@@ -11599,25 +11599,32 @@
 			renderCartCivChart();
 		}
 		
-		// ================= 購物車文明卡牌張數統計長條圖 (localStorage 直讀版) =================
+		// ================= 購物車文明卡牌張數統計長條圖 (精準解析版) =================
 		function renderCartCivChart() {
 			const container = document.getElementById('cart-chart-container');
 			if (!container) return;
 
-			// 💡 直接精準讀取 localStorage 內的購物車資料
+			// 1. 取得並解析 localStorage 內的 JSON 字串
 			let cartDataMap = {};
 			try {
-				const savedCart = localStorage.getItem('dm_shopping_cart');
-				if (savedCart) {
-					cartDataMap = JSON.parse(savedCart);
+				const rawData = localStorage.getItem('dm_shopping_cart');
+				if (!rawData) {
+					container.innerHTML = '';
+					return;
+				}
+				cartDataMap = JSON.parse(rawData);
+				
+				// 防呆：如果儲存時不小心被雙重 JSON.stringify，再解析一次
+				if (typeof cartDataMap === 'string') {
+					cartDataMap = JSON.parse(cartDataMap);
 				}
 			} catch (e) {
-				console.error('解析購物車資料失敗:', e);
+				console.error('購物車資料解析失敗', e);
+				container.innerHTML = '';
+				return;
 			}
 
 			const cartNames = Object.keys(cartDataMap);
-
-			// 若購物車依然為空，清空圖表
 			if (cartNames.length === 0) {
 				container.innerHTML = '';
 				return;
@@ -11633,24 +11640,25 @@
 				{ bit: 32, name: '無', dark: '#64748b', light: '#e2e8f0' }
 			];
 
-			// 初始化統計物件
 			const stats = {};
 			CIV_CONFIGS.forEach(c => {
 				stats[c.bit] = { name: c.name, bit: c.bit, mono: 0, multi: 0, total: 0, dark: c.dark, light: c.light };
 			});
 
-			// 遍歷購物車計算各文明張數
+			// 2. 遍歷 key-value (卡名: 張數) 並計算文明
 			cartNames.forEach(rawName => {
 				const count = Number(cartDataMap[rawName]) || 0;
 				if (count <= 0) return;
 
+				// 尋找卡牌資料 (包含精確名稱比對或去括號比對)
 				const cleanTarget = cleanCardName(rawName);
-				const card = globalCardData.find(c => cleanCardName(c.name) === cleanTarget);
+				const card = globalCardData.find(c => c.name === rawName || cleanCardName(c.name) === cleanTarget);
+				
 				if (!card || !Array.isArray(card.wdata)) return;
 
+				// 計算卡片全文明 Bitmask
 				let civBitmask = 0;
 				card.wdata.forEach(w => civBitmask |= (parseInt(w.civil) || 0));
-
 				if (civBitmask === 0) civBitmask = 32;
 
 				const activeBits = [16, 8, 4, 2, 1, 32].filter(bit => (civBitmask & bit) !== 0);
@@ -11668,7 +11676,7 @@
 				});
 			});
 
-			// 過濾掉張數為 0 的文明
+			// 3. 過濾掉張數為 0 的文明，並渲染畫面
 			const activeCivs = CIV_CONFIGS.map(c => stats[c.bit]).filter(s => s.total > 0);
 
 			if (activeCivs.length === 0) {
@@ -11680,7 +11688,6 @@
 			const maxTotal = Math.max(...activeCivs.map(c => c.total), 10);
 			const chartMaxScale = Math.ceil(maxTotal / 5) * 5;
 
-			// 產生長條圖 HTML
 			let barsHtml = '';
 			activeCivs.forEach(civ => {
 				const totalHeightPercent = (civ.total / chartMaxScale) * 100;
@@ -11698,7 +11705,6 @@
 				`;
 			});
 
-			// 產生下方資料表 HTML
 			let ths = `<th>項目</th>`;
 			let totalTds = `<th>合計</th>`;
 			let multiTds = `<th>多色</th>`;
@@ -11727,7 +11733,6 @@
 						</div>
 					</div>
 					
-					<!-- 長條圖繪製區 -->
 					<div class="chart-bars-area">
 						<div class="chart-grid-line" style="top: 25%;"></div>
 						<div class="chart-grid-line" style="top: 50%;"></div>
@@ -11735,7 +11740,6 @@
 						${barsHtml}
 					</div>
 
-					<!-- 數值表 -->
 					<table class="chart-data-table">
 						<thead><tr>${ths}</tr></thead>
 						<tbody>
