@@ -1932,6 +1932,143 @@
 		.cart-controls button:hover { background: #0369a1; }
 		.cart-controls span { font-weight: bold; font-size: 13px; min-width: 14px; text-align: center; }
 		
+		/* ================= 購物車文明長條圖統計樣式 ================= */
+		.cart-chart-wrapper {
+			margin-top: 20px;
+			padding: 14px;
+			background: #ffffff;
+			border: 1px solid #e2e8f0;
+			border-radius: 10px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+			box-sizing: border-box;
+			width: 100%;
+		}
+
+		.cart-chart-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 15px;
+			border-bottom: 1px dashed #e2e8f0;
+			padding-bottom: 8px;
+		}
+
+		.cart-chart-title {
+			font-size: 14px;
+			font-weight: bold;
+			color: #334155;
+		}
+
+		.cart-chart-legend {
+			display: flex;
+			gap: 12px;
+			font-size: 12px;
+			color: #64748b;
+			align-items: center;
+		}
+
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		.legend-dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 2px;
+		}
+
+		/* 繪圖長條圖區域 */
+		.chart-bars-area {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-around;
+			height: 150px;
+			border-bottom: 2px solid #cbd5e1;
+			position: relative;
+			padding: 0 10px;
+			margin-bottom: 8px;
+		}
+
+		/* 背景刻度輔助線 */
+		.chart-grid-line {
+			position: absolute;
+			left: 0;
+			right: 0;
+			border-top: 1px dashed #f1f5f9;
+			pointer-events: none;
+		}
+
+		.chart-col {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: flex-end;
+			height: 100%;
+			flex: 1;
+			max-width: 46px;
+			z-index: 1;
+		}
+
+		.chart-bar-track {
+			width: 24px;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			border-radius: 4px 4px 0 0;
+			overflow: hidden;
+			transition: height 0.3s ease;
+		}
+
+		.chart-bar-segment {
+			width: 100%;
+			transition: height 0.3s ease;
+		}
+
+		.chart-bar-total-val {
+			font-size: 11px;
+			font-weight: bold;
+			color: #475569;
+			margin-bottom: 4px;
+			line-height: 1;
+		}
+
+		/* 下方統計數值表格 */
+		.chart-data-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 12px;
+			text-align: center;
+			margin-top: 6px;
+		}
+
+		.chart-data-table th, .chart-data-table td {
+			padding: 4px 2px;
+			border: 1px solid #e2e8f0;
+		}
+
+		.chart-data-table th {
+			background: #f8fafc;
+			color: #475569;
+			font-weight: bold;
+		}
+
+		.chart-data-table tr.row-total {
+			background: #f1f5f9;
+			font-weight: bold;
+			color: #0f172a;
+		}
+
+		.chart-data-table td.cell-multi {
+			color: #64748b;
+		}
+
+		.chart-data-table td.cell-mono {
+			color: #1e293b;
+			font-weight: 600;
+		}
+		
 		/* ================= 卡圖右側 4 功能按鈕佈局整合 ================= */
 
 		/* 1. 四個按鈕的通用定位基底（直向卡：外浮於卡圖右側） */
@@ -2651,6 +2788,8 @@
 				<div id="cart-list-container" class="cart-list-container">
 					<!-- 動態縮排陳列於此 -->
 				</div>
+				<!-- 💡 新增：文明卡牌統計長條圖容器 -->
+				<div id="cart-chart-container"></div>
 			</div>
 
 			<!-- 4. 綠色按鈕 Footer -->
@@ -11455,6 +11594,156 @@
 					container.appendChild(groupDiv);
 				});
 			}
+			
+			// 💡 呼叫更新底部文明圖表
+			renderCartCivChart();
+		}
+		
+		// ================= 購物車文明卡牌張數統計長條圖 (修正版：支援無文明+五文明 63 等複合卡) =================
+		function renderCartCivChart() {
+			const container = document.getElementById('cart-chart-container');
+			if (!container) return;
+
+			// 若購物車為空，清空圖表
+			const cartNames = Object.keys(cartMap || {});
+			if (cartNames.length === 0) {
+				container.innerHTML = '';
+				return;
+			}
+
+			// 定義文明設定與色票 (Dark: 單色, Light: 多色)
+			const CIV_CONFIGS = [
+				{ bit: 16, name: '光', dark: '#ca8a04', light: '#fef08a' },
+				{ bit: 8,  name: '水', dark: '#0284c7', light: '#bae6fd' },
+				{ bit: 4,  name: '闇', dark: '#475569', light: '#cbd5e1' },
+				{ bit: 2,  name: '火', dark: '#dc2626', light: '#fca5a5' },
+				{ bit: 1,  name: '自然', dark: '#16a34a', light: '#86efac' },
+				{ bit: 32, name: '無', dark: '#64748b', light: '#e2e8f0' }
+			];
+
+			// 初始化文明統計物件
+			const stats = {};
+			CIV_CONFIGS.forEach(c => {
+				stats[c.bit] = { name: c.name, bit: c.bit, mono: 0, multi: 0, total: 0, dark: c.dark, light: c.light };
+			});
+
+			// 遍歷購物車內的每張卡片
+			cartNames.forEach(cardName => {
+				const count = Number(cartMap[cardName]) || 0;
+				if (count <= 0) return;
+
+				const cleanTarget = cleanCardName(cardName);
+				const card = globalCardData.find(c => cleanCardName(c.name) === cleanTarget);
+				if (!card || !Array.isArray(card.wdata)) return;
+
+				// 計算卡片全文明 Bitmask (累加全部面)
+				let civBitmask = 0;
+				card.wdata.forEach(w => civBitmask |= (parseInt(w.civil) || 0));
+
+				// 💡 修正點：將 0 視為純無文明 (32)
+				if (civBitmask === 0) {
+					civBitmask = 32;
+				}
+
+				// 檢查這張卡片總共包含哪幾種文明（包含無文明 32）
+				const activeBits = [16, 8, 4, 2, 1, 32].filter(bit => (civBitmask & bit) !== 0);
+				
+				// 💡 包含 2 種以上文明（例如 63 = 5文明+無文明，或單色+無文明）即為多色
+				const isMulti = activeBits.length > 1;
+
+				// 凡是卡片擁有的文明，各文明皆累加張數
+				activeBits.forEach(bit => {
+					if (stats[bit]) {
+						if (isMulti) {
+							stats[bit].multi += count;
+						} else {
+							stats[bit].mono += count;
+						}
+						stats[bit].total += count;
+					}
+				});
+			});
+
+			// 💡 過濾掉張數為 0 的文明（不存在的文明不列出）
+			const activeCivs = CIV_CONFIGS.map(c => stats[c.bit]).filter(s => s.total > 0);
+
+			if (activeCivs.length === 0) {
+				container.innerHTML = '';
+				return;
+			}
+
+			// 計算最高張數供長條圖百分比縮放（最高高度以 100% 計算，預設底限至少 10）
+			const maxTotal = Math.max(...activeCivs.map(c => c.total), 10);
+			const chartMaxScale = Math.ceil(maxTotal / 5) * 5; // 向上取 5 的倍數使刻度更整齊
+
+			// 產生長條圖 HTML
+			let barsHtml = '';
+			activeCivs.forEach(civ => {
+				const totalHeightPercent = (civ.total / chartMaxScale) * 100;
+				const multiHeightPercent = civ.total > 0 ? (civ.multi / civ.total) * 100 : 0;
+				const monoHeightPercent = civ.total > 0 ? (civ.mono / civ.total) * 100 : 0;
+
+				barsHtml += `
+					<div class="chart-col">
+						<div class="chart-bar-total-val">${civ.total}</div>
+						<div class="chart-bar-track" style="height: ${totalHeightPercent}%;">
+							<!-- 上半部：淺色 (來自多色卡) -->
+							<div class="chart-bar-segment" style="height: ${multiHeightPercent}%; background-color: ${civ.light};" title="${civ.name} (多色): ${civ.multi}張"></div>
+							<!-- 下半部：深色 (來自單色卡) -->
+							<div class="chart-bar-segment" style="height: ${monoHeightPercent}%; background-color: ${civ.dark};" title="${civ.name} (單色): ${civ.mono}張"></div>
+						</div>
+					</div>
+				`;
+			});
+
+			// 產生下方資料表 HTML
+			let ths = `<th>項目</th>`;
+			let totalTds = `<th>合計</th>`;
+			let multiTds = `<th>多色</th>`;
+			let monoTds = `<th>單色</th>`;
+
+			activeCivs.forEach(civ => {
+				ths += `<th>${civ.name}</th>`;
+				totalTds += `<td>${civ.total}</td>`;
+				multiTds += `<td class="cell-multi">${civ.multi}</td>`;
+				monoTds += `<td class="cell-mono">${civ.mono}</td>`;
+			});
+
+			container.innerHTML = `
+				<div class="cart-chart-wrapper">
+					<div class="cart-chart-header">
+						<div class="cart-chart-title">📊 各文明卡牌張數統計</div>
+						<div class="cart-chart-legend">
+							<div class="legend-item">
+								<span class="legend-dot" style="background: #475569;"></span>
+								<span>單色</span>
+							</div>
+							<div class="legend-item">
+								<span class="legend-dot" style="background: #cbd5e1;"></span>
+								<span>多色</span>
+							</div>
+						</div>
+					</div>
+					
+					<!-- 長條圖繪製區 -->
+					<div class="chart-bars-area">
+						<div class="chart-grid-line" style="top: 25%;"></div>
+						<div class="chart-grid-line" style="top: 50%;"></div>
+						<div class="chart-grid-line" style="top: 75%;"></div>
+						${barsHtml}
+					</div>
+
+					<!-- 數值表 -->
+					<table class="chart-data-table">
+						<thead><tr>${ths}</tr></thead>
+						<tbody>
+							<tr class="row-total">${totalTds}</tr>
+							<tr>${multiTds}</tr>
+							<tr>${monoTds}</tr>
+						</tbody>
+					</table>
+				</div>
+			`;
 		}
 
 		// 綁定購物車 Modal 開關與操作
