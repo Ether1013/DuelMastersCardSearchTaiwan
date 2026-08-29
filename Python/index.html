@@ -11599,14 +11599,15 @@
 			renderCartCivChart();
 		}
 		
-		// ================= 購物車文明卡牌張數統計長條圖 (修正版：支援無文明+五文明 63 等複合卡) =================
+		// ================= 購物車文明卡牌張數統計長條圖 (純 DOM 萃取版) =================
 		function renderCartCivChart() {
 			const container = document.getElementById('cart-chart-container');
-			if (!container) return;
+			const listContainer = document.getElementById('cart-list-container');
+			if (!container || !listContainer) return;
 
-			// 若購物車為空，清空圖表
-			const cartNames = Object.keys(cartMap || {});
-			if (cartNames.length === 0) {
+			// 💡 直接從 DOM 抓取購物車內所有卡牌項目與張數
+			const itemGroups = listContainer.querySelectorAll('.cart-item-group');
+			if (itemGroups.length === 0) {
 				container.innerHTML = '';
 				return;
 			}
@@ -11621,37 +11622,38 @@
 				{ bit: 32, name: '無', dark: '#64748b', light: '#e2e8f0' }
 			];
 
-			// 初始化文明統計物件
+			// 初始化統計物件
 			const stats = {};
 			CIV_CONFIGS.forEach(c => {
 				stats[c.bit] = { name: c.name, bit: c.bit, mono: 0, multi: 0, total: 0, dark: c.dark, light: c.light };
 			});
 
-			// 遍歷購物車內的每張卡片
-			cartNames.forEach(cardName => {
-				const count = Number(cartMap[cardName]) || 0;
+			// 遍歷 DOM 上的每一組卡牌
+			itemGroups.forEach(group => {
+				// 從 controls 或標籤取得張數 (支援 data-card-name 或 title/alt)
+				const countSpan = group.querySelector('.cart-controls span');
+				const count = countSpan ? (parseInt(countSpan.innerText) || 0) : 0;
 				if (count <= 0) return;
 
-				const cleanTarget = cleanCardName(cardName);
+				const targetImg = group.querySelector('img');
+				const rawName = group.dataset.cardName || (targetImg ? (targetImg.alt || targetImg.title) : '');
+				const cleanTarget = cleanCardName(rawName);
+
 				const card = globalCardData.find(c => cleanCardName(c.name) === cleanTarget);
 				if (!card || !Array.isArray(card.wdata)) return;
 
-				// 計算卡片全文明 Bitmask (累加全部面)
+				// 計算卡片文明 Bitmask
 				let civBitmask = 0;
 				card.wdata.forEach(w => civBitmask |= (parseInt(w.civil) || 0));
 
-				// 💡 修正點：將 0 視為純無文明 (32)
 				if (civBitmask === 0) {
 					civBitmask = 32;
 				}
 
-				// 檢查這張卡片總共包含哪幾種文明（包含無文明 32）
+				// 判斷包含的文明標籤
 				const activeBits = [16, 8, 4, 2, 1, 32].filter(bit => (civBitmask & bit) !== 0);
-				
-				// 💡 包含 2 種以上文明（例如 63 = 5文明+無文明，或單色+無文明）即為多色
 				const isMulti = activeBits.length > 1;
 
-				// 凡是卡片擁有的文明，各文明皆累加張數
 				activeBits.forEach(bit => {
 					if (stats[bit]) {
 						if (isMulti) {
@@ -11672,9 +11674,9 @@
 				return;
 			}
 
-			// 計算最高張數供長條圖百分比縮放（最高高度以 100% 計算，預設底限至少 10）
+			// 計算最高張數供長條圖百分比縮放
 			const maxTotal = Math.max(...activeCivs.map(c => c.total), 10);
-			const chartMaxScale = Math.ceil(maxTotal / 5) * 5; // 向上取 5 的倍數使刻度更整齊
+			const chartMaxScale = Math.ceil(maxTotal / 5) * 5;
 
 			// 產生長條圖 HTML
 			let barsHtml = '';
