@@ -11599,45 +11599,25 @@
 			renderCartCivChart();
 		}
 		
-		// ================= 購物車文明卡牌張數統計長條圖 (支援 localStorage 與 DOM 雙重萃取) =================
+		// ================= 購物車文明卡牌張數統計長條圖 (localStorage 直讀版) =================
 		function renderCartCivChart() {
 			const container = document.getElementById('cart-chart-container');
 			if (!container) return;
 
-			// 1. 嘗試從 localStorage 讀取購物車資料，若無則從 DOM 解析
+			// 💡 直接精準讀取 localStorage 內的購物車資料
 			let cartDataMap = {};
 			try {
-				const saved = localStorage.getItem('dm_deck_cart') || localStorage.getItem('dm_cart');
-				if (saved) cartDataMap = JSON.parse(saved);
-			} catch (e) {}
-
-			// 若 localStorage 沒抓到，改從 DOM 上的卡片群組擷取
-			if (Object.keys(cartDataMap).length === 0) {
-				const listContainer = document.getElementById('cart-list-container');
-				if (listContainer) {
-					listContainer.querySelectorAll('.cart-item-group').forEach(group => {
-						const countSpan = group.querySelector('.cart-controls span');
-						const count = countSpan ? (parseInt(countSpan.innerText) || 0) : 0;
-						if (count <= 0) return;
-
-						// 萃取卡名：優先讀取 dataset，次之讀取卡名文字/圖片屬性
-						let cardName = group.dataset.cardName || '';
-						if (!cardName) {
-							const nameEl = group.querySelector('.card-name, .cart-card-name, [title]');
-							const imgEl = group.querySelector('img');
-							cardName = nameEl?.innerText || nameEl?.getAttribute('title') || imgEl?.title || imgEl?.alt || '';
-						}
-
-						// 移除括號或版本編號取得純卡名
-						const clean = cleanCardName(cardName);
-						if (clean) {
-							cartDataMap[clean] = (cartDataMap[clean] || 0) + count;
-						}
-					});
+				const savedCart = localStorage.getItem('dm_shopping_cart');
+				if (savedCart) {
+					cartDataMap = JSON.parse(savedCart);
 				}
+			} catch (e) {
+				console.error('解析購物車資料失敗:', e);
 			}
 
 			const cartNames = Object.keys(cartDataMap);
+
+			// 若購物車依然為空，清空圖表
 			if (cartNames.length === 0) {
 				container.innerHTML = '';
 				return;
@@ -11653,6 +11633,7 @@
 				{ bit: 32, name: '無', dark: '#64748b', light: '#e2e8f0' }
 			];
 
+			// 初始化統計物件
 			const stats = {};
 			CIV_CONFIGS.forEach(c => {
 				stats[c.bit] = { name: c.name, bit: c.bit, mono: 0, multi: 0, total: 0, dark: c.dark, light: c.light };
@@ -11687,6 +11668,7 @@
 				});
 			});
 
+			// 過濾掉張數為 0 的文明
 			const activeCivs = CIV_CONFIGS.map(c => stats[c.bit]).filter(s => s.total > 0);
 
 			if (activeCivs.length === 0) {
@@ -11694,9 +11676,11 @@
 				return;
 			}
 
+			// 計算最高張數供長條圖百分比縮放
 			const maxTotal = Math.max(...activeCivs.map(c => c.total), 10);
 			const chartMaxScale = Math.ceil(maxTotal / 5) * 5;
 
+			// 產生長條圖 HTML
 			let barsHtml = '';
 			activeCivs.forEach(civ => {
 				const totalHeightPercent = (civ.total / chartMaxScale) * 100;
@@ -11714,6 +11698,7 @@
 				`;
 			});
 
+			// 產生下方資料表 HTML
 			let ths = `<th>項目</th>`;
 			let totalTds = `<th>合計</th>`;
 			let multiTds = `<th>多色</th>`;
@@ -11742,6 +11727,7 @@
 						</div>
 					</div>
 					
+					<!-- 長條圖繪製區 -->
 					<div class="chart-bars-area">
 						<div class="chart-grid-line" style="top: 25%;"></div>
 						<div class="chart-grid-line" style="top: 50%;"></div>
@@ -11749,6 +11735,7 @@
 						${barsHtml}
 					</div>
 
+					<!-- 數值表 -->
 					<table class="chart-data-table">
 						<thead><tr>${ths}</tr></thead>
 						<tbody>
