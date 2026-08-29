@@ -11599,7 +11599,7 @@
 			renderCartCivChart();
 		}
 		
-		// ================= 購物車文明卡牌張數統計長條圖 (精準解析版) =================
+		// ================= 購物車文明卡牌張數統計長條圖 (調整表格順序：單色 -> 多色 -> 合計) =================
 		function renderCartCivChart() {
 			const container = document.getElementById('cart-chart-container');
 			if (!container) return;
@@ -11614,7 +11614,6 @@
 				}
 				cartDataMap = JSON.parse(rawData);
 				
-				// 防呆：如果儲存時不小心被雙重 JSON.stringify，再解析一次
 				if (typeof cartDataMap === 'string') {
 					cartDataMap = JSON.parse(cartDataMap);
 				}
@@ -11645,12 +11644,15 @@
 				stats[c.bit] = { name: c.name, bit: c.bit, mono: 0, multi: 0, total: 0, dark: c.dark, light: c.light };
 			});
 
+			// 全牌組單色與多色總張數統計（一張多色卡僅計算一次）
+			let totalDeckMono = 0;
+			let totalDeckMulti = 0;
+
 			// 2. 遍歷 key-value (卡名: 張數) 並計算文明
 			cartNames.forEach(rawName => {
 				const count = Number(cartDataMap[rawName]) || 0;
 				if (count <= 0) return;
 
-				// 尋找卡牌資料 (包含精確名稱比對或去括號比對)
 				const cleanTarget = cleanCardName(rawName);
 				const card = globalCardData.find(c => c.name === rawName || cleanCardName(c.name) === cleanTarget);
 				
@@ -11664,6 +11666,14 @@
 				const activeBits = [16, 8, 4, 2, 1, 32].filter(bit => (civBitmask & bit) !== 0);
 				const isMulti = activeBits.length > 1;
 
+				// 牌組整體單/多色計數（不重複算）
+				if (isMulti) {
+					totalDeckMulti += count;
+				} else {
+					totalDeckMono += count;
+				}
+
+				// 各文明獨立計數
 				activeBits.forEach(bit => {
 					if (stats[bit]) {
 						if (isMulti) {
@@ -11676,7 +11686,7 @@
 				});
 			});
 
-			// 3. 過濾掉張數為 0 的文明，並渲染畫面
+			// 3. 過濾掉張數為 0 的文明
 			const activeCivs = CIV_CONFIGS.map(c => stats[c.bit]).filter(s => s.total > 0);
 
 			if (activeCivs.length === 0) {
@@ -11688,6 +11698,9 @@
 			const maxTotal = Math.max(...activeCivs.map(c => c.total), 10);
 			const chartMaxScale = Math.ceil(maxTotal / 5) * 5;
 
+			// 動態依現存文明數量分配長條圖寬度
+			const barWidth = Math.max(34, Math.min(64, Math.floor(240 / activeCivs.length)));
+
 			let barsHtml = '';
 			activeCivs.forEach(civ => {
 				const totalHeightPercent = (civ.total / chartMaxScale) * 100;
@@ -11695,9 +11708,9 @@
 				const monoHeightPercent = civ.total > 0 ? (civ.mono / civ.total) * 100 : 0;
 
 				barsHtml += `
-					<div class="chart-col">
+					<div class="chart-col" style="max-width: none;">
 						<div class="chart-bar-total-val">${civ.total}</div>
-						<div class="chart-bar-track" style="height: ${totalHeightPercent}%;">
+						<div class="chart-bar-track" style="width: ${barWidth}px; height: ${totalHeightPercent}%;">
 							<div class="chart-bar-segment" style="height: ${multiHeightPercent}%; background-color: ${civ.light};" title="${civ.name} (多色): ${civ.multi}張"></div>
 							<div class="chart-bar-segment" style="height: ${monoHeightPercent}%; background-color: ${civ.dark};" title="${civ.name} (單色): ${civ.mono}張"></div>
 						</div>
@@ -11705,47 +11718,49 @@
 				`;
 			});
 
+			// 💡 調整表格生成順序：單色 -> 多色 -> 合計
 			let ths = `<th>項目</th>`;
-			let totalTds = `<th>合計</th>`;
-			let multiTds = `<th>多色</th>`;
 			let monoTds = `<th>單色</th>`;
+			let multiTds = `<th>多色</th>`;
+			let totalTds = `<th>合計</th>`;
 
 			activeCivs.forEach(civ => {
 				ths += `<th>${civ.name}</th>`;
-				totalTds += `<td>${civ.total}</td>`;
-				multiTds += `<td class="cell-multi">${civ.multi}</td>`;
 				monoTds += `<td class="cell-mono">${civ.mono}</td>`;
+				multiTds += `<td class="cell-multi">${civ.multi}</td>`;
+				totalTds += `<td>${civ.total}</td>`;
 			});
 
 			container.innerHTML = `
-				<div class="cart-chart-wrapper">
+				<div class="cart-chart-wrapper" style="overflow-x: hidden;">
 					<div class="cart-chart-header">
 						<div class="cart-chart-title">📊 各文明卡牌張數統計</div>
 						<div class="cart-chart-legend">
 							<div class="legend-item">
 								<span class="legend-dot" style="background: #475569;"></span>
-								<span>單色</span>
+								<span>單色 ${totalDeckMono}</span>
 							</div>
 							<div class="legend-item">
 								<span class="legend-dot" style="background: #cbd5e1;"></span>
-								<span>多色</span>
+								<span>多色 ${totalDeckMulti}</span>
 							</div>
 						</div>
 					</div>
 					
-					<div class="chart-bars-area">
+					<div class="chart-bars-area" style="padding: 0 4px;">
 						<div class="chart-grid-line" style="top: 25%;"></div>
 						<div class="chart-grid-line" style="top: 50%;"></div>
 						<div class="chart-grid-line" style="top: 75%;"></div>
 						${barsHtml}
 					</div>
 
+					<!-- 數值表：單色 -> 多色 -> 合計 -->
 					<table class="chart-data-table">
 						<thead><tr>${ths}</tr></thead>
 						<tbody>
-							<tr class="row-total">${totalTds}</tr>
-							<tr>${multiTds}</tr>
 							<tr>${monoTds}</tr>
+							<tr>${multiTds}</tr>
+							<tr class="row-total">${totalTds}</tr>
 						</tbody>
 					</table>
 				</div>
