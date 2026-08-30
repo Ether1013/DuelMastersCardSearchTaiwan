@@ -6404,6 +6404,14 @@
 				return res;
 			};
 
+			// 👇 新增這段：用來同時提取基礎攻擊力與超化攻擊力
+			const getWdataPowerList = (w) => {
+				let res = [];
+				if (w.power !== undefined && w.power !== null) res.push(w.power);
+				if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) res.push(w.hypermode.power);
+				return res;
+			};
+
 			const hasNoAbilitySelected = cfg.abilities.some(a => a.value === '__NO_ABILITY__');
 			const hasSemiVanillaSelected = cfg.abilities.some(a => a.value === '__SEMI_VANILLA__');
 			const hasSoupSelected = cfg.abilities.some(a => a.value === '__SOUP__'); // 💡 補上這一行宣告！
@@ -6419,7 +6427,7 @@
 				if (cfg.isAbilityMix) {
 					const allTypes = card.wdata.flatMap(w => w.type || []);
 					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
-					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+					const allPowers = card.wdata.flatMap(w => getWdataPowerList(w));
 					const allRaces = card.wdata.flatMap(w => w.race || []);
 
 					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
@@ -6430,7 +6438,7 @@
 					const hasMatchedBlock = card.wdata.some(w => {
 						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 						if (!checkCostMatchSingle(w.cost, cfg)) return false;
-						if (!checkPowerMatchSingle(w.power, cfg)) return false;
+						if (!checkPowerMatchList(getWdataPowerList(w), cfg)) return false;
 						if (!checkRaceMatchList(w.race || [], cfg.races, cfg.raceLogic)) return false;
 						return true;
 					});
@@ -6459,7 +6467,7 @@
 				if (cfg.isAbilityMix) {
 					const allTypes = card.wdata.flatMap(w => w.type || []);
 					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
-					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+					const allPowers = card.wdata.flatMap(w => getWdataPowerList(w));
 					const allRaces = card.wdata.flatMap(w => w.race || []);
 
 					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
@@ -6472,7 +6480,7 @@
 						if (!isOnlyBreakerSp(wSp)) return false;
 						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 						if (!checkCostMatchSingle(w.cost, cfg)) return false;
-						if (!checkPowerMatchSingle(w.power, cfg)) return false;
+						if (!checkPowerMatchList(getWdataPowerList(w), cfg)) return false;
 						if (!checkRaceMatchList(w.race || [], cfg.races, cfg.raceLogic)) return false;
 						return true;
 					});
@@ -6515,7 +6523,7 @@
 				if (cfg.isAbilityMix) {
 					const allTypes = card.wdata.flatMap(w => w.type || []);
 					const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
-					const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+					const allPowers = card.wdata.flatMap(w => getWdataPowerList(w));
 					const allRaces = card.wdata.flatMap(w => w.race || []);
 
 					if (!checkTypeMatch(allTypes, cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
@@ -6528,7 +6536,7 @@
 						if (!isOnlyKeywordSp(wSp)) return false;
 						if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 						if (!checkCostMatchSingle(w.cost, cfg)) return false;
-						if (!checkPowerMatchSingle(w.power, cfg)) return false;
+						if (!checkPowerMatchList(getWdataPowerList(w), cfg)) return false;
 						if (!checkRaceMatchList(w.race || [], cfg.races, cfg.raceLogic)) return false;
 						return true;
 					});
@@ -6538,7 +6546,7 @@
 			} else if (cfg.isAbilityMix) {
 				const allTypes = card.wdata.flatMap(w => w.type || []);
 				const allCosts = card.wdata.map(w => w.cost).filter(v => v !== undefined && v !== null);
-				const allPowers = card.wdata.map(w => w.power).filter(v => v !== undefined && v !== null);
+				const allPowers = card.wdata.flatMap(w => getWdataPowerList(w));
 				const allRaces = card.wdata.flatMap(w => w.race || []);
 				const allSp = card.wdata.flatMap(w => getWdataSpList(w));
 
@@ -6553,7 +6561,7 @@
 					const wSp = getWdataSpList(w);
 					if (!checkTypeMatch(w.type || [], cfg.checkedCardTypes, cfg.isAllCardTypesChecked)) return false;
 					if (!checkCostMatchSingle(w.cost, cfg)) return false;
-					if (!checkPowerMatchSingle(w.power, cfg)) return false;
+					if (!checkPowerMatchList(getWdataPowerList(w), cfg)) return false;
 					if (!checkRaceMatchList(w.race || [], cfg.races)) return false;
 					if (!checkAbilityMatchList(wSp, cfg)) return false;
 					return true;
