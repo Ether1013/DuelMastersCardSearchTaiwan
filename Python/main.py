@@ -12,6 +12,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from urllib.parse import quote, unquote
+import pytz
 
 import httpx
 from dotenv import load_dotenv
@@ -24,6 +25,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from collections import defaultdict, deque
+from zoneinfo import ZoneInfo
 from datetime import datetime, timezone, timedelta
 import logging
 import random, string
@@ -81,6 +83,7 @@ last_reset_time = SERVER_START_TIME  # 預設起算時間為啟動時間
 # --- 全域緩存變數區 ---
 carddata_cache = []
 carddata_gzip_cache = b""  # 👈 新增：存放 carddata 壓縮檔
+carddata_patch_cache = []  # 👈 新增：存放 carddata 補丁
 card_types_cache = []
 races_cache = []
 abilities_cache = []
@@ -89,6 +92,7 @@ nickname_cache = []
 diary_cache = []
 setlist_cache = {}
 setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
+setlist_patch_cache = {}   # 👈 新增：存放 setlist 補丁
 # ================= 新增：日誌儲存相關變數 =================
 RECORD_DIR = BASE_DIR / "record"
 RECORD_DIR.mkdir(exist_ok=True)
@@ -131,10 +135,11 @@ DATA_NAME_MAP = {
     "card_types": "卡種資料",
     "races": "種族資料",
     "abilities": "能力資料",
-    "card_stats": "數值統計資料",
     "categoryname": "分類名稱資料",
     "nickname": "暱稱資料",
-    "diary": "更新日誌資料"
+    "diary": "更新日誌資料",
+    "patch_carddata": "卡牌補丁資料",  # 👈 新增
+    "patch_setlist": "商品補丁資料"    # 👈 新增
 }
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
@@ -392,6 +397,30 @@ async def tag_debounce_timer():
     except Exception as e:
         print(f"[Tag Debounce Error]: {e}")
 
+def convert_utc8_str_to_local_hour(time_str: str, country_code: str) -> str:
+    """
+    將資料庫中的 'YYYY-MM-DD HH:MM:SS' (UTC+8) 轉換為該國當地時間，並回傳 2 位數小時字串 (如 '14')。
+    """
+    try:
+        # 1. 解析 UTC+8 時間字串為帶有時區資訊的 datetime 物件
+        dt_naive = datetime.strptime(time_str[:19], "%Y-%m-%d %H:%M:%S")
+        dt_utc8 = dt_naive.replace(tzinfo=TZ_UTC8)
+
+        # 2. 查找該國的時區 (遇到跨時區抓第 0 個，無對應則保留 UTC+8)
+        code = str(country_code).upper().strip()
+        timezones = pytz.country_timezones.get(code)
+        
+        if timezones:
+            target_tz = ZoneInfo(timezones[0])
+            local_dt = dt_utc8.astimezone(target_tz)
+        else:
+            local_dt = dt_utc8
+
+        return local_dt.strftime("%H")
+    except Exception:
+        # 若時間格式解析異常，Fallback 直接截取原字串
+        return time_str[11:13] if len(time_str) >= 13 else "00"
+        
 def mask_ip(ip: str) -> str:
     """將 IPv4 / IPv6 進行部分遮罩打碼處理"""
     if not ip or ip in ["unknown", "::1"]:
@@ -549,8 +578,6 @@ class DeckItem(BaseModel):
 class ExportDeckRequest(BaseModel):
     items: List[DeckItem]
 
-card_stats_cache = {"powers": [], "costs": []}
-
 def load_json_file(filename: str):
     file_path = BASE_DIR / filename
     if file_path.exists():
@@ -590,7 +617,7 @@ def load_all_setlists():
 
 @app.on_event("startup")
 def load_and_process_caches():
-    global carddata_cache, carddata_gzip_cache, card_types_cache, races_cache, abilities_cache, card_stats_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, diary_cache, tags_cache, etag_cache
+    global carddata_cache, carddata_gzip_cache, carddata_patch_cache, card_types_cache, races_cache, abilities_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, setlist_patch_cache, diary_cache, tags_cache, etag_cache
     # 加入宣告 last_reset_time
     global action_details_log, current_daily_logs, current_daily_date, last_reset_time
 
@@ -662,6 +689,8 @@ def load_and_process_caches():
         # 👈 新增：預先壓縮 carddata
         carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
         carddata_gzip_cache = gzip.compress(carddata_json_bytes)
+        
+        carddata_patch_cache = load_json_file("patch_carddata.json") or [] # 👈 新增讀取補丁
 
         card_types_cache = load_json_file("card_type.json")
         races_cache = load_json_file("races.json")
@@ -674,6 +703,8 @@ def load_and_process_caches():
         # 👈 新增：預先壓縮 setlist
         setlist_json_bytes = json.dumps(setlist_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
         setlist_gzip_cache = gzip.compress(setlist_json_bytes)
+        
+        setlist_patch_cache = load_json_file("patch_setlist.json") or {} # 👈 新增讀取補丁
         
         # 新增 tags 載入
         loaded_tags = load_json_file("tags.json")
@@ -691,31 +722,15 @@ def load_and_process_caches():
                 
         # 👈 新增：在這裡為所有資料計算 ETag
         etag_cache["carddata"] = f'"{hashlib.md5(carddata_json_bytes).hexdigest()}"'
+        etag_cache["patch_carddata"] = generate_etag(carddata_patch_cache) # 👈 新增
         etag_cache["setlist"] = f'"{hashlib.md5(setlist_json_bytes).hexdigest()}"'
+        etag_cache["patch_setlist"] = generate_etag(setlist_patch_cache) # 👈 新增
         etag_cache["card_types"] = generate_etag(card_types_cache)
         etag_cache["races"] = generate_etag(races_cache)
         etag_cache["abilities"] = generate_etag(abilities_cache)
-        etag_cache["card_stats"] = generate_etag(card_stats_cache)
         etag_cache["categoryname"] = generate_etag(categoryname_cache)
         etag_cache["nickname"] = generate_etag(nickname_cache)
         etag_cache["diary"] = generate_etag(diary_cache)
-        
-        
-        powers, costs = set(), set()
-        for card_dict in carddata_cache:
-            wdata_list = card_dict.get("wdata", [])
-            if isinstance(wdata_list, list):
-                for w in wdata_list:
-                    if isinstance(w, dict):
-                        p, c = w.get("power"), w.get("cost")
-                        if p is not None:
-                            try: powers.add(int(p))
-                            except ValueError: pass
-                        if c is not None:
-                            try: costs.add(int(c))
-                            except ValueError: pass
-                            
-        card_stats_cache = {"powers": sorted(list(powers)), "costs": sorted(list(costs))}
 
     except Exception as e:
         print(f"載入緩存失敗: {e}")
@@ -1191,6 +1206,18 @@ def poison_legacy_route(request: Request, legacy_path: str):
             headers={"Clear-Site-Data": '"cache"'}
         )
     return None
+
+@app.get("/api/patch_carddata")
+@app.get("/api/v2/patch_carddata")
+async def get_patch_carddata(request: Request): 
+    if poison := poison_legacy_route(request, "/api/patch_carddata"): return poison
+    return get_etag_response(request, "patch_carddata", carddata_patch_cache)
+
+@app.get("/api/patch_setlist")
+@app.get("/api/v2/patch_setlist")
+async def get_patch_setlist(request: Request): 
+    if poison := poison_legacy_route(request, "/api/patch_setlist"): return poison
+    return get_etag_response(request, "patch_setlist", setlist_patch_cache)
     
 @app.get("/api/card_types")
 @app.get("/api/v2/card_types")
@@ -1480,12 +1507,6 @@ async def get_pop_custom_data(payload: CustomDeckModel):
         },
         "cards": matched_cards
     }
-
-@app.get("/api/card_stats")
-@app.get("/api/v2/card_stats")
-def get_card_stats(request: Request): 
-    if poison := poison_legacy_route(request, "/api/card_stats"): return poison
-    return get_etag_response(request, "card_stats", card_stats_cache)
 
 @app.get("/api/proxy-image")
 @limiter.limit("5/minute")
@@ -2055,15 +2076,12 @@ async def get_historical_report(
         except Exception as e:
             print(f"從 Firebase 抓取歷史紀錄 {d_str} 失敗: {e}")
 
-        # [步驟 B] 若有資料，進行聚合運算
+        # [步驟 B] 聚合運算修改
         if isinstance(logs, list):
             for log in logs:
                 time_str = log.get("time", "")
                 if not time_str or len(time_str) < 13:
                     continue
-                
-                # 擷取 'HH' 作為小時級距的 Key (例如 '10')
-                hour_key = time_str[11:13]
                 
                 user = log.get("user", "Unknown")
                 feat = log.get("feature", "Unknown")
@@ -2074,17 +2092,19 @@ async def get_historical_report(
                 if c == "UNKNOWN" and user != "Unknown" and "-" in user:
                     c = user.split("-")[0].upper()
                     
-                # (1) 累加該國籍專屬數據
+                # 💡 (1) 轉成使用者「該國籍的當地小時」
+                local_hour = convert_utc8_str_to_local_hour(time_str, c)
+
                 aggregated[c]["users"].add(user)
                 aggregated[c]["events"] += 1
                 aggregated[c]["features"][feat] += 1
-                aggregated[c]["hourly"][hour_key] += 1
-                
-                # (2) 累加全域 (ALL) 數據
+                aggregated[c]["hourly"][local_hour] += 1  # 寫入該國當地活躍時段
+
+                # 💡 (2) 全域 (ALL) 數據：同樣依「當地小時」聚合，呈現全域使用者的「總體生活作息/生理時鐘分佈」
                 aggregated["ALL"]["users"].add(user)
                 aggregated["ALL"]["events"] += 1
                 aggregated["ALL"]["features"][feat] += 1
-                aggregated["ALL"]["hourly"][hour_key] += 1
+                aggregated["ALL"]["hourly"][local_hour] += 1  # 👈 改用 local_hour
 
     # 5. 產生日期清單
     current_dt = start_dt

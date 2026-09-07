@@ -4566,19 +4566,45 @@
 					return await directRes.json();
 				}
 
-				// 並行發送所有請求 (指向 v2 新路由)
-                const [cardData, ctData, raceData, abilData, statsData, catNameData, nicknameData, setlistData, diaryData, replaceConfig] = await Promise.all([
+				const [cardData, ctData, raceData, abilData, catNameData, nicknameData, setlistData, diaryData, replaceConfig, patchCardData, patchSetlist] = await Promise.all([
                     fetchWithCache('/api/v2/carddata'),
                     fetchWithCache('/api/v2/card_types'),
                     fetchWithCache('/api/v2/races'),
                     fetchWithCache('/api/v2/abilities'),
-                    fetchWithCache('/api/v2/card_stats'),
                     fetchWithCache('/api/v2/categoryname'),
                     fetchWithCache('/api/v2/nickname'),
                     fetchWithCache('/api/v2/setlist'),
                     fetchWithCache('/api/v2/diary'),
-                    fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false }))
+                    fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false })),
+                    fetchWithCache('/api/v2/patch_carddata'), // 👈 新增
+                    fetchWithCache('/api/v2/patch_setlist')   // 👈 新增
                 ]);
+
+				// ==========================================
+				// 💡 1. 執行補丁合併：把 Patch 覆寫至基底資料
+				// ==========================================
+				if (cardData && patchCardData && patchCardData.length > 0) {
+					patchCardData.forEach(patchItem => {
+						if (patchItem.name) {
+							const existingIndex = cardData.findIndex(c => c.name === patchItem.name);
+							if (existingIndex !== -1) {
+								cardData[existingIndex] = patchItem; // 覆寫舊卡
+							} else {
+								cardData.push(patchItem); // 追加新卡
+							}
+						}
+					});
+				}
+
+				if (setlistData && patchSetlist && Object.keys(patchSetlist).length > 0) {
+					Object.assign(setlistData, patchSetlist); // 合併系列物件
+				}
+				// ==========================================
+
+				// 判斷是否需要替換特殊字元
+				if (replaceConfig && replaceConfig.need_replace && cardData) {
+					processSpText(cardData);
+				}
 
 				globalCardData = (cardData || []).map(card => {
 					return {
@@ -4587,6 +4613,7 @@
 						normalizedName: card.name ? normalizeCardNameFull(card.name) : ''
 					};
 				});
+
 				rawCardTypes = ctData || [];
 				rawRaces = raceData || [];
 				rawAbilities = abilData || [];
@@ -4595,19 +4622,6 @@
 				rawSetlist = setlistData || {};
 				rawDiary = diaryData || [];
 				
-				// 🔽 新增這段判斷：若需要替換，就在寫入 globalCardData 之前先行處理
-				if (replaceConfig && replaceConfig.need_replace && cardData) {
-					processSpText(cardData);
-				}
-				globalCardData = (cardData || []).map(card => {
-					return {
-						...card,
-						// 預先生成歸一化卡名，提升後續備援比對效能
-						normalizedName: card.name ? normalizeCardNameFull(card.name) : ''
-					};
-				});
-
-				// 💡 修正 1：資料載入後，先將 localStorage 內的自訂套牌載入 rawSetlist 中
 				loadCustomDecksIntoSetlist();
 
 				initDiaryUI();
@@ -4619,12 +4633,39 @@
 				initQuickCardTypes();
 				initQuickSetCodeButtons();
 				initDropdownData();
-				initSeriesDropdown(); // 💡 繪製選單時就能一併渲染自訂套牌
+				initSeriesDropdown(); 
 				renderLatestSetButtons();
-				renderQaLatestSetButtons(); // 👈 💡 在這裡補上這行！資料下載完後自動渲染按鈕
-				initStatsSelects(statsData);
-				// 💡 確保 API 全域資料載入完畢後，重新觸發一次購物車 UI 渲染以繪製卡圖
-                if (typeof updateCartUI === 'function') {
+				renderQaLatestSetButtons(); 
+
+				// ==========================================
+				// 💡 2. 由前端直接從合併後的 globalCardData 提煉出費用與攻擊力陣列
+				// ==========================================
+				const dynamicStats = { powers: new Set(), costs: new Set() };
+				globalCardData.forEach(card => {
+					if (card.wdata && Array.isArray(card.wdata)) {
+						card.wdata.forEach(w => {
+							if (w.power !== undefined && w.power !== null) {
+								dynamicStats.powers.add(Number(w.power));
+							}
+							if (w.cost !== undefined && w.cost !== null) {
+								dynamicStats.costs.add(Number(w.cost));
+							}
+							if (w.hypermode && w.hypermode.power !== undefined && w.hypermode.power !== null) {
+								dynamicStats.powers.add(Number(w.hypermode.power));
+							}
+						});
+					}
+				});
+
+				const mergedStatsData = {
+					powers: Array.from(dynamicStats.powers).sort((a, b) => a - b),
+					costs: Array.from(dynamicStats.costs).sort((a, b) => a - b)
+				};
+
+				initStatsSelects(mergedStatsData); // 👈 餵給選單動態產生的結果
+				// ==========================================
+
+				if (typeof updateCartUI === 'function') {
                     updateCartUI();
                 }
 
