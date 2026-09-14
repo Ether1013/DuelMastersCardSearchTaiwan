@@ -2197,6 +2197,56 @@
 				justify-content: center;
 			}
 		}
+		
+		/* ================= 自訂複合下拉選單 (取代原生 datalist) ================= */
+        .combo-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .combo-list {
+            position: absolute;
+            top: calc(100% - 4px); /* 稍微蓋住輸入框下邊緣，視覺更一體 */
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #0284c7; /* 配合 focus 時的藍色邊框 */
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-sizing: border-box;
+        }
+        .combo-list.active {
+            display: block;
+        }
+        .combo-item {
+            padding: 10px 12px;
+            font-size: 14px;
+            color: #334155;
+            cursor: pointer;
+            border-bottom: 1px dashed #e2e8f0;
+            transition: background 0.1s ease;
+        }
+        .combo-item:last-child {
+            border-bottom: none;
+        }
+        .combo-item:hover {
+            background: #f0f9ff;
+            color: #0369a1;
+            font-weight: bold;
+        }
+		.combo-separator {
+            padding: 4px 12px;
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+            user-select: none;
+            pointer-events: none;
+            background: #f8fafc;
+        }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2403,12 +2453,19 @@
             </div>
         </div>
 
+		<!-- 新增：全域隱藏的 Datalist 容器，供 Input 對照使用 -->
+		<datalist id="datalist-race"></datalist>
+		<datalist id="datalist-ability"></datalist>
+
 		<!-- 新增 row-flex 包裹容器，讓種族與能力在桌機並排、手機版一上一下 -->
 		<div class="row-flex">
 			<!-- D/F. 種族設定 -->
 			<div class="col" id="section-race">
 				<h3>
-					<span>種族設定</span>
+					<span style="display: flex; align-items: center; gap: 8px;">
+						種族設定
+						<button type="button" class="btn-icon btn-lang-toggle" style="background:#0284c7; color:white; font-size:11px; padding:3px 8px;">日</button>
+					</span>
 					<div id="race-logic-group" class="race-logic-group advanced-only advanced-only-flex">
 						<button type="button" class="btn-race-logic active" data-logic="AND">全部包含</button>
 						<button type="button" class="btn-race-logic" data-logic="OR">滿足任一</button>
@@ -2416,16 +2473,20 @@
 				</h3>
 				<div id="race-container">
 					<div class="flex-input-row">
-						<!-- 💡 調整：按鈕移至最左側，保留 advanced-only (進階模式才顯示) -->
 						<button type="button" class="btn-icon advanced-only btn-add-race" style="padding: 8px 12px; font-weight: bold;">+</button>
-						<select class="race-select" style="margin-bottom: 0;"></select>
+						<input type="text" class="combo-input race-input" data-combo-type="race" list="datalist-race" placeholder="請選擇或輸入..." style="margin-bottom: 0;" autocomplete="off">
 					</div>
 				</div>
 			</div>
 
 			<!-- E/G. 能力過濾 -->
 			<div class="col" id="section-ability">
-				<h3>能力過濾</h3>
+				<h3>
+					<span style="display: flex; align-items: center; gap: 8px;">
+						能力過濾
+						<button type="button" class="btn-icon btn-lang-toggle" style="background:#0284c7; color:white; font-size:11px; padding:3px 8px;">日</button>
+					</span>
+				</h3>
 				<!-- 自由輸入框 + [使用技巧] 按鈕容器 -->
 				<div class="flex-input-row" style="margin-bottom: 10px;">
 					<input type="text" id="ability-text" placeholder="自由輸入，以空格表示多項條件，不適用自然語" style="margin-bottom: 0;">
@@ -2433,14 +2494,13 @@
 				</div>
 				<div id="ability-container">
 					<div class="flex-input-row">
-						<!-- 💡 調整：按鈕移至最左側，無 advanced-only (基本與進階皆可使用) -->
 						<button type="button" class="btn-icon btn-add-ability" style="padding: 8px 12px; font-weight: bold;">+</button>
-						<select class="ability-select" style="margin-bottom: 0;"></select>
+						<input type="text" class="combo-input ability-input" data-combo-type="ability" list="datalist-ability" placeholder="請選擇或輸入..." style="margin-bottom: 0;" autocomplete="off">
 						<button type="button" class="btn-native-ability" data-native="false">原生能力</button>
 					</div>
 				</div>
 				<div class="advanced-only" style="margin-top: 10px; width: 100%;">
-					<select class="race-select-adv"></select>
+					<input type="text" class="combo-input race-input-adv" data-combo-type="race" list="datalist-race" placeholder="能力裡提到的種族..." autocomplete="off">
 				</div>
 			</div>
 		</div>
@@ -3542,6 +3602,11 @@
 
 			document.querySelectorAll('select').forEach(sel => sel.value = "");
 			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+			
+			// 💡 針對新版複合 DOM 追加清除 dataset，確保內部值歸零
+			document.querySelectorAll('.combo-input').forEach(input => {
+				input.dataset.japValue = "";
+			});
 
 			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
 			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
@@ -3769,13 +3834,12 @@
 					label: `雙極卡: ${twinSelected.value === 'yes' ? '限定雙極' : '排除雙極'}`, 
 					action: () => { 
 						document.querySelector('input[name="twinpect"][value="all"]').checked = true; 
-						syncChipUI(); // 👈 加這行
+						syncChipUI();
 						updateSummaryText(); 
 					} 
 				});
 			}
             
-            // 💡 加上 if (isAdv) 包裹，確保只有在進階模式啟用時才處理雙極進階標籤
             if (isAdv) {
                 const twinAdvBoxes = document.querySelectorAll('input[name="twin_adv"]');
                 const uncheckedTwinAdv = Array.from(twinAdvBoxes).filter(cb => !cb.checked);
@@ -3874,74 +3938,88 @@
                 }
             }
 
-            const selectedRaces = Array.from(document.querySelectorAll('.race-select'))
-				.map(sel => sel.value)
-				.filter(Boolean);
+            // 💡 新版種族設定讀取
+            const selectedRaceInputs = Array.from(document.querySelectorAll('.race-input')).filter(s => s.dataset.japValue);
+            if (selectedRaceInputs.length > 0) {
+                const activeLogicBtn = document.querySelector('.btn-race-logic.active');
+                const isOrMode = activeLogicBtn && activeLogicBtn.dataset.logic === 'OR';
+                
+                // 去除可能出現的星星符號
+                const displayNames = selectedRaceInputs.map(s => s.value.replace(/^★\s*/, ''));
+                let tagLabel = "";
+                if (displayNames.length === 1) {
+                    tagLabel = `種族：${displayNames[0]}`;
+                } else {
+                    const separator = isOrMode ? ' / ' : ' + ';
+                    tagLabel = `種族：${displayNames.join(separator)}`;
+                }
 
-			if (selectedRaces.length > 0) {
-				const activeLogicBtn = document.querySelector('.btn-race-logic.active');
-				const isOrMode = activeLogicBtn && activeLogicBtn.dataset.logic === 'OR';
-				
-				let tagLabel = "";
-				if (selectedRaces.length === 1) {
-					// 單一項目：例如 "種族：R"
-					tagLabel = `種族：${selectedRaces[0]}`;
-				} else {
-					// 多項目：例如 "種族：A+B" 或 "種族：C/D"
-					const separator = isOrMode ? ' / ' : ' + ';
-					tagLabel = `種族：${selectedRaces.join(separator)}`;
-				}
+                tags.push({
+                    label: tagLabel,
+                    action: () => {
+                        const raceContainer = document.getElementById('race-container');
+                        if (raceContainer) {
+                            const firstInput = raceContainer.querySelector('.race-input');
+                            if (firstInput) {
+                                firstInput.value = "";
+                                firstInput.dataset.japValue = "";
+                            }
+                            raceContainer.querySelectorAll('.flex-input-row:not(:first-child)').forEach(row => row.remove());
+                        }
+                        updateSummaryText();
+                    }
+                });
+            }
 
-				tags.push({
-					label: tagLabel,
-					action: () => {
-						const raceContainer = document.getElementById('race-container');
-						if (raceContainer) {
-							const firstSelect = raceContainer.querySelector('.race-select');
-							if (firstSelect) firstSelect.value = "";
-							raceContainer.querySelectorAll('.flex-input-row:not(:first-child)').forEach(row => row.remove());
-						}
-						updateSummaryText();
-					}
-				});
-			}
             const abilText = document.getElementById('ability-text');
             if(abilText && abilText.value) tags.push({ label: `能力關鍵字: ${abilText.value}`, action: () => { abilText.value = ""; updateSummaryText(); } });
             
-			// 尋找處理 .ability-select 的區塊並替換為：
-			document.querySelectorAll('#ability-container .flex-input-row').forEach(row => {
-				const sel = row.querySelector('.ability-select');
-				const btnNative = row.querySelector('.btn-native-ability');
-				if (sel && sel.value) {
-					const isNative = btnNative && btnNative.classList.contains('active');
-					let displayText = sel.value;
-					if (sel.value === '__NO_ABILITY__') displayText = '無能力';
-					else if (sel.value === '__SEMI_VANILLA__') displayText = '準バニラ';
-					else if (sel.value === '__SOUP__') displayText = 'SOUP'; // 💡 新增 SOUP 標籤名稱
-					
-					const nativeSuffix = isNative ? '(原生)' : '';
-					
-					tags.push({ 
-						label: `能力包含: ${displayText}${nativeSuffix}`, 
-						action: () => { 
-							sel.value = ""; 
-							if (btnNative) {
-								btnNative.classList.remove('active');
-								btnNative.dataset.native = 'false';
-							}
-							updateSummaryText(); 
-						} 
-					});
-				}
-			});
+            // 💡 新版能力過濾讀取
+            document.querySelectorAll('#ability-container .flex-input-row').forEach(row => {
+                const input = row.querySelector('.ability-input');
+                const btnNative = row.querySelector('.btn-native-ability');
+                if (input && input.dataset.japValue) {
+                    const isNative = btnNative && btnNative.classList.contains('active');
+                    let displayText = input.value.replace(/^★\s*/, '');
+                    
+                    // 特殊選項使用固定文字
+                    if (input.dataset.japValue === '__NO_ABILITY__') displayText = '無能力';
+                    else if (input.dataset.japValue === '__SEMI_VANILLA__') displayText = '準バニラ';
+                    else if (input.dataset.japValue === '__SOUP__') displayText = 'SOUP'; 
+                    
+                    const nativeSuffix = isNative ? '(原生)' : '';
+                    
+                    tags.push({ 
+                        label: `能力包含: ${displayText}${nativeSuffix}`, 
+                        action: () => { 
+                            input.value = ""; 
+                            input.dataset.japValue = "";
+                            if (btnNative) {
+                                btnNative.classList.remove('active');
+                                btnNative.dataset.native = 'false';
+                            }
+                            updateSummaryText(); 
+                        } 
+                    });
+                }
+            });
             
-            const raceAdv = document.querySelector('.race-select-adv');
-            if(raceAdv && raceAdv.value) tags.push({ label: `能力裡提到的種族: ${raceAdv.value}`, action: () => { raceAdv.value = ""; updateSummaryText(); } });
+            // 💡 新版能力裡提到的種族讀取
+            const raceAdv = document.querySelector('.race-input-adv');
+            if(raceAdv && raceAdv.dataset.japValue) {
+                tags.push({ 
+                    label: `能力裡提到的種族: ${raceAdv.value.replace(/^★\s*/, '')}`, 
+                    action: () => { 
+                        raceAdv.value = ""; 
+                        raceAdv.dataset.japValue = "";
+                        updateSummaryText(); 
+                    } 
+                });
+            }
 
             const cardName = document.getElementById('card-name');
             if(cardName && cardName.value) tags.push({ label: `卡名: ${cardName.value}`, action: () => { cardName.value = ""; updateSummaryText(); } });
 
-			// 💡 需求 2：檢查是否選擇了商品 (series-small)，若有選擇則新增 setcode 標籤
 			const smallSelect = document.getElementById('series-small');
 			if (smallSelect && smallSelect.value) {
 				const selectedSetcode = smallSelect.value;
@@ -3963,7 +4041,6 @@
 				tags.forEach(t => {
 					const span = document.createElement('span');
 					span.className = 'summary-tag';
-					// 💡 將文字獨立包在 .tag-text，確保文字與叉叉按鈕美觀對齊
 					span.innerHTML = `<span class="tag-text">${t.label}</span> <span>&times;</span>`; 
 					span.addEventListener('click', (e) => {
 						e.stopPropagation(); 
@@ -3973,7 +4050,6 @@
 				});
 				summaryBox.appendChild(wrap);
             }
-			
         }
 		
 		// 全域卡名歷史紀錄 (儲存結構改為物件陣列：[{ name: '卡名', time: 時間戳記 }, ...])
@@ -4967,37 +5043,293 @@
 				}
 			});
 		}
+		
+		// ================= 複合式下拉與語系切換管理 =================
+		const comboManager = {
+			lang: 'jap',
+			dicts: { race: { data: [], toJap: {}, toDisplay: {} }, ability: { data: [], toJap: {}, toDisplay: {} } },
+			// 💡 調整：為特殊選項加上 fixedDisplay 屬性，無視語系切換
+			specialAbilities: [
+				{ jap: '__NO_ABILITY__', fixedDisplay: '無能力' },
+				{ jap: '__SEMI_VANILLA__', fixedDisplay: '準バニラ' },
+				{ jap: '__SOUP__', fixedDisplay: 'SOUP' }
+			],
+			init: function() {
+				const sortAlpha = (a, b) => (a.jap || "").localeCompare(b.jap || "");
 
-        function generateOptionsHtml(dataList) {
-			let sorted = [...dataList].sort((a,b) => (a.jap || "").localeCompare(b.jap || ""));
-			let popHtml = '';
-			let normHtml = '';
-			
-			sorted.forEach(d => {
-				const isCat = d.iscategory || d.category;
-				const categorySuffix = isCat ? ' (類別種族)' : '';
-				const displayText = `${d.jap}${categorySuffix}`;
+				// --- 處理資料排序：Pop -> 特殊 -> 一般 ---
+				['race', 'ability'].forEach(type => {
+					const rawData = type === 'race' ? rawRaces : rawAbilities;
+					const sortedData = [...rawData].sort(sortAlpha);
+					
+					const popItems = sortedData.filter(item => item.pop);
+					const normItems = sortedData.filter(item => !item.pop);
+					
+					this.dicts[type].data = [];
+					
+					if (popItems.length > 0) {
+						this.dicts[type].data.push(...popItems);
+						this.dicts[type].data.push({ isSeparator: true });
+					}
+					
+					// 如果是能力清單，插入特殊選項
+					if (type === 'ability') {
+						this.dicts[type].data.push(...this.specialAbilities);
+						this.dicts[type].data.push({ isSeparator: true });
+					}
+					
+					this.dicts[type].data.push(...normItems);
+				});
 
-				if (d.pop) {
-					popHtml += `<option value="${d.jap}" style="color:red; font-weight:bold;">${displayText}</option>`;
+				this.buildMaps();
+				this.bindAllExistingInputs();
+				
+				// 點擊畫面其他地方時，隱藏所有下拉清單
+				document.addEventListener('click', (e) => {
+					if (!e.target.closest('.combo-wrapper')) {
+						document.querySelectorAll('.combo-list.active').forEach(list => list.classList.remove('active'));
+					}
+				});
+			},
+			getDisplayText: function(item, type) {
+				// 💡 調整：如果是特殊選項，直接回傳固定文字，不經過語系判斷
+				if (item.fixedDisplay) return item.fixedDisplay;
+
+				let base = item.jap;
+				if (this.lang === 'chi' && item.chi) base = item.chi;
+				if (this.lang === 'eng' && item.eng) base = item.eng;
+				
+				if (type === 'race') {
+					const isCat = item.iscategory || item.category;
+					const catSuffix = isCat ? (this.lang === 'eng' ? ' (Category)' : ' (類別種族)') : '';
+					return `${base}${catSuffix}`; 
 				} else {
-					normHtml += `<option value="${d.jap}">${displayText}</option>`;
+					return `${base}`; 
 				}
+			},
+			buildMaps: function() {
+				['race', 'ability'].forEach(type => {
+					this.dicts[type].toJap = {};
+					this.dicts[type].toDisplay = {};
+					this.dicts[type].data.forEach(item => {
+						if(item.isSeparator || !item.jap) return;
+						const display = this.getDisplayText(item, type);
+						this.dicts[type].toJap[display] = item.jap;
+						this.dicts[type].toDisplay[item.jap] = display;
+					});
+				});
+			},
+			validate: function(input) {
+				const val = input.value.trim();
+				if (val === '') {
+					input.dataset.japValue = '';
+					if (typeof updateSummaryText === 'function') updateSummaryText();
+					return;
+				}
+				const type = input.dataset.comboType;
+				const mappedJap = this.dicts[type].toJap[val];
+				
+				if (mappedJap) {
+					input.dataset.japValue = mappedJap; // 驗證通過
+				} else {
+					input.value = ''; // 驗證失敗，清空防呆
+					input.dataset.japValue = '';
+					if (typeof showToast === 'function') showToast('無效的選項，請從下拉清單中選擇');
+				}
+				if (typeof updateSummaryText === 'function') updateSummaryText();
+			},
+			bindInput: function(input) {
+				if (input.dataset.bound) return; 
+				input.dataset.bound = "true";
+				input.removeAttribute('list'); 
+
+				const wrapper = document.createElement('div');
+				wrapper.className = 'combo-wrapper';
+				input.parentNode.insertBefore(wrapper, input);
+				wrapper.appendChild(input);
+
+				const listContainer = document.createElement('div');
+				listContainer.className = 'combo-list';
+				wrapper.appendChild(listContainer);
+
+				const type = input.dataset.comboType;
+
+				const renderList = (filterText = '') => {
+					document.querySelectorAll('.combo-list.active').forEach(l => {
+						if(l !== listContainer) l.classList.remove('active');
+					});
+
+					listContainer.innerHTML = '';
+					let count = 0;
+					this.dicts[type].data.forEach(item => {
+						if (item.isSeparator) {
+							if (filterText === '' && count > 0) {
+								const sep = document.createElement('div');
+								sep.className = 'combo-separator';
+								sep.innerText = '──────';
+								listContainer.appendChild(sep);
+							}
+							return;
+						}
+
+						if(!item.jap) return;
+						const displayText = this.dicts[type].toDisplay[item.jap];
+						
+						if (displayText.toLowerCase().includes(filterText.toLowerCase())) {
+							const div = document.createElement('div');
+							div.className = 'combo-item';
+							
+							if (item.pop) {
+								div.style.color = '#d32f2f';
+								div.style.fontWeight = 'bold';
+							}
+							if (['__NO_ABILITY__', '__SEMI_VANILLA__', '__SOUP__'].includes(item.jap)) {
+								div.style.fontWeight = 'bold';
+							}
+
+							div.innerText = displayText;
+							
+							div.addEventListener('mousedown', (e) => {
+								e.preventDefault(); 
+								input.value = displayText;
+								listContainer.classList.remove('active');
+								this.validate(input);
+							});
+							listContainer.appendChild(div);
+							count++;
+						}
+					});
+					
+					if (count > 0) {
+						listContainer.classList.add('active');
+					} else {
+						listContainer.classList.remove('active');
+					}
+				};
+
+				input.addEventListener('focus', () => renderList('')); 
+				input.addEventListener('input', () => renderList(input.value)); 
+				input.addEventListener('blur', () => {
+					listContainer.classList.remove('active');
+					this.validate(input);
+				});
+			},
+			bindAllExistingInputs: function() {
+				document.querySelectorAll('.combo-input').forEach(input => this.bindInput(input));
+			},
+			toggleLang: function() {
+				const nextMap = { 'jap': 'chi', 'chi': 'eng', 'eng': 'jap' };
+				const labelMap = { 'jap': '日(預設)', 'chi': '中', 'eng': '英' };
+				this.lang = nextMap[this.lang];
+				
+				document.querySelectorAll('.btn-lang-toggle').forEach(btn => {
+					btn.innerText = labelMap[this.lang];
+				});
+				
+				this.buildMaps();
+				
+				document.querySelectorAll('.combo-input').forEach(input => {
+					const japVal = input.dataset.japValue;
+					if (japVal) {
+						const type = input.dataset.comboType;
+						input.value = this.dicts[type].toDisplay[japVal] || '';
+					}
+				});
+				if (typeof updateSummaryText === 'function') updateSummaryText();
+			}
+		};
+
+		function bindAddRemoveEventsCombo(btnAddSelector, containerSelector, inputClass, type) {
+			const container = document.querySelector(containerSelector);
+			const oldBtn = document.querySelector(btnAddSelector);
+			if (!oldBtn || !container) return;
+
+			const newBtn = oldBtn.cloneNode(true);
+			oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+			newBtn.addEventListener('click', () => {
+				const row = document.createElement('div');
+				row.className = 'flex-input-row';
+				
+				const isAbility = type === 'ability';
+				const isRace = type === 'race';
+				const advClass = isRace ? 'advanced-only' : '';
+				const nativeBtnHtml = isAbility ? `<button type="button" class="btn-native-ability" data-native="false">原生能力</button>` : '';
+
+				row.innerHTML = `
+					<button type="button" class="btn-icon btn-remove ${advClass}" style="padding: 8px 12px; background: #fee2e2; color: #b91c1c; font-weight: bold;">-</button>
+					<input type="text" class="combo-input ${inputClass}" data-combo-type="${type}" list="datalist-${type}" placeholder="請選擇或輸入..." style="margin-bottom: 0;" autocomplete="off">
+					${nativeBtnHtml}
+				`;
+
+				// 綁定動態新增元件的驗證機制
+				const inputEl = row.querySelector('.combo-input');
+				comboManager.bindInput(inputEl);
+
+				row.querySelector('.btn-remove').addEventListener('click', function() {
+					row.remove();
+					updateSummaryText(); 
+				});
+
+				if (isAbility) {
+					const btnNative = row.querySelector('.btn-native-ability');
+					btnNative.addEventListener('click', function() {
+						this.classList.toggle('active');
+						this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
+						updateSummaryText();
+					});
+				}
+				container.appendChild(row);
+			});
+		}
+
+		function initDropdownData() {
+			comboManager.init();
+
+			// 綁定語系切換按鈕事件
+			document.querySelectorAll('.btn-lang-toggle').forEach(btn => {
+				btn.addEventListener('click', () => {
+					comboManager.toggleLang();
+				});
 			});
 
-			let finalHtml = '<option value="">(請選擇)</option>';
-			if (popHtml !== '') finalHtml += popHtml + '<option disabled>──────</option>';
+			bindAddRemoveEventsCombo('.btn-add-race', '#race-container', 'race-input', 'race');
+			bindAddRemoveEventsCombo('.btn-add-ability', '#ability-container', 'ability-input', 'ability');
 			
-			// 💡 修正點：取消 [無能力] 與 [準バニラ] 的紅色 (color:#d32f2f)，並新增 [SOUP]
-			finalHtml += '<option value="__NO_ABILITY__" style="font-weight:bold;">無能力</option>';
-			finalHtml += '<option value="__SEMI_VANILLA__" style="font-weight:bold;">準バニラ</option>';
-			finalHtml += '<option value="__SOUP__" style="font-weight:bold;">SOUP</option>';
-			finalHtml += '<option disabled>──────</option>';
+			updateSummaryText();
 			
-			finalHtml += normHtml;
-			return finalHtml;
+			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
+				btn.onclick = function() {
+					this.classList.toggle('active');
+					this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
+					updateSummaryText();
+				};
+			});
+			
+			const btnRaceLogic = document.getElementById('btn-race-logic');
+			if (btnRaceLogic) {
+				btnRaceLogic.addEventListener('click', () => {
+					const currentLogic = btnRaceLogic.dataset.logic;
+					if (currentLogic === 'AND') {
+						btnRaceLogic.dataset.logic = 'OR';
+						btnRaceLogic.innerText = '滿足任一';
+					} else {
+						btnRaceLogic.dataset.logic = 'AND';
+						btnRaceLogic.innerText = '全部包含';
+					}
+					if (typeof updateSummaryText === 'function') updateSummaryText();
+				});
+			}
+			
+			document.querySelectorAll('.btn-race-logic').forEach(btn => {
+				btn.addEventListener('click', function() {
+					document.querySelectorAll('.btn-race-logic').forEach(b => b.classList.remove('active'));
+					this.classList.add('active');
+					if (typeof updateSummaryText === 'function') updateSummaryText();
+				});
+			});
 		}
-		
+
 		// --- 系列選單連動邏輯 ---
 		function initSeriesDropdown() {
 			const bigSelect = document.getElementById('series-big');
@@ -5170,101 +5502,6 @@
 			});
 		}
 
-        function initDropdownData() {
-            const raceHtml = generateOptionsHtml(rawRaces);
-            const abilHtml = generateOptionsHtml(rawAbilities);
-
-            document.querySelector('.race-select').innerHTML = raceHtml;
-            document.querySelector('.ability-select').innerHTML = abilHtml;
-            document.querySelector('.race-select-adv').innerHTML = raceHtml;
-
-            bindAddRemoveEvents('.btn-add-race', '#race-container', 'race-select', raceHtml);
-            bindAddRemoveEvents('.btn-add-ability', '#ability-container', 'ability-select', abilHtml);
-            
-            updateSummaryText();
-			
-			// 在 initDropdownData() 結尾處加上：
-			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
-				btn.onclick = function() {
-					this.classList.toggle('active');
-					this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
-					updateSummaryText();
-				};
-			});
-			
-			const btnRaceLogic = document.getElementById('btn-race-logic');
-			if (btnRaceLogic) {
-				btnRaceLogic.addEventListener('click', () => {
-					const currentLogic = btnRaceLogic.dataset.logic;
-					if (currentLogic === 'AND') {
-						btnRaceLogic.dataset.logic = 'OR';
-						btnRaceLogic.innerText = '滿足任一';
-					} else {
-						btnRaceLogic.dataset.logic = 'AND';
-						btnRaceLogic.innerText = '全部包含';
-					}
-					if (typeof updateSummaryText === 'function') updateSummaryText();
-				});
-			}
-			
-			// 在 initDropdownData() 執行完畢或 DOMContentLoaded 中綁定：
-			document.querySelectorAll('.btn-race-logic').forEach(btn => {
-				btn.addEventListener('click', function() {
-					// 1. 同群組所有按鈕移除 active
-					document.querySelectorAll('.btn-race-logic').forEach(b => b.classList.remove('active'));
-					// 2. 當前點擊的按鈕加上 active
-					this.classList.add('active');
-					// 3. 更新 Z 區條件摘要
-					if (typeof updateSummaryText === 'function') updateSummaryText();
-				});
-			});
-        }
-
-        function bindAddRemoveEvents(btnAddSelector, containerSelector, selectClass, optionsHtml) {
-			const container = document.querySelector(containerSelector);
-			const oldBtn = document.querySelector(btnAddSelector);
-			if (!oldBtn || !container) return;
-
-			const newBtn = oldBtn.cloneNode(true);
-			oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-
-			newBtn.addEventListener('click', () => {
-				const row = document.createElement('div');
-				row.className = 'flex-input-row';
-				
-				const isAbility = containerSelector === '#ability-container';
-				const isRace = containerSelector === '#race-container';
-
-				// 判斷是否為進階模式才顯示的刪除按鈕 (種族橫列需帶有 advanced-only)
-				const advClass = isRace ? 'advanced-only' : '';
-				const nativeBtnHtml = isAbility ? `<button type="button" class="btn-native-ability" data-native="false">原生能力</button>` : '';
-
-				// 💡 統一將 [-] 按鈕放在最前面 (左側)
-				row.innerHTML = `
-					<button type="button" class="btn-icon btn-remove ${advClass}" style="padding: 8px 12px; background: #fee2e2; color: #b91c1c; font-weight: bold;">-</button>
-					<select class="${selectClass}" style="margin-bottom: 0;">${optionsHtml}</select>
-					${nativeBtnHtml}
-				`;
-
-				// 綁定動態刪除事件
-				row.querySelector('.btn-remove').addEventListener('click', function() {
-					row.remove();
-					updateSummaryText(); 
-				});
-
-				// 若為能力過濾，為動態新增的原生能力按鈕綁定切換事件
-				if (isAbility) {
-					const btnNative = row.querySelector('.btn-native-ability');
-					btnNative.addEventListener('click', function() {
-						this.classList.toggle('active');
-						this.dataset.native = this.classList.contains('active') ? 'true' : 'false';
-						updateSummaryText();
-					});
-				}
-
-				container.appendChild(row);
-			});
-		}
 
         // --- 頁籤切換邏輯 ---
         // --- 頁籤切換邏輯 (支援 localStorage 紀錄偏好) ---
@@ -5997,20 +6234,27 @@
 			const power1 = document.getElementById('power-1').value;
 			const power2 = document.getElementById('power-2').value;
 
-			const races = Array.from(document.querySelectorAll('.race-select')).map(s => s.value).filter(Boolean);
-			// 在 getFilterConfigFromUI() 內部替換：
+			// 💡 修正 1：改抓 .race-input 且取值為 dataset.japValue
+			const races = Array.from(document.querySelectorAll('.race-input'))
+				.map(s => s.dataset.japValue)
+				.filter(Boolean);
+
 			const activeRaceLogicBtn = document.querySelector('.btn-race-logic.active');
 			const raceLogic = activeRaceLogicBtn ? activeRaceLogicBtn.dataset.logic : 'AND';
 
 			const abilityText = document.getElementById('ability-text').value.trim();
+			
+			// 💡 修正 2：改抓 .ability-input 且取值為 dataset.japValue
 			const abilities = Array.from(document.querySelectorAll('#ability-container .flex-input-row')).map(row => {
-				const select = row.querySelector('.ability-select');
+				const input = row.querySelector('.ability-input');
 				const nativeBtn = row.querySelector('.btn-native-ability');
-				const val = select ? select.value : '';
+				const val = input ? (input.dataset.japValue || '') : '';
 				const isNative = nativeBtn ? nativeBtn.classList.contains('active') : false;
 				return { value: val, isNative: isNative };
 			}).filter(item => item.value !== '');
-			const raceAdv = document.querySelector('.race-select-adv')?.value || '';
+			
+			// 💡 修正 3：改抓 .race-input-adv 且取值為 dataset.japValue
+			const raceAdv = document.querySelector('.race-input-adv')?.dataset.japValue || '';
 
 			const cardName = document.getElementById('card-name').value.trim();
 
@@ -6019,7 +6263,7 @@
 
 			return {
 				isAdv, 
-				isAllCardTypesChecked, // 💡 回傳全選狀態標記
+				isAllCardTypesChecked, 
 				checkedCardTypes, 
 				twinpect,
 				isAbilityMix, 
@@ -9167,10 +9411,11 @@
 			}
 
 			const raceTag = quickTags.find(t => t.type === 'quick-race');
-			const firstRaceSelect = document.querySelector('.race-select');
-			if (firstRaceSelect) {
+			const firstRaceInput = document.querySelector('.race-input'); // 改為抓 input
+			if (firstRaceInput) {
 				if (raceTag) {
-					firstRaceSelect.value = raceTag.val;
+					firstRaceInput.dataset.japValue = raceTag.val; // JAP value
+					firstRaceInput.value = comboManager.dicts.race.toDisplay[raceTag.val] || raceTag.val; // 顯示文字
 				}
 			}
 
