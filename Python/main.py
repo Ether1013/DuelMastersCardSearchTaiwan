@@ -1019,6 +1019,9 @@ def trigger_record_sync(date_str: str):
 @app.get("/")
 async def serve_index(): return FileResponse("index.html")
 
+@app.get("/fabric.do")
+async def serve_index(): return FileResponse("fabric.html")
+
 @app.get("/pop.html")
 async def get_pop_page(
     request: Request, 
