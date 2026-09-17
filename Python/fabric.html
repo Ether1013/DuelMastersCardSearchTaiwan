@@ -160,28 +160,30 @@
                 });
 
                 function initFabricControls() {
-                    const controls = fabric.Object.prototype.controls;
-                    controls.mt.visible = false;
-                    controls.mb.visible = false;
-                    controls.ml.visible = false;
-                    controls.mr.visible = false;
-                    controls.mtr.visible = false; 
+					const controls = fabric.Object.prototype.controls;
+					
+					// 隱藏上下左右的邊緣變形點，只保留四個角落
+					controls.mt.visible = false;
+					controls.mb.visible = false;
+					controls.ml.visible = false;
+					controls.mr.visible = false;
 
-                    const rotHandler = fabric.controlsUtils.rotationWithSnapping;
-                    controls.tl.actionHandler = rotHandler;
-                    controls.tl.cursorStyle = 'grab';
-                    
-                    controls.tr.actionHandler = rotHandler;
-                    controls.tr.cursorStyle = 'grab';
-                    
-                    controls.bl.visible = true;
-                    controls.br.visible = true;
-                    
-                    fabric.Object.prototype.set({
-                        cornerColor: '#3b82f6', borderColor: '#3b82f6',
-                        cornerSize: 12, transparentCorners: false
-                    });
-                }
+					// --- 修改旋轉柄 (mtr) 的位置到左側 ---
+					controls.mtr.visible = true;
+					controls.mtr.x = -0.5;      // 水平位置：-0.5 代表最左邊 (0是中間，0.5是最右)
+					controls.mtr.y = 0;         // 垂直位置：0 代表正中間
+					controls.mtr.offsetY = 0;   // 歸零原本預設向上的偏移
+					controls.mtr.offsetX = -120; // 給予向左側的偏移量 (距離邊框 30px)，避免跟縮放點靠太近
+					
+					// (注意：把原本原始碼中對 controls.tl 和 controls.tr 的 actionHandler 覆寫刪除，讓它們回歸預設的縮放)
+
+					fabric.Object.prototype.set({
+						cornerColor: '#3b82f6', 
+						borderColor: '#3b82f6',
+						cornerSize: 12, 
+						transparentCorners: false
+					});
+				}
 
                 function packProjectData() {
                     const transforms = {};
