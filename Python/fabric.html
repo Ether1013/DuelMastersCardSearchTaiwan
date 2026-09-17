@@ -12,19 +12,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f3f4f6; }
+        
+        /* 讓 Canvas 支援自適應縮放，解決文字超出邊界與無法看到標題的問題 */
         .canvas-container { 
             margin: 0 auto; 
             background: white; 
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
-            /* 加入以下兩行讓外層容器自適應寬度 */
-            max-width: 100%;
+            
+            /* 新增比例設定，避免 Fabric 絕對定位導致的高度為 0 */
+            width: 100% !important;
+            max-width: 1200px;
             height: auto !important; 
+            aspect-ratio: 1200 / 800; /* 對應畫布的寬高比例 */
         }
         
-        /* 新增這段，讓 Fabric 產生的多層 canvas 標籤也能跟著等比例縮放 */
         .canvas-container canvas {
             width: 100% !important;
-            height: auto !important;
+            height: 100% !important; /* 確保內部畫布填滿容器 */
         }
         
         #loading-overlay {
@@ -35,10 +39,11 @@
     </style>
 </head>
 <body>
-    <div id="app" class="h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- 調整：手機版解除固定高度限制，改為自然堆疊向下展開；桌面版(md)維持固定高度與隱藏外部捲軸 -->
+    <div id="app" class="flex flex-col md:flex-row md:h-screen md:overflow-hidden">
         
         <!-- 左側控制面板 -->
-        <div class="w-full md:w-1/3 h-full bg-white border-r overflow-y-auto p-4 flex flex-col">
+        <div class="w-full md:w-1/3 bg-white border-r md:overflow-y-auto p-4 flex flex-col md:h-full">
             <h1 class="text-2xl font-bold mb-1 text-gray-800">圓餅圖生成器</h1>
             <div class="text-xs text-gray-500 mb-4 flex justify-between items-center">
                 <span>每10秒自動暫存</span>
@@ -50,7 +55,8 @@
                 <input v-model="chartTitle" type="text" class="w-full border rounded p-2" placeholder="例如: 2026台灣GP代表選拔戰">
             </div>
 
-            <div class="flex-1 overflow-y-auto border-t pt-4">
+            <!-- 切片編輯區塊：手機版時不使用局部 overflow，完全展開 -->
+            <div class="md:flex-1 md:overflow-y-auto border-t pt-4">
                 <div v-for="(item, index) in slices" :key="item.id" class="mb-4 p-3 border rounded bg-gray-50">
                     <div class="flex justify-between items-center mb-2">
                         <span class="font-bold text-sm">切片 #{{ index + 1 }}</span>
@@ -82,14 +88,14 @@
             </div>
         </div>
 
-        <!-- 右側 Canvas 顯示區 -->
-        <div class="w-full md:w-2/3 h-full bg-gray-100 p-4 flex overflow-auto relative">
-            <div class="absolute top-4 left-4 bg-white/80 p-2 text-sm rounded shadow pointer-events-none z-10 text-gray-700">
+        <!-- 右側 Canvas 顯示區：拔除 items-center 與 justify-center，避免縮放後上下留出多餘空白 -->
+        <div class="w-full md:w-2/3 md:h-full bg-gray-100 p-4 overflow-auto relative">
+            <div class="relative mb-4 md:absolute md:top-4 md:left-4 md:mb-0 bg-white md:bg-white/80 p-3 md:p-2 text-sm rounded shadow pointer-events-none z-10 text-gray-700">
                 💡 <b>操作提示</b>：請點擊圖表兩側的<b>文字標籤</b>來啟動圖片編輯。<br>
                 (左上/右上控制點為旋轉，左下/右下為縮放)
             </div>
-            <!-- 將 width="1000" 修改為 width="1200" -->
-			<canvas id="pieCanvas" width="1200" height="800" class="fabric-canvas"></canvas>
+            <!-- 加寬至 1200 為兩側文字爭取空間 -->
+            <canvas id="pieCanvas" width="1200" height="800" class="fabric-canvas"></canvas>
         </div>
 
         <!-- Loading 狀態 -->
@@ -104,12 +110,10 @@
 
         createApp({
             setup() {
-                const chartTitle = ref("2026台灣GP代表選拔戰");
+                // 拿掉預設值
+                const chartTitle = ref("");
                 const slices = ref([
-                    { id: 's1', label: '學生會(3C:6 / 4C:1)', value: 7, imageUrl: 'https://via.placeholder.com/400?text=Card1' },
-                    { id: 's2', label: '水闇人偶', value: 4, imageUrl: 'https://via.placeholder.com/400?text=Card2' },
-                    { id: 's3', label: '水火自然刃鬼', value: 1, imageUrl: 'https://via.placeholder.com/400?text=Card3' },
-                    { id: 's4', label: '火光自然夢幻夥伴', value: 1, imageUrl: 'https://via.placeholder.com/400?text=Card4' },
+                    { id: 's1', label: '', value: 1, imageUrl: '' }
                 ]);
 
                 const isLoading = ref(false);
@@ -118,25 +122,26 @@
                 let canvas = null;
                 let imageLayers = {}; 
 
+                // 因應 Canvas 寬度調整為 1200，中心點 X 座標改為 600
                 const CX = 600;
                 const CY = 420;
                 const RADIUS = 280;
+                
+                // 預設的柔和背景色票 (沒有圖片時的隨機顏色)
+                const palette = ['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E8BAFF', '#FFBAF3', '#D0F4DE', '#A9DEF9', '#FCF6BD'];
 
                 onMounted(() => {
-                    initFabricControls(); // 初始化 Fabric 自訂控制點
+                    initFabricControls(); 
                     
                     canvas = new fabric.Canvas('pieCanvas', {
                         preserveObjectStacking: true,
                         backgroundColor: '#ffffff'
                     });
 
-                    // 【需求2】點擊對應文字來選取圖片
                     canvas.on('mouse:down', (e) => {
                         if (e.target && e.target.isLabel) {
-                            // 先將所有圖片鎖定取消選取
                             canvas.getObjects('image').forEach(o => o.set({ selectable: false, evented: false }));
                             
-                            // 啟動對應圖片
                             const img = imageLayers[e.target.linkId];
                             if (img) {
                                 img.set({ selectable: true, evented: true });
@@ -146,29 +151,22 @@
                         }
                     });
 
-                    // 點擊空白處或取消選取時，封鎖圖片互動
                     canvas.on('selection:cleared', () => {
                         canvas.getObjects('image').forEach(o => o.set({ selectable: false, evented: false }));
                     });
 
-                    // 【需求1】嘗試讀取本地暫存
                     loadFromLocal();
-                    
-                    // 自動存檔迴圈 (每10秒)
                     setInterval(saveToLocal, 10000);
                 });
 
-                // 【需求3】自訂控制點 (旋轉與縮放)
                 function initFabricControls() {
                     const controls = fabric.Object.prototype.controls;
-                    // 隱藏不需要的點
                     controls.mt.visible = false;
                     controls.mb.visible = false;
                     controls.ml.visible = false;
                     controls.mr.visible = false;
-                    controls.mtr.visible = false; // 隱藏原本懸空的旋轉桿
+                    controls.mtr.visible = false; 
 
-                    // 設定左上、右上為旋轉 (Rotation)
                     const rotHandler = fabric.controlsUtils.rotationWithSnapping;
                     controls.tl.actionHandler = rotHandler;
                     controls.tl.cursorStyle = 'grab';
@@ -176,19 +174,15 @@
                     controls.tr.actionHandler = rotHandler;
                     controls.tr.cursorStyle = 'grab';
                     
-                    // 確保左下、右下維持預設的等比縮放
-                    // Fabric v5 預設 tl,tr,bl,br 都是 scalingEqually，所以 bl,br 不需特別改，只要確保顯示
                     controls.bl.visible = true;
                     controls.br.visible = true;
                     
-                    // 樣式調整
                     fabric.Object.prototype.set({
                         cornerColor: '#3b82f6', borderColor: '#3b82f6',
                         cornerSize: 12, transparentCorners: false
                     });
                 }
 
-                // --- 暫存機制 (Local Storage) ---
                 function packProjectData() {
                     const transforms = {};
                     for (let id in imageLayers) {
@@ -217,16 +211,14 @@
                     if (saved) {
                         try {
                             const parsed = JSON.parse(saved);
-                            // 檢查是否過期 (24小時 = 86400000 ms)
                             if (Date.now() - parsed.timestamp < 86400000) {
                                 restoreProjectData(parsed.project);
                                 return;
                             } else {
-                                localStorage.removeItem('pieChartBackup'); // 過期清除
+                                localStorage.removeItem('pieChartBackup'); 
                             }
                         } catch(e) {}
                     }
-                    // 無有效暫存則繪製初始預設值
                     renderChart();
                 }
 
@@ -239,12 +231,11 @@
                     
                     await renderChart();
 
-                    // 復原圖片矩陣
                     if (data.transforms) {
                         for (let id in data.transforms) {
                             if (imageLayers[id]) {
                                 imageLayers[id].set(data.transforms[id]);
-                                imageLayers[id].setCoords(); // 更新點擊判定
+                                imageLayers[id].setCoords(); 
                             }
                         }
                         canvas.renderAll();
@@ -252,7 +243,7 @@
                 }
 
                 function addSlice() {
-                    slices.value.push({ id: 's' + Date.now(), label: '新項目', value: 1, imageUrl: '' });
+                    slices.value.push({ id: 's' + Date.now(), label: '', value: 1, imageUrl: '' });
                 }
 
                 function removeSlice(index) {
@@ -264,14 +255,13 @@
                     slices.value.splice(index, 1);
                 }
 
-                // 改用 Base64，確保 F5 重新整理後圖片依然存在 localStorage 裡
                 function handleFileUpload(event, item) {
                     const file = event.target.files[0];
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             item.imageUrl = e.target.result;
-                            item.isBlob = true; // 註記這是本地檔，匯出時不需走 Proxy
+                            item.isBlob = true;
                         };
                         reader.readAsDataURL(file);
                     }
@@ -290,11 +280,11 @@
                 }
 
                 async function renderChart() {
-                    // 清除舊裝飾線
                     const objects = canvas.getObjects();
+                    // 每次渲染時清除舊的裝飾線以及底色區塊
                     objects.forEach(obj => { if (obj.isDecorator) canvas.remove(obj); });
 
-                    const titleText = new fabric.Text(chartTitle.value, {
+                    const titleText = new fabric.Text(chartTitle.value || "", {
                         left: CX, top: 50, originX: 'center', originY: 'center',
                         fontSize: 32, fontWeight: 'bold', isDecorator: true, selectable: false
                     });
@@ -313,8 +303,17 @@
                         const endAngle = currentAngle + sliceAngle;
                         
                         const pathStr = createArcPath(CX, CY, RADIUS, startAngle, endAngle);
-                        const clipPath = new fabric.Path(pathStr, { absolutePositioned: true });
+                        
+                        // 1. 繪製預設底色區塊 (沒有圖片時會顯示這個顏色)
+                        const bgPath = new fabric.Path(pathStr, {
+                            fill: palette[i % palette.length],
+                            absolutePositioned: true, selectable: false, evented: false, 
+                            isDecorator: true, isBg: true // 註記為背景
+                        });
+                        canvas.add(bgPath);
 
+                        // 2. 處理圖片 (覆蓋在底色區塊上)
+                        const clipPath = new fabric.Path(pathStr, { absolutePositioned: true });
                         if (item.imageUrl) {
                             if (!imageLayers[item.id] || imageLayers[item.id].originalUrl !== item.imageUrl) {
                                 if (imageLayers[item.id]) canvas.remove(imageLayers[item.id]);
@@ -322,18 +321,16 @@
                                 await new Promise(resolve => {
                                     fabric.Image.fromURL(item.imageUrl, (img) => {
                                         img.set({
-                                            clipPath: clipPath,
-                                            left: CX, top: CY,
+                                            clipPath: clipPath, left: CX, top: CY,
                                             originX: 'center', originY: 'center',
                                             originalUrl: item.imageUrl, isBlob: item.isBlob, customId: item.id,
-                                            // 預設關閉選取事件，必須透過點擊文字喚醒
                                             selectable: false, evented: false
                                         });
                                         const scale = Math.max((RADIUS * 2) / img.width, (RADIUS * 2) / img.height);
                                         img.scale(scale);
                                         
                                         imageLayers[item.id] = img;
-                                        canvas.insertAt(img, 0);
+                                        canvas.add(img); 
                                         resolve();
                                     });
                                 });
@@ -342,6 +339,7 @@
                             }
                         }
 
+                        // 3. 處理邊框
                         const borderPath = new fabric.Path(pathStr, {
                             fill: 'transparent', stroke: '#ffffff', strokeWidth: 3,
                             absolutePositioned: true, selectable: false, evented: false, isDecorator: true
@@ -357,6 +355,16 @@
                         });
                         currentAngle = endAngle;
                     }
+
+                    // --- 圖層順序整理 ---
+                    // 將所有底色區塊推到最底層
+                    canvas.getObjects().forEach(obj => {
+                        if (obj.isBg) canvas.sendToBack(obj);
+                    });
+                    // 將所有線條/邊框/標題推到最上層
+                    canvas.getObjects().forEach(obj => {
+                        if (obj.isDecorator && !obj.isBg) canvas.bringToFront(obj);
+                    });
 
                     drawLabelsAndLines(labelData);
                     canvas.renderAll();
@@ -402,28 +410,28 @@
                             });
                             canvas.add(polyline);
 
-                            // 【需求2】使文字具備互動性
-                            const text = new fabric.Text(node.label, {
-                                left: side === 'left' ? endX - 5 : endX + 5,
-                                top: node.targetY - 14,
-                                originX: align, originY: 'top',
-                                fontSize: 16, fill: '#000',
-                                selectable: false, evented: true, isDecorator: true,
-                                hoverCursor: 'pointer', isLabel: true, linkId: node.id
-                            });
-                            
-                            // 滑鼠懸停樣式
-                            text.on('mouseover', () => { text.set('fill', '#2563eb'); canvas.requestRenderAll(); });
-                            text.on('mouseout', () => { text.set('fill', '#000'); canvas.requestRenderAll(); });
-                            
-                            canvas.add(text);
+                            const textStr = node.label.trim() === "1 (NaN%)" ? "" : node.label; // 處理初始無資料狀態
+                            if(textStr) {
+                                const text = new fabric.Text(textStr, {
+                                    left: side === 'left' ? endX - 5 : endX + 5,
+                                    top: node.targetY - 14,
+                                    originX: align, originY: 'top',
+                                    fontSize: 16, fill: '#000',
+                                    selectable: false, evented: true, isDecorator: true,
+                                    hoverCursor: 'pointer', isLabel: true, linkId: node.id
+                                });
+                                
+                                text.on('mouseover', () => { text.set('fill', '#2563eb'); canvas.requestRenderAll(); });
+                                text.on('mouseout', () => { text.set('fill', '#000'); canvas.requestRenderAll(); });
+                                
+                                canvas.add(text);
+                            }
                         });
                     };
 
                     drawSide(lefts, 'left'); drawSide(rights, 'right');
                 }
 
-                // 匯出與匯入專案 JSON
                 function exportProject() {
                     const blob = new Blob([JSON.stringify(packProjectData(), null, 2)], { type: 'application/json' });
                     const link = document.createElement('a');
@@ -452,7 +460,6 @@
                         const objects = canvas.getObjects('image');
                         const fetchPromises = objects.map(async (obj) => {
                             if (obj.originalUrl && obj.originalUrl.startsWith('http') && !obj.isBlob) {
-                                // 呼叫 Python 後端 CORS Proxy
                                 const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(obj.originalUrl)}`;
                                 return new Promise((resolve) => {
                                     obj.setSrc(proxyUrl, () => resolve(), { crossOrigin: 'anonymous' });
@@ -470,7 +477,7 @@
 
                         if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
                             const file = new File([blob], 'pie-chart.png', { type: 'image/png' });
-                            await navigator.share({ title: chartTitle.value, files: [file] })
+                            await navigator.share({ title: chartTitle.value || 'chart', files: [file] })
                                 .catch(err => console.log('分享取消或失敗:', err));
                         } else {
                             const link = document.createElement('a');
