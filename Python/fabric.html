@@ -180,7 +180,14 @@
 					fabric.Object.prototype.set({
 						cornerColor: '#3b82f6', 
 						borderColor: '#3b82f6',
+						
+						// 視覺大小：畫布上實際看到的藍色小方塊大小（桌機看起來保持精緻）
 						cornerSize: 12, 
+						
+						// 🌟 關鍵：觸控判定大小（預設通常是 24，建議在行動版調大到 36 或 48）
+						// 這會在控制點周圍建立一個隱形的巨大觸控區，只要點在附近就會判定成功
+						touchCornerSize: 40, 
+						
 						transparentCorners: false
 					});
 				}
