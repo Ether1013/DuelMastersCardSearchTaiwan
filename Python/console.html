@@ -167,6 +167,23 @@
             </div>
         </div>
 
+		<!-- 💡 新增：最新商品熱度排行榜 -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <h2 class="text-base font-semibold text-gray-200 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-fire text-orange-500"></i> 最新發售商品：單卡瀏覽熱度 (Top 15)
+            </h2>
+            
+            <!-- 動態頁籤 (Tabs) -->
+            <div id="hotCardTabs" class="flex flex-wrap gap-1 border-b border-gray-800 mb-4">
+                <!-- 由 JS 動態生成 -->
+            </div>
+            
+            <!-- 排行榜清單 -->
+            <div id="hotCardList" class="space-y-4 max-h-[320px] overflow-y-auto custom-scrollbar pr-2">
+                <div class="text-gray-500 text-sm text-center py-4">資料載入中...</div>
+            </div>
+        </div>
+		
         <!-- 修改後的排版結構 -->
 		<div id="detailFiltersContainer" class="flex justify-between items-center mb-4 gap-3">
 			<!-- 左側容器：兩個下拉選單一上一下排列 -->
@@ -952,10 +969,116 @@
 				currentLogs = data.recent_50_details || [];
 				updateUserDropdown();
 				renderLogsTable();
+				
+				// 💡 新增：處理單卡熱度數據
+				window.latestSetCodes = data.LATEST_SET_CODES || [];
+				window.aggregatedHotCards = {};
+
+				const rawHotCards = data.hot_card_views || {};
+				// 跨國籍加總
+				for (let ctry in rawHotCards) {
+					let sets = rawHotCards[ctry];
+					for (let scode in sets) {
+						if (!window.aggregatedHotCards[scode]) {
+							window.aggregatedHotCards[scode] = {};
+						}
+						let cards = sets[scode];
+						for (let cname in cards) {
+							window.aggregatedHotCards[scode][cname] = (window.aggregatedHotCards[scode][cname] || 0) + cards[cname];
+						}
+					}
+				}
+				
+				// 預設選擇第一個 D/O 開頭的商品作為目前的頁籤
+				if (!window.currentHotTab && window.latestSetCodes.length > 0) {
+					let validSets = window.latestSetCodes.filter(c => c.toUpperCase().startsWith('D') || c.toUpperCase().startsWith('O'));
+					if (validSets.length > 0) {
+						window.currentHotTab = validSets[0];
+					}
+				}
+				
+				// 呼叫渲染函式
+				renderHotCardsUI();
 
 			} catch (err) {
 				console.error("Dashboard render error:", err);
 			}
+		}
+		
+		// 💡 新增：渲染單卡熱度排行榜 UI
+		function renderHotCardsUI() {
+			const tabsContainer = document.getElementById('hotCardTabs');
+			const listContainer = document.getElementById('hotCardList');
+			if (!tabsContainer || !listContainer) return;
+
+			// 篩選出 D 或 O 開頭的商品
+			let validSets = (window.latestSetCodes || []).filter(c => c.toUpperCase().startsWith('D') || c.toUpperCase().startsWith('O'));
+			
+			if (validSets.length === 0) {
+				tabsContainer.innerHTML = '';
+				listContainer.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">目前無追蹤中的最新商品</div>';
+				return;
+			}
+
+			// 1. 繪製頁籤 (Tabs)
+			tabsContainer.innerHTML = '';
+			validSets.forEach(scode => {
+				const btn = document.createElement('button');
+				const isActive = (scode === window.currentHotTab);
+				
+				btn.className = `px-4 py-2 text-xs font-bold rounded-t-lg transition border-b-2 ${
+					isActive 
+					? 'text-orange-400 border-orange-500 bg-gray-800' 
+					: 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-800/50'
+				}`;
+				btn.innerText = scode;
+				btn.onclick = () => {
+					window.currentHotTab = scode;
+					renderHotCardsUI(); // 點擊時切換重繪
+				};
+				tabsContainer.appendChild(btn);
+			});
+
+			// 2. 繪製排行榜清單
+			let cardData = window.aggregatedHotCards[window.currentHotTab] || {};
+			
+			// 將 Object 轉為 Array 並依照次數降冪排序
+			let sortedCards = Object.entries(cardData).sort((a, b) => b[1] - a[1]);
+			
+			if (sortedCards.length === 0) {
+				listContainer.innerHTML = '<div class="text-gray-500 text-sm flex items-center justify-center h-20">此商品目前尚無單卡瀏覽紀錄</div>';
+				return;
+			}
+
+			// 只取前 15 名
+			sortedCards = sortedCards.slice(0, 15);
+			
+			// 取得第一名的最高次數，用來計算長條圖的百分比寬度
+			let maxCount = sortedCards[0][1];
+
+			listContainer.innerHTML = '';
+			sortedCards.forEach(([cname, count], idx) => {
+				let pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+				// 前 3 名給予特別的顏色
+				let rankColor = idx < 3 ? 'text-orange-400' : 'text-gray-400';
+				
+				let itemHtml = `
+					<div class="flex flex-col gap-1.5">
+						<div class="flex justify-between items-end text-sm">
+							<div class="flex items-center gap-2 truncate">
+								<span class="font-mono font-black ${rankColor} w-6 text-right">#${idx + 1}</span>
+								<span class="text-gray-200 truncate font-semibold" title="${cname}">${cname}</span>
+							</div>
+							<span class="text-indigo-300 font-bold font-mono text-xs whitespace-nowrap ml-2">${count} 次</span>
+						</div>
+						<!-- 視覺化長條圖 -->
+						<div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+							<div class="bg-gradient-to-r from-orange-500 to-amber-400 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+						</div>
+					</div>
+				`;
+				listContainer.insertAdjacentHTML('beforeend', itemHtml);
+			});
 		}
 		
 		// 更新使用者與動作類型下拉選單

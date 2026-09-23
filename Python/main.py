@@ -141,6 +141,10 @@ DATA_NAME_MAP = {
     "patch_carddata": "卡牌補丁資料",  # 👈 新增
     "patch_setlist": "商品補丁資料"    # 👈 新增
 }
+# --- 請加在全域變數區 (如 DATA_NAME_MAP 下方) ---
+LATEST_SET_CODES = ["DM26-RP3", "DM26-EX3", "DM26-EX2", "NET-092"]
+# 結構設計：hot_card_views[國籍][商品代碼][卡名] = 點擊次數
+hot_card_views = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
 action_details_log = deque(maxlen=50)
 
@@ -153,6 +157,10 @@ logger = logging.getLogger("api_cache")
 class NicknameApplyModel(BaseModel):
     card_name: str
     nicknames: List[str]
+    
+# --- 請加在其他的 BaseModel 宣告附近 ---
+class CardViewTrackModel(BaseModel):
+    card_name: str
     
 class PrettyJSONResponse(JSONResponse):
     # 💡 增加 media_type，確保 Response Header 包含 utf-8 編碼宣告
@@ -190,7 +198,9 @@ class ConsoleConnectionManager:
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
             "recent_50_details": recent_logs,
-            "start_time": last_reset_time
+            "start_time": last_reset_time,
+            "hot_card_views": hot_card_views,          # 👈 加上這行
+            "LATEST_SET_CODES": LATEST_SET_CODES       # 👈 加上這行
         }
 
         # 2. 針對每條連線，依照權限派發不同資料
@@ -205,13 +215,18 @@ class ConsoleConnectionManager:
                     c_users = country_user_counter[c]
                     c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
                     
+                    # 💡 國家專屬視角：只給予該國家的卡牌熱度數據
+                    c_hot_card_views = {c: hot_card_views[c]} if c in hot_card_views else {}
+                    
                     c_payload = {
                         "total_events": sum(c_stats.values()),
                         "stats": c_stats,
                         "country_stats": {c: country_counter[c]}, 
                         "country_user_counts": {c: len(c_users)},
                         "recent_50_details": c_logs,
-                        "start_time": last_reset_time
+                        "start_time": last_reset_time,
+                        "hot_card_views": c_hot_card_views,         # 👈 加上這行
+                        "LATEST_SET_CODES": LATEST_SET_CODES        # 👈 加上這行
                     }
                     await connection.send_json(c_payload)
             except:
@@ -682,6 +697,22 @@ def load_and_process_caches():
         else:
             last_reset_time = (now - timedelta(days=2)).strftime("%Y-%m-%d 00:00:00")
 
+        # ================= 新增：載入熱門單卡紀錄 (獨立文件累加) =================
+        if db:
+            try:
+                hc_doc_ref = db.collection('analytics').document('hot_cards')
+                hc_doc = hc_doc_ref.get()
+                if hc_doc.exists:
+                    hc_data = hc_doc.to_dict().get("data", {})
+                    # 將讀回的字典重新灌回巢狀的 defaultdict 裡
+                    for ctry, sets in hc_data.items():
+                        for scode, cards in sets.items():
+                            for cname, count in cards.items():
+                                hot_card_views[ctry][scode][cname] = count
+            except Exception as e:
+                print(f"載入 Firebase 熱門卡牌紀錄失敗: {e}")
+        # ==================================================================
+
         # ==================================================================
 
         # 以下為你原本載入 JSON 檔案的邏輯，維持不變...
@@ -983,17 +1014,32 @@ async def record_debounce_timer(date_str: str):
     await asyncio.sleep(120)  # 停止動作後 2 分鐘才執行 (防抖)
     try:
         def _safe_write_to_firestore():
-            global current_daily_logs
+            global current_daily_logs, hot_card_views
             if db:
+                # 1. 寫入日常 Log (每日一檔)
                 doc_ref = db.collection('daily_records').document(date_str)
-                # 將今日記憶體內的陣列直接覆寫至 Firebase (效率極高)
                 doc_ref.set({
                     "logs": current_daily_logs,
                     "updated_at": firestore.SERVER_TIMESTAMP
                 }, merge=True)
+                
+                # 2. 獨立寫入熱門單卡追蹤 (累加在 analytics/hot_cards 內，不跨日清零)
+                hc_doc_ref = db.collection('analytics').document('hot_cards')
+                
+                # 將巢狀 defaultdict 轉換回普通 dict 以符合 Firestore 寫入規範
+                hc_dict = {}
+                for ctry, sets in hot_card_views.items():
+                    hc_dict[ctry] = {}
+                    for scode, cards in sets.items():
+                        hc_dict[ctry][scode] = dict(cards)
+                        
+                hc_doc_ref.set({
+                    "data": hc_dict,
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                }, merge=True)
 
         await asyncio.to_thread(_safe_write_to_firestore)
-        print(f"[Record] 成功同步 {date_str} 日誌至 Firebase！")
+        print(f"[Record] 成功同步 {date_str} 日誌與熱門卡牌至 Firebase！")
     except Exception as e:
         print(f"[Record Debounce Error]: {e}")
 
@@ -1755,6 +1801,54 @@ async def track_feature(request: Request):
         pass
     return {"status": "ok"}
 
+@app.get("/api/system_config")
+async def get_system_config():
+    """提供前端 LATEST_SET_CODES 以動態繪製按鈕，並作為判斷依據"""
+    return {"LATEST_SET_CODES": LATEST_SET_CODES}
+
+@app.post("/api/track/card_view")
+async def track_card_view(request: Request, payload: CardViewTrackModel):
+    """前端駐留 1.5 秒後觸發，僅針對 LATEST 且 D/O 開頭商品的單卡進行熱度計數"""
+    card_name = payload.card_name.strip()
+    if not card_name:
+        return {"status": "skipped", "reason": "empty card name"}
+        
+    client_host = request.client.host if request.client else ""
+    request_host = request.headers.get("host", "")
+    is_localhost = (
+        client_host in ["127.0.0.1", "::1"] or 
+        "localhost" in request_host or 
+        "127.0.0.1" in request_host
+    )
+
+    # 開發環境下不寫入正式統計
+    if is_localhost:
+        return {"status": "skipped", "reason": "localhost environment"}
+
+    country = get_client_country(request)
+    matched = False
+    
+    # 在記憶體的商品資料中比對這張卡
+    for set_code, set_obj in setlist_cache.items():
+        upper_code = str(set_code).strip().upper()
+        # 條件：必須存在於 LATEST 陣列中，且必須是 D 或 O 開頭
+        if set_code in LATEST_SET_CODES and (upper_code.startswith('D') or upper_code.startswith('O')):
+            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+            # 檢查這張卡有沒有在這個商品裡
+            for item in card_list:
+                item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
+                if item_name == card_name:
+                    hot_card_views[country][set_code][card_name] += 1
+                    matched = True
+                    # 不 break，因為同一張卡可能同時被收錄在兩包新發售的 LATEST 包裡
+                    
+    # 如果有被登記到次數，觸發防抖機制進行存檔
+    if matched:
+        now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
+        trigger_record_sync(now_date_str)
+        
+    return {"status": "success"}
+
 @app.get("/console.html")
 @app.get("/api/track/stats")
 async def get_feature_stats(
@@ -1840,13 +1934,18 @@ async def get_feature_stats(
             "country_user_counts": get_country_user_counts(),
             "recent_50_details": recent_logs,
             "data_transfer_stats": formatted_data_stats,
-            "start_time": last_reset_time
+            "start_time": last_reset_time,
+            "hot_card_views": hot_card_views,         # 👈 新增這行：全域單卡熱度
+            "LATEST_SET_CODES": LATEST_SET_CODES      # 👈 新增這行：目前追蹤的商品清單
         }
     else:
         c = country.upper()
         c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
         c_users = country_user_counter[c]
         c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
+        
+        # 💡 國家專屬視角：只給予該國家的卡牌熱度數據
+        c_hot_card_views = {c: hot_card_views[c]} if c in hot_card_views else {}
         
         result = {
             "total_events": sum(c_stats.values()),
@@ -1855,7 +1954,9 @@ async def get_feature_stats(
             "country_user_counts": {c: len(c_users)},
             "recent_50_details": c_logs,
             "data_transfer_stats": formatted_data_stats,
-            "start_time": last_reset_time
+            "start_time": last_reset_time,
+            "hot_card_views": c_hot_card_views,       # 👈 新增這行：該國專屬單卡熱度
+            "LATEST_SET_CODES": LATEST_SET_CODES      # 👈 新增這行：目前追蹤的商品清單
         }
 
     return PrettyJSONResponse(content=result)
@@ -2395,6 +2496,7 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     user_counter.clear()
     action_details_log.clear()
     data_transfer_stats.clear()  # 👈 新增這行
+    hot_card_views.clear()  # 👈 新增這行：清空單卡熱度紀錄
 
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 

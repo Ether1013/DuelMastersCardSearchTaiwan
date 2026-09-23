@@ -734,6 +734,42 @@
 				right: -36px !important;
 				left: auto !important;
 			}
+			/* 💡 新增：手機版水平切換按鈕樣式 */
+            .hor-arrow-btn {
+                display: flex !important;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                
+                /* 👇 調整這三行：讓底色與邊框變得極度淡雅 */
+                background: rgba(0, 0, 0, 0.2);          /* 從原本的 0.65 降為 0.2，大幅增加透明度 */
+                border: 1px solid rgba(255, 255, 255, 0.08); /* 邊框調淡到幾乎快看不見 */
+                color: rgba(255, 255, 255, 0.7);         /* 箭頭顏色也稍微調柔和一點 */
+                
+                font-size: 20px;
+                font-weight: bold;
+                width: 140px; 
+                height: 32px;
+                border-radius: 16px;
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                user-select: none;
+                transition: all 0.2s ease;
+                z-index: 1050;
+                backdrop-filter: blur(4px); /* 配合淡淡的背景色，毛玻璃效果會更好看 */
+            }
+            .hor-arrow-btn:active {
+                background: rgba(211, 47, 47, 0.7); /* 點擊時的紅色也跟著調淡一點 */
+                border-color: rgba(211, 47, 47, 0.7);
+                transform: translateX(-50%) scale(0.95);
+            }
+            /* 定位在 Modal 卡片上下的深色留白區 */
+            .hor-arrow-btn.prev { top: 3vh; }
+            .hor-arrow-btn.next { bottom: 3vh; }
+            
+            /* 截圖時隱藏 */
+            .is-capturing .hor-arrow-btn { display: none !important; }
 		}
 			
 		
@@ -2247,6 +2283,10 @@
             pointer-events: none;
             background: #f8fafc;
         }
+		/* 💡 新增：預設隱藏水平切換按鈕 */
+        .hor-arrow-btn {
+            display: none;
+        }
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2824,6 +2864,9 @@
 
     <!-- 卡牌資料浮動視窗 (Modal Window) -->
     <div class="modal-overlay" id="card-modal">
+		<!-- 💡 新增：手機版專屬的上下切換按鈕 (懸浮於卡片外側) -->
+        <button class="hor-arrow-btn prev" id="btn-mobile-prev">︿</button>
+        <button class="hor-arrow-btn next" id="btn-mobile-next">﹀</button>
         <div class="modal-card">
             <div class="modal-header" id="modal-header">
                 <div class="modal-title" id="modal-title">卡牌名稱</div>
@@ -3318,6 +3361,10 @@
         let rawNicknames = [];
 		let rawDiary = [];   // 💡 新增：日記快取變數
 		let rawSetlist = {}; // 系列快取變數
+		// 💡 新增：動態商品代碼與卡牌熱度追蹤變數
+        let LATEST_SET_CODES = []; 
+        let cardViewTimer = null;
+        let viewedCardsInSession = new Set();
 		// 全域快取當前過濾後的原始結果
 		let currentFilterResults = [];
 		let currentExactResults = []; // 💡 新增：完全比對結果快取
@@ -3721,6 +3768,9 @@
 			const newCloseBtn = modalTitleEl.querySelector('#modal-close-btn');
 			if (newCloseBtn) {
 				newCloseBtn.onclick = () => {
+					// 💡 關閉時中斷計時
+					if (cardViewTimer) clearTimeout(cardViewTimer);
+					
 					const cardModal = document.getElementById('card-modal');
 					cardModal.classList.remove('active');
 					cardModal.style.zIndex = ''; 
@@ -4664,7 +4714,8 @@
 					return await directRes.json();
 				}
 
-				const [cardData, ctData, raceData, abilData, catNameData, nicknameData, setlistData, diaryData, replaceConfig, patchCardData, patchSetlist] = await Promise.all([
+				// 將原本的 Promise.all 替換為以下內容：
+				const [cardData, ctData, raceData, abilData, catNameData, nicknameData, setlistData, diaryData, replaceConfig, patchCardData, patchSetlist, systemConfig] = await Promise.all([
                     fetchWithCache('/api/v2/carddata'),
                     fetchWithCache('/api/v2/card_types'),
                     fetchWithCache('/api/v2/races'),
@@ -4674,9 +4725,15 @@
                     fetchWithCache('/api/v2/setlist'),
                     fetchWithCache('/api/v2/diary'),
                     fetch('/api/check_sp_replace').then(r => r.json()).catch(() => ({ need_replace: false })),
-                    fetchWithCache('/api/v2/patch_carddata'), // 👈 新增
-                    fetchWithCache('/api/v2/patch_setlist')   // 👈 新增
+                    fetchWithCache('/api/v2/patch_carddata'),
+                    fetchWithCache('/api/v2/patch_setlist'),
+                    fetch('/api/system_config').then(r => r.json()).catch(() => ({ LATEST_SET_CODES: [] })) // 💡 新增這行
                 ]);
+
+				// 💡 新增：將取得的 LATEST_SET_CODES 存入全域變數
+				if (systemConfig && systemConfig.LATEST_SET_CODES) {
+					LATEST_SET_CODES = systemConfig.LATEST_SET_CODES;
+				}
 
 				// ==========================================
 				// 💡 1. 執行補丁合併：把 Patch 覆寫至基底資料
@@ -5430,15 +5487,6 @@
 			updateSmallDropdown(bigSelect.value);
 		}
 		
-		// ==========================================
-		// 最新商品快捷陣列 (你可以在這裡手動替換 setcode)
-		// ==========================================
-		const LATEST_SET_CODES = [
-			"DM26-RP3",
-			"DM26-EX3",
-			"DM26-EX2",
-			"NET-092"
-		];
 		// 動態產生最新商品按鈕
 		function renderLatestSetButtons() {
 			const container = document.getElementById('latest-sets-container');
@@ -7298,22 +7346,24 @@
 				imgStackContainer.appendChild(nicknameApplyBtn);
 			}
 
-            if (isModal) {
-                nicknameApplyBtn.style.display = 'flex';
-                nicknameApplyBtn.onclick = (e) => {
-                    e.stopPropagation();
+            // 解除 isModal 限制，讓雙欄模式也能顯示申請暱稱按鈕
+            nicknameApplyBtn.style.display = 'flex';
+            nicknameApplyBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (typeof openNicknameModal === 'function') {
                     openNicknameModal(card.name);
-                };
-            } else {
-                nicknameApplyBtn.style.display = 'none';
-            }
+                }
+            };
 
-            if (isModal && !window.isOpenedFromCart) {
+            // 解除 isModal 限制，只要不是從購物車裡面打開的，就顯示加入按鈕
+            if (!window.isOpenedFromCart) {
                 cartAddBtn.style.display = 'flex';
                 cartAddBtn.onclick = (e) => {
                     e.stopPropagation();
-                    modifyCart(card.name, 1);
-                    showToast(`已將 ${card.name} 加入購物車`);
+                    if (typeof modifyCart === 'function') {
+                        modifyCart(card.name, 1);
+                        showToast(`已將 ${card.name} 加入購物車`);
+                    }
                 };
             } else {
                 cartAddBtn.style.display = 'none';
@@ -8584,6 +8634,31 @@
             }
         }
 
+		// 💡 新增：1.5秒駐留追蹤機制
+		function trackCardViewWithDwellTime(cardName) {
+			// 每次切換卡牌，先清除前一個計時器
+			if (cardViewTimer) {
+				clearTimeout(cardViewTimer);
+				cardViewTimer = null;
+			}
+			
+			// 防呆與 Session 去重判定 (同一次開網頁，同一張卡只算一次)
+			if (!cardName || viewedCardsInSession.has(cardName)) return;
+
+			// 開始倒數 1.5 秒
+			cardViewTimer = setTimeout(() => {
+				viewedCardsInSession.add(cardName); // 登記為已看過
+				
+				// 背景發送給後端 (後端會自動判斷這張卡是不是熱門商品裡的)
+				fetch('/api/track/card_view', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ card_name: cardName })
+				}).catch(err => console.error("卡牌熱度發送失敗:", err));
+				
+			}, 1500);
+		}
+
         // 修改 openCardModal (加上 reRenderCallback)
         function openCardModal(card, combinedCiv, matchedItem = null, targetIdIndex = 0, resetScroll = true) {
             // 除非是剛切換語系導致的重繪，否則每次打開都預設回中文
@@ -8609,6 +8684,9 @@
                 const modalBody = cardModal.querySelector('.modal-body');
                 if (modalBody) modalBody.scrollTop = 0;
             }
+			
+			// 💡 觸發 1.5 秒駐留判定
+            trackCardViewWithDwellTime(card.name);
         }
 		
 		function renderSplitDetail(card, combinedCiv, matchedItem = null) {
@@ -8660,6 +8738,9 @@
             renderDetailContentToContainer(card, combinedCiv, matchedItem, imgBox, infoContainer, false);
 
             if (infoContainer) infoContainer.scrollTop = 0;
+			
+			// 💡 觸發 1.5 秒駐留判定
+            trackCardViewWithDwellTime(card.name);
         }
 		
 		// ================= 全站即時廣播接收器 =================
@@ -8716,6 +8797,9 @@
 			if (cardModal) {
 				cardModal.addEventListener('click', (e) => {
 					if (e.target === cardModal) {
+						// 💡 關閉時中斷計時
+						if (cardViewTimer) clearTimeout(cardViewTimer);
+						
 						cardModal.classList.remove('active');
 						cardModal.style.zIndex = ''; // 💡 還原 z-index
 					}
@@ -9635,35 +9719,14 @@
 				// B. 鍵盤上下鍵 (ArrowUp / ArrowDown) 切換卡牌列表
 				// ==========================================
 				if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-					// 判斷目前停留在 Page 2 還是 Page 3[cite: 1]
-					const isPage2Active = document.getElementById('tab-list')?.classList.contains('active');
-					const isPage3Active = document.getElementById('tab-list-split')?.classList.contains('active');
-
-					// 若不在 Page 2 或 Page 3 則跳出[cite: 1]
-					if (!isPage2Active && !isPage3Active) return;
-
-					const containerId = isPage2Active ? 'list-container' : 'list-container-split';
-					const cardItems = Array.from(document.querySelectorAll(`#${containerId} .card-list-item`));
-
-					if (cardItems.length > 0) {
-						e.preventDefault(); // 避免畫面被預設上下捲動[cite: 1]
-
-						const currentIndex = cardItems.findIndex(item => item.classList.contains('selected'));
-						let targetIndex = -1;
-
-						if (e.key === 'ArrowDown') {
-							targetIndex = (currentIndex === -1 || currentIndex >= cardItems.length - 1) ? 0 : currentIndex + 1;
-						} else if (e.key === 'ArrowUp') {
-							targetIndex = (currentIndex <= 0) ? cardItems.length - 1 : currentIndex - 1;
-						}
-
-						if (targetIndex !== -1 && cardItems[targetIndex]) {
-							const targetItem = cardItems[targetIndex];
-							targetItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-							targetItem.click(); // 點擊卡牌（Page 2 Modal 開啟時會直接覆蓋，不會關閉）
-						}
-						return;
+					// 💡 替換為呼叫共用函式
+					e.preventDefault(); 
+					if (e.key === 'ArrowDown') {
+						navigateCardList('next');
+					} else if (e.key === 'ArrowUp') {
+						navigateCardList('prev');
 					}
+					return;
 				}
 
 				// ==========================================
@@ -11830,6 +11893,46 @@
 			}
 			return null;
 		}
+		
+		// 💡 新增：共用的列表上下切換邏輯
+		function navigateCardList(direction) {
+			const isPage2Active = document.getElementById('tab-list')?.classList.contains('active');
+			const isPage3Active = document.getElementById('tab-list-split')?.classList.contains('active');
+
+			if (!isPage2Active && !isPage3Active) return;
+
+			const containerId = isPage2Active ? 'list-container' : 'list-container-split';
+			const cardItems = Array.from(document.querySelectorAll(`#${containerId} .card-list-item`));
+
+			if (cardItems.length > 0) {
+				const currentIndex = cardItems.findIndex(item => item.classList.contains('selected'));
+				let targetIndex = -1;
+
+				if (direction === 'next') {
+					targetIndex = (currentIndex === -1 || currentIndex >= cardItems.length - 1) ? 0 : currentIndex + 1;
+				} else if (direction === 'prev') {
+					targetIndex = (currentIndex <= 0) ? cardItems.length - 1 : currentIndex - 1;
+				}
+
+				if (targetIndex !== -1 && cardItems[targetIndex]) {
+					const targetItem = cardItems[targetIndex];
+					targetItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+					targetItem.click(); 
+				}
+			}
+		}
+
+		// 💡 新增：綁定手機版上下按鈕事件
+		document.addEventListener('DOMContentLoaded', () => {
+			document.getElementById('btn-mobile-prev')?.addEventListener('click', (e) => {
+				e.stopPropagation(); // 避免點到背景觸發關閉 Modal
+				navigateCardList('prev');
+			});
+			document.getElementById('btn-mobile-next')?.addEventListener('click', (e) => {
+				e.stopPropagation();
+				navigateCardList('next');
+			});
+		});
 
 		// 渲染與更新購物車 UI
 		function updateCartUI() {
