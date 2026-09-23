@@ -169,10 +169,15 @@
 
 		<!-- 💡 新增：最新商品熱度排行榜 -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <h2 class="text-base font-semibold text-gray-200 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-fire text-orange-500"></i> 最新發售商品：單卡瀏覽熱度 (Top 15)
-            </h2>
-            
+            <!-- 👇 修改這裡：把單純的 h2 改成 flex 容器，並加入 select -->
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-fire text-orange-500"></i> 最新發售商品：單卡熱度 (Top 15)
+                </h2>
+                <select id="hotCardCountrySelect" onchange="renderHotCardsUI()" class="bg-gray-800 text-xs font-bold text-orange-400 border border-gray-700 rounded-lg px-3 py-1 outline-none cursor-pointer">
+                    <option value="ALL">🌍 全世界 (ALL)</option>
+                </select>
+            </div>
             <!-- 動態頁籤 (Tabs) -->
             <div id="hotCardTabs" class="flex flex-wrap gap-1 border-b border-gray-800 mb-4">
                 <!-- 由 JS 動態生成 -->
@@ -972,20 +977,27 @@
 				
 				// 💡 新增：處理單卡熱度數據
 				window.latestSetCodes = data.LATEST_SET_CODES || [];
-				window.aggregatedHotCards = {};
+				window.rawHotCards = data.hot_card_views || {}; // 👈 改為儲存原始的巢狀結構
 
-				const rawHotCards = data.hot_card_views || {};
-				// 跨國籍加總
-				for (let ctry in rawHotCards) {
-					let sets = rawHotCards[ctry];
-					for (let scode in sets) {
-						if (!window.aggregatedHotCards[scode]) {
-							window.aggregatedHotCards[scode] = {};
-						}
-						let cards = sets[scode];
-						for (let cname in cards) {
-							window.aggregatedHotCards[scode][cname] = (window.aggregatedHotCards[scode][cname] || 0) + cards[cname];
-						}
+				// 👇 新增：動態更新國籍下拉選項
+				const hotSelect = document.getElementById('hotCardCountrySelect');
+				if (hotSelect) {
+					// 抓取所有有紀錄的國籍並排序
+					const availableCountries = Object.keys(window.rawHotCards).sort();
+					
+					// 保留第一個 ALL 選項，清除舊的國家選項
+					hotSelect.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>';
+					availableCountries.forEach(c => {
+						const opt = document.createElement('option');
+						opt.value = c;
+						opt.innerText = `${c} 專屬視角`;
+						hotSelect.appendChild(opt);
+					});
+
+					// 如果是 Token 單一國家登入，或是只有一個國家的資料，隱藏下拉選單
+					if (availableCountries.length === 1 && !adminKey) {
+						hotSelect.value = availableCountries[0];
+						hotSelect.style.display = 'none';
 					}
 				}
 				
@@ -1040,7 +1052,28 @@
 			});
 
 			// 2. 繪製排行榜清單
-			let cardData = window.aggregatedHotCards[window.currentHotTab] || {};
+			// 2. 繪製排行榜清單
+			const selectedCountry = document.getElementById('hotCardCountrySelect')?.value || 'ALL';
+			let cardData = {};
+
+			// 👇 依照選擇的國籍即時計算數據
+			if (selectedCountry === 'ALL') {
+				// 全世界：跨國籍加總目前頁籤 (Set) 的資料
+				for (let ctry in window.rawHotCards) {
+					let sets = window.rawHotCards[ctry];
+					if (sets[window.currentHotTab]) {
+						let cards = sets[window.currentHotTab];
+						for (let cname in cards) {
+							cardData[cname] = (cardData[cname] || 0) + cards[cname];
+						}
+					}
+				}
+			} else {
+				// 特定國家：只抓該國籍目前頁籤的資料
+				if (window.rawHotCards[selectedCountry] && window.rawHotCards[selectedCountry][window.currentHotTab]) {
+					cardData = window.rawHotCards[selectedCountry][window.currentHotTab];
+				}
+			}
 			
 			// 將 Object 轉為 Array 並依照次數降冪排序
 			let sortedCards = Object.entries(cardData).sort((a, b) => b[1] - a[1]);
