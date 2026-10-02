@@ -123,6 +123,9 @@ wiki_details_cache = {}
 feature_counter = defaultdict(int)
 country_counter = defaultdict(int)  # 👈 新增：全域國籍次數統計
 user_counter = defaultdict(int)     # 👈 新增：全域使用者次數統計
+# 👇 新增這兩行：每日加總統計計數器
+daily_total_counter = defaultdict(int)
+country_daily_total_counter = defaultdict(lambda: defaultdict(int))
 # 💡 新增：紀錄各靜態資料的「重傳 (fetch)」與「快取 (cache)」次數
 data_transfer_stats = defaultdict(lambda: {"fetch": 0, "cache": 0})
 # ================= 補上這兩行：國家專屬的細部分類計數器 =================
@@ -194,6 +197,7 @@ class ConsoleConnectionManager:
         
         admin_payload = {
             "total_events": sum(sorted_stats.values()),
+            "daily_totals": dict(sorted(daily_total_counter.items())), # 👈 補上這一行
             "stats": sorted_stats,
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
@@ -672,6 +676,8 @@ def load_and_process_caches():
         user_counter.clear()
         country_feature_counter.clear()
         country_user_counter.clear()
+        daily_total_counter.clear()         # 👈 新增清空
+        country_daily_total_counter.clear() # 👈 新增清空
         action_details_log.clear()
 
         for entry in all_records:
@@ -681,13 +687,19 @@ def load_and_process_caches():
             c = str(entry.get("country", "Unknown")).upper()
             if c == "UNKNOWN" and u != "Unknown" and "-" in u:
                 c = u.split("-")[0].upper()
+                
+            # 👇 新增：解析紀錄時間，轉換為 YYYYMMDD 格式作為 Key
+            time_str = entry.get("time", "")
+            date_key = time_str[:10].replace("-", "") if time_str else current_daily_date
 
             feature_counter[feat] += 1
             country_counter[c] += 1
             user_counter[u] += 1
+            daily_total_counter[date_key] += 1                  # 👈 新增：累加該日全域總數
             
             country_feature_counter[c][feat] += 1
             country_user_counter[c][u] += 1
+            country_daily_total_counter[c][date_key] += 1       # 👈 新增：累加該日該國籍總數
             
             action_details_log.appendleft(entry)
 
@@ -1737,9 +1749,14 @@ async def track_feature(request: Request):
                 country_counter[country] += 1
                 user_counter[user_id] += 1
 
-                # 👇 新增這兩行：同步累加「國家專屬」計數器
+                # 同步累加「國家專屬」計數器
                 country_feature_counter[country][feature_name] += 1
                 country_user_counter[country][user_id] += 1
+
+                # 👇 新增這三行：即時累加當日計數器
+                now_date_key = now_utc8[:10].replace("-", "")
+                daily_total_counter[now_date_key] += 1
+                country_daily_total_counter[country][now_date_key] += 1
 
                 # 💡 將 is_vpn 與 real_ip_country 一併存入 Log，供 Console 顯示 Badge
                 entry = {
@@ -1789,6 +1806,7 @@ async def track_feature(request: Request):
 
             await console_manager.broadcast({
                 "total_events": sum(sorted_stats.values()),
+                "daily_totals": dict(sorted(daily_total_counter.items())), # 👈 新增這行 (全域每日陣列)
                 "stats": sorted_stats,
                 "country_stats": sorted_country_stats,
                 "country_user_counts": get_country_user_counts(),
@@ -1929,6 +1947,7 @@ async def get_feature_stats(
         
         result = {
             "total_events": sum(sorted_stats.values()),
+            "daily_totals": dict(sorted(daily_total_counter.items())), # 👈 補上這一行
             "stats": sorted_stats,
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
@@ -1949,6 +1968,7 @@ async def get_feature_stats(
         
         result = {
             "total_events": sum(c_stats.values()),
+            "daily_totals": dict(sorted(country_daily_total_counter[c].items())), # 👈 新增這行 (單一國家每日陣列)
             "stats": c_stats,
             "country_stats": {c: country_counter[c]}, 
             "country_user_counts": {c: len(c_users)},
@@ -2497,6 +2517,8 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     action_details_log.clear()
     data_transfer_stats.clear()  # 👈 新增這行
     hot_card_views.clear()  # 👈 新增這行：清空單卡熱度紀錄
+    daily_total_counter.clear()
+    country_daily_total_counter.clear()
 
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 

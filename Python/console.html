@@ -900,7 +900,20 @@
 
 				const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
 
-				if (totalElem) totalElem.innerText = data.total_events || 0;
+				if (totalElem) {
+					// 💡 新增邏輯：如果是兩天以上的資料，組合顯示字串並微調字體避免破版
+					if (data.daily_totals && Object.keys(data.daily_totals).length > 1) {
+						const counts = Object.values(data.daily_totals);
+						const formula = counts.join('+'); // 產生如 "350+421+62"
+						totalElem.innerText = `${formula}=${data.total_events || 0}`;
+						totalElem.className = "text-xl md:text-2xl font-extrabold text-white mt-1 tracking-tight";
+					} else {
+						// 只有一天資料的話，維持只顯示一個數字
+						totalElem.innerText = data.total_events || 0;
+						totalElem.className = "text-3xl font-extrabold text-white mt-1";
+					}
+				}
+				
 				if (featElem) featElem.innerText = Object.keys(featureStats).length;
 				if (userElem) userElem.innerText = totalUsersCount;
 
