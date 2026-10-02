@@ -2298,11 +2298,15 @@
 
     <!-- 固定頂部 Header 頁籤 -->
 	<div class="header-tabs">
-		<div class="tab active">條件過濾</div>
+		<!-- 將條件過濾與計算機按鈕合併，使用 flex 排版拉開距離 -->
+		<div class="tab active" style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+			<span>條件過濾</span>
+			<div id="btn-toggle-quick-calc" style="display: flex; align-items: center; font-size: 13px;" title="開啟/關閉 快速計算機">
+				🧮<span id="quick-calc-status" style="font-size: 11px; margin-left: 4px; font-weight: bold; color: #ccc;">OFF</span>
+			</div>
+		</div>
 		<div class="tab">查詢結果</div>
 		<div class="tab desktop-only-tab">查詢結果(雙欄)</div>
-		<!-- 請在 header-tabs 內找到 .tab 區域加入這行 -->
-		<button type="button" class="tab btn-id-search" id="btn-open-id-search">ID找卡</button>
 		<div class="tab">⚡今天我要…</div>
 		
 		<!-- 新增：獨立計數器容器 (無切換功能、置右對齊) -->
@@ -2316,13 +2320,10 @@
 	<!-- 第一個頁籤：條件過濾 -->
     <div id="tab-filter" class="tab-content active layout-grid">
         
-		<!-- ⚡ 快速計算機搜尋面板 (方案 A - Sticky Drawer) -->
-		<div class="drawer-container quick-search-drawer" id="drawer-quick-search">
-			<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
-				<span>⚡ 快速計算機搜尋面板</span>
-				<span class="drawer-arrow" style="font-size: 10px;">▼</span>
-			</div>
-			<div class="drawer-content">
+		<!-- 拔除 drawer-container 與 handle，直接設為隱藏 -->
+		<div class="quick-search-drawer" id="drawer-quick-search" style="display: none;">
+			<!-- 加上 style="display: flex;" 確保內部排版不受原 css drawer-content 隱藏的影響 -->
+			<div class="drawer-content" style="display: flex;">
 				<!-- 上方標籤顯示區 -->
 				<div id="quick-tag-display" class="quick-tag-container">
 					<span class="quick-placeholder">請點擊下方按鈕或使用鍵盤輸入條件...</span>
@@ -3594,12 +3595,10 @@
 
 		btnAdvanced.addEventListener('click', () => {
 		
-			// 💡 新增：如果「快速計算機面板」目前是展開狀態，點擊時將其收起來
 			const quickDrawer = document.getElementById('drawer-quick-search');
-			if (quickDrawer && quickDrawer.classList.contains('open')) {
-				quickDrawer.classList.remove('open');
-				const arrow = quickDrawer.querySelector('.drawer-arrow');
-				if (arrow) arrow.innerText = '▼';
+			if (quickDrawer && quickDrawer.style.display !== 'none') {
+				quickDrawer.style.display = 'none';
+				updateQuickCalcUI(false); // 💡 同步狀態
 			}
 			
 			// 在切換模式前，先判斷目前畫面上「可見」的卡種是否達到 UI 全選
@@ -4501,30 +4500,23 @@
 			// ----------------------------------------------------
 			// [快速計算機]
 			document.getElementById('qa-btn-filter-quick').addEventListener('click', () => {
-				tabHeaders[0].click(); // 切換到「條件過濾」(現在是 index 1)
+				tabHeaders[0].click(); 
 				const drawer = document.getElementById('drawer-quick-search');
-				if (drawer && !drawer.classList.contains('open')) {
-					drawer.parentElement.querySelector('.drawer-handle')?.click();
+				if (drawer) {
+					drawer.style.display = 'block';
+					updateQuickCalcUI(true); // 💡 同步狀態為 ON
 				}
 				showToast("⚡ 已為您開啟快速計算機");
 			});
 
 			// [標準搜尋]
 			document.getElementById('qa-btn-filter-std').addEventListener('click', () => {
-				// 💡 關鍵：強迫將快速計算機面板收起來
 				const quickDrawer = document.getElementById('drawer-quick-search');
-				if (quickDrawer && quickDrawer.classList.contains('open')) {
-					quickDrawer.classList.remove('open');
-					const arrow = quickDrawer.querySelector('.drawer-arrow');
-					if (arrow) arrow.innerText = '▼';
+				if (quickDrawer && quickDrawer.style.display !== 'none') {
+					quickDrawer.style.display = 'none';
+					updateQuickCalcUI(false); // 💡 同步狀態
 				}
-
-				tabHeaders[0].click(); // 切換到「條件過濾」
-				const cardNameInput = document.getElementById('card-name');
-				if (cardNameInput) {
-					cardNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-					cardNameInput.focus();
-				}
+				tabHeaders[0].click();
 			});
 
 			// [精密進階過濾]
@@ -4588,6 +4580,25 @@
 						if (targetContent) targetContent.classList.remove('active');
 					}
 				});
+			});
+			
+			// 💡 更新：條件過濾頁籤內的計算機按鈕點擊事件
+			document.getElementById('btn-toggle-quick-calc')?.addEventListener('click', function(e) {
+				const parentTab = this.closest('.tab');
+				
+				// 情況 1：如果焦點在其他頁籤，點擊只會切換分頁，不開啟計算機
+				if (!parentTab.classList.contains('active')) {
+					return; // 讓事件自然冒泡給父元素 (.tab) 去處理頁籤切換
+				}
+
+				// 情況 2：如果焦點已經在 [條件過濾]，則阻止冒泡，執行計算機開關
+				e.stopPropagation();
+				
+				const drawer = document.getElementById('drawer-quick-search');
+				const isCurrentlyHidden = drawer.style.display === 'none';
+				
+				drawer.style.display = isCurrentlyHidden ? 'block' : 'none';
+				updateQuickCalcUI(isCurrentlyHidden); // 呼叫共用函式切換 ON/OFF
 			});
 		});
 
@@ -5575,8 +5586,8 @@
 
 
         // --- 頁籤切換邏輯 ---
-        // --- 頁籤切換邏輯 (支援 localStorage 紀錄偏好) ---
-		const tabHeaders = document.querySelectorAll('.header-tabs .tab:not(.btn-id-search)');
+ 		// 💡 將排除對象改為計算機的 ID，這樣計算機按鈕就不會觸發頁籤切換了
+		const tabHeaders = document.querySelectorAll('.header-tabs .tab:not(#btn-toggle-quick-calc)');
 		const tabContentsList = document.querySelectorAll('.tab-content');
 
 		tabHeaders.forEach((header, index) => {
@@ -5823,7 +5834,7 @@
 		// =========================================
 		btnSearch.addEventListener('click', (e) => {
 		
-			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.classList.contains('open');
+			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.style.display !== 'none';
 			const isAdvMode = document.body.classList.contains('advanced-mode');
 			
 			// 取得當前 UI 過濾條件作為 detail 側錄
@@ -8068,6 +8079,15 @@
 			}
 		}
 		
+		// 💡 共用函式：切換計算機的 ON/OFF 視覺狀態
+		function updateQuickCalcUI(isOn) {
+			const statusSpan = document.getElementById('quick-calc-status');
+			if (statusSpan) {
+				statusSpan.innerText = isOn ? 'ON' : 'OFF';
+				statusSpan.style.color = isOn ? '#ffffff' : '#cccccc';
+			}
+		}
+		
 		function renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal) {
 			const twSets = [];
 			const nonTwSets = [];
@@ -9668,8 +9688,8 @@
 						commitNumBuffer();
 					}
 
-					// 2. 當快搜抽屜開啟且有條件時，先套用至 UI[cite: 1]
-					if (drawer && drawer.classList.contains('open')) {
+					// 2. 當快搜抽屜開啟且有條件時，先套用至 UI
+					if (drawer && drawer.style.display !== 'none') { // 💡 修正：改用 display 判斷
 						if (quickTags.length > 0) {
 							applyQuickSearchToUI();
 						}
@@ -9733,7 +9753,7 @@
 				// B. 快搜計算機抽屜熱鍵邏輯 (原有邏輯)[cite: 1]
 				// ==========================================
 				const drawer = document.getElementById('drawer-quick-search');
-				if (!drawer || !drawer.classList.contains('open')) return;
+				if (!drawer || drawer.style.display === 'none') return;
 
 				if (e.key >= '0' && e.key <= '9') {
 					e.preventDefault();
@@ -9765,10 +9785,8 @@
 			document.getElementById('btn-quick-close-footer')?.addEventListener('click', () => {
 				const drawer = document.getElementById('drawer-quick-search');
 				if (drawer) {
-					drawer.classList.remove('open');
-					// 同步更新上方標題拉桿的箭頭
-					const arrow = drawer.querySelector('.drawer-arrow');
-					if (arrow) arrow.innerText = '▼';
+					drawer.style.display = 'none';
+					updateQuickCalcUI(false); // 💡 同步狀態
 				}
 			});
 			
