@@ -4343,6 +4343,8 @@
 					results[0].cardData.wdata?.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
 					openCardModal(results[0].cardData, combinedCiv, null);
 				} else {
+					// 💡 新增：在此處先點擊「選項初始化」按鈕，清空所有現有過濾條件
+					document.getElementById('btn-reset').click();
 					// 如果精確找不到，嘗試呼叫原生模糊查詢並打開結果列表
 					document.getElementById('card-name').value = nameVal;
 					document.getElementById('btn-search').click();
