@@ -26,11 +26,18 @@
     <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
 		<div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
 			
-			<!-- 將標題與時間區間包在一起 -->
-			<div class="flex flex-col gap-1">
-				<div class="flex items-center gap-3">
-					<i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
-					<h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+			<!-- 將標題與時間區間包在一起，加上 w-full 使其在手機版撐開 -->
+			<div class="flex flex-col gap-1 w-full sm:w-auto">
+				<!-- 加入 flex justify-between 使標題與按鈕左右對齊 -->
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
+						<i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
+						<h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+					</div>
+					<!-- 💡 新增：手機版漢堡選單按鈕 (僅手機版顯示 sm:hidden) -->
+					<button onclick="toggleMobileMenu()" class="sm:hidden text-gray-400 hover:text-white p-1 outline-none">
+						<i id="mobileMenuIcon" class="fa-solid fa-bars text-xl"></i>
+					</button>
 				</div>
 				<!-- 統計區間顯示 -->
 				<div class="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-1 mt-0.5">
@@ -43,7 +50,7 @@
 				</div>
 			</div>
             <!-- 按鈕控制區域 -->
-            <div class="flex flex-col gap-2 w-full sm:w-auto items-end">
+            <div id="actionMenu" class="hidden sm:flex flex-col gap-2 w-full sm:w-auto items-end mt-2 pt-3 border-t border-gray-800 sm:mt-0 sm:pt-0 sm:border-0">
                 <!-- 第一行：Connected 狀態標籤 (自己一行) -->
                 <div class="w-full flex justify-start sm:justify-end">
                     <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
@@ -1914,6 +1921,26 @@
 				closeResetModal();
 			}
 		}
+		
+		// 💡 新增：切換手機版 Header 選單
+        function toggleMobileMenu() {
+            const menu = document.getElementById('actionMenu');
+            const icon = document.getElementById('mobileMenuIcon');
+            
+            if (menu.classList.contains('hidden')) {
+                // 打開選單
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark'); // 換成 X 圖示
+            } else {
+                // 關閉選單
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars'); // 換回漢堡圖示
+            }
+        }
 
 		// 頁面初始化時，如果是 Admin 才顯示 Reset 按鈕
 		// 頁面初始化
