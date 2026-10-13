@@ -1080,6 +1080,9 @@ async def serve_index(): return FileResponse("index.html")
 @app.get("/fabric.do")
 async def serve_index(): return FileResponse("fabric.html")
 
+@app.get("/rank.html")
+async def serve_index(): return FileResponse("rank.html")
+
 @app.get("/pop.html")
 async def get_pop_page(
     request: Request, 

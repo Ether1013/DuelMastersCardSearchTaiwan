@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>動態排行產生器</title>
+    <!-- 引入 SortableJS (拖曳套件) 與 html2canvas (截圖套件) -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* 全局變數 */
+        :root {
+            --unit-height: calc(100vh / 7);
+            --label-width: 100px;
+            --upload-btn-width: 80px;
+            --bg-color: #1a1a1a;
+            --tier-border: #000;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background-color: var(--bg-color); 
+            color: white; 
+            font-family: sans-serif;
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 頂部功能列 (不入鏡) */
+        #top-bar {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 20px;
+            background: #333;
+            flex-shrink: 0;
+        }
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #555;
+            color: white;
+            font-weight: bold;
+        }
+        button:hover { background: #777; }
+        .btn-primary { background: #4CAF50; }
+        .btn-primary:hover { background: #45a049; }
+
+        /* 截圖範圍 (包含標題與排行榜) */
+        #screenshot-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            overflow: hidden; /* 由 JS 演算法保證不溢出 */
+        }
+
+        /* 可編輯主標題 */
+        #main-title {
+            text-align: center;
+            padding: 10px;
+            font-size: 1.5rem;
+            outline: none;
+            background-color: var(--bg-color);
+            color: white;
+            border-bottom: 2px solid var(--tier-border);
+            flex-shrink: 0;
+        }
+
+        #tier-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tier-row {
+            display: flex;
+            border-bottom: 2px solid var(--tier-border);
+            min-height: var(--unit-height);
+            background-color: var(--bg-color);
+        }
+
+        /* 等級標籤 (Header) */
+        .tier-label {
+            width: var(--label-width);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            border-right: 2px solid var(--tier-border);
+            position: relative;
+            cursor: grab; /* 提示可拖曳交換順序 */
+            flex-shrink: 0;
+        }
+        .tier-label:active { cursor: grabbing; }
+
+        /* 文字編輯區 (避免干擾拖曳) */
+        .tier-name {
+            outline: none;
+            cursor: text;
+            width: 70%;
+            text-align: center;
+            z-index: 2;
+        }
+
+        /* 增刪 UI */
+        .ui-btn {
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+            color: rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 3;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            padding: 2px 5px;
+            user-select: none;
+        }
+        .ui-btn:hover { color: black; background: rgba(255,255,255,0.8); }
+        .btn-del { top: 2px; left: 2px; }
+        .btn-add { bottom: 2px; right: 2px; }
+		
+		/* 當只剩一個 tier-row 時，隱藏該列的 [X] 按鈕 */
+        .tier-row:only-child .btn-del {
+            display: none;
+        }
+
+        /* 預設等級顏色 (利用 nth-child 賦予基礎色系) */
+        .tier-row:nth-child(5n+1) .tier-label { background-color: #ff7f7f; }
+        .tier-row:nth-child(5n+2) .tier-label { background-color: #ffbf7f; }
+        .tier-row:nth-child(5n+3) .tier-label { background-color: #ffff7f; }
+        .tier-row:nth-child(5n+4) .tier-label { background-color: #7fff7f; }
+        .tier-row:nth-child(5n+5) .tier-label { background-color: #7fbfff; }
+
+        .tier-content, #footer-pool {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap; /* 超出寬度自動折行 */
+            align-content: flex-start;
+            min-height: var(--unit-height);
+        }
+
+        /* 底部選項池 */
+        #footer-container {
+            display: flex;
+            min-height: var(--unit-height);
+            border-top: 2px solid var(--tier-border);
+            background: #2a2a2a;
+            flex-shrink: 0;
+        }
+
+        #upload-zone {
+            width: var(--upload-btn-width);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #444;
+            cursor: pointer;
+            border-left: 2px solid var(--tier-border);
+        }
+        #upload-zone:hover { background: #555; }
+
+        /* 圖片樣式修改 */
+        .item-img {
+            height: var(--unit-height); /* 統一高度 */
+            width: auto; /* 寬度設為 auto，讓瀏覽器依照原圖比例自動計算 */
+            max-width: 100%; /* 防止極端超寬圖片撐破版面 */
+            background: #111;
+            border: 1px solid #333;
+            cursor: grab;
+            display: block; /* 避免圖片下方產生預設的文字基線空隙 */
+        }
+        .item-img:active { cursor: grabbing; }
+
+        /* 垃圾桶 */
+        #trash-zone {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 60px;
+            background: rgba(255, 50, 50, 0.9);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 10px 10px 0 0;
+            transition: bottom 0.3s ease;
+            z-index: 999;
+        }
+        #trash-zone.active { bottom: 0; }
+        #trash-zone.hover { background: rgba(255, 0, 0, 1); transform: translateX(-50%) scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部功能列 -->
+    <div id="top-bar">
+        <button class="btn-primary" onclick="downloadImage()">下載截圖</button>
+    </div>
+
+    <!-- 截圖範圍開始 -->
+    <div id="screenshot-area">
+        <h2 id="main-title" contenteditable="true">動態排行工具</h2>
+        <div id="tier-list">
+            <!-- 預設 5 個等級 -->
+        </div>
+    </div>
+    <!-- 截圖範圍結束 -->
+
+    <div id="footer-container">
+        <div id="footer-pool"></div>
+        <div id="upload-zone" onclick="document.getElementById('file-upload').click()">
+            上傳<br>圖片
+        </div>
+        <input type="file" id="file-upload" multiple accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+    </div>
+
+    <div id="trash-zone">🗑️ 拖曳至此刪除</div>
+
+    <script>
+        const tierList = document.getElementById('tier-list');
+        const footerPool = document.getElementById('footer-pool');
+        const trashZone = document.getElementById('trash-zone');
+        const mainTitle = document.getElementById('main-title');
+        
+        // 預設等級資料
+        const defaultTiers = ['S', 'A', 'B', 'C', 'D'];
+
+        // 初始化
+        function init() {
+            defaultTiers.forEach(label => createTierRow(label));
+            
+            // 初始化選項池拖曳
+            initSortableItems(footerPool);
+            // 初始化垃圾桶
+            initTrash();
+            
+            // 初始化列級別的拖曳 (點擊空白處拖曳交換位置)
+            new Sortable(tierList, {
+                handle: '.tier-label', // 限制只能抓取標籤區塊拖曳
+                animation: 150,
+                onEnd: calculateLayout
+            });
+
+            // 監聽全域貼上事件與視窗改變
+            window.addEventListener('paste', handlePaste);
+            window.addEventListener('resize', calculateLayout);
+            mainTitle.addEventListener('input', calculateLayout); // 標題高度改變時重算
+            
+            calculateLayout();
+        }
+
+        // 建立單一等級列 (可指定插入在某列之後)
+        function createTierRow(labelText, referenceRow = null) {
+            const row = document.createElement('div');
+            row.className = 'tier-row';
+            
+            const label = document.createElement('div');
+            label.className = 'tier-label';
+            
+            // 刪除按鈕 [X]
+			const delBtn = document.createElement('div');
+			delBtn.className = 'ui-btn btn-del';
+			delBtn.innerText = 'X';
+			delBtn.setAttribute('data-html2canvas-ignore', 'true'); // <--- 新增這行，讓截圖忽略它
+			delBtn.onclick = (e) => {
+				e.stopPropagation(); // 阻止觸發拖曳
+				removeSpecificTier(row);
+			};
+
+			// 新增按鈕 [+]
+			const addBtn = document.createElement('div');
+			addBtn.className = 'ui-btn btn-add';
+			addBtn.innerText = '+';
+			addBtn.setAttribute('data-html2canvas-ignore', 'true'); // <--- 新增這行，讓截圖忽略它
+			addBtn.onclick = (e) => {
+				e.stopPropagation();
+				createTierRow('New', row);
+			};
+
+            // 文字編輯區
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'tier-name';
+            nameSpan.contentEditable = true;
+            nameSpan.innerText = labelText;
+            // 防止編輯文字時觸發 Sortable 拖曳
+            nameSpan.onmousedown = (e) => e.stopPropagation();
+            nameSpan.ontouchstart = (e) => e.stopPropagation();
+
+            label.appendChild(delBtn);
+            label.appendChild(nameSpan);
+            label.appendChild(addBtn);
+            
+            const content = document.createElement('div');
+            content.className = 'tier-content';
+            
+            row.appendChild(label);
+            row.appendChild(content);
+            
+            if (referenceRow) {
+                referenceRow.after(row);
+            } else {
+                tierList.appendChild(row);
+            }
+            
+            initSortableItems(content);
+            calculateLayout();
+        }
+
+        // 刪除特定列
+        function removeSpecificTier(rowEl) {
+            const content = rowEl.querySelector('.tier-content');
+            // 將該列剩餘的圖片丟回選項池
+            while (content.firstChild) {
+                footerPool.appendChild(content.firstChild);
+            }
+            rowEl.remove();
+            calculateLayout();
+        }
+
+        // 初始化圖片項目拖曳功能
+        function initSortableItems(el) {
+            new Sortable(el, {
+                group: 'shared',
+                animation: 150,
+                delay: 100, // 手機防誤觸
+                delayOnTouchOnly: true,
+                onStart: function () {
+                    trashZone.classList.add('active');
+                },
+                onEnd: function () {
+                    trashZone.classList.remove('active');
+                    calculateLayout(); // 重新計算高度
+                }
+            });
+        }
+
+        // 垃圾桶邏輯
+        function initTrash() {
+            new Sortable(trashZone, {
+                group: 'shared',
+                ghostClass: 'hover',
+                onAdd: function (evt) {
+                    const itemEl = evt.item;
+                    itemEl.parentNode.removeChild(itemEl);
+                    URL.revokeObjectURL(itemEl.src);
+                    calculateLayout();
+                }
+            });
+        }
+
+        // 圖片上傳與貼上處理
+        function handleFileUpload(event) {
+            processFiles(event.target.files);
+            event.target.value = '';
+        }
+
+        function handlePaste(event) {
+            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            const files = [];
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.includes('image')) {
+                    files.push(item.getAsFile());
+                }
+            }
+            if(files.length > 0) processFiles(files);
+        }
+
+        function processFiles(files) {
+            for (let file of files) {
+                if (file && file.type.startsWith('image/')) {
+                    const imgUrl = URL.createObjectURL(file);
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.className = 'item-img';
+                    img.ondblclick = function() {
+                        this.remove();
+                        URL.revokeObjectURL(imgUrl);
+                        calculateLayout();
+                    };
+                    footerPool.appendChild(img);
+                }
+            }
+            calculateLayout();
+        }
+
+        // 核心演算法：動態計算無滾動條的單位高度 (考慮固定高度與折行)
+        function calculateLayout() {
+            const viewportH = window.innerHeight;
+            const viewportW = window.innerWidth;
+            const labelW = 100;
+            const uploadBtnW = 80;
+            
+            // 計算固定佔用的高度 (頂部按鈕區 + 截圖內的標題)
+            const topBarH = document.getElementById('top-bar').offsetHeight;
+            const titleH = mainTitle.offsetHeight;
+            const fixedH = topBarH + titleH;
+            
+            // 剩餘可用高度
+            const availableH = viewportH - fixedH;
+            
+            let minH = 20;
+            let maxH = availableH / 6; // 基準評估
+            let bestH = maxH;
+
+            const rowContents = document.querySelectorAll('.tier-content');
+            const rowCounts = Array.from(rowContents).map(el => el.children.length);
+            const footerCount = footerPool.children.length;
+
+            function checkFit(h) {
+                let totalUnits = 0;
+                
+                // 計算每一列佔用的行數
+                for (let count of rowCounts) {
+                    if (count === 0) {
+                        totalUnits += 1;
+                    } else {
+                        const imgPerRow = Math.max(1, Math.floor((viewportW - labelW) / h));
+                        totalUnits += Math.ceil(count / imgPerRow);
+                    }
+                }
+                
+                // 計算 footer 佔用的行數
+                if (footerCount === 0) {
+                    totalUnits += 1;
+                } else {
+                    const imgPerRowFooter = Math.max(1, Math.floor((viewportW - uploadBtnW) / h));
+                    totalUnits += Math.ceil(footerCount / imgPerRowFooter);
+                }
+
+                return (totalUnits * h) <= availableH;
+            }
+
+            // 二元搜尋
+            for (let i = 0; i < 15; i++) {
+                let mid = (minH + maxH) / 2;
+                if (checkFit(mid)) {
+                    bestH = mid; 
+                    minH = mid;
+                } else {
+                    maxH = mid;
+                }
+            }
+
+            document.documentElement.style.setProperty('--unit-height', `${bestH}px`);
+        }
+
+        // 截圖下載功能 (針對 #screenshot-area)
+        function downloadImage() {
+            const target = document.getElementById('screenshot-area');
+            window.scrollTo(0,0);
+            
+            html2canvas(target, {
+                backgroundColor: '#1a1a1a',
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'tier_list.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
