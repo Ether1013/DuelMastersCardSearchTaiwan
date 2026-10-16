@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f7f7f5">
+<title>Color Palette Drill</title>
+<style>
+  :root{--bg:#f7f7f5;--card:#fff;--text:#1d1d1f;--muted:#6e6e73;--line:#d8d8dc;--soft:#efefed;--ok:#1f7a4d;--bad:#b42318;--accent:#161616;--radius:18px}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+  button{font:inherit}
+  a{color:inherit}
+  .app{width:min(760px,100%);margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom))}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:4px 2px 18px}
+  .brand{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .title{font-size:28px;line-height:1.15;font-weight:750;margin:5px 0 0;letter-spacing:-.02em}
+  .badge{font-size:12px;color:var(--muted);white-space:nowrap}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .start{padding:24px}
+  .section-label{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin-bottom:10px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+  .seg button,.primary,.secondary,.type-pick{min-height:50px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);font-weight:700;cursor:pointer;touch-action:manipulation}
+  .seg button.active,.type-pick.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .primary{width:100%;background:var(--accent);color:#fff;border-color:var(--accent);font-size:16px}
+  .secondary{padding:0 18px;background:#fff}
+  .note{font-size:12px;line-height:1.65;color:var(--muted);margin-top:14px}
+  .note a{text-underline-offset:2px}
+  .mode-list{display:grid;gap:8px;margin:8px 0 22px}
+  .mode-item{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;background:var(--soft);border-radius:12px}
+  .mode-num{width:26px;height:26px;border:1px solid #b9b9bd;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto;background:#fff;color:var(--text)}
+  .mode-item b{font-size:14px}.mode-item span{display:block;color:var(--muted);font-size:12px;margin-top:2px;line-height:1.45}
+  .single-wrap{display:none;margin:-4px 0 22px}
+  .single-wrap.show{display:block}
+  .type-grid{display:grid;grid-template-columns:1fr;gap:8px}
+  .type-pick{height:auto;min-height:58px;text-align:left;padding:11px 12px;display:flex;gap:11px;align-items:flex-start}
+  .type-pick .pick-num{width:25px;height:25px;border-radius:7px;border:1px solid currentColor;display:grid;place-items:center;font-size:11px;flex:0 0 auto;opacity:.78}
+  .type-pick .pick-copy{font-size:13px;line-height:1.35}
+  .type-pick .pick-copy small{display:block;font-size:11px;font-weight:500;margin-top:2px;color:var(--muted)}
+  .type-pick.active .pick-copy small{color:rgba(255,255,255,.72)}
+  .quiz{display:none}
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .progress-wrap{flex:1;height:8px;background:#e5e5e5;border-radius:999px;overflow:hidden}
+  .progress{height:100%;width:0;background:#202020;transition:width .25s ease}
+  .counter{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);min-width:62px;text-align:right}
+  .qcard{padding:22px}
+  .qtype{font-size:12px;font-weight:800;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+  .question{font-size:21px;font-weight:750;line-height:1.42;margin:9px 0 18px;letter-spacing:-.01em}
+  .prompt-swatch{width:100%;height:170px;border-radius:15px;border:1px solid rgba(0,0,0,.15);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);margin:4px 0 22px}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .answer{position:relative;min-height:68px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;padding:12px;text-align:left;transition:transform .06s ease,border-color .15s ease,background .15s ease;touch-action:manipulation;overflow:hidden}
+  .answer:active{transform:scale(.99)}
+  .answer[disabled]{cursor:default}
+  .answer.correct{border:2px solid var(--ok);background:#f0faf4}
+  .answer.wrong{border:2px solid var(--bad);background:#fff3f2}
+  .letter{position:absolute;top:9px;left:10px;display:grid;place-items:center;width:23px;height:23px;border-radius:7px;background:rgba(255,255,255,.88);border:1px solid rgba(0,0,0,.13);font-size:11px;font-weight:800;z-index:2;color:#111}
+  .text-choice{padding:11px 10px 10px 36px;min-height:68px;display:flex;align-items:center;font-weight:650;line-height:1.35}
+  .swatch-choice{height:128px;border-radius:11px;border:1px solid rgba(0,0,0,.12)}
+  .swatch-meta{font-size:12px;font-weight:700;margin-top:8px;text-align:center;color:var(--muted)}
+  .feedback{display:none;margin-top:16px;padding:15px;border-radius:13px;background:#f3f3f1;border:1px solid #dededb}
+  .feedback.show{display:block}
+  .feedback-title{font-weight:800;margin-bottom:6px}
+  .feedback-title.ok{color:var(--ok)}.feedback-title.bad{color:var(--bad)}
+  .feedback-body{font-size:13px;line-height:1.65;color:#4f4f52}
+  .feedback-compare{margin-top:8px;padding-top:8px;border-top:1px solid #d9d9d5}
+  .next-row{display:flex;justify-content:flex-end;margin-top:14px}
+  .next-row .primary{width:auto;min-width:145px;padding:0 20px}
+  .results{display:none;padding:24px}
+  .score-big{font-size:54px;font-weight:800;letter-spacing:-.04em;margin:6px 0 2px}
+  .score-sub{color:var(--muted);font-size:14px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}
+  .stat{padding:14px;background:var(--soft);border-radius:12px}
+  .stat b{display:block;font-size:13px;line-height:1.35}.stat span{display:block;font-size:21px;font-weight:800;margin-top:4px}
+  .result-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mini{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.55}
+  .season-chip{font-weight:800}
+  .answer.revealed{padding-bottom:10px}
+  .swatch-choice{position:relative;overflow:hidden}
+  .swatch-reveal{position:absolute;left:7px;right:7px;bottom:7px;border-radius:9px;padding:7px 8px;font-size:11px;line-height:1.35;font-weight:800;letter-spacing:.01em;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 1px 5px rgba(0,0,0,.12);z-index:3}
+  .swatch-reveal.light{color:#111;background:rgba(255,255,255,.86);border:1px solid rgba(0,0,0,.12)}
+  .swatch-reveal.dark{color:#fff;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.18)}
+  .swatch-reveal small{display:block;font-size:10px;font-weight:650;opacity:.82;margin-top:1px}
+  .text-reveal{display:flex;align-items:center;gap:9px;margin:6px 7px 3px 34px;padding-top:7px;border-top:1px solid #e2e2df;font-size:11px;color:var(--muted);line-height:1.35}
+  .mini-swatch{width:30px;height:30px;border-radius:7px;border:1px solid rgba(0,0,0,.14);flex:0 0 auto}
+  .season-reveal{margin:6px 7px 3px 34px;padding-top:7px;border-top:1px solid #e2e2df;font-size:11px;color:var(--muted);line-height:1.35}
+  .prompt-swatch{position:relative;overflow:hidden}
+  .prompt-reveal{position:absolute;left:12px;right:12px;bottom:12px;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;line-height:1.4;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);box-shadow:0 1px 6px rgba(0,0,0,.14)}
+  .prompt-reveal.light{color:#111;background:rgba(255,255,255,.88);border:1px solid rgba(0,0,0,.12)}
+  .prompt-reveal.dark{color:#fff;background:rgba(0,0,0,.67);border:1px solid rgba(255,255,255,.18)}
+  .save-row{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .save-row.show{display:flex}
+  .review-save{min-height:42px;padding:0 14px;border-radius:10px;border:1px solid #b8b8bc;background:#fff;font-weight:750;cursor:pointer}
+  .review-save.saved{background:#202020;color:#fff;border-color:#202020}
+  .save-status{font-size:12px;color:var(--muted);line-height:1.4}
+  .review-panel{margin:4px 0 22px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fafaf9}
+  .review-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+  .review-count{font-size:13px;font-weight:800}
+  .review-actions{display:flex;gap:7px;flex-wrap:wrap}
+  .tiny-btn{min-height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700;cursor:pointer}
+  .tiny-btn:disabled{opacity:.4;cursor:default}
+  .file-pick{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px dashed #aaaab0;border-radius:11px;background:#fff;font-size:13px;font-weight:750;cursor:pointer;padding:9px 12px;text-align:center}
+  .file-pick input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  .import-status{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px;min-height:18px}
+  .review-start-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}
+  .review-start{min-height:44px;border-radius:11px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-weight:800;cursor:pointer}
+  .review-start:disabled{opacity:.35;cursor:default}
+  .review-cancel{min-height:44px;padding:0 12px;border-radius:11px;border:1px solid var(--line);background:#fff;font-weight:750;cursor:pointer}
+  .review-cancel:disabled{opacity:.35;cursor:default}
+  .review-mode-banner{display:none;margin:0 0 12px;padding:10px 12px;border:1px solid #cfcfd2;border-radius:11px;background:#fff;font-size:12px;color:var(--muted);line-height:1.45}
+  .review-mode-banner.show{display:block}
+  @media (max-width:520px){
+    .app{padding-left:12px;padding-right:12px}.title{font-size:25px}.start,.qcard,.results{padding:18px}.question{font-size:19px}.prompt-swatch{height:145px}.answers{gap:9px}.swatch-choice{height:112px}.answer{padding:9px}.text-choice{font-size:14px;padding-left:34px}.stats{grid-template-columns:1fr 1fr}.result-actions{grid-template-columns:1fr}.badge{display:none}.swatch-reveal{left:5px;right:5px;bottom:5px;padding:6px;font-size:10px}.swatch-reveal small{font-size:9px}.review-head{align-items:flex-start;flex-direction:column}.review-start-row{grid-template-columns:1fr}.save-row{align-items:stretch}.review-save{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><div class="brand">Personal Color Trainer</div><h1 class="title">Color Palette Drill</h1></div>
+    <div class="badge">128 OFFICIAL RGB COLORS · 4 SEASONS</div>
+  </header>
+
+  <section id="startScreen" class="card start">
+    <div class="section-label">題數</div>
+    <div class="seg" id="countSeg"><button type="button" data-count="10" class="active">10 題</button><button type="button" data-count="20">20 題</button></div>
+
+    <div class="section-label">出題模式</div>
+    <div class="seg" id="modeSeg"><button type="button" data-mode="mixed" class="active">混合題型</button><button type="button" data-mode="single">單一題型</button></div>
+
+    <div id="singleWrap" class="single-wrap">
+      <div class="section-label">選擇單一題型</div>
+      <div class="type-grid" id="typeGrid">
+        <button class="type-pick active" type="button" data-type="1"><span class="pick-num">1</span><span class="pick-copy">色名 → 選色<small>看到日文色名，選出正確色塊。</small></span></button>
+        <button class="type-pick" type="button" data-type="2"><span class="pick-num">2</span><span class="pick-copy">色 → 選色名<small>看到色塊，選出正確日文色名。</small></span></button>
+        <button class="type-pick" type="button" data-type="3"><span class="pick-num">3</span><span class="pick-copy">色 → 判斷季節<small>判斷該色屬於哪個 Season。</small></span></button>
+        <button class="type-pick" type="button" data-type="4"><span class="pick-num">4</span><span class="pick-copy">同色系四季比較<small>四個相近色（含低彩度／中性色組）中找出指定季節。</small></span></button>
+        <button class="type-pick" type="button" data-type="5"><span class="pick-num">5</span><span class="pick-copy">雙色微差辨識<small>兩個近似色中辨識指定季節；涵蓋底調、清濁、彩度、明度。</small></span></button>
+      </div>
+    </div>
+
+    <div id="mixedInfo">
+      <div class="section-label">混合題型內容</div>
+      <div class="mode-list">
+        <div class="mode-item"><div class="mode-num">1</div><div><b>色名 → 選色</b><span>看到日文色名，選出正確色塊。</span></div></div>
+        <div class="mode-item"><div class="mode-num">2</div><div><b>色 → 選色名</b><span>看到色塊，選出正確的日文顏色名稱。</span></div></div>
+        <div class="mode-item"><div class="mode-num">3</div><div><b>色 → 判斷季節</b><span>判斷該色屬於 Spring / Summer / Autumn / Winter。</span></div></div>
+        <div class="mode-item"><div class="mode-num">4</div><div><b>同色系四季比較</b><span>四個相近色（包含獨立打包的低彩度與中性色題組）中，找出指定季節的命定色。</span></div></div>
+        <div class="mode-item"><div class="mode-num">5</div><div><b>雙色微差辨識</b><span>兩個近似色中找出指定季節；題目會刻意安排底調、清濁、彩度或明度的細微差異。</span></div></div>
+      </div>
+    </div>
+
+    <div class="section-label">特別複習題庫</div>
+    <div class="review-panel">
+      <div class="review-head">
+        <div id="reviewCount" class="review-count">目前已存 0 題</div>
+        <div class="review-actions">
+          <button id="exportReviewBtn" type="button" class="tiny-btn" disabled>匯出 JSON</button>
+          <button id="clearReviewBtn" type="button" class="tiny-btn" disabled>清空存檔</button>
+        </div>
+      </div>
+      <label class="file-pick">讀取要特別複習的 JSON 題庫<input id="reviewFileInput" type="file" accept="application/json,.json"></label>
+      <div id="importStatus" class="import-status">尚未載入 JSON。載入後會只考該檔案內的題目，並忽略上方 10 / 20 題與題型設定。</div>
+      <div class="review-start-row">
+        <button id="startReviewBtn" type="button" class="review-start" disabled>開始匯入題庫</button>
+        <button id="clearImportBtn" type="button" class="review-cancel" disabled>取消載入</button>
+      </div>
+    </div>
+
+    <button id="startBtn" type="button" class="primary">開始測驗</button>
+    <div class="note">色塊改用「パーソナルカラー実務検定協会（ACB）」官方網頁公開 RGB 數值，色名亦以官網現行拼寫為準；CMYK 保留你提供的教材數值作為複習參考。題型 5 的「底調／清濁／彩度／明度」比較軸是依官方 RGB 做程式化近似配對，並非官方逐色屬性標註。不同裝置與 Safari 顯示器設定仍可能造成些微顯色差異。<br><a href="https://acb-color.com/about_personalcolor/" target="_blank" rel="noopener noreferrer">ACB 官方 Personal Color 色票來源</a></div>
+  </section>
+
+  <section id="quizScreen" class="quiz">
+    <div id="reviewModeBanner" class="review-mode-banner"></div>
+    <div class="topbar"><div class="progress-wrap"><div id="progress" class="progress"></div></div><div id="counter" class="counter">1 / 10</div></div>
+    <div class="card qcard">
+      <div id="qtype" class="qtype"></div>
+      <div id="question" class="question"></div>
+      <div id="promptArea"></div>
+      <div id="answers" class="answers"></div>
+      <div id="feedback" class="feedback"></div>
+      <div id="saveRow" class="save-row"><button id="saveQuestionBtn" type="button" class="review-save">存入複習題庫</button><span id="saveStatus" class="save-status"></span></div>
+      <div id="nextRow" class="next-row" style="display:none"><button id="nextBtn" type="button" class="primary">下一題</button></div>
+    </div>
+  </section>
+
+  <section id="resultScreen" class="card results">
+    <div class="section-label">RESULT</div>
+    <div id="scoreBig" class="score-big">0 / 10</div>
+    <div id="scoreSub" class="score-sub"></div>
+    <div id="stats" class="stats"></div>
+    <div class="result-actions"><button id="retryBtn" type="button" class="primary">再考一次</button><button id="homeBtn" type="button" class="secondary">回到首頁</button></div>
+    <div class="mini">本頁為單一 HTML 檔，不需網路即可答題；Safari / Chrome 可直接開啟。重新整理頁面即可完全重置。</div>
+  </section>
+</div>
+<script>
+'use strict';
+
+/**
+ * ============================================================================
+ * 抽樣與遞迴演算法可調參數區 (DRILL_CONFIG)
+ * 後續若要調整難度或將參數 UI 化（例如綁定 Slider），可直接修改此物件屬性
+ * ============================================================================
+ */
+const DRILL_CONFIG = {
+  // 【條件 1-1】低彩度／極暗色獨立分組（Neutral 中性與米灰白系）判定門檻
+  NEUTRAL_MAX_SATURATION: 0.18, // HSV 彩度 <= 0.18 歸入獨立的中性／低彩度題庫
+  NEUTRAL_MAX_VALUE: 0.18,      // HSV 明度 <= 0.18（極深色／近黑色）歸入中性／低彩度題庫
+
+  // 【條件 1-2】次級遞迴展開時，候選色與「最初題目色 A (Root Anchor)」的最大色相差上限（度）
+  // 用於防止「朋友的朋友」發生色相過度漂移（Hue Drift）
+  MAX_ROOT_HUE_DRIFT: 48,
+
+  // 【條件 2-1 & 2-2】單一遞迴步驟內的嚴格匹配條件 f(CurrentNode, 嚴格)
+  STRICT_STEP_HUE_DIFF: 32,          // 嚴格模式下，與上一級節點的色相差上限（度）
+  STRICT_NEUTRAL_RGB_DIST: 95,       // 中性色題庫在嚴格模式下的 RGB 綜合距離上限
+  STRICT_NEIGHBOR_LIMIT_PER_STEP: 5, // 題型 1/2 每次從單一節點展開時，最多抓幾個最相近色（避免第一層直接塞爆）
+
+  // 【條件 2-4】當嚴格遞迴見底仍未滿額時，放寬模式 f(RootAnchor, 放寬) 的匹配條件
+  RELAXED_ROOT_HUE_DIFF: 75,         // 放寬模式下，允許與最初題目色 A 的最大色相差（跨相鄰色系）
+
+  // 【條件 2-2 & 2-3】各題型遞迴候選池大小與最終抽取數量
+  TYPE1_2_POOL_SIZE: 8,              // 題型 1 & 2：遞迴湊滿 8 個干擾候選色
+  TYPE1_2_PICK_COUNT: 3,             // 題型 1 & 2：從 8 個候選中隨機抽 3 個作為錯誤選項
+  TYPE4_PER_SEASON_POOL_SIZE: 3,     // 題型 4：另外三個季節「各自」遞迴湊滿 3 個候選色（三季共 9 個候選）
+  TYPE5_POOL_SIZE: 6                 // 題型 5：針對目標色與指定維度，遞迴湊滿 6 個候選比較色再抽 1 個
+};
+
+const COLORS=[{"season":"spring","name":"ピーチピンク","rgb":"245, 197, 181","cmyk":"C:0 M:25 Y:20 K:0","hex":"#F5C5B5"},{"season":"spring","name":"オーロラ","rgb":"235, 145, 128","cmyk":"C:0 M:50 Y:40 K:0","hex":"#EB9180"},{"season":"spring","name":"カーネーションピンク","rgb":"230, 118, 135","cmyk":"C:0 M:64 Y:25 K:0","hex":"#E67687"},{"season":"spring","name":"ウォームピンク","rgb":"222, 73, 92","cmyk":"C:0 M:85 Y:50 K:0","hex":"#DE495C"},{"season":"spring","name":"スカーレット","rgb":"220, 62, 59","cmyk":"C:0 M:90 Y:82 K:0","hex":"#DC3E3B"},{"season":"spring","name":"トマトレッド","rgb":"216, 35, 50","cmyk":"C:0 M:100 Y:90 K:0","hex":"#D82332"},{"season":"spring","name":"チャイナレッド","rgb":"220, 62, 51","cmyk":"C:0 M:90 Y:90 K:0","hex":"#DC3E33"},{"season":"spring","name":"アイリス","rgb":"94, 81, 145","cmyk":"C:70 M:75 Y:0 K:0","hex":"#5E5191"},{"season":"spring","name":"パンジー","rgb":"112, 97, 155","cmyk":"C:60 M:65 Y:0 K:0","hex":"#70619B"},{"season":"spring","name":"ロンドントワイライト","rgb":"2, 34, 44","cmyk":"C:100 M:60 Y:40 K:65","hex":"#02222C"},{"season":"spring","name":"ターコイズ","rgb":"0, 165, 156","cmyk":"C:90 M:0 Y:40 K:0","hex":"#00A59C"},{"season":"spring","name":"ケンブリッジブルー","rgb":"82, 187, 185","cmyk":"C:63 M:0 Y:25 K:0","hex":"#52BBB9"},{"season":"spring","name":"ライトアクア","rgb":"150, 208, 195","cmyk":"C:40 M:0 Y:22 K:0","hex":"#96D0C3"},{"season":"spring","name":"パロットグリーン","rgb":"21, 167, 72","cmyk":"C:80 M:0 Y:100 K:0","hex":"#15A748"},{"season":"spring","name":"スプリングノート","rgb":"0, 167, 86","cmyk":"C:80 M:0 Y:90 K:0","hex":"#00A756"},{"season":"spring","name":"アップルグリーン","rgb":"108, 183, 68","cmyk":"C:60 M:0 Y:100 K:0","hex":"#6CB744"},{"season":"spring","name":"スプリンググリーン","rgb":"155, 201, 98","cmyk":"C:40 M:0 Y:80 K:0","hex":"#9BC962"},{"season":"spring","name":"ハニーイエロー","rgb":"251, 215, 158","cmyk":"C:0 M:15 Y:40 K:0","hex":"#FBD79E"},{"season":"spring","name":"カナリアイエロー","rgb":"255, 232, 109","cmyk":"C:0 M:5 Y:70 K:0","hex":"#FFE86D"},{"season":"spring","name":"ミモザ","rgb":"254, 219, 61","cmyk":"C:0 M:10 Y:90 K:0","hex":"#FEDB3D"},{"season":"spring","name":"バナナイエロー","rgb":"246, 188, 37","cmyk":"C:0 M:25 Y:100 K:0","hex":"#F6BC25"},{"season":"spring","name":"シャンパンオレンジ","rgb":"231, 125, 98","cmyk":"C:0 M:60 Y:60 K:0","hex":"#E77D62"},{"season":"spring","name":"ルミナスコーラル","rgb":"228, 106, 81","cmyk":"C:0 M:70 Y:70 K:0","hex":"#E46A51"},{"season":"spring","name":"バレンシア","rgb":"201, 61, 53","cmyk":"C:10 M:90 Y:90 K:0","hex":"#C93D35"},{"season":"spring","name":"フロリダゴールド","rgb":"237, 150, 67","cmyk":"C:0 M:45 Y:87 K:0","hex":"#ED9643"},{"season":"spring","name":"マロン","rgb":"138, 80, 47","cmyk":"C:40 M:75 Y:100 K:10","hex":"#8A502F"},{"season":"spring","name":"コーヒーブラウン","rgb":"107, 69, 49","cmyk":"C:60 M:80 Y:100 K:10","hex":"#6B4531"},{"season":"spring","name":"キャメル","rgb":"157, 102, 48","cmyk":"C:30 M:60 Y:100 K:10","hex":"#9D6630"},{"season":"spring","name":"ビスケット","rgb":"209, 164, 118","cmyk":"C:5 M:30 Y:50 K:10","hex":"#D1A476"},{"season":"spring","name":"フローラルホワイト","rgb":"253, 241, 213","cmyk":"C:1 M:4 Y:15 K:0","hex":"#FDF1D5"},{"season":"spring","name":"アイボリー","rgb":"255, 245, 220","cmyk":"C:0 M:3 Y:12 K:0","hex":"#FFF5DC"},{"season":"spring","name":"カント","rgb":"189, 190, 185","cmyk":"C:15 M:10 Y:12 K:12","hex":"#BDBEB9"},{"season":"summer","name":"ベビーピンク","rgb":"249, 220, 228","cmyk":"C:0 M:15 Y:0 K:0","hex":"#F9DCE4"},{"season":"summer","name":"パステルピンク","rgb":"238, 176, 199","cmyk":"C:0 M:36 Y:0 K:0","hex":"#EEB0C7"},{"season":"summer","name":"オールドローズ","rgb":"218, 171, 187","cmyk":"C:0 M:30 Y:0 K:10","hex":"#DAABBB"},{"season":"summer","name":"イタリアンローズ","rgb":"234, 145, 165","cmyk":"C:0 M:50 Y:10 K:0","hex":"#EA91A5"},{"season":"summer","name":"ローズピンク","rgb":"233, 149, 182","cmyk":"C:0 M:49 Y:0 K:0","hex":"#E995B6"},{"season":"summer","name":"チェリーピンク","rgb":"230, 116, 135","cmyk":"C:0 M:65 Y:25 K:0","hex":"#E67487"},{"season":"summer","name":"ストロベリーレッド","rgb":"207, 31, 61","cmyk":"C:0 M:100 Y:75 K:5","hex":"#CF1F3D"},{"season":"summer","name":"チェリーレッド","rgb":"197, 32, 55","cmyk":"C:0 M:100 Y:80 K:10","hex":"#C52037"},{"season":"summer","name":"ウォーターメロンローズ","rgb":"200, 56, 86","cmyk":"C:0 M:90 Y:45 K:10","hex":"#C83856"},{"season":"summer","name":"ディープレッド","rgb":"180, 29, 66","cmyk":"C:4 M:100 Y:60 K:15","hex":"#B41D42"},{"season":"summer","name":"ラズベリー","rgb":"149, 68, 117","cmyk":"C:40 M:85 Y:20 K:0","hex":"#954475"},{"season":"summer","name":"ペールライラック","rgb":"223, 192, 210","cmyk":"C:8 M:25 Y:0 K:0","hex":"#DFC0D2"},{"season":"summer","name":"ラベンダー","rgb":"148, 142, 185","cmyk":"C:40 M:40 Y:0 K:0","hex":"#948EB9"},{"season":"summer","name":"ラベンダーブルー","rgb":"113, 140, 186","cmyk":"C:55 M:35 Y:0 K:0","hex":"#718CBA"},{"season":"summer","name":"ゼニスブルー","rgb":"129, 156, 192","cmyk":"C:45 M:25 Y:0 K:5","hex":"#819CC0"},{"season":"summer","name":"ゼファブルー","rgb":"93, 159, 202","cmyk":"C:60 M:20 Y:0 K:0","hex":"#5D9FCA"},{"season":"summer","name":"ペールアクア","rgb":"199, 232, 241","cmyk":"C:20 M:0 Y:0 K:0","hex":"#C7E8F1"},{"season":"summer","name":"ウェッジウッドブルー","rgb":"59, 108, 167","cmyk":"C:80 M:50 Y:0 K:0","hex":"#3B6CA7"},{"season":"summer","name":"キャンバスブルー","rgb":"46, 121, 177","cmyk":"C:80 M:40 Y:0 K:0","hex":"#2E79B1"},{"season":"summer","name":"インクブルー","rgb":"32, 58, 107","cmyk":"C:90 M:70 Y:0 K:30","hex":"#203A6B"},{"season":"summer","name":"ビリジアン","rgb":"0, 139, 129","cmyk":"C:90 M:20 Y:50 K:0","hex":"#008B81"},{"season":"summer","name":"エメラルドグリーン","rgb":"0, 149, 122","cmyk":"C:90 M:10 Y:60 K:0","hex":"#00957A"},{"season":"summer","name":"ミントグリーン","rgb":"121, 198, 187","cmyk":"C:50 M:0 Y:25 K:0","hex":"#79C6BB"},{"season":"summer","name":"シトラスイエロー","rgb":"255, 239, 140","cmyk":"C:0 M:3 Y:55 K:0","hex":"#FFEF8C"},{"season":"summer","name":"バーリーウッド","rgb":"208, 170, 152","cmyk":"C:10 M:30 Y:30 K:5","hex":"#D0AA98"},{"season":"summer","name":"シャンパーニュ","rgb":"179, 151, 138","cmyk":"C:15 M:30 Y:30 K:15","hex":"#B3978A"},{"season":"summer","name":"ココア","rgb":"98, 75, 71","cmyk":"C:60 M:70 Y:70 K:15","hex":"#624B47"},{"season":"summer","name":"ローズブラウン","rgb":"102, 79, 72","cmyk":"C:70 M:80 Y:80 K:0","hex":"#664F48"},{"season":"summer","name":"ダークブルーフォグ","rgb":"55, 77, 86","cmyk":"C:35 M:0 Y:0 K:75","hex":"#374D56"},{"season":"summer","name":"アッシュグレイ","rgb":"111, 141, 150","cmyk":"C:40 M:10 Y:10 K:30","hex":"#6F8D96"},{"season":"summer","name":"ブルーミスト","rgb":"220, 227, 232","cmyk":"C:8 M:3 Y:0 K:5","hex":"#DCE3E8"},{"season":"summer","name":"オフホワイト","rgb":"248, 247, 246","cmyk":"C:0 M:0 Y:0 K:3","hex":"#F8F7F6"},{"season":"autumn","name":"ペールアプリコット","rgb":"246, 196, 157","cmyk":"C:0 M:25 Y:35 K:0","hex":"#F6C49D"},{"season":"autumn","name":"サーモンピンク","rgb":"230, 116, 106","cmyk":"C:0 M:65 Y:50 K:0","hex":"#E6746A"},{"season":"autumn","name":"バーミリオン","rgb":"224, 84, 53","cmyk":"C:0 M:80 Y:90 K:0","hex":"#E05435"},{"season":"autumn","name":"ダークトマトレッド","rgb":"208, 48, 54","cmyk":"C:0 M:95 Y:85 K:5","hex":"#D03036"},{"season":"autumn","name":"ダークカーディナル","rgb":"196, 49, 42","cmyk":"C:7 M:95 Y:100 K:5","hex":"#C4312A"},{"season":"autumn","name":"テラコッタ","rgb":"163, 51, 45","cmyk":"C:10 M:90 Y:90 K:20","hex":"#A3332D"},{"season":"autumn","name":"プラム","rgb":"106, 57, 120","cmyk":"C:65 M:90 Y:10 K:0","hex":"#6A3978"},{"season":"autumn","name":"ナイルブルー","rgb":"72, 159, 162","cmyk":"C:70 M:15 Y:30 K:0","hex":"#489FA2"},{"season":"autumn","name":"ティールブルー","rgb":"0, 101, 111","cmyk":"C:100 M:50 Y:50 K:0","hex":"#00656F"},{"season":"autumn","name":"ダークロンドントワイライト","rgb":"37, 35, 41","cmyk":"C:100 M:100 Y:90 K:20","hex":"#252329"},{"season":"autumn","name":"ボトルグリーン","rgb":"17, 63, 42","cmyk":"C:100 M:60 Y:100 K:30","hex":"#113F2A"},{"season":"autumn","name":"オリーブドラブ","rgb":"95, 105, 89","cmyk":"C:70 M:55 Y:70 K:1","hex":"#5F6959"},{"season":"autumn","name":"オリーブグリーン","rgb":"97, 109, 60","cmyk":"C:70 M:50 Y:100 K:0","hex":"#616D3C"},{"season":"autumn","name":"モスグリーン","rgb":"134, 132, 85","cmyk":"C:50 M:40 Y:80 K:0","hex":"#868455"},{"season":"autumn","name":"スプラウト","rgb":"103, 170, 124","cmyk":"C:60 M:10 Y:60 K:0","hex":"#67AA7C"},{"season":"autumn","name":"シャルトルーズグリーン","rgb":"135, 175, 63","cmyk":"C:50 M:10 Y:100 K:0","hex":"#87AF3F"},{"season":"autumn","name":"クロムイエロー","rgb":"243, 179, 41","cmyk":"C:0 M:30 Y:100 K:0","hex":"#F3B329"},{"season":"autumn","name":"マスタード","rgb":"204, 133, 49","cmyk":"C:15 M:50 Y:100 K:0","hex":"#CC8531"},{"season":"autumn","name":"ゴールデンオレンジ","rgb":"237, 150, 54","cmyk":"C:0 M:45 Y:95 K:0","hex":"#ED9636"},{"season":"autumn","name":"アプリコットオレンジ","rgb":"231, 124, 86","cmyk":"C:0 M:60 Y:70 K:0","hex":"#E77C56"},{"season":"autumn","name":"タイガーリリー","rgb":"221, 101, 42","cmyk":"C:1 M:70 Y:100 K:2","hex":"#DD652A"},{"season":"autumn","name":"スパニッシュオレンジ","rgb":"231, 122, 57","cmyk":"C:0 M:60 Y:90 K:0","hex":"#E77A39"},{"season":"autumn","name":"アラゴンオレンジ","rgb":"197, 101, 47","cmyk":"C:15 M:70 Y:100 K:0","hex":"#C5652F"},{"season":"autumn","name":"アーモンドシェル","rgb":"174, 106, 46","cmyk":"C:20 M:60 Y:100 K:10","hex":"#AE6A2E"},{"season":"autumn","name":"チョコレートブラウン","rgb":"98, 74, 55","cmyk":"C:70 M:80 Y:100 K:0","hex":"#624A37"},{"season":"autumn","name":"ダークブラウン","rgb":"74, 59, 43","cmyk":"C:75 M:80 Y:100 K:20","hex":"#4A3B2B"},{"season":"autumn","name":"ブラウンオリーブ","rgb":"116, 105, 80","cmyk":"C:50 M:50 Y:70 K:15","hex":"#746950"},{"season":"autumn","name":"クロワッサン","rgb":"177, 137, 87","cmyk":"C:20 M:40 Y:70 K:10","hex":"#B18957"},{"season":"autumn","name":"サンドベージュ","rgb":"199, 177, 135","cmyk":"C:19 M:25 Y:47 K:1","hex":"#C7B187"},{"season":"autumn","name":"コルク","rgb":"202, 177, 124","cmyk":"C:10 M:20 Y:50 K:10","hex":"#CAB17C"},{"season":"autumn","name":"モスグレイ","rgb":"184, 177, 147","cmyk":"C:10 M:10 Y:30 K:20","hex":"#B8B193"},{"season":"autumn","name":"オイスターホワイト","rgb":"255, 237, 202","cmyk":"C:0 M:6 Y:20 K:0","hex":"#FFEDCA"},{"season":"winter","name":"パウダーピンク","rgb":"235, 215, 225","cmyk":"C:5 M:15 Y:0 K:0","hex":"#EBD7E1"},{"season":"winter","name":"ポンパドールピンク","rgb":"227, 96, 140","cmyk":"C:0 M:75 Y:10 K:0","hex":"#E3608C"},{"season":"winter","name":"オペラモーヴ","rgb":"224, 130, 171","cmyk":"C:3 M:58 Y:0 K:0","hex":"#E082AB"},{"season":"winter","name":"アザレアピンク","rgb":"221, 58, 116","cmyk":"C:0 M:90 Y:20 K:0","hex":"#DD3A74"},{"season":"winter","name":"マゼンタ","rgb":"219, 57, 135","cmyk":"C:0 M:90 Y:0 K:0","hex":"#DB3987"},{"season":"winter","name":"ラズベリーレッド","rgb":"150, 31, 97","cmyk":"C:30 M:100 Y:20 K:10","hex":"#961F61"},{"season":"winter","name":"トゥルーレッド","rgb":"180, 33, 55","cmyk":"C:10 M:100 Y:80 K:10","hex":"#B42137"},{"season":"winter","name":"カーニバルレッド","rgb":"180, 35, 62","cmyk":"C:15 M:100 Y:75 K:5","hex":"#B4233E"},{"season":"winter","name":"ローズレッド","rgb":"183, 36, 74","cmyk":"C:15 M:100 Y:60 K:3","hex":"#B7244A"},{"season":"winter","name":"バーガンディ","rgb":"125, 41, 63","cmyk":"C:45 M:100 Y:70 K:10","hex":"#7D293F"},{"season":"winter","name":"オーベルジーヌ","rgb":"65, 33, 98","cmyk":"C:80 M:100 Y:0 K:20","hex":"#412162"},{"season":"winter","name":"ロイヤルパープル","rgb":"68, 44, 121","cmyk":"C:85 M:100 Y:0 K:0","hex":"#442C79"},{"season":"winter","name":"パウダーパープル","rgb":"207, 204, 221","cmyk":"C:15 M:15 Y:0 K:0","hex":"#CFCCDD"},{"season":"winter","name":"ノクターン","rgb":"8, 0, 32","cmyk":"C:100 M:100 Y:0 K:80","hex":"#080020"},{"season":"winter","name":"ロイヤルブルー","rgb":"26, 77, 144","cmyk":"C:96 M:73 Y:0 K:0","hex":"#1A4D90"},{"season":"winter","name":"ウルトラマリン","rgb":"33, 79, 133","cmyk":"C:95 M:70 Y:10 K:3","hex":"#214F85"},{"season":"winter","name":"コバルトブルー","rgb":"0, 116, 176","cmyk":"C:100 M:40 Y:0 K:0","hex":"#0074B0"},{"season":"winter","name":"ターコイズブルー","rgb":"0, 168, 211","cmyk":"C:90 M:0 Y:5 K:0","hex":"#00A8D3"},{"season":"winter","name":"アクアブルー","rgb":"172, 220, 236","cmyk":"C:30 M:0 Y:0 K:0","hex":"#ACDCEC"},{"season":"winter","name":"アクアティント","rgb":"226, 243, 248","cmyk":"C:10 M:0 Y:0 K:0","hex":"#E2F3F8"},{"season":"winter","name":"パイングリーン","rgb":"21, 82, 71","cmyk":"C:100 M:60 Y:80 K:10","hex":"#155247"},{"season":"winter","name":"フォレストグリーン","rgb":"0, 97, 66","cmyk":"C:100 M:40 Y:90 K:15","hex":"#006142"},{"season":"winter","name":"レモンイエロー","rgb":"254, 238, 16","cmyk":"C:3 M:0 Y:100 K:0","hex":"#FEEE10"},{"season":"winter","name":"ライトニングイエロー","rgb":"245, 236, 88","cmyk":"C:0 M:0 Y:80 K:0","hex":"#F5EC58"},{"season":"winter","name":"レモンティント","rgb":"249, 248, 213","cmyk":"C:3 M:0 Y:18 K:0","hex":"#F9F8D5"},{"season":"winter","name":"クリスタルベージュ","rgb":"247, 238, 221","cmyk":"C:3 M:5 Y:10 K:0","hex":"#F7EEDD"},{"season":"winter","name":"ダークバーガンディ","rgb":"42, 1, 16","cmyk":"C:0 M:100 Y:25 K:90","hex":"#2A0110"},{"season":"winter","name":"チャコールグレイ","rgb":"39, 46, 50","cmyk":"C:20 M:0 Y:0 K:90","hex":"#272E32"},{"season":"winter","name":"ブラック","rgb":"11, 10, 8","cmyk":"C:30 M:30 Y:30 K:100","hex":"#0B0A08"},{"season":"winter","name":"ミディアムグレイ","rgb":"158, 159, 158","cmyk":"C:0 M:0 Y:0 K:40","hex":"#9E9F9E"},{"season":"winter","name":"シルバーグレイ","rgb":"203, 204, 203","cmyk":"C:0 M:0 Y:0 K:20","hex":"#CBCCCB"},{"season":"winter","name":"スノーホワイト","rgb":"255, 255, 255","cmyk":"C:0 M:0 Y:0 K:0","hex":"#FFFFFF"}];
+
+const SEASONS=['spring','summer','autumn','winter'];
+const SEASON_LABEL={spring:'春季 Spring',summer:'夏季 Summer',autumn:'秋季 Autumn',winter:'冬季 Winter'};
+const TYPE_LABEL={1:'TYPE 1 · 色名 → 選色',2:'TYPE 2 · 色 → 選色名',3:'TYPE 3 · 色 → 判斷季節',4:'TYPE 4 · 同色系四季比較',5:'TYPE 5 · 雙色微差辨識'};
+const TYPE_NAME={1:'色名 → 選色',2:'色 → 選色名',3:'季節判斷',4:'同色系四季比較',5:'雙色微差辨識'};
+const UNDERTONE={spring:'yellow',autumn:'yellow',summer:'blue',winter:'blue'};
+const CLARITY={spring:'clear',winter:'clear',summer:'muted',autumn:'muted'};
+const CLARITY_PARTNER={spring:'autumn',autumn:'spring',summer:'winter',winter:'summer'};
+const DIM_LABEL={undertone:'底調 Yellow Base / Blue Base',clarity:'清濁 Clear / Muted',saturation:'彩度 Saturation',lightness:'明度 Lightness'};
+
+let questionCount=10,quizMode='mixed',singleType=1,questions=[],index=0,score=0,locked=false;
+let breakdown={1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0]};
+let activeQuizSource='generated', importedQuestions=[], importedFileName='', currentAnswerWrong=false;
+const REVIEW_STORAGE_KEY='colorPaletteDrill.review.v1';
+const REVIEW_SCHEMA='color-palette-drill-review-v1';
+let reviewBank=[];
+
+const $=id=>document.getElementById(id);
+function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const tmp=x[i];x[i]=x[j];x[j]=tmp}return x}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function hexRgb(hex){const n=parseInt(hex.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function rgbToHsv(hex){const rgb=hexRgb(hex),r=rgb[0]/255,g=rgb[1]/255,b=rgb[2]/255,max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;let h=0;if(d){if(max===r)h=((g-b)/d)%6;else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360}return{h:h,s:max?d/max:0,v:max}}
+function hueDist(a,b){const d=Math.abs(a-b);return Math.min(d,360-d)}
+function colorKey(c){return c.season+'|'+c.name}
+
+// 【條件 1-1】依彩度與明度門檻，將低彩度／米灰白深色自動打包為獨立的 'neutral' 色系
+function classifyColorFamily(hsv){
+  if(hsv.s <= DRILL_CONFIG.NEUTRAL_MAX_SATURATION || hsv.v <= DRILL_CONFIG.NEUTRAL_MAX_VALUE){
+    return 'neutral';
+  }
+  const h = hsv.h;
+  if(h>=345||h<15)return'red';
+  if(h<45)return'orange';
+  if(h<72)return'yellow';
+  if(h<165)return'green';
+  if(h<195)return'aqua';
+  if(h<255)return'blue';
+  if(h<300)return'purple';
+  return'pink';
+}
+
+const FAMILY_ZH={
+  red:'紅色系',
+  orange:'橘色系',
+  yellow:'黃色系',
+  green:'綠色系',
+  aqua:'藍綠色系',
+  blue:'藍色系',
+  purple:'紫色系',
+  pink:'粉紅色系',
+  neutral:'低彩度／中性色系'
+};
+
+function initColorMetadata(){
+  COLORS.forEach(function(c){
+    const v=rgbToHsv(c.hex);
+    c.h=v.h;
+    c.s=v.s;
+    c.v=v.v;
+    c.family=classifyColorFamily(v);
+    c.isNeutral=(c.family==='neutral');
+  });
+}
+initColorMetadata();
+
+function rgbEuclidDist(a,b){
+  const A=hexRgb(a.hex),B=hexRgb(b.hex);
+  let d=0;
+  for(let i=0;i<3;i++)d+=(A[i]-B[i])*(A[i]-B[i]);
+  return Math.sqrt(d);
+}
+
+// 計算兩色綜合距離：若涉及中性色則主要依據 RGB 與明度距離，避免無意義的色相角干擾
+function colorDistance(a,b){
+  const rgbD = rgbEuclidDist(a,b);
+  if(a.isNeutral || b.isNeutral){
+    return rgbD + Math.abs(a.v - b.v)*120 + Math.abs(a.s - b.s)*80;
+  }
+  return rgbD + hueDist(a.h,b.h)*1.8;
+}
+
+// 【條件 1-2】檢查次級遞迴選項與「最初題目色 A (rootAnchor)」是否超出最大色相差上限
+function withinRootHueDrift(rootAnchor, candidate, maxDrift){
+  if(rootAnchor.isNeutral && candidate.isNeutral) return true;
+  if(rootAnchor.isNeutral !== candidate.isNeutral) return false;
+  return hueDist(rootAnchor.h, candidate.h) <= maxDrift;
+}
+
+/**
+ * ============================================================================
+ * 【條件 2-1 ~ 2-4】通用遞迴（BFS 廣度優先展開）候選干擾色蒐集器
+ * - 2-1: 先以 getStrictNeighbors(A) 找出第一層候選顏色
+ * - 2-2: 若未滿 targetCount，保留目前已選顏色，並將剛挑出的顏色當作下一層題目繼續找，
+ *        途中所有已挑過的顏色皆記錄於 visited 集合，絕不重複成為次級選項（防止無限迴圈）。
+ *        若單層次級選項加上去會超過 targetCount，則將該層新選項隨機洗牌後截斷補滿。
+ * - 2-4: 若嚴格遞迴到底仍未滿 targetCount，啟動 getRelaxedFallback(A) 放寬條件補齊。
+ * ============================================================================
+ */
+function collectCandidatesBFS(rootAnchor, targetCount, getStrictNeighbors, getRelaxedFallback){
+  const visited = new Set([colorKey(rootAnchor)]);
+  const result = [];
+  let frontier = [rootAnchor];
+
+  // 階段一：嚴格模式逐層遞迴展開 (2-1 & 2-2)
+  while(result.length < targetCount && frontier.length > 0){
+    const nextLayerPool = [];
+    const nextLayerSeen = new Set();
+
+    for(let i=0; i<frontier.length; i++){
+      const node = frontier[i];
+      const neighbors = getStrictNeighbors(node, rootAnchor) || [];
+      for(let j=0; j<neighbors.length; j++){
+        const cand = neighbors[j];
+        const key = colorKey(cand);
+        if(visited.has(key) || nextLayerSeen.has(key)) continue;
+        // 強制檢查與最初題目色 A 的色相差上限 (條件 1-2)
+        if(!withinRootHueDrift(rootAnchor, cand, DRILL_CONFIG.MAX_ROOT_HUE_DRIFT)) continue;
+        nextLayerSeen.add(key);
+        nextLayerPool.push(cand);
+      }
+    }
+
+    if(nextLayerPool.length === 0) break; // 嚴格條件已見底
+
+    const needed = targetCount - result.length;
+    if(nextLayerPool.length <= needed){
+      // 未滿或剛好滿 targetCount：全數保留並作為下一層遞迴的錨點
+      nextLayerPool.forEach(function(c){
+        visited.add(colorKey(c));
+        result.push(c);
+      });
+      frontier = nextLayerPool;
+    } else {
+      // 加上次級選項會超過 targetCount：隨機抽出幾個次級選項補滿 targetCount
+      const picked = shuffle(nextLayerPool).slice(0, needed);
+      picked.forEach(function(c){
+        visited.add(colorKey(c));
+        result.push(c);
+      });
+      frontier = picked;
+    }
+  }
+
+  // 階段二：若嚴格遞迴見底仍未滿額，啟動放寬條件 f(A, 放寬) 補齊 (2-4)
+  if(result.length < targetCount && typeof getRelaxedFallback === 'function'){
+    const relaxedList = getRelaxedFallback(rootAnchor, visited) || [];
+    for(let i=0; i<relaxedList.length && result.length < targetCount; i++){
+      const cand = relaxedList[i];
+      const key = colorKey(cand);
+      if(!visited.has(key)){
+        visited.add(key);
+        result.push(cand);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 題型 1 & 2 的干擾選項抽樣器（套用 8 抽 3 遞迴規則）
+ */
+function pickDistractorsForType1And2(target){
+  const poolSize = DRILL_CONFIG.TYPE1_2_POOL_SIZE;
+  const pickCount = DRILL_CONFIG.TYPE1_2_PICK_COUNT;
+
+  // f(node, 嚴格)：同色系、且與上一層節點距離夠近的前 N 個顏色
+  function strictFn(node){
+    return COLORS.filter(function(c){
+      if(c === node || c.family !== node.family) return false;
+      if(node.isNeutral){
+        return rgbEuclidDist(node, c) <= DRILL_CONFIG.STRICT_NEUTRAL_RGB_DIST;
+      }
+      return hueDist(node.h, c.h) <= DRILL_CONFIG.STRICT_STEP_HUE_DIFF;
+    }).sort(function(a,b){
+      return colorDistance(node, a) - colorDistance(node, b);
+    }).slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_LIMIT_PER_STEP);
+  }
+
+  // f(root, 放寬)：先找同類別或跨相鄰色系（色相差 <= RELAXED_ROOT_HUE_DIFF），再依綜合視覺距離排序補齊
+  function relaxedFn(root, visited){
+    const primaryRelaxed = COLORS.filter(function(c){
+      if(visited.has(colorKey(c))) return false;
+      if(root.isNeutral) return c.isNeutral || c.s <= 0.30;
+      return !c.isNeutral && hueDist(root.h, c.h) <= DRILL_CONFIG.RELAXED_ROOT_HUE_DIFF;
+    }).sort(function(a,b){
+      return colorDistance(root, a) - colorDistance(root, b);
+    });
+
+    if(primaryRelaxed.length >= poolSize) return primaryRelaxed;
+
+    const rest = COLORS.filter(function(c){
+      return !visited.has(colorKey(c)) && primaryRelaxed.indexOf(c) === -1;
+    }).sort(function(a,b){
+      return colorDistance(root, a) - colorDistance(root, b);
+    });
+    return primaryRelaxed.concat(rest);
+  }
+
+  const candidatePool = collectCandidatesBFS(target, poolSize, strictFn, relaxedFn);
+  return shuffle(candidatePool).slice(0, pickCount);
+}
+
+function createType1(forcedTarget){
+  const t = forcedTarget || pick(COLORS);
+  const ds = pickDistractorsForType1And2(t);
+  return {type:1, target:t, options:shuffle([t].concat(ds)), correct:t, signature:'1|'+t.season+'|'+t.name};
+}
+
+function createType2(forcedTarget){
+  const t = forcedTarget || pick(COLORS);
+  const ds = pickDistractorsForType1And2(t);
+  return {type:2, target:t, options:shuffle([t].concat(ds)), correct:t, signature:'2|'+t.season+'|'+t.name};
+}
+
+function createType3(forcedTarget){
+  const t = forcedTarget || pick(COLORS);
+  return {type:3, target:t, options:shuffle(SEASONS.slice()), correct:t.season, signature:'3|'+t.season+'|'+t.name};
+}
+
+/**
+ * 題型 4（同色系四季比較）：
+ * - 條件 1-1：不排除低彩度色，128 色皆可作為題目（低彩度自動進入 'neutral' 題庫互相比較）
+ * - 條件 2：先滿足另外三個季節限制，針對每個季節各自用遞迴找出候選池（預設各季 3 個），再從各季隨機抽 1 個
+ */
+function pickSeasonRepresentativeForType4(target, desiredSeason){
+  const perSeasonPoolSize = DRILL_CONFIG.TYPE4_PER_SEASON_POOL_SIZE;
+
+  // f(node, 嚴格)：必須屬於目標季節（或在遞迴中介層屬於同色系），但為了確保最終抽出的是 desiredSeason，
+  // 我們讓 BFS 在全色系內傳遞錨點，並針對 desiredSeason 收集候選
+  const visitedNodes = new Set([colorKey(target)]);
+  const seasonPool = [];
+  const seasonPoolKeys = new Set();
+  let frontier = [target];
+
+  while(seasonPool.length < perSeasonPoolSize && frontier.length > 0){
+    const nextFrontier = [];
+    const layerSeasonCandidates = [];
+
+    for(let i=0; i<frontier.length; i++){
+      const node = frontier[i];
+      const strictMatches = COLORS.filter(function(c){
+        const key = colorKey(c);
+        if(visitedNodes.has(key)) return false;
+        if(c.family !== target.family) return false;
+        if(!withinRootHueDrift(target, c, DRILL_CONFIG.MAX_ROOT_HUE_DRIFT)) return false;
+        if(target.isNeutral){
+          return rgbEuclidDist(node, c) <= DRILL_CONFIG.STRICT_NEUTRAL_RGB_DIST;
+        }
+        return hueDist(node.h, c.h) <= DRILL_CONFIG.STRICT_STEP_HUE_DIFF;
+      }).sort(function(a,b){
+        return colorDistance(node, a) - colorDistance(node, b);
+      });
+
+      strictMatches.forEach(function(c){
+        const key = colorKey(c);
+        if(visitedNodes.has(key)) return;
+        visitedNodes.add(key);
+        nextFrontier.push(c);
+        if(c.season === desiredSeason && !seasonPoolKeys.has(key)){
+          seasonPoolKeys.add(key);
+          layerSeasonCandidates.push(c);
+        }
+      });
+    }
+
+    if(layerSeasonCandidates.length > 0){
+      const needed = perSeasonPoolSize - seasonPool.length;
+      const toAdd = layerSeasonCandidates.length <= needed
+        ? layerSeasonCandidates
+        : shuffle(layerSeasonCandidates).slice(0, needed);
+      toAdd.forEach(function(c){ seasonPool.push(c); });
+    }
+
+    frontier = nextFrontier;
+  }
+
+  // 2-4：若該季節在嚴格遞迴下未滿 perSeasonPoolSize（例如夏季缺橘色、秋季缺藍紫色），啟動 f(target, 放寬)
+  if(seasonPool.length < perSeasonPoolSize){
+    const relaxedCandidates = COLORS.filter(function(c){
+      if(c.season !== desiredSeason || seasonPoolKeys.has(colorKey(c))) return false;
+      if(target.isNeutral){
+        return c.isNeutral || c.s <= 0.32;
+      }
+      return !c.isNeutral && hueDist(target.h, c.h) <= DRILL_CONFIG.RELAXED_ROOT_HUE_DIFF;
+    }).sort(function(a,b){
+      return colorDistance(target, a) - colorDistance(target, b);
+    });
+
+    // 若放寬色相範圍仍不足，則直接從該季節中挑選視覺距離最接近的色票補齊
+    const fallbackAllSeason = COLORS.filter(function(c){
+      return c.season === desiredSeason && !seasonPoolKeys.has(colorKey(c)) && relaxedCandidates.indexOf(c) === -1;
+    }).sort(function(a,b){
+      return colorDistance(target, a) - colorDistance(target, b);
+    });
+
+    const combinedRelaxed = relaxedCandidates.concat(fallbackAllSeason);
+    for(let i=0; i<combinedRelaxed.length && seasonPool.length < perSeasonPoolSize; i++){
+      seasonPool.push(combinedRelaxed[i]);
+    }
+  }
+
+  return pick(seasonPool);
+}
+
+function createType4(forcedTarget){
+  const t = forcedTarget || pick(COLORS);
+  const opts = [t];
+  SEASONS.forEach(function(s){
+    if(s === t.season) return;
+    const rep = pickSeasonRepresentativeForType4(t, s);
+    if(rep) opts.push(rep);
+  });
+  return {
+    type:4,
+    target:t,
+    targetSeason:t.season,
+    family:t.family,
+    options:shuffle(opts),
+    correct:t,
+    signature:'4|'+t.season+'|'+t.name
+  };
+}
+
+/**
+ * 題型 5（雙色微差辨識）：
+ * - 條件 1-1：解除 `s < 0.25` 的封印，所有色票（含低彩度中性色）皆可參與微差比較
+ * - 條件 2 & 3：套用 BFS 遞迴候選池與放寬機制，並改為「先均勻抽目標色、再抽比較維度」消除熱門色權重偏差
+ */
+function evaluateType5Pair(anchor, cand, dim, isRelaxed){
+  if(cand === anchor || cand.season === anchor.season) return null;
+  if(!isRelaxed){
+    if(cand.family !== anchor.family) return null;
+    if(!withinRootHueDrift(anchor, cand, DRILL_CONFIG.MAX_ROOT_HUE_DRIFT)) return null;
+  } else {
+    if(anchor.isNeutral !== cand.isNeutral && cand.s > 0.35) return null;
+    if(!anchor.isNeutral && hueDist(anchor.h, cand.h) > DRILL_CONFIG.RELAXED_ROOT_HUE_DIFF) return null;
+  }
+
+  const hd = anchor.isNeutral ? rgbEuclidDist(anchor, cand) * 0.25 : hueDist(anchor.h, cand.h);
+  const maxHd = isRelaxed ? DRILL_CONFIG.RELAXED_ROOT_HUE_DIFF : DRILL_CONFIG.STRICT_STEP_HUE_DIFF;
+  if(hd > maxHd) return null;
+
+  const ds = Math.abs(anchor.s - cand.s);
+  const dv = Math.abs(anchor.v - cand.v);
+
+  if(dim === 'undertone'){
+    if(UNDERTONE[cand.season] === UNDERTONE[anchor.season]) return null;
+    if(!isRelaxed && (ds > 0.26 || dv > 0.24)) return null;
+    return hd * 3 + ds * 90 + dv * 90;
+  }
+  if(dim === 'clarity'){
+    if(!isRelaxed && cand.season !== CLARITY_PARTNER[anchor.season]) return null;
+    if(isRelaxed && CLARITY[cand.season] === CLARITY[anchor.season]) return null;
+    if(!isRelaxed && (ds < 0.04 || dv > 0.28)) return null;
+    return hd * 3 + dv * 80 - ds * 15;
+  }
+  if(dim === 'saturation'){
+    const minDs = anchor.isNeutral ? 0.04 : (isRelaxed ? 0.08 : 0.12);
+    if(ds < minDs || (!isRelaxed && dv > 0.20)) return null;
+    return hd * 3 + dv * 120 - ds * 25;
+  }
+  if(dim === 'lightness'){
+    const minDv = isRelaxed ? 0.08 : 0.12;
+    if(dv < minDv || (!isRelaxed && ds > 0.24)) return null;
+    return hd * 3 + ds * 120 - dv * 20;
+  }
+  return null;
+}
+
+function collectType5CandidatesForDim(target, dim){
+  const poolSize = DRILL_CONFIG.TYPE5_POOL_SIZE;
+
+  function strictFn(node, rootAnchor){
+    const matches = [];
+    COLORS.forEach(function(c){
+      const sc = evaluateType5Pair(rootAnchor, c, dim, false);
+      if(sc !== null && colorDistance(node, c) <= 140){
+        matches.push({color:c, score:sc});
+      }
+    });
+    matches.sort(function(a,b){ return a.score - b.score; });
+    return matches.slice(0, 3).map(function(m){ return m.color; });
+  }
+
+  function relaxedFn(rootAnchor, visited){
+    const matches = [];
+    COLORS.forEach(function(c){
+      if(visited.has(colorKey(c))) return;
+      const sc = evaluateType5Pair(rootAnchor, c, dim, true);
+      if(sc !== null) matches.push({color:c, score:sc});
+    });
+    matches.sort(function(a,b){ return a.score - b.score; });
+    return matches.map(function(m){ return m.color; });
+  }
+
+  return collectCandidatesBFS(target, poolSize, strictFn, relaxedFn);
+}
+
+function createType5(forcedTarget){
+  const dims = shuffle(['undertone','clarity','saturation','lightness']);
+  const t = forcedTarget || pick(COLORS);
+  let chosenDim = dims[0];
+  let pool = [];
+
+  for(let i=0; i<dims.length; i++){
+    const candPool = collectType5CandidatesForDim(t, dims[i]);
+    if(candPool.length > 0){
+      chosenDim = dims[i];
+      pool = candPool;
+      break;
+    }
+  }
+
+  // 保底：若極端情況下四個維度皆無配對，取不同季節中最相近的 4 色隨機抽 1
+  if(pool.length === 0){
+    pool = COLORS.filter(function(c){ return c.season !== t.season; })
+      .sort(function(a,b){ return colorDistance(t,a) - colorDistance(t,b); })
+      .slice(0, 4);
+  }
+
+  const d = pick(pool);
+  return {
+    type:5,
+    target:t,
+    targetSeason:t.season,
+    family:t.family,
+    dimension:chosenDim,
+    options:shuffle([t,d]),
+    correct:t,
+    compare:d,
+    metrics:{satDiff:Math.abs(t.s-d.s), valueDiff:Math.abs(t.v-d.v), hueDiff:hueDist(t.h,d.h)},
+    signature:'5|'+chosenDim+'|'+t.season+'|'+t.name+'|'+d.season+'|'+d.name
+  };
+}
+
+function createByType(t, forcedTarget){
+  if(t===1)return createType1(forcedTarget);
+  if(t===2)return createType2(forcedTarget);
+  if(t===3)return createType3(forcedTarget);
+  if(t===4)return createType4(forcedTarget);
+  return createType5(forcedTarget);
+}
+
+function mixedTypes(n){
+  const per=Math.floor(n/5),extra=n%5,arr=[];
+  for(let t=1;t<=5;t++){for(let i=0;i<per;i++)arr.push(t)}
+  for(let i=0;i<extra;i++)arr.push(i+1);
+  return shuffle(arr);
+}
+
+// 建立測驗時，先從 128 色不重複洗牌抽出本回主角色，確保單次測驗（10/20題）不會一直考同一個顏色
+function buildQuiz(n){
+  const types = quizMode==='single' ? Array(n).fill(singleType) : mixedTypes(n);
+  const shuffledTargets = shuffle(COLORS);
+  const seenSignatures = {};
+  questions = [];
+
+  types.forEach(function(t, idx){
+    const preferredTarget = shuffledTargets[idx % shuffledTargets.length];
+    let q = createByType(t, preferredTarget);
+    if(seenSignatures[q.signature]){
+      for(let tries=0; tries<40; tries++){
+        q = createByType(t);
+        if(!seenSignatures[q.signature]) break;
+      }
+    }
+    seenSignatures[q.signature] = true;
+    questions.push(q);
+  });
+
+  questions = shuffle(questions);
+  index = 0;
+  score = 0;
+  locked = false;
+  breakdown = {1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0]};
+}
+
+function questionText(q){
+  if(q.type===1)return '「'+q.target.name+'」是哪一個顏色？';
+  if(q.type===2)return '這個顏色的正確日文色名是？';
+  if(q.type===3)return '這個顏色屬於哪一個季節的命定色？';
+  if(q.type===4)return '以下四個'+FAMILY_ZH[q.family]+'中，哪一個是「'+SEASON_LABEL[q.targetSeason]+'」的命定色？';
+  return '以下兩個相近的'+FAMILY_ZH[q.family]+'中，哪一個更符合「'+SEASON_LABEL[q.targetSeason]+'」？';
+}
+
+function renderQuestion(){
+  locked=false;
+  currentAnswerWrong=false;
+  const q=questions[index];
+  $('progress').style.width=(index/questions.length*100)+'%';
+  $('counter').textContent=(index+1)+' / '+questions.length;
+  $('qtype').textContent=TYPE_LABEL[q.type];
+  $('promptArea').innerHTML='';
+  $('answers').innerHTML='';
+  $('feedback').className='feedback';
+  $('feedback').innerHTML='';
+  $('saveRow').className='save-row';
+  $('saveStatus').textContent='';
+  $('nextRow').style.display='none';
+  $('question').textContent=questionText(q);
+  if(q.type===1)renderColorOptions(q);
+  if(q.type===2){renderPromptSwatch(q.target);renderTextColorNames(q)}
+  if(q.type===3){renderPromptSwatch(q.target);renderSeasonOptions(q)}
+  if(q.type===4||q.type===5)renderColorOptions(q);
+}
+
+function renderPromptSwatch(c){
+  const d=document.createElement('div');
+  d.className='prompt-swatch';
+  d.style.backgroundColor=c.hex;
+  d.dataset.colorKey=colorKey(c);
+  $('promptArea').appendChild(d);
+}
+
+function makeButton(letter){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='answer';
+  const l=document.createElement('span');
+  l.className='letter';
+  l.textContent=letter;
+  b.appendChild(l);
+  return b;
+}
+
+function renderColorOptions(q){
+  q.options.forEach(function(c,i){
+    const b=makeButton('ABCD'[i]);
+    b.dataset.colorKey=colorKey(c);
+    const s=document.createElement('div');
+    s.className='swatch-choice';
+    s.style.backgroundColor=c.hex;
+    b.appendChild(s);
+    if(q.type===4||q.type===5){
+      const m=document.createElement('div');
+      m.className='swatch-meta';
+      m.textContent=q.type===5?'比較色 '+('AB'[i]):'色票 '+(i+1);
+      b.appendChild(m);
+    }
+    b.addEventListener('click',function(){answer(q,c,b)});
+    $('answers').appendChild(b);
+  });
+}
+
+function renderTextColorNames(q){
+  q.options.forEach(function(c,i){
+    const b=makeButton('ABCD'[i]);
+    b.dataset.colorKey=colorKey(c);
+    const t=document.createElement('div');
+    t.className='text-choice';
+    t.textContent=c.name;
+    b.appendChild(t);
+    b.addEventListener('click',function(){answer(q,c,b)});
+    $('answers').appendChild(b);
+  });
+}
+
+function renderSeasonOptions(q){
+  q.options.forEach(function(season,i){
+    const b=makeButton('ABCD'[i]);
+    b.dataset.season=season;
+    const t=document.createElement('div');
+    t.className='text-choice';
+    t.textContent=SEASON_LABEL[season];
+    b.appendChild(t);
+    b.addEventListener('click',function(){answer(q,season,b)});
+    $('answers').appendChild(b);
+  });
+}
+
+function isCorrect(q,val){
+  if(q.type===3)return val===q.correct;
+  return !!val&&!!q.correct&&colorKey(val)===colorKey(q.correct);
+}
+
+function luminance(hex){
+  const rgb=hexRgb(hex).map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});
+  return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
+}
+
+function overlayClass(c){return luminance(c.hex)>.43?'light':'dark'}
+
+function revealPrompt(c){
+  const sw=$('promptArea').querySelector('.prompt-swatch');
+  if(!sw||sw.querySelector('.prompt-reveal'))return;
+  const r=document.createElement('div');
+  r.className='prompt-reveal '+overlayClass(c);
+  r.innerHTML=escapeHtml(c.name)+' · '+escapeHtml(SEASON_LABEL[c.season])+'<br><span style="font-weight:650;opacity:.86">'+escapeHtml(c.hex)+' · RGB '+escapeHtml(c.rgb)+'</span>';
+  sw.appendChild(r);
+}
+
+function revealAllOptions(q){
+  const buttons=Array.prototype.slice.call($('answers').querySelectorAll('.answer'));
+  buttons.forEach(function(b,i){
+    b.classList.add('revealed');
+    const option=q.options[i];
+    if(q.type===1||q.type===4||q.type===5){
+      const sw=b.querySelector('.swatch-choice');
+      if(sw&&!sw.querySelector('.swatch-reveal')){
+        const r=document.createElement('div');
+        r.className='swatch-reveal '+overlayClass(option);
+        r.innerHTML=escapeHtml(option.name)+'<small>'+escapeHtml(SEASON_LABEL[option.season])+' · '+escapeHtml(option.hex)+'</small>';
+        sw.appendChild(r);
+      }
+    }
+    else if(q.type===2){
+      const r=document.createElement('div');
+      r.className='text-reveal';
+      const mini=document.createElement('span');
+      mini.className='mini-swatch';
+      mini.style.backgroundColor=option.hex;
+      const tx=document.createElement('span');
+      tx.textContent=SEASON_LABEL[option.season]+' · '+option.hex;
+      r.appendChild(mini);
+      r.appendChild(tx);
+      b.appendChild(r);
+    }
+    else if(q.type===3){
+      const r=document.createElement('div');
+      r.className='season-reveal';
+      r.textContent=option===q.correct?'此色的正確季節':'此色不屬於此季節';
+      b.appendChild(r);
+    }
+  });
+  if(q.type===2||q.type===3)revealPrompt(q.target);
+}
+
+function traitText(q){
+  if(q.type!==5)return'';
+  const a=q.target,b=q.compare;
+  if(q.dimension==='undertone'){
+    return '本題比較重點：<b>'+DIM_LABEL.undertone+'</b>。'+SEASON_LABEL[a.season]+' 屬於 '+(UNDERTONE[a.season]==='yellow'?'Yellow Base（黃底）':'Blue Base（藍底）')+'；另一色來自'+SEASON_LABEL[b.season]+'。';
+  }
+  if(q.dimension==='clarity'){
+    return '本題比較重點：<b>'+DIM_LABEL.clarity+'</b>。這組刻意用不同清濁傾向的 Season 做近似色比較。';
+  }
+  if(q.dimension==='saturation'){
+    const d=Math.round(q.metrics.satDiff*100);
+    return '本題比較重點：<b>'+DIM_LABEL.saturation+'</b>。兩色保持相近色相與明度，HSV 彩度差約 '+d+' 個百分點。';
+  }
+  const d=Math.round(q.metrics.valueDiff*100);
+  return '本題比較重點：<b>'+DIM_LABEL.lightness+'</b>。兩色保持相近色相與彩度，HSV 明度差約 '+d+' 個百分點。';
+}
+
+function answer(q,val,clicked){
+  if(locked)return;
+  locked=true;
+  const ok=isCorrect(q,val);
+  currentAnswerWrong=!ok;
+  breakdown[q.type][1]++;
+  if(ok){score++;breakdown[q.type][0]++}
+  const buttons=Array.prototype.slice.call($('answers').querySelectorAll('.answer'));
+  buttons.forEach(function(b,i){
+    b.disabled=true;
+    const option=q.options[i];
+    if(isCorrect(q,option))b.classList.add('correct');
+  });
+  if(!ok)clicked.classList.add('wrong');
+  revealAllOptions(q);
+  const correctColor=q.type===3?q.target:q.correct,ft=ok?'答對了':'這題答錯';
+  let body='<b>'+escapeHtml(correctColor.name)+'</b> · <span class="season-chip">'+escapeHtml(SEASON_LABEL[correctColor.season])+'</span><br>RGB '+escapeHtml(correctColor.rgb)+' · '+escapeHtml(correctColor.hex)+'<br>'+escapeHtml(correctColor.cmyk);
+  if(q.type===5){
+    const other=q.compare;
+    body+='<div class="feedback-compare">'+traitText(q)+'<br><b>另一色：</b>'+escapeHtml(other.name)+' · '+escapeHtml(SEASON_LABEL[other.season])+' · '+escapeHtml(other.hex)+'</div>';
+  }
+  $('feedback').innerHTML='<div class="feedback-title '+(ok?'ok':'bad')+'">'+ft+'</div><div class="feedback-body">'+body+'</div>';
+  $('feedback').classList.add('show');
+  if(!ok){
+    saveQuestionToBank(q,'wrong');
+    $('saveStatus').textContent='答錯題已自動加入複習題庫。';
+  }else if(isQuestionSaved(q)){
+    $('saveStatus').textContent='這題已在複習題庫中。';
+  }else{
+    $('saveStatus').textContent='想加深印象，可手動存入複習題庫。';
+  }
+  updateSaveButton(q);
+  $('saveRow').className='save-row show';
+  $('nextRow').style.display='flex';
+  $('nextBtn').textContent=index===questions.length-1?'查看成績':'下一題';
+  $('progress').style.width=((index+1)/questions.length*100)+'%';
+}
+
+function showResults(){
+  $('quizScreen').style.display='none';
+  $('resultScreen').style.display='block';
+  $('scoreBig').textContent=score+' / '+questions.length;
+  const pct=Math.round(score/questions.length*100);
+  let desc=activeQuizSource==='import'?'特別複習題庫：'+importedFileName:(quizMode==='single'?'單一題型：'+TYPE_NAME[singleType]:'五種題型混合');
+  $('scoreSub').textContent='正確率 '+pct+'% · '+desc;
+  $('stats').innerHTML='';
+  for(let t=1;t<=5;t++){
+    if(breakdown[t][1]===0)continue;
+    const d=document.createElement('div');
+    d.className='stat';
+    d.innerHTML='<b>'+TYPE_NAME[t]+'</b><span>'+breakdown[t][0]+' / '+breakdown[t][1]+'</span>';
+    $('stats').appendChild(d);
+  }
+}
+
+function escapeHtml(v){
+  return String(v==null?'':v).replace(/[&<>"]/g,function(ch){
+    return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];
+  });
+}
+
+function colorRef(c){return{season:c.season,name:c.name,rgb:c.rgb,cmyk:c.cmyk,hex:c.hex}}
+function resolveColor(ref){
+  if(!ref)return null;
+  const found=COLORS.find(function(c){return c.season===ref.season&&c.name===ref.name});
+  return found||ref;
+}
+
+function serializeQuestion(q,reason){
+  return{
+    signature:q.signature,
+    type:q.type,
+    prompt:questionText(q),
+    target:colorRef(q.target),
+    options:q.type===3?q.options.slice():q.options.map(colorRef),
+    correct:q.type===3?q.correct:colorRef(q.correct),
+    targetSeason:q.targetSeason||null,
+    family:q.family||null,
+    dimension:q.dimension||null,
+    compare:q.compare?colorRef(q.compare):null,
+    metrics:q.metrics||null,
+    savedReason:reason||'manual',
+    savedAt:new Date().toISOString()
+  };
+}
+
+function deserializeQuestion(o){
+  if(!o||![1,2,3,4,5].includes(Number(o.type))||!o.target)return null;
+  const type=Number(o.type),target=resolveColor(o.target);
+  if(!target)return null;
+  let options;
+  if(type===3){
+    if(!Array.isArray(o.options)||o.options.some(function(x){return SEASONS.indexOf(x)===-1}))return null;
+    options=o.options.slice();
+  }else{
+    if(!Array.isArray(o.options))return null;
+    options=o.options.map(resolveColor);
+    if(options.some(function(x){return !x}))return null;
+  }
+  const q={
+    type:type,
+    target:target,
+    options:options,
+    correct:type===3?o.correct:resolveColor(o.correct),
+    signature:o.signature||('import|'+type+'|'+colorKey(target))
+  };
+  if(type!==3&&!q.correct)return null;
+  q.targetSeason=o.targetSeason||target.season;
+  q.family=(o.family && FAMILY_ZH[o.family]) ? o.family : target.family;
+  q.dimension=o.dimension||null;
+  q.compare=o.compare?resolveColor(o.compare):null;
+  q.metrics=o.metrics||null;
+  if(type===5){
+    if(!q.compare)q.compare=options.find(function(c){return colorKey(c)!==colorKey(target)})||options[0];
+    if(!q.metrics)q.metrics={satDiff:Math.abs(target.s-q.compare.s),valueDiff:Math.abs(target.v-q.compare.v),hueDiff:hueDist(target.h,q.compare.h)};
+  }
+  return q;
+}
+
+function loadReviewBank(){
+  try{
+    const raw=localStorage.getItem(REVIEW_STORAGE_KEY);
+    if(!raw)return[];
+    const parsed=JSON.parse(raw);
+    const list=Array.isArray(parsed)?parsed:(parsed.questions||[]);
+    return list.filter(function(x){return deserializeQuestion(x)});
+  }catch(e){return[]}
+}
+
+function persistReviewBank(){
+  try{
+    localStorage.setItem(REVIEW_STORAGE_KEY,JSON.stringify({schema:REVIEW_SCHEMA,updatedAt:new Date().toISOString(),questions:reviewBank}));
+  }catch(e){}
+  updateReviewUI();
+}
+
+function isQuestionSaved(q){return reviewBank.some(function(x){return x.signature===q.signature})}
+
+function saveQuestionToBank(q,reason){
+  const rec=serializeQuestion(q,reason);
+  const i=reviewBank.findIndex(function(x){return x.signature===rec.signature});
+  if(i>=0){
+    if(reason==='wrong')reviewBank[i].savedReason='wrong';
+    reviewBank[i].savedAt=new Date().toISOString();
+  }else reviewBank.push(rec);
+  persistReviewBank();
+}
+
+function removeQuestionFromBank(q){
+  reviewBank=reviewBank.filter(function(x){return x.signature!==q.signature});
+  persistReviewBank();
+}
+
+function updateReviewUI(){
+  $('reviewCount').textContent='目前已存 '+reviewBank.length+' 題';
+  $('exportReviewBtn').disabled=reviewBank.length===0;
+  $('clearReviewBtn').disabled=reviewBank.length===0;
+}
+
+function updateSaveButton(q){
+  const saved=isQuestionSaved(q),btn=$('saveQuestionBtn');
+  btn.textContent=saved?'移出複習題庫':'存入複習題庫';
+  btn.className='review-save'+(saved?' saved':'');
+}
+
+function exportReviewJSON(){
+  if(!reviewBank.length)return;
+  const payload={
+    schema:REVIEW_SCHEMA,
+    version:1,
+    exportedAt:new Date().toISOString(),
+    reference:'ACB official RGB / Color Palette Drill',
+    questionCount:reviewBank.length,
+    questions:reviewBank
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date(),stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  a.href=url;
+  a.download='color_palette_review_'+stamp+'.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url)},1000);
+}
+
+function clearReviewBank(){
+  if(!reviewBank.length)return;
+  if(window.confirm('確定要清空目前儲存在這個瀏覽器的複習題庫嗎？')){
+    reviewBank=[];
+    persistReviewBank();
+  }
+}
+
+function parseImportedPayload(data){
+  const list=Array.isArray(data)?data:(data&&Array.isArray(data.questions)?data.questions:null);
+  if(!list)throw new Error('找不到 questions 陣列');
+  const qs=list.map(deserializeQuestion).filter(Boolean);
+  if(!qs.length)throw new Error('檔案內沒有可讀取的題目');
+  return qs;
+}
+
+function resetImport(){
+  $('reviewFileInput').value='';
+  importedQuestions=[];
+  importedFileName='';
+  $('importStatus').textContent='尚未載入 JSON。載入後會只考該檔案內的題目，並忽略上方 10 / 20 題與題型設定。';
+  $('startReviewBtn').disabled=true;
+  $('clearImportBtn').disabled=true;
+}
+
+function startImportedQuiz(){
+  if(!importedQuestions.length)return;
+  questions=shuffle(importedQuestions.slice());
+  index=0;
+  score=0;
+  locked=false;
+  breakdown={1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0]};
+  activeQuizSource='import';
+  $('reviewModeBanner').textContent='特別複習模式 · '+importedFileName+' · 共 '+questions.length+' 題';
+  $('reviewModeBanner').className='review-mode-banner show';
+  $('startScreen').style.display='none';
+  $('resultScreen').style.display='none';
+  $('quizScreen').style.display='block';
+  renderQuestion();
+  window.scrollTo(0,0);
+}
+
+function goHome(){
+  $('resultScreen').style.display='none';
+  $('quizScreen').style.display='none';
+  $('startScreen').style.display='block';
+  $('reviewModeBanner').className='review-mode-banner';
+  activeQuizSource='generated';
+  window.scrollTo(0,0);
+}
+
+function updateModeUI(){
+  const single=quizMode==='single';
+  $('singleWrap').className='single-wrap'+(single?' show':'');
+  $('mixedInfo').style.display=single?'none':'block';
+}
+
+document.querySelectorAll('#countSeg button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#countSeg button').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    questionCount=parseInt(b.dataset.count,10);
+  });
+});
+document.querySelectorAll('#modeSeg button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#modeSeg button').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    quizMode=b.dataset.mode;
+    updateModeUI();
+  });
+});
+document.querySelectorAll('#typeGrid .type-pick').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#typeGrid .type-pick').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    singleType=parseInt(b.dataset.type,10);
+  });
+});
+$('startBtn').addEventListener('click',function(){
+  activeQuizSource='generated';
+  $('reviewModeBanner').className='review-mode-banner';
+  buildQuiz(questionCount);
+  $('startScreen').style.display='none';
+  $('resultScreen').style.display='none';
+  $('quizScreen').style.display='block';
+  renderQuestion();
+  window.scrollTo(0,0);
+});
+$('startReviewBtn').addEventListener('click',startImportedQuiz);
+$('clearImportBtn').addEventListener('click',resetImport);
+$('reviewFileInput').addEventListener('change',function(){
+  const file=this.files&&this.files[0];
+  if(!file){resetImport();return}
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const data=JSON.parse(String(reader.result));
+      importedQuestions=parseImportedPayload(data);
+      importedFileName=file.name;
+      $('importStatus').textContent='已載入「'+file.name+'」：'+importedQuestions.length+' 題。按下方按鈕後會只考這份題庫。';
+      $('startReviewBtn').disabled=false;
+      $('clearImportBtn').disabled=false;
+    }catch(e){
+      importedQuestions=[];
+      importedFileName='';
+      $('importStatus').textContent='讀取失敗：'+e.message;
+      $('startReviewBtn').disabled=true;
+      $('clearImportBtn').disabled=false;
+    }
+  };
+  reader.onerror=function(){$('importStatus').textContent='讀取檔案失敗，請重新選擇 JSON。'};
+  reader.readAsText(file,'utf-8');
+});
+$('exportReviewBtn').addEventListener('click',exportReviewJSON);
+$('clearReviewBtn').addEventListener('click',clearReviewBank);
+$('saveQuestionBtn').addEventListener('click',function(){
+  if(!locked||!questions[index])return;
+  const q=questions[index];
+  if(isQuestionSaved(q)){
+    removeQuestionFromBank(q);
+    $('saveStatus').textContent='已從複習題庫移除。';
+  }else{
+    saveQuestionToBank(q,currentAnswerWrong?'wrong':'manual');
+    $('saveStatus').textContent=currentAnswerWrong?'已重新加入複習題庫。':'已存入複習題庫。';
+  }
+  updateSaveButton(q);
+});
+$('nextBtn').addEventListener('click',function(){
+  if(!locked)return;
+  if(index<questions.length-1){
+    index++;
+    renderQuestion();
+    window.scrollTo(0,0);
+  }else showResults();
+});
+$('retryBtn').addEventListener('click',function(){
+  if(activeQuizSource==='import'&&importedQuestions.length){
+    startImportedQuiz();
+  }else{
+    buildQuiz(questionCount);
+    $('resultScreen').style.display='none';
+    $('quizScreen').style.display='block';
+    renderQuestion();
+    window.scrollTo(0,0);
+  }
+});
+$('homeBtn').addEventListener('click',goHome);
+document.addEventListener('keydown',function(e){
+  if($('quizScreen').style.display!=='block'||locked)return;
+  const k=e.key.toUpperCase();
+  if('ABCD'.indexOf(k)!==-1){
+    const i='ABCD'.indexOf(k),b=$('answers').querySelectorAll('.answer')[i];
+    if(b)b.click();
+  }
+});
+reviewBank=loadReviewBank();
+updateReviewUI();
+updateModeUI();
+</script>
+</body>
+</html>
