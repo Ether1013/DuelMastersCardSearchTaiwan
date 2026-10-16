@@ -369,16 +369,7 @@
 					<!-- 💡 調整：改為 text-base (16px)，防止 iOS 自動縮放 -->
 					<textarea id="bcMessageInput" rows="3" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-base text-gray-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder-gray-600" placeholder="請輸入欲發送給使用者的彈窗訊息..."></textarea>
 				</div>
-
-				<!-- 動態驗證碼輸入 (依本地時區即時刷新) -->
-				<div class="bg-gray-950/60 p-3 rounded-lg border border-gray-800 space-y-1">
-					<div class="flex justify-between items-center text-xs">
-						<span class="text-gray-400">當前動態驗證碼 (本地時區)：</span>
-						<span id="bcCodeHint" class="font-mono font-bold text-emerald-400">------</span>
-					</div>
-					<!-- 💡 調整：改為 text-base (16px) -->
-					<input type="text" id="bcCodeInput" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-base text-center font-mono text-white tracking-widest outline-none focus:border-emerald-500" placeholder="請輸入上方動態驗證碼">
-				</div>
+				
 			</div>
 
 			<div class="flex justify-end gap-3 pt-2">
@@ -672,19 +663,13 @@
 			}
 
 			document.getElementById('bcMessageInput').value = '';
-			document.getElementById('bcCodeInput').value = '';
 			document.querySelector('input[name="bcTargetType"][value="all"]').checked = true;
 			handleTargetTypeChange();
-
-			updateBroadcastCodeHint();
-			if (bcCodeInterval) clearInterval(bcCodeInterval);
-			bcCodeInterval = setInterval(updateBroadcastCodeHint, 1000);
 
 			document.getElementById('broadcastModal').classList.remove('hidden');
 		}
 
 		function closeBroadcastModal() {
-			if (bcCodeInterval) clearInterval(bcCodeInterval);
 			document.getElementById('broadcastModal').classList.add('hidden');
 		}
 
@@ -728,15 +713,10 @@
 
 		async function submitBroadcastModal() {
 			const msg = document.getElementById('bcMessageInput').value.trim();
-			const code = document.getElementById('bcCodeInput').value.trim();
 			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
 
 			if (!msg) {
 				alert("請輸入廣播內容！");
-				return;
-			}
-			if (!code) {
-				alert("請輸入驗證碼！");
 				return;
 			}
 
@@ -761,7 +741,6 @@
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						message: msg,
-						code: code,
 						timezone_offset: new Date().getTimezoneOffset(), // 💡 傳遞本地時區
 						target_type: targetType,
 						targets: targets

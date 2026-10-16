@@ -276,9 +276,9 @@ client_manager = ClientConnectionManager()
 
 class BroadcastModel(BaseModel):
     message: str
-    code: str
-    timezone_offset: int = -480  # 預設 UTC+8 (分鐘差)
-    target_type: str = "all"     # 'all' | 'country' | 'user'
+    # 刪除這行: code: str 
+    timezone_offset: int = -480  
+    target_type: str = "all"     
     targets: List[str] = []
 # -----------------------------------------------------------
 
@@ -2055,20 +2055,6 @@ async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(N
     
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="廣播訊息不可為空")
-
-    # 依前端傳入的 timezone_offset 動態計算當地時間
-    # JS 的 getTimezoneOffset() 回傳值：UTC-8 為 -480 分鐘
-    user_tz = timezone(timedelta(minutes=-payload.timezone_offset))
-    now_user_time = datetime.now(user_tz)
-
-    valid_codes = [
-        now_user_time.strftime("%Y%m%d%H%S"),
-        (now_user_time - timedelta(seconds=1)).strftime("%Y%m%d%H%S"),
-        (now_user_time + timedelta(seconds=1)).strftime("%Y%m%d%H%S")
-    ]
-
-    if payload.code.strip() not in valid_codes:
-        raise HTTPException(status_code=400, detail="驗證碼錯誤或已過期，請重新輸入當前秒數！")
 
     await client_manager.broadcast(
         message=payload.message.strip(),
