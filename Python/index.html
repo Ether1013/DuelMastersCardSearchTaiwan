@@ -4277,7 +4277,9 @@
 				const q = isId ? normalizeIdString(query) : cleanCardName(query).toLowerCase();
 				if (!q) return [];
 				
-				const results = [];
+				const exactResults = [];
+				const partialResults = [];
+
 				if (isId) {
 					// ID 搜尋邏輯
 					Object.values(rawSetlist).forEach(product => {
@@ -4286,9 +4288,17 @@
 							cardList.forEach(item => {
 								if (item && item.id) {
 									const idArray = Array.isArray(item.id) ? item.id : [item.id];
-									if (idArray.some(idVal => normalizeIdString(idVal) === q)) {
+									
+									// 判斷完全比對與開頭比對 (只比對英數字)
+									const isExact = idArray.some(idVal => normalizeIdString(idVal) === q);
+									const isStartsWith = idArray.some(idVal => normalizeIdString(idVal).startsWith(q));
+
+									if (isExact || isStartsWith) {
 										const fullCard = globalCardData.find(c => cleanCardName(c.name) === cleanCardName(item.name || ''));
-										if (fullCard) results.push({ cardData: fullCard, matchedItem: item });
+										if (fullCard) {
+											if (isExact) exactResults.push({ cardData: fullCard, matchedItem: item });
+											else partialResults.push({ cardData: fullCard, matchedItem: item });
+										}
 									}
 								}
 							});
@@ -4297,18 +4307,35 @@
 				} else {
 					// 卡名精確搜尋邏輯
 					globalCardData.forEach(c => {
-						if (cleanCardName(c.name).toLowerCase() === q) results.push({ cardData: c, matchedItem: null });
+						if (cleanCardName(c.name).toLowerCase() === q) exactResults.push({ cardData: c, matchedItem: null });
 					});
 				}
 				
-				// 去重處理
-				const uniqueMap = new Map();
-				results.forEach(res => {
-					if (!uniqueMap.has(res.cardData.name)) uniqueMap.set(res.cardData.name, res);
-				});
-				return Array.from(uniqueMap.values());
+				// 去重處理函式 (同一張卡名只留一筆)
+				const getUnique = (arr) => {
+					const uniqueMap = new Map();
+					arr.forEach(res => {
+						if (!uniqueMap.has(res.cardData.name)) uniqueMap.set(res.cardData.name, res);
+					});
+					return Array.from(uniqueMap.values());
+				};
+
+				const uniqueExact = getUnique(exactResults);
+				// 如果完全比對有找到，優先回傳完全比對的結果
+				if (uniqueExact.length > 0) return uniqueExact;
+
+				// 如果完全比對沒找到，但 startsWith 有找到，回傳去重後的 startsWith 結果
+				if (isId && partialResults.length > 0) {
+					return getUnique(partialResults);
+				}
+
+				return [];
 			}
 
+			// ----------------------------------------------------
+			// 1. 我要查卡效
+			// ----------------------------------------------------
+			// [看效果 (ID)]
 			// ----------------------------------------------------
 			// 1. 我要查卡效
 			// ----------------------------------------------------
@@ -4316,10 +4343,14 @@
 			document.getElementById('qa-btn-id-view').addEventListener('click', () => {
 				const idVal = document.getElementById('qa-input-id').value;
 				const results = silentSearchCard(idVal, true);
-				if (results.length > 0) {
+				
+				if (results.length === 1) {
 					let combinedCiv = 0;
 					results[0].cardData.wdata?.forEach(w => combinedCiv |= (parseInt(w.civil) || 0));
 					openCardModal(results[0].cardData, combinedCiv, results[0].matchedItem);
+				} else if (results.length > 1) {
+					// 找到多筆，且去重後發現是「不同卡名」
+					showToast(`⚠️ 當前輸入找到${results.length}筆，請輸入更完整的ID`);
 				} else {
 					showToast(`⚠️ 找不到卡號為「${idVal}」的卡牌`);
 				}
@@ -4330,8 +4361,11 @@
 			document.getElementById('qa-btn-id-share').addEventListener('click', () => {
 				const idVal = document.getElementById('qa-input-id').value;
 				const results = silentSearchCard(idVal, true);
-				if (results.length > 0) {
+				
+				if (results.length === 1) {
 					handleShareCard(results[0].cardData, results[0].matchedItem);
+				} else if (results.length > 1) {
+					showToast(`⚠️ 當前輸入找到${results.length}筆，請輸入更完整的ID`);
 				} else {
 					// 即使沒找到資料庫卡片，直接硬派產生短網址
 					const shareUrl = `${window.location.origin}/card.html?p=${encodeURIComponent(idVal)}`;
