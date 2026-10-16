@@ -217,8 +217,8 @@ const DRILL_CONFIG = {
   // 【條件 2-1 & 2-2】單一遞迴步驟內的嚴格匹配條件 f(CurrentNode, 嚴格)
   STRICT_STEP_HUE_DIFF: 32,          // 嚴格模式下，與上一級節點的色相差上限（度）
   STRICT_NEUTRAL_RGB_DIST: 95,       // 中性色題庫在嚴格模式下的 RGB 綜合距離上限
-  STRICT_NEIGHBOR_LIMIT_PER_STEP: 5, // 題型 1/2 每次從單一節點展開時，最多抓幾個最相近色（避免第一層直接塞爆）
-
+  STRICT_NEIGHBOR_SEARCH_POOL: 8,    // ★新增：每層先嚴格找出最相近的 8 個 (確保有效學習)
+  STRICT_NEIGHBOR_PICK_COUNT: 5,     // ★新增：從這 8 個中隨機抽出 5 個進入候選池 (產生微亂數)
   // 【條件 2-4】當嚴格遞迴見底仍未滿額時，放寬模式 f(RootAnchor, 放寬) 的匹配條件
   RELAXED_ROOT_HUE_DIFF: 75,         // 放寬模式下，允許與最初題目色 A 的最大色相差（跨相鄰色系）
 
@@ -398,7 +398,7 @@ function pickDistractorsForType1And2(target){
 
   // f(node, 嚴格)：同色系、且與上一層節點距離夠近的前 N 個顏色
   function strictFn(node){
-    return COLORS.filter(function(c){
+    const validMatches = COLORS.filter(function(c){
       if(c === node || c.family !== node.family) return false;
       if(node.isNeutral){
         return rgbEuclidDist(node, c) <= DRILL_CONFIG.STRICT_NEUTRAL_RGB_DIST;
@@ -406,7 +406,11 @@ function pickDistractorsForType1And2(target){
       return hueDist(node.h, c.h) <= DRILL_CONFIG.STRICT_STEP_HUE_DIFF;
     }).sort(function(a,b){
       return colorDistance(node, a) - colorDistance(node, b);
-    }).slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_LIMIT_PER_STEP);
+    });
+
+    // 【修改核心】：先取前 8 名，再隨機洗牌抽 5 名回傳（打亂第一層必定保送的死水）
+    const topMatches = validMatches.slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_SEARCH_POOL);
+    return shuffle(topMatches).slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_PICK_COUNT);
   }
 
   // f(root, 放寬)：先找同類別或跨相鄰色系（色相差 <= RELAXED_ROOT_HUE_DIFF），再依綜合視覺距離排序補齊
@@ -475,6 +479,7 @@ function pickSeasonRepresentativeForType4(target, desiredSeason){
         const key = colorKey(c);
         if(visitedNodes.has(key)) return false;
         if(c.family !== target.family) return false;
+        // 條件 1-2：確保不超出與 Root A 的最大色相偏移
         if(!withinRootHueDrift(target, c, DRILL_CONFIG.MAX_ROOT_HUE_DRIFT)) return false;
         if(target.isNeutral){
           return rgbEuclidDist(node, c) <= DRILL_CONFIG.STRICT_NEUTRAL_RGB_DIST;
@@ -484,7 +489,11 @@ function pickSeasonRepresentativeForType4(target, desiredSeason){
         return colorDistance(node, a) - colorDistance(node, b);
       });
 
-      strictMatches.forEach(function(c){
+      // 【修改核心】：加入單層擴張的微亂數
+      const topMatches = strictMatches.slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_SEARCH_POOL);
+      const randomizedMatches = shuffle(topMatches).slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_PICK_COUNT);
+
+      randomizedMatches.forEach(function(c){
         const key = colorKey(c);
         if(visitedNodes.has(key)) return;
         visitedNodes.add(key);
@@ -606,13 +615,16 @@ function collectType5CandidatesForDim(target, dim){
   function strictFn(node, rootAnchor){
     const matches = [];
     COLORS.forEach(function(c){
-      const sc = evaluateType5Pair(rootAnchor, c, dim, false);
+      const sc = evaluateType5Pair(rootAnchor, c, dim, false); // 內部依然包含嚴格的色相差與屬性審查
       if(sc !== null && colorDistance(node, c) <= 140){
         matches.push({color:c, score:sc});
       }
     });
     matches.sort(function(a,b){ return a.score - b.score; });
-    return matches.slice(0, 3).map(function(m){ return m.color; });
+    
+    // 【修改核心】：題型 5 同樣先圈出安全名單再洗牌截斷（這裡取 3 個代表）
+    const topMatches = matches.slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_SEARCH_POOL);
+    return shuffle(topMatches).slice(0, 3).map(function(m){ return m.color; });
   }
 
   function relaxedFn(rootAnchor, visited){
