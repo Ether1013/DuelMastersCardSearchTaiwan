@@ -110,6 +110,11 @@
   .review-cancel:disabled{opacity:.35;cursor:default}
   .review-mode-banner{display:none;margin:0 0 12px;padding:10px 12px;border:1px solid #cfcfd2;border-radius:11px;background:#fff;font-size:12px;color:var(--muted);line-height:1.45}
   .review-mode-banner.show{display:block}
+  /* 讓題數按鈕分成 3 等份不換行 */
+  #countSeg { grid-template-columns: repeat(3, 1fr); }
+  
+  /* 讓特訓季節的 5 個按鈕在同一行平均分配（若手機版覺得太擠也可改為 flex 或 auto-fit） */
+  #seasonSeg { grid-template-columns: repeat(5, 1fr); }
   @media (max-width:520px){
     .app{padding-left:12px;padding-right:12px}.title{font-size:25px}.start,.qcard,.results{padding:18px}.question{font-size:19px}.prompt-swatch{height:145px}.answers{gap:9px}.swatch-choice{height:112px}.answer{padding:9px}.text-choice{font-size:14px;padding-left:34px}.stats{grid-template-columns:1fr 1fr}.result-actions{grid-template-columns:1fr}.badge{display:none}.swatch-reveal{left:5px;right:5px;bottom:5px;padding:6px;font-size:10px}.swatch-reveal small{font-size:9px}.review-head{align-items:flex-start;flex-direction:column}.review-start-row{grid-template-columns:1fr}.save-row{align-items:stretch}.review-save{width:100%}
   }
@@ -125,10 +130,14 @@
 
   <section id="startScreen" class="card start">
     <div class="section-label">題數</div>
-    <div class="seg" id="countSeg"><button type="button" data-count="10" class="active">10 題</button><button type="button" data-count="20">20 題</button></div>
+    <div class="seg" id="countSeg">
+	  <button type="button" data-count="10" class="active">10 題</button>
+	  <button type="button" data-count="20">20 題</button>
+	  <button type="button" data-count="32">32 題</button>
+	</div>
 
     <div class="section-label">出題模式</div>
-    <div class="seg" id="modeSeg"><button type="button" data-mode="mixed" class="active">混合題型</button><button type="button" data-mode="single">單一題型</button></div>
+    <div class="seg" id="modeSeg"><button type="button" data-mode="mixed">混合題型</button><button type="button" data-mode="single" class="active">單一題型</button></div>
 
     <div id="singleWrap" class="single-wrap">
       <div class="section-label">選擇單一題型</div>
@@ -137,8 +146,21 @@
         <button class="type-pick" type="button" data-type="2"><span class="pick-num">2</span><span class="pick-copy">色 → 選色名<small>看到色塊，選出正確日文色名。</small></span></button>
         <button class="type-pick" type="button" data-type="3"><span class="pick-num">3</span><span class="pick-copy">色 → 判斷季節<small>判斷該色屬於哪個 Season。</small></span></button>
         <button class="type-pick" type="button" data-type="4"><span class="pick-num">4</span><span class="pick-copy">同色系四季比較<small>四個相近色（含低彩度／中性色組）中找出指定季節。</small></span></button>
+        
+        <!-- 將特訓季節區塊安插在題型四和題型五之間 -->
+        <div id="seasonWrap" style="display: none; padding: 12px; background: #fafaf9; border: 1px solid var(--line); border-radius: 12px; margin-top: -4px;">
+          <div class="section-label" style="font-size: 11px; margin-bottom: 8px;">特訓季節 (僅套用於本題型)</div>
+          <div class="seg" id="seasonSeg" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 0;">
+            <button type="button" data-mask="15" class="active">四季</button>
+            <button type="button" data-mask="8">春</button>
+            <button type="button" data-mask="4">夏</button>
+            <button type="button" data-mask="2">秋</button>
+            <button type="button" data-mask="1">冬</button>
+          </div>
+        </div>
         <button class="type-pick" type="button" data-type="5"><span class="pick-num">5</span><span class="pick-copy">雙色微差辨識<small>兩個近似色中辨識指定季節；涵蓋底調、清濁、彩度、明度。</small></span></button>
-      </div>
+		<button class="type-pick" type="button" data-type="6"><span class="pick-num">6</span><span class="pick-copy">指定季節 → 選色名<small>無色塊提示，從四個同色系色名中選出該季專屬顏色。</small></span></button>
+	  </div>
     </div>
 
     <div id="mixedInfo">
@@ -149,6 +171,7 @@
         <div class="mode-item"><div class="mode-num">3</div><div><b>色 → 判斷季節</b><span>判斷該色屬於 Spring / Summer / Autumn / Winter。</span></div></div>
         <div class="mode-item"><div class="mode-num">4</div><div><b>同色系四季比較</b><span>四個相近色（包含獨立打包的低彩度與中性色題組）中，找出指定季節的命定色。</span></div></div>
         <div class="mode-item"><div class="mode-num">5</div><div><b>雙色微差辨識</b><span>兩個近似色中找出指定季節；題目會刻意安排底調、清濁、彩度或明度的細微差異。</span></div></div>
+		<div class="mode-item"><div class="mode-num">6</div><div><b>指定季節 → 選色名</b><span>無色塊輔助，考驗對同色系不同季節色名的純文字記憶。</span></div></div>
       </div>
     </div>
 
@@ -242,8 +265,9 @@ const CLARITY={spring:'clear',winter:'clear',summer:'muted',autumn:'muted'};
 const CLARITY_PARTNER={spring:'autumn',autumn:'spring',summer:'winter',winter:'summer'};
 const DIM_LABEL={undertone:'底調 Yellow Base / Blue Base',clarity:'清濁 Clear / Muted',saturation:'彩度 Saturation',lightness:'明度 Lightness'};
 
-let questionCount=10,quizMode='mixed',singleType=1,questions=[],index=0,score=0,locked=false;
-let breakdown={1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0]};
+let questionCount=10,quizMode='single',singleType=1,questions=[],index=0,score=0,locked=false;
+let activeSeasonMask = 15; // 預設為全季節 (二進位 1111)
+let breakdown={1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0],6:[0,0]};
 let activeQuizSource='generated', importedQuestions=[], importedFileName='', currentAnswerWrong=false;
 const REVIEW_STORAGE_KEY='colorPaletteDrill.review.v1';
 const REVIEW_SCHEMA='color-palette-drill-review-v1';
@@ -682,34 +706,79 @@ function createType5(forcedTarget){
   };
 }
 
+function createType6(forcedTarget){
+  const t = forcedTarget || pick(COLORS);
+  
+  // 干擾項優先找：同色系但「不同季節」的顏色
+  let diffSeasonSameFamily = COLORS.filter(function(c){ return c.family === t.family && c.season !== t.season; });
+  let ds = [];
+  
+  if(diffSeasonSameFamily.length >= 3){
+    ds = shuffle(diffSeasonSameFamily).slice(0, 3);
+  } else {
+    // 如果同色系的其他季節不夠 3 個，就從其他色系補齊視覺最接近的
+    ds = diffSeasonSameFamily.slice();
+    const needed = 3 - ds.length;
+    const fallback = COLORS.filter(function(c){ return c.season !== t.season && ds.indexOf(c) === -1 && c !== t; })
+      .sort(function(a,b){ return colorDistance(t, a) - colorDistance(t, b); });
+    ds = ds.concat(fallback.slice(0, needed));
+  }
+  
+  return {
+    type: 6,
+    target: t,
+    targetSeason: t.season,
+    family: t.family,
+    options: shuffle([t].concat(ds)),
+    correct: t,
+    signature: '6|' + t.season + '|' + t.name
+  };
+}
+
 function createByType(t, forcedTarget){
   if(t===1)return createType1(forcedTarget);
   if(t===2)return createType2(forcedTarget);
   if(t===3)return createType3(forcedTarget);
   if(t===4)return createType4(forcedTarget);
+  if(t===6)return createType6(forcedTarget); // ★ 新增這行
   return createType5(forcedTarget);
 }
 
 function mixedTypes(n){
-  const per=Math.floor(n/5),extra=n%5,arr=[];
-  for(let t=1;t<=5;t++){for(let i=0;i<per;i++)arr.push(t)}
+  const per=Math.floor(n/6),extra=n%6,arr=[];
+  for(let t=1;t<=6;t++){for(let i=0;i<per;i++)arr.push(t)}
   for(let i=0;i<extra;i++)arr.push(i+1);
   return shuffle(arr);
 }
 
-// 建立測驗時，先從 128 色不重複洗牌抽出本回主角色，確保單次測驗（10/20題）不會一直考同一個顏色
 function buildQuiz(n){
   const types = quizMode==='single' ? Array(n).fill(singleType) : mixedTypes(n);
-  const shuffledTargets = shuffle(COLORS);
+  
+  // ★ 新增：依據位元遮罩過濾候選目標色池
+  let pool = COLORS;
+  if (quizMode === 'single' && singleType === 4) {
+    const SEASON_BIT = { spring: 8, summer: 4, autumn: 2, winter: 1 };
+    pool = COLORS.filter(function(c) {
+      return (SEASON_BIT[c.season] & activeSeasonMask) !== 0;
+    });
+    // 終極防呆：若異常導致沒選到顏色，則退回全域
+    if(pool.length === 0) pool = COLORS; 
+  }
+
+  const shuffledTargets = shuffle(pool);
   const seenSignatures = {};
   questions = [];
 
   types.forEach(function(t, idx){
-    const preferredTarget = shuffledTargets[idx % shuffledTargets.length];
+    let preferredTarget = shuffledTargets[idx % shuffledTargets.length];
     let q = createByType(t, preferredTarget);
+    
+    // 檢查是否有重複出題
     if(seenSignatures[q.signature]){
       for(let tries=0; tries<40; tries++){
-        q = createByType(t);
+        // ★ 核心修復：重抽時也必須強制從「過濾後的 pool」中隨機抽，不能用全域 COLORS
+        preferredTarget = pick(pool);
+        q = createByType(t, preferredTarget);
         if(!seenSignatures[q.signature]) break;
       }
     }
@@ -721,7 +790,7 @@ function buildQuiz(n){
   index = 0;
   score = 0;
   locked = false;
-  breakdown = {1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0]};
+  breakdown = {1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0],6:[0,0]};
 }
 
 function questionText(q){
@@ -729,6 +798,7 @@ function questionText(q){
   if(q.type===2)return '這個顏色的正確日文色名是？';
   if(q.type===3)return '這個顏色屬於哪一個季節的命定色？';
   if(q.type===4)return '以下四個'+FAMILY_ZH[q.family]+'中，哪一個是「'+SEASON_LABEL[q.targetSeason]+'」的命定色？';
+  if(q.type===6)return '請選出屬於「'+SEASON_LABEL[q.targetSeason]+'」的顏色名：'; // ★ 新增這行
   return '以下兩個相近的'+FAMILY_ZH[q.family]+'中，哪一個更符合「'+SEASON_LABEL[q.targetSeason]+'」？';
 }
 
@@ -751,6 +821,7 @@ function renderQuestion(){
   if(q.type===2){renderPromptSwatch(q.target);renderTextColorNames(q)}
   if(q.type===3){renderPromptSwatch(q.target);renderSeasonOptions(q)}
   if(q.type===4||q.type===5)renderColorOptions(q);
+  if(q.type===6)renderTextColorNames(q); // ★ 新增這行：不渲染色塊，直接渲染文字選項
 }
 
 function renderPromptSwatch(c){
@@ -852,7 +923,7 @@ function revealAllOptions(q){
         sw.appendChild(r);
       }
     }
-    else if(q.type===2){
+    else if(q.type===2 || q.type===6){
       const r=document.createElement('div');
       r.className='text-reveal';
       const mini=document.createElement('span');
@@ -937,7 +1008,7 @@ function showResults(){
   let desc=activeQuizSource==='import'?'特別複習題庫：'+importedFileName:(quizMode==='single'?'單一題型：'+TYPE_NAME[singleType]:'五種題型混合');
   $('scoreSub').textContent='正確率 '+pct+'% · '+desc;
   $('stats').innerHTML='';
-  for(let t=1;t<=5;t++){
+  for(let t=1;t<=6;t++){
     if(breakdown[t][1]===0)continue;
     const d=document.createElement('div');
     d.className='stat';
@@ -978,7 +1049,7 @@ function serializeQuestion(q,reason){
 }
 
 function deserializeQuestion(o){
-  if(!o||![1,2,3,4,5].includes(Number(o.type))||!o.target)return null;
+  if(!o||![1,2,3,4,5,6].includes(Number(o.type))||!o.target)return null;
   const type=Number(o.type),target=resolveColor(o.target);
   if(!target)return null;
   let options;
@@ -1130,9 +1201,14 @@ function goHome(){
 }
 
 function updateModeUI(){
-  const single=quizMode==='single';
-  $('singleWrap').className='single-wrap'+(single?' show':'');
-  $('mixedInfo').style.display=single?'none':'block';
+  const single = quizMode === 'single';
+  $('singleWrap').className = 'single-wrap' + (single ? ' show' : '');
+  $('mixedInfo').style.display = single ? 'none' : 'block';
+  
+  // 新增：只有在單一題型且選了「題型 4」時，才顯示季節特訓面板
+  const showSeason = (single && singleType === 4);
+  const seasonWrap = $('seasonWrap');
+  if(seasonWrap) seasonWrap.style.display = showSeason ? 'block' : 'none';
 }
 
 document.querySelectorAll('#countSeg button').forEach(function(b){
@@ -1155,6 +1231,15 @@ document.querySelectorAll('#typeGrid .type-pick').forEach(function(b){
     document.querySelectorAll('#typeGrid .type-pick').forEach(function(x){x.classList.remove('active')});
     b.classList.add('active');
     singleType=parseInt(b.dataset.type,10);
+	updateModeUI(); // ★ 加上這行：切換題型時連動更新 UI
+  });
+});
+// ★ 新增：季節特訓按鈕的點擊監聽
+document.querySelectorAll('#seasonSeg button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#seasonSeg button').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    activeSeasonMask = parseInt(b.dataset.mask, 10);
   });
 });
 $('startBtn').addEventListener('click',function(){
