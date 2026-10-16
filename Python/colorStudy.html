@@ -212,7 +212,7 @@ const DRILL_CONFIG = {
 
   // 【條件 1-2】次級遞迴展開時，候選色與「最初題目色 A (Root Anchor)」的最大色相差上限（度）
   // 用於防止「朋友的朋友」發生色相過度漂移（Hue Drift）
-  MAX_ROOT_HUE_DRIFT: 48,
+  MAX_ROOT_HUE_DRIFT: 35,
 
   // 【條件 2-1 & 2-2】單一遞迴步驟內的嚴格匹配條件 f(CurrentNode, 嚴格)
   STRICT_STEP_HUE_DIFF: 32,          // 嚴格模式下，與上一級節點的色相差上限（度）
@@ -220,13 +220,15 @@ const DRILL_CONFIG = {
   STRICT_NEIGHBOR_SEARCH_POOL: 8,    // ★新增：每層先嚴格找出最相近的 8 個 (確保有效學習)
   STRICT_NEIGHBOR_PICK_COUNT: 5,     // ★新增：從這 8 個中隨機抽出 5 個進入候選池 (產生微亂數)
   // 【條件 2-4】當嚴格遞迴見底仍未滿額時，放寬模式 f(RootAnchor, 放寬) 的匹配條件
-  RELAXED_ROOT_HUE_DIFF: 75,         // 放寬模式下，允許與最初題目色 A 的最大色相差（跨相鄰色系）
+  RELAXED_ROOT_HUE_DIFF: 55,         // 放寬模式下，允許與最初題目色 A 的最大色相差（跨相鄰色系）
 
   // 【條件 2-2 & 2-3】各題型遞迴候選池大小與最終抽取數量
   TYPE1_2_POOL_SIZE: 8,              // 題型 1 & 2：遞迴湊滿 8 個干擾候選色
   TYPE1_2_PICK_COUNT: 3,             // 題型 1 & 2：從 8 個候選中隨機抽 3 個作為錯誤選項
-  TYPE4_PER_SEASON_POOL_SIZE: 3,     // 題型 4：另外三個季節「各自」遞迴湊滿 3 個候選色（三季共 9 個候選）
-  TYPE5_POOL_SIZE: 6                 // 題型 5：針對目標色與指定維度，遞迴湊滿 6 個候選比較色再抽 1 個
+  TYPE5_POOL_SIZE: 6,                // 題型 5：針對目標色與指定維度，遞迴湊滿 6 個候選比較色再抽 1 個
+  // ★ 題型 4 專用新邏輯參數：
+  TYPE4_POOL_THRESHOLD: 4,           // 題型 4：大候選池累積門檻（一旦 >= 4 即強制停機盲抽）
+  TYPE4_MAX_ANCHORS: 2               // 題型 4：未達門檻時，每層隨機抽出當作下一層「跳板」的錨點數};
 };
 
 const COLORS=[{"season":"spring","name":"ピーチピンク","rgb":"245, 197, 181","cmyk":"C:0 M:25 Y:20 K:0","hex":"#F5C5B5"},{"season":"spring","name":"オーロラ","rgb":"235, 145, 128","cmyk":"C:0 M:50 Y:40 K:0","hex":"#EB9180"},{"season":"spring","name":"カーネーションピンク","rgb":"230, 118, 135","cmyk":"C:0 M:64 Y:25 K:0","hex":"#E67687"},{"season":"spring","name":"ウォームピンク","rgb":"222, 73, 92","cmyk":"C:0 M:85 Y:50 K:0","hex":"#DE495C"},{"season":"spring","name":"スカーレット","rgb":"220, 62, 59","cmyk":"C:0 M:90 Y:82 K:0","hex":"#DC3E3B"},{"season":"spring","name":"トマトレッド","rgb":"216, 35, 50","cmyk":"C:0 M:100 Y:90 K:0","hex":"#D82332"},{"season":"spring","name":"チャイナレッド","rgb":"220, 62, 51","cmyk":"C:0 M:90 Y:90 K:0","hex":"#DC3E33"},{"season":"spring","name":"アイリス","rgb":"94, 81, 145","cmyk":"C:70 M:75 Y:0 K:0","hex":"#5E5191"},{"season":"spring","name":"パンジー","rgb":"112, 97, 155","cmyk":"C:60 M:65 Y:0 K:0","hex":"#70619B"},{"season":"spring","name":"ロンドントワイライト","rgb":"2, 34, 44","cmyk":"C:100 M:60 Y:40 K:65","hex":"#02222C"},{"season":"spring","name":"ターコイズ","rgb":"0, 165, 156","cmyk":"C:90 M:0 Y:40 K:0","hex":"#00A59C"},{"season":"spring","name":"ケンブリッジブルー","rgb":"82, 187, 185","cmyk":"C:63 M:0 Y:25 K:0","hex":"#52BBB9"},{"season":"spring","name":"ライトアクア","rgb":"150, 208, 195","cmyk":"C:40 M:0 Y:22 K:0","hex":"#96D0C3"},{"season":"spring","name":"パロットグリーン","rgb":"21, 167, 72","cmyk":"C:80 M:0 Y:100 K:0","hex":"#15A748"},{"season":"spring","name":"スプリングノート","rgb":"0, 167, 86","cmyk":"C:80 M:0 Y:90 K:0","hex":"#00A756"},{"season":"spring","name":"アップルグリーン","rgb":"108, 183, 68","cmyk":"C:60 M:0 Y:100 K:0","hex":"#6CB744"},{"season":"spring","name":"スプリンググリーン","rgb":"155, 201, 98","cmyk":"C:40 M:0 Y:80 K:0","hex":"#9BC962"},{"season":"spring","name":"ハニーイエロー","rgb":"251, 215, 158","cmyk":"C:0 M:15 Y:40 K:0","hex":"#FBD79E"},{"season":"spring","name":"カナリアイエロー","rgb":"255, 232, 109","cmyk":"C:0 M:5 Y:70 K:0","hex":"#FFE86D"},{"season":"spring","name":"ミモザ","rgb":"254, 219, 61","cmyk":"C:0 M:10 Y:90 K:0","hex":"#FEDB3D"},{"season":"spring","name":"バナナイエロー","rgb":"246, 188, 37","cmyk":"C:0 M:25 Y:100 K:0","hex":"#F6BC25"},{"season":"spring","name":"シャンパンオレンジ","rgb":"231, 125, 98","cmyk":"C:0 M:60 Y:60 K:0","hex":"#E77D62"},{"season":"spring","name":"ルミナスコーラル","rgb":"228, 106, 81","cmyk":"C:0 M:70 Y:70 K:0","hex":"#E46A51"},{"season":"spring","name":"バレンシア","rgb":"201, 61, 53","cmyk":"C:10 M:90 Y:90 K:0","hex":"#C93D35"},{"season":"spring","name":"フロリダゴールド","rgb":"237, 150, 67","cmyk":"C:0 M:45 Y:87 K:0","hex":"#ED9643"},{"season":"spring","name":"マロン","rgb":"138, 80, 47","cmyk":"C:40 M:75 Y:100 K:10","hex":"#8A502F"},{"season":"spring","name":"コーヒーブラウン","rgb":"107, 69, 49","cmyk":"C:60 M:80 Y:100 K:10","hex":"#6B4531"},{"season":"spring","name":"キャメル","rgb":"157, 102, 48","cmyk":"C:30 M:60 Y:100 K:10","hex":"#9D6630"},{"season":"spring","name":"ビスケット","rgb":"209, 164, 118","cmyk":"C:5 M:30 Y:50 K:10","hex":"#D1A476"},{"season":"spring","name":"フローラルホワイト","rgb":"253, 241, 213","cmyk":"C:1 M:4 Y:15 K:0","hex":"#FDF1D5"},{"season":"spring","name":"アイボリー","rgb":"255, 245, 220","cmyk":"C:0 M:3 Y:12 K:0","hex":"#FFF5DC"},{"season":"spring","name":"カント","rgb":"189, 190, 185","cmyk":"C:15 M:10 Y:12 K:12","hex":"#BDBEB9"},{"season":"summer","name":"ベビーピンク","rgb":"249, 220, 228","cmyk":"C:0 M:15 Y:0 K:0","hex":"#F9DCE4"},{"season":"summer","name":"パステルピンク","rgb":"238, 176, 199","cmyk":"C:0 M:36 Y:0 K:0","hex":"#EEB0C7"},{"season":"summer","name":"オールドローズ","rgb":"218, 171, 187","cmyk":"C:0 M:30 Y:0 K:10","hex":"#DAABBB"},{"season":"summer","name":"イタリアンローズ","rgb":"234, 145, 165","cmyk":"C:0 M:50 Y:10 K:0","hex":"#EA91A5"},{"season":"summer","name":"ローズピンク","rgb":"233, 149, 182","cmyk":"C:0 M:49 Y:0 K:0","hex":"#E995B6"},{"season":"summer","name":"チェリーピンク","rgb":"230, 116, 135","cmyk":"C:0 M:65 Y:25 K:0","hex":"#E67487"},{"season":"summer","name":"ストロベリーレッド","rgb":"207, 31, 61","cmyk":"C:0 M:100 Y:75 K:5","hex":"#CF1F3D"},{"season":"summer","name":"チェリーレッド","rgb":"197, 32, 55","cmyk":"C:0 M:100 Y:80 K:10","hex":"#C52037"},{"season":"summer","name":"ウォーターメロンローズ","rgb":"200, 56, 86","cmyk":"C:0 M:90 Y:45 K:10","hex":"#C83856"},{"season":"summer","name":"ディープレッド","rgb":"180, 29, 66","cmyk":"C:4 M:100 Y:60 K:15","hex":"#B41D42"},{"season":"summer","name":"ラズベリー","rgb":"149, 68, 117","cmyk":"C:40 M:85 Y:20 K:0","hex":"#954475"},{"season":"summer","name":"ペールライラック","rgb":"223, 192, 210","cmyk":"C:8 M:25 Y:0 K:0","hex":"#DFC0D2"},{"season":"summer","name":"ラベンダー","rgb":"148, 142, 185","cmyk":"C:40 M:40 Y:0 K:0","hex":"#948EB9"},{"season":"summer","name":"ラベンダーブルー","rgb":"113, 140, 186","cmyk":"C:55 M:35 Y:0 K:0","hex":"#718CBA"},{"season":"summer","name":"ゼニスブルー","rgb":"129, 156, 192","cmyk":"C:45 M:25 Y:0 K:5","hex":"#819CC0"},{"season":"summer","name":"ゼファブルー","rgb":"93, 159, 202","cmyk":"C:60 M:20 Y:0 K:0","hex":"#5D9FCA"},{"season":"summer","name":"ペールアクア","rgb":"199, 232, 241","cmyk":"C:20 M:0 Y:0 K:0","hex":"#C7E8F1"},{"season":"summer","name":"ウェッジウッドブルー","rgb":"59, 108, 167","cmyk":"C:80 M:50 Y:0 K:0","hex":"#3B6CA7"},{"season":"summer","name":"キャンバスブルー","rgb":"46, 121, 177","cmyk":"C:80 M:40 Y:0 K:0","hex":"#2E79B1"},{"season":"summer","name":"インクブルー","rgb":"32, 58, 107","cmyk":"C:90 M:70 Y:0 K:30","hex":"#203A6B"},{"season":"summer","name":"ビリジアン","rgb":"0, 139, 129","cmyk":"C:90 M:20 Y:50 K:0","hex":"#008B81"},{"season":"summer","name":"エメラルドグリーン","rgb":"0, 149, 122","cmyk":"C:90 M:10 Y:60 K:0","hex":"#00957A"},{"season":"summer","name":"ミントグリーン","rgb":"121, 198, 187","cmyk":"C:50 M:0 Y:25 K:0","hex":"#79C6BB"},{"season":"summer","name":"シトラスイエロー","rgb":"255, 239, 140","cmyk":"C:0 M:3 Y:55 K:0","hex":"#FFEF8C"},{"season":"summer","name":"バーリーウッド","rgb":"208, 170, 152","cmyk":"C:10 M:30 Y:30 K:5","hex":"#D0AA98"},{"season":"summer","name":"シャンパーニュ","rgb":"179, 151, 138","cmyk":"C:15 M:30 Y:30 K:15","hex":"#B3978A"},{"season":"summer","name":"ココア","rgb":"98, 75, 71","cmyk":"C:60 M:70 Y:70 K:15","hex":"#624B47"},{"season":"summer","name":"ローズブラウン","rgb":"102, 79, 72","cmyk":"C:70 M:80 Y:80 K:0","hex":"#664F48"},{"season":"summer","name":"ダークブルーフォグ","rgb":"55, 77, 86","cmyk":"C:35 M:0 Y:0 K:75","hex":"#374D56"},{"season":"summer","name":"アッシュグレイ","rgb":"111, 141, 150","cmyk":"C:40 M:10 Y:10 K:30","hex":"#6F8D96"},{"season":"summer","name":"ブルーミスト","rgb":"220, 227, 232","cmyk":"C:8 M:3 Y:0 K:5","hex":"#DCE3E8"},{"season":"summer","name":"オフホワイト","rgb":"248, 247, 246","cmyk":"C:0 M:0 Y:0 K:3","hex":"#F8F7F6"},{"season":"autumn","name":"ペールアプリコット","rgb":"246, 196, 157","cmyk":"C:0 M:25 Y:35 K:0","hex":"#F6C49D"},{"season":"autumn","name":"サーモンピンク","rgb":"230, 116, 106","cmyk":"C:0 M:65 Y:50 K:0","hex":"#E6746A"},{"season":"autumn","name":"バーミリオン","rgb":"224, 84, 53","cmyk":"C:0 M:80 Y:90 K:0","hex":"#E05435"},{"season":"autumn","name":"ダークトマトレッド","rgb":"208, 48, 54","cmyk":"C:0 M:95 Y:85 K:5","hex":"#D03036"},{"season":"autumn","name":"ダークカーディナル","rgb":"196, 49, 42","cmyk":"C:7 M:95 Y:100 K:5","hex":"#C4312A"},{"season":"autumn","name":"テラコッタ","rgb":"163, 51, 45","cmyk":"C:10 M:90 Y:90 K:20","hex":"#A3332D"},{"season":"autumn","name":"プラム","rgb":"106, 57, 120","cmyk":"C:65 M:90 Y:10 K:0","hex":"#6A3978"},{"season":"autumn","name":"ナイルブルー","rgb":"72, 159, 162","cmyk":"C:70 M:15 Y:30 K:0","hex":"#489FA2"},{"season":"autumn","name":"ティールブルー","rgb":"0, 101, 111","cmyk":"C:100 M:50 Y:50 K:0","hex":"#00656F"},{"season":"autumn","name":"ダークロンドントワイライト","rgb":"37, 35, 41","cmyk":"C:100 M:100 Y:90 K:20","hex":"#252329"},{"season":"autumn","name":"ボトルグリーン","rgb":"17, 63, 42","cmyk":"C:100 M:60 Y:100 K:30","hex":"#113F2A"},{"season":"autumn","name":"オリーブドラブ","rgb":"95, 105, 89","cmyk":"C:70 M:55 Y:70 K:1","hex":"#5F6959"},{"season":"autumn","name":"オリーブグリーン","rgb":"97, 109, 60","cmyk":"C:70 M:50 Y:100 K:0","hex":"#616D3C"},{"season":"autumn","name":"モスグリーン","rgb":"134, 132, 85","cmyk":"C:50 M:40 Y:80 K:0","hex":"#868455"},{"season":"autumn","name":"スプラウト","rgb":"103, 170, 124","cmyk":"C:60 M:10 Y:60 K:0","hex":"#67AA7C"},{"season":"autumn","name":"シャルトルーズグリーン","rgb":"135, 175, 63","cmyk":"C:50 M:10 Y:100 K:0","hex":"#87AF3F"},{"season":"autumn","name":"クロムイエロー","rgb":"243, 179, 41","cmyk":"C:0 M:30 Y:100 K:0","hex":"#F3B329"},{"season":"autumn","name":"マスタード","rgb":"204, 133, 49","cmyk":"C:15 M:50 Y:100 K:0","hex":"#CC8531"},{"season":"autumn","name":"ゴールデンオレンジ","rgb":"237, 150, 54","cmyk":"C:0 M:45 Y:95 K:0","hex":"#ED9636"},{"season":"autumn","name":"アプリコットオレンジ","rgb":"231, 124, 86","cmyk":"C:0 M:60 Y:70 K:0","hex":"#E77C56"},{"season":"autumn","name":"タイガーリリー","rgb":"221, 101, 42","cmyk":"C:1 M:70 Y:100 K:2","hex":"#DD652A"},{"season":"autumn","name":"スパニッシュオレンジ","rgb":"231, 122, 57","cmyk":"C:0 M:60 Y:90 K:0","hex":"#E77A39"},{"season":"autumn","name":"アラゴンオレンジ","rgb":"197, 101, 47","cmyk":"C:15 M:70 Y:100 K:0","hex":"#C5652F"},{"season":"autumn","name":"アーモンドシェル","rgb":"174, 106, 46","cmyk":"C:20 M:60 Y:100 K:10","hex":"#AE6A2E"},{"season":"autumn","name":"チョコレートブラウン","rgb":"98, 74, 55","cmyk":"C:70 M:80 Y:100 K:0","hex":"#624A37"},{"season":"autumn","name":"ダークブラウン","rgb":"74, 59, 43","cmyk":"C:75 M:80 Y:100 K:20","hex":"#4A3B2B"},{"season":"autumn","name":"ブラウンオリーブ","rgb":"116, 105, 80","cmyk":"C:50 M:50 Y:70 K:15","hex":"#746950"},{"season":"autumn","name":"クロワッサン","rgb":"177, 137, 87","cmyk":"C:20 M:40 Y:70 K:10","hex":"#B18957"},{"season":"autumn","name":"サンドベージュ","rgb":"199, 177, 135","cmyk":"C:19 M:25 Y:47 K:1","hex":"#C7B187"},{"season":"autumn","name":"コルク","rgb":"202, 177, 124","cmyk":"C:10 M:20 Y:50 K:10","hex":"#CAB17C"},{"season":"autumn","name":"モスグレイ","rgb":"184, 177, 147","cmyk":"C:10 M:10 Y:30 K:20","hex":"#B8B193"},{"season":"autumn","name":"オイスターホワイト","rgb":"255, 237, 202","cmyk":"C:0 M:6 Y:20 K:0","hex":"#FFEDCA"},{"season":"winter","name":"パウダーピンク","rgb":"235, 215, 225","cmyk":"C:5 M:15 Y:0 K:0","hex":"#EBD7E1"},{"season":"winter","name":"ポンパドールピンク","rgb":"227, 96, 140","cmyk":"C:0 M:75 Y:10 K:0","hex":"#E3608C"},{"season":"winter","name":"オペラモーヴ","rgb":"224, 130, 171","cmyk":"C:3 M:58 Y:0 K:0","hex":"#E082AB"},{"season":"winter","name":"アザレアピンク","rgb":"221, 58, 116","cmyk":"C:0 M:90 Y:20 K:0","hex":"#DD3A74"},{"season":"winter","name":"マゼンタ","rgb":"219, 57, 135","cmyk":"C:0 M:90 Y:0 K:0","hex":"#DB3987"},{"season":"winter","name":"ラズベリーレッド","rgb":"150, 31, 97","cmyk":"C:30 M:100 Y:20 K:10","hex":"#961F61"},{"season":"winter","name":"トゥルーレッド","rgb":"180, 33, 55","cmyk":"C:10 M:100 Y:80 K:10","hex":"#B42137"},{"season":"winter","name":"カーニバルレッド","rgb":"180, 35, 62","cmyk":"C:15 M:100 Y:75 K:5","hex":"#B4233E"},{"season":"winter","name":"ローズレッド","rgb":"183, 36, 74","cmyk":"C:15 M:100 Y:60 K:3","hex":"#B7244A"},{"season":"winter","name":"バーガンディ","rgb":"125, 41, 63","cmyk":"C:45 M:100 Y:70 K:10","hex":"#7D293F"},{"season":"winter","name":"オーベルジーヌ","rgb":"65, 33, 98","cmyk":"C:80 M:100 Y:0 K:20","hex":"#412162"},{"season":"winter","name":"ロイヤルパープル","rgb":"68, 44, 121","cmyk":"C:85 M:100 Y:0 K:0","hex":"#442C79"},{"season":"winter","name":"パウダーパープル","rgb":"207, 204, 221","cmyk":"C:15 M:15 Y:0 K:0","hex":"#CFCCDD"},{"season":"winter","name":"ノクターン","rgb":"8, 0, 32","cmyk":"C:100 M:100 Y:0 K:80","hex":"#080020"},{"season":"winter","name":"ロイヤルブルー","rgb":"26, 77, 144","cmyk":"C:96 M:73 Y:0 K:0","hex":"#1A4D90"},{"season":"winter","name":"ウルトラマリン","rgb":"33, 79, 133","cmyk":"C:95 M:70 Y:10 K:3","hex":"#214F85"},{"season":"winter","name":"コバルトブルー","rgb":"0, 116, 176","cmyk":"C:100 M:40 Y:0 K:0","hex":"#0074B0"},{"season":"winter","name":"ターコイズブルー","rgb":"0, 168, 211","cmyk":"C:90 M:0 Y:5 K:0","hex":"#00A8D3"},{"season":"winter","name":"アクアブルー","rgb":"172, 220, 236","cmyk":"C:30 M:0 Y:0 K:0","hex":"#ACDCEC"},{"season":"winter","name":"アクアティント","rgb":"226, 243, 248","cmyk":"C:10 M:0 Y:0 K:0","hex":"#E2F3F8"},{"season":"winter","name":"パイングリーン","rgb":"21, 82, 71","cmyk":"C:100 M:60 Y:80 K:10","hex":"#155247"},{"season":"winter","name":"フォレストグリーン","rgb":"0, 97, 66","cmyk":"C:100 M:40 Y:90 K:15","hex":"#006142"},{"season":"winter","name":"レモンイエロー","rgb":"254, 238, 16","cmyk":"C:3 M:0 Y:100 K:0","hex":"#FEEE10"},{"season":"winter","name":"ライトニングイエロー","rgb":"245, 236, 88","cmyk":"C:0 M:0 Y:80 K:0","hex":"#F5EC58"},{"season":"winter","name":"レモンティント","rgb":"249, 248, 213","cmyk":"C:3 M:0 Y:18 K:0","hex":"#F9F8D5"},{"season":"winter","name":"クリスタルベージュ","rgb":"247, 238, 221","cmyk":"C:3 M:5 Y:10 K:0","hex":"#F7EEDD"},{"season":"winter","name":"ダークバーガンディ","rgb":"42, 1, 16","cmyk":"C:0 M:100 Y:25 K:90","hex":"#2A0110"},{"season":"winter","name":"チャコールグレイ","rgb":"39, 46, 50","cmyk":"C:20 M:0 Y:0 K:90","hex":"#272E32"},{"season":"winter","name":"ブラック","rgb":"11, 10, 8","cmyk":"C:30 M:30 Y:30 K:100","hex":"#0B0A08"},{"season":"winter","name":"ミディアムグレイ","rgb":"158, 159, 158","cmyk":"C:0 M:0 Y:0 K:40","hex":"#9E9F9E"},{"season":"winter","name":"シルバーグレイ","rgb":"203, 204, 203","cmyk":"C:0 M:0 Y:0 K:20","hex":"#CBCCCB"},{"season":"winter","name":"スノーホワイト","rgb":"255, 255, 255","cmyk":"C:0 M:0 Y:0 K:0","hex":"#FFFFFF"}];
@@ -456,70 +458,72 @@ function createType3(forcedTarget){
 
 /**
  * 題型 4（同色系四季比較）：
- * - 條件 1-1：不排除低彩度色，128 色皆可作為題目（低彩度自動進入 'neutral' 題庫互相比較）
- * - 條件 2：先滿足另外三個季節限制，針對每個季節各自用遞迴找出候選池（預設各季 3 個），再從各季隨機抽 1 個
+ * 套用「隨機錨點擴張 + 大池子盲抽」邏輯，並以「色相安全鎖」為絕對底線。
  */
 function pickSeasonRepresentativeForType4(target, desiredSeason){
-  const perSeasonPoolSize = DRILL_CONFIG.TYPE4_PER_SEASON_POOL_SIZE;
+  const threshold = DRILL_CONFIG.TYPE4_POOL_THRESHOLD;
+  const maxAnchors = DRILL_CONFIG.TYPE4_MAX_ANCHORS;
 
-  // f(node, 嚴格)：必須屬於目標季節（或在遞迴中介層屬於同色系），但為了確保最終抽出的是 desiredSeason，
-  // 我們讓 BFS 在全色系內傳遞錨點，並針對 desiredSeason 收集候選
   const visitedNodes = new Set([colorKey(target)]);
   const seasonPool = [];
-  const seasonPoolKeys = new Set();
-  let frontier = [target];
+  
+  let frontier = [target]; // 初始第一層的錨點就是主角
 
-  while(seasonPool.length < perSeasonPoolSize && frontier.length > 0){
+  // 當候選池還沒達到門檻，且還有錨點可以往下找時，持續遞迴
+  while(seasonPool.length < threshold && frontier.length > 0){
     const nextFrontier = [];
-    const layerSeasonCandidates = [];
 
+    // 1. 從目前的錨點往外找朋友
     for(let i=0; i<frontier.length; i++){
       const node = frontier[i];
       const strictMatches = COLORS.filter(function(c){
         const key = colorKey(c);
         if(visitedNodes.has(key)) return false;
         if(c.family !== target.family) return false;
-        // 條件 1-2：確保不超出與 Root A 的最大色相偏移
+        // 【絕對安全鎖】：即使是朋友的朋友，也不能偏離最初的主角太遠
         if(!withinRootHueDrift(target, c, DRILL_CONFIG.MAX_ROOT_HUE_DRIFT)) return false;
+        
         if(target.isNeutral){
           return rgbEuclidDist(node, c) <= DRILL_CONFIG.STRICT_NEUTRAL_RGB_DIST;
         }
         return hueDist(node.h, c.h) <= DRILL_CONFIG.STRICT_STEP_HUE_DIFF;
-      }).sort(function(a,b){
-        return colorDistance(node, a) - colorDistance(node, b);
       });
 
-      // 【修改核心】：加入單層擴張的微亂數
-      const topMatches = strictMatches.slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_SEARCH_POOL);
-      const randomizedMatches = shuffle(topMatches).slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_PICK_COUNT);
-
-      randomizedMatches.forEach(function(c){
+      strictMatches.forEach(function(c){
         const key = colorKey(c);
         if(visitedNodes.has(key)) return;
         visitedNodes.add(key);
-        nextFrontier.push(c);
-        if(c.season === desiredSeason && !seasonPoolKeys.has(key)){
-          seasonPoolKeys.add(key);
-          layerSeasonCandidates.push(c);
+        nextFrontier.push(c); // 合格的朋友，列入潛在跳板名單
+
+        // 若剛好是我們要找的季節，收編入大候選池
+        if(c.season === desiredSeason){
+          seasonPool.push(c);
         }
       });
     }
 
-    if(layerSeasonCandidates.length > 0){
-      const needed = perSeasonPoolSize - seasonPool.length;
-      const toAdd = layerSeasonCandidates.length <= needed
-        ? layerSeasonCandidates
-        : shuffle(layerSeasonCandidates).slice(0, needed);
-      toAdd.forEach(function(c){ seasonPool.push(c); });
+    // 若本回合大池子已經 >= 4，強制停機（while 迴圈也會擋，雙重保險）
+    if(seasonPool.length >= threshold){
+      break;
     }
 
-    frontier = nextFrontier;
+    // 2. 決定下一層的跳板 (錨點)
+    // 從這層探索到的新朋友中，洗牌後隨機抽出 maxAnchors 個，創造動態活水
+    if(nextFrontier.length > 0){
+      frontier = shuffle(nextFrontier).slice(0, maxAnchors);
+    } else {
+      frontier = []; // 找不到新朋友了，自然停機，接受「必定之痛」
+    }
   }
 
-  // 2-4：若該季節在嚴格遞迴下未滿 perSeasonPoolSize（例如夏季缺橘色、秋季缺藍紫色），啟動 f(target, 放寬)
-  if(seasonPool.length < perSeasonPoolSize){
+  // 3. 終極防呆：如果遞迴到底，連 1 個選項都沒找到 (例如秋季找藍紫色)
+  // 此時啟動放寬機制，但【依然強制必須是同色系】
+  if(seasonPool.length === 0){
     const relaxedCandidates = COLORS.filter(function(c){
-      if(c.season !== desiredSeason || seasonPoolKeys.has(colorKey(c))) return false;
+      if(c.season !== desiredSeason) return false;
+      // ★ 調整：放寬時依然保持使用同色系
+      if(c.family !== target.family) return false; 
+      
       if(target.isNeutral){
         return c.isNeutral || c.s <= 0.32;
       }
@@ -528,19 +532,19 @@ function pickSeasonRepresentativeForType4(target, desiredSeason){
       return colorDistance(target, a) - colorDistance(target, b);
     });
 
-    // 若放寬色相範圍仍不足，則直接從該季節中挑選視覺距離最接近的色票補齊
-    const fallbackAllSeason = COLORS.filter(function(c){
-      return c.season === desiredSeason && !seasonPoolKeys.has(colorKey(c)) && relaxedCandidates.indexOf(c) === -1;
-    }).sort(function(a,b){
-      return colorDistance(target, a) - colorDistance(target, b);
-    });
-
-    const combinedRelaxed = relaxedCandidates.concat(fallbackAllSeason);
-    for(let i=0; i<combinedRelaxed.length && seasonPool.length < perSeasonPoolSize; i++){
-      seasonPool.push(combinedRelaxed[i]);
+    if(relaxedCandidates.length === 0){
+      // 如果該季節在該色系「完全沒有半個顏色」（例如夏季題庫完全沒有橘色），
+      // 為了避免程式找不到選項而崩潰，才以該季節全域視覺最接近的 1 個色補底（通常會抓到最相近的相鄰色系）。
+      const fallback = COLORS.filter(function(c){ return c.season === desiredSeason; })
+        .sort(function(a,b){ return colorDistance(target, a) - colorDistance(target, b); })[0];
+      seasonPool.push(fallback);
+    } else {
+      // 放寬條件下的同色系顏色全塞入池中
+      relaxedCandidates.forEach(function(c){ seasonPool.push(c); });
     }
   }
 
+  // 4. 從大候選池中盲抽 1 個當作最終該季的干擾選項
   return pick(seasonPool);
 }
 
