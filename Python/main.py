@@ -101,7 +101,7 @@ current_daily_date = ""      # 紀錄當下正在寫入的日期字串
 current_daily_logs = []      # 紀錄當天所有的 Log 陣列
 record_sync_task = None      # 2 分鐘防抖的背景 Task
 # --- 在全域變數區新增參數化名單 ---
-EXCLUDED_COUNTRIES = ["JP", "TW"]
+EXCLUDED_COUNTRIES = ["JP", "TW" ,"KR"]
 one_time_tokens = {}
 
 setlist_gzip_cache = b""
@@ -145,7 +145,7 @@ DATA_NAME_MAP = {
     "patch_setlist": "商品補丁資料"    # 👈 新增
 }
 # --- 請加在全域變數區 (如 DATA_NAME_MAP 下方) ---
-LATEST_SET_CODES = ["DM26-RP3", "DM26-EX3", "DM26-EX2", "NET-092"]
+LATEST_SET_CODES = ["DM26-EX4","DM26-RP3", "DM26-EX3", "DM26-EX2"]
 # 結構設計：hot_card_views[國籍][商品代碼][卡名] = 點擊次數
 hot_card_views = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 # 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
