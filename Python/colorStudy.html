@@ -597,11 +597,11 @@ function collectCandidatesBFS(rootAnchor, targetCount, getStrictNeighbors, getRe
 /**
  * 題型 1 & 2 的干擾選項抽樣器（套用 8 抽 3 遞迴規則）
  */
+// 【修改後的程式碼】
 function pickDistractorsForType1And2(target){
   const poolSize = DRILL_CONFIG.TYPE1_2_POOL_SIZE;
   const pickCount = DRILL_CONFIG.TYPE1_2_PICK_COUNT;
 
-  // f(node, 嚴格)：同色系、且與上一層節點距離夠近的前 N 個顏色
   function strictFn(node){
     const validMatches = COLORS.filter(function(c){
       if(c === node || c.family !== node.family) return false;
@@ -610,22 +610,38 @@ function pickDistractorsForType1And2(target){
       }
       return hueDist(node.h, c.h) <= DRILL_CONFIG.STRICT_STEP_HUE_DIFF;
     }).sort(function(a,b){
-      return colorDistance(node, a) - colorDistance(node, b);
+      // ★ 核心校正：計算基礎視覺距離
+      let scoreA = colorDistance(node, a);
+      let scoreB = colorDistance(node, b);
+
+      // 【視覺語意校正】如果目標是中性色/低彩度色（如白、米、灰），
+      // 而候選干擾項跟目標「一個是中性色、一個不是中性色」，施加懲罰讓它們分開，
+      // 避免出現「一個米白，旁邊配三個鮮豔黃/粉紅」一眼就被看破的怪現象。
+      if(node.isNeutral){
+        if(a.isNeutral !== node.isNeutral) scoreA += 180;
+        if(b.isNeutral !== node.isNeutral) scoreB += 180;
+      }
+
+      return scoreA - scoreB;
     });
 
-    // 【修改核心】：先取前 8 名，再隨機洗牌抽 5 名回傳（打亂第一層必定保送的死水）
     const topMatches = validMatches.slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_SEARCH_POOL);
     return shuffle(topMatches).slice(0, DRILL_CONFIG.STRICT_NEIGHBOR_PICK_COUNT);
   }
 
-  // f(root, 放寬)：先找同類別或跨相鄰色系（色相差 <= RELAXED_ROOT_HUE_DIFF），再依綜合視覺距離排序補齊
   function relaxedFn(root, visited){
     const primaryRelaxed = COLORS.filter(function(c){
       if(visited.has(colorKey(c))) return false;
       if(root.isNeutral) return c.isNeutral || c.s <= 0.30;
       return !c.isNeutral && hueDist(root.h, c.h) <= DRILL_CONFIG.RELAXED_ROOT_HUE_DIFF;
     }).sort(function(a,b){
-      return colorDistance(root, a) - colorDistance(root, b);
+      let scoreA = colorDistance(root, a);
+      let scoreB = colorDistance(root, b);
+      if(root.isNeutral){
+        if(a.isNeutral !== root.isNeutral) scoreA += 180;
+        if(b.isNeutral !== root.isNeutral) scoreB += 180;
+      }
+      return scoreA - scoreB;
     });
 
     if(primaryRelaxed.length >= poolSize) return primaryRelaxed;
