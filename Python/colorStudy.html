@@ -119,6 +119,11 @@
     .app{padding-left:12px;padding-right:12px}.title{font-size:25px}.start,.qcard,.results{padding:18px}.question{font-size:19px}.prompt-swatch{height:145px}.answers{gap:9px}.swatch-choice{height:112px}.answer{padding:9px}.text-choice{font-size:14px;padding-left:34px}.stats{grid-template-columns:1fr 1fr}.result-actions{grid-template-columns:1fr}.badge{display:none}.swatch-reveal{left:5px;right:5px;bottom:5px;padding:6px;font-size:10px}.swatch-reveal small{font-size:9px}.review-head{align-items:flex-start;flex-direction:column}.review-start-row{grid-template-columns:1fr}.save-row{align-items:stretch}.review-save{width:100%}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  #seasonWrap {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+  }
 </style>
 </head>
 <body>
@@ -149,7 +154,7 @@
         
         <!-- 將特訓季節區塊安插在題型四和題型五之間 -->
         <div id="seasonWrap" style="display: none; padding: 12px; background: #fafaf9; border: 1px solid var(--line); border-radius: 12px; margin-top: -4px;">
-          <div class="section-label" style="font-size: 11px; margin-bottom: 8px;">特訓季節 (僅套用於本題型)</div>
+          <div class="section-label" style="font-size: 11px; margin-bottom: 8px;">特訓季節（縮限目前題型的目標色庫）</div>
           <div class="seg" id="seasonSeg" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 0;">
             <button type="button" data-mask="15" class="active">四季</button>
             <button type="button" data-mask="8">春</button>
@@ -267,6 +272,12 @@ const DIM_LABEL={undertone:'底調 Yellow Base / Blue Base',clarity:'清濁 Clea
 
 let questionCount=10,quizMode='single',singleType=1,questions=[],index=0,score=0,locked=false;
 let activeSeasonMask = 15; // 預設為全季節 (二進位 1111)
+/**
+ * 指定季節篩選功能設定
+ * 只影響「單一題型」模式。
+ * 要開放哪些題型，直接修改此陣列即可。
+ */
+const SEASON_FILTER_ENABLED_TYPES = [1, 2, 4];
 let breakdown={1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0],6:[0,0]};
 let activeQuizSource='generated', importedQuestions=[], importedFileName='', currentAnswerWrong=false;
 const REVIEW_STORAGE_KEY='colorPaletteDrill.review.v1';
@@ -751,18 +762,36 @@ function mixedTypes(n){
   return shuffle(arr);
 }
 
+
 function buildQuiz(n){
-  const types = quizMode==='single' ? Array(n).fill(singleType) : mixedTypes(n);
-  
-  // ★ 新增：依據位元遮罩過濾候選目標色池
+  const types = quizMode === 'single'
+    ? Array(n).fill(singleType)
+    : mixedTypes(n);
+
+  // 預設使用完整色庫。
   let pool = COLORS;
-  if (quizMode === 'single' && singleType === 4) {
-    const SEASON_BIT = { spring: 8, summer: 4, autumn: 2, winter: 1 };
-    pool = COLORS.filter(function(c) {
+
+  // 只有單一題型且該題型已開放季節篩選時，才縮限目標色庫。
+  const useSeasonFilter =
+    quizMode === 'single' &&
+    SEASON_FILTER_ENABLED_TYPES.includes(singleType);
+
+  if(useSeasonFilter){
+    const SEASON_BIT = {
+      spring: 8,
+      summer: 4,
+      autumn: 2,
+      winter: 1
+    };
+
+    pool = COLORS.filter(function(c){
       return (SEASON_BIT[c.season] & activeSeasonMask) !== 0;
     });
-    // 終極防呆：若異常導致沒選到顏色，則退回全域
-    if(pool.length === 0) pool = COLORS; 
+
+    // 防止設定異常導致沒有可用的目標色。
+    if(pool.length === 0){
+      pool = COLORS;
+    }
   }
 
   const shuffledTargets = shuffle(pool);
@@ -770,18 +799,23 @@ function buildQuiz(n){
   questions = [];
 
   types.forEach(function(t, idx){
-    let preferredTarget = shuffledTargets[idx % shuffledTargets.length];
+    let preferredTarget =
+      shuffledTargets[idx % shuffledTargets.length];
+
     let q = createByType(t, preferredTarget);
-    
-    // 檢查是否有重複出題
+
+    // 若題目重複，重抽時仍使用同一個目標色池。
     if(seenSignatures[q.signature]){
-      for(let tries=0; tries<40; tries++){
-        // ★ 核心修復：重抽時也必須強制從「過濾後的 pool」中隨機抽，不能用全域 COLORS
+      for(let tries = 0; tries < 40; tries++){
         preferredTarget = pick(pool);
         q = createByType(t, preferredTarget);
-        if(!seenSignatures[q.signature]) break;
+
+        if(!seenSignatures[q.signature]){
+          break;
+        }
       }
     }
+
     seenSignatures[q.signature] = true;
     questions.push(q);
   });
@@ -790,8 +824,17 @@ function buildQuiz(n){
   index = 0;
   score = 0;
   locked = false;
-  breakdown = {1:[0,0],2:[0,0],3:[0,0],4:[0,0],5:[0,0],6:[0,0]};
+
+  breakdown = {
+    1:[0,0],
+    2:[0,0],
+    3:[0,0],
+    4:[0,0],
+    5:[0,0],
+    6:[0,0]
+  };
 }
+
 
 function questionText(q){
   if(q.type===1)return '「'+q.target.name+'」是哪一個顏色？';
@@ -1200,16 +1243,46 @@ function goHome(){
   window.scrollTo(0,0);
 }
 
+
+
 function updateModeUI(){
   const single = quizMode === 'single';
-  $('singleWrap').className = 'single-wrap' + (single ? ' show' : '');
-  $('mixedInfo').style.display = single ? 'none' : 'block';
-  
-  // 新增：只有在單一題型且選了「題型 4」時，才顯示季節特訓面板
-  const showSeason = (single && singleType === 4);
+
+  $('singleWrap').className =
+    'single-wrap' + (single ? ' show' : '');
+
+  $('mixedInfo').style.display =
+    single ? 'none' : 'block';
+
   const seasonWrap = $('seasonWrap');
-  if(seasonWrap) seasonWrap.style.display = showSeason ? 'block' : 'none';
+  const typeGrid = $('typeGrid');
+
+  if(!seasonWrap || !typeGrid) return;
+
+  // 目前題型是否開放季節篩選
+  const showSeason =
+    single &&
+    SEASON_FILTER_ENABLED_TYPES.includes(singleType);
+
+  // 找到目前選取的題型按鈕
+  const selectedButton = typeGrid.querySelector(
+    '.type-pick[data-type="' + singleType + '"]'
+  );
+
+  if(showSeason && selectedButton){
+    // 將同一個面板移到目前題型按鈕正下方
+    selectedButton.insertAdjacentElement(
+      'afterend',
+      seasonWrap
+    );
+
+    seasonWrap.style.display = 'block';
+  }else{
+    seasonWrap.style.display = 'none';
+  }
 }
+
+
 
 document.querySelectorAll('#countSeg button').forEach(function(b){
   b.addEventListener('click',function(){
