@@ -840,13 +840,14 @@
 				return;
 			}
 
-			// 💡 追加需求：[不分商品] 或商品頁籤取前 100 名
-			sortedCards = sortedCards.slice(0, 100);
+			// 💡 追加需求：[不分商品] 或商品頁籤取前 200 名
+			let size = ( selectedSet === '[不分商品]' ) ? 200 : 50;
+			sortedCards = sortedCards.slice(0, size);
 			let maxCount = sortedCards[0][1];
 
 			listContainer.innerHTML = '';
 			sortedCards.forEach(([cname, count], idx) => {
-				let pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+				let pct = maxCount > 0 ? (count / maxCount) * size : 0;
 				let rankColor = idx < 3 ? 'text-orange-400' : 'text-gray-400';
 				
 				let itemHtml = `
@@ -854,7 +855,7 @@
 						<div class="flex justify-between items-end text-sm">
 							<div class="flex items-center gap-2 truncate">
 								<span class="font-mono font-black ${rankColor} w-8 text-right">#${idx + 1}</span>
-								<span class="text-gray-200 truncate font-semibold" title="${cname}">${cname}</span>
+								<span class="text-gray-${size} truncate font-semibold" title="${cname}">${cname}</span>
 							</div>
 							<span class="text-indigo-300 font-bold font-mono text-xs whitespace-nowrap ml-2">${count} 次</span>
 						</div>
