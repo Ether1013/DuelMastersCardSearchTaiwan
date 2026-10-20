@@ -1,8 +1,9 @@
+
 import hashlib
 import os
 import json
-import gzip  # 👈 新增這一行
-import uuid  # 用來產生唯一 ID
+import gzip
+import uuid
 import asyncio
 import base64
 import re
@@ -30,7 +31,7 @@ from datetime import datetime, timezone, timedelta
 import logging
 import random, string
 
-# 👇 新增 Firebase 套件
+# 👇 Firebase 套件
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -40,10 +41,8 @@ app = FastAPI()
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 lz_compressor = LZString()
 
-# 自動讀取同目錄下的 .env 檔案
 load_dotenv()
 
-# 👇 新增 Firebase 初始化邏輯
 firebase_cred_path = os.getenv("FIREBASE_CRED_PATH", "firebase-key.json")
 db = None
 try:
@@ -57,33 +56,27 @@ except Exception as e:
     
 LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN", "你的_LINE_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID", "你的_LINE_USER_ID")
-# 新增 user 系統參數 (可從 .env 讀取，預設為 "admin")
 TRACK_STATS_USER = os.getenv("TRACK_STATS_USER", "admin")
 
-# GitHub 自動批次 Commit 設定
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "").strip()
 
-# --- Rate Limiter 設定 ---
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# 快取配置
-MAX_CACHE_SIZE = 200          # 最多快取 200 張卡圖
-CACHE_TTL_SECONDS = 7 * 86400 # 圖片快取有效期限：7 天
+MAX_CACHE_SIZE = 200
+CACHE_TTL_SECONDS = 7 * 86400
 
 proxy_cache = OrderedDict()
 SERVER_INSTANCE_ID = str(uuid.uuid4())
 TZ_UTC8 = timezone(timedelta(hours=8))
 SERVER_START_TIME = datetime.now(TZ_UTC8).isoformat()
-last_reset_time = SERVER_START_TIME  # 預設起算時間為啟動時間
+last_reset_time = SERVER_START_TIME
 
-
-# --- 全域緩存變數區 ---
 carddata_cache = []
-carddata_gzip_cache = b""  # 👈 新增：存放 carddata 壓縮檔
-carddata_patch_cache = []  # 👈 新增：存放 carddata 補丁
+carddata_gzip_cache = b""
+carddata_patch_cache = []
 card_types_cache = []
 races_cache = []
 abilities_cache = []
@@ -91,23 +84,19 @@ categoryname_cache = []
 nickname_cache = []
 diary_cache = []
 setlist_cache = {}
-setlist_gzip_cache = b""   # 👈 新增：存放 setlist 壓縮檔
-setlist_patch_cache = {}   # 👈 新增：存放 setlist 補丁
-# ================= 新增：日誌儲存相關變數 =================
+setlist_gzip_cache = b""
+setlist_patch_cache = {}
+
 RECORD_DIR = BASE_DIR / "record"
 RECORD_DIR.mkdir(exist_ok=True)
 
-current_daily_date = ""      # 紀錄當下正在寫入的日期字串
-current_daily_logs = []      # 紀錄當天所有的 Log 陣列
-record_sync_task = None      # 2 分鐘防抖的背景 Task
-# --- 在全域變數區新增參數化名單 ---
+current_daily_date = ""
+current_daily_logs = []
+record_sync_task = None
 EXCLUDED_COUNTRIES = ["JP", "TW" ,"KR"]
 one_time_tokens = {}
 
-setlist_gzip_cache = b""
-etag_cache = {}  # 👈 新增：用來存放各個 API 的 MD5 Hash (ETag)
-
-# 💡 Wiki 網址檢查快取配置 (最多快取 500 筆卡片判斷結果，快取 3 天)
+etag_cache = {}
 wiki_url_cache = OrderedDict()
 WIKI_CACHE_MAX_SIZE = 500
 WIKI_CACHE_TTL = 3 * 86400
@@ -116,22 +105,17 @@ ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
 english_name_cache = {}
 has_unsynced_en_names = False
 file_write_lock = asyncio.Lock()
-# 詳細資料的獨立快取，避免重複請求 Fandom
 wiki_details_cache = {}
 
-# 1. 記憶體計數器 (Render 重啟後自動歸零)
 feature_counter = defaultdict(int)
-country_counter = defaultdict(int)  # 👈 新增：全域國籍次數統計
-user_counter = defaultdict(int)     # 👈 新增：全域使用者次數統計
-# 👇 新增這兩行：每日加總統計計數器
+country_counter = defaultdict(int)
+user_counter = defaultdict(int)
 daily_total_counter = defaultdict(int)
 country_daily_total_counter = defaultdict(lambda: defaultdict(int))
-# 💡 新增：紀錄各靜態資料的「重傳 (fetch)」與「快取 (cache)」次數
 data_transfer_stats = defaultdict(lambda: {"fetch": 0, "cache": 0})
-# ================= 補上這兩行：國家專屬的細部分類計數器 =================
 country_feature_counter = defaultdict(lambda: defaultdict(int))
 country_user_counter = defaultdict(lambda: defaultdict(int))
-# ====================================================================
+
 DATA_NAME_MAP = {
     "carddata": "卡牌資料",
     "setlist": "系列與商品資料",
@@ -141,44 +125,37 @@ DATA_NAME_MAP = {
     "categoryname": "分類名稱資料",
     "nickname": "暱稱資料",
     "diary": "更新日誌資料",
-    "patch_carddata": "卡牌補丁資料",  # 👈 新增
-    "patch_setlist": "商品補丁資料"    # 👈 新增
+    "patch_carddata": "卡牌補丁資料",
+    "patch_setlist": "商品補丁資料"
 }
-# --- 請加在全域變數區 (如 DATA_NAME_MAP 下方) ---
-LATEST_SET_CODES = ["DM26-EX4","DM26-RP3", "DM26-EX3", "DM26-EX2"]
-# 結構設計：hot_card_views[國籍][商品代碼][卡名] = 點擊次數
+
+LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DM26-EX2"]
+
+# 結構設計：
+# 1. 舊架構/商品分類：hot_card_views[國籍][商品代碼][卡名] = 點擊次數
+# 2. 新架構/不分商品：hot_card_views[國籍]["[不分商品]"][卡名] = 點擊次數
 hot_card_views = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-# 💡 新增：只保留最新 50 筆使用者過濾條件、參數與匯入卡表 Detail (記憶體極小且絕對不爆)
+
 action_details_log = deque(maxlen=50)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("api_cache")
 
 class NicknameApplyModel(BaseModel):
     card_name: str
     nicknames: List[str]
     
-# --- 請加在其他的 BaseModel 宣告附近 ---
 class CardViewTrackModel(BaseModel):
     card_name: str
     
 class PrettyJSONResponse(JSONResponse):
-    # 💡 增加 media_type，確保 Response Header 包含 utf-8 編碼宣告
     media_type = "application/json; charset=utf-8"
 
     def render(self, content: Any) -> bytes:
-        return json.dumps(
-            content,
-            ensure_ascii=False,  # 💡 關鍵：保持日文/中文原字，不編碼成 \uXXXX
-            indent=2
-        ).encode("utf-8")
+        return json.dumps(content, ensure_ascii=False, indent=2).encode("utf-8")
 
 class ConsoleConnectionManager:
     def __init__(self):
-        # 結構改為 Dict，儲存每個連線的權限等級與國家
         self.active_connections: Dict[WebSocket, dict] = {}
 
     async def connect(self, websocket: WebSocket, auth_level: str, country: str = None):
@@ -190,36 +167,32 @@ class ConsoleConnectionManager:
             del self.active_connections[websocket]
 
     async def broadcast(self):
-        # 1. 準備全域通用數據 (給 Admin / Token)
         sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
         sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
         recent_logs = get_clean_recent_logs()
         
         admin_payload = {
             "total_events": sum(sorted_stats.values()),
-            "daily_totals": dict(sorted(daily_total_counter.items())), # 👈 補上這一行
+            "daily_totals": dict(sorted(daily_total_counter.items())),
             "stats": sorted_stats,
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
             "recent_50_details": recent_logs,
             "start_time": last_reset_time,
-            "hot_card_views": hot_card_views,          # 👈 加上這行
-            "LATEST_SET_CODES": LATEST_SET_CODES       # 👈 加上這行
+            "hot_card_views": hot_card_views,
+            "LATEST_SET_CODES": LATEST_SET_CODES
         }
 
-        # 2. 針對每條連線，依照權限派發不同資料
         for connection, info in list(self.active_connections.items()):
             try:
                 if info["auth_level"] in ["admin", "token"]:
                     await connection.send_json(admin_payload)
                 elif info["auth_level"] == "country":
                     c = info["country"]
-                    # 計算該國專屬數據與專屬 Log
                     c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
                     c_users = country_user_counter[c]
                     c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
                     
-                    # 💡 國家專屬視角：只給予該國家的卡牌熱度數據
                     c_hot_card_views = {c: hot_card_views[c]} if c in hot_card_views else {}
                     
                     c_payload = {
@@ -229,8 +202,8 @@ class ConsoleConnectionManager:
                         "country_user_counts": {c: len(c_users)},
                         "recent_50_details": c_logs,
                         "start_time": last_reset_time,
-                        "hot_card_views": c_hot_card_views,         # 👈 加上這行
-                        "LATEST_SET_CODES": LATEST_SET_CODES        # 👈 加上這行
+                        "hot_card_views": c_hot_card_views,
+                        "LATEST_SET_CODES": LATEST_SET_CODES
                     }
                     await connection.send_json(c_payload)
             except:
@@ -238,10 +211,8 @@ class ConsoleConnectionManager:
 
 console_manager = ConsoleConnectionManager()
 
-# ---------------- 連線管理器與廣播 Model 升級 ----------------
 class ClientConnectionManager:
     def __init__(self):
-        # 結構: { websocket: {"user": user_id, "country": country} }
         self.active_connections: Dict[WebSocket, Dict[str, str]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: str, country: str):
@@ -253,10 +224,6 @@ class ClientConnectionManager:
             del self.active_connections[websocket]
 
     async def broadcast(self, message: str, target_type: str = "all", targets: List[str] = []):
-        """
-        target_type: 'all' | 'country' | 'user'
-        targets: 國家代碼清單 (例 ['TW', 'HK']) 或 User ID 清單 (例 ['TWa', 'HKb'])
-        """
         for ws, info in list(self.active_connections.items()):
             should_send = False
             if target_type == "all":
@@ -276,13 +243,10 @@ client_manager = ClientConnectionManager()
 
 class BroadcastModel(BaseModel):
     message: str
-    # 刪除這行: code: str 
     timezone_offset: int = -480  
     target_type: str = "all"     
     targets: List[str] = []
-# -----------------------------------------------------------
 
-# --- 定義預設標籤結構 ---
 DEFAULT_TAGS = {
     "version": 1,
     "target": ["我方", "對手", "雙方"],
@@ -321,7 +285,6 @@ DEFAULT_TAGS = {
 TAGS_FILE = BASE_DIR / "tags.json"
 tags_cache = copy.deepcopy(DEFAULT_TAGS)
 
-# 負責管理 WebSocket 連線
 class TagConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -343,17 +306,11 @@ class TagConnectionManager:
                     pass
 
 tag_manager = TagConnectionManager()
-
-# 1 分鐘防抖任務
 tag_sync_task = None
 
-# --- 修正後的非同步 GitHub Push 函式 ---
 async def push_tags_to_github():
     if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
-        print("[Tags GitHub Sync 警告]: GITHUB_TOKEN 或 GITHUB_REPO 未設定/為預設值，跳過 Commit")
         return
-
-    # 👇 若 tags.json 也在 Python 目錄下，請改成 "Python/tags.json"
     file_path = "Python/tags.json"
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
     headers = {
@@ -361,117 +318,77 @@ async def push_tags_to_github():
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "FastAPI-AutoCommit"
     }
-
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            # 1. 取得目標檔案最新的 SHA (若檔案存在)
             get_resp = await client.get(url, headers=headers)
             sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
-
-            # 2. 讀取最新本地檔案內容並轉成 Base64
             if not TAGS_FILE.exists():
-                print(f"[Tags GitHub Sync 錯誤]: 找不到本地檔案 {TAGS_FILE}")
                 return
-
             with open(TAGS_FILE, 'r', encoding='utf-8') as f:
                 content_str = f.read()
-
             content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
             payload = {
-                "message": "auto: sync tags.json [skip render] [skip ci]",  # 👈 加入 [skip render]
+                "message": "auto: sync tags.json [skip render] [skip ci]",
                 "content": content_base64,
                 "branch": "main"
             }
             if sha:
                 payload["sha"] = sha
-
-            # 3. 發送 PUT 請求進行 Commit & Push
-            put_resp = await client.put(url, headers=headers, json=payload)
-            if put_resp.status_code in [200, 201]:
-                print("[Tags] 成功 Commit 併 Push 至 GitHub！")
-            else:
-                print(f"[Tags GitHub Sync 失敗]: HTTP {put_resp.status_code} - {put_resp.text}")
-
+            await client.put(url, headers=headers, json=payload)
     except Exception as e:
-        print(f"[Tags GitHub Sync 網路/系統錯誤]: {e}")
+        print(f"[Tags GitHub Sync Error]: {e}")
 
 def get_clean_recent_logs():
-    """將內部使用的隱藏欄位 (以 _ 開頭) 過濾掉，再回傳給前端"""
     return [
         {k: v for k, v in log.items() if not k.startswith('_')}
         for log in action_details_log
     ]
     
 async def tag_debounce_timer():
-    await asyncio.sleep(60)  # 等待 60 秒防抖
+    await asyncio.sleep(60)
     try:
-        # 1. 寫入本地檔案
         def _write():
             with open(TAGS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(tags_cache, f, ensure_ascii=False, indent=2)
         await asyncio.to_thread(_write)
-
-        # 2. 推送到 GitHub
         await push_tags_to_github()
     except Exception as e:
         print(f"[Tag Debounce Error]: {e}")
 
 def convert_utc8_str_to_local_hour(time_str: str, country_code: str) -> str:
-    """
-    將資料庫中的 'YYYY-MM-DD HH:MM:SS' (UTC+8) 轉換為該國當地時間，並回傳 2 位數小時字串 (如 '14')。
-    """
     try:
-        # 1. 解析 UTC+8 時間字串為帶有時區資訊的 datetime 物件
         dt_naive = datetime.strptime(time_str[:19], "%Y-%m-%d %H:%M:%S")
         dt_utc8 = dt_naive.replace(tzinfo=TZ_UTC8)
-
-        # 2. 查找該國的時區 (遇到跨時區抓第 0 個，無對應則保留 UTC+8)
         code = str(country_code).upper().strip()
         timezones = pytz.country_timezones.get(code)
-        
         if timezones:
             target_tz = ZoneInfo(timezones[0])
             local_dt = dt_utc8.astimezone(target_tz)
         else:
             local_dt = dt_utc8
-
         return local_dt.strftime("%H")
     except Exception:
-        # 若時間格式解析異常，Fallback 直接截取原字串
         return time_str[11:13] if len(time_str) >= 13 else "00"
         
 def mask_ip(ip: str) -> str:
-    """將 IPv4 / IPv6 進行部分遮罩打碼處理"""
     if not ip or ip in ["unknown", "::1"]:
         return ip
-
-    # 處理 IPv4 (例: 123.45.67.89 -> 123.*.*.89)
     if "." in ip:
         parts = ip.split(".")
         if len(parts) == 4:
             return f"{parts[0]}.*.*.{parts[3]}"
         return f"{parts[0]}.*.*"
-
-    # 處理 IPv6 (例: 2001:db8:... -> 2001:db8:***:7334)
     if ":" in ip:
         parts = ip.split(":")
         if len(parts) >= 4:
             return f"{parts[0]}:{parts[1]}:***:{parts[-1]}"
         return f"{parts[0]}:***"
-
     return "***"
 
-# =====================================================================
-# Fandom Wiki 詳細資料抓取與解析 (支援英日文效果文、雙極卡、Flavor)
-# =====================================================================
-
 def extract_wiki_params(wikitext: str) -> dict:
-    """從 Fandom 的 {{Cardtable ...}} 中萃取出鍵值對字典"""
     data = {}
     start = wikitext.find('{{Cardtable')
     if start == -1: return data
-    
-    # 使用正則表達式萃取 | key = value (支援多行 value，直到下一個 \n| 或結束的 }})
     pattern = re.compile(r'\n\|\s*([a-zA-Z0-9_]+)\s*=\s*(.*?)(?=\n\|\s*[a-zA-Z0-9_]+\s*=|^\}\})', re.MULTILINE | re.DOTALL)
     matches = pattern.findall(wikitext[start:])
     for key, val in matches:
@@ -481,37 +398,24 @@ def extract_wiki_params(wikitext: str) -> dict:
 def clean_wikitext_sp(text: str) -> list:
     if not text:
         return []
-    
-    # 1. 移除註解
     text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
-    # 2. 移除內部連結
     text = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]', r'\1', text)
-    # 3. 處理模板
     text = re.sub(r'\{\{([^|}]*)[^}]*\}\}', r'\1', text)
-    # 4. 子選項換行符號替換
     text = text.replace(':▶', '##').replace('▶', '##')
     text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
-    
-    # 5. 標準化換行符號
     text = text.replace('\r\n', '\n').replace('\r', '\n')
-    
-    # 6. 切分雙換行
     raw_blocks = re.split(r'\n{2,}', text)
     result = []
-    
     for block in raw_blocks:
         block_str = block.strip()
         if not block_str:
             continue
-            
         lines = [l.strip() for l in block_str.split('\n') if l.strip()]
         combined_ability = ""
-        
         for line in lines:
             clean_line = re.sub(r'^[■\s]+', '', line).strip()
             if not clean_line:
                 continue
-                
             if not combined_ability:
                 combined_ability = clean_line
             else:
@@ -519,71 +423,49 @@ def clean_wikitext_sp(text: str) -> list:
                     combined_ability += clean_line
                 else:
                     combined_ability += " " + clean_line
-                    
         if combined_ability:
             result.append(combined_ability.strip())
-            
     return result
 
 def clean_flavor_text(text: str) -> str:
-    """清洗風味敘述"""
     if not text: return ""
     text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
     text = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]', r'\1', text)
     text = re.sub(r'<br\s*/?>', ' ', text, flags=re.IGNORECASE)
     return text.strip()
     
-# ==========================================
-# B. 統計函式修改
-# ==========================================
 def get_country_user_counts() -> Dict[str, int]:
-    """統計各國籍目前擁有多少位不重複使用者 (改由計算 user_counter)"""
     counts = defaultdict(int)
     for user_id in user_counter.keys():
-        # user_id 格式為 "TW-260819-a1b2"，前綴即為主要國籍
         country = user_id.split('-')[0] if '-' in user_id else "Unknown"
         counts[country] += 1
     return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
     
 def trigger_tag_sync():
-    """每次異動時呼叫，重置 60 秒倒數計時器"""
     global tag_sync_task
     if tag_sync_task:
         tag_sync_task.cancel()
     tag_sync_task = asyncio.create_task(tag_debounce_timer())
     
 def generate_etag(data) -> str:
-    """將資料轉為 JSON Bytes 並計算 MD5 Hash 作為 ETag，加上雙引號符合 HTTP 標準"""
-    # 💡 加上 sort_keys=True 強制排序
     json_bytes = json.dumps(data, ensure_ascii=False, sort_keys=True).encode('utf-8')
     hash_str = hashlib.md5(json_bytes).hexdigest()
     return f'"{hash_str}"'
 
 def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_bytes: bytes = None):
-    """共用的 ETag 判斷與 Response 生成器（移除了 log，改為記憶體側錄統計）"""
     client_etag = request.headers.get("If-None-Match")
     server_etag = etag_cache.get(data_key, "")
-
-    # 💡 核心補強：加上 Cache-Control: no-cache
-    # 這會告訴瀏覽器：你可以快取檔案，但在使用前「必須」帶 ETag 來問伺服器有沒有更新
     headers = {
         "ETag": server_etag,
         "Cache-Control": "no-cache"
     }
-
-    # 1. 命中本地 Cache (304 Not Modified)
     if client_etag and client_etag == server_etag:
         data_transfer_stats[data_key]["cache"] += 1
-        # 304 回應一樣要帶上 headers 規範
         return Response(status_code=304, headers=headers)
-
-    # 2. 未命中或初次請求 (200 OK，重傳資料)
     data_transfer_stats[data_key]["fetch"] += 1
-
     if gzip_cache_bytes:
         headers["Content-Encoding"] = "gzip"
         return Response(content=gzip_cache_bytes, media_type="application/json", headers=headers)
-
     json_str = json.dumps(cache_obj, ensure_ascii=False)
     return Response(content=json_str, media_type="application/json", headers=headers)
     
@@ -600,10 +482,9 @@ class ExportDeckRequest(BaseModel):
 def load_json_file(filename: str):
     file_path = BASE_DIR / filename
     if file_path.exists():
-        with open(file_path, 'r', encoding='utf-8') as f: # 💡 必須有 encoding='utf-8'
+        with open(file_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     else:
-        print(f"警告: 找不到檔案 {file_path}，將回傳空陣列。")
         return []
 
 def load_all_setlists():
@@ -611,8 +492,6 @@ def load_all_setlists():
     setlist_dir = BASE_DIR / "setlist"
     if not setlist_dir.exists() or not setlist_dir.is_dir():
         return merged_setlist
-
-    # 💡 加上 sorted()，確保每次開機讀取檔案的先後順序 100% 一致
     for file_path in sorted(setlist_dir.glob("_setlist_*.json")):
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -631,17 +510,14 @@ def load_all_setlists():
                                 merged_setlist[set_code] = item
         except Exception as e:
             print(f"錯誤: 讀取系列檔案 {file_path.name} 失敗: {e}")
-
     return merged_setlist
 
 @app.on_event("startup")
 def load_and_process_caches():
     global carddata_cache, carddata_gzip_cache, carddata_patch_cache, card_types_cache, races_cache, abilities_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, setlist_patch_cache, diary_cache, tags_cache, etag_cache
-    # 加入宣告 last_reset_time
     global action_details_log, current_daily_logs, current_daily_date, last_reset_time
 
     try:
-        # ================= 回溯 48 小時重建 Console 數據 =================
         now = datetime.now(TZ_UTC8)
         current_daily_date = now.strftime("%Y%m%d")
         
@@ -661,79 +537,84 @@ def load_and_process_caches():
                         day_logs = doc.to_dict().get("logs", [])
                         if isinstance(day_logs, list):
                             all_records.extend(day_logs)
-                            # 💡 確保今天如果已經有資料，記憶體要完整接續，而不是開新空陣列
                             if d == current_daily_date:
                                 current_daily_logs = day_logs
                 except Exception as e:
                     print(f"載入 Firebase 紀錄 {d} 失敗: {e}")
         
-        # 依時間順序 (舊到新) 排序
         all_records.sort(key=lambda x: x.get("time", ""))
         
-        # 清空並重建計數器與 Deque
         feature_counter.clear()
         country_counter.clear()
         user_counter.clear()
         country_feature_counter.clear()
         country_user_counter.clear()
-        daily_total_counter.clear()         # 👈 新增清空
-        country_daily_total_counter.clear() # 👈 新增清空
+        daily_total_counter.clear()
+        country_daily_total_counter.clear()
         action_details_log.clear()
 
         for entry in all_records:
             feat = entry.get("feature")
             u = entry.get("user", "Unknown")
-            
             c = str(entry.get("country", "Unknown")).upper()
             if c == "UNKNOWN" and u != "Unknown" and "-" in u:
                 c = u.split("-")[0].upper()
                 
-            # 👇 新增：解析紀錄時間，轉換為 YYYYMMDD 格式作為 Key
             time_str = entry.get("time", "")
             date_key = time_str[:10].replace("-", "") if time_str else current_daily_date
 
             feature_counter[feat] += 1
             country_counter[c] += 1
             user_counter[u] += 1
-            daily_total_counter[date_key] += 1                  # 👈 新增：累加該日全域總數
+            daily_total_counter[date_key] += 1
             
             country_feature_counter[c][feat] += 1
             country_user_counter[c][u] += 1
-            country_daily_total_counter[c][date_key] += 1       # 👈 新增：累加該日該國籍總數
+            country_daily_total_counter[c][date_key] += 1
             
             action_details_log.appendleft(entry)
 
-        # 👇 關鍵修改：將起算時間設為最舊紀錄的時間（若完全沒紀錄則以 2 天前起算）
         if all_records and all_records[0].get("time"):
             last_reset_time = all_records[0]["time"]
         else:
             last_reset_time = (now - timedelta(days=2)).strftime("%Y-%m-%d 00:00:00")
 
-        # ================= 新增：載入熱門單卡紀錄 (獨立文件累加) =================
+        # ================= 載入熱門單卡紀錄（支援新舊架構平滑過渡） =================
         if db:
             try:
                 hc_doc_ref = db.collection('analytics').document('hot_cards')
                 hc_doc = hc_doc_ref.get()
                 if hc_doc.exists:
                     hc_data = hc_doc.to_dict().get("data", {})
-                    # 將讀回的字典重新灌回巢狀的 defaultdict 裡
                     for ctry, sets in hc_data.items():
                         for scode, cards in sets.items():
                             for cname, count in cards.items():
                                 hot_card_views[ctry][scode][cname] = count
+                
+                # 💡 過版後第一次開機：若新架構尚未統計 "[不分商品]"，自動從舊欄位/舊架構計算並回填寫入新欄位
+                # TODO: 【欄位清理提示】當確認新架構穩定運行、且管理者已手動清理舊欄位後，可將此段自動回填與舊欄位相容轉換邏輯刪除。
+                for ctry, sets in hot_card_views.items():
+                    if "[不分商品]" not in sets or not sets["[不分商品]"]:
+                        global_aggregated = defaultdict(int)
+                        for scode, cards in sets.items():
+                            if scode != "[不分商品]":
+                                for cname, count in cards.items():
+                                    global_aggregated[cname] += count
+                        if global_aggregated:
+                            hot_card_views[ctry]["[不分商品]"] = dict(global_aggregated)
+                            # 自動寫回新架構欄位
+                            hc_dict = {}
+                            for tc, tsets in hot_card_views.items():
+                                hc_dict[tc] = {ts: dict(tcval) for ts, tcval in tsets.items()}
+                            hc_doc_ref.set({"data": hc_dict, "updated_at": firestore.SERVER_TIMESTAMP}, merge=True)
             except Exception as e:
                 print(f"載入 Firebase 熱門卡牌紀錄失敗: {e}")
-        # ==================================================================
+        # =========================================================================
 
-        # ==================================================================
-
-        # 以下為你原本載入 JSON 檔案的邏輯，維持不變...
         carddata_cache = load_json_file("carddata.json")
-        # 👈 新增：預先壓縮 carddata
         carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
         carddata_gzip_cache = gzip.compress(carddata_json_bytes)
-        
-        carddata_patch_cache = load_json_file("patch_carddata.json") or [] # 👈 新增讀取補丁
+        carddata_patch_cache = load_json_file("patch_carddata.json") or []
 
         card_types_cache = load_json_file("card_type.json")
         races_cache = load_json_file("races.json")
@@ -743,31 +624,25 @@ def load_and_process_caches():
         diary_cache = load_json_file("diary.json")
         
         setlist_cache = load_all_setlists()
-        # 👈 新增：預先壓縮 setlist
         setlist_json_bytes = json.dumps(setlist_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
         setlist_gzip_cache = gzip.compress(setlist_json_bytes)
+        setlist_patch_cache = load_json_file("patch_setlist.json") or {}
         
-        setlist_patch_cache = load_json_file("patch_setlist.json") or {} # 👈 新增讀取補丁
-        
-        # 新增 tags 載入
         loaded_tags = load_json_file("tags.json")
         if loaded_tags:
-            # 將讀取到的資料寫入 cache，同時確保舊版檔案若少了特定鍵值也能補上預設值
             tags_cache = loaded_tags
             if "target_obj" not in tags_cache:
                 tags_cache["target_obj"] = copy.deepcopy(DEFAULT_TAGS["target_obj"])
             if "trigger_time" not in tags_cache:
                 tags_cache["trigger_time"] = copy.deepcopy(DEFAULT_TAGS["trigger_time"])
         else:
-            # 如果本地沒檔案，存一份預設的
             with open(TAGS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(tags_cache, f, ensure_ascii=False, indent=2)
                 
-        # 👈 新增：在這裡為所有資料計算 ETag
         etag_cache["carddata"] = f'"{hashlib.md5(carddata_json_bytes).hexdigest()}"'
-        etag_cache["patch_carddata"] = generate_etag(carddata_patch_cache) # 👈 新增
+        etag_cache["patch_carddata"] = generate_etag(carddata_patch_cache)
         etag_cache["setlist"] = f'"{hashlib.md5(setlist_json_bytes).hexdigest()}"'
-        etag_cache["patch_setlist"] = generate_etag(setlist_patch_cache) # 👈 新增
+        etag_cache["patch_setlist"] = generate_etag(setlist_patch_cache)
         etag_cache["card_types"] = generate_etag(card_types_cache)
         etag_cache["races"] = generate_etag(races_cache)
         etag_cache["abilities"] = generate_etag(abilities_cache)
@@ -778,20 +653,17 @@ def load_and_process_caches():
     except Exception as e:
         print(f"載入緩存失敗: {e}")
 
-# --- LINE 通知共用模型與函式 ---
-
 class LineNotificationModel(BaseModel):
     reporter_name: str = "使用者"
     email: str = ""
     emojis: str = ""
     message: str = ""
     
-# 💡 新增 email 欄位 (預設為空字串，非必填)
 class ReportModel(BaseModel):
     card_name: str
     card_id: str = ""
     reporter_name: str = "熱情的決鬥者"
-    email: str = ""  # 👈 新增這行
+    email: str = ""
     error_desc: str = ""
 
 class AuthorMessageModel(BaseModel):
@@ -801,11 +673,9 @@ class AuthorMessageModel(BaseModel):
     message: str
     
 def push_line_message(msg_text: str):
-    """共用的 LINE Push Notification 呼叫式"""
     token, user_id = LINE_ACCESS_TOKEN.strip(), LINE_USER_ID.strip()
     if not token or not user_id or "你的_" in token:
         return
-
     url = "https://api.line.me/v2/bot/message/push"
     headers = {
         "Content-Type": "application/json; charset=utf-8",
@@ -816,42 +686,31 @@ def push_line_message(msg_text: str):
         with httpx.Client() as client:
             client.post(url, headers=headers, json=payload, timeout=5.0)
     except Exception as e:
-        print(f"[LINE Push 網路錯誤]: {e}")
+        print(f"[LINE Push Error]: {e}")
         
 def send_line_notification(report: ReportModel, base_url: str = "", country: str = "Unknown"):
     raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
     target_param = raw_id if raw_id else report.card_name.strip()
     card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
-
-    # 動態組裝訊息行
     lines = [
         "🚨 【卡牌翻譯錯誤回報】\n",
-        f"🌐 國籍：{country}",  # 👈 新增國籍資訊
+        f"🌐 國籍：{country}",
         f"📌 卡名：{report.card_name}"
     ]
-
-    # 有卡號才顯示
     if raw_id:
         lines.append(f"🆔 卡號：{raw_id}")
-
     lines.append(f"🔗 連結：\n{card_link}\n")
     lines.append(f"👤 回報者：{report.reporter_name}")
-
-    # 有 Email 才顯示
     clean_email = report.email.strip() if report.email else ""
     if clean_email:
         lines.append(f"📧 Email：{clean_email}")
-
     lines.append(f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}")
-
-    msg_text = "\n".join(lines)
-    push_line_message(msg_text)
+    push_line_message("\n".join(lines))
 
 def send_author_message_notification(msg_data: AuthorMessageModel, country: str = "Unknown"):
-    """處理留言給作者的 LINE 通知格式"""
     msg_text = (
         f"💬 【收到給作者的新留言】\n\n"
-        f"🌐 國籍：{country}\n"  # 👈 新增國籍資訊
+        f"🌐 國籍：{country}\n"
         f"👤 暱稱：{msg_data.nickname or '使用者'}\n"
         f"📧 Email：{msg_data.email or '未提供'}\n"
         f"😀 表情：{msg_data.emojis or '無'}\n\n"
@@ -860,7 +719,6 @@ def send_author_message_notification(msg_data: AuthorMessageModel, country: str 
     push_line_message(msg_text)
 
 def send_nickname_application_notification(payload: NicknameApplyModel, country: str):
-    """處理申請暱稱的 LINE 通知格式"""
     lines = [
         "🏷️ 【新暱稱申請通知】",
         f"🌐 國籍：{country}",
@@ -869,21 +727,16 @@ def send_nickname_application_notification(payload: NicknameApplyModel, country:
     ]
     for i, nick in enumerate(payload.nicknames, 1):
         lines.append(f"  {i}. {nick}")
-    
     push_line_message("\n".join(lines))
     
 async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
     jp_name_clean = jp_name.strip()
     if not jp_name_clean:
         return jp_name
-
-    # 查記憶體快取
     if jp_name_clean in english_name_cache:
         return english_name_cache[jp_name_clean]
-
     clean_search_name = re.sub(r'（.*?）|\(.*?\)|《.*?》|＜.*?＞', '', jp_name_clean).strip() or jp_name_clean
     search_url = f"https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch={quote(clean_search_name)}&format=json"
-
     try:
         resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0"})
         if resp.status_code == 200:
@@ -894,17 +747,12 @@ async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient
                     english_name_cache[jp_name_clean] = en_title
                     return en_title
     except Exception as e:
-        print(f"[Fandom Fetch Error] {jp_name_clean} -> {e}")
-
+        print(f"[Fandom Fetch Error]: {e}")
     return jp_name_clean
 
-# ----------------------------------------------------
-# 工具函式區（必須放在 API 路由宣告的「上方」）
-# ----------------------------------------------------
 def format_card_wdata_types(card_dict):
     if not card_dict or "wdata" not in card_dict or not isinstance(card_dict["wdata"], list):
         return card_dict
-
     card_copy = copy.deepcopy(card_dict)
     cardtype_map = {}
     if isinstance(card_types_cache, list):
@@ -916,22 +764,18 @@ def format_card_wdata_types(card_dict):
                     val = item.get(k)
                     if val is not None:
                         cardtype_map[str(val).strip().upper()] = chi_val
-
     for w in card_copy["wdata"]:
         if isinstance(w, dict):
             raw_val = w.get("type") if w.get("type") is not None else (w.get("cardtype") if w.get("cardtype") is not None else w.get("card_type"))
             target_key = raw_val[0] if isinstance(raw_val, list) and len(raw_val) > 0 else raw_val
-
             if target_key is not None and str(target_key).strip() != "":
                 clean_key = str(target_key).strip().upper()
                 w["cardtype_chi"] = cardtype_map.get(clean_key, target_key)
-
     return card_copy
 
 def get_card_set_list(card_name: str):
     tw_sets, non_tw_sets, net_sets = [], [], []
     clean_target = card_name.strip()
-
     if isinstance(setlist_cache, dict):
         for key, set_obj in setlist_cache.items():
             card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
@@ -946,7 +790,6 @@ def get_card_set_list(card_name: str):
                     is_tw = set_obj.get("istw") == True
                     upper_code = str(setcode).strip().upper()
                     is_net = not upper_code.startswith('D') and not upper_code.startswith('O')
-
                     display_str = f"{setcode}{setname}"
                     if is_net:
                         net_sets.append(display_str)
@@ -954,11 +797,9 @@ def get_card_set_list(card_name: str):
                         tw_sets.append(display_str)
                     else:
                         non_tw_sets.append(display_str)
-
     return {"tw": tw_sets, "non_tw": non_tw_sets, "net": net_sets}
     
 def normalize_search_id(s: str) -> str:
-    """全域輔助函式：將 ID 轉為大寫半形並去除非英數字"""
     if not s:
         return ""
     res = []
@@ -968,24 +809,15 @@ def normalize_search_id(s: str) -> str:
             res.append(chr(code - 0xfee0))
         else:
             res.append(ch)
-    import re
     return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
 
 def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
-    """
-    OG 預覽圖借圖演算法
-    - 嚴格模式 (D/O 開頭商品)：只找該商品圖，不借圖。
-    - 寬鬆模式 (其他商品/文字卡表/單卡名)：商品圖 -> carddata本尊 -> 全域借圖。
-    """
     clean_name = card_name.strip()
     is_strict = False
-    
     if set_code:
         upper_code = str(set_code).strip().upper()
         if upper_code.startswith('D') or upper_code.startswith('O'):
             is_strict = True
-
-    # 1. 如果有指定商品，先從該商品找
     if set_code and set_code in setlist_cache:
         set_obj = setlist_cache[set_code]
         card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
@@ -997,17 +829,11 @@ def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
                     found_pic = pics[0] if isinstance(pics, list) and len(pics) > 0 else pics
                     if found_pic:
                         return found_pic
-        
-    # 嚴格模式：如果在官方商品沒找到圖，直接放棄，不往外借圖
     if is_strict:
         return ""
-
-    # 2. 寬鬆模式：找 carddata 本尊
     for card in carddata_cache:
         if card.get("name", "").strip() == clean_name and card.get("pic"):
             return card["pic"]
-
-    # 3. 寬鬆模式：全域借圖
     for set_info in setlist_cache.values():
         card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
         for item in card_list:
@@ -1021,24 +847,19 @@ def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
                         return pics
     return ""
 
-# ================= 新增：Record 日誌 Firebase 寫入功能 =================
 async def record_debounce_timer(date_str: str):
-    await asyncio.sleep(120)  # 停止動作後 2 分鐘才執行 (防抖)
+    await asyncio.sleep(120)
     try:
         def _safe_write_to_firestore():
             global current_daily_logs, hot_card_views
             if db:
-                # 1. 寫入日常 Log (每日一檔)
                 doc_ref = db.collection('daily_records').document(date_str)
                 doc_ref.set({
                     "logs": current_daily_logs,
                     "updated_at": firestore.SERVER_TIMESTAMP
                 }, merge=True)
                 
-                # 2. 獨立寫入熱門單卡追蹤 (累加在 analytics/hot_cards 內，不跨日清零)
                 hc_doc_ref = db.collection('analytics').document('hot_cards')
-                
-                # 將巢狀 defaultdict 轉換回普通 dict 以符合 Firestore 寫入規範
                 hc_dict = {}
                 for ctry, sets in hot_card_views.items():
                     hc_dict[ctry] = {}
@@ -1056,24 +877,11 @@ async def record_debounce_timer(date_str: str):
         print(f"[Record Debounce Error]: {e}")
 
 def trigger_record_sync(date_str: str):
-    """每次收到新 Log 時呼叫，重置 2 分鐘倒數計時器"""
     global record_sync_task
     if record_sync_task:
         record_sync_task.cancel()
     record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
-# =========================================================================
 
-def trigger_record_sync(date_str: str):
-    """每次收到新 Log 時呼叫，重置 2 分鐘倒數計時器"""
-    global record_sync_task
-    if record_sync_task:
-        record_sync_task.cancel()
-    record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
-# =========================================================================
-
-# ----------------------------------------------------
-# 路由區
-# ----------------------------------------------------
 @app.get("/")
 async def serve_index(): return FileResponse("index.html")
 
@@ -1087,42 +895,30 @@ async def serve_index(): return FileResponse("rank.html")
 async def serve_index(): return FileResponse("colorStudy.html")
 
 @app.get("/pop.html")
-async def get_pop_page(
-    request: Request, 
-    setCode: Optional[str] = None, 
-    deckList: Optional[str] = None, 
-    title: Optional[str] = None
-):
+async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList: Optional[str] = None, title: Optional[str] = None):
     html_path = BASE_DIR / "pop.html"
     if not html_path.exists():
         return HTMLResponse("File not found", status_code=404)
-        
     html_content = html_path.read_text(encoding="utf-8")
     meta_tags = ""
     custom_title_clean = title.strip().replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;') if title else ""
-    
     if setCode:
-        # 情境 1：商品代碼查詢
         set_code = setCode.strip()
         set_obj = setlist_cache.get(set_code)
         if set_obj:
             set_name = set_obj.get("setname") or set_obj.get("name") or set_code
             card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
-            
             first_card_name = ""
             if card_list:
                 first_item = card_list[0]
                 first_card_name = first_item.get("name", "").strip() if isinstance(first_item, dict) else str(first_item).strip()
-            
             og_image = get_og_image(first_card_name, set_code) if first_card_name else ""
-            
             if custom_title_clean:
                 display_title = f"{custom_title_clean} - 卡表總覽"
             elif set_name and set_name != set_code:
                 display_title = f"{set_name} ({set_code}) - 卡表總覽"
             else:
                 display_title = f"{set_code} - 卡表總覽"
-
             meta_tags = f"""
             <meta property="og:title" content="{display_title}">
             <meta property="og:description" content="點擊查看完整商品卡表與詳細內容。">
@@ -1130,36 +926,28 @@ async def get_pop_page(
             if og_image:
                 meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
                 meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
-                
     elif deckList:
-        # 情境 2：自訂文字卡表 (解壓縮)
         compressed = deckList.strip()
         decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed) or compressed
         raw_items = decompressed.split(',')
-        
         first_card_name = ""
         og_image = ""
-        
         for item in raw_items:
             item = item.strip()
             if not item: continue
             cname = item.split('*', 1)[1].strip() if '*' in item else item
-            
             if not first_card_name:
                 first_card_name = cname
-                
             img = get_og_image(cname)
             if img:
                 og_image = img
                 break
-        
         if custom_title_clean:
             display_title = f"{custom_title_clean} - 卡表總覽"
         elif first_card_name:
             display_title = f"自訂分享卡表 - {first_card_name}...等"
         else:
             display_title = "自訂分享卡表"
-
         meta_tags = f"""
         <meta property="og:title" content="{display_title}">
         <meta property="og:description" content="點擊查看完整自訂牌組/卡表內容。">
@@ -1167,11 +955,8 @@ async def get_pop_page(
         if og_image:
             meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
             meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
-
-    # 如果有產生 Meta，就塞進 <head> 的最前面
     if meta_tags:
         html_content = html_content.replace("<head>", f"<head>\n{meta_tags}", 1)
-
     return HTMLResponse(content=html_content)
 
 @app.get("/card.html")
@@ -1179,31 +964,22 @@ async def get_card_page(request: Request, p: Optional[str] = None):
     html_path = BASE_DIR / "card.html"
     if not html_path.exists():
         return HTMLResponse("File not found", status_code=404)
-    
     html_content = html_path.read_text(encoding="utf-8")
-    
     if not p:
         return HTMLResponse(content=html_content)
-
     query_str = p.strip()
     clean_query = normalize_search_id(query_str)
-    
     target_card_name = ""
     target_set_code = None
-    
-    # 邏輯 A：找卡名或綽號
     for card in carddata_cache:
         if card.get("name", "").strip() == query_str:
             target_card_name = query_str
             break
-    
     if not target_card_name and isinstance(nickname_cache, list):
         for nick_item in nickname_cache:
             if query_str in nick_item.get("nicknames", []):
                 target_card_name = nick_item.get("realname", "")
                 break
-                
-    # 邏輯 B：找 ID
     if not target_card_name:
         def search_id(tgt_id):
             for s_code, s_info in setlist_cache.items():
@@ -1215,18 +991,13 @@ async def get_card_page(request: Request, p: Optional[str] = None):
                             if normalize_search_id(single_id) == tgt_id:
                                 return item.get("name", "").strip(), s_code
             return "", None
-            
         target_card_name, target_set_code = search_id(clean_query)
-        # 如果是 DM 開頭的 ID 且第一次沒找到，拔掉 DM 再找一次
         if not target_card_name and query_str.upper().startswith("DM"):
             stripped = query_str[2:].strip()
             if stripped:
                 target_card_name, target_set_code = search_id(normalize_search_id(stripped))
-                
-    # 若有找到目標卡名，產生 Meta Tags 進行塞入
     if target_card_name:
         og_image = get_og_image(target_card_name, target_set_code)
-        
         meta_tags = f"""
         <meta property="og:title" content="【{target_card_name}】卡牌詳細資料">
         <meta property="og:description" content="點擊查看卡牌的詳細數值、效果與收錄商品。">
@@ -1234,9 +1005,7 @@ async def get_card_page(request: Request, p: Optional[str] = None):
         if og_image:
             meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
             meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
-            
         html_content = html_content.replace("<head>", f"<head>\n{meta_tags}", 1)
-
     return HTMLResponse(content=html_content)
 
 @app.get("/relationship.html")
@@ -1245,27 +1014,17 @@ async def get_relationship_page(): return FileResponse("relationship.html")
 @app.get("/api/server_id")
 async def get_server_id(request: Request, client_id: Optional[str] = Query(None)):
     country = get_client_country(request)
-    
-    # 若前端無 ID (新用戶)，則直接以當下時區生成一個全新且去中心化的流水號
     if not client_id:
         date_str = datetime.now(TZ_UTC8).strftime("%y%m%d")
         rand_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
         client_id = f"{country}-{date_str}-{rand_str}"
-        
     return {
         "server_id": SERVER_INSTANCE_ID,
         "client_id": client_id,
         "ip_country": country
     }
 
-# ----------------------------------------------------
-# 💡 API 路由區 (包含舊路由餵毒與新路由 v2)
-# ----------------------------------------------------
 def poison_legacy_route(request: Request, legacy_path: str):
-    """
-    舊 API 餵毒專用檢查器：
-    若請求來自舊 API，回傳 HTTP 410 (Gone)，並強制塞入 Clear-Site-Data 快取清除標頭！
-    """
     if request.url.path == legacy_path:
         return JSONResponse(
             status_code=410,
@@ -1335,7 +1094,6 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
     if not query_str:
         raise HTTPException(status_code=400, detail="請提供卡牌名稱或ID")
 
-    # 正規化 ID (全形轉半形、轉大寫、剔除非英數字)
     def normalize_id(s: str) -> str:
         if not s:
             return ""
@@ -1346,14 +1104,9 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                 res.append(chr(code - 0xfee0))
             else:
                 res.append(ch)
-        import re
         return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
 
     clean_query = normalize_id(query_str)
-
-    # ----------------------------------------------------
-    # 邏輯 A：先嘗試以「卡名」精確或暱稱模糊尋找卡牌
-    # ----------------------------------------------------
     matched_card = None
     target_card_name = None
 
@@ -1374,12 +1127,8 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                     target_card_name = real_name
                     break
 
-    # 🎯 當以卡名找到時：不上鎖任何特定商品 ID
     if matched_card and target_card_name:
-        import copy
         card_to_return = copy.deepcopy(matched_card)
-
-        # 💡 若卡片本尊 pic 為空，向其他商品「借用」圖片
         if not card_to_return.get("pic"):
             borrowed_pic = ""
             for set_info in setlist_cache.values():
@@ -1402,8 +1151,8 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
         return {
             "found_by": "name",
             "card": processed_card,
-            "setdata": None,        # 不指定任何特定商品
-            "matched_id": "",       # 不載入任何 ID
+            "setdata": None,
+            "matched_id": "",
             "matched_index": 0,
             "set_list": get_card_set_list(target_card_name),
             "races": races_cache,
@@ -1411,25 +1160,18 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
             "card_types": card_types_cache
         }
 
-    # ----------------------------------------------------
-    # 邏輯 B：若卡名找不到，才以「ID / 卡號」搜尋特定商品版本
-    # ----------------------------------------------------
     def search_by_id(target_id_clean: str):
-        """輔助函式：傳入正規化後的 ID 進行 setlist 掃描"""
         m_setdata = None
         t_card_name = None
         m_id_val = ""
         m_index = 0
-
         for set_code, set_info in setlist_cache.items():
             card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
             name_occurrence_counter = {}
-
             for item in card_list:
                 if isinstance(item, dict):
                     item_name = item.get("name", "").strip()
                     current_occ = name_occurrence_counter.get(item_name, 0)
-                    
                     if "id" in item:
                         ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
                         for idx, single_id in enumerate(ids):
@@ -1439,34 +1181,26 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
                                 m_id_val = single_id
                                 m_index = current_occ + idx
                                 break
-                    
                     ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
                     name_occurrence_counter[item_name] = current_occ + ids_count
-
                 if m_setdata:
                     break
             if m_setdata:
                 break
         return m_setdata, t_card_name, m_id_val, m_index
 
-    # 第一次比對：使用原始規整後的 clean_query
     matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query)
-
-    # 💡 第一次找不到，且輸入以 DM (不分大小寫) 開頭時：去處 DM 再找第二次
     if not matched_setdata and query_str.upper().startswith("DM"):
         stripped_query = query_str[2:].strip()
         if stripped_query:
             clean_query_stripped = normalize_id(stripped_query)
             matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query_stripped)
 
-    # 如果找到商品與卡牌名稱，打包成果回傳
     if matched_setdata and target_card_name:
         matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == target_card_name), None)
         if not matched_card:
             matched_card = {"name": target_card_name, "wdata": []}
-
         processed_card = format_card_wdata_types(matched_card)
-
         return {
             "found_by": "id",
             "card": processed_card,
@@ -1487,14 +1221,11 @@ async def get_english_name(request: Request, name: str = Query(..., description=
     jp_name = name.strip()
     if not jp_name:
         raise HTTPException(status_code=400, detail="請提供日文卡名")
-
     from_cache = jp_name in english_name_cache
     async with httpx.AsyncClient(timeout=6.0) as client:
         en_name = await fetch_english_name_from_fandom(jp_name, client)
-
     if en_name and en_name != jp_name:
         return {"status": "success", "jp_name": jp_name, "en_name": en_name, "from_cache": from_cache}
-
     raise HTTPException(status_code=404, detail=f"查無卡牌「{jp_name}」的英文名稱")
 
 @app.post("/api/export_english_deck")
@@ -1502,18 +1233,15 @@ async def get_english_name(request: Request, name: str = Query(..., description=
 async def export_english_deck(request: Request, payload: ExportDeckRequest):
     if not payload.items:
         raise HTTPException(status_code=400, detail="牌組清單不可為空")
-
     semaphore = asyncio.Semaphore(3)
     async def fetch_item_with_throttle(item: DeckItem, client: httpx.AsyncClient):
         async with semaphore:
             await asyncio.sleep(0.15)
             en_name = await fetch_english_name_from_fandom(item.name, client)
             return {"jp_name": item.name, "en_name": en_name, "count": item.count}
-
     async with httpx.AsyncClient(timeout=10.0) as client:
         tasks = [fetch_item_with_throttle(item, client) for item in payload.items]
         results = await asyncio.gather(*tasks)
-
     return {"status": "success", "result": results}
 
 @app.get("/api/pop/{set_code}")
@@ -1521,7 +1249,6 @@ async def get_pop_data(set_code: str):
     current_set = setlist_cache.get(set_code)
     if not current_set:
         raise HTTPException(status_code=404, detail=f"找不到代碼為 '{set_code}' 的商品資料")
-
     set_card_list = current_set.get("setcardlist") or current_set.get("cardlist") or []
     order_map = {}
     for index, item in enumerate(set_card_list):
@@ -1530,13 +1257,11 @@ async def get_pop_data(set_code: str):
             clean_name = item_name.strip()
             if clean_name not in order_map:
                 order_map[clean_name] = index
-
     matched_cards = []
     for card in carddata_cache:
         c_name = card.get("name")
         if c_name and c_name.strip() in order_map:
             matched_cards.append(card)
-
     matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
     return {"set_info": current_set, "cards": matched_cards}
 
@@ -1545,11 +1270,9 @@ async def get_pop_custom_data(payload: CustomDeckModel):
     compressed = payload.deck_list.strip()
     if not compressed:
         raise HTTPException(status_code=400, detail="密碼不可為空")
-
     decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed) or compressed
     raw_items = decompressed.split(',')
     custom_card_list = []
-    
     for item in raw_items:
         item = item.strip()
         if not item: continue
@@ -1561,13 +1284,10 @@ async def get_pop_custom_data(payload: CustomDeckModel):
                 count, cname = 1, item
         else:
             count, cname = 1, item
-            
         custom_card_list.append({"name": cname, "count": count})
-
     order_map = {str(item["name"]).strip(): index for index, item in enumerate(custom_card_list)}
     matched_cards = [card for card in carddata_cache if card.get("name") and card.get("name").strip() in order_map]
     matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
-
     return {
         "set_info": {
             "setcode": "NET-CUSTOM", "setname": "自訂分享卡表", "isdeck": True, "istw": True, "setcardlist": custom_card_list
@@ -1587,15 +1307,12 @@ async def proxy_image(request: Request, url: str = Query(...)):
             return Response(content=item["content"], media_type=item["content_type"], headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"})
         else:
             del proxy_cache[url]
-
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 Chrome/120.0.0.0"}, timeout=8.0)
             if resp.status_code != 200: raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
-
             content_type = resp.headers.get("content-type", "image/jpeg")
             if len(proxy_cache) >= MAX_CACHE_SIZE: proxy_cache.popitem(last=False)
-
             proxy_cache[url] = {"content": resp.content, "content_type": content_type, "timestamp": now}
             return Response(content=resp.content, media_type=content_type, headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"})
     except Exception as e:
@@ -1607,15 +1324,12 @@ async def get_diary(request: Request):
     if poison := poison_legacy_route(request, "/api/diary"): return poison
     return get_etag_response(request, "diary", diary_cache)
 
-# --- 尋找 /api/report_error 路由並修改 ---
 @app.post("/api/report_error")
 @limiter.limit("3/minute")
 async def report_error(request: Request, report: ReportModel, background_tasks: BackgroundTasks):
     if not report.card_name: raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
-    
-    country = get_client_country(request)  # 👈 取得國籍
-    background_tasks.add_task(send_line_notification, report, str(request.base_url), country) # 👈 帶入 country
-    
+    country = get_client_country(request)
+    background_tasks.add_task(send_line_notification, report, str(request.base_url), country)
     name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
     return {"status": "success", "message": f"回報成功！感謝{name}！"}
 
@@ -1624,28 +1338,19 @@ async def report_error(request: Request, report: ReportModel, background_tasks: 
 async def apply_nickname(request: Request, payload: NicknameApplyModel, background_tasks: BackgroundTasks):
     if not payload.nicknames:
         raise HTTPException(status_code=400, detail="申請的暱稱不可為空")
-    
-    # 取得請求來源的國籍
     country = get_client_country(request)
-    
-    # 背景執行 LINE 通知發送
     background_tasks.add_task(send_nickname_application_notification, payload, country)
     return {"status": "success", "message": "暱稱申請已成功送出！"}
 
-# --- 尋找 /api/message_author 路由並修改 ---
 @app.post("/api/message_author")
 @limiter.limit("3/minute")
 async def message_author(request: Request, payload: AuthorMessageModel, background_tasks: BackgroundTasks):
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="留言內容為必填項目")
-    
-    # 限制表情文字上限（避免惡意過長輸入）
     if len(payload.emojis) > 20:
         raise HTTPException(status_code=400, detail="表情符號最多選擇 20 個")
-
-    country = get_client_country(request)  # 👈 取得國籍
-    background_tasks.add_task(send_author_message_notification, payload, country) # 👈 帶入 country
-    
+    country = get_client_country(request)
+    background_tasks.add_task(send_author_message_notification, payload, country)
     nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
     return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}
     
@@ -1654,24 +1359,19 @@ async def track_feature(request: Request):
     try:
         client_host = request.client.host if request.client else ""
         request_host = request.headers.get("host", "")
-
         is_localhost = (
             client_host in ["127.0.0.1", "::1"] or 
             "localhost" in request_host or 
             "127.0.0.1" in request_host
         )
-
-        # 保持防護：本地端開發不寫入正式統計
         if is_localhost:
             return {"status": "skipped", "reason": "localhost environment"}
 
         data = await request.json()
         feature_name = data.get("feature")
         detail = data.get("detail")
-        
         user_id = data.get("user_id", "Unknown")
         
-        # 💡 增強解析：支援多種 key，並且若是 Unknown 則從 user_id 推斷
         raw_country = data.get("primary_country") or data.get("country") or "Unknown"
         country = str(raw_country).upper()
         if country == "UNKNOWN" and user_id != "Unknown" and "-" in user_id:
@@ -1682,8 +1382,6 @@ async def track_feature(request: Request):
 
         if feature_name:
             now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
-
-            # ================= 需求 1: Diff-Chain 與 Skip 邏輯 =================
             last_user_log = None
             for log in action_details_log:
                 if log.get("user") == user_id:
@@ -1697,74 +1395,53 @@ async def track_feature(request: Request):
             if last_user_log and last_user_log.get("feature") == feature_name:
                 old_raw = last_user_log.get("_raw_detail")
                 new_raw = detail
-
                 if old_raw == new_raw:
                     is_skip = True
                 elif isinstance(old_raw, dict) and isinstance(new_raw, dict):
-                    # 確保新舊屬性 Key 完全相同
                     if set(old_raw.keys()) == set(new_raw.keys()):
                         diff_keys = [k for k in old_raw.keys() if old_raw[k] != new_raw[k]]
-                        # 只有一個屬性不同
                         if len(diff_keys) == 1:
                             changed_k = diff_keys[0]
                             last_chained_key = last_user_log.get("_chained_key")
-
-                            # 若是第一次變更，或變更的屬性跟上一次相同，則啟動合併
                             if last_chained_key is None or last_chained_key == changed_k:
                                 is_merge = True
                                 chained_key = changed_k
-                                
                                 current_display_detail = copy.deepcopy(last_user_log["detail"])
                                 old_disp_val = str(current_display_detail[changed_k])
                                 new_raw_val = str(new_raw[changed_k])
                                 current_display_detail[changed_k] = f"{old_disp_val} > {new_raw_val}"
-
                                 last_user_log["detail"] = current_display_detail
                                 last_user_log["_raw_detail"] = copy.deepcopy(new_raw)
                                 last_user_log["_chained_key"] = changed_k
                                 last_user_log["time"] = now_utc8
-                                
-                                # 更新後移至最頂端
                                 action_details_log.remove(last_user_log)
                                 action_details_log.appendleft(last_user_log)
-
                 elif isinstance(old_raw, str) and isinstance(new_raw, str):
-                    # 若為純字串，直接進行合併
                     last_chained_key = last_user_log.get("_chained_key")
                     if last_chained_key is None or last_chained_key == "_string_chain":
                         is_merge = True
                         chained_key = "_string_chain"
-                        
                         old_disp_val = str(last_user_log["detail"])
                         new_raw_val = str(new_raw)
                         last_user_log["detail"] = f"{old_disp_val} > {new_raw_val}"
                         last_user_log["_raw_detail"] = new_raw
                         last_user_log["_chained_key"] = chained_key
                         last_user_log["time"] = now_utc8
-                        
                         action_details_log.remove(last_user_log)
                         action_details_log.appendleft(last_user_log)
 
-            # 處理全域計數與寫入
             if is_skip or is_merge:
-                # Skip 與 Merge 不累加全域計數，也不新增一筆獨立紀錄
                 pass
             else:
-                # 視為全新動作，正常計數與新增
                 feature_counter[feature_name] += 1
                 country_counter[country] += 1
                 user_counter[user_id] += 1
-
-                # 同步累加「國家專屬」計數器
                 country_feature_counter[country][feature_name] += 1
                 country_user_counter[country][user_id] += 1
-
-                # 👇 新增這三行：即時累加當日計數器
                 now_date_key = now_utc8[:10].replace("-", "")
                 daily_total_counter[now_date_key] += 1
                 country_daily_total_counter[country][now_date_key] += 1
 
-                # 💡 將 is_vpn 與 real_ip_country 一併存入 Log，供 Console 顯示 Badge
                 entry = {
                     "feature": feature_name,
                     "country": country,
@@ -1777,62 +1454,44 @@ async def track_feature(request: Request):
                     "time": now_utc8
                 }
                 action_details_log.appendleft(entry)
-            # ================================================================
 
-            # ================= 新增：日常分檔與觸發存檔 =================
             global current_daily_date, current_daily_logs
             now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
-
-            # 跨日偵測：如果到了明天，重置記憶體陣列，開新檔
             if now_date_str != current_daily_date:
                 current_daily_date = now_date_str
                 current_daily_logs = []
 
             if not is_skip:
                 if is_merge:
-                    # Python 字典特性：is_merge 時 last_user_log 已被修改。
-                    # 只要確保這筆 log 存在今天的名單內，存檔時就會是最新合併後的狀態。
                     if last_user_log not in current_daily_logs:
                         current_daily_logs.append(last_user_log)
                 else:
-                    # 全新動作，加入今日名單
                     current_daily_logs.append(entry)
-
-                # 觸發 2 分鐘防抖寫入本地 + Push 到 GitHub
                 trigger_record_sync(now_date_str)
-            # =========================================================
 
-            # (原有的 廣播給所有連接在 WebSocket Console 的用戶 邏輯...)
-            sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-            # ...下略
-
-            # 廣播給所有連接在 WebSocket Console 的用戶
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
             sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
 
             await console_manager.broadcast({
                 "total_events": sum(sorted_stats.values()),
-                "daily_totals": dict(sorted(daily_total_counter.items())), # 👈 新增這行 (全域每日陣列)
+                "daily_totals": dict(sorted(daily_total_counter.items())),
                 "stats": sorted_stats,
                 "country_stats": sorted_country_stats,
                 "country_user_counts": get_country_user_counts(),
                 "recent_50_details": get_clean_recent_logs(),
                 "start_time": last_reset_time
             })
-
     except Exception as e:
-        # 可以改為 print(e) 輔助錯誤排除
         pass
     return {"status": "ok"}
 
 @app.get("/api/system_config")
 async def get_system_config():
-    """提供前端 LATEST_SET_CODES 以動態繪製按鈕，並作為判斷依據"""
     return {"LATEST_SET_CODES": LATEST_SET_CODES}
 
 @app.post("/api/track/card_view")
 async def track_card_view(request: Request, payload: CardViewTrackModel):
-    """前端駐留 1.5 秒後觸發，僅針對 LATEST 且 D/O 開頭商品的單卡進行熱度計數"""
+    """前端駐留 1.5 秒後觸發，改為記錄所有單卡的瀏覽紀錄，並支援 [不分商品] 與商品代碼分類計數"""
     card_name = payload.card_name.strip()
     if not card_name:
         return {"status": "skipped", "reason": "empty card name"}
@@ -1844,32 +1503,26 @@ async def track_card_view(request: Request, payload: CardViewTrackModel):
         "localhost" in request_host or 
         "127.0.0.1" in request_host
     )
-
-    # 開發環境下不寫入正式統計
     if is_localhost:
         return {"status": "skipped", "reason": "localhost environment"}
 
     country = get_client_country(request)
-    matched = False
     
-    # 在記憶體的商品資料中比對這張卡
+    # 1. 記錄至 [不分商品] 總計排行榜
+    hot_card_views[country]["[不分商品]"][card_name] += 1
+    
+    # 2. 同時檢查並記錄至對應的發售商品分類 (維持原本 LATEST_SET_CODES 且開頭為 O/D 的商品清單)
     for set_code, set_obj in setlist_cache.items():
         upper_code = str(set_code).strip().upper()
-        # 條件：必須存在於 LATEST 陣列中，且必須是 D 或 O 開頭
         if set_code in LATEST_SET_CODES and (upper_code.startswith('D') or upper_code.startswith('O')):
             card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
-            # 檢查這張卡有沒有在這個商品裡
             for item in card_list:
                 item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
                 if item_name == card_name:
                     hot_card_views[country][set_code][card_name] += 1
-                    matched = True
-                    # 不 break，因為同一張卡可能同時被收錄在兩包新發售的 LATEST 包裡
                     
-    # 如果有被登記到次數，觸發防抖機制進行存檔
-    if matched:
-        now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
-        trigger_record_sync(now_date_str)
+    now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
+    trigger_record_sync(now_date_str)
         
     return {"status": "success"}
 
@@ -1883,25 +1536,18 @@ async def get_feature_stats(
 ):
     accept_header = request.headers.get("accept", "")
     user_agent = request.headers.get("user-agent", "").lower()
-    
-    # 判斷是否為常見爬蟲
     is_crawler = any(bot in user_agent for bot in [
         "bot", "crawler", "spider", "facebookexternalhit", "line-poker", "discordbot", "slackbot"
     ])
-    
     is_html = "text/html" in accept_header and format != "json"
     now = time.time()
 
-    # 清理已過期的 Token
     for k in list(one_time_tokens.keys()):
         if one_time_tokens[k]["expires_at"] < now:
             del one_time_tokens[k]
 
-    # 權限驗證邏輯
     authorized = False
     auth_level = ""
-    
-    # 拆解 token
     real_token = token
     country = None
     if token and len(token) == 34:
@@ -1915,25 +1561,19 @@ async def get_feature_stats(
         auth_level = "admin"
     elif real_token and real_token in one_time_tokens:
         token_info = one_time_tokens[real_token]
-        
-        # 💡 關鍵修復：如果是真人打開 HTML 網頁
         if is_html and not is_crawler:
-            # 若從未被打開過，標記已啟用，並將過期時間縮短至 5 分鐘 (足夠本機連線與使用)
             if not token_info.get("is_activated", False):
                 token_info["is_activated"] = True
-                token_info["expires_at"] = min(token_info["expires_at"], now + 300) # 5分鐘後作廢
+                token_info["expires_at"] = min(token_info["expires_at"], now + 300)
             else:
-                # 若已經啟用且超過了寬限期
                 if now > token_info["expires_at"]:
                     raise HTTPException(status_code=403, detail="此 Token 已過期失效")
-        
         authorized = True
         auth_level = "country" if country else "token"
 
     if not authorized:
         raise HTTPException(status_code=404, detail="Not Found")
 
-    # 回傳 HTML 檔案
     if is_html:
         html_file = BASE_DIR / "console.html"
         if html_file.exists():
@@ -1946,58 +1586,47 @@ async def get_feature_stats(
     formatted_data_stats = { DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items() }
     recent_logs = get_clean_recent_logs()
 
-    # 依權限回傳資料
     if auth_level in ["admin", "token"]:
         sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
         sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
-        
         result = {
             "total_events": sum(sorted_stats.values()),
-            "daily_totals": dict(sorted(daily_total_counter.items())), # 👈 補上這一行
+            "daily_totals": dict(sorted(daily_total_counter.items())),
             "stats": sorted_stats,
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
             "recent_50_details": recent_logs,
             "data_transfer_stats": formatted_data_stats,
             "start_time": last_reset_time,
-            "hot_card_views": hot_card_views,         # 👈 新增這行：全域單卡熱度
-            "LATEST_SET_CODES": LATEST_SET_CODES      # 👈 新增這行：目前追蹤的商品清單
+            "hot_card_views": hot_card_views,
+            "LATEST_SET_CODES": LATEST_SET_CODES
         }
     else:
         c = country.upper()
         c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
         c_users = country_user_counter[c]
         c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
-        
-        # 💡 國家專屬視角：只給予該國家的卡牌熱度數據
         c_hot_card_views = {c: hot_card_views[c]} if c in hot_card_views else {}
-        
         result = {
             "total_events": sum(c_stats.values()),
-            "daily_totals": dict(sorted(country_daily_total_counter[c].items())), # 👈 新增這行 (單一國家每日陣列)
+            "daily_totals": dict(sorted(country_daily_total_counter[c].items())),
             "stats": c_stats,
             "country_stats": {c: country_counter[c]}, 
             "country_user_counts": {c: len(c_users)},
             "recent_50_details": c_logs,
             "data_transfer_stats": formatted_data_stats,
             "start_time": last_reset_time,
-            "hot_card_views": c_hot_card_views,       # 👈 新增這行：該國專屬單卡熱度
-            "LATEST_SET_CODES": LATEST_SET_CODES      # 👈 新增這行：目前追蹤的商品清單
+            "hot_card_views": c_hot_card_views,
+            "LATEST_SET_CODES": LATEST_SET_CODES
         }
 
     return PrettyJSONResponse(content=result)
 
 @app.websocket("/ws/console")
-async def websocket_console(
-    websocket: WebSocket, 
-    admin: Optional[str] = Query(None),
-    token: Optional[str] = Query(None)
-):
+async def websocket_console(websocket: WebSocket, admin: Optional[str] = Query(None), token: Optional[str] = Query(None)):
     now = time.time()
     authorized = False
     auth_level = ""
-    
-    # 拆解 token
     real_token = token
     country = None
     if token and len(token) == 34:
@@ -2012,18 +1641,14 @@ async def websocket_console(
     elif real_token and real_token in one_time_tokens:
         if one_time_tokens[real_token]["expires_at"] >= now:
             authorized = True
-            # 👇 關鍵判斷：如果帶有 country 參數，WebSocket 也給予 country 視角
             auth_level = "country" if country else "token"
 
     if not authorized:
         await websocket.close(code=4008)
         return
 
-    # 連線時帶入權限等級與國家參數
     c_val = country.upper() if country else None
     await console_manager.connect(websocket, auth_level, c_val)
-    
-    # 建立連線時，利用 manager 的廣播機制主動推播一次最新專屬數據
     await console_manager.broadcast()
 
     try:
@@ -2035,12 +1660,7 @@ async def websocket_console(
         console_manager.disconnect(websocket)
 
 @app.websocket("/ws/broadcast")
-async def websocket_broadcast(
-    websocket: WebSocket,
-    user_id: str = Query("Unknown"),
-    primary_country: str = Query("Unknown")
-):
-    # 直接從 Query Params 獲取 Client ID 與校正國籍，無需再算雜湊
+async def websocket_broadcast(websocket: WebSocket, user_id: str = Query("Unknown"), primary_country: str = Query("Unknown")):
     await client_manager.connect(websocket, user_id, primary_country)
     try:
         while True:
@@ -2052,10 +1672,8 @@ async def websocket_broadcast(
 async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="廣播訊息不可為空")
-
     await client_manager.broadcast(
         message=payload.message.strip(),
         target_type=payload.target_type,
@@ -2067,16 +1685,13 @@ async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(N
 async def force_manual_save(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
     try:
-        # 1. 強制儲存與 Push Tags (Tags 仍保留 GitHub 機制)
         def _write_tags():
             with open(TAGS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(tags_cache, f, ensure_ascii=False, indent=2)
         await asyncio.to_thread(_write_tags)
         await push_tags_to_github()
 
-        # 2. 強制儲存 Record 到 Firebase
         global current_daily_date, current_daily_logs
         if db and current_daily_date and current_daily_logs:
             def _write_records():
@@ -2087,23 +1702,19 @@ async def force_manual_save(admin: Optional[str] = Query(None)):
                 }, merge=True)
             await asyncio.to_thread(_write_records)
 
-        return {"status": "success", "message": "手動存檔成功！已強制推播 Tags(GitHub) 與 Record(Firebase)。"}
+        return {"status": "success", "message": "手動存檔成功！"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"儲存失敗: {str(e)}")
-        
-        
-# 提供給 Console 取得目前在線使用者的 API
+
 @app.get("/api/console/online_users")
 async def get_online_users(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
     users = []
     countries = set()
     for info in client_manager.active_connections.values():
         users.append(info["user"])
         countries.add(info["country"])
-    
     return {
         "users": sorted(list(set(users))),
         "countries": sorted(list(countries)),
@@ -2111,23 +1722,16 @@ async def get_online_users(admin: Optional[str] = Query(None)):
     }
 
 def get_client_country(request: Request) -> str:
-    """取得請求來源的國籍 ISO 代碼（含 localhost = TW 判斷）"""
-    # 1. 判斷是否為 Localhost
     client_host = request.client.host if request.client else ""
     request_host = request.headers.get("host", "")
-    
     if client_host in ["127.0.0.1", "::1"] or "localhost" in request_host or "127.0.0.1" in request_host:
         return "TW"
-        
-    # 2. 優先從 Render / Cloudflare 轉發的 Header 取得國籍代碼
     country = request.headers.get("cf-ipcountry") or request.headers.get("x-country-code")
-    if country and country.upper() != "XX":  # XX 代表未知國籍
+    if country and country.upper() != "XX":
         return country.upper()
-    
     return "Unknown"
     
 def find_and_remove_node(node_list, target_id):
-    """遞迴在樹狀結構中尋找並移除節點，回傳該節點與其內容"""
     for i, node in enumerate(node_list):
         if node.get("id") == target_id:
             return node_list.pop(i)
@@ -2137,7 +1741,6 @@ def find_and_remove_node(node_list, target_id):
     return None
 
 def find_node(node_list, target_id):
-    """遞迴尋找節點"""
     for node in node_list:
         if node.get("id") == target_id: return node
         if "children" in node:
@@ -2151,11 +1754,8 @@ async def get_historical_report(
     start_date: str = Query(..., description="開始日期 YYYYMMDD"),
     end_date: str = Query(..., description="結束日期 YYYYMMDD")
 ):
-    # 1. 權限驗證
     if admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-
-    # 2. 解析日期與範圍限制 (最多允許查詢 60 天，防 OOM)
     try:
         start_dt = datetime.strptime(start_date, "%Y%m%d")
         end_dt = datetime.strptime(end_date, "%Y%m%d")
@@ -2167,7 +1767,6 @@ async def get_historical_report(
     if start_dt > end_dt:
         raise HTTPException(status_code=400, detail="開始日期不可晚於結束日期")
 
-    # 3. 準備存放聚合資料的資料結構
     aggregated = defaultdict(lambda: {
         "users": set(),
         "events": 0,
@@ -2175,61 +1774,48 @@ async def get_historical_report(
         "hourly": defaultdict(int)
     })
 
-    # 4. 定義逐日抓取與處理的非同步任務
     async def fetch_and_process_date(d_str: str):
         logs = []
-        
-        # [步驟 A] 從 Firebase 拉取當日陣列
         def _fetch_from_firestore():
             if db:
                 doc = db.collection('daily_records').document(d_str).get()
                 if doc.exists:
                     return doc.to_dict().get("logs", [])
             return []
-
         try:
             logs = await asyncio.to_thread(_fetch_from_firestore)
         except Exception as e:
             print(f"從 Firebase 抓取歷史紀錄 {d_str} 失敗: {e}")
 
-        # [步驟 B] 聚合運算修改
         if isinstance(logs, list):
             for log in logs:
                 time_str = log.get("time", "")
                 if not time_str or len(time_str) < 13:
                     continue
-                
                 user = log.get("user", "Unknown")
                 feat = log.get("feature", "Unknown")
-                
-                # 推斷國籍
                 raw_country = log.get("country", "Unknown")
                 c = str(raw_country).upper()
                 if c == "UNKNOWN" and user != "Unknown" and "-" in user:
                     c = user.split("-")[0].upper()
-                    
-                # 💡 (1) 轉成使用者「該國籍的當地小時」
                 local_hour = convert_utc8_str_to_local_hour(time_str, c)
 
                 aggregated[c]["users"].add(user)
                 aggregated[c]["events"] += 1
                 aggregated[c]["features"][feat] += 1
-                aggregated[c]["hourly"][local_hour] += 1  # 寫入該國當地活躍時段
+                aggregated[c]["hourly"][local_hour] += 1
 
-                # 💡 (2) 全域 (ALL) 數據：同樣依「當地小時」聚合，呈現全域使用者的「總體生活作息/生理時鐘分佈」
                 aggregated["ALL"]["users"].add(user)
                 aggregated["ALL"]["events"] += 1
                 aggregated["ALL"]["features"][feat] += 1
-                aggregated["ALL"]["hourly"][local_hour] += 1  # 👈 改用 local_hour
+                aggregated["ALL"]["hourly"][local_hour] += 1
 
-    # 5. 產生日期清單
     current_dt = start_dt
     date_list = []
     while current_dt <= end_dt:
         date_list.append(current_dt.strftime("%Y%m%d"))
         current_dt += timedelta(days=1)
 
-    # 6. 併發處理所有日期 (向 Firebase 要資料極快，限制 10 個連線同時發送)
     sem = asyncio.Semaphore(10)
     async def bounded_fetch(d):
         async with sem:
@@ -2237,7 +1823,6 @@ async def get_historical_report(
             
     await asyncio.gather(*(bounded_fetch(d) for d in date_list))
 
-    # 7. 轉換格式 (將 Set 轉為長度，並對字典進行排序)
     result = {}
     for c, data in aggregated.items():
         result[c] = {
@@ -2249,43 +1834,9 @@ async def get_historical_report(
 
     return {"status": "success", "data": result}
     
-    
 @app.on_event("shutdown")
 def on_shutdown():
-    """伺服器重啟或終止前，自動謄寫完整統計日誌"""
-    now_str = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
-    total_events = sum(feature_counter.values())
-    total_users = len(user_counter)  # 👈 改用 user_counter 計算總使用者數
-    
-    top_features = sorted(feature_counter.items(), key=lambda x: x[1], reverse=True)[:5]
-    top_countries = sorted(country_counter.items(), key=lambda x: x[1], reverse=True)[:5]
-    
-    report_lines = [
-        "\n" + "=" * 55,
-        "📊 【SERVER SHUTDOWN SUMMARY REPORT - 伺服器關機結算報告】",
-        f"📅 統計起訖：{last_reset_time} ~ {now_str}",
-        f"⚡ 總事件數：{total_events} 次 | 👥 總使用者：{total_users} 人",
-        "-" * 55,
-        "🏆 【功能觸發 TOP 5】:"
-    ]
-    for rank, (feat, count) in enumerate(top_features, 1):
-        report_lines.append(f"  {rank}. {feat}: {count} 次")
-        
-    report_lines.append("\n🌐 【國籍分佈 TOP 5】:")
-    for country, count in top_countries:
-        report_lines.append(f"  * {country}: {count} 次")
-
-    report_lines.append("\n📦 【資料傳輸與快取統計 (重傳 / 快取 / 快取率)】:")
-    for key, name in DATA_NAME_MAP.items():
-        stats = data_transfer_stats.get(key, {"fetch": 0, "cache": 0})
-        fetch_cnt = stats["fetch"]
-        cache_cnt = stats["cache"]
-        total_req = fetch_cnt + cache_cnt
-        cache_rate = (cache_cnt / total_req * 100) if total_req > 0 else 0.0
-        report_lines.append(f"  * {name}：{fetch_cnt} / {cache_cnt} ({cache_rate:.1f}% 快取)")
-
-    report_lines.append("=" * 55 + "\n")
-    logger.info("\n".join(report_lines))
+    pass
     
 @app.get("/tags.html")
 async def get_tags_page(): 
@@ -2299,24 +1850,17 @@ async def getLineQRCode():
 async def websocket_tags(websocket: WebSocket):
     await tag_manager.connect(websocket)
     await websocket.send_json({"type": "FULL_SYNC", "data": tags_cache})
-    
     try:
         while True:
             msg = await websocket.receive_json()
             action = msg.get("action")
             category = msg.get("category")
             data = msg.get("data", {})
-            
-            # (約在接收 msg 之後)
             if category not in ["buff", "free", "target_obj", "trigger_time"]:
                 continue
-                
             cat_list = tags_cache[category]
-            
-            # 判斷當前操作的分類是否屬於「樹狀結構」
             is_tree_category = category in ["free", "target_obj", "trigger_time"]
             
-            # --- 處理相對操作 ---
             if action == "ADD":
                 new_node = {
                     "id": data["id"],
@@ -2336,12 +1880,10 @@ async def websocket_tags(websocket: WebSocket):
                         cat_list.append(new_node)
                 else: 
                     cat_list.append(new_node)
-                    
             elif action == "RENAME":
                 target = find_node(cat_list, data["id"]) if is_tree_category else next((n for n in cat_list if n["id"] == data["id"]), None)
                 if target and target.get("is_renamable", True):
                     target["name"] = data["name"]
-                    
             elif action == "DELETE":
                 if is_tree_category:
                     find_and_remove_node(cat_list, data["id"])
@@ -2349,42 +1891,32 @@ async def websocket_tags(websocket: WebSocket):
                     target = next((n for n in cat_list if n["id"] == data["id"]), None)
                     if target and target.get("is_deletable", True):
                         cat_list.remove(target)
-                        
             elif action == "MOVE" and is_tree_category:
                 node_id = data["id"]
-                target_parent_id = data.get("target_parent_id") # null 代表移到根目錄
-                
-                # 1. 先把它從舊位置拔出來
+                target_parent_id = data.get("target_parent_id")
                 moved_node = find_and_remove_node(cat_list, node_id)
                 if moved_node:
-                    # 2. 塞入新位置
                     if target_parent_id:
                         parent_node = find_node(cat_list, target_parent_id)
                         if parent_node:
                             parent_node.setdefault("children", []).append(moved_node)
                         else:
-                            cat_list.append(moved_node) # 找不到父節點就放根目錄
+                            cat_list.append(moved_node)
                     else:
                         cat_list.append(moved_node)
 
-            # 廣播異動
             await tag_manager.broadcast({
                 "type": "UPDATE_CATEGORY",
                 "category": category,
                 "data": tags_cache[category]
             })
-            
-            # 觸發 60 秒防抖存檔
             trigger_tag_sync()
-
     except WebSocketDisconnect:
         tag_manager.disconnect(websocket)
         
-# --- 新增這支 API 供 3 支前端共用判斷 ---
 @app.get("/api/check_sp_replace")
 async def check_sp_replace(request: Request):
     country = get_client_country(request)
-    # 如果國籍「不在」排除名單內，就代表需要執行替換
     need_replace = country not in EXCLUDED_COUNTRIES
     return {"country": country, "need_replace": need_replace}
     
@@ -2392,24 +1924,19 @@ async def check_sp_replace(request: Request):
 async def generate_console_token(admin: str = Query(...)):
     if admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-    
     new_token = uuid.uuid4().hex
     one_time_tokens[new_token] = {
-        "expires_at": time.time() + 3600,  # 產生後未打開前 1 小時有效
-        "is_activated": False              # 標記是否已被真人點開
+        "expires_at": time.time() + 3600,
+        "is_activated": False
     }
     return {"status": "success", "token": new_token}
-    
     
 @app.get("/api/check_wiki_url")
 async def check_wiki_url(card_name: str = Query(..., description="處理後的卡名")):
     clean_name = card_name.strip()
     if not clean_name:
         raise HTTPException(status_code=400, detail="請提供卡名")
-
     now = time.time()
-
-    # 1. 優先從記憶體快取讀取結果 (0 流量、秒回)
     if clean_name in wiki_url_cache:
         item = wiki_url_cache[clean_name]
         if now - item["timestamp"] < WIKI_CACHE_TTL:
@@ -2420,17 +1947,13 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
 
     direct_url = f"https://dmwiki.net/《{quote(clean_name)}》"
     fallback_google_url = f"https://www.google.com/search?q={quote(clean_name + ' site:dmwiki.net')}"
-
-    # 模擬更完整的瀏覽器 Header，降低被防護機制誤判的機率
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "ja,zh-TW;q=0.9,en;q=0.8"
     }
     result_data = {"target_url": fallback_google_url, "type": "fallback"}
-
     try:
-        # 2. 超時限制設為 2.5 秒，讀取前 8KB 進行判定
         async with httpx.AsyncClient(timeout=2.5, follow_redirects=True) as client:
             async with client.stream("GET", direct_url, headers=headers) as resp:
                 if resp.status_code == 200:
@@ -2438,9 +1961,7 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
                     async for chunk in resp.aiter_text():
                         chunk_text += chunk
                         if len(chunk_text) >= 8192:
-                            break  # 判定資訊已足夠，主動中斷傳輸
-                    
-                    # 💡 關鍵修復：擴充無效頁面與錯誤訊息的判斷關鍵字
+                            break
                     invalid_keywords = [
                         "は存在しません", 
                         "ページ名変更", 
@@ -2448,37 +1969,25 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
                         "Runtime error", 
                         "Match:ipcountry"
                     ]
-                    
-                    # 只要不包含任何錯誤關鍵字，才判定為正常的直連頁面
                     if not any(kw in chunk_text for kw in invalid_keywords):
                         result_data = {"target_url": direct_url, "type": "direct"}
-
     except Exception as e:
-        print(f"[Wiki Check Exception/Timeout] {e}")
+        print(f"[Wiki Check Exception]: {e}")
 
-    # 3. 寫入快取，保護伺服器與 Wiki 流量
     if len(wiki_url_cache) >= WIKI_CACHE_MAX_SIZE:
         wiki_url_cache.popitem(last=False)
     wiki_url_cache[clean_name] = {"data": result_data, "timestamp": now}
-
     return result_data
     
 @app.delete("/api/track/delete_user_logs")
-async def delete_user_logs(
-    user_id: str = Query(..., description="要刪除 Log 的使用者代稱，例如 TWa"),
-    admin: Optional[str] = Query(None)
-):
+async def delete_user_logs(user_id: str = Query(..., description="要刪除 Log 的使用者代稱"), admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-
     global action_details_log
     filtered_logs = [log for log in action_details_log if log.get("user") != user_id]
     action_details_log = deque(filtered_logs, maxlen=50)
-
     if user_id in user_counter:
         del user_counter[user_id]
-        
-    # 👇 建議補上：同步清理國家專屬的使用者數量紀錄
     country = user_id.split("-")[0].upper() if "-" in user_id else "Unknown"
     if country in country_user_counter and user_id in country_user_counter[country]:
         del country_user_counter[country][user_id]
@@ -2494,24 +2003,21 @@ async def delete_user_logs(
         "user_stats": sorted_user_stats,
         "recent_50_details": get_clean_recent_logs()
     })
-    
     return {"status": "success", "message": f"已刪除使用者 {user_id} 的紀錄"}
     
 @app.delete("/api/track/reset")
 async def reset_track_stats(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-
     global action_details_log, last_reset_time
     feature_counter.clear()
     country_counter.clear()
     user_counter.clear()
     action_details_log.clear()
-    data_transfer_stats.clear()  # 👈 新增這行
-    hot_card_views.clear()  # 👈 新增這行：清空單卡熱度紀錄
+    data_transfer_stats.clear()
+    hot_card_views.clear()
     daily_total_counter.clear()
     country_daily_total_counter.clear()
-
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 
     await console_manager.broadcast({
@@ -2523,7 +2029,6 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
         "recent_50_details": [],
         "start_time": last_reset_time
     })
-
     return {"status": "success", "message": "所有統計數據與國籍計數已徹底重置！"}
     
 @app.get("/api/get_wiki_card_details")
@@ -2532,22 +2037,15 @@ async def get_wiki_card_details(request: Request, name: str = Query(..., descrip
     jp_name = name.strip()
     if not jp_name:
         raise HTTPException(status_code=400, detail="請提供日文卡名")
-
-    # 優先讀取記憶體快取 (秒開)
     if jp_name in wiki_details_cache:
         return {"status": "success", "data": wiki_details_cache[jp_name]}
 
     async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-        # 1. 使用現有邏輯取得精確的 Fandom 頁面標題 (這步會利用到你原有的 english_name_cache)
         en_title = await fetch_english_name_from_fandom(jp_name, client)
         if not en_title or en_title == jp_name:
             raise HTTPException(status_code=404, detail="找不到對應的 Fandom 頁面")
-
-        # 2. 呼叫 Revisions API 取得原始維基代碼 (Wikitext)
         rev_url = f"https://duelmasters.fandom.com/api.php?action=query&prop=revisions&titles={quote(en_title)}&rvprop=content&rvslots=main&format=json"
-
         try:
-            # 加上 User-Agent 避免被阻擋
             resp = await client.get(rev_url, headers={"User-Agent": "DuelMastersCardSearchBot/2.0"})
             resp.raise_for_status()
             data = resp.json()
@@ -2556,35 +2054,23 @@ async def get_wiki_card_details(request: Request, name: str = Query(..., descrip
 
         pages = data.get("query", {}).get("pages", {})
         page = list(pages.values())[0] if pages else {}
-
         if "revisions" not in page:
             raise HTTPException(status_code=404, detail="Fandom 頁面內容為空")
 
         wikitext = page["revisions"][0]["slots"]["main"]["*"]
-
-        # 3. 解析與清洗資料
         params = extract_wiki_params(wikitext)
-
-        sp_en = []
-        sp_jp = []
-
-        # 處理生物效果 (或雙極卡上方)
+        sp_en, sp_jp = [], []
         if "engtext" in params or "jptext" in params:
             sp_en.append(clean_wikitext_sp(params.get("engtext", "")))
             sp_jp.append(clean_wikitext_sp(params.get("jptext", "")))
-
-        # 處理咒文效果 (雙極卡下方)
         if "engtext2" in params or "jptext2" in params:
             sp_en.append(clean_wikitext_sp(params.get("engtext2", "")))
             sp_jp.append(clean_wikitext_sp(params.get("jptext2", "")))
-
-        # 處理風味敘述 (Flavor Text)
         flavors = []
         for k in ["flavor", "flavor2", "flavor3", "flavor4", "flavor5"]:
             if k in params and params[k]:
                 flavors.append(clean_flavor_text(params[k]))
 
-        # 組裝完整的英文卡名 (支援雙極卡斜線處理)
         name1 = params.get("name", en_title)
         name2 = params.get("name2", "")
         en_full_name = f'{name1} / {name2}' if name2 else name1
@@ -2595,8 +2081,5 @@ async def get_wiki_card_details(request: Request, name: str = Query(..., descrip
             "sp_jp": sp_jp,
             "flavors": flavors
         }
-
-        # 寫入快取，下次同一張卡就不用再等了
         wiki_details_cache[jp_name] = result_data
-
         return {"status": "success", "data": result_data}

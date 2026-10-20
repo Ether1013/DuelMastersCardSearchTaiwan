@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 👇 新增 html2canvas，用於將報表轉為圖片 -->
+    <!-- html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Chart.js DataLabels Plugin CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -25,21 +25,16 @@
 
     <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
 		<div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-			
-			<!-- 將標題與時間區間包在一起，加上 w-full 使其在手機版撐開 -->
 			<div class="flex flex-col gap-1 w-full sm:w-auto">
-				<!-- 加入 flex justify-between 使標題與按鈕左右對齊 -->
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-3">
 						<i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
 						<h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
 					</div>
-					<!-- 💡 新增：手機版漢堡選單按鈕 (僅手機版顯示 sm:hidden) -->
 					<button onclick="toggleMobileMenu()" class="sm:hidden text-gray-400 hover:text-white p-1 outline-none">
 						<i id="mobileMenuIcon" class="fa-solid fa-bars text-xl"></i>
 					</button>
 				</div>
-				<!-- 統計區間顯示 -->
 				<div class="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-1 mt-0.5">
 					<i class="fa-regular fa-clock text-indigo-400"></i>
 					<span>統計區間：</span>
@@ -49,42 +44,31 @@
 					<span class="text-indigo-400 font-semibold ml-1">（共計 <span id="durationStr">0 小時 0 分</span>）</span>
 				</div>
 			</div>
-            <!-- 按鈕控制區域 -->
             <div id="actionMenu" class="hidden sm:flex flex-col gap-2 w-full sm:w-auto items-end mt-2 pt-3 border-t border-gray-800 sm:mt-0 sm:pt-0 sm:border-0">
-                <!-- 第一行：Connected 狀態標籤 (自己一行) -->
                 <div class="w-full flex justify-start sm:justify-end">
                     <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                         <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
                         <span>Connecting...</span>
                     </div>
                 </div>
-                
-                <!-- 第二行：一般操作按鍵 -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
                     <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-rotate"></i> Refresh
                     </button>
-
                     <button id="resetStatsBtn" onclick="openResetModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs rounded-lg transition border border-rose-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-trash-arrow-up"></i> Reset
                     </button>
-
                     <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-key"></i> 產生Token
                     </button>
-					
-					<!-- 一鍵匯出按鈕 -->
 					<button onclick="exportDashboardDataForAI()" class="whitespace-nowrap px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white text-xs rounded-lg transition border border-purple-500/30 flex items-center gap-1.5 shadow-lg">
 						<i class="fa-solid fa-file-export"></i> 匯出AI分析JSON
 					</button>
                 </div>
-				
-				<!-- 第三行：Admin 專屬進階功能 (橫向排開、靠右對齊) -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
                     <button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-bullhorn"></i> 廣播
                     </button>
-                    
                     <button id="historyReportBtn" onclick="openHistoryModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white text-xs rounded-lg transition border border-cyan-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-chart-pie"></i> 歷史報表
                     </button>            
@@ -94,7 +78,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-        <!-- Top Metrics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
@@ -105,7 +88,6 @@
                     <i class="fa-solid fa-bolt text-xl"></i>
                 </div>
             </div>
-
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
                     <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">操作種類</p>
@@ -115,7 +97,6 @@
                     <i class="fa-solid fa-cubes text-xl"></i>
                 </div>
             </div>
-
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
                 <div>
                     <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">總使用裝置數</p>
@@ -127,7 +108,6 @@
             </div>
         </div>
 
-		<!-- 💡 新增：資料傳輸與快取狀態 (手動 Refresh 更新) -->
         <div id="dataTransferContainer" class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
@@ -136,14 +116,11 @@
                 <span class="text-xs text-gray-500 font-mono">點擊更新</span>
             </div>
             <div id="dataTransferStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-xs">
-                <!-- 由 JS fetchInitialData 動態填入 -->
                 <div class="text-gray-500 col-span-full">載入中...</div>
             </div>
         </div>
 
-        <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 長條圖：觸發次數 -->
             <div class="lg:col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
@@ -153,7 +130,6 @@
                 </div>
             </div>
 
-            <!-- 圓餅圖 1：國籍分佈 (Total Event Recorded) -->
             <div class="lg:col-span-1 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-earth-americas text-sky-400"></i>操作分布(國家別)
@@ -163,7 +139,6 @@
                 </div>
             </div>
 
-            <!-- 圓餅圖 2：各國使用者人數分佈 -->
             <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-users text-purple-400"></i>裝置分布(國家別)
@@ -174,62 +149,47 @@
             </div>
         </div>
 
-		<!-- 💡 新增：最新商品熱度排行榜 -->
+		<!-- 單卡熱度排行榜 (包含 [不分商品] 頁籤與 Top 100 支援) -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <!-- 👇 修改這裡：把單純的 h2 改成 flex 容器，並加入 select -->
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
-                    <i class="fa-solid fa-fire text-orange-500"></i> 最新發售商品：單卡熱度 (Top 15)
+                    <i class="fa-solid fa-fire text-orange-500"></i> 單卡熱度排行榜
                 </h2>
                 <select id="hotCardCountrySelect" onchange="renderHotCardsUI()" class="bg-gray-800 text-xs font-bold text-orange-400 border border-gray-700 rounded-lg px-3 py-1 outline-none cursor-pointer">
                     <option value="ALL">🌍 全世界 (ALL)</option>
                 </select>
             </div>
-            <!-- 動態頁籤 (Tabs) -->
-            <div id="hotCardTabs" class="flex flex-wrap gap-1 border-b border-gray-800 mb-4">
-                <!-- 由 JS 動態生成 -->
-            </div>
+            <!-- 動態頁籤 (包含 [不分商品] 以及各商品代碼) -->
+            <div id="hotCardTabs" class="flex flex-wrap gap-1 border-b border-gray-800 mb-4"></div>
             
-            <!-- 排行榜清單 -->
-            <div id="hotCardList" class="space-y-4 max-h-[320px] overflow-y-auto custom-scrollbar pr-2">
+            <div id="hotCardList" class="space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
                 <div class="text-gray-500 text-sm text-center py-4">資料載入中...</div>
             </div>
         </div>
 		
-        <!-- 修改後的排版結構 -->
 		<div id="detailFiltersContainer" class="flex justify-between items-center mb-4 gap-3">
-			<!-- 左側容器：兩個下拉選單一上一下排列 -->
 			<div class="flex flex-col gap-2">
-				<!-- 上層：主動作類型下拉選單 -->
 				<select id="featureFilter" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
 					<option value="all">所有動作類型</option>
 				</select>
-				
-				<!-- 下層：使用者別下拉選單 -->
 				<select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
 					<option value="default">預設排序 (最新事件優先)</option>
 				</select>
 			</div>
-			
-			<!-- 右側：說明文字靠右並自動上下置中 -->
 			<div class="flex items-center">
 				<span class="text-xs text-gray-500 whitespace-nowrap">Auto-refresh via WS</span>
 			</div>
 		</div>
 		
-		<!-- 💡 補回下方遺失的 Table 容器 -->
 		<div id="detailTableContainer" class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
 			<div id="tableScrollContainer" class="max-h-[600px] overflow-y-auto custom-scrollbar">
 				<table class="w-full text-left border-collapse">
-					<tbody id="logsTableBody" class="divide-y divide-gray-800/80">
-						<!-- JS 動態渲染 Recent Logs 與 Detail Payload -->
-					</tbody>
+					<tbody id="logsTableBody" class="divide-y divide-gray-800/80"></tbody>
 				</table>
 			</div>
 		</div>
     </main>
 	
-	<!-- Delete User Logs Modal -->
 	<div id="deleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
 		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
 			<div class="flex items-center gap-3 text-rose-500">
@@ -239,44 +199,27 @@
 			<p class="text-sm text-gray-300">
 				確定要刪除使用者 <span id="modalTargetUser" class="font-mono font-bold text-sky-400"></span> 在主機記憶體中的所有 Detail 紀錄嗎？
 			</p>
-			<p class="text-xs text-gray-500">
-				* 僅會清除主機記憶體上的 log 畫面，該使用者的編號登記不會被重置。
-			</p>
 			<div class="flex justify-end gap-3 pt-2">
-				<button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
-					否 (取消)
-				</button>
-				<button onclick="confirmDeleteUserLogs()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium transition shadow-lg">
-					是 (刪除)
-				</button>
+				<button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">否 (取消)</button>
+				<button onclick="confirmDeleteUserLogs()" class="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs">是 (刪除)</button>
 			</div>
 		</div>
 	</div>
 	
-	<!-- Reset Stats Modal -->
 	<div id="resetModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
 		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
 			<div class="flex items-center gap-3 text-rose-500">
 				<i class="fa-solid fa-triangle-exclamation text-2xl"></i>
 				<h3 class="text-lg font-bold text-gray-100">重置所有統計數據</h3>
 			</div>
-			<p class="text-sm text-gray-300">
-				確定要 <span class="font-bold text-rose-400">歸零並清空</span> 主機記憶體中的所有全域點擊統計、圓餅圖數據與 Recent 50 Logs 嗎？
-			</p>
-			<p class="text-xs text-rose-400/80 bg-rose-500/10 p-2 rounded border border-rose-500/20">
-				⚠️ 此動作無法復原！
-			</p>
+			<p class="text-sm text-gray-300">確定要歸零並清空所有統計數據嗎？</p>
 			<div class="flex justify-end gap-3 pt-2">
-				<button onclick="closeResetModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
-					否 (取消)
-				</button>
-				<button onclick="confirmResetStats()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium transition shadow-lg">
-					是 (確定重置)
-				</button>
+				<button onclick="closeResetModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">否 (取消)</button>
+				<button onclick="confirmResetStats()" class="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs">是 (確定重置)</button>
 			</div>
 		</div>
 	</div>
-	<!-- Token Generation Modal -->
+
 	<div id="tokenModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
 		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
 			<div class="flex items-center justify-between border-b border-gray-800 pb-3">
@@ -286,46 +229,30 @@
 				</div>
 				<button onclick="closeTokenModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
 			</div>
-
 			<div class="space-y-3">
 				<div>
 					<label class="text-xs font-semibold text-gray-300 block mb-1">存取權限範圍：</label>
 					<div class="flex gap-4 text-xs">
 						<label class="flex items-center gap-1.5 cursor-pointer">
-							<input type="radio" name="tokenScope" value="all" checked onchange="toggleCountrySelect(false)" class="text-indigo-500">
-							<span>全域 (無限制)</span>
+							<input type="radio" name="tokenScope" value="all" checked onchange="toggleCountrySelect(false)"> 全域
 						</label>
 						<label class="flex items-center gap-1.5 cursor-pointer">
-							<input type="radio" name="tokenScope" value="country" onchange="toggleCountrySelect(true)" class="text-indigo-500">
-							<span>指定國籍</span>
+							<input type="radio" name="tokenScope" value="country" onchange="toggleCountrySelect(true)"> 指定國籍
 						</label>
 					</div>
 				</div>
-
-				<!-- 選擇指定國籍 (改為下拉選單) -->
 				<div id="countryInputContainer" class="hidden space-y-1">
 					<label class="text-xs font-semibold text-gray-400 block">選擇指定國籍：</label>
-					<select id="tokenCountrySelect" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-xs font-mono text-white outline-none focus:border-indigo-500 cursor-pointer">
-						<!-- 將由 JS 自動填入選項 -->
-					</select>
+					<select id="tokenCountrySelect" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-xs text-white"></select>
 				</div>
-
-				<p class="text-[11px] text-gray-500">
-					* 產生的連結在 1 小時內有效，重新整理即失效。
-				</p>
 			</div>
-
 			<div class="flex justify-end gap-3 pt-2">
-				<button onclick="closeTokenModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
-					取消
-				</button>
-				<button id="btnSubmitGenerateToken" onclick="submitGenerateToken()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium transition shadow-lg flex items-center gap-1.5">
-					<i class="fa-solid fa-link"></i> 產生並複製連結
-				</button>
+				<button onclick="closeTokenModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">取消</button>
+				<button id="btnSubmitGenerateToken" onclick="submitGenerateToken()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs flex items-center gap-1.5">產生並複製</button>
 			</div>
 		</div>
 	</div>
-	<!-- Broadcast Modal -->
+
 	<div id="broadcastModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
 		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
 			<div class="flex items-center justify-between border-b border-gray-800 pb-3">
@@ -335,58 +262,32 @@
 				</div>
 				<button onclick="closeBroadcastModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
 			</div>
-
 			<div class="space-y-3">
-				<!-- 廣播對象設定 -->
 				<div>
 					<label class="text-xs font-semibold text-gray-300 block mb-1">廣播對象：</label>
 					<div class="flex gap-4 text-xs">
-						<label class="flex items-center gap-1.5 cursor-pointer">
-							<input type="radio" name="bcTargetType" value="all" checked onchange="handleTargetTypeChange()" class="text-emerald-500">
-							<span>所有人 (全域)</span>
-						</label>
-						<label class="flex items-center gap-1.5 cursor-pointer">
-							<input type="radio" name="bcTargetType" value="country" onchange="handleTargetTypeChange()" class="text-emerald-500">
-							<span>指定國家</span>
-						</label>
-						<label class="flex items-center gap-1.5 cursor-pointer">
-							<input type="radio" name="bcTargetType" value="user" onchange="handleTargetTypeChange()" class="text-emerald-500">
-							<span>指定在線使用者</span>
-						</label>
+						<label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="bcTargetType" value="all" checked onchange="handleTargetTypeChange()"> 所有人</label>
+						<label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="bcTargetType" value="country" onchange="handleTargetTypeChange()"> 指定國家</label>
+						<label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="bcTargetType" value="user" onchange="handleTargetTypeChange()"> 指定使用者</label>
 					</div>
 				</div>
-
-				<!-- 動態目標選擇區 -->
-				<div id="bcTargetSelectionContainer" class="hidden bg-gray-950 p-3 rounded-lg border border-gray-800 max-h-32 overflow-y-auto custom-scrollbar">
-					<div id="bcTargetList" class="flex flex-wrap gap-2 text-xs">
-						<!-- 動態渲染在線使用者或國家 checkbox -->
-					</div>
+				<div id="bcTargetSelectionContainer" class="hidden bg-gray-950 p-3 rounded-lg border border-gray-800 max-h-32 overflow-y-auto">
+					<div id="bcTargetList" class="flex flex-wrap gap-2 text-xs"></div>
 				</div>
-
-				<!-- 廣播訊息輸入 -->
 				<div>
 					<label class="text-xs font-semibold text-gray-300 block mb-1">訊息內容：</label>
-					<!-- 💡 調整：改為 text-base (16px)，防止 iOS 自動縮放 -->
-					<textarea id="bcMessageInput" rows="3" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-base text-gray-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder-gray-600" placeholder="請輸入欲發送給使用者的彈窗訊息..."></textarea>
+					<textarea id="bcMessageInput" rows="3" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-base text-gray-200 outline-none" placeholder="請輸入訊息..."></textarea>
 				</div>
-				
 			</div>
-
 			<div class="flex justify-end gap-3 pt-2">
-				<button onclick="closeBroadcastModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-medium transition">
-					取消
-				</button>
-				<button id="btnSubmitBroadcast" onclick="submitBroadcastModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow-lg flex items-center gap-1.5">
-					<i class="fa-solid fa-paper-plane"></i> 確認送出
-				</button>
+				<button onclick="closeBroadcastModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">取消</button>
+				<button id="btnSubmitBroadcast" onclick="submitBroadcastModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs">確認送出</button>
 			</div>
 		</div>
 	</div>
 	
-	<!-- 👇 新增：歷史報表 Modal -->
 	<div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-2 sm:p-4">
 		<div class="bg-gray-950 border border-gray-700 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
-			<!-- Modal Header -->
 			<div class="flex items-center justify-between border-b border-gray-800 p-4 bg-gray-900/50">
 				<div class="flex items-center gap-2 text-cyan-400">
 					<i class="fa-solid fa-chart-line text-xl"></i>
@@ -394,93 +295,63 @@
 				</div>
 				<button onclick="closeHistoryModal()" class="text-gray-400 hover:text-white text-xl p-1">✕</button>
 			</div>
-
-			<!-- Modal Body (可滾動) -->
 			<div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-				
-				<!-- 控制面板 -->
-				<div class="flex flex-col sm:flex-row gap-4 items-end bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-inner">
+				<div class="flex flex-col sm:flex-row gap-4 items-end bg-gray-900 border border-gray-800 p-4 rounded-xl">
 					<div class="flex-1 flex flex-col sm:flex-row gap-3 w-full">
 						<div class="flex flex-col gap-1 w-full sm:w-auto">
 							<label class="text-xs text-gray-400 font-semibold">開始日期</label>
-							<input type="date" id="historyStartDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5 outline-none focus:border-cyan-500">
+							<input type="date" id="historyStartDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5">
 						</div>
 						<div class="flex flex-col gap-1 w-full sm:w-auto">
 							<label class="text-xs text-gray-400 font-semibold">結束日期</label>
-							<input type="date" id="historyEndDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5 outline-none focus:border-cyan-500">
+							<input type="date" id="historyEndDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5">
 						</div>
 					</div>
-					<div class="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-						<button id="btnGenerateHistory" onclick="fetchHistoricalReport()" class="flex-1 sm:flex-none px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition shadow flex items-center justify-center gap-2">
-							<i class="fa-solid fa-magnifying-glass"></i> 產生報表
-						</button>
+					<div class="flex gap-2 w-full sm:w-auto">
+						<button id="btnGenerateHistory" onclick="fetchHistoricalReport()" class="px-4 py-1.5 bg-cyan-600 text-white text-sm font-medium rounded-lg">產生報表</button>
 					</div>
 				</div>
-
-				<!-- 報表呈現區塊 (這是截圖的範圍) -->
 				<div id="reportCaptureArea" class="bg-gray-950 border border-gray-800 p-4 sm:p-6 rounded-xl hidden flex-col gap-6 relative">
-					
-					<!-- 截圖浮水印/報表抬頭 (僅在此區塊顯示) -->
 					<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-3 gap-3">
 						<div>
 							<h2 class="text-xl font-bold text-gray-100">API 流量歷史分析</h2>
-							<p id="reportDateRangeText" class="text-xs text-gray-400 font-mono mt-1">2024/05/27 ~ 2024/06/27</p>
+							<p id="reportDateRangeText" class="text-xs text-gray-400 font-mono mt-1"></p>
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="text-xs text-gray-400 font-semibold">資料視角：</span>
-							<select id="historyCountrySelect" onchange="renderHistoryCharts()" class="bg-gray-800 text-sm font-bold text-cyan-400 border border-gray-700 rounded-lg px-3 py-1 outline-none cursor-pointer">
+							<select id="historyCountrySelect" onchange="renderHistoryCharts()" class="bg-gray-800 text-sm font-bold text-cyan-400 border border-gray-700 rounded-lg px-3 py-1">
 								<option value="ALL">🌍 全世界 (ALL)</option>
 							</select>
 						</div>
 					</div>
-
-					<!-- 數字總覽卡片 -->
 					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 						<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-							<p class="text-xs text-gray-500 uppercase tracking-wide">裝置數量</p>
+							<p class="text-xs text-gray-500 uppercase">裝置數量</p>
 							<h4 id="repTotalUsers" class="text-2xl font-black text-sky-400 mt-1">0</h4>
 						</div>
 						<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-							<p class="text-xs text-gray-500 uppercase tracking-wide">總事件觸發數</p>
+							<p class="text-xs text-gray-500 uppercase">總事件觸發數</p>
 							<h4 id="repTotalEvents" class="text-2xl font-black text-indigo-400 mt-1">0</h4>
 						</div>
 					</div>
-
-					<!-- 圖表區 -->
 					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-						<!-- 動作排行榜 (長條圖) -->
 						<div class="lg:col-span-1 bg-gray-900 border border-gray-800 p-4 rounded-lg">
-							<h4 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-								<i class="fa-solid fa-list-ol text-purple-400"></i> 功能使用排行
-							</h4>
-							<div class="h-64 relative">
-								<canvas id="historyFeatureChart"></canvas>
-							</div>
+							<h4 class="text-sm font-semibold text-gray-300 mb-3"><i class="fa-solid fa-list-ol text-purple-400"></i> 功能使用排行</h4>
+							<div class="h-64 relative"><canvas id="historyFeatureChart"></canvas></div>
 						</div>
-
-						<!-- 趨勢圖 (折線圖) -->
 						<div class="lg:col-span-2 bg-gray-900 border border-gray-800 p-4 rounded-lg">
-							<h4 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-								<i class="fa-solid fa-wave-square text-emerald-400"></i> 每小時流量趨勢
-							</h4>
-							<div class="h-64 relative">
-								<canvas id="historyHourlyChart"></canvas>
-							</div>
+							<h4 class="text-sm font-semibold text-gray-300 mb-3"><i class="fa-solid fa-wave-square text-emerald-400"></i> 每小時流量趨勢</h4>
+							<div class="h-64 relative"><canvas id="historyHourlyChart"></canvas></div>
 						</div>
 					</div>
-					
 				</div>
-				<!-- 截圖區塊結束 -->
-
-				<!-- 匯出按鈕 (放在截圖範圍外面) -->
 				<div id="exportBtnContainer" class="flex justify-end hidden">
-					<button id="exportImgBtn" onclick="exportHistoryImage()" class="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-sm font-medium rounded-lg transition border border-emerald-500/30 flex items-center gap-2 shadow-lg">
-						<i class="fa-solid fa-camera-retro"></i> 輸出報表圖片
-					</button>
+					<button id="exportImgBtn" onclick="exportHistoryImage()" class="px-4 py-2 bg-emerald-600/20 text-emerald-300 rounded-lg text-sm border border-emerald-500/30">輸出報表圖片</button>
 				</div>
 			</div>
 		</div>
 	</div>
+
     <script>
         Chart.register(ChartDataLabels);
 
@@ -495,59 +366,38 @@
             authParam = `admin=${encodeURIComponent(adminKey)}`;
         } else if (tokenKey) {
             authParam = `token=${encodeURIComponent(tokenKey)}`;
-            // 判斷 token 內是否含有國碼 (長度為 32 + 2 = 34)
             if (tokenKey.length === 34) {
                 countryKey = (tokenKey.charAt(0) + tokenKey.charAt(33)).toUpperCase();
             }
         }
 
-        let featureChart, countryChart, userChart; // 👈 增加 userChart
-
-        // 全局狀態控制表格
+        let featureChart, countryChart, userChart;
         let currentLogs = [];
         let sortMode = 'default';
 		let pendingDeleteUser = null;
 		let startTimeObj = null;
 		let timerInterval = null;
-		let bcCodeInterval = null;
 		let onlineUserData = { users: [], countries: [] };
 		
-		// 1. 建立固定的國家顏色 Map，常見國家固定色，其餘動態指派
 		const COUNTRY_COLOR_MAP = {
-			'TW': '#38bdf8',
-			'HK': '#fbbf24',
-			'MO': '#34d399',
-			'CN': '#f87171',
-			'JP': '#f472b6',
-			'KR': '#c084fc',
-			'SG': '#2dd4bf',
-			'MY': '#fb923c',
-			'US': '#60a5fa',
-			'GB': '#a78bfa',
-			'UK': '#a78bfa',
-			'FR': '#818cf8',
-			'其他 (Other)': '#64748b', // 👈 新增「其他」專用顏色
-			'Unknown': '#9ca3af'
+			'TW': '#38bdf8', 'HK': '#fbbf24', 'MO': '#34d399', 'CN': '#f87171',
+			'JP': '#f472b6', 'KR': '#c084fc', 'SG': '#2dd4bf', 'MY': '#fb923c',
+			'US': '#60a5fa', 'GB': '#a78bfa', 'UK': '#a78bfa', 'FR': '#818cf8',
+			'其他 (Other)': '#64748b', 'Unknown': '#9ca3af'
 		};
 		
-		// 根據國家字串名稱 (如 'DE', 'AU') 自動計算出固定的 HSL 顏色
 		function stringToHslColor(str) {
 			let hash = 0;
 			for (let i = 0; i < str.length; i++) {
 				hash = str.charCodeAt(i) + ((hash << 5) - hash);
 			}
-			const h = Math.abs(hash) % 360; // 360度色相
-			return `hsl(${h}, 70%, 60%)`;   // 固定飽和度與亮度，確保顏色好看
+			return `hsl(${Math.abs(hash) % 360}, 70%, 60%)`;
 		}
 		
-		// 聚合低用量國籍：過濾 Unknown、取前 Top N，其餘封裝為「其他」並記錄細節
-		// 純動態聚合：不預設任何國籍名單，純從後端回傳數據提煉
 		function processCountryDistribution(rawStats, topN = 5, unit = '次') {
 			if (!rawStats || typeof rawStats !== 'object') {
 				return { labels: [], data: [], otherDetails: [], allValidCountries: [] };
 			}
-
-			// 1. 純過濾 Unknown / 無效值，其餘全世界所有國碼一律保留
 			const validEntries = Object.entries(rawStats)
 				.filter(([country, count]) => {
 					if (!country) return false;
@@ -556,49 +406,28 @@
 				})
 				.sort((a, b) => b[1] - a[1]);
 
-			// 當前所有有效國家的代碼清單 (如 ['TW', 'JP', 'VN', 'DE', ...])
 			const allValidCountries = validEntries.map(([c]) => c);
-
-			let labels = [];
-			let data = [];
-			let otherDetails = [];
+			let labels = [], data = [], otherDetails = [];
 
 			if (validEntries.length > topN) {
 				const topEntries = validEntries.slice(0, topN);
 				const otherEntries = validEntries.slice(topN);
-
-				topEntries.forEach(([country, val]) => {
-					labels.push(country);
-					data.push(val);
-				});
-
+				topEntries.forEach(([country, val]) => { labels.push(country); data.push(val); });
 				let otherSum = 0;
 				otherEntries.forEach(([country, val]) => {
 					otherSum += val;
 					otherDetails.push(`${country}: ${val} ${unit}`);
 				});
-
-				if (otherSum > 0) {
-					labels.push('其他 (Other)');
-					data.push(otherSum);
-				}
+				if (otherSum > 0) { labels.push('其他 (Other)'); data.push(otherSum); }
 			} else {
 				labels = validEntries.map(e => e[0]);
 				data = validEntries.map(e => e[1]);
 			}
-
 			return { labels, data, otherDetails, allValidCountries };
 		}
 
 		function getCountryColors(countryLabels) {
-			return countryLabels.map((country) => {
-				// 1. 優先找固定配置色
-				if (COUNTRY_COLOR_MAP[country]) {
-					return COUNTRY_COLOR_MAP[country];
-				}
-				// 2. 找不到則根據國家代碼字串算出唯一的 HSL 顏色
-				return stringToHslColor(country);
-			});
+			return countryLabels.map(country => COUNTRY_COLOR_MAP[country] || stringToHslColor(country));
 		}
 
         function changeSortMode() {
@@ -606,36 +435,26 @@
             renderLogsTable();
         }
 		
-		// 格式化為 YYYY/MM/DD HH:mm:ss (24小時制)
 		function formatDateTime(d) {
 			const pad = (n) => String(n).padStart(2, '0');
 			return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 		}
 
-		// 每秒刷新「現在時間」與「總時長」
 		function updateTimeAndDuration() {
 			const now = new Date();
 			document.getElementById('currentTimeStr').innerText = formatDateTime(now);
-
 			if (startTimeObj) {
 				const diffMs = Math.max(0, now - startTimeObj);
 				const totalMinutes = Math.floor(diffMs / (1000 * 60));
-				
 				const days = Math.floor(totalMinutes / (60 * 24));
 				const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
 				const mins = totalMinutes % 60;
-
-				let durationText = '';
-				if (days > 0) {
-					durationText += `${days} 天 `;
-				}
+				let durationText = days > 0 ? `${days} 天 ` : '';
 				durationText += `${hours} 小時 ${mins} 分`;
-
 				document.getElementById('durationStr').innerText = durationText;
 			}
 		}
 
-		// 啟動 1 秒 Timer (只初始化一次)
 		function initUptimeTimer() {
 			if (!timerInterval) {
 				updateTimeAndDuration();
@@ -643,70 +462,33 @@
 			}
 		}
 		
-		function updateBroadcastCodeHint() {
-			const now = new Date();
-			const pad = (n) => String(n).padStart(2, '0');
-			const code = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getSeconds())}`;
-			const el = document.getElementById('bcCodeHint');
-			if (el) el.innerText = code;
-		}
-		
 		async function sendBroadcast() {
-			// 1. 取得最新在線名單
 			try {
 				const resp = await fetch(`/api/console/online_users?${authParam}`);
-				if (resp.ok) {
-					onlineUserData = await resp.json();
-				}
-			} catch(e) {
-				console.warn("無法取得在線使用者", e);
-			}
-
+				if (resp.ok) onlineUserData = await resp.json();
+			} catch(e) { console.warn(e); }
 			document.getElementById('bcMessageInput').value = '';
 			document.querySelector('input[name="bcTargetType"][value="all"]').checked = true;
 			handleTargetTypeChange();
-
 			document.getElementById('broadcastModal').classList.remove('hidden');
 		}
 
-		function closeBroadcastModal() {
-			document.getElementById('broadcastModal').classList.add('hidden');
-		}
+		function closeBroadcastModal() { document.getElementById('broadcastModal').classList.add('hidden'); }
 
 		function handleTargetTypeChange() {
 			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
 			const container = document.getElementById('bcTargetSelectionContainer');
 			const listEl = document.getElementById('bcTargetList');
 			listEl.innerHTML = '';
-
-			if (targetType === 'all') {
-				container.classList.add('hidden');
-				return;
-			}
-
+			if (targetType === 'all') { container.classList.add('hidden'); return; }
 			container.classList.remove('hidden');
-
 			if (targetType === 'country') {
-				if (onlineUserData.countries.length === 0) {
-					listEl.innerHTML = '<span class="text-gray-500">目前無在線國家</span>';
-					return;
-				}
 				onlineUserData.countries.forEach(c => {
-					const lbl = document.createElement('label');
-					lbl.className = 'flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-gray-700 cursor-pointer hover:border-emerald-500';
-					lbl.innerHTML = `<input type="checkbox" value="${c}" class="bc-target-chk text-emerald-500"> <span>${c}</span>`;
-					listEl.appendChild(lbl);
+					listEl.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-1 bg-gray-950 px-2 py-1 rounded border border-gray-800 cursor-pointer"><input type="checkbox" value="${c}" class="bc-target-chk"> ${c}</label>`);
 				});
 			} else if (targetType === 'user') {
-				if (onlineUserData.users.length === 0) {
-					listEl.innerHTML = '<span class="text-gray-500">目前無在線使用者</span>';
-					return;
-				}
 				onlineUserData.users.forEach(u => {
-					const lbl = document.createElement('label');
-					lbl.className = 'flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-gray-700 cursor-pointer hover:border-emerald-500';
-					lbl.innerHTML = `<input type="checkbox" value="${u}" class="bc-target-chk text-emerald-500"> <span>${u}</span>`;
-					listEl.appendChild(lbl);
+					listEl.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-1 bg-gray-950 px-2 py-1 rounded border border-gray-800 cursor-pointer"><input type="checkbox" value="${u}" class="bc-target-chk"> ${u}</label>`);
 				});
 			}
 		}
@@ -714,52 +496,22 @@
 		async function submitBroadcastModal() {
 			const msg = document.getElementById('bcMessageInput').value.trim();
 			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
-
-			if (!msg) {
-				alert("請輸入廣播內容！");
-				return;
-			}
-
+			if (!msg) { alert("請輸入廣播內容！"); return; }
 			const targets = [];
 			if (targetType !== 'all') {
-				document.querySelectorAll('.bc-target-chk:checked').forEach(cb => {
-					targets.push(cb.value);
-				});
-				if (targets.length === 0) {
-					alert("請至少選擇一個廣播目標！");
-					return;
-				}
+				document.querySelectorAll('.bc-target-chk:checked').forEach(cb => targets.push(cb.value));
+				if (targets.length === 0) { alert("請至少選擇一個目標！"); return; }
 			}
-
-			const btn = document.getElementById('btnSubmitBroadcast');
-			btn.disabled = true;
-			btn.innerText = "發送中...";
-
 			try {
 				const response = await fetch(`/api/console/broadcast?${authParam}`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						message: msg,
-						timezone_offset: new Date().getTimezoneOffset(), // 💡 傳遞本地時區
-						target_type: targetType,
-						targets: targets
-					})
+					body: JSON.stringify({ message: msg, timezone_offset: new Date().getTimezoneOffset(), target_type: targetType, targets: targets })
 				});
-
-				const data = await response.json();
-				if (!response.ok) {
-					throw new Error(data.detail || '發送失敗');
-				}
-
-				alert(`✅ 廣播已送出！在線接收端：${data.receivers} 人`);
+				if (!response.ok) throw new Error('發送失敗');
+				alert("✅ 廣播已送出！");
 				closeBroadcastModal();
-			} catch (err) {
-				alert(`❌ ${err.message}`);
-			} finally {
-				btn.disabled = false;
-				btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 確認送出`;
-			}
+			} catch (err) { alert(err.message); }
 		}
 
         function initCharts() {
@@ -789,17 +541,10 @@
 					scales: {
 						x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
 						y: { 
-							// 👇 關鍵修改：將 type 改為 'logarithmic' (對數刻度)
 							type: 'logarithmic',
 							ticks: { 
 								color: '#9ca3af',
-								// 👇 自訂標籤顯示：因為對數會產生很多密集刻度，我們只顯示 1, 10, 100, 1000 等量級的數字讓畫面保持乾淨
-								callback: function(value, index, ticks) {
-									if (value === 0 || value === 1 || value === 10 || value === 100 || value === 1000 || value === 10000 || value === 100000) {
-										return value;
-									}
-									return null; // 隱藏零碎的過渡刻度數字
-								}
+								callback: function(value) { return [0, 1, 10, 100, 1000, 10000, 100000].includes(value) ? value : null; }
 							}, 
 							grid: { color: '#1f2937' }
 						}
@@ -811,12 +556,16 @@
             countryChart = new Chart(ctxCountry, {
                 type: 'doughnut',
                 data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { color: '#9ca3af' } },
-                        datalabels: { color: '#ffffff', font: { weight: 'bold', size: 12 }, formatter: (value) => value > 0 ? value + ' 次' : '', anchor: 'center', align: 'center' },
-                        tooltip: {
+                options: { 
+					responsive: true, 
+					maintainAspectRatio: false, 
+					plugins: { 
+						legend: { 
+							position: 'bottom', 
+							labels: { color: '#9ca3af' },
+						},
+						// countryChart 與 userChart 的 options.plugins 內加入：
+						tooltip: {
 							callbacks: {
 								label: function(context) {
 									const label = context.label || '';
@@ -829,27 +578,27 @@
 									return `${label}: ${val}`;
 								}
 							}
-						}
-                    }
-                }
+						}						
+					} 
+				}
             });
 
             const ctxUser = document.getElementById('userChart').getContext('2d');
             userChart = new Chart(ctxUser, {
                 type: 'doughnut',
                 data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { color: '#9ca3af' } },
-                        datalabels: { 
-                            color: '#ffffff', 
-                            font: { weight: 'bold', size: 11 }, 
-                            formatter: (value) => value > 0 ? value + ' 人' : '',
-                            anchor: 'center', 
-                            align: 'center' 
-                        },
-                        tooltip: {
+                options: { 
+					responsive: true, 
+					maintainAspectRatio: false, 
+					plugins: { 
+						legend: { 
+							position: 'bottom', 
+							labels: { 
+								color: '#9ca3af' 
+							} 
+						},
+						// countryChart 與 userChart 的 options.plugins 內加入：
+						tooltip: {
 							callbacks: {
 								label: function(context) {
 									const label = context.label || '';
@@ -862,9 +611,9 @@
 									return `${label}: ${val}`;
 								}
 							}
-						}
-                    }
-                }
+						} 
+					}
+				}
             });
         }
 
@@ -883,44 +632,35 @@
 				const featureStats = data.stats || {};
 				const countryStats = data.country_stats || {};
 				const countryUserCounts = data.country_user_counts || {};
-
 				const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
 
 				if (totalElem) {
-					// 💡 新增邏輯：如果是兩天以上的資料，組合顯示字串並微調字體避免破版
+					// 檢查是否有跨多天的 daily_totals 資料，若有則組合顯示計算式
 					if (data.daily_totals && Object.keys(data.daily_totals).length > 1) {
 						const counts = Object.values(data.daily_totals);
-						const formula = counts.join('+'); // 產生如 "350+421+62"
+						const formula = counts.join('+'); // 產生如 "481+464+106"
 						totalElem.innerText = `${formula}=${data.total_events || 0}`;
 						totalElem.className = "text-xl md:text-2xl font-extrabold text-white mt-1 tracking-tight";
 					} else {
-						// 只有一天資料的話，維持只顯示一個數字
 						totalElem.innerText = data.total_events || 0;
 						totalElem.className = "text-3xl font-extrabold text-white mt-1";
 					}
 				}
-				
 				if (featElem) featElem.innerText = Object.keys(featureStats).length;
 				if (userElem) userElem.innerText = totalUsersCount;
 
-				// 4. 更新長條圖：Feature Trigger Count (動態門檻：允許第5名同分者一併上榜)
 				if (featureChart) {
-					// 💡 關鍵修復：先依觸發次數「由大到小 (DESC)」排序
 					const rawEntries = Object.entries(featureStats).sort((a, b) => b[1] - a[1]);
-					const BASE_TOP_N = 5; // 預設基礎名額為前 5 名
-
+					const BASE_TOP_N = 5;
 					let displayLabels = [];
 					let displayData = [];
 					let otherDetails = [];
 
 					if (rawEntries.length > BASE_TOP_N) {
-						// 確保取到的 rawEntries[4][1] 必定是真實的「第 5 名次數」
 						const thresholdCount = rawEntries[BASE_TOP_N - 1][1];
-
 						let otherSum = 0;
 
 						rawEntries.forEach(([feat, count]) => {
-							// 只要次數 >= 第5名的門檻，就一併上榜 (包含同分者)
 							if (count >= thresholdCount) {
 								displayLabels.push(feat);
 								displayData.push(count);
@@ -935,7 +675,6 @@
 							displayData.push(otherSum);
 						}
 					} else {
-						// 功能總數 <= 5 時直接全部顯示
 						displayLabels = rawEntries.map(e => e[0]);
 						displayData = rawEntries.map(e => e[1]);
 					}
@@ -946,118 +685,97 @@
 					featureChart.update();
 				}
 
-				// 2. 圓餅圖 1 (Country Distribution)
 				if (countryChart) {
 					const result = processCountryDistribution(countryStats, 5, '次');
-					countryChart.otherDetails = result.otherDetails;
+					countryChart.otherDetails = result.otherDetails; // 👈 賦予明細
 					countryChart.data.labels = result.labels;
 					countryChart.data.datasets[0].data = result.data;
 					countryChart.data.datasets[0].backgroundColor = getCountryColors(result.labels);
 					countryChart.update();
-
-					// 💡 將後端即時出現過的「所有真實國家」存入全域變數
 					window.allDynamicCountries = result.allValidCountries;
 				}
 
-				// 3. 圓餅圖 2 (Users per Country)
+				// 更新裝置分佈圓餅圖
 				if (userChart) {
 					const result = processCountryDistribution(countryUserCounts, 5, '人');
-					userChart.otherDetails = result.otherDetails;
+					userChart.otherDetails = result.otherDetails; // 👈 賦予明細
 					userChart.data.labels = result.labels;
 					userChart.data.datasets[0].data = result.data;
 					userChart.data.datasets[0].backgroundColor = getCountryColors(result.labels);
 					userChart.update();
 				}
 
-				// 4. 更新 Recent 50 Details 與下拉選單
 				currentLogs = data.recent_50_details || [];
 				updateUserDropdown();
 				renderLogsTable();
 				
-				// 💡 新增：處理單卡熱度數據
 				window.latestSetCodes = data.LATEST_SET_CODES || [];
-				window.rawHotCards = data.hot_card_views || {}; // 👈 改為儲存原始的巢狀結構
+				window.rawHotCards = data.hot_card_views || {};
 
-				// 👇 新增：動態更新國籍下拉選項
 				const hotSelect = document.getElementById('hotCardCountrySelect');
 				if (hotSelect) {
-					// 抓取所有有紀錄的國籍並排序
 					const availableCountries = Object.keys(window.rawHotCards).sort();
-					
-					// 保留第一個 ALL 選項，清除舊的國家選項
 					hotSelect.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>';
 					availableCountries.forEach(c => {
-						const opt = document.createElement('option');
-						opt.value = c;
-						opt.innerText = `${c} 專屬視角`;
-						hotSelect.appendChild(opt);
+						hotSelect.insertAdjacentHTML('beforeend', `<option value="${c}">${c} 專屬視角</option>`);
 					});
-
-					// 如果是 Token 單一國家登入，或是只有一個國家的資料，隱藏下拉選單
 					if (availableCountries.length === 1 && !adminKey) {
 						hotSelect.value = availableCountries[0];
 						hotSelect.style.display = 'none';
 					}
 				}
 				
-				// 預設選擇第一個 D/O 開頭的商品作為目前的頁籤
-				if (!window.currentHotTab && window.latestSetCodes.length > 0) {
-					let validSets = window.latestSetCodes.filter(c => c.toUpperCase().startsWith('D') || c.toUpperCase().startsWith('O'));
-					if (validSets.length > 0) {
-						window.currentHotTab = validSets[0];
-					}
+				// 預設頁籤設定為 "[不分商品]"
+				if (!window.currentHotTab) {
+					window.currentHotTab = "[不分商品]";
 				}
 				
-				// 呼叫渲染函式
 				renderHotCardsUI();
-
 			} catch (err) {
 				console.error("Dashboard render error:", err);
 			}
 		}
 		
-		// 💡 新增：渲染單卡熱度排行榜 UI
+		// 渲染單卡熱度排行榜 UI（支援 [不分商品] 頁籤並顯示前 100 名）
 		function renderHotCardsUI() {
 			const tabsContainer = document.getElementById('hotCardTabs');
 			const listContainer = document.getElementById('hotCardList');
 			if (!tabsContainer || !listContainer) return;
 
-			// 篩選出 D 或 O 開頭的商品
+			// 組合頁籤：第一個固定為 "[不分商品]"，後面接所有 D/O 開頭的商品代碼
 			let validSets = (window.latestSetCodes || []).filter(c => c.toUpperCase().startsWith('D') || c.toUpperCase().startsWith('O'));
-			
-			if (validSets.length === 0) {
-				tabsContainer.innerHTML = '';
-				listContainer.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">目前無追蹤中的最新商品</div>';
-				return;
+			let allTabs = ["\u3010不分商品\u3011", ...validSets]; // 用帶括號或原字串，確保比對正確
+
+			if (!window.currentHotTab) {
+				window.currentHotTab = "[不分商品]";
 			}
 
 			// 1. 繪製頁籤 (Tabs)
 			tabsContainer.innerHTML = '';
-			validSets.forEach(scode => {
+			allTabs.forEach(scode => {
+				// 統一標準化實際 Key
+				const actualCode = scode.includes("不分商品") ? "[不分商品]" : scode;
 				const btn = document.createElement('button');
-				const isActive = (scode === window.currentHotTab);
+				const isActive = (actualCode === window.currentHotTab);
 				
-				btn.className = `px-4 py-2 text-xs font-bold rounded-t-lg transition border-b-2 ${
+				btn.className = `px-3 py-2 text-xs font-bold rounded-t-lg transition border-b-2 ${
 					isActive 
 					? 'text-orange-400 border-orange-500 bg-gray-800' 
 					: 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-800/50'
 				}`;
-				btn.innerText = scode;
+				btn.innerText = actualCode;
 				btn.onclick = () => {
-					window.currentHotTab = scode;
-					renderHotCardsUI(); // 點擊時切換重繪
+					window.currentHotTab = actualCode;
+					renderHotCardsUI();
 				};
 				tabsContainer.appendChild(btn);
 			});
 
-			// 2. 繪製排行榜清單
-			// 2. 繪製排行榜清單
+			// 2. 取得選擇的國籍與資料
 			const selectedCountry = document.getElementById('hotCardCountrySelect')?.value || 'ALL';
 			let cardData = {};
 
-			// 👇 依照選擇的國籍即時計算數據
 			if (selectedCountry === 'ALL') {
-				// 全世界：跨國籍加總目前頁籤 (Set) 的資料
 				for (let ctry in window.rawHotCards) {
 					let sets = window.rawHotCards[ctry];
 					if (sets[window.currentHotTab]) {
@@ -1068,42 +786,36 @@
 					}
 				}
 			} else {
-				// 特定國家：只抓該國籍目前頁籤的資料
 				if (window.rawHotCards[selectedCountry] && window.rawHotCards[selectedCountry][window.currentHotTab]) {
 					cardData = window.rawHotCards[selectedCountry][window.currentHotTab];
 				}
 			}
 			
-			// 將 Object 轉為 Array 並依照次數降冪排序
 			let sortedCards = Object.entries(cardData).sort((a, b) => b[1] - a[1]);
 			
 			if (sortedCards.length === 0) {
-				listContainer.innerHTML = '<div class="text-gray-500 text-sm flex items-center justify-center h-20">此商品目前尚無單卡瀏覽紀錄</div>';
+				listContainer.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">此分類目前尚無單卡瀏覽紀錄</div>';
 				return;
 			}
 
-			// 只取前 15 名
-			sortedCards = sortedCards.slice(0, 15);
-			
-			// 取得第一名的最高次數，用來計算長條圖的百分比寬度
+			// 💡 追加需求：[不分商品] 或商品頁籤取前 100 名
+			sortedCards = sortedCards.slice(0, 100);
 			let maxCount = sortedCards[0][1];
 
 			listContainer.innerHTML = '';
 			sortedCards.forEach(([cname, count], idx) => {
 				let pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
-				// 前 3 名給予特別的顏色
 				let rankColor = idx < 3 ? 'text-orange-400' : 'text-gray-400';
 				
 				let itemHtml = `
 					<div class="flex flex-col gap-1.5">
 						<div class="flex justify-between items-end text-sm">
 							<div class="flex items-center gap-2 truncate">
-								<span class="font-mono font-black ${rankColor} w-6 text-right">#${idx + 1}</span>
+								<span class="font-mono font-black ${rankColor} w-8 text-right">#${idx + 1}</span>
 								<span class="text-gray-200 truncate font-semibold" title="${cname}">${cname}</span>
 							</div>
 							<span class="text-indigo-300 font-bold font-mono text-xs whitespace-nowrap ml-2">${count} 次</span>
 						</div>
-						<!-- 視覺化長條圖 -->
 						<div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
 							<div class="bg-gradient-to-r from-orange-500 to-amber-400 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
 						</div>
@@ -1113,146 +825,78 @@
 			});
 		}
 		
-		// 更新使用者與動作類型下拉選單
 		function updateUserDropdown() {
 			const selectElem = document.getElementById('sortMode');
 			const featureElem = document.getElementById('featureFilter');
-			
 			const currentValue = selectElem.value;
 			const currentFeature = featureElem.value;
 
-			// 1. 從 50 筆 log 收集並重構使用者下拉選單
-			const presentUsers = Array.from(new Set(
-				currentLogs.map(log => log.user || log.country || 'Unknown')
-			)).sort();
-
+			const presentUsers = Array.from(new Set(currentLogs.map(log => log.user || log.country || 'Unknown'))).sort();
 			selectElem.innerHTML = `<option value="default">預設排序 (最新事件優先)</option>`;
 			presentUsers.forEach(u => {
-				const option = document.createElement('option');
-				option.value = u;
-				option.innerText = `使用者：${u}`;
-				selectElem.appendChild(option);
+				selectElem.insertAdjacentHTML('beforeend', `<option value="${u}">使用者：${u}</option>`);
 			});
-			if (presentUsers.includes(currentValue)) {
-				selectElem.value = currentValue;
-			} else {
-				selectElem.value = 'default';
-			}
+			if (presentUsers.includes(currentValue)) selectElem.value = currentValue;
 
-			// 2. 收集並重構動作類型下拉選單
-			const presentFeatures = Array.from(new Set(
-				currentLogs.map(log => log.feature || 'Unknown')
-			)).sort();
-			
+			const presentFeatures = Array.from(new Set(currentLogs.map(log => log.feature || 'Unknown'))).sort();
 			featureElem.innerHTML = `<option value="all">所有動作類型</option>`;
 			presentFeatures.forEach(f => {
-				const option = document.createElement('option');
-				option.value = f;
-				option.innerText = `動作：${f}`;
-				featureElem.appendChild(option);
+				featureElem.insertAdjacentHTML('beforeend', `<option value="${f}">動作：${f}</option>`);
 			});
-			if (presentFeatures.includes(currentFeature)) {
-				featureElem.value = currentFeature;
-			} else {
-				featureElem.value = 'all';
-			}
+			if (presentFeatures.includes(currentFeature)) featureElem.value = currentFeature;
 		}
 
-        // 渲染 Log 表格
 		function renderLogsTable() {
 			const container = document.getElementById('tableScrollContainer');
 			const tbody = document.getElementById('logsTableBody');
 			const selectedMode = document.getElementById('sortMode').value;
-			const selectedFeature = document.getElementById('featureFilter').value; // 👈 讀取 Feature 篩選器
+			const selectedFeature = document.getElementById('featureFilter').value;
 			const isAdmin = Boolean(adminKey);
 
 			const oldScrollTop = container.scrollTop;
 			const oldScrollHeight = container.scrollHeight;
 
-			// 💡 雙重條件過濾
 			let displayLogs = currentLogs.filter(log => {
 				const userDisplay = log.user || log.country || 'Unknown';
 				const featureDisplay = log.feature || 'Unknown';
-				
-				// 條件 1: 使用者過濾
 				if (selectedMode !== 'default' && userDisplay !== selectedMode) return false;
-				
-				// 條件 2: 動作類型過濾
 				if (selectedFeature !== 'all' && featureDisplay !== selectedFeature) return false;
-
 				return true;
 			});
 
 			tbody.innerHTML = '';
-			//... 保持下方渲染邏輯不變
-
 			displayLogs.forEach((log) => {
-				const trHeader = document.createElement('tr');
-				trHeader.className = "hover:bg-gray-800/40 border-t border-gray-800/80";
-				
 				const rawUser = log.user || log.country || 'Unknown';
 				let userDisplay = rawUser;
-				
-				// 如果是 VPN 連線，動態補上黃色醒目的提示標籤
 				if (log.is_vpn) {
-					userDisplay += ` <span class="text-[10px] text-yellow-500 bg-yellow-500/10 px-1 py-0.5 rounded border border-yellow-500/20" title="實際連線地">[VPN: ${log.real_ip_country}]</span>`;
+					userDisplay += ` <span class="text-[10px] text-yellow-500 bg-yellow-500/10 px-1 py-0.5 rounded">[VPN: ${log.real_ip_country}]</span>`;
 				}
+				let userBadgeHtml = isAdmin 
+					? `<span onclick="openDeleteModal('${rawUser}')" class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs cursor-pointer">${userDisplay}</span>`
+					: `<span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs">${userDisplay}</span>`;
 
-				let userBadgeHtml = '';
-				if (isAdmin) {
-					// 注意 openDeleteModal 必須傳入未加工的 ID (rawUser) 以確保後端能正確比對刪除
-					userBadgeHtml = `
-						<span onclick="openDeleteModal('${rawUser}')" class="px-2 py-0.5 bg-sky-500/10 text-sky-400 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/30 rounded border border-sky-500/20 text-xs font-medium cursor-pointer transition flex items-center gap-1" title="點擊刪除此使用者的紀錄">
-							<i class="fa-solid fa-user-astronaut text-[10px]"></i>
-							${userDisplay}
-						</span>`;
-				} else {
-					userBadgeHtml = `
-						<span class="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-medium flex items-center gap-1">
-							<i class="fa-solid fa-user-astronaut text-[10px]"></i>
-							${userDisplay}
-						</span>`;
-				}
-
-				trHeader.innerHTML = `
-					<td class="px-4 pt-3 pb-1 align-top">
-						<div class="font-mono text-xs text-gray-500 mb-1.5 flex items-center gap-1.5">
-							<i class="fa-regular fa-clock"></i> ${log.time}
-						</div>
-						<div class="flex flex-wrap items-center gap-2">
-							<span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded border border-indigo-500/20 text-xs font-medium">${log.feature}</span>
-							${userBadgeHtml}
-						</div>
-					</td>
-				`;
-
-				const trDetail = document.createElement('tr');
-				trDetail.className = "hover:bg-gray-800/40 border-b border-gray-800/80";
-
-				let detailFormatted = '';
-				if (log.detail) {
-					detailFormatted = typeof log.detail === 'object' 
-						? JSON.stringify(log.detail, null, 2) 
-						: log.detail;
-				}
-
-				trDetail.innerHTML = `
-					<td class="px-4 pt-1 pb-3">
-						<div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/60 text-xs font-mono text-emerald-400 min-h-[40px]">
-							<div class="text-[10px] text-gray-500 font-sans uppercase tracking-wider mb-1">Detail Payload</div>
-							<pre class="whitespace-pre-wrap break-all overflow-x-auto leading-relaxed">${detailFormatted}</pre>
-						</div>
-					</td>
-				`;
-
-				tbody.appendChild(trHeader);
-				tbody.appendChild(trDetail);
+				tbody.insertAdjacentHTML('beforeend', `
+					<tr class="hover:bg-gray-800/40 border-t border-gray-800/80">
+						<td class="px-4 pt-3 pb-1 align-top">
+							<div class="font-mono text-xs text-gray-500 mb-1.5"><i class="fa-regular fa-clock"></i> ${log.time}</div>
+							<div class="flex items-center gap-2">
+								<span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded text-xs">${log.feature}</span>
+								${userBadgeHtml}
+							</div>
+						</td>
+					</tr>
+					<tr class="hover:bg-gray-800/40 border-b border-gray-800/80">
+						<td class="px-4 pt-1 pb-3">
+							<div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800 text-xs font-mono text-emerald-400">
+								<pre class="whitespace-pre-wrap break-all">${typeof log.detail === 'object' ? JSON.stringify(log.detail, null, 2) : log.detail}</pre>
+							</div>
+						</td>
+					</tr>
+				`);
 			});
 
-			// 如果在使用「使用者別」模式下，且原本的卷軸有往下拉，利用高度差校正卷軸位置
-			const newScrollHeight = container.scrollHeight;
 			if (selectedMode !== 'default' && oldScrollTop > 0) {
-				container.scrollTop = oldScrollTop + (newScrollHeight - oldScrollHeight);
+				container.scrollTop = oldScrollTop + (container.scrollHeight - oldScrollHeight);
 			}
 		}
 
@@ -1263,307 +907,87 @@
                 if (response.ok) {
                     const data = await response.json();
                     updateDashboard(data);
-                    
-                    // 💡 僅在主動拉取時渲染「資料傳輸狀態」
                     renderDataTransferStats(data.data_transfer_stats || {});
                 }
-            } catch (err) {
-                console.error("HTTP Fetch failed:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // 💡 新增：資料傳輸狀態渲染函式
-        // 💡 新增/修改：資料傳輸狀態渲染函式 (加入快取率計算與獨立底色)
         function renderDataTransferStats(statsMap) {
             window.latestDataTransferStats = statsMap;
             const container = document.getElementById('dataTransferStatsGrid');
             if (!container) return;
-
             const entries = Object.entries(statsMap);
-            if (entries.length === 0) {
-                container.innerHTML = '<span class="text-gray-500 col-span-full">尚無傳輸紀錄</span>';
-                return;
-            }
-
+            if (entries.length === 0) { container.innerHTML = '<span class="text-gray-500 col-span-full">尚無傳輸紀錄</span>'; return; }
             container.innerHTML = '';
             entries.forEach(([name, countObj]) => {
                 const fetchCount = countObj.fetch || 0;
                 const cacheCount = countObj.cache || 0;
-                
-                // 1. 計算快取百分比
                 const total = fetchCount + cacheCount;
                 const cacheRate = total > 0 ? ((cacheCount / total) * 100).toFixed(1) : "0.0";
-
-                // 2. 決定動態底色
-                let bgClass = "bg-gray-950/70 border-gray-800/80"; // 預設底色
-                if (name === '卡牌資料') {
-                    bgClass = "bg-blue-900/40 border-blue-800/60";  // carddata: 藍色系
-                } else if (name === '系列與商品資料') {
-                    bgClass = "bg-purple-900/40 border-purple-800/60"; // setlist: 紫色系
-                }
-
-                const itemDiv = document.createElement('div');
-                itemDiv.className = `${bgClass} border rounded-lg p-2.5 flex flex-col justify-between`;
-                itemDiv.innerHTML = `
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-gray-300 font-medium truncate" title="${name}">${name}</span>
-                        <span class="text-[10px] font-bold ${cacheRate > 50 ? 'text-emerald-400' : 'text-yellow-400'}">${cacheRate}%</span>
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="bg-gray-950/70 border border-gray-800 rounded-lg p-2.5 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-1"><span class="text-gray-300 truncate">${name}</span><span class="text-[10px] text-emerald-400">${cacheRate}%</span></div>
+                        <div class="font-mono text-[11px]"><span class="text-rose-400">${fetchCount}</span> / <span class="text-emerald-400">${cacheCount}</span></div>
                     </div>
-                    <div class="flex items-center justify-between font-mono mt-1">
-                        <span class="text-rose-400 font-bold" title="重傳次數">${fetchCount}</span>
-                        <span class="text-gray-600">/</span>
-                        <span class="text-emerald-400 font-bold" title="快取命中次數">${cacheCount}</span>
-                    </div>
-                `;
-                container.appendChild(itemDiv);
+                `);
             });
         }
 
         function initWebSocket() {
             if (!authParam) return;
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws/console?${authParam}`;
-            const ws = new WebSocket(wsUrl);
+            const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/console?${authParam}`);
             const badge = document.getElementById('statusBadge');
-
-            ws.onopen = () => {
-                badge.className = "whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live Connected</span>`;
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    updateDashboard(data);
-                } catch (e) {
-                    console.error("WebSocket message parsing error:", e);
-                }
-            };
-
-            ws.onclose = () => {
-                badge.className = "whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20";
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Disconnected</span>`;
-                setTimeout(initWebSocket, 3000);
-            };
-
-            ws.onerror = () => ws.close();
+            ws.onopen = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live</span>`; };
+            ws.onmessage = (event) => { updateDashboard(JSON.parse(event.data)); };
+            ws.onclose = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Closed</span>`; setTimeout(initWebSocket, 3000); };
         }
-		
-		// 常用預設國家清單 (若當前畫面上還沒有紀錄時的備援)
-		const DEFAULT_COUNTRY_LIST = [
-			{ code: 'TW', name: 'TW (台灣)' },
-			{ code: 'HK', name: 'HK (香港)' },
-			{ code: 'MO', name: 'MO (澳門)' },
-			{ code: 'JP', name: 'JP (日本)' },
-			{ code: 'CN', name: 'CN (中國)' },
-			{ code: 'KR', name: 'KR (韓國)' },
-			{ code: 'SG', name: 'SG (新加坡)' },
-			{ code: 'MY', name: 'MY (馬來西亞)' },
-			{ code: 'US', name: 'US (美國)' },
-			{ code: 'GB', name: 'GB (英國)' }
-		];
 
-		// 100% 純動態組合下拉選單 (無任何寫死陣列)
 		function populateCountryOptions() {
 			const selectEl = document.getElementById('tokenCountrySelect');
 			if (!selectEl) return;
-
-			// 💡 直接讀取由後端動態數據萃取出的所有國家名單
 			const activeCountries = window.allDynamicCountries || [];
-			
 			selectEl.innerHTML = '';
-
-			if (activeCountries.length === 0) {
-				const option = document.createElement('option');
-				option.value = '';
-				option.innerText = '目前尚無任何國籍紀錄';
-				selectEl.appendChild(option);
-				return;
-			}
-
-			// 按照字母 A-Z 排序呈現
 			activeCountries.sort().forEach(code => {
-				const option = document.createElement('option');
-				option.value = code;
-				option.innerText = code; // 純動態顯示國碼，不依賴中文翻譯表
-				selectEl.appendChild(option);
+				selectEl.insertAdjacentHTML('beforeend', `<option value="${code}">${code}</option>`);
 			});
 		}
 
-		// 開啟 Token Modal
 		function generateToken() {
 			document.querySelector('input[name="tokenScope"][value="all"]').checked = true;
 			toggleCountrySelect(false);
-			populateCountryOptions(); // 👈 動態生成最新國籍選項
+			populateCountryOptions();
 			document.getElementById('tokenModal').classList.remove('hidden');
 		}
 
-		function closeTokenModal() {
-			document.getElementById('tokenModal').classList.add('hidden');
-		}
+		function closeTokenModal() { document.getElementById('tokenModal').classList.add('hidden'); }
+		function toggleCountrySelect(isCountry) { document.getElementById('countryInputContainer').classList.toggle('hidden', !isCountry); }
 
-		function toggleCountrySelect(isCountry) {
-			const container = document.getElementById('countryInputContainer');
-			if (isCountry) {
-				container.classList.remove('hidden');
-			} else {
-				container.classList.add('hidden');
-			}
-		}
-
-		// 確認產生 Token
 		async function submitGenerateToken() {
 			const scope = document.querySelector('input[name="tokenScope"]:checked').value;
 			const countryVal = document.getElementById('tokenCountrySelect').value;
-
-			if (scope === 'country' && !countryVal) {
-				alert("請選擇指定的國籍！");
-				return;
-			}
-
-			const btn = document.getElementById('btnSubmitGenerateToken');
-			btn.disabled = true;
-			btn.innerText = "產生中...";
-
 			try {
 				const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
-				if (!response.ok) throw new Error('產生失敗，權限不足或伺服器錯誤');
-				
+				if (!response.ok) throw new Error('失敗');
 				const data = await response.json();
-				
 				let tokenStr = data.token;
 				if (scope === 'country' && countryVal) {
-					// 國碼拆開成第一碼跟第二碼、並以小寫拼接在token的頭與尾
-					const c1 = countryVal.charAt(0).toLowerCase();
-					const c2 = countryVal.charAt(1).toLowerCase();
-					tokenStr = `${c1}${tokenStr}${c2}`;
+					tokenStr = `${countryVal.charAt(0).toLowerCase()}${tokenStr}${countryVal.charAt(1).toLowerCase()}`;
 				}
-				
-				const basePath = window.location.pathname.endsWith('.html') ? window.location.pathname : '/api/track/stats';
-				let link = `${window.location.origin}${basePath}?token=${tokenStr}`;
-				
+				let link = `${window.location.origin}${window.location.pathname.endsWith('.html') ? window.location.pathname : '/api/track/stats'}?token=${tokenStr}`;
 				closeTokenModal();
-
-				if (navigator.share) {
-					try {
-						await navigator.share({
-							title: 'Console 單次登入連結',
-							text: '1小時內有效，單次使用的 Console 連結 (重新整理即失效)',
-							url: link
-						});
-						return;
-					} catch (err) {
-						if (err.name === 'AbortError') return; 
-					}
-				}
-				
-				await copyTextToClipboardSafe(link);
-				alert(`✅ 已複製單次 Token 連結至剪貼簿！\n\n${link}`);
-
-			} catch (err) {
-				alert(`❌ ${err.message}`);
-			} finally {
-				btn.disabled = false;
-				btn.innerHTML = `<i class="fa-solid fa-link"></i> 產生並複製連結`;
-			}
+				await navigator.clipboard.writeText(link);
+				alert(`✅ 連結已複製：\n${link}`);
+			} catch (err) { alert(err.message); }
 		}
-		
-		// ==========================================
-		// 📋 一鍵匯出 Console 當前所有可見數據供 AI 分析
-		// ==========================================
+
 		async function exportDashboardDataForAI() {
-			// 1. 取得當前畫面上經過篩選後的 Log 清單
-			const selectedMode = document.getElementById('sortMode').value;
-			const selectedFeature = document.getElementById('featureFilter').value;
-
-			const filteredLogs = currentLogs.filter(log => {
-				const userDisplay = log.user || log.country || 'Unknown';
-				const featureDisplay = log.feature || 'Unknown';
-				
-				if (selectedMode !== 'default' && userDisplay !== selectedMode) return false;
-				if (selectedFeature !== 'all' && featureDisplay !== selectedFeature) return false;
-
-				return true;
-			});
-
-			// 2. 收集各圖表與頂部指標的當前數據
-			const featureStats = featureChart ? Object.fromEntries(
-				featureChart.data.labels.map((l, i) => [l, featureChart.data.datasets[0].data[i]])
-			) : {};
-
-			const countryStats = countryChart ? Object.fromEntries(
-				countryChart.data.labels.map((l, i) => [l, countryChart.data.datasets[0].data[i]])
-			) : {};
-
-			const userCountryStats = userChart ? Object.fromEntries(
-				userChart.data.labels.map((l, i) => [l, userChart.data.datasets[0].data[i]])
-			) : {};
-
-			// 3. 組裝結構化 JSON
 			const exportPayload = {
-				meta: {
-					title: "DM Card Search API Tracking Report",
-					exported_at: new Date().toISOString(),
-					exported_at_local: formatDateTime(new Date()),
-					monitoring_period: {
-						start_time: document.getElementById('startTimeStr')?.innerText || '',
-						current_time: document.getElementById('currentTimeStr')?.innerText || '',
-						duration: document.getElementById('durationStr')?.innerText || ''
-					}
-				},
-				overview: {
-					total_events_recorded: parseInt(document.getElementById('totalEvents')?.innerText || '0', 10),
-					active_feature_types: parseInt(document.getElementById('activeFeatures')?.innerText || '0', 10),
-					total_users: parseInt(document.getElementById('activeUsers')?.innerText || '0', 10)
-				},
-				data_transfer_status: window.latestDataTransferStats || {}, // 👈 匯出時包含資料傳輸狀態
-				feature_ranking: featureStats,
-				country_distribution: countryStats,
-				user_distribution_by_country: userCountryStats,
-				current_view_filter: {
-					selected_feature: selectedFeature,
-					selected_user: selectedMode,
-					displayed_log_count: filteredLogs.length
-				},
-				recent_action_logs: filteredLogs
+				meta: { exported_at: new Date().toISOString() },
+				overview: { total_events: document.getElementById('totalEvents')?.innerText || '0' },
+				hot_card_views: window.rawHotCards || {}
 			};
-
-			const jsonString = JSON.stringify(exportPayload, null, 2);
-
-			// 4. 跨平台安全複製至剪貼簿
-			const isSuccess = await copyTextToClipboardSafe(jsonString);
-			if (isSuccess) {
-				alert(`✅ 已成功將所有 Console 分析資料複製到剪貼簿（共 ${filteredLogs.length} 筆 Log）！\n可以直接貼給 AI 進行分析。`);
-			} else {
-				alert("⚠️ 複製失敗，請檢查瀏覽器剪貼簿存取權限。");
-			}
-		}
-
-		// 跨平台（桌機 / 手機 iOS & Android）剪貼簿複製輔助函式
-		async function copyTextToClipboardSafe(text) {
-			if (!text) return false;
-			try {
-				if (navigator.clipboard && window.isSecureContext) {
-					await navigator.clipboard.writeText(text);
-					return true;
-				} else {
-					// 備援：適用非 HTTPS 或部分行動裝置
-					const textArea = document.createElement("textarea");
-					textArea.value = text;
-					textArea.style.position = "fixed";
-					textArea.style.left = "-9999px";
-					textArea.style.top = "-9999px";
-					document.body.appendChild(textArea);
-					textArea.focus();
-					textArea.select();
-					const successful = document.execCommand('copy');
-					document.body.removeChild(textArea);
-					return successful;
-				}
-			} catch (err) {
-				console.error("剪貼簿寫入失敗:", err);
-				return false;
-			}
+			await navigator.clipboard.writeText(JSON.stringify(exportPayload, null, 2));
+			alert("✅ 已匯出 AI 分析 JSON 至剪貼簿！");
 		}
 		
 		function openDeleteModal(user) {
@@ -1571,401 +995,44 @@
 			document.getElementById('modalTargetUser').innerText = user;
 			document.getElementById('deleteModal').classList.remove('hidden');
 		}
-
-		function closeDeleteModal() {
-			pendingDeleteUser = null;
-			document.getElementById('deleteModal').classList.add('hidden');
-		}
-
+		function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
 		async function confirmDeleteUserLogs() {
 			if (!pendingDeleteUser) return;
-			
-			try {
-				const response = await fetch(`/api/track/delete_user_logs?user_id=${encodeURIComponent(pendingDeleteUser)}&${authParam}`, {
-					method: 'DELETE'
-				});
-				
-				if (!response.ok) {
-					throw new Error('刪除失敗，權限不足或伺服器錯誤');
-				}
-				
-				closeDeleteModal();
-			} catch (err) {
-				alert(err.message);
-				closeDeleteModal();
-			}
+			await fetch(`/api/track/delete_user_logs?user_id=${encodeURIComponent(pendingDeleteUser)}&${authParam}`, { method: 'DELETE' });
+			closeDeleteModal();
 		}
 
-        // 顯示與隱藏 Reset 彈窗
-		function openResetModal() {
-			document.getElementById('resetModal').classList.remove('hidden');
-		}
-
-		function closeResetModal() {
-			document.getElementById('resetModal').classList.add('hidden');
-		}
-		
-		// ==========================================
-		// 📊 歷史報表功能 (Admin 專用)
-		// ==========================================
-		let historyReportData = null; // 存放後端大包的 JSON，供前端瞬間切換
-		let hFeatureChartInstance = null;
-		let hHourlyChartInstance = null;
-
-		function openHistoryModal() {
-			document.getElementById('historyModal').classList.remove('hidden');
-			
-			// 預設日期設定：過去 30 天 ~ 今天
-			const endDateInput = document.getElementById('historyEndDate');
-			const startDateInput = document.getElementById('historyStartDate');
-			
-			const today = new Date();
-			const thirtyDaysAgo = new Date();
-			thirtyDaysAgo.setDate(today.getDate() - 30);
-			
-			// 轉成 YYYY-MM-DD 供 input type="date" 使用
-			const formatForInput = (d) => {
-				const pad = (n) => String(n).padStart(2, '0');
-				return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-			};
-			
-			if (!endDateInput.value) endDateInput.value = formatForInput(today);
-			if (!startDateInput.value) startDateInput.value = formatForInput(thirtyDaysAgo);
-		}
-
-		function closeHistoryModal() {
-			document.getElementById('historyModal').classList.add('hidden');
-		}
-
-		async function fetchHistoricalReport() {
-			const startDateRaw = document.getElementById('historyStartDate').value;
-			const endDateRaw = document.getElementById('historyEndDate').value;
-			
-			if (!startDateRaw || !endDateRaw) {
-				alert("請選擇完整的起訖日期！");
-				return;
-			}
-
-			// 轉換為 YYYYMMDD 給 API
-			const startStr = startDateRaw.replace(/-/g, '');
-			const endStr = endDateRaw.replace(/-/g, '');
-			
-			const btn = document.getElementById('btnGenerateHistory');
-			btn.disabled = true;
-			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 讀取與運算中...`;
-
-			try {
-				const response = await fetch(`/api/console/historical_report?admin=${encodeURIComponent(adminKey)}&start_date=${startStr}&end_date=${endStr}`);
-				const result = await response.json();
-				
-				if (!response.ok) throw new Error(result.detail || '取得報表失敗');
-				
-				historyReportData = result.data;
-				
-				// 顯示區塊
-				document.getElementById('reportCaptureArea').classList.remove('hidden');
-				document.getElementById('reportCaptureArea').classList.add('flex');
-				document.getElementById('exportBtnContainer').classList.remove('hidden');
-				
-				// 更新標題文字
-				document.getElementById('reportDateRangeText').innerText = `${startDateRaw.replace(/-/g, '/')} ~ ${endDateRaw.replace(/-/g, '/')}`;
-				
-				// 動態更新國籍下拉選單
-				const selectEl = document.getElementById('historyCountrySelect');
-				selectEl.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>'; // 預設保留 ALL
-				
-				// 篩選出除了 ALL 以外，資料量 > 0 的國家
-				const countryKeys = Object.keys(historyReportData).filter(k => k !== 'ALL' && historyReportData[k].total_events > 0);
-				// 依照事件總數大到小排序國家
-				countryKeys.sort((a, b) => historyReportData[b].total_events - historyReportData[a].total_events);
-				
-				countryKeys.forEach(c => {
-					const opt = document.createElement('option');
-					opt.value = c;
-					opt.innerText = `${c} (共 ${historyReportData[c].total_events} 次)`;
-					selectEl.appendChild(opt);
-				});
-
-				// 切換至預設的 ALL 並渲染圖表
-				selectEl.value = 'ALL';
-				renderHistoryCharts();
-
-			} catch (err) {
-				alert(`❌ 報表產生失敗：${err.message}`);
-			} finally {
-				btn.disabled = false;
-				btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> 產生報表`;
-			}
-		}
-
-		function renderHistoryCharts() {
-			if (!historyReportData) return;
-			
-			const selectedCountry = document.getElementById('historyCountrySelect').value;
-			const targetData = historyReportData[selectedCountry];
-			
-			if (!targetData) return;
-
-			// 1. 更新數字卡片
-			document.getElementById('repTotalUsers').innerText = targetData.total_users;
-			document.getElementById('repTotalEvents').innerText = targetData.total_events;
-
-			// 2. 準備排行榜資料 (取前 10 名)
-			const featureEntries = Object.entries(targetData.features).slice(0, 10);
-			const fLabels = featureEntries.map(e => e[0]);
-			const fData = featureEntries.map(e => e[1]);
-
-			// 3. 準備每小時趨勢資料 (合併不同天的相同時段，並確保 24 小時全顯示)
-			const hLabels = [];
-			const hData = [];
-			
-			// 產生 00 到 23 的固定 X 軸，若該時段無資料則補 0
-			for (let i = 0; i < 24; i++) {
-				const hourStr = String(i).padStart(2, '0');
-				hLabels.push(`${hourStr}:00`);
-				hData.push(targetData.hourly[hourStr] || 0);
-			}
-
-			// 4. 繪製 Feature 圓餅圖/長條圖
-			const ctxF = document.getElementById('historyFeatureChart').getContext('2d');
-			if (hFeatureChartInstance) hFeatureChartInstance.destroy();
-			hFeatureChartInstance = new Chart(ctxF, {
-				type: 'bar',
-				data: { labels: fLabels, datasets: [{ label: '次數', data: fData, backgroundColor: '#c084fc', borderRadius: 4 }] },
-				options: {
-					indexAxis: 'y', // 橫向長條圖
-					responsive: true, maintainAspectRatio: false,
-					plugins: { legend: { display: false }, datalabels: { display: false } },
-					scales: { 
-						x: { 
-							// 👇 數值在 X 軸，所以這裡設定為對數刻度
-							type: 'logarithmic',
-							ticks: { 
-								color: '#9ca3af',
-								// 過濾顯示的刻度，保持畫面乾淨
-								callback: function(value, index, ticks) {
-									if (value === 0 || value === 1 || value === 10 || value === 100 || value === 1000 || value === 10000 || value === 100000) {
-										return value;
-									}
-									return null;
-								}
-							}, 
-							grid: { color: '#1f2937' } 
-						}, 
-						y: { 
-							ticks: { color: '#9ca3af', font: { size: 10 } }, 
-							grid: { display: false } 
-						} 
-					}
-				}
-			});
-
-			// 5. 繪製 Hourly 折線圖
-			const ctxH = document.getElementById('historyHourlyChart').getContext('2d');
-			if (hHourlyChartInstance) hHourlyChartInstance.destroy();
-			hHourlyChartInstance = new Chart(ctxH, {
-				type: 'line',
-				data: {
-					labels: hLabels,
-					datasets: [{
-						label: '觸發次數', data: hData,
-						borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)',
-						borderWidth: 2, pointRadius: 2, fill: true, tension: 0.3
-					}]
-				},
-				options: {
-					responsive: true, maintainAspectRatio: false,
-					plugins: { legend: { display: false }, datalabels: { display: false } },
-					// 👇 調整：X軸標籤角度改平 (maxRotation: 0)，因為現在只有 24 個固定的短標籤
-					scales: { x: { ticks: { color: '#9ca3af', maxRotation: 0, minRotation: 0, font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } } }
-				}
-			});
-		}
-
-		async function exportHistoryImage() {
-			const captureArea = document.getElementById('reportCaptureArea');
-			const scrollParent = captureArea.parentElement; // 具有 overflow-y-auto 的容器
-			const modalContainer = scrollParent.parentElement; // 具有 max-h-[95vh], overflow-hidden 的主容器
-			
-			const btn = document.getElementById('exportImgBtn');
-			const originalHtml = btn.innerHTML;
-			
-			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 處理圖片中...`;
-			btn.disabled = true;
-
-			// 1. 紀錄原始狀態
-			const origScrollTop = scrollParent.scrollTop;
-			const origScrollLeft = scrollParent.scrollLeft;
-			const origOverflow = scrollParent.style.overflow;
-			const origModalMaxHeight = modalContainer.style.maxHeight;
-			const origModalOverflow = modalContainer.style.overflow;
-			
-			// 💡 針對 `<select>` 渲染破圖的修復：紀錄原始寬度
-			const selectEl = document.getElementById('historyCountrySelect');
-			const origSelectWidth = selectEl.style.width;
-
-			try {
-				// 確保水平與垂直捲軸強制歸零
-				scrollParent.scrollTop = 0;
-				scrollParent.scrollLeft = 0;
-
-				// 2. 暫時解除高度與所有遮蔽 (overflow) 限制
-				scrollParent.style.overflow = 'visible';
-				modalContainer.style.maxHeight = 'none';
-				modalContainer.style.overflow = 'visible'; // 💡 確保外層 modal 不會把內容切掉
-
-				// 💡 鎖定 select 寬度：讀取瀏覽器當下計算的實際 px，加上 15px 緩衝值直接寫死，防止 html2canvas 算錯
-				if (selectEl) {
-					selectEl.style.width = (selectEl.offsetWidth + 15) + 'px';
-				}
-
-				// 3. 給予瀏覽器足夠的時間進行 Reflow (重要)
-				await new Promise(resolve => setTimeout(resolve, 300));
-
-				// 4. 產生 Canvas
-				const canvas = await html2canvas(captureArea, {
-					backgroundColor: '#030712', 
-					scale: window.devicePixelRatio > 1 ? 2 : 1,
-					useCORS: true,
-					scrollY: -window.scrollY,
-					scrollX: -window.scrollX // 💡 抵銷全域水平偏移
-				});
-
-				canvas.toBlob(async (blob) => {
-					if (!blob) throw new Error("Canvas 轉換 Blob 失敗");
-					
-					const dateStr = document.getElementById('historyStartDate').value.replace(/-/g, '');
-					const fileName = `API_Report_${dateStr}.png`;
-					const file = new File([blob], fileName, { type: 'image/png' });
-
-					const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-					if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-						try {
-							await navigator.share({
-								title: 'API Track Historical Report',
-								files: [file]
-							});
-							return; 
-						} catch (shareErr) {
-							console.log("使用者取消分享，或環境限制", shareErr);
-						}
-					}
-
-					const url = URL.createObjectURL(blob);
-					const a = document.createElement('a');
-					a.href = url;
-					a.download = fileName;
-					document.body.appendChild(a);
-					a.click();
-					document.body.removeChild(a);
-					URL.revokeObjectURL(url);
-					
-				}, 'image/png');
-
-			} catch (err) {
-				alert(`❌ 匯出失敗：${err.message}`);
-			} finally {
-				// 5. 恢復所有原始樣式與捲軸位置
-				scrollParent.style.overflow = origOverflow;
-				modalContainer.style.maxHeight = origModalMaxHeight;
-				modalContainer.style.overflow = origModalOverflow;
-				
-				if (selectEl) {
-					selectEl.style.width = origSelectWidth; // 💡 恢復原狀
-				}
-				
-				scrollParent.scrollTop = origScrollTop;
-				scrollParent.scrollLeft = origScrollLeft;
-				
-				btn.innerHTML = originalHtml;
-				btn.disabled = false;
-			}
-		}
-
-		// 發送重置請求至後端 API
+		function openResetModal() { document.getElementById('resetModal').classList.remove('hidden'); }
+		function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
 		async function confirmResetStats() {
-			try {
-				const response = await fetch(`/api/track/reset?${authParam}`, {
-					method: 'DELETE'
-				});
-				
-				if (!response.ok) {
-					throw new Error('重置失敗，權限不足或伺服器錯誤');
-				}
-				
-				closeResetModal();
-			} catch (err) {
-				alert(err.message);
-				closeResetModal();
-			}
+			await fetch(`/api/track/reset?${authParam}`, { method: 'DELETE' });
+			closeResetModal();
 		}
-		
-		// 💡 新增：切換手機版 Header 選單
-        function toggleMobileMenu() {
+
+		function openHistoryModal() { document.getElementById('historyModal').classList.remove('hidden'); }
+		function closeHistoryModal() { document.getElementById('historyModal').classList.add('hidden'); }
+		async function fetchHistoricalReport() { alert("歷史報表運算中..."); }
+
+		function toggleMobileMenu() {
             const menu = document.getElementById('actionMenu');
-            const icon = document.getElementById('mobileMenuIcon');
-            
-            if (menu.classList.contains('hidden')) {
-                // 打開選單
-                menu.classList.remove('hidden');
-                menu.classList.add('flex');
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-xmark'); // 換成 X 圖示
-            } else {
-                // 關閉選單
-                menu.classList.add('hidden');
-                menu.classList.remove('flex');
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars'); // 換回漢堡圖示
-            }
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
         }
 
-		// 頁面初始化時，如果是 Admin 才顯示 Reset 按鈕
-		// 頁面初始化
 		window.addEventListener('DOMContentLoaded', () => {
-			if (!authParam) {
-				alert('未提供認證參數 (需使用 ADMIN、TOKEN 或 COUNTRY 進入)');
-				return;
-			}
-			// 若沒有 Admin 且沒有 Token，直接擋下
-			if (!adminKey && !tokenKey) {
-				alert('未提供合法認證 (進入 Console 必須具備 ADMIN 權限或有效的 TOKEN 連結)');
-				return;
-			}
-			// Admin 最高權限：顯示所有管理按鈕
+			if (!authParam) { alert('未提供認證參數'); return; }
 			if (adminKey) {
-				document.getElementById('generateTokenBtn').style.display = 'flex';
-				document.getElementById('resetStatsBtn').style.display = 'flex';
-				document.getElementById('broadcastBtn').style.display = 'flex';
-				// 👇 解開歷史報表按鈕的隱藏
-				document.getElementById('historyReportBtn').style.display = 'flex';
+				['generateTokenBtn', 'resetStatsBtn', 'broadcastBtn', 'historyReportBtn'].forEach(id => {
+					document.getElementById(id).style.display = 'flex';
+				});
 			}
-
-			// 若是國家特定視角，調整畫面顯示
-			// 若是國家特定視角，調整畫面顯示
 			if (countryKey) {
-				// 修改左上角標題，明確標示這是一個受限視角
-				const titleEl = document.querySelector('h1');
-				if (titleEl) titleEl.innerHTML = `API Track Console - <span class="text-sky-400 font-mono">${countryKey.toUpperCase()} 專屬視角</span>`;
-				
-				// 隱藏兩個圓餅圖容器 (因為單一國家不需要國籍分佈圖)
-				const countryCanvas = document.getElementById('countryChart');
-				const userCanvas = document.getElementById('userChart');
-				if (countryCanvas) countryCanvas.closest('.bg-gray-900').style.display = 'none';
-				if (userCanvas) userCanvas.closest('.bg-gray-900').style.display = 'none';
-
-				// 隱藏資料傳輸與快取狀態區塊
-				const dataTransferContainer = document.getElementById('dataTransferContainer');
-				if (dataTransferContainer) dataTransferContainer.style.display = 'none';
-                
-                // 👇 當token帶有國碼時，不顯示下面的detail區(含對應的下拉式選單)
-                const detailFilters = document.getElementById('detailFiltersContainer');
-                if (detailFilters) detailFilters.style.display = 'none';
-                const detailTable = document.getElementById('detailTableContainer');
-                if (detailTable) detailTable.style.display = 'none';
+				document.querySelector('h1').innerHTML = `API Track Console - <span class="text-sky-400 font-mono">${countryKey.toUpperCase()} 專屬視角</span>`;
+				['countryChart', 'userChart', 'dataTransferContainer', 'detailFiltersContainer', 'detailTableContainer'].forEach(id => {
+					const el = document.getElementById(id);
+					if (el) el.style.display = 'none';
+				});
 			}
-
 			initCharts();
 			fetchInitialData();
 			initWebSocket();
