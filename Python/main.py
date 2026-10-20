@@ -132,9 +132,66 @@ DATA_NAME_MAP = {
 LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DM26-EX2"]
 
 # 結構設計：
-# 1. 舊架構/商品分類：hot_card_views[國籍][商品代碼][卡名] = 點擊次數
-# 2. 新架構/不分商品：hot_card_views[國籍]["[不分商品]"][卡名] = 點擊次數
-hot_card_views = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+# 新架構：view_records[卡牌名稱][國家] = 瀏覽次數
+view_records = defaultdict(lambda: defaultdict(int))
+
+
+def convert_legacy_hot_cards(legacy_data):
+    """將舊的國家 -> 商品分類 -> 卡名結構轉換成卡名 -> 國家結構。"""
+    converted = defaultdict(lambda: defaultdict(int))
+
+    if not isinstance(legacy_data, dict):
+        return converted
+
+    for country, sets in legacy_data.items():
+        if not isinstance(sets, dict):
+            continue
+
+        # 優先使用「所有商品」，其次相容舊程式的「[不分商品]」。
+        total_cards = sets.get("所有商品")
+        if not isinstance(total_cards, dict) or not total_cards:
+            total_cards = sets.get("[不分商品]")
+
+        # 只有總次數缺漏或為空時，才從商品分類補救。
+        if not isinstance(total_cards, dict) or not total_cards:
+            total_cards = defaultdict(int)
+
+            for set_code, cards in sets.items():
+                if set_code in ("所有商品", "[不分商品]"):
+                    continue
+                if not isinstance(cards, dict):
+                    continue
+
+                for card_name, count in cards.items():
+                    try:
+                        total_cards[card_name] += int(count)
+                    except (TypeError, ValueError):
+                        continue
+
+        for card_name, count in total_cards.items():
+            try:
+                converted[str(card_name)][str(country).upper()] = int(count)
+            except (TypeError, ValueError):
+                continue
+
+    return converted
+
+
+def get_view_records_data(country=None):
+    """取得可安全傳送給 API/WebSocket 或寫入 Firestore 的一般 dict。"""
+    result = {}
+
+    for card_name, countries in view_records.items():
+        if country is not None:
+            code = str(country).upper()
+            if code in countries:
+                result[card_name] = {code: countries[code]}
+        else:
+            result[card_name] = dict(countries)
+
+    return result
+
 
 action_details_log = deque(maxlen=50)
 
@@ -179,7 +236,7 @@ class ConsoleConnectionManager:
             "country_user_counts": get_country_user_counts(),
             "recent_50_details": recent_logs,
             "start_time": last_reset_time,
-            "hot_card_views": hot_card_views,
+            "hot_card_views": get_view_records_data(),
             "LATEST_SET_CODES": LATEST_SET_CODES
         }
 
@@ -193,7 +250,7 @@ class ConsoleConnectionManager:
                     c_users = country_user_counter[c]
                     c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
                     
-                    c_hot_card_views = {c: hot_card_views[c]} if c in hot_card_views else {}
+                    c_hot_card_views = get_view_records_data(c)
                     
                     c_payload = {
                         "total_events": sum(c_stats.values()),
@@ -579,37 +636,57 @@ def load_and_process_caches():
         else:
             last_reset_time = (now - timedelta(days=2)).strftime("%Y-%m-%d 00:00:00")
 
-        # ================= 載入熱門單卡紀錄（支援新舊架構平滑過渡） =================
+        
+        # ================= 載入熱門單卡紀錄 =================
         if db:
             try:
-                hc_doc_ref = db.collection('analytics').document('hot_cards')
-                hc_doc = hc_doc_ref.get()
-                if hc_doc.exists:
-                    hc_data = hc_doc.to_dict().get("data", {})
-                    for ctry, sets in hc_data.items():
-                        for scode, cards in sets.items():
-                            for cname, count in cards.items():
-                                hot_card_views[ctry][scode][cname] = count
-                
-                # 💡 過版後第一次開機：若新架構尚未統計 "[不分商品]"，自動從舊欄位/舊架構計算並回填寫入新欄位
-                # TODO: 【欄位清理提示】當確認新架構穩定運行、且管理者已手動清理舊欄位後，可將此段自動回填與舊欄位相容轉換邏輯刪除。
-                for ctry, sets in hot_card_views.items():
-                    if "[不分商品]" not in sets or not sets["[不分商品]"]:
-                        global_aggregated = defaultdict(int)
-                        for scode, cards in sets.items():
-                            if scode != "[不分商品]":
-                                for cname, count in cards.items():
-                                    global_aggregated[cname] += count
-                        if global_aggregated:
-                            hot_card_views[ctry]["[不分商品]"] = dict(global_aggregated)
-                            # 自動寫回新架構欄位
-                            hc_dict = {}
-                            for tc, tsets in hot_card_views.items():
-                                hc_dict[tc] = {ts: dict(tcval) for ts, tcval in tsets.items()}
-                            hc_doc_ref.set({"data": hc_dict, "updated_at": firestore.SERVER_TIMESTAMP}, merge=True)
+                view_records.clear()
+
+                # 新資料存在時，一律以新資料為準。
+                new_doc_ref = db.collection("analytics").document("view_records")
+                new_doc = new_doc_ref.get()
+
+                if new_doc.exists:
+                    new_data = new_doc.to_dict().get("data", {})
+                    if isinstance(new_data, dict):
+                        for card_name, countries in new_data.items():
+                            if not isinstance(countries, dict):
+                                continue
+                            for country, count in countries.items():
+                                try:
+                                    view_records[str(card_name)][str(country).upper()] = int(count)
+                                except (TypeError, ValueError):
+                                    continue
+
+                    print("✅ 已從 analytics/view_records 載入瀏覽紀錄")
+
+                else:
+                    # 新文件不存在，才讀取舊文件進行一次性遷移。
+                    old_doc_ref = db.collection("analytics").document("hot_cards")
+                    old_doc = old_doc_ref.get()
+
+                    if old_doc.exists:
+                        old_data = old_doc.to_dict().get("data", {})
+                        migrated = convert_legacy_hot_cards(old_data)
+
+                        for card_name, countries in migrated.items():
+                            for country, count in countries.items():
+                                view_records[card_name][country] = count
+
+                        # 寫入新文件，不修改舊的 analytics/hot_cards。
+                        new_doc_ref.set({
+                            "data": get_view_records_data(),
+                            "updated_at": firestore.SERVER_TIMESTAMP
+                        })
+
+                        print("✅ 舊瀏覽紀錄已遷移至 analytics/view_records")
+                    else:
+                        print("ℹ️ 新舊瀏覽紀錄文件皆不存在，從空紀錄開始")
+
             except Exception as e:
-                print(f"載入 Firebase 熱門卡牌紀錄失敗: {e}")
-        # =========================================================================
+                print(f"載入 Firebase 瀏覽紀錄失敗: {e}")
+        # ====================================================
+
 
         carddata_cache = load_json_file("carddata.json")
         carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
@@ -847,34 +924,34 @@ def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
                         return pics
     return ""
 
+
 async def record_debounce_timer(date_str: str):
     await asyncio.sleep(120)
     try:
         def _safe_write_to_firestore():
-            global current_daily_logs, hot_card_views
+            global current_daily_logs
+
             if db:
-                doc_ref = db.collection('daily_records').document(date_str)
+                # 一般操作日誌維持原本的存檔位置。
+                doc_ref = db.collection("daily_records").document(date_str)
                 doc_ref.set({
                     "logs": current_daily_logs,
                     "updated_at": firestore.SERVER_TIMESTAMP
                 }, merge=True)
-                
-                hc_doc_ref = db.collection('analytics').document('hot_cards')
-                hc_dict = {}
-                for ctry, sets in hot_card_views.items():
-                    hc_dict[ctry] = {}
-                    for scode, cards in sets.items():
-                        hc_dict[ctry][scode] = dict(cards)
-                        
-                hc_doc_ref.set({
-                    "data": hc_dict,
+
+                # 瀏覽紀錄只寫入新的文件。
+                view_doc_ref = db.collection("analytics").document("view_records")
+                view_doc_ref.set({
+                    "data": get_view_records_data(),
                     "updated_at": firestore.SERVER_TIMESTAMP
                 }, merge=True)
 
         await asyncio.to_thread(_safe_write_to_firestore)
-        print(f"[Record] 成功同步 {date_str} 日誌與熱門卡牌至 Firebase！")
+        print(f"[Record] 成功同步 {date_str} 日誌與新格式瀏覽紀錄！")
+
     except Exception as e:
         print(f"[Record Debounce Error]: {e}")
+
 
 def trigger_record_sync(date_str: str):
     global record_sync_task
@@ -1489,42 +1566,34 @@ async def track_feature(request: Request):
 async def get_system_config():
     return {"LATEST_SET_CODES": LATEST_SET_CODES}
 
+
 @app.post("/api/track/card_view")
 async def track_card_view(request: Request, payload: CardViewTrackModel):
-    """前端駐留 1.5 秒後觸發，改為記錄所有單卡的瀏覽紀錄，並支援 [不分商品] 與商品代碼分類計數"""
+    """記錄單張卡牌瀏覽次數，依卡名與國家統計。"""
     card_name = payload.card_name.strip()
     if not card_name:
         return {"status": "skipped", "reason": "empty card name"}
-        
+
     client_host = request.client.host if request.client else ""
     request_host = request.headers.get("host", "")
     is_localhost = (
-        client_host in ["127.0.0.1", "::1"] or 
-        "localhost" in request_host or 
-        "127.0.0.1" in request_host
+        client_host in ["127.0.0.1", "::1"]
+        or "localhost" in request_host
+        or "127.0.0.1" in request_host
     )
     if is_localhost:
         return {"status": "skipped", "reason": "localhost environment"}
 
     country = get_client_country(request)
-    
-    # 1. 記錄至 [不分商品] 總計排行榜
-    hot_card_views[country]["[不分商品]"][card_name] += 1
-    
-    # 2. 同時檢查並記錄至對應的發售商品分類 (維持原本 LATEST_SET_CODES 且開頭為 O/D 的商品清單)
-    for set_code, set_obj in setlist_cache.items():
-        upper_code = str(set_code).strip().upper()
-        if set_code in LATEST_SET_CODES and (upper_code.startswith('D') or upper_code.startswith('O')):
-            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
-            for item in card_list:
-                item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
-                if item_name == card_name:
-                    hot_card_views[country][set_code][card_name] += 1
-                    
+
+    # 新結構只記錄卡名與國家，不再按商品重複累加。
+    view_records[card_name][country] += 1
+
     now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
     trigger_record_sync(now_date_str)
-        
+
     return {"status": "success"}
+
 
 @app.get("/console.html")
 @app.get("/api/track/stats")
@@ -1598,7 +1667,7 @@ async def get_feature_stats(
             "recent_50_details": recent_logs,
             "data_transfer_stats": formatted_data_stats,
             "start_time": last_reset_time,
-            "hot_card_views": hot_card_views,
+            "hot_card_views": get_view_records_data(),
             "LATEST_SET_CODES": LATEST_SET_CODES
         }
     else:
@@ -1606,7 +1675,7 @@ async def get_feature_stats(
         c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
         c_users = country_user_counter[c]
         c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
-        c_hot_card_views = {c: hot_card_views[c]} if c in hot_card_views else {}
+        c_hot_card_views = get_view_records_data(c)
         result = {
             "total_events": sum(c_stats.values()),
             "daily_totals": dict(sorted(country_daily_total_counter[c].items())),
@@ -2015,7 +2084,7 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     user_counter.clear()
     action_details_log.clear()
     data_transfer_stats.clear()
-    hot_card_views.clear()
+    view_records.clear()
     daily_total_counter.clear()
     country_daily_total_counter.clear()
     last_reset_time = datetime.now(TZ_UTC8).isoformat()

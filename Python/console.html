@@ -617,7 +617,7 @@
             });
         }
 
-        function updateDashboard(data) {
+        async function updateDashboard(data) {
 			try {
 				if (data.start_time) {
 					startTimeObj = new Date(data.start_time);
@@ -709,12 +709,42 @@
 				updateUserDropdown();
 				renderLogsTable();
 				
+				window.rawSetlist = {};
 				window.latestSetCodes = data.LATEST_SET_CODES || [];
+				await Promise.all(
+					window.latestSetCodes.map(async (setCode) => {
+						try {
+							const response = await fetch(
+								`/api/pop/${encodeURIComponent(setCode)}`
+							);
+
+							if (!response.ok) return;
+
+							const data = await response.json();
+							window.rawSetlist[setCode] = data.set_info || {};
+							window.rawSetlist[setCode].setcardlist =
+								data.set_info?.setcardlist ||
+								data.set_info?.cardlist ||
+								data.cards?.map(card => ({ name: card.name })) ||
+								[];
+						} catch (error) {
+							console.error(`載入商品 ${setCode} 失敗：`, error);
+						}
+					})
+				);
 				window.rawHotCards = data.hot_card_views || {};
 
 				const hotSelect = document.getElementById('hotCardCountrySelect');
 				if (hotSelect) {
-					const availableCountries = Object.keys(window.rawHotCards).sort();
+					const availableCountries = [
+						...new Set(
+							Object.values(window.rawHotCards).flatMap(records =>
+								records && typeof records === 'object'
+									? Object.keys(records)
+									: []
+							)
+						)
+					].sort();
 					hotSelect.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>';
 					availableCountries.forEach(c => {
 						hotSelect.insertAdjacentHTML('beforeend', `<option value="${c}">${c} 專屬視角</option>`);
@@ -772,22 +802,34 @@
 			});
 
 			// 2. 取得選擇的國籍與資料
-			const selectedCountry = document.getElementById('hotCardCountrySelect')?.value || 'ALL';
-			let cardData = {};
+			const selectedCountry =
+				document.getElementById('hotCardCountrySelect')?.value || 'ALL';
 
-			if (selectedCountry === 'ALL') {
-				for (let ctry in window.rawHotCards) {
-					let sets = window.rawHotCards[ctry];
-					if (sets[window.currentHotTab]) {
-						let cards = sets[window.currentHotTab];
-						for (let cname in cards) {
-							cardData[cname] = (cardData[cname] || 0) + cards[cname];
-						}
-					}
-				}
-			} else {
-				if (window.rawHotCards[selectedCountry] && window.rawHotCards[selectedCountry][window.currentHotTab]) {
-					cardData = window.rawHotCards[selectedCountry][window.currentHotTab];
+			const cardData = {};
+			const selectedSet = window.currentHotTab;
+
+			const setCardList =
+				selectedSet === '[不分商品]'
+					? null
+					: window.rawSetlist[selectedSet]?.setcardlist || [];
+
+			const allowedNames = setCardList
+				? new Set(
+					setCardList
+						.map(card => typeof card === 'string' ? card : card?.name)
+						.filter(Boolean)
+				  )
+				: null;
+
+			for (const [cardName, countryRecords] of Object.entries(window.rawHotCards)) {
+				if (allowedNames && !allowedNames.has(cardName)) continue;
+
+				if (selectedCountry === 'ALL') {
+					cardData[cardName] = Object.values(countryRecords || {})
+						.reduce((sum, count) => sum + (Number(count) || 0), 0);
+				} else {
+					cardData[cardName] =
+						Number(countryRecords?.[selectedCountry]) || 0;
 				}
 			}
 			
