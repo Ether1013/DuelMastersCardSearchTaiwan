@@ -135,6 +135,9 @@ LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DM26-EX2"]
 
 # 新架構：view_records[卡牌名稱][國家] = 瀏覽次數
 view_records = defaultdict(lambda: defaultdict(int))
+# 最新卡牌瀏覽紀錄：只存在伺服器記憶體，不寫入 Firebase
+RECENT_CARD_VIEW_LIMIT = 20  # 日後要改成 30、50，只需修改這個數字
+recent_card_views = []
 
 
 def convert_legacy_hot_cards(legacy_data):
@@ -237,6 +240,7 @@ class ConsoleConnectionManager:
             "recent_50_details": recent_logs,
             "start_time": last_reset_time,
             "hot_card_views": get_view_records_data(),
+            "latest_20_card_views": list(recent_card_views),
             "LATEST_SET_CODES": LATEST_SET_CODES
         }
 
@@ -251,6 +255,10 @@ class ConsoleConnectionManager:
                     c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
                     
                     c_hot_card_views = get_view_records_data(c)
+                    c_latest_card_views = [
+                        item for item in recent_card_views
+                        if item.get("country") == c
+                    ]
                     
                     c_payload = {
                         "total_events": sum(c_stats.values()),
@@ -260,11 +268,36 @@ class ConsoleConnectionManager:
                         "recent_50_details": c_logs,
                         "start_time": last_reset_time,
                         "hot_card_views": c_hot_card_views,
+                        "latest_20_card_views": c_latest_card_views,
                         "LATEST_SET_CODES": LATEST_SET_CODES
                     }
                     await connection.send_json(c_payload)
             except:
                 self.disconnect(connection)
+                
+    
+    async def broadcast_recent_card_views(self):
+        """只推送最新卡牌瀏覽紀錄，不重載其他統計資料。"""
+        for connection, info in list(self.active_connections.items()):
+            try:
+                if info["auth_level"] in ["admin", "token"]:
+                    records = list(recent_card_views)
+                elif info["auth_level"] == "country":
+                    country = info["country"]
+                    records = [
+                        item for item in recent_card_views
+                        if item.get("country") == country
+                    ]
+                else:
+                    continue
+
+                await connection.send_json({
+                    "type": "RECENT_CARD_VIEWS_UPDATE",
+                    "latest_20_card_views": records
+                })
+            except Exception:
+                self.disconnect(connection)
+
 
 console_manager = ConsoleConnectionManager()
 
@@ -1589,6 +1622,19 @@ async def track_card_view(request: Request, payload: CardViewTrackModel):
     # 新結構只記錄卡名與國家，不再按商品重複累加。
     view_records[card_name][country] += 1
 
+    # 新增功能：記錄最新卡牌瀏覽紀錄
+    recent_card_views.insert(0, {
+        "card_name": card_name,
+        "country": country,
+        "time": datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    # 只保留指定筆數，超出部分刪除最舊的紀錄
+    del recent_card_views[RECENT_CARD_VIEW_LIMIT:]
+
+    # 如果有 Console 正在連線，就即時推送更新
+    await console_manager.broadcast_recent_card_views()
+
     now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
     trigger_record_sync(now_date_str)
 
@@ -1668,6 +1714,7 @@ async def get_feature_stats(
             "data_transfer_stats": formatted_data_stats,
             "start_time": last_reset_time,
             "hot_card_views": get_view_records_data(),
+            "latest_20_card_views": list(recent_card_views),
             "LATEST_SET_CODES": LATEST_SET_CODES
         }
     else:
@@ -1686,6 +1733,10 @@ async def get_feature_stats(
             "data_transfer_stats": formatted_data_stats,
             "start_time": last_reset_time,
             "hot_card_views": c_hot_card_views,
+            "latest_20_card_views": [
+                item for item in recent_card_views
+                if item.get("country") == c
+            ],
             "LATEST_SET_CODES": LATEST_SET_CODES
         }
 

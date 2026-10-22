@@ -167,6 +167,27 @@
             </div>
         </div>
 		
+		<!-- 最新卡牌瀏覽紀錄 -->
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+			<div class="flex justify-between items-center mb-3">
+				<h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+					<i class="fa-solid fa-clock-rotate-left text-cyan-400"></i>
+					最新卡牌瀏覽紀錄
+				</h2>
+				<span class="text-xs text-gray-500">
+					最新 <span id="recentCardViewCount">0</span> 筆
+				</span>
+			</div>
+
+			<div id="recentCardViewList"
+				 class="space-y-2 max-h-[320px] overflow-y-auto custom-scrollbar">
+				<div class="text-gray-500 text-sm text-center py-4">
+					開機後尚無瀏覽紀錄
+				</div>
+			</div>
+		</div>
+
+		
 		<div id="detailFiltersContainer" class="flex justify-between items-center mb-4 gap-3">
 			<div class="flex flex-col gap-2">
 				<select id="featureFilter" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
@@ -616,6 +637,61 @@
 				}
             });
         }
+		
+		function renderRecentCardViews(records) {
+			const container = document.getElementById('recentCardViewList');
+			const countElement = document.getElementById('recentCardViewCount');
+
+			if (!container || !countElement) return;
+
+			const items = Array.isArray(records) ? records : [];
+
+			countElement.textContent = items.length;
+			container.replaceChildren();
+
+			if (items.length === 0) {
+				const empty = document.createElement('div');
+				empty.className = 'text-gray-500 text-sm text-center py-4';
+				empty.textContent = '尚無瀏覽紀錄';
+				container.appendChild(empty);
+				return;
+			}
+
+			items.forEach((item, index) => {
+				const row = document.createElement('div');
+				row.className =
+					'flex items-center justify-between gap-3 bg-gray-950/70 ' +
+					'border border-gray-800 rounded-lg px-3 py-2';
+
+				const left = document.createElement('div');
+				left.className = 'flex items-center gap-3 min-w-0';
+
+				const number = document.createElement('span');
+				number.className = 'text-xs text-cyan-400 font-mono';
+				number.textContent = String(index + 1).padStart(2, '0');
+
+				const name = document.createElement('span');
+				name.className = 'text-sm text-gray-200 break-words';
+				name.textContent = item.card_name || '未知卡牌';
+
+				const right = document.createElement('div');
+				right.className =
+					'text-right text-[10px] text-gray-500 shrink-0';
+
+				const country = document.createElement('div');
+				country.textContent = item.country || 'Unknown';
+
+				const time = document.createElement('div');
+				time.className = 'font-mono';
+				time.textContent = item.time || '';
+
+				left.append(number, name);
+				right.append(country, time);
+				row.append(left, right);
+				container.appendChild(row);
+			});
+		}
+
 
         async function updateDashboard(data) {
 			try {
@@ -632,6 +708,8 @@
 				const featureStats = data.stats || {};
 				const countryStats = data.country_stats || {};
 				const countryUserCounts = data.country_user_counts || {};
+				// 更新最新卡牌瀏覽紀錄
+				renderRecentCardViews(data.latest_20_card_views || []);
 				const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
 
 				if (totalElem) {
@@ -981,7 +1059,16 @@
             const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/console?${authParam}`);
             const badge = document.getElementById('statusBadge');
             ws.onopen = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live</span>`; };
-            ws.onmessage = (event) => { updateDashboard(JSON.parse(event.data)); };
+            ws.onmessage = (event) => {
+				const data = JSON.parse(event.data);
+
+				if (data.type === 'RECENT_CARD_VIEWS_UPDATE') {
+					renderRecentCardViews(data.latest_20_card_views || []);
+					return;
+				}
+
+				updateDashboard(data);
+			};
             ws.onclose = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Closed</span>`; setTimeout(initWebSocket, 3000); };
         }
 
