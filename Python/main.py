@@ -129,7 +129,7 @@ DATA_NAME_MAP = {
     "patch_setlist": "商品補丁資料"
 }
 
-LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DM26-EX2"]
+LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DMRP-03", "DMRP-02"]
 
 # 結構設計：
 
