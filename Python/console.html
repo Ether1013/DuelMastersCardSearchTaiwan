@@ -715,7 +715,7 @@
 				if (totalElem) {
 					// 檢查是否有跨多天的 daily_totals 資料，若有則組合顯示計算式
 					if (data.daily_totals && Object.keys(data.daily_totals).length > 1) {
-						const counts = Object.values(data.daily_totals);
+						const counts = Object.values(data.daily_totals).slice(-3);
 						const formula = counts.join('+'); // 產生如 "481+464+106"
 						totalElem.innerText = `${formula}=${data.total_events || 0}`;
 						totalElem.className = "text-xl md:text-2xl font-extrabold text-white mt-1 tracking-tight";
