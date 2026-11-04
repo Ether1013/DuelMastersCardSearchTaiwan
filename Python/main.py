@@ -642,17 +642,23 @@ def load_and_process_caches():
         daily_total_counter.clear()
         country_daily_total_counter.clear()
         action_details_log.clear()
+        
+        valid_date_keys = set(dates_to_load)
 
         for entry in all_records:
+
+            time_str = entry.get("time", "")
+            date_key = time_str[:10].replace("-", "") if time_str else current_daily_date
+            
+            if date_key not in valid_date_keys:
+                continue
+
             feat = entry.get("feature")
             u = entry.get("user", "Unknown")
             c = str(entry.get("country", "Unknown")).upper()
             if c == "UNKNOWN" and u != "Unknown" and "-" in u:
                 c = u.split("-")[0].upper()
                 
-            time_str = entry.get("time", "")
-            date_key = time_str[:10].replace("-", "") if time_str else current_daily_date
-
             feature_counter[feat] += 1
             country_counter[c] += 1
             user_counter[u] += 1
