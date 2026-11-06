@@ -1010,6 +1010,9 @@ async def serve_index(): return FileResponse("rank.html")
 @app.get("/quizzes/ColorDrill")
 async def serve_index(): return FileResponse("colorStudy.html")
 
+@app.get("/quizzes/AFT2")
+async def serve_index(): return FileResponse("colorStudyAFT2.html")
+
 @app.get("/pop.html")
 async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList: Optional[str] = None, title: Optional[str] = None):
     html_path = BASE_DIR / "pop.html"
