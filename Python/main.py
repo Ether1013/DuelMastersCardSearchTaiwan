@@ -129,7 +129,7 @@ DATA_NAME_MAP = {
     "patch_setlist": "商品補丁資料"
 }
 
-LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DMRP-04裁", "DMRP-04魔"]
+LATEST_SET_CODES = ["DM26-EX5", "DM26-EX4", "DM26-RP3", "DM26-EX3"]
 
 # 結構設計：
 
@@ -139,6 +139,28 @@ view_records = defaultdict(lambda: defaultdict(int))
 RECENT_CARD_VIEW_LIMIT = 20  # 日後要改成 30、50，只需修改這個數字
 recent_card_views = []
 
+def get_recent_three_day_totals(country=None):
+    now = datetime.now(TZ_UTC8)
+
+    date_keys = [
+        (now - timedelta(days=2)).strftime("%Y%m%d"),
+        (now - timedelta(days=1)).strftime("%Y%m%d"),
+        now.strftime("%Y%m%d"),
+    ]
+
+    source = (
+        daily_total_counter
+        if country is None
+        else country_daily_total_counter[country]
+    )
+
+    # 只取指定三天；沒有紀錄的日期顯示 0
+    daily_totals = {
+        date_key: source.get(date_key, 0)
+        for date_key in date_keys
+    }
+
+    return daily_totals, sum(daily_totals.values())
 
 def convert_legacy_hot_cards(legacy_data):
     """將舊的國家 -> 商品分類 -> 卡名結構轉換成卡名 -> 國家結構。"""
@@ -227,13 +249,15 @@ class ConsoleConnectionManager:
             del self.active_connections[websocket]
 
     async def broadcast(self):
+        
+        daily_totals, total_events = get_recent_three_day_totals()
         sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
         sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
         recent_logs = get_clean_recent_logs()
         
         admin_payload = {
-            "total_events": sum(sorted_stats.values()),
-            "daily_totals": dict(sorted(daily_total_counter.items())),
+            "total_events": total_events,
+            "daily_totals": daily_totals,
             "stats": sorted_stats,
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
@@ -250,6 +274,7 @@ class ConsoleConnectionManager:
                     await connection.send_json(admin_payload)
                 elif info["auth_level"] == "country":
                     c = info["country"]
+                    c_daily_totals, c_total_events = get_recent_three_day_totals(c)
                     c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
                     c_users = country_user_counter[c]
                     c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
@@ -261,7 +286,8 @@ class ConsoleConnectionManager:
                     ]
                     
                     c_payload = {
-                        "total_events": sum(c_stats.values()),
+                        "total_events": c_total_events,
+                        "daily_totals": c_daily_totals,
                         "stats": c_stats,
                         "country_stats": {c: country_counter[c]}, 
                         "country_user_counts": {c: len(c_users)},
@@ -1591,15 +1617,8 @@ async def track_feature(request: Request):
             sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
             sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
 
-            await console_manager.broadcast({
-                "total_events": sum(sorted_stats.values()),
-                "daily_totals": dict(sorted(daily_total_counter.items())),
-                "stats": sorted_stats,
-                "country_stats": sorted_country_stats,
-                "country_user_counts": get_country_user_counts(),
-                "recent_50_details": get_clean_recent_logs(),
-                "start_time": last_reset_time
-            })
+            await console_manager.broadcast()
+            
     except Exception as e:
         pass
     return {"status": "ok"}
@@ -1707,6 +1726,7 @@ async def get_feature_stats(
         else:
             raise HTTPException(status_code=500, detail="找不到 console.html 檔案")
 
+    daily_totals, total_events = get_recent_three_day_totals()
     formatted_data_stats = { DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items() }
     recent_logs = get_clean_recent_logs()
 
@@ -1714,8 +1734,8 @@ async def get_feature_stats(
         sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
         sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
         result = {
-            "total_events": sum(sorted_stats.values()),
-            "daily_totals": dict(sorted(daily_total_counter.items())),
+            "total_events": total_events,
+            "daily_totals": daily_totals,
             "stats": sorted_stats,
             "country_stats": sorted_country_stats,
             "country_user_counts": get_country_user_counts(),
@@ -1728,13 +1748,14 @@ async def get_feature_stats(
         }
     else:
         c = country.upper()
+        c_daily_totals, c_total_events = get_recent_three_day_totals(c)
         c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
         c_users = country_user_counter[c]
         c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
         c_hot_card_views = get_view_records_data(c)
         result = {
-            "total_events": sum(c_stats.values()),
-            "daily_totals": dict(sorted(country_daily_total_counter[c].items())),
+            "total_events": c_total_events,
+            "daily_totals": c_daily_totals,
             "stats": c_stats,
             "country_stats": {c: country_counter[c]}, 
             "country_user_counts": {c: len(c_users)},
