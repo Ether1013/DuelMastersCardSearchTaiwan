@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Stats Realtime Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Chart.js DataLabels Plugin CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <header class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-50">
+		<div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+			<div class="flex flex-col gap-1 w-full sm:w-auto">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
+						<i class="fa-solid fa-chart-line text-indigo-500 text-2xl"></i>
+						<h1 class="text-lg sm:text-xl font-bold tracking-tight">API Track Monitoring Console</h1>
+					</div>
+					<button onclick="toggleMobileMenu()" class="sm:hidden text-gray-400 hover:text-white p-1 outline-none">
+						<i id="mobileMenuIcon" class="fa-solid fa-bars text-xl"></i>
+					</button>
+				</div>
+				<div class="text-xs text-gray-400 font-mono flex flex-wrap items-center gap-1 mt-0.5">
+					<i class="fa-regular fa-clock text-indigo-400"></i>
+					<span>統計區間：</span>
+					<span id="startTimeStr" class="text-gray-200">----/--/-- --:--:--</span>
+					<span>~</span>
+					<span id="currentTimeStr" class="text-gray-200">----/--/-- --:--:--</span>
+					<span class="text-indigo-400 font-semibold ml-1">（共計 <span id="durationStr">0 小時 0 分</span>）</span>
+				</div>
+			</div>
+            <div id="actionMenu" class="hidden sm:flex flex-col gap-2 w-full sm:w-auto items-end mt-2 pt-3 border-t border-gray-800 sm:mt-0 sm:pt-0 sm:border-0">
+                <div class="w-full flex justify-start sm:justify-end">
+                    <div id="statusBadge" class="whitespace-nowrap flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                        <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                        <span>Connecting...</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+                    <button onclick="fetchInitialData()" class="whitespace-nowrap px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition border border-gray-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
+                    <button id="resetStatsBtn" onclick="openResetModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white text-xs rounded-lg transition border border-rose-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-trash-arrow-up"></i> Reset
+                    </button>
+                    <button id="generateTokenBtn" onclick="generateToken()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition border border-indigo-500 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-key"></i> 產生Token
+                    </button>
+					<button onclick="exportDashboardDataForAI()" class="whitespace-nowrap px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white text-xs rounded-lg transition border border-purple-500/30 flex items-center gap-1.5 shadow-lg">
+						<i class="fa-solid fa-file-export"></i> 匯出AI分析JSON
+					</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+                    <button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-bullhorn"></i> 廣播
+                    </button>
+                    <button id="historyReportBtn" onclick="openHistoryModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white text-xs rounded-lg transition border border-cyan-500/30 flex items-center gap-1.5 shadow-lg">
+                        <i class="fa-solid fa-chart-pie"></i> 歷史報表
+                    </button>            
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">操作紀錄</p>
+                    <h3 id="totalEvents" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-500/10 rounded-lg flex items-center justify-center text-indigo-400">
+                    <i class="fa-solid fa-bolt text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">操作種類</p>
+                    <h3 id="activeFeatures" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-cubes text-xl"></i>
+                </div>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
+                <div>
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">總使用裝置數</p>
+                    <h3 id="activeUsers" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center text-sky-400">
+                    <i class="fa-solid fa-globe text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="dataTransferContainer" class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-server text-emerald-400"></i>資料傳輸狀態(重傳/快取)
+                </h2>
+                <span class="text-xs text-gray-500 font-mono">點擊更新</span>
+            </div>
+            <div id="dataTransferStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-xs">
+                <div class="text-gray-500 col-span-full">載入中...</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
+                </h2>
+                <div class="h-64">
+                    <canvas id="featureChart"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-earth-americas text-sky-400"></i>操作分布(國家別)
+                </h2>
+                <div class="h-64 flex justify-center items-center">
+                    <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+                <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-purple-400"></i>裝置分布(國家別)
+                </h2>
+                <div class="h-64 flex justify-center items-center">
+                    <canvas id="userChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+		<!-- 單卡熱度排行榜 (包含 [不分商品] 頁籤與 Top 100 支援) -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+                    <i class="fa-solid fa-fire text-orange-500"></i> 單卡熱度排行榜
+                </h2>
+                <select id="hotCardCountrySelect" onchange="renderHotCardsUI()" class="bg-gray-800 text-xs font-bold text-orange-400 border border-gray-700 rounded-lg px-3 py-1 outline-none cursor-pointer">
+                    <option value="ALL">🌍 全世界 (ALL)</option>
+                </select>
+            </div>
+            <!-- 動態頁籤 (包含 [不分商品] 以及各商品代碼) -->
+            <div id="hotCardTabs" class="flex flex-wrap gap-1 border-b border-gray-800 mb-4"></div>
+            
+            <div id="hotCardList" class="space-y-4 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
+                <div class="text-gray-500 text-sm text-center py-4">資料載入中...</div>
+            </div>
+        </div>
+		
+		<!-- 最新卡牌瀏覽紀錄 -->
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+			<div class="flex justify-between items-center mb-3">
+				<h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+					<i class="fa-solid fa-clock-rotate-left text-cyan-400"></i>
+					最新卡牌瀏覽紀錄
+				</h2>
+				<span class="text-xs text-gray-500">
+					最新 <span id="recentCardViewCount">0</span> 筆
+				</span>
+			</div>
+
+			<div id="recentCardViewList"
+				 class="space-y-2 max-h-[320px] overflow-y-auto custom-scrollbar">
+				<div class="text-gray-500 text-sm text-center py-4">
+					開機後尚無瀏覽紀錄
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="detailFiltersContainer" class="flex justify-between items-center mb-4 gap-3">
+			<div class="flex flex-col gap-2">
+				<select id="featureFilter" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
+					<option value="all">所有動作類型</option>
+				</select>
+				<select id="sortMode" onchange="changeSortMode()" class="bg-gray-800 text-xs text-gray-300 border border-gray-700 rounded-lg px-2 py-1 outline-none cursor-pointer">
+					<option value="default">預設排序 (最新事件優先)</option>
+				</select>
+			</div>
+			<div class="flex items-center">
+				<span class="text-xs text-gray-500 whitespace-nowrap">Auto-refresh via WS</span>
+			</div>
+		</div>
+		
+		<div id="detailTableContainer" class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+			<div id="tableScrollContainer" class="max-h-[600px] overflow-y-auto custom-scrollbar">
+				<table class="w-full text-left border-collapse">
+					<tbody id="logsTableBody" class="divide-y divide-gray-800/80"></tbody>
+				</table>
+			</div>
+		</div>
+    </main>
+	
+	<div id="resetModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+			<div class="flex items-center gap-3 text-rose-500">
+				<i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+				<h3 class="text-lg font-bold text-gray-100">重置所有統計數據</h3>
+			</div>
+			<p class="text-sm text-gray-300">確定要歸零並清空所有統計數據嗎？</p>
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeResetModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">否 (取消)</button>
+				<button onclick="confirmResetStats()" class="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs">是 (確定重置)</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="tokenModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+			<div class="flex items-center justify-between border-b border-gray-800 pb-3">
+				<div class="flex items-center gap-2 text-indigo-400">
+					<i class="fa-solid fa-key text-xl"></i>
+					<h3 class="text-base font-bold text-gray-100">產生一次性 Console 連結</h3>
+				</div>
+				<button onclick="closeTokenModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+			</div>
+			<div class="space-y-3">
+				<div>
+					<label class="text-xs font-semibold text-gray-300 block mb-1">存取權限範圍：</label>
+					<div class="flex gap-4 text-xs">
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="tokenScope" value="all" checked onchange="toggleCountrySelect(false)"> 全域
+						</label>
+						<label class="flex items-center gap-1.5 cursor-pointer">
+							<input type="radio" name="tokenScope" value="country" onchange="toggleCountrySelect(true)"> 指定國籍
+						</label>
+					</div>
+				</div>
+				<div id="countryInputContainer" class="hidden space-y-1">
+					<label class="text-xs font-semibold text-gray-400 block">選擇指定國籍：</label>
+					<select id="tokenCountrySelect" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-xs text-white"></select>
+				</div>
+			</div>
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeTokenModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">取消</button>
+				<button id="btnSubmitGenerateToken" onclick="submitGenerateToken()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs flex items-center gap-1.5">產生並複製</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="broadcastModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+		<div class="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+			<div class="flex items-center justify-between border-b border-gray-800 pb-3">
+				<div class="flex items-center gap-2 text-emerald-400">
+					<i class="fa-solid fa-bullhorn text-xl"></i>
+					<h3 class="text-base font-bold text-gray-100">全站即時訊息廣播</h3>
+				</div>
+				<button onclick="closeBroadcastModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+			</div>
+			<div class="space-y-3">
+				<div>
+					<label class="text-xs font-semibold text-gray-300 block mb-1">廣播對象：</label>
+					<div class="flex gap-4 text-xs">
+						<label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="bcTargetType" value="all" checked onchange="handleTargetTypeChange()"> 所有人</label>
+						<label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="bcTargetType" value="country" onchange="handleTargetTypeChange()"> 指定國家</label>
+						<label class="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="bcTargetType" value="user" onchange="handleTargetTypeChange()"> 指定使用者</label>
+					</div>
+				</div>
+				<div id="bcTargetSelectionContainer" class="hidden bg-gray-950 p-3 rounded-lg border border-gray-800 max-h-32 overflow-y-auto">
+					<div id="bcTargetList" class="flex flex-wrap gap-2 text-xs"></div>
+				</div>
+				<div>
+					<label class="text-xs font-semibold text-gray-300 block mb-1">訊息內容：</label>
+					<textarea id="bcMessageInput" rows="3" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-base text-gray-200 outline-none" placeholder="請輸入訊息..."></textarea>
+				</div>
+			</div>
+			<div class="flex justify-end gap-3 pt-2">
+				<button onclick="closeBroadcastModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-xs">取消</button>
+				<button id="btnSubmitBroadcast" onclick="submitBroadcastModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs">確認送出</button>
+			</div>
+		</div>
+	</div>
+	
+	<div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-2 sm:p-4">
+		<div class="bg-gray-950 border border-gray-700 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+			<div class="flex items-center justify-between border-b border-gray-800 p-4 bg-gray-900/50">
+				<div class="flex items-center gap-2 text-cyan-400">
+					<i class="fa-solid fa-chart-line text-xl"></i>
+					<h3 class="text-lg font-bold text-gray-100">歷史統計報表</h3>
+				</div>
+				<button onclick="closeHistoryModal()" class="text-gray-400 hover:text-white text-xl p-1">✕</button>
+			</div>
+			<div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+				<div class="flex flex-col sm:flex-row gap-4 items-end bg-gray-900 border border-gray-800 p-4 rounded-xl">
+					<div class="flex-1 flex flex-col sm:flex-row gap-3 w-full">
+						<div class="flex flex-col gap-1 w-full sm:w-auto">
+							<label class="text-xs text-gray-400 font-semibold">開始日期</label>
+							<input type="date" id="historyStartDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5">
+						</div>
+						<div class="flex flex-col gap-1 w-full sm:w-auto">
+							<label class="text-xs text-gray-400 font-semibold">結束日期</label>
+							<input type="date" id="historyEndDate" class="bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-1.5">
+						</div>
+					</div>
+					<div class="flex gap-2 w-full sm:w-auto">
+						<button id="btnGenerateHistory" onclick="fetchHistoricalReport()" class="px-4 py-1.5 bg-cyan-600 text-white text-sm font-medium rounded-lg">產生報表</button>
+					</div>
+				</div>
+				<div id="reportCaptureArea" class="bg-gray-950 border border-gray-800 p-4 sm:p-6 rounded-xl hidden flex-col gap-6 relative">
+					<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-3 gap-3">
+						<div>
+							<h2 class="text-xl font-bold text-gray-100">API 流量歷史分析</h2>
+							<p id="reportDateRangeText" class="text-xs text-gray-400 font-mono mt-1"></p>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="text-xs text-gray-400 font-semibold">資料視角：</span>
+							<select id="historyCountrySelect" onchange="renderHistoryCharts()" class="bg-gray-800 text-sm font-bold text-cyan-400 border border-gray-700 rounded-lg px-3 py-1">
+								<option value="ALL">🌍 全世界 (ALL)</option>
+							</select>
+						</div>
+					</div>
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+						<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+							<p class="text-xs text-gray-500 uppercase">裝置數量</p>
+							<h4 id="repTotalUsers" class="text-2xl font-black text-sky-400 mt-1">0</h4>
+						</div>
+						<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+							<p class="text-xs text-gray-500 uppercase">總事件觸發數</p>
+							<h4 id="repTotalEvents" class="text-2xl font-black text-indigo-400 mt-1">0</h4>
+						</div>
+					</div>
+					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+						<div class="lg:col-span-1 bg-gray-900 border border-gray-800 p-4 rounded-lg">
+							<h4 class="text-sm font-semibold text-gray-300 mb-3"><i class="fa-solid fa-list-ol text-purple-400"></i> 功能使用排行</h4>
+							<div class="h-64 relative"><canvas id="historyFeatureChart"></canvas></div>
+						</div>
+						<div class="lg:col-span-2 bg-gray-900 border border-gray-800 p-4 rounded-lg">
+							<h4 class="text-sm font-semibold text-gray-300 mb-3"><i class="fa-solid fa-wave-square text-emerald-400"></i> 每小時流量趨勢</h4>
+							<div class="h-64 relative"><canvas id="historyHourlyChart"></canvas></div>
+						</div>
+					</div>
+				</div>
+				<div id="exportBtnContainer" class="flex justify-end hidden">
+					<button id="exportImgBtn" onclick="exportHistoryImage()" class="px-4 py-2 bg-emerald-600/20 text-emerald-300 rounded-lg text-sm border border-emerald-500/30">輸出報表圖片</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminKey = urlParams.get('admin');
+        const tokenKey = urlParams.get('token');
+        
+        let authParam = '';
+        let countryKey = null;
+
+        if (adminKey) {
+            authParam = `admin=${encodeURIComponent(adminKey)}`;
+        } else if (tokenKey) {
+            authParam = `token=${encodeURIComponent(tokenKey)}`;
+            if (tokenKey.length === 34) {
+                countryKey = (tokenKey.charAt(0) + tokenKey.charAt(33)).toUpperCase();
+            }
+        }
+
+        let featureChart, countryChart, userChart;
+        let currentLogs = [];
+        let sortMode = 'default';
+		let pendingDeleteUser = null;
+		let startTimeObj = null;
+		let timerInterval = null;
+		let onlineUserData = { users: [], countries: [] };
+		
+		const COUNTRY_COLOR_MAP = {
+			'TW': '#38bdf8', 'HK': '#fbbf24', 'MO': '#34d399', 'CN': '#f87171',
+			'JP': '#f472b6', 'KR': '#c084fc', 'SG': '#2dd4bf', 'MY': '#fb923c',
+			'US': '#60a5fa', 'GB': '#a78bfa', 'UK': '#a78bfa', 'FR': '#818cf8',
+			'其他 (Other)': '#64748b', 'Unknown': '#9ca3af'
+		};
+		
+		function stringToHslColor(str) {
+			let hash = 0;
+			for (let i = 0; i < str.length; i++) {
+				hash = str.charCodeAt(i) + ((hash << 5) - hash);
+			}
+			return `hsl(${Math.abs(hash) % 360}, 70%, 60%)`;
+		}
+		
+		function processCountryDistribution(rawStats, topN = 5, unit = '次') {
+			if (!rawStats || typeof rawStats !== 'object') {
+				return { labels: [], data: [], otherDetails: [], allValidCountries: [] };
+			}
+			const validEntries = Object.entries(rawStats)
+				.filter(([country, count]) => {
+					if (!country) return false;
+					const c = String(country).trim().toUpperCase();
+					return c !== 'UNKNOWN' && c !== 'XX' && c !== 'NULL' && count > 0;
+				})
+				.sort((a, b) => b[1] - a[1]);
+
+			const allValidCountries = validEntries.map(([c]) => c);
+			let labels = [], data = [], otherDetails = [];
+
+			if (validEntries.length > topN) {
+				const topEntries = validEntries.slice(0, topN);
+				const otherEntries = validEntries.slice(topN);
+				topEntries.forEach(([country, val]) => { labels.push(country); data.push(val); });
+				let otherSum = 0;
+				otherEntries.forEach(([country, val]) => {
+					otherSum += val;
+					otherDetails.push(`${country}: ${val} ${unit}`);
+				});
+				if (otherSum > 0) { labels.push('其他 (Other)'); data.push(otherSum); }
+			} else {
+				labels = validEntries.map(e => e[0]);
+				data = validEntries.map(e => e[1]);
+			}
+			return { labels, data, otherDetails, allValidCountries };
+		}
+
+		function getCountryColors(countryLabels) {
+			return countryLabels.map(country => COUNTRY_COLOR_MAP[country] || stringToHslColor(country));
+		}
+
+        function changeSortMode() {
+            sortMode = document.getElementById('sortMode').value;
+            renderLogsTable();
+        }
+		
+		function formatDateTime(d) {
+			const pad = (n) => String(n).padStart(2, '0');
+			return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+		}
+
+		function updateTimeAndDuration() {
+			const now = new Date();
+			document.getElementById('currentTimeStr').innerText = formatDateTime(now);
+			if (startTimeObj) {
+				const diffMs = Math.max(0, now - startTimeObj);
+				const totalMinutes = Math.floor(diffMs / (1000 * 60));
+				const days = Math.floor(totalMinutes / (60 * 24));
+				const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+				const mins = totalMinutes % 60;
+				let durationText = days > 0 ? `${days} 天 ` : '';
+				durationText += `${hours} 小時 ${mins} 分`;
+				document.getElementById('durationStr').innerText = durationText;
+			}
+		}
+
+		function initUptimeTimer() {
+			if (!timerInterval) {
+				updateTimeAndDuration();
+				timerInterval = setInterval(updateTimeAndDuration, 1000);
+			}
+		}
+		
+		async function sendBroadcast() {
+			try {
+				const resp = await fetch(`/api/console/online_users?${authParam}`);
+				if (resp.ok) onlineUserData = await resp.json();
+			} catch(e) { console.warn(e); }
+			document.getElementById('bcMessageInput').value = '';
+			document.querySelector('input[name="bcTargetType"][value="all"]').checked = true;
+			handleTargetTypeChange();
+			document.getElementById('broadcastModal').classList.remove('hidden');
+		}
+
+		function closeBroadcastModal() { document.getElementById('broadcastModal').classList.add('hidden'); }
+
+		function handleTargetTypeChange() {
+			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
+			const container = document.getElementById('bcTargetSelectionContainer');
+			const listEl = document.getElementById('bcTargetList');
+			listEl.innerHTML = '';
+			if (targetType === 'all') { container.classList.add('hidden'); return; }
+			container.classList.remove('hidden');
+			if (targetType === 'country') {
+				onlineUserData.countries.forEach(c => {
+					listEl.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-1 bg-gray-950 px-2 py-1 rounded border border-gray-800 cursor-pointer"><input type="checkbox" value="${c}" class="bc-target-chk"> ${c}</label>`);
+				});
+			} else if (targetType === 'user') {
+				onlineUserData.users.forEach(u => {
+					listEl.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-1 bg-gray-950 px-2 py-1 rounded border border-gray-800 cursor-pointer"><input type="checkbox" value="${u}" class="bc-target-chk"> ${u}</label>`);
+				});
+			}
+		}
+
+		async function submitBroadcastModal() {
+			const msg = document.getElementById('bcMessageInput').value.trim();
+			const targetType = document.querySelector('input[name="bcTargetType"]:checked').value;
+			if (!msg) { alert("請輸入廣播內容！"); return; }
+			const targets = [];
+			if (targetType !== 'all') {
+				document.querySelectorAll('.bc-target-chk:checked').forEach(cb => targets.push(cb.value));
+				if (targets.length === 0) { alert("請至少選擇一個目標！"); return; }
+			}
+			try {
+				const response = await fetch(`/api/console/broadcast?${authParam}`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ message: msg, timezone_offset: new Date().getTimezoneOffset(), target_type: targetType, targets: targets })
+				});
+				if (!response.ok) throw new Error('發送失敗');
+				alert("✅ 廣播已送出！");
+				closeBroadcastModal();
+			} catch (err) { alert(err.message); }
+		}
+		
+        function initCharts() {
+		
+			// 💡 確保加入這行全域設定，強制所有圖例和文字為白色
+            Chart.defaults.color = '#ffffff'; 
+            Chart.register(ChartDataLabels);
+			
+            const ctxFeature = document.getElementById('featureChart').getContext('2d');
+			featureChart = new Chart(ctxFeature, {
+				type: 'bar',
+				data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
+				options: {
+					responsive: true, maintainAspectRatio: false,
+					plugins: { 
+						legend: { 
+							position: 'bottom', 
+							labels: { color: '#ffffff' },
+						},
+						datalabels: { display: false },
+						tooltip: {
+							callbacks: {
+								label: function(context) {
+									const label = context.label || '';
+									const val = context.raw;
+									if (label === 'Other' || label.startsWith('其他')) {
+										const details = featureChart.otherDetails || [];
+										return [`總計: ${val} 次`, '----------------', ...details];
+									}
+									return `觸發: ${val} 次`;
+								}
+							}
+						}
+					},
+					scales: {
+						x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
+						y: { 
+							type: 'logarithmic',
+							ticks: { 
+								color: '#9ca3af',
+								callback: function(value) { return [0, 1, 10, 100, 1000, 10000, 100000].includes(value) ? value : null; }
+							}, 
+							grid: { color: '#1f2937' }
+						}
+					}
+				}
+			});
+
+            const ctxCountry = document.getElementById('countryChart').getContext('2d');
+            countryChart = new Chart(ctxCountry, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                options: { 
+					responsive: true, 
+					maintainAspectRatio: false, 
+					plugins: { 
+						datalabels: {
+							color: '#ffffff',
+							formatter: (value) => `${value}次`
+						},
+						legend: { 
+							position: 'bottom', 
+							labels: { color: '#ffffff' },
+						},
+						// countryChart 與 userChart 的 options.plugins 內加入：
+						tooltip: {
+							callbacks: {
+								label: function(context) {
+									const label = context.label || '';
+									const val = context.raw;
+									if (label.includes('其他') || label.includes('Other')) {
+										const details = context.chart.otherDetails || [];
+										if (details.length === 0) return `總計: ${val} 次`;
+										return [`總計: ${val} 次`, '──────────────', ...details];
+									}
+									return `${label}: ${val} 次`;
+								}
+							}
+						}						
+					} 
+				}
+            });
+
+            const ctxUser = document.getElementById('userChart').getContext('2d');
+            userChart = new Chart(ctxUser, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                options: { 
+					responsive: true, 
+					maintainAspectRatio: false, 
+					plugins: { 
+						datalabels: {
+							color: '#ffffff',
+							formatter: (value) => `${value}人`
+						},
+						legend: { 
+							position: 'bottom', 
+							labels: { 
+								color: '#ffffff' 
+							} 
+						},
+						// countryChart 與 userChart 的 options.plugins 內加入：
+						tooltip: {
+							callbacks: {
+								label: function(context) {
+									const label = context.label || '';
+									const val = context.raw;
+									if (label.includes('其他') || label.includes('Other')) {
+										const details = context.chart.otherDetails || [];
+										if (details.length === 0) return `總計: ${val} 人`;
+										return [`總計: ${val} 人`, '──────────────', ...details];
+									}
+									return `${label}: ${val} 人`;
+								}
+							}
+						} 
+					}
+				}
+            });
+        }
+		
+		function renderRecentCardViews(records) {
+			const container = document.getElementById('recentCardViewList');
+			const countElement = document.getElementById('recentCardViewCount');
+
+			if (!container || !countElement) return;
+
+			const items = Array.isArray(records) ? records : [];
+
+			countElement.textContent = items.length;
+			container.replaceChildren();
+
+			if (items.length === 0) {
+				const empty = document.createElement('div');
+				empty.className = 'text-gray-500 text-sm text-center py-4';
+				empty.textContent = '尚無瀏覽紀錄';
+				container.appendChild(empty);
+				return;
+			}
+
+			items.forEach((item, index) => {
+				const row = document.createElement('div');
+				row.className =
+					'flex items-center justify-between gap-3 bg-gray-950/70 ' +
+					'border border-gray-800 rounded-lg px-3 py-2';
+
+				const left = document.createElement('div');
+				left.className = 'flex items-center gap-3 min-w-0';
+
+				const number = document.createElement('span');
+				number.className = 'text-xs text-cyan-400 font-mono';
+				number.textContent = String(index + 1).padStart(2, '0');
+
+				const name = document.createElement('span');
+				name.className = 'text-sm text-gray-200 break-words';
+				name.textContent = item.card_name || '未知卡牌';
+
+				const right = document.createElement('div');
+				right.className =
+					'text-right text-[10px] text-gray-500 shrink-0';
+
+				const country = document.createElement('div');
+				country.textContent = item.country || 'Unknown';
+
+				const time = document.createElement('div');
+				time.className = 'font-mono';
+				time.textContent = item.time || '';
+
+				left.append(number, name);
+				right.append(country, time);
+				row.append(left, right);
+				container.appendChild(row);
+			});
+		}
+
+
+        async function updateDashboard(data) {
+			try {
+				if (data.start_time) {
+					startTimeObj = new Date(data.start_time);
+					document.getElementById('startTimeStr').innerText = formatDateTime(startTimeObj);
+					updateTimeAndDuration();
+				}
+				
+				const totalElem = document.getElementById('totalEvents');
+				const featElem = document.getElementById('activeFeatures');
+				const userElem = document.getElementById('activeUsers');
+
+				const featureStats = data.stats || {};
+				const countryStats = data.country_stats || {};
+				const countryUserCounts = data.country_user_counts || {};
+				// 更新最新卡牌瀏覽紀錄
+				renderRecentCardViews(data.latest_20_card_views || []);
+				const totalUsersCount = Object.values(countryUserCounts).reduce((a, b) => a + b, 0);
+
+				if (totalElem) {
+					// 檢查是否有跨多天的 daily_totals 資料，若有則組合顯示計算式
+					if (data.daily_totals && Object.keys(data.daily_totals).length > 1) {
+						const counts = Object.values(data.daily_totals);
+						const formula = counts.join('+'); // 產生如 "481+464+106"
+						totalElem.innerText = `${formula}=${data.total_events || 0}`;
+						totalElem.className = "text-xl md:text-2xl font-extrabold text-white mt-1 tracking-tight";
+					} else {
+						totalElem.innerText = data.total_events || 0;
+						totalElem.className = "text-3xl font-extrabold text-white mt-1";
+					}
+				}
+				if (featElem) featElem.innerText = Object.keys(featureStats).length;
+				if (userElem) userElem.innerText = totalUsersCount;
+
+				if (featureChart) {
+					const rawEntries = Object.entries(featureStats).sort((a, b) => b[1] - a[1]);
+					const BASE_TOP_N = 5;
+					let displayLabels = [];
+					let displayData = [];
+					let otherDetails = [];
+
+					if (rawEntries.length > BASE_TOP_N) {
+						const thresholdCount = rawEntries[BASE_TOP_N - 1][1];
+						let otherSum = 0;
+
+						rawEntries.forEach(([feat, count]) => {
+							if (count >= thresholdCount) {
+								displayLabels.push(feat);
+								displayData.push(count);
+							} else {
+								otherSum += count;
+								otherDetails.push(`${feat}: ${count}次`);
+							}
+						});
+
+						if (otherSum > 0) {
+							displayLabels.push('其他 (Other)');
+							displayData.push(otherSum);
+						}
+					} else {
+						displayLabels = rawEntries.map(e => e[0]);
+						displayData = rawEntries.map(e => e[1]);
+					}
+
+					featureChart.otherDetails = otherDetails;
+					featureChart.data.labels = displayLabels;
+					featureChart.data.datasets[0].data = displayData;
+					featureChart.update();
+				}
+
+				if (countryChart) {
+					const result = processCountryDistribution(countryStats, 5, '次');
+					countryChart.otherDetails = result.otherDetails; // 👈 賦予明細
+					countryChart.data.labels = result.labels;
+					countryChart.data.datasets[0].data = result.data;
+					countryChart.data.datasets[0].backgroundColor = getCountryColors(result.labels);
+					countryChart.update();
+					window.allDynamicCountries = result.allValidCountries;
+				}
+
+				// 更新裝置分佈圓餅圖
+				if (userChart) {
+					const result = processCountryDistribution(countryUserCounts, 5, '人');
+					userChart.otherDetails = result.otherDetails; // 👈 賦予明細
+					userChart.data.labels = result.labels;
+					userChart.data.datasets[0].data = result.data;
+					userChart.data.datasets[0].backgroundColor = getCountryColors(result.labels);
+					userChart.update();
+				}
+
+				currentLogs = data.recent_50_details || [];
+				updateUserDropdown();
+				renderLogsTable();
+				
+				window.rawSetlist = {};
+				window.latestSetCodes = data.LATEST_SET_CODES || [];
+				await Promise.all(
+					window.latestSetCodes.map(async (setCode) => {
+						try {
+							const response = await fetch(
+								`/api/pop/${encodeURIComponent(setCode)}`
+							);
+
+							if (!response.ok) return;
+
+							const data = await response.json();
+							window.rawSetlist[setCode] = data.set_info || {};
+							window.rawSetlist[setCode].setcardlist =
+								data.set_info?.setcardlist ||
+								data.set_info?.cardlist ||
+								data.cards?.map(card => ({ name: card.name })) ||
+								[];
+						} catch (error) {
+							console.error(`載入商品 ${setCode} 失敗：`, error);
+						}
+					})
+				);
+				window.rawHotCards = data.hot_card_views || {};
+
+				const hotSelect = document.getElementById('hotCardCountrySelect');
+				if (hotSelect) {
+					const availableCountries = [
+						...new Set(
+							Object.values(window.rawHotCards).flatMap(records =>
+								records && typeof records === 'object'
+									? Object.keys(records)
+									: []
+							)
+						)
+					].sort();
+					hotSelect.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>';
+					availableCountries.forEach(c => {
+						hotSelect.insertAdjacentHTML('beforeend', `<option value="${c}">${c} 專屬視角</option>`);
+					});
+					if (availableCountries.length === 1 && !adminKey) {
+						hotSelect.value = availableCountries[0];
+						hotSelect.style.display = 'none';
+					}
+				}
+				
+				// 預設頁籤設定為 "[不分商品]"
+				if (!window.currentHotTab) {
+					window.currentHotTab = "[不分商品]";
+				}
+				
+				renderHotCardsUI();
+			} catch (err) {
+				console.error("Dashboard render error:", err);
+			}
+		}
+		
+		// 渲染單卡熱度排行榜 UI（支援 [不分商品] 頁籤並顯示前 100 名）
+		function renderHotCardsUI() {
+			const tabsContainer = document.getElementById('hotCardTabs');
+			const listContainer = document.getElementById('hotCardList');
+			if (!tabsContainer || !listContainer) return;
+
+			// 組合頁籤：第一個固定為 "[不分商品]"，後面接所有 D/O 開頭的商品代碼
+			let validSets = (window.latestSetCodes || []).filter(c => c.toUpperCase().startsWith('D') || c.toUpperCase().startsWith('O'));
+			let allTabs = ["\u3010不分商品\u3011", ...validSets]; // 用帶括號或原字串，確保比對正確
+
+			if (!window.currentHotTab) {
+				window.currentHotTab = "[不分商品]";
+			}
+
+			// 1. 繪製頁籤 (Tabs)
+			tabsContainer.innerHTML = '';
+			allTabs.forEach(scode => {
+				// 統一標準化實際 Key
+				const actualCode = scode.includes("不分商品") ? "[不分商品]" : scode;
+				const btn = document.createElement('button');
+				const isActive = (actualCode === window.currentHotTab);
+				
+				btn.className = `px-3 py-2 text-xs font-bold rounded-t-lg transition border-b-2 ${
+					isActive 
+					? 'text-orange-400 border-orange-500 bg-gray-800' 
+					: 'text-gray-400 border-transparent hover:text-gray-200 hover:bg-gray-800/50'
+				}`;
+				btn.innerText = actualCode;
+				btn.onclick = () => {
+					window.currentHotTab = actualCode;
+					renderHotCardsUI();
+				};
+				tabsContainer.appendChild(btn);
+			});
+
+			// 2. 取得選擇的國籍與資料
+			const selectedCountry =
+				document.getElementById('hotCardCountrySelect')?.value || 'ALL';
+
+			const cardData = {};
+			const selectedSet = window.currentHotTab;
+
+			const setCardList =
+				selectedSet === '[不分商品]'
+					? null
+					: window.rawSetlist[selectedSet]?.setcardlist || [];
+
+			const allowedNames = setCardList
+				? new Set(
+					setCardList
+						.map(card => typeof card === 'string' ? card : card?.name)
+						.filter(Boolean)
+				  )
+				: null;
+
+			for (const [cardName, countryRecords] of Object.entries(window.rawHotCards)) {
+				if (allowedNames && !allowedNames.has(cardName)) continue;
+
+				if (selectedCountry === 'ALL') {
+					cardData[cardName] = Object.values(countryRecords || {})
+						.reduce((sum, count) => sum + (Number(count) || 0), 0);
+				} else {
+					cardData[cardName] =
+						Number(countryRecords?.[selectedCountry]) || 0;
+				}
+			}
+			
+			let sortedCards = Object.entries(cardData).sort((a, b) => b[1] - a[1]);
+			
+			if (sortedCards.length === 0) {
+				listContainer.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">此分類目前尚無單卡瀏覽紀錄</div>';
+				return;
+			}
+
+			// 💡 追加需求：[不分商品] 或商品頁籤取前 200 名
+			let size = ( selectedSet === '[不分商品]' ) ? 200 : 50;
+			sortedCards = sortedCards.slice(0, size);
+			let maxCount = sortedCards[0][1];
+
+			listContainer.innerHTML = '';
+			sortedCards.forEach(([cname, count], idx) => {
+				let pct = maxCount > 0 ? (count / maxCount) * size : 0;
+				let rankColor = idx < 3 ? 'text-orange-400' : 'text-gray-400';
+				
+				let itemHtml = `
+					<div class="flex flex-col gap-1.5">
+						<div class="flex justify-between items-end text-sm">
+							<div class="flex items-center gap-2 truncate">
+								<span class="font-mono font-black ${rankColor} w-8 text-right">#${idx + 1}</span>
+								<span class="text-gray-${size} truncate font-semibold" title="${cname}">${cname}</span>
+							</div>
+							<span class="text-indigo-300 font-bold font-mono text-xs whitespace-nowrap ml-2">${count} 次</span>
+						</div>
+						<div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+							<div class="bg-gradient-to-r from-orange-500 to-amber-400 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+						</div>
+					</div>
+				`;
+				listContainer.insertAdjacentHTML('beforeend', itemHtml);
+			});
+		}
+		
+		function updateUserDropdown() {
+			const selectElem = document.getElementById('sortMode');
+			const featureElem = document.getElementById('featureFilter');
+			const currentValue = selectElem.value;
+			const currentFeature = featureElem.value;
+
+			const presentUsers = Array.from(new Set(currentLogs.map(log => log.user || log.country || 'Unknown'))).sort();
+			selectElem.innerHTML = `<option value="default">預設排序 (最新事件優先)</option>`;
+			presentUsers.forEach(u => {
+				selectElem.insertAdjacentHTML('beforeend', `<option value="${u}">使用者：${u}</option>`);
+			});
+			if (presentUsers.includes(currentValue)) selectElem.value = currentValue;
+
+			const presentFeatures = Array.from(new Set(currentLogs.map(log => log.feature || 'Unknown'))).sort();
+			featureElem.innerHTML = `<option value="all">所有動作類型</option>`;
+			presentFeatures.forEach(f => {
+				featureElem.insertAdjacentHTML('beforeend', `<option value="${f}">動作：${f}</option>`);
+			});
+			if (presentFeatures.includes(currentFeature)) featureElem.value = currentFeature;
+		}
+
+		function renderLogsTable() {
+			const container = document.getElementById('tableScrollContainer');
+			const tbody = document.getElementById('logsTableBody');
+			const selectedMode = document.getElementById('sortMode').value;
+			const selectedFeature = document.getElementById('featureFilter').value;
+			const isAdmin = Boolean(adminKey);
+
+			const oldScrollTop = container.scrollTop;
+			const oldScrollHeight = container.scrollHeight;
+
+			let displayLogs = currentLogs.filter(log => {
+				const userDisplay = log.user || log.country || 'Unknown';
+				const featureDisplay = log.feature || 'Unknown';
+				if (selectedMode !== 'default' && userDisplay !== selectedMode) return false;
+				if (selectedFeature !== 'all' && featureDisplay !== selectedFeature) return false;
+				return true;
+			});
+
+			tbody.innerHTML = '';
+			displayLogs.forEach((log) => {
+				const rawUser = log.user || log.country || 'Unknown';
+				let userDisplay = rawUser;
+				if (log.is_vpn) {
+					userDisplay += ` <span class="text-[10px] text-yellow-500 bg-yellow-500/10 px-1 py-0.5 rounded">[VPN: ${log.real_ip_country}]</span>`;
+				}
+				let userBadgeHtml = `<span onclick="filterLogsByUser('${rawUser}')" class="px-2 py-0.5 bg-sky-500/15 text-sky-400 rounded border border-sky-500/20 text-xs cursor-pointer hover:bg-sky-500/30 transition">${userDisplay}</span>`;
+
+				tbody.insertAdjacentHTML('beforeend', `
+					<tr class="hover:bg-gray-800/40 border-t border-gray-800/80">
+						<td class="px-4 pt-3 pb-1 align-top">
+							<div class="font-mono text-xs text-gray-500 mb-1.5"><i class="fa-regular fa-clock"></i> ${log.time}</div>
+							<div class="flex items-center gap-2">
+								<span class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded text-xs">${log.feature}</span>
+								${userBadgeHtml}
+							</div>
+						</td>
+					</tr>
+					<tr class="hover:bg-gray-800/40 border-b border-gray-800/80">
+						<td class="px-4 pt-1 pb-3">
+							<div class="bg-gray-950/60 p-2.5 rounded-lg border border-gray-800 text-xs font-mono text-emerald-400">
+								<pre class="whitespace-pre-wrap break-all">${typeof log.detail === 'object' ? JSON.stringify(log.detail, null, 2) : log.detail}</pre>
+							</div>
+						</td>
+					</tr>
+				`);
+			});
+
+			if (selectedMode !== 'default' && oldScrollTop > 0) {
+				container.scrollTop = oldScrollTop + (container.scrollHeight - oldScrollHeight);
+			}
+		}
+
+        async function fetchInitialData() {
+            if (!authParam) return;
+            try {
+                const response = await fetch(`/api/track/stats?${authParam}&format=json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data);
+                    renderDataTransferStats(data.data_transfer_stats || {});
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function renderDataTransferStats(statsMap) {
+            window.latestDataTransferStats = statsMap;
+            const container = document.getElementById('dataTransferStatsGrid');
+            if (!container) return;
+            const entries = Object.entries(statsMap);
+            if (entries.length === 0) { container.innerHTML = '<span class="text-gray-500 col-span-full">尚無傳輸紀錄</span>'; return; }
+            container.innerHTML = '';
+            entries.forEach(([name, countObj]) => {
+                const fetchCount = countObj.fetch || 0;
+                const cacheCount = countObj.cache || 0;
+                const total = fetchCount + cacheCount;
+                const cacheRate = total > 0 ? ((cacheCount / total) * 100).toFixed(1) : "0.0";
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="bg-gray-950/70 border border-gray-800 rounded-lg p-2.5 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-1"><span class="text-gray-300 truncate">${name}</span><span class="text-[10px] text-emerald-400">${cacheRate}%</span></div>
+                        <div class="font-mono text-[11px]"><span class="text-rose-400">${fetchCount}</span> / <span class="text-emerald-400">${cacheCount}</span></div>
+                    </div>
+                `);
+            });
+        }
+
+        function initWebSocket() {
+            if (!authParam) return;
+            const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/console?${authParam}`);
+            const badge = document.getElementById('statusBadge');
+            ws.onopen = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live</span>`; };
+            ws.onmessage = (event) => {
+				const data = JSON.parse(event.data);
+
+				if (data.type === 'RECENT_CARD_VIEWS_UPDATE') {
+					renderRecentCardViews(data.latest_20_card_views || []);
+					return;
+				}
+
+				updateDashboard(data);
+			};
+            ws.onclose = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>Closed</span>`; setTimeout(initWebSocket, 3000); };
+        }
+
+		function populateCountryOptions() {
+			const selectEl = document.getElementById('tokenCountrySelect');
+			if (!selectEl) return;
+			const activeCountries = window.allDynamicCountries || [];
+			selectEl.innerHTML = '';
+			activeCountries.sort().forEach(code => {
+				selectEl.insertAdjacentHTML('beforeend', `<option value="${code}">${code}</option>`);
+			});
+		}
+
+		function generateToken() {
+			document.querySelector('input[name="tokenScope"][value="all"]').checked = true;
+			toggleCountrySelect(false);
+			populateCountryOptions();
+			document.getElementById('tokenModal').classList.remove('hidden');
+		}
+
+		function closeTokenModal() { document.getElementById('tokenModal').classList.add('hidden'); }
+		function toggleCountrySelect(isCountry) { document.getElementById('countryInputContainer').classList.toggle('hidden', !isCountry); }
+
+		async function submitGenerateToken() {
+			const scope = document.querySelector('input[name="tokenScope"]:checked').value;
+			const countryVal = document.getElementById('tokenCountrySelect').value;
+			try {
+				const response = await fetch(`/api/console/generate_token?admin=${encodeURIComponent(adminKey)}`, { method: 'POST' });
+				if (!response.ok) throw new Error('失敗');
+				const data = await response.json();
+				let tokenStr = data.token;
+				if (scope === 'country' && countryVal) {
+					tokenStr = `${countryVal.charAt(0).toLowerCase()}${tokenStr}${countryVal.charAt(1).toLowerCase()}`;
+				}
+				let link = `${window.location.origin}${window.location.pathname.endsWith('.html') ? window.location.pathname : '/api/track/stats'}?token=${tokenStr}`;
+				closeTokenModal();
+				await navigator.clipboard.writeText(link);
+				alert(`✅ 連結已複製：\n${link}`);
+			} catch (err) { alert(err.message); }
+		}
+
+		async function exportDashboardDataForAI() {
+			const exportPayload = {
+				meta: { exported_at: new Date().toISOString() },
+				overview: { total_events: document.getElementById('totalEvents')?.innerText || '0' },
+				hot_card_views: window.rawHotCards || {}
+			};
+			await navigator.clipboard.writeText(JSON.stringify(exportPayload, null, 2));
+			alert("✅ 已匯出 AI 分析 JSON 至剪貼簿！");
+		}
+		
+		function filterLogsByUser(user) {
+			// 1. 將動作類型下拉選單重設為「所有動作類型」
+			const featureElem = document.getElementById('featureFilter');
+			if (featureElem) {
+				featureElem.value = 'all';
+			}
+
+			// 2. 將排序/使用者篩選下拉選單切換為該使用者
+			const sortModeElem = document.getElementById('sortMode');
+			if (sortModeElem) {
+				sortModeElem.value = user;
+			}
+
+			// 3. 重新渲染下方表格以顯示該使用者的紀錄
+			renderLogsTable();
+		}
+
+		function openResetModal() { document.getElementById('resetModal').classList.remove('hidden'); }
+		function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
+		async function confirmResetStats() {
+			await fetch(`/api/track/reset?${authParam}`, { method: 'DELETE' });
+			closeResetModal();
+		}
+
+		function openHistoryModal() { document.getElementById('historyModal').classList.remove('hidden'); }
+		function closeHistoryModal() { document.getElementById('historyModal').classList.add('hidden'); }
+		async function fetchHistoricalReport() { alert("歷史報表運算中..."); }
+
+		function toggleMobileMenu() {
+            const menu = document.getElementById('actionMenu');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+        }
+
+		window.addEventListener('DOMContentLoaded', () => {
+			if (!authParam) { alert('未提供認證參數'); return; }
+			if (adminKey) {
+				['generateTokenBtn', 'resetStatsBtn', 'broadcastBtn', 'historyReportBtn'].forEach(id => {
+					document.getElementById(id).style.display = 'flex';
+				});
+			}
+			if (countryKey) {
+				document.querySelector('h1').innerHTML = `API Track Console - <span class="text-sky-400 font-mono">${countryKey.toUpperCase()} 專屬視角</span>`;
+				['countryChart', 'userChart', 'dataTransferContainer', 'detailFiltersContainer', 'detailTableContainer'].forEach(id => {
+					const el = document.getElementById(id);
+					if (el) el.style.display = 'none';
+				});
+			}
+			initCharts();
+			fetchInitialData();
+			initWebSocket();
+			initUptimeTimer(); 
+		});
+    </script>
+</body>
+</html>

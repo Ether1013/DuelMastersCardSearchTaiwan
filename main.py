@@ -1,0 +1,2235 @@
+
+import hashlib
+import os
+import json
+import gzip
+import uuid
+import asyncio
+import base64
+import re
+import time
+import copy
+from collections import OrderedDict
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+from urllib.parse import quote, unquote
+import pytz
+
+import httpx
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from fastapi.middleware.gzip import GZipMiddleware
+from lzstring import LZString
+from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from collections import defaultdict, deque
+from zoneinfo import ZoneInfo
+from datetime import datetime, timezone, timedelta
+import logging
+import random, string
+
+# 👇 Firebase 套件
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+BASE_DIR = Path(__file__).resolve().parent
+
+app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+lz_compressor = LZString()
+
+load_dotenv()
+
+firebase_cred_path = os.getenv("FIREBASE_CRED_PATH", "firebase-key.json")
+db = None
+try:
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(firebase_cred_path)
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("✅ Firebase 初始化成功！")
+except Exception as e:
+    print(f"❌ Firebase 初始化失敗，請檢查金鑰設定: {e}")
+    
+LINE_ACCESS_TOKEN = os.getenv("LINE_ACCESS_TOKEN", "你的_LINE_ACCESS_TOKEN")
+LINE_USER_ID = os.getenv("LINE_USER_ID", "你的_LINE_USER_ID")
+TRACK_STATS_USER = os.getenv("TRACK_STATS_USER", "admin")
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
+GITHUB_REPO = os.getenv("GITHUB_REPO", "").strip()
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+MAX_CACHE_SIZE = 200
+CACHE_TTL_SECONDS = 7 * 86400
+
+proxy_cache = OrderedDict()
+SERVER_INSTANCE_ID = str(uuid.uuid4())
+TZ_UTC8 = timezone(timedelta(hours=8))
+SERVER_START_TIME = datetime.now(TZ_UTC8).isoformat()
+last_reset_time = SERVER_START_TIME
+
+carddata_cache = []
+carddata_gzip_cache = b""
+carddata_patch_cache = []
+card_types_cache = []
+races_cache = []
+abilities_cache = []
+categoryname_cache = []
+nickname_cache = []
+diary_cache = []
+setlist_cache = {}
+setlist_gzip_cache = b""
+setlist_patch_cache = {}
+
+RECORD_DIR = BASE_DIR / "record"
+RECORD_DIR.mkdir(exist_ok=True)
+
+current_daily_date = ""
+current_daily_logs = []
+record_sync_task = None
+EXCLUDED_COUNTRIES = ["JP", "TW" ,"KR"]
+one_time_tokens = {}
+
+etag_cache = {}
+wiki_url_cache = OrderedDict()
+WIKI_CACHE_MAX_SIZE = 500
+WIKI_CACHE_TTL = 3 * 86400
+
+ENGLISH_NAME_FILE = BASE_DIR / "englishname.json"
+english_name_cache = {}
+has_unsynced_en_names = False
+file_write_lock = asyncio.Lock()
+wiki_details_cache = {}
+
+feature_counter = defaultdict(int)
+country_counter = defaultdict(int)
+user_counter = defaultdict(int)
+daily_total_counter = defaultdict(int)
+country_daily_total_counter = defaultdict(lambda: defaultdict(int))
+data_transfer_stats = defaultdict(lambda: {"fetch": 0, "cache": 0})
+country_feature_counter = defaultdict(lambda: defaultdict(int))
+country_user_counter = defaultdict(lambda: defaultdict(int))
+
+DATA_NAME_MAP = {
+    "carddata": "卡牌資料",
+    "setlist": "系列與商品資料",
+    "card_types": "卡種資料",
+    "races": "種族資料",
+    "abilities": "能力資料",
+    "categoryname": "分類名稱資料",
+    "nickname": "暱稱資料",
+    "diary": "更新日誌資料",
+    "patch_carddata": "卡牌補丁資料",
+    "patch_setlist": "商品補丁資料"
+}
+
+LATEST_SET_CODES = ["DM26-EX4", "DM26-RP3", "DM26-EX3", "DMRP-04裁", "DMRP-04魔"]
+
+# 結構設計：
+
+# 新架構：view_records[卡牌名稱][國家] = 瀏覽次數
+view_records = defaultdict(lambda: defaultdict(int))
+# 最新卡牌瀏覽紀錄：只存在伺服器記憶體，不寫入 Firebase
+RECENT_CARD_VIEW_LIMIT = 20  # 日後要改成 30、50，只需修改這個數字
+recent_card_views = []
+
+def get_recent_three_day_totals(country=None):
+    now = datetime.now(TZ_UTC8)
+
+    date_keys = [
+        (now - timedelta(days=2)).strftime("%Y%m%d"),
+        (now - timedelta(days=1)).strftime("%Y%m%d"),
+        now.strftime("%Y%m%d"),
+    ]
+
+    source = (
+        daily_total_counter
+        if country is None
+        else country_daily_total_counter[country]
+    )
+
+    # 只取指定三天；沒有紀錄的日期顯示 0
+    daily_totals = {
+        date_key: source.get(date_key, 0)
+        for date_key in date_keys
+    }
+
+    return daily_totals, sum(daily_totals.values())
+
+def convert_legacy_hot_cards(legacy_data):
+    """將舊的國家 -> 商品分類 -> 卡名結構轉換成卡名 -> 國家結構。"""
+    converted = defaultdict(lambda: defaultdict(int))
+
+    if not isinstance(legacy_data, dict):
+        return converted
+
+    for country, sets in legacy_data.items():
+        if not isinstance(sets, dict):
+            continue
+
+        # 優先使用「所有商品」，其次相容舊程式的「[不分商品]」。
+        total_cards = sets.get("所有商品")
+        if not isinstance(total_cards, dict) or not total_cards:
+            total_cards = sets.get("[不分商品]")
+
+        # 只有總次數缺漏或為空時，才從商品分類補救。
+        if not isinstance(total_cards, dict) or not total_cards:
+            total_cards = defaultdict(int)
+
+            for set_code, cards in sets.items():
+                if set_code in ("所有商品", "[不分商品]"):
+                    continue
+                if not isinstance(cards, dict):
+                    continue
+
+                for card_name, count in cards.items():
+                    try:
+                        total_cards[card_name] += int(count)
+                    except (TypeError, ValueError):
+                        continue
+
+        for card_name, count in total_cards.items():
+            try:
+                converted[str(card_name)][str(country).upper()] = int(count)
+            except (TypeError, ValueError):
+                continue
+
+    return converted
+
+
+def get_view_records_data(country=None):
+    """取得可安全傳送給 API/WebSocket 或寫入 Firestore 的一般 dict。"""
+    result = {}
+
+    for card_name, countries in view_records.items():
+        if country is not None:
+            code = str(country).upper()
+            if code in countries:
+                result[card_name] = {code: countries[code]}
+        else:
+            result[card_name] = dict(countries)
+
+    return result
+
+
+action_details_log = deque(maxlen=50)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("api_cache")
+
+class NicknameApplyModel(BaseModel):
+    card_name: str
+    nicknames: List[str]
+    
+class CardViewTrackModel(BaseModel):
+    card_name: str
+    
+class PrettyJSONResponse(JSONResponse):
+    media_type = "application/json; charset=utf-8"
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(content, ensure_ascii=False, indent=2).encode("utf-8")
+
+class ConsoleConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[WebSocket, dict] = {}
+
+    async def connect(self, websocket: WebSocket, auth_level: str, country: str = None):
+        await websocket.accept()
+        self.active_connections[websocket] = {"auth_level": auth_level, "country": country}
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            del self.active_connections[websocket]
+
+    async def broadcast(self):
+        
+        daily_totals, total_events = get_recent_three_day_totals()
+        sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+        sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+        recent_logs = get_clean_recent_logs()
+        
+        admin_payload = {
+            "total_events": total_events,
+            "daily_totals": daily_totals,
+            "stats": sorted_stats,
+            "country_stats": sorted_country_stats,
+            "country_user_counts": get_country_user_counts(),
+            "recent_50_details": recent_logs,
+            "start_time": last_reset_time,
+            "hot_card_views": get_view_records_data(),
+            "latest_20_card_views": list(recent_card_views),
+            "LATEST_SET_CODES": LATEST_SET_CODES
+        }
+
+        for connection, info in list(self.active_connections.items()):
+            try:
+                if info["auth_level"] in ["admin", "token"]:
+                    await connection.send_json(admin_payload)
+                elif info["auth_level"] == "country":
+                    c = info["country"]
+                    c_daily_totals, c_total_events = get_recent_three_day_totals(c)
+                    c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
+                    c_users = country_user_counter[c]
+                    c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
+                    
+                    c_hot_card_views = get_view_records_data(c)
+                    c_latest_card_views = [
+                        item for item in recent_card_views
+                        if item.get("country") == c
+                    ]
+                    
+                    c_payload = {
+                        "total_events": c_total_events,
+                        "daily_totals": c_daily_totals,
+                        "stats": c_stats,
+                        "country_stats": {c: country_counter[c]}, 
+                        "country_user_counts": {c: len(c_users)},
+                        "recent_50_details": c_logs,
+                        "start_time": last_reset_time,
+                        "hot_card_views": c_hot_card_views,
+                        "latest_20_card_views": c_latest_card_views,
+                        "LATEST_SET_CODES": LATEST_SET_CODES
+                    }
+                    await connection.send_json(c_payload)
+            except:
+                self.disconnect(connection)
+                
+    
+    async def broadcast_recent_card_views(self):
+        """只推送最新卡牌瀏覽紀錄，不重載其他統計資料。"""
+        for connection, info in list(self.active_connections.items()):
+            try:
+                if info["auth_level"] in ["admin", "token"]:
+                    records = list(recent_card_views)
+                elif info["auth_level"] == "country":
+                    country = info["country"]
+                    records = [
+                        item for item in recent_card_views
+                        if item.get("country") == country
+                    ]
+                else:
+                    continue
+
+                await connection.send_json({
+                    "type": "RECENT_CARD_VIEWS_UPDATE",
+                    "latest_20_card_views": records
+                })
+            except Exception:
+                self.disconnect(connection)
+
+
+console_manager = ConsoleConnectionManager()
+
+class ClientConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[WebSocket, Dict[str, str]] = {}
+
+    async def connect(self, websocket: WebSocket, user_id: str, country: str):
+        await websocket.accept()
+        self.active_connections[websocket] = {"user": user_id, "country": country}
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            del self.active_connections[websocket]
+
+    async def broadcast(self, message: str, target_type: str = "all", targets: List[str] = []):
+        for ws, info in list(self.active_connections.items()):
+            should_send = False
+            if target_type == "all":
+                should_send = True
+            elif target_type == "country" and info.get("country") in targets:
+                should_send = True
+            elif target_type == "user" and info.get("user") in targets:
+                should_send = True
+
+            if should_send:
+                try:
+                    await ws.send_json({"type": "BROADCAST", "message": message})
+                except:
+                    self.disconnect(ws)
+
+client_manager = ClientConnectionManager()
+
+class BroadcastModel(BaseModel):
+    message: str
+    timezone_offset: int = -480  
+    target_type: str = "all"     
+    targets: List[str] = []
+
+DEFAULT_TAGS = {
+    "version": 1,
+    "target": ["我方", "對手", "雙方"],
+    "buff": [
+        {"id": "b1", "name": "Buff", "is_deletable": False, "is_renamable": False},
+        {"id": "b2", "name": "Debuff", "is_deletable": False, "is_renamable": False}
+    ],
+    "trigger_time": [
+        { "id": "tr_1", "name": "攻擊", "children": [] },
+        { "id": "tr_2", "name": "出場", "children": [] },
+        { "id": "tr_3", "name": "離場", "children": [] },
+        { "id": "tr_4", "name": "戰鬥", "children": [] },
+        { "id": "tr_5", "name": "回合初", "children": [] },
+        { "id": "tr_6", "name": "回合結束時", "children": [] },
+        { "id": "tr_7", "name": "戰鬥後", "children": [] },
+        { "id": "tr_8", "name": "攻擊後", "children": [] }
+    ],
+    "target_obj": [
+        { "id": "t_ele", "name": "元素", "children": [
+            { "id": "t_ele_bio", "name": "元素-生物", "children": [] },
+            { "id": "t_ele_soul", "name": "元素-魂種", "children": [] },
+            { "id": "t_ele_cg", "name": "元素-CrossGear", "children": [] },
+            { "id": "t_ele_field", "name": "元素-領域", "children": [] },
+            { "id": "t_ele_beat", "name": "元素-鼓動", "children": [] }
+        ]},
+        { "id": "t_spell", "name": "咒文", "children": [] },
+        { "id": "t_nonbio", "name": "非生物", "children": [] },
+        { "id": "t_castle", "name": "城", "children": [
+            { "id": "t_castle_gal", "name": "城-銀河城", "children": [] }
+        ]},
+        { "id": "t_player", "name": "玩家", "children": [] }
+    ],
+    "free": []
+}
+
+TAGS_FILE = BASE_DIR / "tags.json"
+tags_cache = copy.deepcopy(DEFAULT_TAGS)
+
+class TagConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict, exclude: WebSocket = None):
+        for connection in self.active_connections:
+            if connection != exclude:
+                try:
+                    await connection.send_json(message)
+                except:
+                    pass
+
+tag_manager = TagConnectionManager()
+tag_sync_task = None
+
+async def push_tags_to_github():
+    if not GITHUB_TOKEN or not GITHUB_REPO or "你的_" in GITHUB_TOKEN:
+        return
+    file_path = "Python/tags.json"
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{file_path}"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "FastAPI-AutoCommit"
+    }
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            get_resp = await client.get(url, headers=headers)
+            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
+            if not TAGS_FILE.exists():
+                return
+            with open(TAGS_FILE, 'r', encoding='utf-8') as f:
+                content_str = f.read()
+            content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
+            payload = {
+                "message": "auto: sync tags.json [skip render] [skip ci]",
+                "content": content_base64,
+                "branch": "main"
+            }
+            if sha:
+                payload["sha"] = sha
+            await client.put(url, headers=headers, json=payload)
+    except Exception as e:
+        print(f"[Tags GitHub Sync Error]: {e}")
+
+def get_clean_recent_logs():
+    return [
+        {k: v for k, v in log.items() if not k.startswith('_')}
+        for log in action_details_log
+    ]
+    
+async def tag_debounce_timer():
+    await asyncio.sleep(60)
+    try:
+        def _write():
+            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+        await asyncio.to_thread(_write)
+        await push_tags_to_github()
+    except Exception as e:
+        print(f"[Tag Debounce Error]: {e}")
+
+def convert_utc8_str_to_local_hour(time_str: str, country_code: str) -> str:
+    try:
+        dt_naive = datetime.strptime(time_str[:19], "%Y-%m-%d %H:%M:%S")
+        dt_utc8 = dt_naive.replace(tzinfo=TZ_UTC8)
+        code = str(country_code).upper().strip()
+        timezones = pytz.country_timezones.get(code)
+        if timezones:
+            target_tz = ZoneInfo(timezones[0])
+            local_dt = dt_utc8.astimezone(target_tz)
+        else:
+            local_dt = dt_utc8
+        return local_dt.strftime("%H")
+    except Exception:
+        return time_str[11:13] if len(time_str) >= 13 else "00"
+        
+def mask_ip(ip: str) -> str:
+    if not ip or ip in ["unknown", "::1"]:
+        return ip
+    if "." in ip:
+        parts = ip.split(".")
+        if len(parts) == 4:
+            return f"{parts[0]}.*.*.{parts[3]}"
+        return f"{parts[0]}.*.*"
+    if ":" in ip:
+        parts = ip.split(":")
+        if len(parts) >= 4:
+            return f"{parts[0]}:{parts[1]}:***:{parts[-1]}"
+        return f"{parts[0]}:***"
+    return "***"
+
+def extract_wiki_params(wikitext: str) -> dict:
+    data = {}
+    start = wikitext.find('{{Cardtable')
+    if start == -1: return data
+    pattern = re.compile(r'\n\|\s*([a-zA-Z0-9_]+)\s*=\s*(.*?)(?=\n\|\s*[a-zA-Z0-9_]+\s*=|^\}\})', re.MULTILINE | re.DOTALL)
+    matches = pattern.findall(wikitext[start:])
+    for key, val in matches:
+        data[key.strip().lower()] = val.strip()
+    return data
+
+def clean_wikitext_sp(text: str) -> list:
+    if not text:
+        return []
+    text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
+    text = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]', r'\1', text)
+    text = re.sub(r'\{\{([^|}]*)[^}]*\}\}', r'\1', text)
+    text = text.replace(':▶', '##').replace('▶', '##')
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    raw_blocks = re.split(r'\n{2,}', text)
+    result = []
+    for block in raw_blocks:
+        block_str = block.strip()
+        if not block_str:
+            continue
+        lines = [l.strip() for l in block_str.split('\n') if l.strip()]
+        combined_ability = ""
+        for line in lines:
+            clean_line = re.sub(r'^[■\s]+', '', line).strip()
+            if not clean_line:
+                continue
+            if not combined_ability:
+                combined_ability = clean_line
+            else:
+                if clean_line.startswith('##'):
+                    combined_ability += clean_line
+                else:
+                    combined_ability += " " + clean_line
+        if combined_ability:
+            result.append(combined_ability.strip())
+    return result
+
+def clean_flavor_text(text: str) -> str:
+    if not text: return ""
+    text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
+    text = re.sub(r'\[\[(?:[^\]|]*\|)?([^\]|]+)\]\]', r'\1', text)
+    text = re.sub(r'<br\s*/?>', ' ', text, flags=re.IGNORECASE)
+    return text.strip()
+    
+def get_country_user_counts() -> Dict[str, int]:
+    counts = defaultdict(int)
+    for user_id in user_counter.keys():
+        country = user_id.split('-')[0] if '-' in user_id else "Unknown"
+        counts[country] += 1
+    return dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
+    
+def trigger_tag_sync():
+    global tag_sync_task
+    if tag_sync_task:
+        tag_sync_task.cancel()
+    tag_sync_task = asyncio.create_task(tag_debounce_timer())
+    
+def generate_etag(data) -> str:
+    json_bytes = json.dumps(data, ensure_ascii=False, sort_keys=True).encode('utf-8')
+    hash_str = hashlib.md5(json_bytes).hexdigest()
+    return f'"{hash_str}"'
+
+def get_etag_response(request: Request, data_key: str, cache_obj, gzip_cache_bytes: bytes = None):
+    client_etag = request.headers.get("If-None-Match")
+    server_etag = etag_cache.get(data_key, "")
+    headers = {
+        "ETag": server_etag,
+        "Cache-Control": "no-cache"
+    }
+    if client_etag and client_etag == server_etag:
+        data_transfer_stats[data_key]["cache"] += 1
+        return Response(status_code=304, headers=headers)
+    data_transfer_stats[data_key]["fetch"] += 1
+    if gzip_cache_bytes:
+        headers["Content-Encoding"] = "gzip"
+        return Response(content=gzip_cache_bytes, media_type="application/json", headers=headers)
+    json_str = json.dumps(cache_obj, ensure_ascii=False)
+    return Response(content=json_str, media_type="application/json", headers=headers)
+    
+class CustomDeckModel(BaseModel):
+    deck_list: str
+
+class DeckItem(BaseModel):
+    name: str
+    count: int = 1
+
+class ExportDeckRequest(BaseModel):
+    items: List[DeckItem]
+
+def load_json_file(filename: str):
+    file_path = BASE_DIR / filename
+    if file_path.exists():
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    else:
+        return []
+
+def load_all_setlists():
+    merged_setlist = {}
+    setlist_dir = BASE_DIR / "setlist"
+    if not setlist_dir.exists() or not setlist_dir.is_dir():
+        return merged_setlist
+    for file_path in sorted(setlist_dir.glob("_setlist_*.json")):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict) and ("setcode" in data or "code" in data or "id" in data):
+                    set_code = data.get("setcode") or data.get("code") or data.get("id")
+                    if set_code:
+                        merged_setlist[set_code] = data
+                elif isinstance(data, dict):
+                    merged_setlist.update(data)
+                elif isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict):
+                            set_code = item.get("setcode") or item.get("code") or item.get("id")
+                            if set_code:
+                                merged_setlist[set_code] = item
+        except Exception as e:
+            print(f"錯誤: 讀取系列檔案 {file_path.name} 失敗: {e}")
+    return merged_setlist
+
+@app.on_event("startup")
+def load_and_process_caches():
+    global carddata_cache, carddata_gzip_cache, carddata_patch_cache, card_types_cache, races_cache, abilities_cache, categoryname_cache, nickname_cache, setlist_cache, setlist_gzip_cache, setlist_patch_cache, diary_cache, tags_cache, etag_cache
+    global action_details_log, current_daily_logs, current_daily_date, last_reset_time
+
+    try:
+        now = datetime.now(TZ_UTC8)
+        current_daily_date = now.strftime("%Y%m%d")
+        
+        dates_to_load = [
+            (now - timedelta(days=2)).strftime("%Y%m%d"),
+            (now - timedelta(days=1)).strftime("%Y%m%d"),
+            current_daily_date
+        ]
+        
+        all_records = []
+        if db:
+            for d in dates_to_load:
+                try:
+                    doc_ref = db.collection('daily_records').document(d)
+                    doc = doc_ref.get()
+                    if doc.exists:
+                        day_logs = doc.to_dict().get("logs", [])
+                        if isinstance(day_logs, list):
+                            all_records.extend(day_logs)
+                            if d == current_daily_date:
+                                current_daily_logs = day_logs
+                except Exception as e:
+                    print(f"載入 Firebase 紀錄 {d} 失敗: {e}")
+        
+        all_records.sort(key=lambda x: x.get("time", ""))
+        
+        feature_counter.clear()
+        country_counter.clear()
+        user_counter.clear()
+        country_feature_counter.clear()
+        country_user_counter.clear()
+        daily_total_counter.clear()
+        country_daily_total_counter.clear()
+        action_details_log.clear()
+        
+        valid_date_keys = set(dates_to_load)
+
+        for entry in all_records:
+
+            time_str = entry.get("time", "")
+            date_key = time_str[:10].replace("-", "") if time_str else current_daily_date
+            
+            if date_key not in valid_date_keys:
+                continue
+
+            feat = entry.get("feature")
+            u = entry.get("user", "Unknown")
+            c = str(entry.get("country", "Unknown")).upper()
+            if c == "UNKNOWN" and u != "Unknown" and "-" in u:
+                c = u.split("-")[0].upper()
+                
+            feature_counter[feat] += 1
+            country_counter[c] += 1
+            user_counter[u] += 1
+            daily_total_counter[date_key] += 1
+            
+            country_feature_counter[c][feat] += 1
+            country_user_counter[c][u] += 1
+            country_daily_total_counter[c][date_key] += 1
+            
+            action_details_log.appendleft(entry)
+
+        if all_records and all_records[0].get("time"):
+            last_reset_time = all_records[0]["time"]
+        else:
+            last_reset_time = (now - timedelta(days=2)).strftime("%Y-%m-%d 00:00:00")
+
+        
+        # ================= 載入熱門單卡紀錄 =================
+        if db:
+            try:
+                view_records.clear()
+
+                # 新資料存在時，一律以新資料為準。
+                new_doc_ref = db.collection("analytics").document("view_records")
+                new_doc = new_doc_ref.get()
+
+                if new_doc.exists:
+                    new_data = new_doc.to_dict().get("data", {})
+                    if isinstance(new_data, dict):
+                        for card_name, countries in new_data.items():
+                            if not isinstance(countries, dict):
+                                continue
+                            for country, count in countries.items():
+                                try:
+                                    view_records[str(card_name)][str(country).upper()] = int(count)
+                                except (TypeError, ValueError):
+                                    continue
+
+                    print("✅ 已從 analytics/view_records 載入瀏覽紀錄")
+
+                else:
+                    # 新文件不存在，才讀取舊文件進行一次性遷移。
+                    old_doc_ref = db.collection("analytics").document("hot_cards")
+                    old_doc = old_doc_ref.get()
+
+                    if old_doc.exists:
+                        old_data = old_doc.to_dict().get("data", {})
+                        migrated = convert_legacy_hot_cards(old_data)
+
+                        for card_name, countries in migrated.items():
+                            for country, count in countries.items():
+                                view_records[card_name][country] = count
+
+                        # 寫入新文件，不修改舊的 analytics/hot_cards。
+                        new_doc_ref.set({
+                            "data": get_view_records_data(),
+                            "updated_at": firestore.SERVER_TIMESTAMP
+                        })
+
+                        print("✅ 舊瀏覽紀錄已遷移至 analytics/view_records")
+                    else:
+                        print("ℹ️ 新舊瀏覽紀錄文件皆不存在，從空紀錄開始")
+
+            except Exception as e:
+                print(f"載入 Firebase 瀏覽紀錄失敗: {e}")
+        # ====================================================
+
+
+        carddata_cache = load_json_file("carddata.json")
+        carddata_json_bytes = json.dumps(carddata_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
+        carddata_gzip_cache = gzip.compress(carddata_json_bytes)
+        carddata_patch_cache = load_json_file("patch_carddata.json") or []
+
+        card_types_cache = load_json_file("card_type.json")
+        races_cache = load_json_file("races.json")
+        abilities_cache = load_json_file("abilities.json")
+        categoryname_cache = load_json_file("categoryname.json")
+        nickname_cache = load_json_file("nickname.json")
+        diary_cache = load_json_file("diary.json")
+        
+        setlist_cache = load_all_setlists()
+        setlist_json_bytes = json.dumps(setlist_cache, ensure_ascii=False, sort_keys=True).encode('utf-8')
+        setlist_gzip_cache = gzip.compress(setlist_json_bytes)
+        setlist_patch_cache = load_json_file("patch_setlist.json") or {}
+        
+        loaded_tags = load_json_file("tags.json")
+        if loaded_tags:
+            tags_cache = loaded_tags
+            if "target_obj" not in tags_cache:
+                tags_cache["target_obj"] = copy.deepcopy(DEFAULT_TAGS["target_obj"])
+            if "trigger_time" not in tags_cache:
+                tags_cache["trigger_time"] = copy.deepcopy(DEFAULT_TAGS["trigger_time"])
+        else:
+            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+                
+        etag_cache["carddata"] = f'"{hashlib.md5(carddata_json_bytes).hexdigest()}"'
+        etag_cache["patch_carddata"] = generate_etag(carddata_patch_cache)
+        etag_cache["setlist"] = f'"{hashlib.md5(setlist_json_bytes).hexdigest()}"'
+        etag_cache["patch_setlist"] = generate_etag(setlist_patch_cache)
+        etag_cache["card_types"] = generate_etag(card_types_cache)
+        etag_cache["races"] = generate_etag(races_cache)
+        etag_cache["abilities"] = generate_etag(abilities_cache)
+        etag_cache["categoryname"] = generate_etag(categoryname_cache)
+        etag_cache["nickname"] = generate_etag(nickname_cache)
+        etag_cache["diary"] = generate_etag(diary_cache)
+
+    except Exception as e:
+        print(f"載入緩存失敗: {e}")
+
+class LineNotificationModel(BaseModel):
+    reporter_name: str = "使用者"
+    email: str = ""
+    emojis: str = ""
+    message: str = ""
+    
+class ReportModel(BaseModel):
+    card_name: str
+    card_id: str = ""
+    reporter_name: str = "熱情的決鬥者"
+    email: str = ""
+    error_desc: str = ""
+
+class AuthorMessageModel(BaseModel):
+    nickname: str = "使用者"
+    email: str = ""
+    emojis: str = ""
+    message: str
+    
+def push_line_message(msg_text: str):
+    token, user_id = LINE_ACCESS_TOKEN.strip(), LINE_USER_ID.strip()
+    if not token or not user_id or "你的_" in token:
+        return
+    url = "https://api.line.me/v2/bot/message/push"
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": f"Bearer {token}"
+    }
+    payload = {"to": user_id, "messages": [{"type": "text", "text": msg_text}]}
+    try:
+        with httpx.Client() as client:
+            client.post(url, headers=headers, json=payload, timeout=5.0)
+    except Exception as e:
+        print(f"[LINE Push Error]: {e}")
+        
+def send_line_notification(report: ReportModel, base_url: str = "", country: str = "Unknown"):
+    raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
+    target_param = raw_id if raw_id else report.card_name.strip()
+    card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
+    lines = [
+        "🚨 【卡牌翻譯錯誤回報】\n",
+        f"🌐 國籍：{country}",
+        f"📌 卡名：{report.card_name}"
+    ]
+    if raw_id:
+        lines.append(f"🆔 卡號：{raw_id}")
+    lines.append(f"🔗 連結：\n{card_link}\n")
+    lines.append(f"👤 回報者：{report.reporter_name}")
+    clean_email = report.email.strip() if report.email else ""
+    if clean_email:
+        lines.append(f"📧 Email：{clean_email}")
+    lines.append(f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}")
+    push_line_message("\n".join(lines))
+
+def send_author_message_notification(msg_data: AuthorMessageModel, country: str = "Unknown"):
+    msg_text = (
+        f"💬 【收到給作者的新留言】\n\n"
+        f"🌐 國籍：{country}\n"
+        f"👤 暱稱：{msg_data.nickname or '使用者'}\n"
+        f"📧 Email：{msg_data.email or '未提供'}\n"
+        f"😀 表情：{msg_data.emojis or '無'}\n\n"
+        f"📝 留言內容：\n{msg_data.message}"
+    )
+    push_line_message(msg_text)
+
+def send_nickname_application_notification(payload: NicknameApplyModel, country: str):
+    lines = [
+        "🏷️ 【新暱稱申請通知】",
+        f"🌐 國籍：{country}",
+        f"📌 目標卡名：{payload.card_name}",
+        "📝 申請暱稱："
+    ]
+    for i, nick in enumerate(payload.nicknames, 1):
+        lines.append(f"  {i}. {nick}")
+    push_line_message("\n".join(lines))
+    
+async def fetch_english_name_from_fandom(jp_name: str, client: httpx.AsyncClient) -> str:
+    jp_name_clean = jp_name.strip()
+    if not jp_name_clean:
+        return jp_name
+    if jp_name_clean in english_name_cache:
+        return english_name_cache[jp_name_clean]
+    clean_search_name = re.sub(r'（.*?）|\(.*?\)|《.*?》|＜.*?＞', '', jp_name_clean).strip() or jp_name_clean
+    search_url = f"https://duelmasters.fandom.com/api.php?action=query&list=search&srsearch={quote(clean_search_name)}&format=json"
+    try:
+        resp = await client.get(search_url, headers={"User-Agent": "Mozilla/5.0"})
+        if resp.status_code == 200:
+            search_results = resp.json().get("query", {}).get("search", [])
+            if search_results:
+                en_title = search_results[0].get("title", "").strip()
+                if en_title:
+                    english_name_cache[jp_name_clean] = en_title
+                    return en_title
+    except Exception as e:
+        print(f"[Fandom Fetch Error]: {e}")
+    return jp_name_clean
+
+def format_card_wdata_types(card_dict):
+    if not card_dict or "wdata" not in card_dict or not isinstance(card_dict["wdata"], list):
+        return card_dict
+    card_copy = copy.deepcopy(card_dict)
+    cardtype_map = {}
+    if isinstance(card_types_cache, list):
+        for item in card_types_cache:
+            if isinstance(item, dict):
+                chi_val = item.get("text") or item.get("chi") or item.get("cht") or item.get("jap")
+                if not chi_val: continue
+                for k in ["value", "jap", "id", "key"]:
+                    val = item.get(k)
+                    if val is not None:
+                        cardtype_map[str(val).strip().upper()] = chi_val
+    for w in card_copy["wdata"]:
+        if isinstance(w, dict):
+            raw_val = w.get("type") if w.get("type") is not None else (w.get("cardtype") if w.get("cardtype") is not None else w.get("card_type"))
+            target_key = raw_val[0] if isinstance(raw_val, list) and len(raw_val) > 0 else raw_val
+            if target_key is not None and str(target_key).strip() != "":
+                clean_key = str(target_key).strip().upper()
+                w["cardtype_chi"] = cardtype_map.get(clean_key, target_key)
+    return card_copy
+
+def get_card_set_list(card_name: str):
+    tw_sets, non_tw_sets, net_sets = [], [], []
+    clean_target = card_name.strip()
+    if isinstance(setlist_cache, dict):
+        for key, set_obj in setlist_cache.items():
+            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+            if isinstance(card_list, list):
+                has_card = any(
+                    (i.get("name", "").strip() == clean_target if isinstance(i, dict) else str(i).strip() == clean_target)
+                    for i in card_list
+                )
+                if has_card:
+                    setcode = set_obj.get("setcode") or set_obj.get("code") or set_obj.get("id") or key
+                    setname = set_obj.get("setname") or set_obj.get("name") or setcode
+                    is_tw = set_obj.get("istw") == True
+                    upper_code = str(setcode).strip().upper()
+                    is_net = not upper_code.startswith('D') and not upper_code.startswith('O')
+                    display_str = f"{setcode}{setname}"
+                    if is_net:
+                        net_sets.append(display_str)
+                    elif is_tw:
+                        tw_sets.append(display_str)
+                    else:
+                        non_tw_sets.append(display_str)
+    return {"tw": tw_sets, "non_tw": non_tw_sets, "net": net_sets}
+    
+def normalize_search_id(s: str) -> str:
+    if not s:
+        return ""
+    res = []
+    for ch in str(s):
+        code = ord(ch)
+        if 0xFF01 <= code <= 0xFF5E:
+            res.append(chr(code - 0xfee0))
+        else:
+            res.append(ch)
+    return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
+
+def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
+    clean_name = card_name.strip()
+    is_strict = False
+    if set_code:
+        upper_code = str(set_code).strip().upper()
+        if upper_code.startswith('D') or upper_code.startswith('O'):
+            is_strict = True
+    if set_code and set_code in setlist_cache:
+        set_obj = setlist_cache[set_code]
+        card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+        for item in card_list:
+            item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
+            if item_name == clean_name:
+                if isinstance(item, dict) and item.get("pic"):
+                    pics = item["pic"]
+                    found_pic = pics[0] if isinstance(pics, list) and len(pics) > 0 else pics
+                    if found_pic:
+                        return found_pic
+    if is_strict:
+        return ""
+    for card in carddata_cache:
+        if card.get("name", "").strip() == clean_name and card.get("pic"):
+            return card["pic"]
+    for set_info in setlist_cache.values():
+        card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+        for item in card_list:
+            item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
+            if item_name == clean_name:
+                if isinstance(item, dict) and item.get("pic"):
+                    pics = item["pic"]
+                    if isinstance(pics, list) and len(pics) > 0 and pics[0]:
+                        return pics[0]
+                    elif isinstance(pics, str) and pics:
+                        return pics
+    return ""
+
+
+async def record_debounce_timer(date_str: str):
+    await asyncio.sleep(120)
+    try:
+        def _safe_write_to_firestore():
+            global current_daily_logs
+
+            if db:
+                # 一般操作日誌維持原本的存檔位置。
+                doc_ref = db.collection("daily_records").document(date_str)
+                doc_ref.set({
+                    "logs": current_daily_logs,
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                }, merge=True)
+
+                # 瀏覽紀錄只寫入新的文件。
+                view_doc_ref = db.collection("analytics").document("view_records")
+                view_doc_ref.set({
+                    "data": get_view_records_data(),
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                }, merge=True)
+
+        await asyncio.to_thread(_safe_write_to_firestore)
+        print(f"[Record] 成功同步 {date_str} 日誌與新格式瀏覽紀錄！")
+
+    except Exception as e:
+        print(f"[Record Debounce Error]: {e}")
+
+
+def trigger_record_sync(date_str: str):
+    global record_sync_task
+    if record_sync_task:
+        record_sync_task.cancel()
+    record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
+
+@app.get("/")
+async def serve_index(): return FileResponse("index.html")
+
+@app.get("/fabric.do")
+async def serve_index(): return FileResponse("fabric.html")
+
+@app.get("/rank.html")
+async def serve_index(): return FileResponse("rank.html")
+
+@app.get("/quizzes/ColorDrill")
+async def serve_index(): return FileResponse("colorStudy.html")
+
+@app.get("/quizzes/AFT2")
+async def serve_index(): return FileResponse("colorStudyAFT2.html")
+
+@app.get("/pop.html")
+async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList: Optional[str] = None, title: Optional[str] = None):
+    html_path = BASE_DIR / "pop.html"
+    if not html_path.exists():
+        return HTMLResponse("File not found", status_code=404)
+    html_content = html_path.read_text(encoding="utf-8")
+    meta_tags = ""
+    custom_title_clean = title.strip().replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;') if title else ""
+    if setCode:
+        set_code = setCode.strip()
+        set_obj = setlist_cache.get(set_code)
+        if set_obj:
+            set_name = set_obj.get("setname") or set_obj.get("name") or set_code
+            card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+            first_card_name = ""
+            if card_list:
+                first_item = card_list[0]
+                first_card_name = first_item.get("name", "").strip() if isinstance(first_item, dict) else str(first_item).strip()
+            og_image = get_og_image(first_card_name, set_code) if first_card_name else ""
+            if custom_title_clean:
+                display_title = f"{custom_title_clean} - 卡表總覽"
+            elif set_name and set_name != set_code:
+                display_title = f"{set_name} ({set_code}) - 卡表總覽"
+            else:
+                display_title = f"{set_code} - 卡表總覽"
+            meta_tags = f"""
+            <meta property="og:title" content="{display_title}">
+            <meta property="og:description" content="點擊查看完整商品卡表與詳細內容。">
+            """
+            if og_image:
+                meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
+                meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
+    elif deckList:
+        compressed = deckList.strip()
+        decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed) or compressed
+        raw_items = decompressed.split(',')
+        first_card_name = ""
+        og_image = ""
+        for item in raw_items:
+            item = item.strip()
+            if not item: continue
+            cname = item.split('*', 1)[1].strip() if '*' in item else item
+            if not first_card_name:
+                first_card_name = cname
+            img = get_og_image(cname)
+            if img:
+                og_image = img
+                break
+        if custom_title_clean:
+            display_title = f"{custom_title_clean} - 卡表總覽"
+        elif first_card_name:
+            display_title = f"自訂分享卡表 - {first_card_name}...等"
+        else:
+            display_title = "自訂分享卡表"
+        meta_tags = f"""
+        <meta property="og:title" content="{display_title}">
+        <meta property="og:description" content="點擊查看完整自訂牌組/卡表內容。">
+        """
+        if og_image:
+            meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
+            meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
+    if meta_tags:
+        html_content = html_content.replace("<head>", f"<head>\n{meta_tags}", 1)
+    return HTMLResponse(content=html_content)
+
+@app.get("/card.html")
+async def get_card_page(request: Request, p: Optional[str] = None):
+    html_path = BASE_DIR / "card.html"
+    if not html_path.exists():
+        return HTMLResponse("File not found", status_code=404)
+    html_content = html_path.read_text(encoding="utf-8")
+    if not p:
+        return HTMLResponse(content=html_content)
+    query_str = p.strip()
+    clean_query = normalize_search_id(query_str)
+    target_card_name = ""
+    target_set_code = None
+    for card in carddata_cache:
+        if card.get("name", "").strip() == query_str:
+            target_card_name = query_str
+            break
+    if not target_card_name and isinstance(nickname_cache, list):
+        for nick_item in nickname_cache:
+            if query_str in nick_item.get("nicknames", []):
+                target_card_name = nick_item.get("realname", "")
+                break
+    if not target_card_name:
+        def search_id(tgt_id):
+            for s_code, s_info in setlist_cache.items():
+                c_list = s_info.get("setcardlist") or s_info.get("cardlist") or []
+                for item in c_list:
+                    if isinstance(item, dict) and "id" in item:
+                        ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                        for single_id in ids:
+                            if normalize_search_id(single_id) == tgt_id:
+                                return item.get("name", "").strip(), s_code
+            return "", None
+        target_card_name, target_set_code = search_id(clean_query)
+        if not target_card_name and query_str.upper().startswith("DM"):
+            stripped = query_str[2:].strip()
+            if stripped:
+                target_card_name, target_set_code = search_id(normalize_search_id(stripped))
+    if target_card_name:
+        og_image = get_og_image(target_card_name, target_set_code)
+        meta_tags = f"""
+        <meta property="og:title" content="【{target_card_name}】卡牌詳細資料">
+        <meta property="og:description" content="點擊查看卡牌的詳細數值、效果與收錄商品。">
+        """
+        if og_image:
+            meta_tags += f'\n    <meta property="og:image" content="{og_image}">'
+            meta_tags += '\n    <meta name="twitter:card" content="summary_large_image">'
+        html_content = html_content.replace("<head>", f"<head>\n{meta_tags}", 1)
+    return HTMLResponse(content=html_content)
+
+@app.get("/relationship.html")
+async def get_relationship_page(): return FileResponse("relationship.html")
+
+@app.get("/api/server_id")
+async def get_server_id(request: Request, client_id: Optional[str] = Query(None)):
+    country = get_client_country(request)
+    if not client_id:
+        date_str = datetime.now(TZ_UTC8).strftime("%y%m%d")
+        rand_str = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
+        client_id = f"{country}-{date_str}-{rand_str}"
+    return {
+        "server_id": SERVER_INSTANCE_ID,
+        "client_id": client_id,
+        "ip_country": country
+    }
+
+def poison_legacy_route(request: Request, legacy_path: str):
+    if request.url.path == legacy_path:
+        return JSONResponse(
+            status_code=410,
+            content={"error": "API deprecated. Forcing cache clear."},
+            headers={"Clear-Site-Data": '"cache"'}
+        )
+    return None
+
+@app.get("/api/patch_carddata")
+@app.get("/api/v2/patch_carddata")
+async def get_patch_carddata(request: Request): 
+    if poison := poison_legacy_route(request, "/api/patch_carddata"): return poison
+    return get_etag_response(request, "patch_carddata", carddata_patch_cache)
+
+@app.get("/api/patch_setlist")
+@app.get("/api/v2/patch_setlist")
+async def get_patch_setlist(request: Request): 
+    if poison := poison_legacy_route(request, "/api/patch_setlist"): return poison
+    return get_etag_response(request, "patch_setlist", setlist_patch_cache)
+    
+@app.get("/api/card_types")
+@app.get("/api/v2/card_types")
+async def get_card_types(request: Request): 
+    if poison := poison_legacy_route(request, "/api/card_types"): return poison
+    return get_etag_response(request, "card_types", card_types_cache)
+
+@app.get("/api/races")
+@app.get("/api/v2/races")
+async def get_races(request: Request): 
+    if poison := poison_legacy_route(request, "/api/races"): return poison
+    return get_etag_response(request, "races", races_cache)
+
+@app.get("/api/abilities")
+@app.get("/api/v2/abilities")
+async def get_abilities(request: Request): 
+    if poison := poison_legacy_route(request, "/api/abilities"): return poison
+    return get_etag_response(request, "abilities", abilities_cache)
+
+@app.get("/api/carddata")
+@app.get("/api/v2/carddata")
+async def get_carddata(request: Request): 
+    if poison := poison_legacy_route(request, "/api/carddata"): return poison
+    return get_etag_response(request, "carddata", carddata_cache, carddata_gzip_cache)
+
+@app.get("/api/categoryname")
+@app.get("/api/v2/categoryname")
+async def get_categoryname(request: Request): 
+    if poison := poison_legacy_route(request, "/api/categoryname"): return poison
+    return get_etag_response(request, "categoryname", categoryname_cache)
+
+@app.get("/api/nickname")
+@app.get("/api/v2/nickname")
+async def get_nickname(request: Request): 
+    if poison := poison_legacy_route(request, "/api/nickname"): return poison
+    return get_etag_response(request, "nickname", nickname_cache)
+
+@app.get("/api/setlist")
+@app.get("/api/v2/setlist")
+async def get_setlist(request: Request): 
+    if poison := poison_legacy_route(request, "/api/setlist"): return poison
+    return get_etag_response(request, "setlist", setlist_cache, setlist_gzip_cache)
+
+@app.get("/api/card_detail")
+@limiter.limit("6/minute")
+async def get_card_detail(request: Request, p: str = Query(..., description="卡牌名稱或ID/卡號")):
+    query_str = p.strip()
+    if not query_str:
+        raise HTTPException(status_code=400, detail="請提供卡牌名稱或ID")
+
+    def normalize_id(s: str) -> str:
+        if not s:
+            return ""
+        res = []
+        for ch in str(s):
+            code = ord(ch)
+            if 0xFF01 <= code <= 0xFF5E:
+                res.append(chr(code - 0xfee0))
+            else:
+                res.append(ch)
+        return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
+
+    clean_query = normalize_id(query_str)
+    matched_card = None
+    target_card_name = None
+
+    for card in carddata_cache:
+        c_name = card.get("name", "").strip()
+        if c_name == query_str:
+            matched_card = card
+            target_card_name = c_name
+            break
+
+    if not matched_card and isinstance(nickname_cache, list):
+        for nick_item in nickname_cache:
+            nicknames = nick_item.get("nicknames", [])
+            if query_str in nicknames:
+                real_name = nick_item.get("realname")
+                matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == real_name), None)
+                if matched_card:
+                    target_card_name = real_name
+                    break
+
+    if matched_card and target_card_name:
+        card_to_return = copy.deepcopy(matched_card)
+        if not card_to_return.get("pic"):
+            borrowed_pic = ""
+            for set_info in setlist_cache.values():
+                card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+                for item in card_list:
+                    if isinstance(item, dict) and item.get("name", "").strip() == target_card_name:
+                        pics = item.get("pic")
+                        if isinstance(pics, list) and len(pics) > 0 and pics[0]:
+                            borrowed_pic = pics[0]
+                            break
+                        elif isinstance(pics, str) and pics:
+                            borrowed_pic = pics
+                            break
+                if borrowed_pic:
+                    break
+            if borrowed_pic:
+                card_to_return["pic"] = borrowed_pic
+
+        processed_card = format_card_wdata_types(card_to_return)
+        return {
+            "found_by": "name",
+            "card": processed_card,
+            "setdata": None,
+            "matched_id": "",
+            "matched_index": 0,
+            "set_list": get_card_set_list(target_card_name),
+            "races": races_cache,
+            "abilities": abilities_cache,
+            "card_types": card_types_cache
+        }
+
+    def search_by_id(target_id_clean: str):
+        m_setdata = None
+        t_card_name = None
+        m_id_val = ""
+        m_index = 0
+        for set_code, set_info in setlist_cache.items():
+            card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
+            name_occurrence_counter = {}
+            for item in card_list:
+                if isinstance(item, dict):
+                    item_name = item.get("name", "").strip()
+                    current_occ = name_occurrence_counter.get(item_name, 0)
+                    if "id" in item:
+                        ids = item["id"] if isinstance(item["id"], list) else [item["id"]]
+                        for idx, single_id in enumerate(ids):
+                            if normalize_id(single_id) == target_id_clean:
+                                m_setdata = set_info
+                                t_card_name = item_name
+                                m_id_val = single_id
+                                m_index = current_occ + idx
+                                break
+                    ids_count = len(item["id"]) if isinstance(item.get("id"), list) else 1
+                    name_occurrence_counter[item_name] = current_occ + ids_count
+                if m_setdata:
+                    break
+            if m_setdata:
+                break
+        return m_setdata, t_card_name, m_id_val, m_index
+
+    matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query)
+    if not matched_setdata and query_str.upper().startswith("DM"):
+        stripped_query = query_str[2:].strip()
+        if stripped_query:
+            clean_query_stripped = normalize_id(stripped_query)
+            matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query_stripped)
+
+    if matched_setdata and target_card_name:
+        matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == target_card_name), None)
+        if not matched_card:
+            matched_card = {"name": target_card_name, "wdata": []}
+        processed_card = format_card_wdata_types(matched_card)
+        return {
+            "found_by": "id",
+            "card": processed_card,
+            "setdata": matched_setdata,
+            "matched_id": matched_id_val,
+            "matched_index": matched_index,
+            "set_list": get_card_set_list(target_card_name),
+            "races": races_cache,
+            "abilities": abilities_cache,
+            "card_types": card_types_cache
+        }
+
+    raise HTTPException(status_code=404, detail=f"查無卡名或 ID 為 '{p}' 的卡牌資料")
+
+@app.get("/api/get_english_name")
+@limiter.limit("20/minute")
+async def get_english_name(request: Request, name: str = Query(..., description="日文卡名")):
+    jp_name = name.strip()
+    if not jp_name:
+        raise HTTPException(status_code=400, detail="請提供日文卡名")
+    from_cache = jp_name in english_name_cache
+    async with httpx.AsyncClient(timeout=6.0) as client:
+        en_name = await fetch_english_name_from_fandom(jp_name, client)
+    if en_name and en_name != jp_name:
+        return {"status": "success", "jp_name": jp_name, "en_name": en_name, "from_cache": from_cache}
+    raise HTTPException(status_code=404, detail=f"查無卡牌「{jp_name}」的英文名稱")
+
+@app.post("/api/export_english_deck")
+@limiter.limit("10/minute")
+async def export_english_deck(request: Request, payload: ExportDeckRequest):
+    if not payload.items:
+        raise HTTPException(status_code=400, detail="牌組清單不可為空")
+    semaphore = asyncio.Semaphore(3)
+    async def fetch_item_with_throttle(item: DeckItem, client: httpx.AsyncClient):
+        async with semaphore:
+            await asyncio.sleep(0.15)
+            en_name = await fetch_english_name_from_fandom(item.name, client)
+            return {"jp_name": item.name, "en_name": en_name, "count": item.count}
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        tasks = [fetch_item_with_throttle(item, client) for item in payload.items]
+        results = await asyncio.gather(*tasks)
+    return {"status": "success", "result": results}
+
+@app.get("/api/pop/{set_code}")
+async def get_pop_data(set_code: str):
+    current_set = setlist_cache.get(set_code)
+    if not current_set:
+        raise HTTPException(status_code=404, detail=f"找不到代碼為 '{set_code}' 的商品資料")
+    set_card_list = current_set.get("setcardlist") or current_set.get("cardlist") or []
+    order_map = {}
+    for index, item in enumerate(set_card_list):
+        item_name = item.get("name") if isinstance(item, dict) else item
+        if isinstance(item_name, str):
+            clean_name = item_name.strip()
+            if clean_name not in order_map:
+                order_map[clean_name] = index
+    matched_cards = []
+    for card in carddata_cache:
+        c_name = card.get("name")
+        if c_name and c_name.strip() in order_map:
+            matched_cards.append(card)
+    matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
+    return {"set_info": current_set, "cards": matched_cards}
+
+@app.post("/api/pop_custom")
+async def get_pop_custom_data(payload: CustomDeckModel):
+    compressed = payload.deck_list.strip()
+    if not compressed:
+        raise HTTPException(status_code=400, detail="密碼不可為空")
+    decompressed = lz_compressor.decompressFromEncodedURIComponent(compressed) or compressed
+    raw_items = decompressed.split(',')
+    custom_card_list = []
+    for item in raw_items:
+        item = item.strip()
+        if not item: continue
+        if '*' in item:
+            parts = item.split('*', 1)
+            try:
+                count, cname = int(parts[0]), parts[1].strip()
+            except ValueError:
+                count, cname = 1, item
+        else:
+            count, cname = 1, item
+        custom_card_list.append({"name": cname, "count": count})
+    order_map = {str(item["name"]).strip(): index for index, item in enumerate(custom_card_list)}
+    matched_cards = [card for card in carddata_cache if card.get("name") and card.get("name").strip() in order_map]
+    matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
+    return {
+        "set_info": {
+            "setcode": "NET-CUSTOM", "setname": "自訂分享卡表", "isdeck": True, "istw": True, "setcardlist": custom_card_list
+        },
+        "cards": matched_cards
+    }
+
+@app.get("/api/proxy-image")
+@limiter.limit("5/minute")
+async def proxy_image(request: Request, url: str = Query(...)):
+    now = time.time()
+    if url in proxy_cache:
+        item = proxy_cache[url]
+        if now - item["timestamp"] < CACHE_TTL_SECONDS:
+            item["timestamp"] = now
+            proxy_cache.move_to_end(url)
+            return Response(content=item["content"], media_type=item["content_type"], headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"})
+        else:
+            del proxy_cache[url]
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 Chrome/120.0.0.0"}, timeout=8.0)
+            if resp.status_code != 200: raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
+            content_type = resp.headers.get("content-type", "image/jpeg")
+            if len(proxy_cache) >= MAX_CACHE_SIZE: proxy_cache.popitem(last=False)
+            proxy_cache[url] = {"content": resp.content, "content_type": content_type, "timestamp": now}
+            return Response(content=resp.content, media_type=content_type, headers={"Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=86400"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image proxy error: {str(e)}")
+
+@app.get("/api/diary")
+@app.get("/api/v2/diary")
+async def get_diary(request: Request): 
+    if poison := poison_legacy_route(request, "/api/diary"): return poison
+    return get_etag_response(request, "diary", diary_cache)
+
+@app.post("/api/report_error")
+@limiter.limit("3/minute")
+async def report_error(request: Request, report: ReportModel, background_tasks: BackgroundTasks):
+    if not report.card_name: raise HTTPException(status_code=400, detail="卡牌名稱為必填項目")
+    country = get_client_country(request)
+    background_tasks.add_task(send_line_notification, report, str(request.base_url), country)
+    name = report.reporter_name.strip() if report.reporter_name and report.reporter_name.strip() else "熱情的決鬥者"
+    return {"status": "success", "message": f"回報成功！感謝{name}！"}
+
+@app.post("/api/apply_nickname")
+@limiter.limit("12/hour")
+async def apply_nickname(request: Request, payload: NicknameApplyModel, background_tasks: BackgroundTasks):
+    if not payload.nicknames:
+        raise HTTPException(status_code=400, detail="申請的暱稱不可為空")
+    country = get_client_country(request)
+    background_tasks.add_task(send_nickname_application_notification, payload, country)
+    return {"status": "success", "message": "暱稱申請已成功送出！"}
+
+@app.post("/api/message_author")
+@limiter.limit("3/minute")
+async def message_author(request: Request, payload: AuthorMessageModel, background_tasks: BackgroundTasks):
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(status_code=400, detail="留言內容為必填項目")
+    if len(payload.emojis) > 20:
+        raise HTTPException(status_code=400, detail="表情符號最多選擇 20 個")
+    country = get_client_country(request)
+    background_tasks.add_task(send_author_message_notification, payload, country)
+    nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
+    return {"status": "success", "message": f"留言已成功送出！感謝 {nickname} 的建議與支持！"}
+    
+@app.post("/api/track")
+async def track_feature(request: Request):
+    try:
+        client_host = request.client.host if request.client else ""
+        request_host = request.headers.get("host", "")
+        is_localhost = (
+            client_host in ["127.0.0.1", "::1"] or 
+            "localhost" in request_host or 
+            "127.0.0.1" in request_host
+        )
+        if is_localhost:
+            return {"status": "skipped", "reason": "localhost environment"}
+
+        data = await request.json()
+        feature_name = data.get("feature")
+        detail = data.get("detail")
+        user_id = data.get("user_id", "Unknown")
+        
+        raw_country = data.get("primary_country") or data.get("country") or "Unknown"
+        country = str(raw_country).upper()
+        if country == "UNKNOWN" and user_id != "Unknown" and "-" in user_id:
+            country = user_id.split("-")[0].upper()
+
+        is_vpn = data.get("is_vpn", False)
+        real_ip_country = data.get("real_ip_country", "Unknown")
+
+        if feature_name:
+            now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
+            last_user_log = None
+            for log in action_details_log:
+                if log.get("user") == user_id:
+                    last_user_log = log
+                    break
+
+            is_skip = False
+            is_merge = False
+            chained_key = None
+
+            if last_user_log and last_user_log.get("feature") == feature_name:
+                old_raw = last_user_log.get("_raw_detail")
+                new_raw = detail
+                if old_raw == new_raw:
+                    is_skip = True
+                elif isinstance(old_raw, dict) and isinstance(new_raw, dict):
+                    if set(old_raw.keys()) == set(new_raw.keys()):
+                        diff_keys = [k for k in old_raw.keys() if old_raw[k] != new_raw[k]]
+                        if len(diff_keys) == 1:
+                            changed_k = diff_keys[0]
+                            last_chained_key = last_user_log.get("_chained_key")
+                            if last_chained_key is None or last_chained_key == changed_k:
+                                is_merge = True
+                                chained_key = changed_k
+                                current_display_detail = copy.deepcopy(last_user_log["detail"])
+                                old_disp_val = str(current_display_detail[changed_k])
+                                new_raw_val = str(new_raw[changed_k])
+                                current_display_detail[changed_k] = f"{old_disp_val} > {new_raw_val}"
+                                last_user_log["detail"] = current_display_detail
+                                last_user_log["_raw_detail"] = copy.deepcopy(new_raw)
+                                last_user_log["_chained_key"] = changed_k
+                                last_user_log["time"] = now_utc8
+                                action_details_log.remove(last_user_log)
+                                action_details_log.appendleft(last_user_log)
+                elif isinstance(old_raw, str) and isinstance(new_raw, str):
+                    last_chained_key = last_user_log.get("_chained_key")
+                    if last_chained_key is None or last_chained_key == "_string_chain":
+                        is_merge = True
+                        chained_key = "_string_chain"
+                        old_disp_val = str(last_user_log["detail"])
+                        new_raw_val = str(new_raw)
+                        last_user_log["detail"] = f"{old_disp_val} > {new_raw_val}"
+                        last_user_log["_raw_detail"] = new_raw
+                        last_user_log["_chained_key"] = chained_key
+                        last_user_log["time"] = now_utc8
+                        action_details_log.remove(last_user_log)
+                        action_details_log.appendleft(last_user_log)
+
+            if is_skip or is_merge:
+                pass
+            else:
+                feature_counter[feature_name] += 1
+                country_counter[country] += 1
+                user_counter[user_id] += 1
+                country_feature_counter[country][feature_name] += 1
+                country_user_counter[country][user_id] += 1
+                now_date_key = now_utc8[:10].replace("-", "")
+                daily_total_counter[now_date_key] += 1
+                country_daily_total_counter[country][now_date_key] += 1
+
+                entry = {
+                    "feature": feature_name,
+                    "country": country,
+                    "user": user_id,
+                    "is_vpn": is_vpn,
+                    "real_ip_country": real_ip_country,
+                    "detail": copy.deepcopy(detail),
+                    "_raw_detail": copy.deepcopy(detail), 
+                    "_chained_key": None,
+                    "time": now_utc8
+                }
+                action_details_log.appendleft(entry)
+
+            global current_daily_date, current_daily_logs
+            now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
+            if now_date_str != current_daily_date:
+                current_daily_date = now_date_str
+                current_daily_logs = []
+
+            if not is_skip:
+                if is_merge:
+                    if last_user_log not in current_daily_logs:
+                        current_daily_logs.append(last_user_log)
+                else:
+                    current_daily_logs.append(entry)
+                trigger_record_sync(now_date_str)
+
+            sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+            sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+
+            await console_manager.broadcast()
+            
+    except Exception as e:
+        pass
+    return {"status": "ok"}
+
+@app.get("/api/system_config")
+async def get_system_config():
+    return {"LATEST_SET_CODES": LATEST_SET_CODES}
+
+
+@app.post("/api/track/card_view")
+async def track_card_view(request: Request, payload: CardViewTrackModel):
+    """記錄單張卡牌瀏覽次數，依卡名與國家統計。"""
+    card_name = payload.card_name.strip()
+    if not card_name:
+        return {"status": "skipped", "reason": "empty card name"}
+
+    client_host = request.client.host if request.client else ""
+    request_host = request.headers.get("host", "")
+    is_localhost = (
+        client_host in ["127.0.0.1", "::1"]
+        or "localhost" in request_host
+        or "127.0.0.1" in request_host
+    )
+    if is_localhost:
+        return {"status": "skipped", "reason": "localhost environment"}
+
+    country = get_client_country(request)
+
+    # 新結構只記錄卡名與國家，不再按商品重複累加。
+    view_records[card_name][country] += 1
+
+    # 新增功能：記錄最新卡牌瀏覽紀錄
+    recent_card_views.insert(0, {
+        "card_name": card_name,
+        "country": country,
+        "time": datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
+    # 只保留指定筆數，超出部分刪除最舊的紀錄
+    del recent_card_views[RECENT_CARD_VIEW_LIMIT:]
+
+    # 如果有 Console 正在連線，就即時推送更新
+    await console_manager.broadcast_recent_card_views()
+
+    now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
+    trigger_record_sync(now_date_str)
+
+    return {"status": "success"}
+
+
+@app.get("/console.html")
+@app.get("/api/track/stats")
+async def get_feature_stats(
+    request: Request, 
+    admin: Optional[str] = Query(None, description="admin"),
+    token: Optional[str] = Query(None, description="token"),
+    format: Optional[str] = Query(None)
+):
+    accept_header = request.headers.get("accept", "")
+    user_agent = request.headers.get("user-agent", "").lower()
+    is_crawler = any(bot in user_agent for bot in [
+        "bot", "crawler", "spider", "facebookexternalhit", "line-poker", "discordbot", "slackbot"
+    ])
+    is_html = "text/html" in accept_header and format != "json"
+    now = time.time()
+
+    for k in list(one_time_tokens.keys()):
+        if one_time_tokens[k]["expires_at"] < now:
+            del one_time_tokens[k]
+
+    authorized = False
+    auth_level = ""
+    real_token = token
+    country = None
+    if token and len(token) == 34:
+        c1 = token[0].upper()
+        c2 = token[-1].upper()
+        country = f"{c1}{c2}"
+        real_token = token[1:-1]
+
+    if admin and admin == TRACK_STATS_USER:
+        authorized = True
+        auth_level = "admin"
+    elif real_token and real_token in one_time_tokens:
+        token_info = one_time_tokens[real_token]
+        if is_html and not is_crawler:
+            if not token_info.get("is_activated", False):
+                token_info["is_activated"] = True
+                token_info["expires_at"] = min(token_info["expires_at"], now + 300)
+            else:
+                if now > token_info["expires_at"]:
+                    raise HTTPException(status_code=403, detail="此 Token 已過期失效")
+        authorized = True
+        auth_level = "country" if country else "token"
+
+    if not authorized:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    if is_html:
+        html_file = BASE_DIR / "console.html"
+        if html_file.exists():
+            return FileResponse(html_file)
+        elif Path("console.html").exists():
+            return FileResponse("console.html")
+        else:
+            raise HTTPException(status_code=500, detail="找不到 console.html 檔案")
+
+    daily_totals, total_events = get_recent_three_day_totals()
+    formatted_data_stats = { DATA_NAME_MAP.get(k, k): v for k, v in data_transfer_stats.items() }
+    recent_logs = get_clean_recent_logs()
+
+    if auth_level in ["admin", "token"]:
+        sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+        sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+        result = {
+            "total_events": total_events,
+            "daily_totals": daily_totals,
+            "stats": sorted_stats,
+            "country_stats": sorted_country_stats,
+            "country_user_counts": get_country_user_counts(),
+            "recent_50_details": recent_logs,
+            "data_transfer_stats": formatted_data_stats,
+            "start_time": last_reset_time,
+            "hot_card_views": get_view_records_data(),
+            "latest_20_card_views": list(recent_card_views),
+            "LATEST_SET_CODES": LATEST_SET_CODES
+        }
+    else:
+        c = country.upper()
+        c_daily_totals, c_total_events = get_recent_three_day_totals(c)
+        c_stats = dict(sorted(country_feature_counter[c].items(), key=lambda item: item[1], reverse=True))
+        c_users = country_user_counter[c]
+        c_logs = [log for log in recent_logs if log.get("country") == c or (log.get("user") and log.get("user").startswith(c))]
+        c_hot_card_views = get_view_records_data(c)
+        result = {
+            "total_events": c_total_events,
+            "daily_totals": c_daily_totals,
+            "stats": c_stats,
+            "country_stats": {c: country_counter[c]}, 
+            "country_user_counts": {c: len(c_users)},
+            "recent_50_details": c_logs,
+            "data_transfer_stats": formatted_data_stats,
+            "start_time": last_reset_time,
+            "hot_card_views": c_hot_card_views,
+            "latest_20_card_views": [
+                item for item in recent_card_views
+                if item.get("country") == c
+            ],
+            "LATEST_SET_CODES": LATEST_SET_CODES
+        }
+
+    return PrettyJSONResponse(content=result)
+
+@app.websocket("/ws/console")
+async def websocket_console(websocket: WebSocket, admin: Optional[str] = Query(None), token: Optional[str] = Query(None)):
+    now = time.time()
+    authorized = False
+    auth_level = ""
+    real_token = token
+    country = None
+    if token and len(token) == 34:
+        c1 = token[0].upper()
+        c2 = token[-1].upper()
+        country = f"{c1}{c2}"
+        real_token = token[1:-1]
+        
+    if admin and admin == TRACK_STATS_USER:
+        authorized = True
+        auth_level = "admin"
+    elif real_token and real_token in one_time_tokens:
+        if one_time_tokens[real_token]["expires_at"] >= now:
+            authorized = True
+            auth_level = "country" if country else "token"
+
+    if not authorized:
+        await websocket.close(code=4008)
+        return
+
+    c_val = country.upper() if country else None
+    await console_manager.connect(websocket, auth_level, c_val)
+    await console_manager.broadcast()
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        console_manager.disconnect(websocket)
+    except Exception:
+        console_manager.disconnect(websocket)
+
+@app.websocket("/ws/broadcast")
+async def websocket_broadcast(websocket: WebSocket, user_id: str = Query("Unknown"), primary_country: str = Query("Unknown")):
+    await client_manager.connect(websocket, user_id, primary_country)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        client_manager.disconnect(websocket)
+
+@app.post("/api/console/broadcast")
+async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(status_code=400, detail="廣播訊息不可為空")
+    await client_manager.broadcast(
+        message=payload.message.strip(),
+        target_type=payload.target_type,
+        targets=payload.targets
+    )
+    return {"status": "success", "receivers": len(client_manager.active_connections)}
+
+@app.post("/api/console/manual_save")
+async def force_manual_save(admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    try:
+        def _write_tags():
+            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+        await asyncio.to_thread(_write_tags)
+        await push_tags_to_github()
+
+        global current_daily_date, current_daily_logs
+        if db and current_daily_date and current_daily_logs:
+            def _write_records():
+                doc_ref = db.collection('daily_records').document(current_daily_date)
+                doc_ref.set({
+                    "logs": current_daily_logs,
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                }, merge=True)
+            await asyncio.to_thread(_write_records)
+
+        return {"status": "success", "message": "手動存檔成功！"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"儲存失敗: {str(e)}")
+
+@app.get("/api/console/online_users")
+async def get_online_users(admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    users = []
+    countries = set()
+    for info in client_manager.active_connections.values():
+        users.append(info["user"])
+        countries.add(info["country"])
+    return {
+        "users": sorted(list(set(users))),
+        "countries": sorted(list(countries)),
+        "total_online": len(client_manager.active_connections)
+    }
+
+def get_client_country(request: Request) -> str:
+    client_host = request.client.host if request.client else ""
+    request_host = request.headers.get("host", "")
+    if client_host in ["127.0.0.1", "::1"] or "localhost" in request_host or "127.0.0.1" in request_host:
+        return "TW"
+    country = request.headers.get("cf-ipcountry") or request.headers.get("x-country-code")
+    if country and country.upper() != "XX":
+        return country.upper()
+    return "Unknown"
+    
+def find_and_remove_node(node_list, target_id):
+    for i, node in enumerate(node_list):
+        if node.get("id") == target_id:
+            return node_list.pop(i)
+        if "children" in node:
+            found = find_and_remove_node(node["children"], target_id)
+            if found: return found
+    return None
+
+def find_node(node_list, target_id):
+    for node in node_list:
+        if node.get("id") == target_id: return node
+        if "children" in node:
+            found = find_node(node["children"], target_id)
+            if found: return found
+    return None
+
+@app.get("/api/console/historical_report")
+async def get_historical_report(
+    admin: str = Query(...),
+    start_date: str = Query(..., description="開始日期 YYYYMMDD"),
+    end_date: str = Query(..., description="結束日期 YYYYMMDD")
+):
+    if admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    try:
+        start_dt = datetime.strptime(start_date, "%Y%m%d")
+        end_dt = datetime.strptime(end_date, "%Y%m%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="日期格式錯誤，請使用 YYYYMMDD")
+
+    if (end_dt - start_dt).days > 60:
+        raise HTTPException(status_code=400, detail="查詢區間不可超過 60 天")
+    if start_dt > end_dt:
+        raise HTTPException(status_code=400, detail="開始日期不可晚於結束日期")
+
+    aggregated = defaultdict(lambda: {
+        "users": set(),
+        "events": 0,
+        "features": defaultdict(int),
+        "hourly": defaultdict(int)
+    })
+
+    async def fetch_and_process_date(d_str: str):
+        logs = []
+        def _fetch_from_firestore():
+            if db:
+                doc = db.collection('daily_records').document(d_str).get()
+                if doc.exists:
+                    return doc.to_dict().get("logs", [])
+            return []
+        try:
+            logs = await asyncio.to_thread(_fetch_from_firestore)
+        except Exception as e:
+            print(f"從 Firebase 抓取歷史紀錄 {d_str} 失敗: {e}")
+
+        if isinstance(logs, list):
+            for log in logs:
+                time_str = log.get("time", "")
+                if not time_str or len(time_str) < 13:
+                    continue
+                user = log.get("user", "Unknown")
+                feat = log.get("feature", "Unknown")
+                raw_country = log.get("country", "Unknown")
+                c = str(raw_country).upper()
+                if c == "UNKNOWN" and user != "Unknown" and "-" in user:
+                    c = user.split("-")[0].upper()
+                local_hour = convert_utc8_str_to_local_hour(time_str, c)
+
+                aggregated[c]["users"].add(user)
+                aggregated[c]["events"] += 1
+                aggregated[c]["features"][feat] += 1
+                aggregated[c]["hourly"][local_hour] += 1
+
+                aggregated["ALL"]["users"].add(user)
+                aggregated["ALL"]["events"] += 1
+                aggregated["ALL"]["features"][feat] += 1
+                aggregated["ALL"]["hourly"][local_hour] += 1
+
+    current_dt = start_dt
+    date_list = []
+    while current_dt <= end_dt:
+        date_list.append(current_dt.strftime("%Y%m%d"))
+        current_dt += timedelta(days=1)
+
+    sem = asyncio.Semaphore(10)
+    async def bounded_fetch(d):
+        async with sem:
+            await fetch_and_process_date(d)
+            
+    await asyncio.gather(*(bounded_fetch(d) for d in date_list))
+
+    result = {}
+    for c, data in aggregated.items():
+        result[c] = {
+            "total_users": len(data["users"]),
+            "total_events": data["events"],
+            "features": dict(sorted(data["features"].items(), key=lambda x: x[1], reverse=True)),
+            "hourly": dict(sorted(data["hourly"].items()))
+        }
+
+    return {"status": "success", "data": result}
+    
+@app.on_event("shutdown")
+def on_shutdown():
+    pass
+    
+@app.get("/tags.html")
+async def get_tags_page(): 
+    return FileResponse("tags.html")
+
+@app.get("/EtherLineQRCode.jpg")
+async def getLineQRCode(): 
+    return FileResponse("EtherLineQRCode.jpg")
+
+@app.websocket("/ws/tags")
+async def websocket_tags(websocket: WebSocket):
+    await tag_manager.connect(websocket)
+    await websocket.send_json({"type": "FULL_SYNC", "data": tags_cache})
+    try:
+        while True:
+            msg = await websocket.receive_json()
+            action = msg.get("action")
+            category = msg.get("category")
+            data = msg.get("data", {})
+            if category not in ["buff", "free", "target_obj", "trigger_time"]:
+                continue
+            cat_list = tags_cache[category]
+            is_tree_category = category in ["free", "target_obj", "trigger_time"]
+            
+            if action == "ADD":
+                new_node = {
+                    "id": data["id"],
+                    "name": data["name"],
+                    "is_deletable": True, "is_renamable": True
+                }
+                if is_tree_category:
+                    new_node["children"] = []
+                    parent_id = data.get("parent_id")
+                    if parent_id:
+                        parent_node = find_node(cat_list, parent_id)
+                        if parent_node: 
+                            parent_node.setdefault("children", []).append(new_node)
+                        else: 
+                            cat_list.append(new_node)
+                    else:
+                        cat_list.append(new_node)
+                else: 
+                    cat_list.append(new_node)
+            elif action == "RENAME":
+                target = find_node(cat_list, data["id"]) if is_tree_category else next((n for n in cat_list if n["id"] == data["id"]), None)
+                if target and target.get("is_renamable", True):
+                    target["name"] = data["name"]
+            elif action == "DELETE":
+                if is_tree_category:
+                    find_and_remove_node(cat_list, data["id"])
+                else:
+                    target = next((n for n in cat_list if n["id"] == data["id"]), None)
+                    if target and target.get("is_deletable", True):
+                        cat_list.remove(target)
+            elif action == "MOVE" and is_tree_category:
+                node_id = data["id"]
+                target_parent_id = data.get("target_parent_id")
+                moved_node = find_and_remove_node(cat_list, node_id)
+                if moved_node:
+                    if target_parent_id:
+                        parent_node = find_node(cat_list, target_parent_id)
+                        if parent_node:
+                            parent_node.setdefault("children", []).append(moved_node)
+                        else:
+                            cat_list.append(moved_node)
+                    else:
+                        cat_list.append(moved_node)
+
+            await tag_manager.broadcast({
+                "type": "UPDATE_CATEGORY",
+                "category": category,
+                "data": tags_cache[category]
+            })
+            trigger_tag_sync()
+    except WebSocketDisconnect:
+        tag_manager.disconnect(websocket)
+        
+@app.get("/api/check_sp_replace")
+async def check_sp_replace(request: Request):
+    country = get_client_country(request)
+    need_replace = country not in EXCLUDED_COUNTRIES
+    return {"country": country, "need_replace": need_replace}
+    
+@app.post("/api/console/generate_token")
+async def generate_console_token(admin: str = Query(...)):
+    if admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    new_token = uuid.uuid4().hex
+    one_time_tokens[new_token] = {
+        "expires_at": time.time() + 3600,
+        "is_activated": False
+    }
+    return {"status": "success", "token": new_token}
+    
+@app.get("/api/check_wiki_url")
+async def check_wiki_url(card_name: str = Query(..., description="處理後的卡名")):
+    clean_name = card_name.strip()
+    if not clean_name:
+        raise HTTPException(status_code=400, detail="請提供卡名")
+    now = time.time()
+    if clean_name in wiki_url_cache:
+        item = wiki_url_cache[clean_name]
+        if now - item["timestamp"] < WIKI_CACHE_TTL:
+            wiki_url_cache.move_to_end(clean_name)
+            return item["data"]
+        else:
+            del wiki_url_cache[clean_name]
+
+    direct_url = f"https://dmwiki.net/《{quote(clean_name)}》"
+    fallback_google_url = f"https://www.google.com/search?q={quote(clean_name + ' site:dmwiki.net')}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "ja,zh-TW;q=0.9,en;q=0.8"
+    }
+    result_data = {"target_url": fallback_google_url, "type": "fallback"}
+    try:
+        async with httpx.AsyncClient(timeout=2.5, follow_redirects=True) as client:
+            async with client.stream("GET", direct_url, headers=headers) as resp:
+                if resp.status_code == 200:
+                    chunk_text = ""
+                    async for chunk in resp.aiter_text():
+                        chunk_text += chunk
+                        if len(chunk_text) >= 8192:
+                            break
+                    invalid_keywords = [
+                        "は存在しません", 
+                        "ページ名変更", 
+                        "Spam check failed", 
+                        "Runtime error", 
+                        "Match:ipcountry"
+                    ]
+                    if not any(kw in chunk_text for kw in invalid_keywords):
+                        result_data = {"target_url": direct_url, "type": "direct"}
+    except Exception as e:
+        print(f"[Wiki Check Exception]: {e}")
+
+    if len(wiki_url_cache) >= WIKI_CACHE_MAX_SIZE:
+        wiki_url_cache.popitem(last=False)
+    wiki_url_cache[clean_name] = {"data": result_data, "timestamp": now}
+    return result_data
+    
+@app.delete("/api/track/delete_user_logs")
+async def delete_user_logs(user_id: str = Query(..., description="要刪除 Log 的使用者代稱"), admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    global action_details_log
+    filtered_logs = [log for log in action_details_log if log.get("user") != user_id]
+    action_details_log = deque(filtered_logs, maxlen=50)
+    if user_id in user_counter:
+        del user_counter[user_id]
+    country = user_id.split("-")[0].upper() if "-" in user_id else "Unknown"
+    if country in country_user_counter and user_id in country_user_counter[country]:
+        del country_user_counter[country][user_id]
+
+    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
+    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
+    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
+
+    await console_manager.broadcast({
+        "total_events": sum(sorted_stats.values()),
+        "stats": sorted_stats,
+        "country_stats": sorted_country_stats,
+        "user_stats": sorted_user_stats,
+        "recent_50_details": get_clean_recent_logs()
+    })
+    return {"status": "success", "message": f"已刪除使用者 {user_id} 的紀錄"}
+    
+@app.delete("/api/track/reset")
+async def reset_track_stats(admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    global action_details_log, last_reset_time
+    feature_counter.clear()
+    country_counter.clear()
+    user_counter.clear()
+    action_details_log.clear()
+    data_transfer_stats.clear()
+    view_records.clear()
+    daily_total_counter.clear()
+    country_daily_total_counter.clear()
+    last_reset_time = datetime.now(TZ_UTC8).isoformat()
+
+    await console_manager.broadcast({
+        "total_events": 0,
+        "stats": {},
+        "country_stats": {},
+        "country_user_counts": {},
+        "user_stats": {},
+        "recent_50_details": [],
+        "start_time": last_reset_time
+    })
+    return {"status": "success", "message": "所有統計數據與國籍計數已徹底重置！"}
+    
+@app.get("/api/get_wiki_card_details")
+@limiter.limit("20/minute")
+async def get_wiki_card_details(request: Request, name: str = Query(..., description="日文卡名")):
+    jp_name = name.strip()
+    if not jp_name:
+        raise HTTPException(status_code=400, detail="請提供日文卡名")
+    if jp_name in wiki_details_cache:
+        return {"status": "success", "data": wiki_details_cache[jp_name]}
+
+    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+        en_title = await fetch_english_name_from_fandom(jp_name, client)
+        if not en_title or en_title == jp_name:
+            raise HTTPException(status_code=404, detail="找不到對應的 Fandom 頁面")
+        rev_url = f"https://duelmasters.fandom.com/api.php?action=query&prop=revisions&titles={quote(en_title)}&rvprop=content&rvslots=main&format=json"
+        try:
+            resp = await client.get(rev_url, headers={"User-Agent": "DuelMastersCardSearchBot/2.0"})
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Fandom API 請求失敗: {str(e)}")
+
+        pages = data.get("query", {}).get("pages", {})
+        page = list(pages.values())[0] if pages else {}
+        if "revisions" not in page:
+            raise HTTPException(status_code=404, detail="Fandom 頁面內容為空")
+
+        wikitext = page["revisions"][0]["slots"]["main"]["*"]
+        params = extract_wiki_params(wikitext)
+        sp_en, sp_jp = [], []
+        if "engtext" in params or "jptext" in params:
+            sp_en.append(clean_wikitext_sp(params.get("engtext", "")))
+            sp_jp.append(clean_wikitext_sp(params.get("jptext", "")))
+        if "engtext2" in params or "jptext2" in params:
+            sp_en.append(clean_wikitext_sp(params.get("engtext2", "")))
+            sp_jp.append(clean_wikitext_sp(params.get("jptext2", "")))
+        flavors = []
+        for k in ["flavor", "flavor2", "flavor3", "flavor4", "flavor5"]:
+            if k in params and params[k]:
+                flavors.append(clean_flavor_text(params[k]))
+
+        name1 = params.get("name", en_title)
+        name2 = params.get("name2", "")
+        en_full_name = f'{name1} / {name2}' if name2 else name1
+
+        result_data = {
+            "en_name": en_full_name,
+            "sp_en": sp_en,
+            "sp_jp": sp_jp,
+            "flavors": flavors
+        }
+        wiki_details_cache[jp_name] = result_data
+        return {"status": "success", "data": result_data}
