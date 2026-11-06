@@ -2287,6 +2287,130 @@
         .hor-arrow-btn {
             display: none;
         }
+		
+		/* 過濾總覽外層：右側放歷史條件開關 */
+		.footer-summary-shell {
+			display: none;
+			align-items: flex-start;
+			background: #444;
+			min-height: 0;
+		}
+
+		.footer-summary-shell.open {
+			display: flex;
+		}
+
+		.footer-summary-shell .footer-summary {
+			display: block;
+			flex: 1;
+			min-width: 0;
+			max-height: min(22vh, 200px);
+			overflow-y: auto;
+			box-sizing: border-box;
+		}
+
+		#toggle-condition-history {
+			flex: 0 0 auto;
+			margin: 10px 12px 10px 0;
+			padding: 7px;
+			border: 0;
+			border-radius: 6px;
+			background: #333;
+			color: white;
+			font-size: 22px;
+			cursor: pointer;
+		}
+
+		#toggle-condition-history:hover {
+			background: #555;
+		}
+
+		/* 歷史條件面板 */
+		.condition-history-panel {
+			display: flex;
+			flex-direction: column;
+			min-height: 0;
+			max-height: min(38vh, 320px);
+			background: #292929;
+			border-bottom: 1px solid #666;
+		}
+
+		.condition-history-panel[hidden] {
+			display: none !important;
+		}
+
+		.condition-history-heading {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 16px;
+			border-bottom: 1px solid #444;
+			font-size: 14px;
+		}
+
+		#condition-history-count {
+			color: #bbb;
+		}
+
+		#condition-history-list {
+			min-height: 0;
+			overflow-y: auto;
+			overflow-x: hidden;
+			padding: 8px 12px;
+			color: #ccc;
+			overscroll-behavior: contain;
+		}
+
+		.condition-history-row {
+			display: flex;
+			align-items: stretch;
+			gap: 8px;
+			margin-bottom: 8px;
+		}
+
+		.condition-history-apply {
+			flex: 1;
+			min-width: 0;
+			padding: 10px 12px;
+			border: 1px solid #555;
+			border-radius: 6px;
+			background: #383838;
+			color: white;
+			text-align: left;
+			font: inherit;
+			font-size: 13px;
+			line-height: 1.6;
+			overflow-wrap: anywhere;
+			cursor: pointer;
+		}
+
+		.condition-history-apply:hover {
+			background: #484848;
+			border-color: #aaa;
+		}
+
+		.condition-history-delete {
+			flex: 0 0 auto;
+			align-self: center;
+			padding: 8px;
+			border: 0;
+			border-radius: 5px;
+			background: #743535;
+			color: white;
+			cursor: pointer;
+		}
+
+		.condition-history-delete:hover {
+			background: #a33b3b;
+		}
+
+		.condition-history-apply:focus-visible,
+		.condition-history-delete:focus-visible,
+		#toggle-condition-history:focus-visible {
+			outline: 2px solid #facc15;
+			outline-offset: 2px;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2641,7 +2765,6 @@
 					<div class="drawer-row">
 						<label>自訂：</label>
 						<div class="drawer-btn-group">
-							<button type="button" class="btn-drawer-action btn-open-deck-import-action" id="btn-open-deck-import">📥 手動匯入卡表</button>
 							<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
 						</div>
 					</div>
@@ -2847,27 +2970,56 @@
 
     <!-- Z. Footer 區 (需求 4 修改結構) -->
     <div class="footer">
-        <div class="footer-summary" id="footer-summary">
-            <p style="margin:0; color:#aaa;">(目前過濾條件與預設值相同)</p>
-        </div>
-        <div class="footer-bar">
-            <!-- 左邊：[進階選項+選項初始化](一上一下) -->
-            <div class="footer-top-row">
-				<button id="toggle-advanced" class="btn-icon">進階<br>選項</button>
-				<button id="btn-reset" class="btn-icon">選項<br>初始化</button>
+		<!-- 歷史條件：展開後位於過濾總覽上方 -->
+		<section id="condition-history-panel"
+				 class="condition-history-panel"
+				 aria-label="歷史搜尋條件"
+				 hidden>
+			<div class="condition-history-heading">
+				<strong>歷史搜尋條件</strong>
+				<span id="condition-history-count">0/10</span>
 			</div>
-				
-            <!-- 中間：開始查詢 -->
-            <button id="btn-search" class="btn-icon">開始查詢</button>
-            
-            <div style="display: flex; align-items: center; gap: 10px;">
-				<!-- 右邊：^ 展開按鈕 -->
+
+			<div id="condition-history-list"></div>
+		</section>
+
+		<!-- 過濾總覽及歷史開關 -->
+		<div id="footer-summary-shell" class="footer-summary-shell">
+			<div class="footer-summary" id="footer-summary">
+				<p style="margin:0; color:#aaa;">
+					(目前過濾條件與預設值相同)
+				</p>
+			</div>
+
+			<button type="button"
+					id="toggle-condition-history"
+					aria-label="展開或收合歷史搜尋條件"
+					aria-controls="condition-history-panel"
+					aria-expanded="false"
+					title="歷史搜尋條件">⏫</button>
+		</div>
+
+		<div class="footer-bar">
+			<div class="footer-top-row">
+				<button id="toggle-advanced" class="btn-icon">
+					進階<br>選項
+				</button>
+				<button id="btn-reset" class="btn-icon">
+					選項<br>初始化
+				</button>
+			</div>
+
+			<button id="btn-search" class="btn-icon">開始查詢</button>
+
+			<div style="display:flex; align-items:center; gap:10px;">
 				<div class="expand-icon" id="toggle-summary">▲</div>
-				<!-- 💡 日記 Icon -->
-				<div id="diary-btn" style="cursor: pointer; font-size: 20px; user-select: none;" title="條款與更新日誌">📖</div>
+
+				<div id="diary-btn"
+					 style="cursor:pointer; font-size:20px; user-select:none;"
+					 title="條款與更新日誌">📖</div>
 			</div>
-        </div>
-    </div>
+		</div>
+	</div>
 
     <!-- 卡牌資料浮動視窗 (Modal Window) -->
     <div class="modal-overlay" id="card-modal">
@@ -3634,15 +3786,26 @@
 		});
 
         btnSummary.addEventListener('click', () => {
-		
-            summaryBox.classList.toggle('open');
-			const isOpen = summaryBox.classList.contains('open');
+			const shell = document.getElementById('footer-summary-shell');
+			const isOpen = shell.classList.toggle('open');
+
 			btnSummary.innerText = isOpen ? '▼' : '▲';
-			// 💡 只有在展開(open)時才觸發側錄
-			if (isOpen) {
-				trackFeature('開啟過濾總覽'); 
+
+			// 收合總覽時，一併收合歷史面板。
+			if (!isOpen) {
+				document.getElementById('condition-history-panel').hidden = true;
+
+				const historyToggle =
+					document.getElementById('toggle-condition-history');
+
+				historyToggle.textContent = '⏫';
+				historyToggle.setAttribute('aria-expanded', 'false');
 			}
-        });
+
+			if (isOpen) {
+				trackFeature('開啟過濾總覽');
+			}
+		});
 
         tabFilter.addEventListener('change', updateSummaryText);
         tabFilter.addEventListener('input', updateSummaryText);
@@ -5874,7 +6037,7 @@
 		// =========================================
 		// 搜尋過濾核心演算法 (整合後)
 		// =========================================
-		btnSearch.addEventListener('click', (e) => {
+		function executeCardSearch(e, { fromHistory = false } = {}) {
 		
 			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.style.display !== 'none';
 			const isAdvMode = document.body.classList.contains('advanced-mode');
@@ -6029,23 +6192,44 @@
 			// 維持 currentFilterResults 供匯出與其他外部功能相容
 			currentFilterResults = [...exactResults, ...fuzzyResults];
 
-			// 💡 判斷是否跳轉或顯示無資料彈窗
-            if (exactResults.length === 0 && fuzzyResults.length === 0) {
-                showNoticeModalPrompt({
-                    title: "🔍 查無資料",
-                    message: "找不到符合條件的卡牌，請嘗試放寬搜尋條件或減少限制。",
-                    confirmText: "我知道了",
-                    showInput: false,   // 👈 關閉輸入框
-                    showCancel: false   // 👈 關閉取消按鈕
-                });
-            } else {
-                // 有資料才跳轉至結果頁籤
-                navigateToResultPage();
-            }
-
-
-			// 💡 6. 統一交給 renderCurrentResultsWithSort() 進行排序與 DOM 繪製 (維持背景渲染狀態)
+			// 先完成列表繪製，再決定是否切換頁籤。
 			renderCurrentResultsWithSort();
+
+			// 只記錄使用者按搜尋或條件頁 Enter 的正式搜尋。
+			// 歷史重播及其他功能的程式觸發不新增紀錄。
+			const shouldRecord =
+				!fromHistory &&
+				(
+					e?.isTrusted === true ||
+					e?.detail?.recordConditionHistory === true
+				);
+
+			if (shouldRecord) {
+				conditionHistory.record();
+			}
+
+			const noResults =
+				exactResults.length === 0 &&
+				fuzzyResults.length === 0;
+
+			if (noResults && !fromHistory) {
+				showNoticeModalPrompt({
+					title: "🔍 查無資料",
+					message: "找不到符合條件的卡牌，請嘗試放寬搜尋條件或減少限制。",
+					confirmText: "我知道了",
+					showInput: false,
+					showCancel: false
+				});
+			} else {
+				// 歷史查詢即使無結果，也直接進入列表頁。
+				navigateToResultPage();
+			}
+		}
+
+		// 原本搜尋按鈕仍使用相同演算法。
+		// 計算機既有的 Capture 事件仍會先執行。
+		btnSearch.addEventListener('click', (e) => {
+			executeCardSearch(e);
 		});
 		
 		function renderCurrentResultsWithSort() {
@@ -7242,9 +7426,19 @@
 		}
 
 		document.getElementById('tab-filter').addEventListener('keydown', (e) => {
+			// 中文／日文輸入法選字時，不觸發查詢。
+			if (e.isComposing || e.keyCode === 229) return;
+
 			if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
 				e.preventDefault();
-				btnSearch.click();
+
+				// 保留搜尋按鈕既有的事件流程，
+				// 同時標示這是需要記錄的使用者搜尋。
+				btnSearch.dispatchEvent(new CustomEvent('click', {
+					detail: {
+						recordConditionHistory: true
+					}
+				}));
 			}
 		});
 
@@ -12750,7 +12944,696 @@
             }
         });
 
-        // 執行資料載入
+		const conditionHistory = (() => {
+			const KEY = 'dm_condition_history_v1';
+
+			const $ = id => document.getElementById(id);
+
+			const values = selector =>
+				[...document.querySelectorAll(selector)].map(el => el.value);
+
+			const sorted = list => [...new Set(list)].sort();
+
+			const fields = [
+				'cost-1',
+				'cost-2',
+				'power-1',
+				'power-2',
+				'ability-text',
+				'card-name',
+				'series-big',
+				'series-small'
+			];
+
+			let items = [];
+			let busy = false;
+
+			// 保存原始 UI 設定，不使用已展開衍生卡種的查詢設定。
+			function capture() {
+				const rows = (id, cls) =>
+					[...$(id).querySelectorAll('.flex-input-row')].map(row => ({
+						value: row.querySelector(cls).dataset.japValue || '',
+						native:
+							row.querySelector('.btn-native-ability')
+								?.classList.contains('active') || false
+					}));
+
+				return {
+					advanced: document.body.classList.contains('advanced-mode'),
+
+					types: values('.chk-cardtype:checked'),
+
+					derived: $('chk-derived-cardtype').checked,
+
+					twin: document.querySelector(
+						'[name="twinpect"]:checked'
+					).value,
+
+					twinAdv: values('[name="twin_adv"]:checked'),
+
+					permit: [
+						...$('civ-permit').querySelectorAll('.active')
+					].map(el => el.dataset.val),
+
+					require: [
+						...$('civ-require').querySelectorAll('.active')
+					].map(el => el.dataset.val),
+
+					raceLogic:
+						document.querySelector('.btn-race-logic.active')
+							?.dataset.logic || 'AND',
+
+					races: rows('race-container', '.race-input'),
+
+					abilities: rows('ability-container', '.ability-input'),
+
+					raceAdv:
+						document.querySelector('.race-input-adv')
+							.dataset.japValue || '',
+
+					fields: Object.fromEntries(
+						fields.map(id => [id, $(id).value])
+					)
+				};
+			}
+
+			// 多選項目順序不影響去重；顯示語系不納入比較。
+			function key(s) {
+				const f = Object.fromEntries(fields.map(id => [
+					id,
+					['ability-text', 'card-name'].includes(id)
+						? s.fields[id].trim()
+						: s.fields[id]
+				]));
+
+				const rows = list => sorted(
+					list
+						.filter(r => r.value || r.native)
+						.map(r => JSON.stringify([r.value, r.native]))
+				);
+
+				return JSON.stringify([
+					s.advanced,
+					sorted(s.types),
+					s.derived,
+					s.twin,
+					sorted(s.twinAdv),
+					sorted(s.permit),
+					sorted(s.require),
+					s.raceLogic,
+					rows(s.races),
+					rows(s.abilities),
+					s.raceAdv,
+					f
+				]);
+			}
+
+			function save() {
+				try {
+					localStorage.setItem(KEY, JSON.stringify(items));
+				} catch (error) {
+					showToast('瀏覽器無法保存歷史，目前僅保留在本次頁面');
+				}
+			}
+
+			// 直接根據保存的狀態產生描述，
+			// 包含目前被隱藏但仍與預設值不同的設定。
+			function describe(s) {
+				const tags = [];
+
+				const names = (selector, selected) =>
+					[...document.querySelectorAll(selector)]
+						.filter(el =>
+							selected.includes(el.value || el.dataset.val)
+						)
+						.map(el =>
+							el.closest('label')?.textContent.trim() ||
+							el.textContent.trim()
+						);
+
+				const comboName = (type, value) =>
+					comboManager.dicts[type].toDisplay[value] || value;
+
+				if (s.advanced) tags.push('進階模式');
+
+				// 現有初始化的卡種預設為全部不勾選。
+				if (s.types.length) {
+					tags.push('卡種：' + s.types.map(value =>
+						rawCardTypes.find(t =>
+							String(t.value) === value
+						)?.text || value
+					).join('、'));
+				}
+
+				if (s.derived) tags.push('包含衍生卡種');
+
+				if (s.twin !== 'all') {
+					tags.push(s.twin === 'yes' ? '限定雙極' : '排除雙極');
+				}
+
+				const allTwin = values('[name="twin_adv"]');
+
+				if (s.twinAdv.length !== allTwin.length) {
+					tags.push(
+						'雙極進階勾選：' +
+						(
+							names('[name="twin_adv"]', s.twinAdv).join('、') ||
+							'全部取消'
+						)
+					);
+				}
+
+				if (s.permit.length !== $('civ-permit').children.length) {
+					tags.push(
+						'允許文明／色數：' +
+						(
+							names('#civ-permit .civ-box', s.permit).join('、') ||
+							'全部取消'
+						)
+					);
+				}
+
+				const required = s.require.filter(v =>
+					!['and', 'or'].includes(v)
+				);
+
+				if (required.length) {
+					tags.push(
+						'必須文明：' +
+						names('#civ-require .civ-box', required).join('、')
+					);
+				}
+
+				if (s.require.includes('or')) {
+					tags.push('文明邏輯：OR');
+				}
+
+				if (s.raceLogic !== 'AND') {
+					tags.push('種族邏輯：' + s.raceLogic);
+				}
+
+				const labels = {
+					'cost-1': '費用第一欄',
+					'cost-2': '費用第二欄',
+					'power-1': '攻擊力第一欄',
+					'power-2': '攻擊力第二欄',
+					'ability-text': '能力文字',
+					'card-name': '卡名',
+					'series-big': '系列大編號',
+					'series-small': '商品'
+				};
+
+				for (const id of fields) {
+					const value = s.fields[id];
+
+					if (value !== '') {
+						tags.push(
+							labels[id] + '：' +
+							(
+								id === 'series-big' && value === '__DECK_ONLY__'
+									? '官方牌組'
+									: value
+							)
+						);
+					}
+				}
+
+				s.races.forEach(r => {
+					if (r.value) {
+						tags.push('種族：' + comboName('race', r.value));
+					}
+				});
+
+				s.abilities.forEach((r, i) => {
+					if (r.value || r.native) {
+						tags.push(
+							'能力：' +
+							(
+								r.value
+									? comboName('ability', r.value)
+									: `第 ${i + 1} 欄（未選能力）`
+							) +
+							(r.native ? '（原生）' : '')
+						);
+					}
+				});
+
+				if (s.raceAdv) {
+					tags.push(
+						'能力提及種族：' + comboName('race', s.raceAdv)
+					);
+				}
+
+				return tags.join('；') || '預設條件';
+			}
+
+			function render(animate = false) {
+				const list = $('condition-history-list');
+
+				const old = new Map(
+					[...list.children].map(el => [
+						el.dataset.id,
+						el.getBoundingClientRect().top
+					])
+				);
+
+				list.replaceChildren();
+
+				$('condition-history-count').textContent =
+					`${items.length}/10`;
+
+				if (!items.length) {
+					list.textContent = '尚無歷史搜尋條件';
+					return;
+				}
+
+				items.forEach((item, index) => {
+					const row = document.createElement('div');
+					row.className = 'condition-history-row';
+					row.dataset.id = item.id;
+
+					const apply = document.createElement('button');
+					apply.type = 'button';
+					apply.className = 'condition-history-apply';
+
+					// 使用 textContent，搜尋文字不會被當成 HTML。
+					apply.textContent =
+						`${index + 1}. ${describe(item.state)}`;
+
+					apply.onclick = () => replay(item.id);
+
+					const remove = document.createElement('button');
+					remove.type = 'button';
+					remove.className = 'condition-history-delete';
+					remove.textContent = '刪除';
+
+					remove.setAttribute(
+						'aria-label',
+						`刪除第 ${index + 1} 組歷史條件`
+					);
+
+					remove.onclick = () => {
+						if (busy) return;
+
+						items = items.filter(x => x.id !== item.id);
+						save();
+						render();
+					};
+
+					row.append(apply, remove);
+					list.appendChild(row);
+				});
+
+				// 用移動前後的位置差，產生滑動置頂效果。
+				if (
+					animate &&
+					!matchMedia('(prefers-reduced-motion: reduce)').matches
+				) {
+					[...list.children].forEach(row => {
+						if (!old.has(row.dataset.id)) return;
+
+						const dy =
+							old.get(row.dataset.id) -
+							row.getBoundingClientRect().top;
+
+						if (dy) {
+							row.animate(
+								[
+									{ transform: `translateY(${dy}px)` },
+									{ transform: 'translateY(0)' }
+								],
+								{
+									duration: 280,
+									easing: 'ease-out'
+								}
+							);
+						}
+					});
+				}
+			}
+
+			function record() {
+				const state = capture();
+
+				// 相同條件不新增，也不調整順序。
+				if (items.some(item => key(item.state) === key(state))) {
+					return;
+				}
+
+				items.unshift({
+					id:
+						`${Date.now().toString(36)}-` +
+						Math.random().toString(36).slice(2),
+					state
+				});
+
+				items = items.slice(0, 10);
+
+				save();
+				render();
+			}
+
+			function restore(s) {
+				// 在修改 UI 前先驗證資料，避免失效條件被靜默忽略。
+				const available = new Set(
+					rawCardTypes
+						.filter(t =>
+							t.disabled !== true &&
+							(
+								s.advanced ||
+								t.category ||
+								t.catagory ||
+								t.main
+							)
+						)
+						.map(t => String(t.value))
+				);
+
+				if (s.types.some(v => !available.has(v))) {
+					throw new Error('部分卡種已不存在');
+				}
+
+				for (const id of [
+					'cost-1',
+					'cost-2',
+					'power-1',
+					'power-2',
+					'series-big'
+				]) {
+					const exists = [...$(id).options].some(o =>
+						o.value === s.fields[id]
+					);
+
+					if (!exists) {
+						throw new Error('部分選項已不存在');
+					}
+				}
+
+				const selectedSet = s.fields['series-small'];
+
+				if (selectedSet && !rawSetlist[selectedSet]) {
+					throw new Error('商品或自訂牌組已不存在');
+				}
+
+				for (const [type, list] of [
+					['race', [...s.races, { value: s.raceAdv }]],
+					['ability', s.abilities]
+				]) {
+					const invalid = list.some(r =>
+						r.value &&
+						!Object.hasOwn(
+							comboManager.dicts[type].toDisplay,
+							r.value
+						)
+					);
+
+					if (invalid) {
+						throw new Error('部分種族或能力已不存在');
+					}
+				}
+
+				// 歷史重播直接呼叫核心，不經過搜尋按鈕的 Capture。
+				// 同時清除計算機暫存，避免下次搜尋又覆蓋歷史條件。
+				clearQuickSearch();
+				$('drawer-quick-search').style.display = 'none';
+				updateQuickCalcUI(false);
+
+				// 直接設定模式，不觸發會跳回條件頁的進階按鈕。
+				document.body.classList.toggle(
+					'advanced-mode',
+					s.advanced
+				);
+
+				$('toggle-advanced').classList.toggle(
+					'active',
+					s.advanced
+				);
+
+				renderCardTypes();
+
+				document.querySelectorAll('.chk-cardtype').forEach(el => {
+					el.checked = s.types.includes(el.value);
+				});
+
+				$('chk-derived-cardtype').checked = s.derived;
+
+				document.querySelectorAll('[name="twinpect"]').forEach(el => {
+					el.checked = el.value === s.twin;
+				});
+
+				document.querySelectorAll('[name="twin_adv"]').forEach(el => {
+					el.checked = s.twinAdv.includes(el.value);
+				});
+
+				for (const [id, selected] of [
+					['civ-permit', s.permit],
+					['civ-require', s.require]
+				]) {
+					$(id).querySelectorAll('.civ-box').forEach(el => {
+						el.classList.toggle(
+							'active',
+							selected.includes(el.dataset.val)
+						);
+					});
+				}
+
+				document.querySelectorAll('.btn-race-logic').forEach(el => {
+					el.classList.toggle(
+						'active',
+						el.dataset.logic === s.raceLogic
+					);
+				});
+
+				for (const id of fields) {
+					if (id !== 'series-small') {
+						$(id).value = s.fields[id];
+					}
+				}
+
+				// 先重建系列小編號的選項，再套用保存的商品。
+				$('series-big').dispatchEvent(
+					new Event('change', { bubbles: true })
+				);
+
+				const small = $('series-small');
+				const code = s.fields['series-small'];
+
+				// 支援原本由其他功能直接指定、未出現在目前選單的商品。
+				if (
+					code &&
+					![...small.options].some(o => o.value === code)
+				) {
+					small.add(new Option(code, code));
+					small.disabled = false;
+				}
+
+				small.value = code;
+
+				const fill = (input, value, type) => {
+					input.dataset.japValue = value;
+					input.value =
+						comboManager.dicts[type].toDisplay[value] || value;
+				};
+
+				// 保留第一列，透過原本新增按鈕重建其餘列，
+				// 讓新增列仍具有原本的選單、刪除及原生能力事件。
+				for (const [id, cls, type, rows] of [
+					[
+						'race-container',
+						'.race-input',
+						'race',
+						s.races
+					],
+					[
+						'ability-container',
+						'.ability-input',
+						'ability',
+						s.abilities
+					]
+				]) {
+					const container = $(id);
+
+					[...container.querySelectorAll('.flex-input-row')]
+						.slice(1)
+						.forEach(row => row.remove());
+
+					const data = rows.length
+						? rows
+						: [{ value: '', native: false }];
+
+					data.forEach((saved, i) => {
+						if (i) {
+							container.querySelector(
+								type === 'race'
+									? '.btn-add-race'
+									: '.btn-add-ability'
+							).click();
+						}
+
+						const row =
+							container.querySelectorAll('.flex-input-row')[i];
+
+						fill(
+							row.querySelector(cls),
+							saved.value,
+							type
+						);
+
+						const native =
+							row.querySelector('.btn-native-ability');
+
+						if (native) {
+							native.classList.toggle('active', saved.native);
+							native.dataset.native = String(saved.native);
+						}
+					});
+				}
+
+				fill(
+					document.querySelector('.race-input-adv'),
+					s.raceAdv,
+					'race'
+				);
+
+				document.querySelectorAll('.combo-list.active').forEach(el => {
+					el.classList.remove('active');
+				});
+
+				checkAllStatus();
+				syncChipUI();
+				updateSummaryText();
+				checkAndToggleClearCustomBtn();
+			}
+
+			function replay(id) {
+				if (busy) return;
+
+				const item = items.find(x => x.id === id);
+				if (!item) return;
+
+				if (
+					!globalCardData.length ||
+					!document.querySelector('.chk-cardtype')
+				) {
+					showToast('卡牌資料尚未載入完成，請稍後再試');
+					return;
+				}
+
+				busy = true;
+
+				try {
+					// 同一段同步流程內完成還原、查詢及切頁，
+					// 不等待動畫，也不逐步切換條件頁。
+					restore(item.state);
+
+					executeCardSearch(null, {
+						fromHistory: true
+					});
+
+					items = [
+						item,
+						...items.filter(x => x.id !== id)
+					];
+
+					save();
+					render(true);
+
+					$('condition-history-list').scrollTop = 0;
+				} catch (error) {
+					showToast('無法套用歷史條件：' + error.message);
+				} finally {
+					busy = false;
+				}
+			}
+
+			function init() {
+				try {
+					const saved = JSON.parse(
+						localStorage.getItem(KEY) || '[]'
+					);
+
+					const seen = new Set();
+
+					items = (Array.isArray(saved) ? saved : [])
+						.filter(item => {
+							try {
+								const s = item.state;
+
+								// 避免損壞或舊格式的資料中斷整個頁面。
+								if (
+									typeof item.id !== 'string' ||
+									typeof s.advanced !== 'boolean' ||
+									typeof s.derived !== 'boolean' ||
+									typeof s.raceAdv !== 'string' ||
+									!['all', 'yes', 'no'].includes(s.twin) ||
+									!['AND', 'OR'].includes(s.raceLogic) ||
+									!fields.every(id =>
+										typeof s.fields[id] === 'string'
+									) ||
+									![
+										'types',
+										'twinAdv',
+										'permit',
+										'require'
+									].every(k =>
+										Array.isArray(s[k]) &&
+										s[k].every(v => typeof v === 'string')
+									) ||
+									![s.races, s.abilities].every(list =>
+										Array.isArray(list) &&
+										list.every(r =>
+											typeof r.value === 'string' &&
+											typeof r.native === 'boolean'
+										)
+									)
+								) {
+									return false;
+								}
+
+								const signature = key(s);
+
+								if (seen.has(signature)) return false;
+
+								seen.add(signature);
+								return true;
+							} catch {
+								return false;
+							}
+						})
+						.slice(0, 10);
+				} catch {
+					items = [];
+				}
+
+				$('toggle-condition-history').onclick = () => {
+					const panel = $('condition-history-panel');
+
+					panel.hidden = !panel.hidden;
+
+					const toggle = $('toggle-condition-history');
+
+					toggle.textContent = panel.hidden ? '⏫' : '⏬';
+
+					toggle.setAttribute(
+						'aria-expanded',
+						String(!panel.hidden)
+					);
+
+					if (!panel.hidden) render();
+				};
+
+				render();
+			}
+
+			return {
+				init,
+				record
+			};
+		})();
+
+		conditionHistory.init();
+		
+		// 執行資料載入
 		loadSearchData();
 
 		// 💡 額外安全機制：若因為任何極端原因 5 秒內資料還沒載入完，強制移除遮罩，避免頁面死鎖
