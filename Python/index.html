@@ -2153,86 +2153,99 @@
 			display: none !important;
 		}
 		
-		/* ================= 列表上方獨立固定工具列 (Page 2 & 3) ================= */
-		.tab-sticky-toolbar {
-			position: sticky;
-			top: 78px; /* 緊隨在收合抽屜下方固定 */
-			z-index: 85;
-			display: flex;
-			justify-content: flex-end; /* 靠右對齊 */
-			align-items: center;
-			padding: 2px 0 6px 0;
-			background: #f4f4f9;
-		}
-
-		#drawer-tab2, #drawer-tab3 {
-			margin-bottom: 4px; /* 縮小與下方按鈕的間距 */
-		}
-		
-		/* ================= 查詢結果上方：抽屜與匯出按鈕同列容器 ================= */
+		/* ================= Page 2 / 3：排序、歷史、匯出功能列 ================= */
 		.tab-sticky-row {
 			position: sticky;
-			top: 50px; /* 避開頂部黑色 Header (約 48px~50px) */
+			top: 50px;
 			z-index: 90;
 			display: flex;
-			align-items: flex-start; /* 頂部對齊，抽屜展開時不影響按鈕高度 */
+			flex-wrap: wrap;
+			align-items: center;
 			gap: 8px;
 			margin-bottom: 10px;
+			padding: 6px 0;
+			background: #f4f4f9;
+			flex-shrink: 0;
 		}
-
-		/* 讓橫排內的抽屜佔滿左側剩餘寬度，並由外層容器負責置頂 */
-		.tab-sticky-row .drawer-container {
-			flex: 1;
+		.toolbar-sort {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex: 1 1 120px;
 			min-width: 0;
-			position: static !important; /* 解除內部自己的 sticky，交由外層容器統一 sticky */
-			margin-bottom: 0 !important;
+			font-size: 13px;
+			font-weight: bold;
+			color: #334155;
 		}
-
-		/* 讓手把與匯出按鈕的高度與排版一致 */
-		.tab-sticky-row .drawer-handle {
-			height: 32px;
+		.toolbar-sort span { flex-shrink: 0; }
+		.toolbar-sort select {
+			flex: 1;
+			width: 100%;
+			min-width: 0;
+			height: 34px;
+			margin: 0;
+			padding: 4px 6px;
+			font-size: 13px;
 			box-sizing: border-box;
 		}
-
-		/* 右側匯出按鈕樣式 */
-		.tab-sticky-row .btn-export-top {
-			height: 32px;
-			padding: 0 12px;
-			background: #0284c7;
-			color: white;
-			border: none;
-			border-radius: 6px;
-			font-size: 12px;
-			font-weight: bold;
-			cursor: pointer;
-			white-space: nowrap;
+		.toolbar-menu { position: relative; flex: 0 0 auto; }
+		.toolbar-menu > summary, .toolbar-edit {
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			flex-shrink: 0; /* 絕不被擠壓 */
-			transition: background-color 0.15s ease;
+			gap: 4px;
+			min-height: 34px;
+			padding: 6px 10px;
+			border: 0;
+			border-radius: 6px;
+			background: #0284c7;
+			color: white;
+			font-size: 13px;
+			font-weight: bold;
+			white-space: nowrap;
+			cursor: pointer;
+			box-sizing: border-box;
+			list-style: none;
 		}
-
-		.tab-sticky-row .btn-export-top:hover {
-			background: #0369a1;
+		.toolbar-menu > summary::-webkit-details-marker { display: none; }
+		.toolbar-menu > summary::after { content: '▾'; font-size: 10px; }
+		.toolbar-menu[open] > summary::after { content: '▴'; }
+		.toolbar-menu > summary:hover { background: #0369a1; }
+		.toolbar-menu-panel {
+			position: fixed;
+			z-index: 100;
+			width: 240px;
+			max-width: calc(100vw - 24px);
+			padding: 6px;
+			border: 1px solid #cbd5e1;
+			border-radius: 8px;
+			background: #fff;
+			box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+			overflow-y: auto;
+			box-sizing: border-box;
 		}
-		
-		@media (max-width: 768px) {
-			/* 讓抽屜內的按鈕群組與下拉選單直向排列並撐滿寬度 */
-			.drawer-row .drawer-btn-group {
-				flex-direction: column;
-				width: 100%;
-			}
-
-			/* 強制下拉選單與所有操作按鈕為 100% 等寬 */
-			.drawer-row select,
-			.drawer-row .btn-drawer-action {
-				width: 100% !important;
-				box-sizing: border-box;
-				text-align: center;
-				justify-content: center;
-			}
+		.toolbar-menu-panel button {
+			display: block;
+			width: 100%;
+			padding: 10px;
+			border: 0;
+			border-radius: 4px;
+			background: transparent;
+			color: #334155;
+			text-align: left;
+			font-size: 13px;
+			cursor: pointer;
 		}
+		.toolbar-menu-panel button:hover { background: #f1f5f9; }
+		.toolbar-menu-panel .btn-share-deck-link-action { color: #15803d; }
+		.toolbar-edit { background: #a16207; }
+		.tab-sticky-row [hidden] { display: none !important; }
+		.tab-sticky-row :is(summary, button, select):focus-visible {
+			outline: 2px solid #0284c7;
+			outline-offset: 2px;
+		}
+		/* 雙欄模式由左側面板負責固定，功能列本身不再重複 sticky。 */
+		.split-left-panel .tab-sticky-row { position: relative; top: auto; }
 		
 		/* ================= 自訂複合下拉選單 (取代原生 datalist) ================= */
         .combo-wrapper {
@@ -2727,55 +2740,46 @@
 
     <!-- 第二個頁籤：查詢結果 (列表) -->
 	<div id="tab-list" class="tab-content">
-		
-		<!-- 💡 抽屜與匯出按鈕「同一橫排」置頂列 -->
-		<div class="tab-sticky-row">
-			<!-- 左側：抽屜主體 -->
-			<div class="drawer-container" id="drawer-tab2">
-				<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
-					<span>⚙️ 排序與列表工具</span>
-					<span class="drawer-arrow" style="font-size: 10px;">▼</span>
-				</div>
-				<div class="drawer-content">
-					<!-- 1. 排序區塊 -->
-					<div class="drawer-row">
-						<label>排序：</label>
-						<div class="drawer-btn-group">
-							<select id="sort-select">
-								<option value="default" selected>預設</option>
-								<option value="name_asc">卡名 (升冪 A→Z)</option>
-								<option value="name_desc">卡名 (降冪 Z→A)</option>
-								<option value="cost_asc">費用 (升冪 低→高)</option>
-								<option value="cost_desc">費用 (降冪 高→低)</option>
-								<option value="power_asc">攻擊力 (升冪 低→高)</option>
-								<option value="power_desc">攻擊力 (降冪 高→低)</option>
-								<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
-							</select>
-						</div>
-					</div>
-					<!-- 2. 歷史區塊 -->
-					<div class="drawer-row">
-						<label>歷史：</label>
-						<div class="drawer-btn-group">
-							<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
-							<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
-						</div>
-					</div>
-					<!-- 3. 自訂區塊 -->
-					<div class="drawer-row">
-						<label>自訂：</label>
-						<div class="drawer-btn-group">
-							<button type="button" class="btn-drawer-action btn-share-deck-link-action" id="btn-share-deck-link" style="background: #16a34a;">🔗 分享卡表</button>
-						</div>
-					</div>
-				</div>
-			</div>
+		<div class="tab-sticky-row" aria-label="卡片列表功能列">
+			<label class="toolbar-sort" for="sort-select">
+				<span>排序</span>
+				<select id="sort-select">
+					<option value="default" selected>預設</option>
+					<option value="name_asc">卡名 (升冪 A→Z)</option>
+					<option value="name_desc">卡名 (降冪 Z→A)</option>
+					<option value="cost_asc">費用 (升冪 低→高)</option>
+					<option value="cost_desc">費用 (降冪 高→低)</option>
+					<option value="power_asc">攻擊力 (升冪 低→高)</option>
+					<option value="power_desc">攻擊力 (降冪 高→低)</option>
+					<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+				</select>
+			</label>
 
-			<!-- 右側：同排的匯出按鈕 -->
-			<button type="button" class="btn-export-top" id="btn-export-list">📄 匯出文字與圖片</button>
+			<details class="toolbar-menu">
+				<summary aria-expanded="false" aria-controls="toolbar-history">歷史</summary>
+				<div class="toolbar-menu-panel" id="toolbar-history"
+					 role="group" aria-label="歷史選單">
+					<button type="button" class="btn-history-action">📜 個人瀏覽歷史</button>
+					<button type="button" class="btn-open-report-action">📊 大賽用卡</button>
+				</div>
+			</details>
+
+			<details class="toolbar-menu toolbar-export-menu">
+				<summary aria-expanded="false" aria-controls="toolbar-export">匯出</summary>
+				<div class="toolbar-menu-panel" id="toolbar-export"
+					 role="group" aria-label="匯出選單">
+					<button type="button" data-export-mode="img_unfold">🖼️ 圖片展開</button>
+					<button type="button" data-export-mode="img_only">🖼️ 圖片縮排</button>
+					<button type="button" data-export-mode="img_text">🖼️＋📝 圖文</button>
+					<button type="button" data-export-mode="text_only">📝 純文字</button>
+					<button type="button" class="btn-share-deck-link-action">🔗 分享卡表</button>
+					<button type="button" class="btn-export-en-deck-action" hidden>🔤 匯出英文牌組列表</button>
+				</div>
+			</details>
+
+			<button type="button" class="toolbar-edit btn-edit-deck-action" hidden>✏️ 修改自訂卡表</button>
 		</div>
 
-		<!-- 下方：卡片列表 -->
 		<div id="list-container">
 			<div class="empty-state">尚無資料</div>
 		</div>
@@ -2784,63 +2788,52 @@
 	<!-- 第三個頁籤：查詢結果 (雙欄分割版 - 僅限桌機) -->
 	<div id="tab-list-split" class="tab-content">
 		<div class="split-layout-container">
-			<!-- 左邊列表區域 -->
 			<div class="split-left-panel">
-				
-				<!-- 💡 抽屜與匯出按鈕「同一橫排」置頂列 -->
-				<div class="tab-sticky-row">
-					<!-- 左側：抽屜主體 -->
-					<div class="drawer-container" id="drawer-tab3">
-						<div class="drawer-handle" onclick="this.parentElement.classList.toggle('open'); this.querySelector('.drawer-arrow').innerText = this.parentElement.classList.contains('open') ? '▲' : '▼';">
-							<span>⚙️ 排序與列表工具</span>
-							<span class="drawer-arrow" style="font-size: 10px;">▼</span>
-						</div>
-						<div class="drawer-content">
-							<!-- 1. 排序區塊 -->
-							<div class="drawer-row">
-								<label>排序：</label>
-								<div class="drawer-btn-group">
-									<select class="sort-select-input" id="sort-select-split">
-										<option value="default" selected>預設</option>
-										<option value="name_asc">卡名 (升冪 A→Z)</option>
-										<option value="name_desc">卡名 (降冪 Z→A)</option>
-										<option value="cost_asc">費用 (升冪 低→高)</option>
-										<option value="cost_desc">費用 (降冪 高→低)</option>
-										<option value="power_asc">攻擊力 (升冪 低→高)</option>
-										<option value="power_desc">攻擊力 (降冪 高→低)</option>
-										<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
-									</select>
-								</div>
-							</div>
-							<!-- 2. 歷史區塊 -->
-							<div class="drawer-row">
-								<label>歷史：</label>
-								<div class="drawer-btn-group">
-									<button type="button" class="btn-drawer-action btn-history-action">📜 查詢歷史紀錄</button>
-									<button type="button" class="btn-drawer-action btn-open-report-action" style="background: #ea580c;">📊 台灣大賽冠軍卡片排行</button>
-								</div>
-							</div>
-							<!-- 3. 自訂區塊 -->
-							<div class="drawer-row">
-								<label>自訂：</label>
-								<div class="drawer-btn-group">
-									<button type="button" class="btn-drawer-action btn-share-deck-link-action" style="background: #16a34a;">🔗 取得連結</button>
-								</div>
-							</div>
-						</div>
-					</div>
+				<div class="tab-sticky-row" aria-label="卡片列表功能列">
+					<label class="toolbar-sort" for="sort-select-split">
+						<span>排序</span>
+						<select id="sort-select-split">
+							<option value="default" selected>預設</option>
+							<option value="name_asc">卡名 (升冪 A→Z)</option>
+							<option value="name_desc">卡名 (降冪 Z→A)</option>
+							<option value="cost_asc">費用 (升冪 低→高)</option>
+							<option value="cost_desc">費用 (降冪 高→低)</option>
+							<option value="power_asc">攻擊力 (升冪 低→高)</option>
+							<option value="power_desc">攻擊力 (降冪 高→低)</option>
+							<option value="civ_custom">文明 (單色→多色/文明總和降冪)</option>
+						</select>
+					</label>
 
-					<!-- 右側：同排的匯出按鈕 -->
-					<button type="button" class="btn-export-top btn-export-action">📄 匯出文字與圖片</button>
+					<details class="toolbar-menu">
+						<summary aria-expanded="false" aria-controls="toolbar-history-split">歷史</summary>
+						<div class="toolbar-menu-panel" id="toolbar-history-split"
+							 role="group" aria-label="歷史選單">
+							<button type="button" class="btn-history-action">📜 個人瀏覽歷史</button>
+							<button type="button" class="btn-open-report-action">📊 大賽用卡</button>
+						</div>
+					</details>
+
+					<details class="toolbar-menu toolbar-export-menu">
+						<summary aria-expanded="false" aria-controls="toolbar-export-split">匯出</summary>
+						<div class="toolbar-menu-panel" id="toolbar-export-split"
+							 role="group" aria-label="匯出選單">
+							<button type="button" data-export-mode="img_unfold">🖼️ 圖片展開</button>
+							<button type="button" data-export-mode="img_only">🖼️ 圖片縮排</button>
+							<button type="button" data-export-mode="img_text">🖼️＋📝 圖文</button>
+							<button type="button" data-export-mode="text_only">📝 純文字</button>
+							<button type="button" class="btn-share-deck-link-action">🔗 分享卡表</button>
+							<button type="button" class="btn-export-en-deck-action" hidden>🔤 匯出英文牌組列表</button>
+						</div>
+					</details>
+
+					<button type="button" class="toolbar-edit btn-edit-deck-action" hidden>✏️ 修改自訂卡表</button>
 				</div>
 
-				<!-- 卡牌列表容器 -->
 				<div id="list-container-split">
 					<div class="empty-state">尚無資料</div>
 				</div>
 			</div>
 
-			<!-- 右邊 Detail 詳細資訊區域 -->
 			<div class="split-right-panel" id="detail-panel-split">
 				<div class="split-empty-placeholder">👈 請點擊左側卡牌檢視詳細資料</div>
 			</div>
@@ -3348,34 +3341,6 @@
 			</div>
 		</div>
 	</div>
-	
-	<!-- 匯出模式選擇 Modal -->
-	<div class="modal-overlay" id="export-mode-modal">
-		<div class="modal-card" style="max-width: 420px;">
-			<div class="modal-header">
-				<div class="modal-title">📄 請選擇匯出模式</div>
-				<div class="modal-close" id="export-modal-close">&times;</div>
-			</div>
-			<div class="modal-body" style="padding: 20px; gap: 12px;">
-				<button type="button" class="btn-drawer-action" id="btn-export-mode-unfold" style="padding: 12px; font-size: 14px; background: #8b5cf6;">
-					🖼️ 僅匯出圖片 (全數展開)
-				</button>
-				<button type="button" class="btn-drawer-action" id="btn-export-mode-1" style="padding: 12px; font-size: 14px; background: #0284c7;">
-					🖼️ 僅匯出圖片 (同卡縮排)
-				</button>
-				<button type="button" class="btn-drawer-action" id="btn-export-mode-2" style="padding: 12px; font-size: 14px; background: #16a34a;">
-					🖼️+📝 圖 + 效果 (標準圖文模式)
-				</button>
-				<button type="button" class="btn-drawer-action" id="btn-export-mode-3" style="padding: 12px; font-size: 14px; background: #475569;">
-					📝 只要效果 (純文字模式)
-				</button>
-				<!-- 💡 新增：預設隱藏，僅在選擇牌組商品時顯示 -->
-				<button type="button" class="btn-drawer-action" id="btn-export-mode-en-deck" style="padding: 12px; font-size: 14px; background: #0d9488; display: none;">
-					🔤 匯出英文牌組列表
-				</button>
-			</div>
-		</div>
-	</div>
 
 	<!-- 新增：呈現英文卡表結果的 Modal -->
 	<div class="modal-overlay" id="export-en-deck-modal">
@@ -3632,14 +3597,82 @@
 				renderCurrentResultsWithSort();
 			});
 		});
+		
+		// Page 2 / 3 功能選單：互斥、點外部關閉、鍵盤與視窗邊界處理。
+		function closeToolbarMenus(except = null) {
+			document.querySelectorAll('.toolbar-menu').forEach(menu => {
+				if (menu === except) return;
+				menu.open = false;
+				menu.querySelector('summary').setAttribute('aria-expanded', 'false');
+			});
+		}
 
-		// ✅ 修正：同時監聽兩頁的匯出按鈕
-		document.querySelectorAll('#btn-export-list, .btn-export-action').forEach(btn => {
-			btn.addEventListener('click', () => {
-				closeAllDrawers(); // 💡 關閉抽屜
-				exportResultsToNewTab();
+		document.querySelectorAll('.toolbar-menu').forEach(menu => {
+			const summary = menu.querySelector('summary');
+			const panel = menu.querySelector('.toolbar-menu-panel');
+
+			summary.addEventListener('click', event => {
+				event.preventDefault();
+
+				const shouldOpen = !menu.open;
+				closeToolbarMenus();
+				if (!shouldOpen) return;
+
+				if (menu.classList.contains('toolbar-export-menu')) {
+					updateToolbarExportOptions();
+				}
+
+				menu.open = true;
+				summary.setAttribute('aria-expanded', 'true');
+
+				const rect = summary.getBoundingClientRect();
+				const left = Math.max(
+					12,
+					Math.min(
+						rect.right - panel.offsetWidth,
+						window.innerWidth - panel.offsetWidth - 12
+					)
+				);
+				const top = Math.min(rect.bottom + 6, window.innerHeight - 80);
+
+				panel.style.left = `${left}px`;
+				panel.style.top = `${Math.max(12, top)}px`;
+				panel.style.maxHeight =
+					`${Math.max(60, window.innerHeight - Math.max(12, top) - 12)}px`;
+			});
+
+			menu.addEventListener('keydown', event => {
+				if (event.key === 'Escape') {
+					closeToolbarMenus();
+					summary.focus();
+					event.preventDefault();
+				} else if (event.key === 'ArrowDown' && event.target === summary) {
+					if (!menu.open) summary.click();
+					panel.querySelector('button:not([hidden])')?.focus();
+					event.preventDefault();
+				}
 			});
 		});
+
+		document.addEventListener('click', event => {
+			if (!event.target.closest('.toolbar-menu')) closeToolbarMenus();
+		});
+
+		document.addEventListener('focusin', event => {
+			const menu = event.target.closest('.toolbar-menu');
+			closeToolbarMenus(menu);
+		});
+
+		window.addEventListener('resize', () => closeToolbarMenus());
+
+		document.addEventListener('scroll', event => {
+			if (
+				!(event.target instanceof Element) ||
+				!event.target.closest('.toolbar-menu-panel')
+			) {
+				closeToolbarMenus();
+			}
+		}, true);
 		
 		// 監聽兩頁的歷史紀錄按鈕點擊
 		document.querySelectorAll('.btn-history-action').forEach(btn => {
@@ -6278,41 +6311,16 @@
 				(filterConfig.checkedCardTypes && filterConfig.checkedCardTypes.length > 0 && !filterConfig.isAllCardTypesChecked)
 			);
 
-			// 動態控制與渲染抽屜工具列中的 [✏️ 修改自訂卡表] 按鈕
-			document.querySelectorAll('#drawer-tab2 .drawer-row, #drawer-tab3 .drawer-row').forEach(row => {
-				const label = row.querySelector('label');
-				if (label && label.innerText.includes('自訂')) {
-					const btnGroup = row.querySelector('.drawer-btn-group') || row;
-					let btnEdit = btnGroup.querySelector('.btn-edit-deck-action');
-					
-					if (isCustomNetDeck && !hasOtherFilters) {
-						if (!btnEdit) {
-							btnEdit = document.createElement('button');
-							btnEdit.type = 'button';
-							btnEdit.className = 'btn-drawer-action btn-edit-deck-action';
-							btnEdit.style.backgroundColor = '#eab308';
-							btnEdit.style.color = '#ffffff';
-							btnEdit.innerText = '✏️ 修改自訂卡表';
-							
-							const btnImport = btnGroup.querySelector('.btn-open-deck-import-action');
-							if (btnImport) {
-								btnImport.after(btnEdit);
-							} else {
-								btnGroup.appendChild(btnEdit);
-							}
-						}
-						
-						btnEdit.onclick = () => {
-							closeAllDrawers();
-							openDeckImportForEdit(selectedSetKey);
-						};
-						btnEdit.style.display = 'inline-block';
-					} else {
-						if (btnEdit) btnEdit.style.display = 'none';
-					}
-				}
-			});
+			// 自訂卡表編輯保留原本顯示條件，改為控制功能列上的固定按鈕。
+			document.querySelectorAll('.btn-edit-deck-action').forEach(btn => {
+				const canEdit = isCustomNetDeck && !hasOtherFilters;
+				btn.hidden = !canEdit;
 
+				btn.onclick = canEdit ? () => {
+					closeAllDrawers();
+					openDeckImportForEdit(selectedSetKey);
+				} : null;
+			});
 			// 若精確區與建議區皆無結果，顯示查無資料
 			if (sortedExact.length === 0 && sortedFuzzy.length === 0) {
 				listContainerPage2.innerHTML = '<div class="empty-state">查無資料</div>';
@@ -6416,6 +6424,8 @@
 		
 		// 💡 收合所有功能抽屜的輔助函式
 		function closeAllDrawers() {
+			closeToolbarMenus();
+
 			document.querySelectorAll('.drawer-container').forEach(drawer => {
 				drawer.classList.remove('open');
 				const arrow = drawer.querySelector('.drawer-arrow');
@@ -10843,38 +10853,18 @@
 			return distribution;
 		}
 
-		// ==========================================
-		// 匯出模式 Modal 與排版邏輯 (使用 sessionStorage + export.html)
-		// ==========================================
-
-		// 1. 開啟/觸發匯出流程（開啟選擇 Modal）
-		function exportResultsToNewTab() {
-			if (!currentFilterResults || currentFilterResults.length === 0) {
-				alert("目前沒有可匯出的卡牌資料！");
-				return;
-			}
-
+		// 每次開啟匯出選單時，更新英文牌組匯出的原有顯示條件。
+		function updateToolbarExportOptions() {
 			const filterConfig = getFilterConfigFromUI();
-			const currentSetObj = filterConfig.seriesSmall ? rawSetlist[filterConfig.seriesSmall] : null;
+			const currentSetObj = filterConfig.seriesSmall
+				? rawSetlist[filterConfig.seriesSmall]
+				: null;
+
 			const isDeck = Boolean(currentSetObj && currentSetObj.isdeck === true);
 
-			const btnEnDeck = document.getElementById('btn-export-mode-en-deck');
-			if (btnEnDeck) {
-				btnEnDeck.style.display = isDeck ? 'block' : 'none';
-			}
-
-			const exportModal = document.getElementById('export-mode-modal');
-			if (exportModal) {
-				exportModal.classList.add('active');
-			}
-		}
-
-		// 2. 關閉匯出 Modal
-		function closeExportModal() {
-			const exportModal = document.getElementById('export-mode-modal');
-			if (exportModal) {
-				exportModal.classList.remove('active');
-			}
+			document.querySelectorAll('.btn-export-en-deck-action').forEach(btn => {
+				btn.hidden = !isDeck;
+			});
 		}
 		
 		// 3. 核心打包與送出 sessionStorage
@@ -11004,42 +10994,38 @@
 		}
 
 		// 4. Modal 按鈕事件監聽
+		// 兩頁共用匯出事件，沿用原有資料打包與新分頁流程。
 		document.addEventListener('DOMContentLoaded', () => {
-			document.getElementById('export-modal-close')?.addEventListener('click', closeExportModal);
-			document.getElementById('export-mode-modal')?.addEventListener('click', (e) => {
-				if (e.target.id === 'export-mode-modal') closeExportModal();
-			});
+			const featureNames = {
+				img_unfold: '匯出列表圖片(展開)',
+				img_only: '匯出列表圖片(縮排)',
+				img_text: '匯出列表圖文',
+				text_only: '匯出列表效果文'
+			};
 
-			// 模式 1：僅匯出圖片
-			document.getElementById('btn-export-mode-1')?.addEventListener('click', () => {
-				const filterConfig = getFilterConfigFromUI();
-				trackFeature('匯出列表圖片(縮排)', { 
-					total_cards: currentFilterResults.length,
-					set_code: filterConfig.seriesSmall || undefined
+			document.querySelectorAll('[data-export-mode]').forEach(btn => {
+				btn.addEventListener('click', () => {
+					closeAllDrawers();
+
+					if (!currentFilterResults || currentFilterResults.length === 0) {
+						alert('目前沒有可匯出的卡牌資料！');
+						return;
+					}
+
+					const mode = btn.dataset.exportMode;
+
+					if (mode === 'img_only') {
+						const filterConfig = getFilterConfigFromUI();
+						trackFeature(featureNames[mode], {
+							total_cards: currentFilterResults.length,
+							set_code: filterConfig.seriesSmall || undefined
+						});
+					} else {
+						trackFeature(featureNames[mode]);
+					}
+
+					dispatchExportToPage(mode);
 				});
-				closeExportModal();
-				dispatchExportToPage('img_only');
-			});
-
-			// 模式 2：圖 + 效果
-			document.getElementById('btn-export-mode-2')?.addEventListener('click', () => {
-				trackFeature('匯出列表圖文');
-				closeExportModal();
-				dispatchExportToPage('img_text');
-			});
-
-			// 模式 3：只要效果
-			document.getElementById('btn-export-mode-3')?.addEventListener('click', () => {
-				trackFeature('匯出列表效果文');
-				closeExportModal();
-				dispatchExportToPage('text_only');
-			});
-			
-			// index.html: 綁定模式 4 觸發事件
-			document.getElementById('btn-export-mode-unfold')?.addEventListener('click', () => {
-				trackFeature('匯出列表圖片(展開)');
-				closeExportModal();
-				dispatchExportToPage('img_unfold');
 			});
 		});
 
@@ -11736,11 +11722,19 @@
 			});
 			
 			// 💡 新增：匯出英文牌組 Modal 相關事件綁定
-            document.getElementById('btn-export-mode-en-deck')?.addEventListener('click', () => {
-				trackFeature('匯出英文卡表');
-                closeExportModal();
-                exportEnglishDeckProcess();
-            });
+            document.querySelectorAll('.btn-export-en-deck-action').forEach(btn => {
+				btn.addEventListener('click', () => {
+					closeAllDrawers();
+
+					if (!currentFilterResults || currentFilterResults.length === 0) {
+						alert('目前沒有可匯出的卡牌資料！');
+						return;
+					}
+
+					trackFeature('匯出英文卡表');
+					exportEnglishDeckProcess();
+				});
+			});
 
             document.getElementById('export-en-deck-modal-close')?.addEventListener('click', () => {
                 document.getElementById('export-en-deck-modal').classList.remove('active');
@@ -11977,14 +11971,8 @@
 				updateSummaryText();
 			}
 
-			// 💡 確保 Page 2 & Page 3 的功能抽屜維持展開 (.open) 狀態
-			document.querySelectorAll('.drawer-container').forEach(drawer => {
-				if (drawer.id === 'drawer-tab2' || drawer.id === 'drawer-tab3') {
-					drawer.classList.add('open');
-					const arrow = drawer.querySelector('.drawer-arrow');
-					if (arrow) arrow.innerText = '▲';
-				}
-			});
+			// 新功能列不需要展開抽屜；搜尋完成後會更新編輯按鈕。
+			closeToolbarMenus();
 
 			// 執行搜尋與列表渲染
 			document.getElementById('btn-search')?.click();
@@ -12805,7 +12793,12 @@
 				console.groupEnd();
 
 				// 💡 根據判斷產出相應的連結
-				if (selectedSetKey && !isCustomNetDeck && rawSetlist[selectedSetKey] && (isSameContent || currentFilterResults.length > 0)) {
+				if (
+					selectedSetKey &&
+					!isCustomNetDeck &&
+					rawSetlist[selectedSetKey] &&
+					isSameContent
+				) {
 					// 只要選取了商品牌組（且未被額外過濾掉卡片），優先吐出 setCode 連結
 					if (isSameOrder || currentSortVal === 'default') {
 						// 順序相同或預設排序：只帶 setCode
