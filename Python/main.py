@@ -1048,11 +1048,45 @@ async def image_backfill_startup():
                     image_url_map[name] = url
 
             # 只檢查原始 carddata，不能用補圖後的暫存值判定。
-            if (BASE_DIR / "carddata.json").is_file() and base:
-                for name, url in list(image_url_map.items()):
-                    if base.get(name, {}).get("pic") == url:
-                        del image_url_map[name]
-                        image_mark_changed(name, None)
+            # 比對實際載入的檔案資料。
+            base_ready = (
+                (BASE_DIR / "carddata.json").is_file()
+                and bool(base)
+            )
+
+            patch_ready = (
+                BASE_DIR / "patch_carddata.json"
+            ).is_file()
+
+            patch_by_name = {
+                card["name"]: card
+                for card in carddata_patch_cache
+                if isinstance(card, dict) and card.get("name")
+            }
+
+            removed_base = 0
+            removed_patch = 0
+
+            for name, url in list(image_url_map.items()):
+                if base.get(name, {}).get("pic") == url:
+                    removed_base += 1
+
+                elif patch_by_name.get(name, {}).get("pic") == url:
+                    removed_patch += 1
+
+                else:
+                    continue
+
+                del image_url_map[name]
+                image_mark_changed(name, None)
+
+            logging.info(
+                "[Card image] Startup cleanup: "
+                "carddata=%s, patch=%s, remaining=%s",
+                removed_base,
+                removed_patch,
+                len(image_url_map),
+            )
 
             # 啟動清理完成後立即同步刪除紀錄。
             await image_flush_changes()
