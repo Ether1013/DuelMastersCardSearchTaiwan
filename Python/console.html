@@ -756,12 +756,13 @@
             ].filter(Boolean).join('；');
         }
 
-        async function exportUpdatedCarddata() {
+                async function exportUpdatedCarddata() {
             if (!canExportCarddata) return;
 
             const button = document.getElementById(
                 'exportCarddataBtn'
             );
+
             button.disabled = true;
 
             try {
@@ -771,10 +772,14 @@
                 );
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(
-                        error.detail || '輸出失敗'
-                    );
+                    let message = `HTTP ${response.status}`;
+
+                    try {
+                        const error = await response.json();
+                        message = error.detail || message;
+                    } catch {}
+
+                    throw new Error(message);
                 }
 
                 const blob = await response.blob();
@@ -782,7 +787,7 @@
                 const link = document.createElement('a');
 
                 link.href = url;
-                link.download = 'carddata_updated.json';
+                link.download = 'carddata_updates.zip';
 
                 document.body.appendChild(link);
                 link.click();
@@ -798,8 +803,10 @@
                 ) || 0;
 
                 alert(
-                    `已輸出 ${count} 筆補圖。請人工檢查；`
-                    + '原始 carddata.json 與 map 保持不變。'
+                    `已輸出 ${count} 筆補圖，下載包內含：\n`
+                    + 'update_carddata.json：完整卡牌資料\n'
+                    + 'patch_update_carddata.json：本次更新卡圖的完整卡牌資料\n\n'
+                    + '請人工檢查。原始 carddata.json 與 map 保持不變。'
                 );
 
             } catch (error) {

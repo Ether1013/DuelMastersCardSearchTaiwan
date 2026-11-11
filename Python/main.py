@@ -32,6 +32,8 @@ from zoneinfo import ZoneInfo
 from datetime import datetime, timezone, timedelta
 import logging
 import random, string
+import io
+import zipfile
 
 # 👇 Firebase 套件
 import firebase_admin
@@ -1677,7 +1679,7 @@ async def export_carddata_images(
 
     data = copy.deepcopy(carddata_cache)
     snapshot = dict(image_url_map)
-    updates = 0
+    patch = []
 
     for card in data:
         url = snapshot.get(card.get("name"))
@@ -1688,38 +1690,88 @@ async def export_carddata_images(
             and image_url_is_valid(url)
         ):
             card["pic"] = url
-            updates += 1
 
-    body = json.dumps(
-        data,
-        ensure_ascii=False,
-        indent=2,
-    ).encode("utf-8")
+            # 收錄完整卡牌物件，不只 name、pic。
+            patch.append(card)
 
-    def write_export():
-        destination = BASE_DIR / "carddata_updated.json"
-        temporary = BASE_DIR / (
-            ".carddata_updated."
-            + uuid.uuid4().hex
-            + ".tmp"
-        )
+    def build_export():
+        files = {
+            "update_carddata.json": json.dumps(
+                data,
+                ensure_ascii=False,
+                indent=2,
+            ).encode("utf-8"),
+
+            "patch_update_carddata.json": json.dumps(
+                patch,
+                ensure_ascii=False,
+                indent=2,
+            ).encode("utf-8"),
+        }
+
+        temporary_files = []
 
         try:
-            temporary.write_bytes(body)
-            os.replace(temporary, destination)
-        finally:
-            temporary.unlink(missing_ok=True)
+            # 先完成兩份暫存檔。
+            for filename, body in files.items():
+                temporary = BASE_DIR / (
+                    "."
+                    + filename
+                    + "."
+                    + uuid.uuid4().hex
+                    + ".tmp"
+                )
 
-    await asyncio.to_thread(write_export)
+                temporary_files.append(
+                    (temporary, BASE_DIR / filename)
+                )
+
+                temporary.write_bytes(body)
+
+            # 兩份下載資料來自同一次快照。
+            buffer = io.BytesIO()
+
+            with zipfile.ZipFile(
+                buffer,
+                "w",
+                compression=zipfile.ZIP_DEFLATED,
+            ) as archive:
+                for filename, body in files.items():
+                    archive.writestr(filename, body)
+
+            for temporary, destination in temporary_files:
+                os.replace(temporary, destination)
+
+            return buffer.getvalue()
+
+        finally:
+            for temporary, _ in temporary_files:
+                temporary.unlink(missing_ok=True)
+
+    try:
+        async with file_write_lock:
+            archive_body = await asyncio.to_thread(
+                build_export
+            )
+
+    except Exception:
+        logging.exception(
+            "[Card image] Export failed"
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="更新檔輸出失敗，請查看伺服器 log",
+        )
 
     return Response(
-        body,
-        media_type="application/json",
+        archive_body,
+        media_type="application/zip",
         headers={
             "Content-Disposition": (
-                'attachment; filename="carddata_updated.json"'
+                'attachment; filename="carddata_updates.zip"'
             ),
-            "X-Updated-Count": str(updates),
+            "X-Updated-Count": str(len(patch)),
             "Cache-Control": "no-store",
         },
     )
