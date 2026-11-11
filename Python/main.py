@@ -12,13 +12,15 @@ import copy
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, urlsplit, urljoin, parse_qs, urlencode
+import unicodedata
+from bs4 import BeautifulSoup
 import pytz
 
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request, Response, BackgroundTasks, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from lzstring import LZString
 from pydantic import BaseModel
@@ -794,6 +796,935 @@ def load_and_process_caches():
 
     except Exception as e:
         print(f"載入緩存失敗: {e}")
+
+# ===== 卡圖漸進補齊 =====
+
+IMAGE_COLLECTION = "card_image_backfill"
+IMAGE_SEARCH_INTERVAL = max(
+    1.0, float(os.getenv("IMAGE_SEARCH_INTERVAL", "45"))
+)
+IMAGE_SAVE_IDLE = max(
+    1.0, float(os.getenv("IMAGE_SAVE_IDLE", "120"))
+)
+IMAGE_FAILURE_TTL = 86400
+IMAGE_BLOCK_COOLDOWN = 1800
+IMAGE_MAX_JOBS = 30
+
+image_url_map = {}               # 原始卡名 -> 官方圖片 URL
+_image_cards = {}
+_image_dirty = {}                # 卡名 -> (版本, URL 或 None=刪除)
+_image_jobs = {}
+_image_failures = {}
+_image_lock = asyncio.Lock()
+_image_save_lock = asyncio.Lock()
+_image_wakeup = asyncio.Event()
+_image_revision = 0
+_image_changed_at = 0.0
+_image_next_search_at = 0.0
+_image_blocked_until = 0.0
+_image_save_task = None
+_image_stopping = False
+_image_ready = False
+_image_last_error = ""
+_image_save_error = ""
+_image_last_saved_at = ""
+
+
+def image_url_is_valid(url):
+    p = urlsplit(url)
+    return (
+        p.scheme == "https"
+        and p.netloc == "dm.takaratomy.co.jp"
+        and p.path.startswith("/wp-content/card/cardimage/")
+        and p.path.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+    )
+
+
+def image_name_key(name):
+    # 只用於官方名稱核對；map 保留 carddata 原始卡名。
+    return re.sub(
+        r"\s+", "",
+        unicodedata.normalize("NFKC", name or "")
+    )
+
+
+def image_card_is_eligible(card):
+    back = card.get("back")
+    return (
+        card.get("pic") == ""
+        and (
+            back is None
+            or (isinstance(back, list) and len(back) <= 1)
+        )
+    )
+
+
+def image_mark_changed(name, url):
+    global _image_revision, _image_changed_at
+
+    _image_revision += 1
+    _image_dirty[name] = (_image_revision, url)
+    _image_changed_at = time.monotonic()
+    _image_wakeup.set()
+
+
+def image_backfill_stats():
+    base = {c.get("name"): c for c in carddata_cache}
+
+    return {
+        "pending_count": sum(
+            base.get(name, {}).get("pic") != url
+            for name, url in image_url_map.items()
+        ),
+        "unsynced_count": len(_image_dirty),
+        "active_jobs": len(_image_jobs),
+        "cooldown_seconds": max(
+            0, int(_image_blocked_until - time.monotonic())
+        ),
+        "ready": _image_ready,
+        "firebase_available": db is not None,
+        "last_error": _image_last_error,
+        "save_error": _image_save_error,
+        "last_saved_at": _image_last_saved_at,
+    }
+
+
+async def image_publish_stats():
+    payload = {
+        "type": "CARD_IMAGE_UPDATE",
+        "card_image_backfill": image_backfill_stats(),
+    }
+
+    for ws in list(console_manager.active_connections):
+        try:
+            await asyncio.wait_for(
+                ws.send_json(payload), timeout=2
+            )
+        except Exception:
+            console_manager.disconnect(ws)
+
+
+async def image_flush_changes():
+    global _image_save_error, _image_last_saved_at
+
+    async with _image_save_lock:
+        if not _image_dirty:
+            return True
+
+        if db is None:
+            _image_save_error = (
+                "Firebase 未連線；補圖仍在記憶體，重啟會遺失"
+            )
+            return False
+
+        snapshot = dict(_image_dirty)
+
+        def write_snapshot():
+            items = list(snapshot.items())
+
+            # Firestore batch 分批寫入。
+            for start in range(0, len(items), 400):
+                batch = db.batch()
+
+                for name, (_, url) in items[start:start + 400]:
+                    doc_id = hashlib.sha256(
+                        name.encode("utf-8")
+                    ).hexdigest()
+
+                    ref = db.collection(
+                        IMAGE_COLLECTION
+                    ).document(doc_id)
+
+                    if url is None:
+                        batch.delete(ref)
+                    else:
+                        batch.set(ref, {
+                            "name": name,
+                            "url": url,
+                            "updated_at": firestore.SERVER_TIMESTAMP,
+                        })
+
+                batch.commit(timeout=15)
+
+        try:
+            await asyncio.to_thread(write_snapshot)
+
+            # 寫入途中可能有新變更，只清除本次已保存的版本。
+            for name, versioned_url in snapshot.items():
+                if _image_dirty.get(name) == versioned_url:
+                    del _image_dirty[name]
+
+            _image_save_error = ""
+            _image_last_saved_at = datetime.now(
+                TZ_UTC8
+            ).isoformat()
+
+            return True
+
+        except Exception as exc:
+            _image_save_error = (
+                "Firebase 保存失敗，稍後重試："
+                f"{type(exc).__name__}"
+            )
+            logging.exception(
+                "[Card image] Firebase sync failed"
+            )
+            return False
+
+
+async def image_save_loop():
+    retry_at = 0.0
+
+    while not _image_stopping:
+        _image_wakeup.clear()
+
+        if (
+            _image_dirty
+            and time.monotonic() >= retry_at
+            and time.monotonic() - _image_changed_at
+            >= IMAGE_SAVE_IDLE
+        ):
+            ok = await image_flush_changes()
+            retry_at = time.monotonic() + (0 if ok else 60)
+            await image_publish_stats()
+
+        try:
+            await asyncio.wait_for(
+                _image_wakeup.wait(), timeout=1
+            )
+        except asyncio.TimeoutError:
+            pass
+
+
+@app.on_event("startup")
+async def image_backfill_startup():
+    global _image_cards, _image_ready
+    global _image_save_task, _image_stopping, _image_save_error
+
+    _image_stopping = False
+
+    _image_cards = {
+        c["name"]: dict(c)
+        for c in carddata_cache
+        if c.get("name")
+    }
+    base = dict(_image_cards)
+
+    # 避免補丁中的空 pic 蓋回原始檔已確認的卡圖。
+    for patch in carddata_patch_cache:
+        if patch.get("name"):
+            previous = _image_cards.get(patch["name"], {})
+            merged = dict(patch)
+
+            if merged.get("pic") == "" and previous.get("pic"):
+                merged["pic"] = previous["pic"]
+
+            _image_cards[patch["name"]] = merged
+
+    image_url_map.clear()
+
+    if db is not None:
+        try:
+            docs = await asyncio.to_thread(
+                lambda: list(
+                    db.collection(
+                        IMAGE_COLLECTION
+                    ).stream(timeout=20)
+                )
+            )
+
+            for doc in docs:
+                data = doc.to_dict() or {}
+                name = data.get("name")
+                url = data.get("url")
+
+                if (
+                    isinstance(name, str)
+                    and isinstance(url, str)
+                    and image_url_is_valid(url)
+                ):
+                    image_url_map[name] = url
+
+            # 只檢查原始 carddata，不能用補圖後的暫存值判定。
+            if (BASE_DIR / "carddata.json").is_file() and base:
+                for name, url in list(image_url_map.items()):
+                    if base.get(name, {}).get("pic") == url:
+                        del image_url_map[name]
+                        image_mark_changed(name, None)
+
+            # 啟動清理完成後立即同步刪除紀錄。
+            await image_flush_changes()
+
+        except Exception:
+            _image_save_error = (
+                "Firebase 載入失敗；未清除遠端資料"
+            )
+            logging.exception(
+                "[Card image] Firebase load failed"
+            )
+    else:
+        _image_save_error = (
+            "Firebase 未連線；本次補圖只保存在記憶體"
+        )
+
+    _image_ready = bool(_image_cards)
+    _image_save_task = asyncio.create_task(
+        image_save_loop()
+    )
+
+
+@app.on_event("shutdown")
+async def image_backfill_shutdown():
+    global _image_stopping
+
+    _image_stopping = True
+
+    jobs = list(_image_jobs.values())
+    for job in jobs:
+        job.cancel()
+
+    if jobs:
+        await asyncio.gather(
+            *jobs, return_exceptions=True
+        )
+
+    _image_wakeup.set()
+
+    if _image_save_task:
+        await _image_save_task
+
+    # 正常關機時補存尚未滿兩分鐘的變更。
+    await image_flush_changes()
+
+
+class ImageLookupBlocked(Exception):
+    def __init__(self, seconds):
+        self.seconds = seconds
+
+
+async def image_fetch_html(client, url, host):
+    # 每一跳都檢查目的網域，不追隨任意外站或內網網址。
+    for _ in range(4):
+        p = urlsplit(url)
+
+        if p.scheme != "https" or p.netloc != host:
+            raise ValueError("unexpected redirect host")
+
+        async with client.stream("GET", url) as response:
+            if response.status_code in (403, 429):
+                try:
+                    seconds = int(
+                        response.headers.get("Retry-After", "0")
+                    )
+                except ValueError:
+                    seconds = 0
+
+                raise ImageLookupBlocked(
+                    max(IMAGE_BLOCK_COOLDOWN, seconds)
+                )
+
+            if response.is_redirect:
+                url = urljoin(
+                    url,
+                    response.headers.get("location", "")
+                )
+                continue
+
+            response.raise_for_status()
+
+            content = bytearray()
+            async for chunk in response.aiter_bytes():
+                content.extend(chunk)
+
+                if len(content) > 2_000_000:
+                    raise ValueError(
+                        "HTML response too large"
+                    )
+
+            html = content.decode(
+                "utf-8", errors="replace"
+            )
+            lower = html.lower()
+            
+
+            if (
+                "/sorry/" in str(response.url)
+                or "unusual traffic" in lower
+                or "g-recaptcha" in lower
+                or 'id="captcha-form"' in lower
+            ):
+                raise ImageLookupBlocked(
+                    IMAGE_BLOCK_COOLDOWN
+                )
+
+            return html
+
+    raise ValueError("too many redirects")
+
+
+def image_extract_card_url(html, page_url, name):
+    soup = BeautifulSoup(html, "html.parser")
+
+    for img in soup.select(".card .card-img img[src]"):
+        if (
+            image_name_key(img.get("alt", ""))
+            != image_name_key(name)
+        ):
+            continue
+
+        url = urljoin(page_url, img["src"])
+
+        if image_url_is_valid(url):
+            return url
+
+    return None
+
+# ===== 官方卡庫內容頁連結 =====
+
+official_page_cache = OrderedDict()
+OFFICIAL_PAGE_CACHE_TTL = 86400
+OFFICIAL_PAGE_CACHE_LIMIT = 2000
+
+
+def official_page_cached(name):
+    item = official_page_cache.get(name)
+
+    if item is None:
+        return False, None
+
+    expires_at, url = item
+
+    if expires_at <= time.monotonic():
+        del official_page_cache[name]
+        return False, None
+
+    official_page_cache.move_to_end(name)
+    return True, url
+
+
+async def official_first_page(client, name):
+    hit, page_url = official_page_cached(name)
+
+    if hit:
+        return page_url
+
+    search_url = "https://dm.takaratomy.co.jp/card/"
+
+    logging.info(
+        "[Card image] Official name search: %s",
+        name,
+    )
+
+    async with client.stream(
+        "POST",
+        search_url,
+        data={
+            "keyword": name,
+            "keyword_type[]": "card_name",
+            "pagenum": "1",
+            "sort": "release_new",
+        },
+        headers={
+            "X-Requested-With": "XMLHttpRequest"
+        },
+    ) as response:
+        if response.status_code in (403, 429):
+            try:
+                retry_after = int(
+                    response.headers.get(
+                        "Retry-After", "0"
+                    )
+                )
+            except ValueError:
+                retry_after = 0
+
+            raise ImageLookupBlocked(
+                max(
+                    IMAGE_BLOCK_COOLDOWN,
+                    retry_after,
+                )
+            )
+
+        response.raise_for_status()
+
+        content = bytearray()
+
+        async for chunk in response.aiter_bytes():
+            content.extend(chunk)
+
+            if len(content) > 2_000_000:
+                raise ValueError(
+                    "Official search response too large"
+                )
+
+    soup = BeautifulSoup(
+        content.decode("utf-8", errors="replace"),
+        "html.parser",
+    )
+    results = soup.select_one("#cardlist")
+
+    if results is None:
+        raise RuntimeError(
+            "Official search did not return "
+            "a recognizable results page"
+        )
+
+    page_url = None
+
+    for link in results.select("a[href]"):
+        candidate = urljoin(
+            search_url, link["href"]
+        )
+        parsed = urlsplit(candidate)
+
+        if (
+            parsed.scheme == "https"
+            and parsed.netloc == "dm.takaratomy.co.jp"
+            and parsed.path.rstrip("/") == "/card/detail"
+            and parse_qs(parsed.query).get("id")
+        ):
+            page_url = candidate
+            break
+
+    official_page_cache[name] = (
+        time.monotonic() + OFFICIAL_PAGE_CACHE_TTL,
+        page_url,
+    )
+    official_page_cache.move_to_end(name)
+
+    while len(official_page_cache) > OFFICIAL_PAGE_CACHE_LIMIT:
+        official_page_cache.popitem(last=False)
+
+    return page_url
+
+
+def official_link_message(
+    message,
+    status_code=200,
+    retry_after=None,
+):
+    # message 只使用固定文字，不直接插入使用者輸入。
+    refresh = (
+        f'<meta http-equiv="refresh" content="{retry_after}">'
+        if retry_after is not None
+        else ""
+    )
+
+    return HTMLResponse(
+        '<!doctype html><html lang="zh-Hant">'
+        '<head><meta charset="utf-8">'
+        f'{refresh}<title>官方卡庫</title></head>'
+        '<body style="font-family:system-ui;padding:32px">'
+        f'<p>{message}</p></body></html>',
+        status_code=status_code,
+        headers={"Cache-Control": "no-store"},
+    )
+def official_google_fallback(name):
+    query = name + " site:https://dm.takaratomy.co.jp/card/"
+    url = (
+        "https://www.google.com/search?"
+        + urlencode({"q": query})
+    )
+
+    logging.info(
+        "[Official link] Google fallback: %s",
+        name,
+    )
+
+    return RedirectResponse(
+        url,
+        status_code=302,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@app.get("/api/official_card")
+async def open_official_card(
+    name: str = Query(
+        ..., min_length=1, max_length=300
+    ),
+):
+    global _image_next_search_at
+    global _image_blocked_until, _image_last_error
+
+    if (
+        not _image_ready
+        or _image_stopping
+        or name not in _image_cards
+    ):
+        return official_google_fallback(name)
+
+    hit, page_url = official_page_cached(name)
+
+    if not hit:
+        now = time.monotonic()
+
+        if now < _image_blocked_until:
+            return official_google_fallback(name)
+
+        # 尚在等待限速時，保留自動等待。
+        if (
+            _image_lock.locked()
+            or now < _image_next_search_at
+        ):
+            delay = min(
+                10,
+                max(
+                    2,
+                    int(_image_next_search_at - now) + 1,
+                ),
+            )
+
+            return official_link_message(
+                "正在準備官方卡牌頁面，請稍候；"
+                "頁面會自動繼續。",
+                retry_after=delay,
+            )
+
+        async with _image_lock:
+            _image_next_search_at = (
+                time.monotonic()
+                + IMAGE_SEARCH_INTERVAL
+            )
+
+            try:
+                async with httpx.AsyncClient(
+                    timeout=15,
+                    follow_redirects=False,
+                ) as client:
+                    page_url = await official_first_page(
+                        client,
+                        name,
+                    )
+
+            except ImageLookupBlocked as exc:
+                _image_blocked_until = (
+                    time.monotonic() + exc.seconds
+                )
+                _image_last_error = (
+                    "官方網站限制請求，已暫停查詢"
+                )
+
+                logging.warning(
+                    "[Official link] Lookup paused: %s",
+                    name,
+                )
+
+                await image_publish_stats()
+                return official_google_fallback(name)
+
+            except Exception:
+                logging.exception(
+                    "[Official link] Lookup failed: %s",
+                    name,
+                )
+                return official_google_fallback(name)
+
+    if not page_url:
+        return official_google_fallback(name)
+
+    return RedirectResponse(
+        page_url,
+        status_code=302,
+        headers={"Cache-Control": "no-store"},
+    )
+
+# ===== 官方卡庫內容頁連結結束 =====
+
+async def image_find_url(name):
+    async with httpx.AsyncClient(
+        timeout=15,
+        follow_redirects=False,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 "
+                "(compatible; DMCardImageBackfill/1.0)"
+            )
+        },
+    ) as client:
+        page_url = await official_first_page(
+            client, name
+        )
+
+        if page_url is None:
+            logging.warning(
+                "[Card image] No official search result: %s",
+                name,
+            )
+            return None
+
+        logging.info(
+            "[Card image] Official result: %s",
+            page_url,
+        )
+
+        await asyncio.sleep(1)
+
+        html = await image_fetch_html(
+            client,
+            page_url,
+            "dm.takaratomy.co.jp",
+        )
+
+        return image_extract_card_url(
+            html,
+            page_url,
+            name,
+        )
+
+async def image_lookup_job(name):
+    global _image_next_search_at
+    global _image_blocked_until, _image_last_error
+
+    try:
+        async with _image_lock:
+            await asyncio.sleep(
+                max(
+                    0,
+                    _image_next_search_at
+                    - time.monotonic()
+                )
+            )
+
+            if time.monotonic() < _image_blocked_until:
+                return
+
+            _image_next_search_at = (
+                time.monotonic()
+                + IMAGE_SEARCH_INTERVAL
+            )
+
+            url = await image_find_url(name)
+
+            if url:
+                image_url_map[name] = url
+                image_mark_changed(name, url)
+                _image_failures.pop(name, None)
+                _image_last_error = ""
+
+                logging.info(
+                    "[Card image] Found %s -> %s",
+                    name, url
+                )
+            else:
+                reason = (
+                    "沒有可核對卡名的官方卡圖；"
+                    "24 小時內不重查"
+                )
+
+                _image_failures[name] = (
+                    time.monotonic() + IMAGE_FAILURE_TTL,
+                    reason,
+                )
+                _image_last_error = f"{name}：{reason}"
+                
+                logging.warning(
+                    "[Card image] Not found: %s; retry after %s seconds",
+                    name, IMAGE_FAILURE_TTL
+                )
+
+    except ImageLookupBlocked as exc:
+        _image_blocked_until = (
+            time.monotonic() + exc.seconds
+        )
+        _image_last_error = (
+            "官方網站限制請求或出現驗證頁面，已暫停查圖"
+        )
+        
+        logging.warning(
+            "[Card image] Lookup paused for %s seconds; card=%s; reason=%s",
+            exc.seconds, name, _image_last_error
+        )
+
+    except asyncio.CancelledError:
+        raise
+
+    except Exception as exc:
+        reason = (
+            f"查圖失敗（{type(exc).__name__}）；"
+            "1 小時內不重查"
+        )
+
+        _image_failures[name] = (
+            time.monotonic() + 3600,
+            reason,
+        )
+        _image_last_error = f"{name}：{reason}"
+
+        logging.exception(
+            "[Card image] Lookup failed: %s", name
+        )
+
+    finally:
+        _image_jobs.pop(name, None)
+
+        if not _image_stopping:
+            await image_publish_stats()
+
+
+class CardImageRequest(BaseModel):
+    name: str
+    setCode: Optional[str] = None
+
+
+@app.post("/api/card_image")
+async def resolve_card_image(payload: CardImageRequest):
+    if not _image_ready or _image_stopping:
+        return JSONResponse(
+            {"status": "unavailable"},
+            headers={"Cache-Control": "no-store"},
+        )
+
+    card = _image_cards.get(payload.name)
+
+    if (
+        payload.setCode
+        or not card
+        or not image_card_is_eligible(card)
+    ):
+        result = {"status": "skipped"}
+
+    elif payload.name in image_url_map:
+        result = {
+            "status": "found",
+            "url": image_url_map[payload.name],
+        }
+
+    elif payload.name in _image_jobs:
+        result = {
+            "status": "pending",
+            "retry_after": 4,
+        }
+
+    elif time.monotonic() < _image_blocked_until:
+        result = {
+            "status": "cooldown",
+            "retry_after": max(
+                1,
+                int(
+                    _image_blocked_until
+                    - time.monotonic()
+                ),
+            ),
+        }
+
+    elif (
+        _image_failures.get(
+            payload.name, (0, "")
+        )[0] > time.monotonic()
+    ):
+        until, reason = _image_failures[payload.name]
+        result = {
+            "status": "not_found",
+            "retry_after": max(
+                1, int(until - time.monotonic())
+            ),
+            "reason": reason,
+        }
+
+    elif len(_image_jobs) >= IMAGE_MAX_JOBS:
+        result = {
+            "status": "busy",
+            "retry_after": 30,
+        }
+
+    else:
+        _image_jobs[payload.name] = asyncio.create_task(
+            image_lookup_job(payload.name)
+        )
+        result = {
+            "status": "pending",
+            "retry_after": 4,
+        }
+
+    return JSONResponse(
+        result,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+def image_export_allowed(request, admin):
+    # 不採信 X-Forwarded-For；同時檢查 Host 與連線來源。
+    return (
+        admin == TRACK_STATS_USER
+        and admin == "EtherC"
+        and request.url.hostname in (
+            "localhost", "127.0.0.1", "::1"
+        )
+        and request.client is not None
+        and request.client.host in (
+            "127.0.0.1", "::1"
+        )
+    )
+
+
+@app.post("/api/console/export_carddata")
+async def export_carddata_images(
+    request: Request,
+    admin: Optional[str] = Query(None),
+):
+    if not image_export_allowed(request, admin):
+        raise HTTPException(
+            status_code=403,
+            detail="僅限 localhost 與 EtherC 管理員",
+        )
+
+    if not _image_ready or not carddata_cache:
+        raise HTTPException(
+            status_code=503,
+            detail="卡牌原始資料尚未載入",
+        )
+
+    data = copy.deepcopy(carddata_cache)
+    snapshot = dict(image_url_map)
+    updates = 0
+
+    for card in data:
+        url = snapshot.get(card.get("name"))
+
+        if (
+            card.get("pic") == ""
+            and url
+            and image_url_is_valid(url)
+        ):
+            card["pic"] = url
+            updates += 1
+
+    body = json.dumps(
+        data,
+        ensure_ascii=False,
+        indent=2,
+    ).encode("utf-8")
+
+    def write_export():
+        destination = BASE_DIR / "carddata_updated.json"
+        temporary = BASE_DIR / (
+            ".carddata_updated."
+            + uuid.uuid4().hex
+            + ".tmp"
+        )
+
+        try:
+            temporary.write_bytes(body)
+            os.replace(temporary, destination)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    await asyncio.to_thread(write_export)
+
+    return Response(
+        body,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": (
+                'attachment; filename="carddata_updated.json"'
+            ),
+            "X-Updated-Count": str(updates),
+            "Cache-Control": "no-store",
+        },
+    )
+
+# ===== 卡圖漸進補齊結束 =====
 
 class LineNotificationModel(BaseModel):
     reporter_name: str = "使用者"
@@ -1769,6 +2700,9 @@ async def get_feature_stats(
             ],
             "LATEST_SET_CODES": LATEST_SET_CODES
         }
+
+    result["card_image_backfill"] = image_backfill_stats()
+    result["can_export_carddata"] = image_export_allowed(request, admin)
 
     return PrettyJSONResponse(content=result)
 

@@ -108,6 +108,37 @@
             </div>
         </div>
 
+		<section class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex flex-wrap justify-between items-center gap-3">
+                <div>
+                    <h2 class="text-base font-semibold">卡圖補齊</h2>
+
+                    <p class="text-sm text-gray-300 mt-2">
+                        已找到、尚未納入 carddata：
+                        <strong id="cardImagePending">0</strong> 筆
+                    </p>
+
+                    <p id="cardImageSaveState"
+                       class="text-xs text-gray-400 mt-2"
+                       role="status">
+                        載入中…
+                    </p>
+
+                    <p id="cardImageError"
+                       class="text-xs text-amber-300 mt-2"
+                       role="status"></p>
+                </div>
+
+                <button id="exportCarddataBtn"
+                        type="button"
+                        onclick="exportUpdatedCarddata()"
+                        style="display:none"
+                        class="px-3 py-2 bg-indigo-600 rounded-lg text-sm">
+                    carddata檔案更新
+                </button>
+            </div>
+        </section>
+
         <div id="dataTransferContainer" class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
@@ -692,8 +723,99 @@
 			});
 		}
 
+		        let canExportCarddata = false;
 
+        function updateCardImageStatus(stats) {
+            if (!stats) return;
+
+            document.getElementById(
+                'cardImagePending'
+            ).textContent = stats.pending_count || 0;
+
+            const saving = stats.unsynced_count
+                ? `${stats.unsynced_count} 筆變更等待同步 Firebase`
+                : '目前沒有等待同步的變更';
+
+            const cooldown = stats.cooldown_seconds
+                ? `；暫停查圖約 ${stats.cooldown_seconds} 秒`
+                : '';
+
+            document.getElementById(
+                'cardImageSaveState'
+            ).textContent =
+                `${stats.ready ? '已就緒' : '尚未就緒'}；`
+                + `${saving}；`
+                + `查詢中／排隊 ${stats.active_jobs || 0} 筆`
+                + cooldown;
+
+            document.getElementById(
+                'cardImageError'
+            ).textContent = [
+                stats.save_error,
+                stats.last_error
+            ].filter(Boolean).join('；');
+        }
+
+        async function exportUpdatedCarddata() {
+            if (!canExportCarddata) return;
+
+            const button = document.getElementById(
+                'exportCarddataBtn'
+            );
+            button.disabled = true;
+
+            try {
+                const response = await fetch(
+                    `/api/console/export_carddata?${authParam}`,
+                    { method: 'POST' }
+                );
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(
+                        error.detail || '輸出失敗'
+                    );
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+
+                link.href = url;
+                link.download = 'carddata_updated.json';
+
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                setTimeout(
+                    () => URL.revokeObjectURL(url),
+                    60000
+                );
+
+                const count = response.headers.get(
+                    'X-Updated-Count'
+                ) || 0;
+
+                alert(
+                    `已輸出 ${count} 筆補圖。請人工檢查；`
+                    + '原始 carddata.json 與 map 保持不變。'
+                );
+
+            } catch (error) {
+                alert(
+                    `更新檔輸出失敗：${error.message}`
+                );
+
+            } finally {
+                button.disabled = false;
+            }
+        }
+		
         async function updateDashboard(data) {
+			
+			updateCardImageStatus(data.card_image_backfill);
+
 			try {
 				if (data.start_time) {
 					startTimeObj = new Date(data.start_time);
@@ -1026,7 +1148,23 @@
                 if (response.ok) {
                     const data = await response.json();
                     updateDashboard(data);
-                    renderDataTransferStats(data.data_transfer_stats || {});
+
+                    canExportCarddata =
+                        data.can_export_carddata === true
+                        && [
+                            'localhost',
+                            '127.0.0.1',
+                            '[::1]'
+                        ].includes(location.hostname);
+
+                    document.getElementById(
+							'exportCarddataBtn'
+						).style.display =
+							canExportCarddata ? 'block' : 'none';
+
+                    renderDataTransferStats(
+                        data.data_transfer_stats || {}
+                    );
                 }
             } catch (err) { console.error(err); }
         }
@@ -1059,7 +1197,12 @@
             ws.onopen = () => { badge.className = "px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2"; badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Live</span>`; };
             ws.onmessage = (event) => {
 				const data = JSON.parse(event.data);
-
+				if (data.type === 'CARD_IMAGE_UPDATE') {
+                    updateCardImageStatus(
+                        data.card_image_backfill
+                    );
+                    return;
+                }
 				if (data.type === 'RECENT_CARD_VIEWS_UPDATE') {
 					renderRecentCardViews(data.latest_20_card_views || []);
 					return;

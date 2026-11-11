@@ -4989,7 +4989,13 @@
 						if (patchItem.name) {
 							const existingIndex = cardData.findIndex(c => c.name === patchItem.name);
 							if (existingIndex !== -1) {
-								cardData[existingIndex] = patchItem; // 覆寫舊卡
+								cardData[existingIndex] = {
+									...patchItem,
+									pic: patchItem.pic === ''
+										&& cardData[existingIndex].pic
+										? cardData[existingIndex].pic
+										: patchItem.pic
+								};
 							} else {
 								cardData.push(patchItem); // 追加新卡
 							}
@@ -7496,9 +7502,144 @@
 			return parts.join('\n');
 		}
 		
+		        // ===== 卡圖補齊 =====
+        const backfilledCardImages = new Map();
+        const cardImageRequests = new Map();
+        const cardImageRetryAt = new Map();
+
+        function canBackfillCardImage(card, matchedItem) {
+            const filters = getFilterConfigFromUI();
+            const setCode = new URLSearchParams(
+                location.search
+            ).get('setCode');
+
+            return card.pic === ''
+                && !matchedItem
+                && !setCode
+                && !filters.seriesSmall
+                && !filters.seriesBig
+                && (
+                    card.back == null
+                    || (
+                        Array.isArray(card.back)
+                        && card.back.length <= 1
+                    )
+                );
+        }
+
+        function requestCardImage(name) {
+            if (!cardImageRequests.has(name)) {
+                const pending = fetch('/api/card_image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        setCode: null
+                    }),
+                    signal: AbortSignal.timeout(15000)
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error(
+                            `HTTP ${response.status}`
+                        );
+                    }
+
+                    return response.json();
+                }).finally(() => {
+                    cardImageRequests.delete(name);
+                });
+
+                cardImageRequests.set(name, pending);
+            }
+
+            return cardImageRequests.get(name);
+        }
+
+        function backfillCardImageForView(
+            card,
+            matchedItem,
+            targetImgBox,
+            token,
+            redraw
+        ) {
+            if (
+                !canBackfillCardImage(card, matchedItem)
+                || backfilledCardImages.has(card.name)
+            ) {
+                return;
+            }
+
+            const isCurrent = () =>
+                targetImgBox.isConnected
+                && targetImgBox._cardImageToken === token
+                && canBackfillCardImage(card, matchedItem);
+
+            const poll = async () => {
+                if (!isCurrent()) return;
+
+                const remaining = (
+                    cardImageRetryAt.get(card.name) || 0
+                ) - Date.now();
+
+                // 冷卻後下次開卡才重試。
+                if (remaining > 0) return;
+
+                try {
+                    const result = await requestCardImage(
+                        card.name
+                    );
+
+                    if (
+                        result.status === 'found'
+                        && result.url
+                    ) {
+                        backfilledCardImages.set(
+                            card.name, result.url
+                        );
+
+                        if (isCurrent()) redraw();
+
+                    } else if (result.status === 'pending') {
+                        setTimeout(
+                            poll,
+                            Math.max(
+                                1, result.retry_after || 4
+                            ) * 1000
+                        );
+
+                    } else {
+                        cardImageRetryAt.set(
+                            card.name,
+                            Date.now()
+                            + (result.retry_after || 60) * 1000
+                        );
+                    }
+
+                } catch (error) {
+                    cardImageRetryAt.set(
+                        card.name,
+                        Date.now() + 60000
+                    );
+
+                    console.warn(
+                        '補圖暫時無法查詢', error
+                    );
+                }
+            };
+
+            // 讓先渲染再掛入 DOM 的詳情容器也能正常檢查。
+            setTimeout(poll, 0);
+        }
+        // ===== 卡圖補齊 helper 結束 =====
+		
 		// 💡 共用 Detail 渲染邏輯 (支援多卡圖 3D 堆疊、版本切換連動 ID、分享與截圖功能、以及動態中/英/日效果切換)
 		function renderDetailContentToContainer(card, combinedCiv, matchedItem, targetImgBox, targetInfoContainer, isModal = false) {
 
+			const cardImageToken = Symbol('card-image-view');
+            targetImgBox._cardImageToken = cardImageToken;
+			
 			let idList = [];
 			let picList = [];
 			let flavorList = [];
@@ -7629,6 +7770,15 @@
 
 			const filterConfig = typeof getFilterConfigFromUI === 'function' ? getFilterConfigFromUI() : {};
 			const hasSelectedSet = Boolean(filterConfig.seriesSmall || filterConfig.seriesBig);
+			
+			if (
+                canBackfillCardImage(card, matchedItem)
+                && backfilledCardImages.has(card.name)
+            ) {
+                validPicUrls = [
+                    backfilledCardImages.get(card.name)
+                ];
+            }
 
 			const currentSetCode = filterConfig.seriesSmall || filterConfig.seriesBig || (matchedItem ? (matchedItem.setcode || matchedItem.code) : '');
 			const upperSetCode = String(currentSetCode).trim().toUpperCase();
@@ -8317,10 +8467,37 @@
 
 			targetInfoContainer.appendChild(flavorBlock);
 
-			if (typeof renderSetBlockAndExtLinks === 'function') {
-				renderSetBlockAndExtLinks(card, matchedItem, targetInfoContainer, isModal);
-			}
-		}
+			            if (typeof renderSetBlockAndExtLinks === 'function') {
+                renderSetBlockAndExtLinks(
+                    card,
+                    matchedItem,
+                    targetInfoContainer,
+                    isModal
+                );
+            }
+
+            backfillCardImageForView(
+                card,
+                matchedItem,
+                targetImgBox,
+                cardImageToken,
+                () => {
+                    const scrollTop =
+                        targetInfoContainer.scrollTop;
+
+                    renderDetailContentToContainer(
+                        card,
+                        combinedCiv,
+                        matchedItem,
+                        targetImgBox,
+                        targetInfoContainer,
+                        isModal
+                    );
+
+                    targetInfoContainer.scrollTop = scrollTop;
+                }
+            );
+        }
 		
 		// 💡 共用函式：切換計算機的 ON/OFF 視覺狀態
 		function updateQuickCalcUI(isOn) {
@@ -8556,7 +8733,7 @@
 			const urlRuten = `https://www.ruten.com.tw/find/?q=${encodeURIComponent('決鬥王 ' + cleanRutenName)}`;
 			// 修正後的 urlOfficial (包含 condition: "on")
 			// 僅帶入處理後的卡名 (cleanNameOnly)
-			const urlOfficial = `https://www.google.com/search?q=${encodeURIComponent(cleanNameOnly + ' site:https://dm.takaratomy.co.jp/card/')}`;
+			const urlOfficial = `/api/official_card?name=${encodeURIComponent(rawCardName)}`;
 			const urlOfficialQA = `https://dm.takaratomy.co.jp/rule/qa/?qa_w=${encodeURIComponent(cleanNameOnly)}`;
 
 			const extBlock = document.createElement('div');
