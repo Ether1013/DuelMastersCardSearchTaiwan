@@ -2424,6 +2424,16 @@
 			outline: 2px solid #facc15;
 			outline-offset: 2px;
 		}
+		/* 排序按鈕與歷史、匯出使用相同的功能選單樣式。 */
+		.toolbar-sort {
+			flex: 0 0 auto;
+		}
+
+		.toolbar-sort-menu button[aria-pressed="true"] {
+			background: #e0f2fe;
+			color: #0369a1;
+			font-weight: bold;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2743,7 +2753,7 @@
 		<div class="tab-sticky-row" aria-label="卡片列表功能列">
 			<label class="toolbar-sort" for="sort-select">
 				<select id="sort-select">
-					<option value="default" selected>預設排序</option>
+					<option value="default" selected>排序</option>
 					<option value="name_asc">卡名 (A→Z)</option>
 					<option value="name_desc">卡名 (Z→A)</option>
 					<option value="cost_asc">費用 (低→高)</option>
@@ -2791,7 +2801,7 @@
 				<div class="tab-sticky-row" aria-label="卡片列表功能列">
 					<label class="toolbar-sort" for="sort-select-split">
 						<select id="sort-select-split">
-							<option value="default" selected>預設排序</option>
+							<option value="default" selected>排序</option>
 							<option value="name_asc">卡名 (A→Z)</option>
 							<option value="name_desc">卡名 (Z→A)</option>
 							<option value="cost_asc">費用 (低→高)</option>
@@ -3586,15 +3596,126 @@
 			return names.length > 0 ? names.join(' / ') : '無文明';
 		}
 
-		// ✅ 修正：同時監聽兩頁的下拉選單並同步狀態
-		document.querySelectorAll('#sort-select, #sort-select-split').forEach(selectEl => {
-			selectEl.addEventListener('change', (e) => {
-				trackFeature('列表更改排序', { sort_type: e.target.value });
-				// 讓 Page 2 與 Page 3 的下拉選單保持選擇一致
-				document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = e.target.value);
-				renderCurrentResultsWithSort();
-			});
-		});
+		function syncToolbarSortMenus() {
+            document.querySelectorAll('.toolbar-sort-menu').forEach(menu => {
+                const select = menu.parentElement.querySelector('select');
+                const selectedValue = select.value || 'default';
+
+                const selectedOption = Array.from(
+                    select.options
+                ).find(option => option.value === selectedValue);
+
+                // 按鈕直接顯示目前選擇的排序名稱。
+                menu.querySelector('summary').textContent =
+                    selectedOption?.textContent || '預設排序';
+
+                menu.querySelectorAll('[data-sort-value]').forEach(button => {
+                    const selected =
+                        button.dataset.sortValue === selectedValue;
+
+                    button.setAttribute(
+                        'aria-pressed',
+                        String(selected)
+                    );
+
+                    button.textContent =
+                        (selected ? '✓ ' : '')
+                        + button.dataset.sortLabel;
+                });
+            });
+        }
+
+        // 保留原本 select 的 ID、選項與 value，
+        // 讓現有排序、重設與匯出功能繼續使用。
+        document.querySelectorAll(
+            '#sort-select, #sort-select-split'
+        ).forEach(select => {
+            const oldLabel = select.closest('.toolbar-sort');
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'toolbar-sort';
+
+            oldLabel.replaceWith(wrapper);
+            select.hidden = true;
+            wrapper.appendChild(select);
+
+            const menu = document.createElement('details');
+            menu.className = 'toolbar-menu toolbar-sort-menu';
+
+            const summary = document.createElement('summary');
+            summary.textContent = '排序';
+            summary.setAttribute('aria-expanded', 'false');
+            summary.setAttribute(
+                'aria-controls',
+                `${select.id}-menu`
+            );
+
+            const panel = document.createElement('div');
+            panel.className = 'toolbar-menu-panel';
+            panel.id = `${select.id}-menu`;
+            panel.setAttribute('role', 'group');
+            panel.setAttribute('aria-label', '排序選單');
+
+            Array.from(select.options).forEach(option => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.sortValue = option.value;
+                button.dataset.sortLabel = option.textContent;
+                button.disabled = option.disabled;
+
+                button.addEventListener('click', () => {
+                    select.value = option.value;
+
+                    select.dispatchEvent(
+                        new Event('change', { bubbles: true })
+                    );
+
+                    closeToolbarMenus();
+                    summary.focus();
+                });
+
+                panel.appendChild(button);
+            });
+
+            // 開啟時同步狀態，涵蓋原本程式直接重設 value 的情況。
+            summary.addEventListener(
+                'click',
+                syncToolbarSortMenus
+            );
+
+            // 避免方向鍵同時觸發頁面原有的卡牌導覽。
+            menu.addEventListener(
+                'keydown',
+                event => event.stopPropagation()
+            );
+
+            menu.append(summary, panel);
+            wrapper.appendChild(menu);
+        });
+
+        document.querySelectorAll(
+            '#sort-select, #sort-select-split'
+        ).forEach(selectEl => {
+            selectEl.addEventListener('change', event => {
+                const value = event.target.value;
+
+                trackFeature(
+                    '列表更改排序',
+                    { sort_type: value }
+                );
+
+                document.querySelectorAll(
+                    '#sort-select, #sort-select-split'
+                ).forEach(el => {
+                    el.value = value;
+                });
+
+                syncToolbarSortMenus();
+                renderCurrentResultsWithSort();
+            });
+        });
+
+        syncToolbarSortMenus();
 		
 		// Page 2 / 3 功能選單：互斥、點外部關閉、鍵盤與視窗邊界處理。
 		function closeToolbarMenus(except = null) {
@@ -3856,6 +3977,7 @@
 			
 			// ✅ 修正為：
 			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
+			queueMicrotask(syncToolbarSortMenus);
 
 			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
 			checkAllStatus();
@@ -9464,6 +9586,8 @@
 
 			// 1. 靜默重置過濾 UI 欄位（不觸發 DOM 重新繪製或頁面閃爍）
 			document.querySelectorAll('#sort-select, #sort-select-split').forEach(el => el.value = 'default');
+			queueMicrotask(syncToolbarSortMenus);
+			
 			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
 			checkAllStatus();
 
