@@ -3483,6 +3483,57 @@
 
     <!-- ================= JavaScript 邏輯 ================= -->
     <script>
+	
+		function mergeCarddataPatch(baseCards, patches) {
+			const merged = new Map();
+
+			for (const card of baseCards || []) {
+				if (card && typeof card.name === 'string' && card.name) {
+					merged.set(card.name, { ...card });
+				}
+			}
+
+			for (const patch of patches || []) {
+				if (
+					!patch ||
+					typeof patch !== 'object' ||
+					Array.isArray(patch) ||
+					typeof patch.name !== 'string' ||
+					!patch.name
+				) {
+					continue;
+				}
+
+				const has = key =>
+					Object.prototype.hasOwnProperty.call(patch, key);
+
+				if (has('wdata') && !Array.isArray(patch.wdata)) {
+					console.warn('補丁 wdata 必須是完整陣列：', patch.name);
+					continue;
+				}
+
+				if (
+					!merged.has(patch.name) &&
+					!['pic', 'mana', 'wdata'].every(has)
+				) {
+					console.warn('略過資料不完整的新卡補丁：', patch.name);
+					continue;
+				}
+
+				const previous = merged.get(patch.name) || {};
+				const current = { ...previous, ...patch };
+
+				// 相容舊補丁：空 pic 不清除已存在的圖片。
+				if (patch.pic == null || patch.pic === '') {
+					current.pic = previous.pic || '';
+				}
+
+				merged.set(patch.name, current);
+			}
+
+			return Array.from(merged.values());
+		}
+
         // 全域變數
         let globalCardData = [];
         let rawCardTypes = [];
@@ -5106,23 +5157,13 @@
 				// ==========================================
 				// 💡 1. 執行補丁合併：把 Patch 覆寫至基底資料
 				// ==========================================
-				if (cardData && patchCardData && patchCardData.length > 0) {
-					patchCardData.forEach(patchItem => {
-						if (patchItem.name) {
-							const existingIndex = cardData.findIndex(c => c.name === patchItem.name);
-							if (existingIndex !== -1) {
-								cardData[existingIndex] = {
-									...patchItem,
-									pic: patchItem.pic === ''
-										&& cardData[existingIndex].pic
-										? cardData[existingIndex].pic
-										: patchItem.pic
-								};
-							} else {
-								cardData.push(patchItem); // 追加新卡
-							}
-						}
-					});
+				if (Array.isArray(cardData) && Array.isArray(patchCardData)) {
+					const mergedCards = mergeCarddataPatch(cardData, patchCardData);
+
+					cardData.length = 0;
+					for (const card of mergedCards) {
+						cardData.push(card);
+					}
 				}
 
 				if (setlistData && patchSetlist && Object.keys(patchSetlist).length > 0) {
@@ -7757,6 +7798,78 @@
         }
         // ===== 卡圖補齊 helper 結束 =====
 		
+		const imageSetCodeCache = new WeakMap();
+
+		function getDefaultCardImage(card) {
+			if (!card) return '';
+
+			if (typeof card.pic === 'string' && card.pic.trim()) {
+				return card.pic;
+			}
+
+			// 保留既有官網補圖結果。
+			return backfilledCardImages.get(card.name) || '';
+		}
+
+		function getImageSetCode(matchedItem, selectedCode = '') {
+			if (matchedItem && typeof matchedItem === 'object') {
+				const explicit = matchedItem.setcode || matchedItem.code;
+
+				if (explicit) {
+					return String(explicit).trim().toUpperCase();
+				}
+
+				if (imageSetCodeCache.has(matchedItem)) {
+					return imageSetCodeCache.get(matchedItem);
+				}
+
+				// 卡號搜尋可能沒有選商品，這裡只查所屬代號，不借圖片。
+				for (const [key, set] of Object.entries(rawSetlist || {})) {
+					const list = set.setcardlist || set.cardlist;
+
+					if (Array.isArray(list) && list.includes(matchedItem)) {
+						const code = String(
+							set.setcode || set.code || key
+						).trim().toUpperCase();
+
+						imageSetCodeCache.set(matchedItem, code);
+						return code;
+					}
+				}
+			}
+
+			return String(selectedCode || '').trim().toUpperCase();
+		}
+
+		function selectCardImages(
+			card,
+			ownPics = [],
+			setCode = '',
+			hasSetContext = false
+		) {
+			const urls = (Array.isArray(ownPics) ? ownPics : [ownPics])
+				.filter(url => typeof url === 'string' && url.trim());
+
+			// 商品自己的版本圖優先。
+			if (hasSetContext && urls.length) {
+				return {
+					urls,
+					isFallbackPic: false,
+				};
+			}
+
+			const generic = getDefaultCardImage(card);
+
+			return {
+				urls: generic ? [generic] : [],
+				isFallbackPic: Boolean(
+					hasSetContext &&
+					/^[DO]/i.test(setCode) &&
+					generic
+				),
+			};
+		}
+		
 		// 💡 共用 Detail 渲染邏輯 (支援多卡圖 3D 堆疊、版本切換連動 ID、分享與截圖功能、以及動態中/英/日效果切換)
 		function renderDetailContentToContainer(card, combinedCiv, matchedItem, targetImgBox, targetInfoContainer, isModal = false) {
 
@@ -7887,62 +8000,29 @@
                 cartAddBtn.style.display = 'none';
             }
 
-			// 彙整所有可用的圖片網址與備援標記判定
-			let validPicUrls = picList.filter(p => p && p.trim() !== '');
-			let isFallbackPic = false; 
+			const filterConfig =
+				typeof getFilterConfigFromUI === 'function'
+					? getFilterConfigFromUI()
+					: {};
 
-			const filterConfig = typeof getFilterConfigFromUI === 'function' ? getFilterConfigFromUI() : {};
-			const hasSelectedSet = Boolean(filterConfig.seriesSmall || filterConfig.seriesBig);
-			
-			if (
-                canBackfillCardImage(card, matchedItem)
-                && backfilledCardImages.has(card.name)
-            ) {
-                validPicUrls = [
-                    backfilledCardImages.get(card.name)
-                ];
-            }
+			const imageSetCode = getImageSetCode(
+				matchedItem,
+				filterConfig.seriesSmall || filterConfig.seriesBig || ''
+			);
 
-			const currentSetCode = filterConfig.seriesSmall || filterConfig.seriesBig || (matchedItem ? (matchedItem.setcode || matchedItem.code) : '');
-			const upperSetCode = String(currentSetCode).trim().toUpperCase();
-			const isNonStandardSet = upperSetCode.includes('NET') || (upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O'));
+			const imageSelection = selectCardImages(
+				card,
+				picList,
+				imageSetCode,
+				Boolean(
+					matchedItem ||
+					filterConfig.seriesSmall ||
+					filterConfig.seriesBig
+				)
+			);
 
-			if (hasSelectedSet && !isNonStandardSet && validPicUrls.length === 0) {
-				isFallbackPic = true;
-			} else {
-				isFallbackPic = false;
-			}
-
-			if (validPicUrls.length === 0) {
-				if (card.pic && card.pic.trim() !== '') {
-					validPicUrls = [card.pic];
-				}
-
-				if (validPicUrls.length === 0) {
-					const cleanTargetName = card.name ? card.name.trim() : "";
-					if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-						for (const setObj of Object.values(rawSetlist)) {
-							const cardList = setObj.setcardlist || setObj.cardlist;
-							if (Array.isArray(cardList)) {
-								const foundItem = cardList.find(item => {
-									const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-									return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-								});
-								if (foundItem) {
-									if (Array.isArray(foundItem.pic)) validPicUrls = foundItem.pic.filter(p => p && p.trim() !== '');
-									else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') validPicUrls = [foundItem.pic];
-									
-									if (validPicUrls.length > 0) break;
-								}
-							}
-						}
-					}
-				}
-
-				if (isNonStandardSet) {
-					isFallbackPic = false;
-				}
-			}
+			const validPicUrls = imageSelection.urls;
+			const isFallbackPic = imageSelection.isFallbackPic;
 
 			let cardImgElements = [];
 			let isAnimating = false;
@@ -11175,8 +11255,6 @@
 			const isDeckSet = Boolean(currentSetObj && currentSetObj.isdeck === true);
 
 			const currentSetCode = currentSetObj ? (currentSetObj.setcode || currentSetObj.code || currentSetObj.id || filterConfig.seriesSmall) : '';
-			const upperSetCode = String(currentSetCode).trim().toUpperCase();
-			const isNonStandardSet = upperSetCode !== '' && !upperSetCode.startsWith('D') && !upperSetCode.startsWith('O');
 
 			const globalAppearedAbilities = new Set();
 			const itemsPayload = [];
@@ -11207,33 +11285,14 @@
 					}
 				}
 
-				if (!picUrl || picUrl.trim() === '' || isNonStandardSet) {
-					if (card.pic && card.pic.trim() !== '') {
-						picUrl = card.pic;
-					} else if (isNonStandardSet) {
-						const cleanTargetName = cleanName.trim();
-						if (typeof rawSetlist === 'object' && rawSetlist !== null && cleanTargetName) {
-							for (const setObj of Object.values(rawSetlist)) {
-								const cardList = setObj.setcardlist || setObj.cardlist;
-								if (Array.isArray(cardList)) {
-									const foundItem = cardList.find(item => {
-										const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-										return typeof itemName === 'string' && itemName.trim() === cleanTargetName;
-									});
-									if (foundItem) {
-										let foundPic = '';
-										if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) foundPic = foundItem.pic[0];
-										else if (typeof foundItem.pic === 'string') foundPic = foundItem.pic;
-										if (foundPic && foundPic.trim() !== '') {
-											picUrl = foundPic;
-											break;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
+				const imageSelection = selectCardImages(
+					card,
+					[picUrl],
+					currentSetCode,
+					Boolean(currentSetObj)
+				);
+
+				picUrl = imageSelection.urls[0] || '';
 
 				let isHorizontal = false;
 				if (card.wdata && card.wdata.length > 0 && card.wdata[0].type && card.wdata[0].type.length > 0) {
@@ -11270,6 +11329,7 @@
 				itemsPayload.push({
 					name: cleanName,
 					picUrl: picUrl,
+					isFallbackPic: imageSelection.isFallbackPic,
 					flavorText: flavorText,
 					setCardId: setCardId,
 					count: cardCount,
@@ -12411,28 +12471,14 @@
 			updateCartUI();
 		}
 
-		// 取得借圖 URL (不套用灰階，與原版相同邏輯)
 		function getCartImageUrl(cardName) {
 			const cleanName = cleanCardName(cardName);
-			const card = globalCardData.find(c => cleanCardName(c.name) === cleanName);
-			if (!card) return null;
 
-			if (card.pic && card.pic.trim() !== '') return card.pic;
+			const card = globalCardData.find(
+				item => cleanCardName(item.name) === cleanName
+			);
 
-			for (const setObj of Object.values(rawSetlist)) {
-				const cardList = setObj.setcardlist || setObj.cardlist;
-				if (Array.isArray(cardList)) {
-					const foundItem = cardList.find(item => {
-						const itemName = (typeof item === 'object' && item !== null) ? item.name : item;
-						return typeof itemName === 'string' && itemName.trim() === cleanName;
-					});
-					if (foundItem) {
-						if (Array.isArray(foundItem.pic) && foundItem.pic.length > 0) return foundItem.pic[0];
-						else if (typeof foundItem.pic === 'string' && foundItem.pic.trim() !== '') return foundItem.pic;
-					}
-				}
-			}
-			return null;
+			return getDefaultCardImage(card) || null;
 		}
 		
 		// 💡 新增：共用的列表上下切換邏輯

@@ -871,11 +871,10 @@ def image_mark_changed(name, url):
 
 
 def image_backfill_stats():
-    base = {c.get("name"): c for c in carddata_cache}
 
     return {
         "pending_count": sum(
-            base.get(name, {}).get("pic") != url
+            _image_cards.get(name, {}).get("pic") != url
             for name, url in image_url_map.items()
         ),
         "unsynced_count": len(_image_dirty),
@@ -997,6 +996,43 @@ async def image_save_loop():
         except asyncio.TimeoutError:
             pass
 
+def merge_carddata_patch(base_cards, patches):
+    """頂層欄位合併；陣列整體替換；保護既有非空 pic。"""
+    merged = {
+        card["name"]: copy.deepcopy(card)
+        for card in base_cards
+        if (
+            isinstance(card, dict)
+            and isinstance(card.get("name"), str)
+            and card["name"]
+        )
+    }
+
+    for patch in patches:
+        if not isinstance(patch, dict):
+            continue
+
+        name = patch.get("name")
+        if not isinstance(name, str) or not name:
+            continue
+
+        if "wdata" in patch and not isinstance(patch["wdata"], list):
+            logging.warning("[Card patch] Invalid wdata array: %s", name)
+            continue
+
+        if name not in merged and not {"pic", "mana", "wdata"}.issubset(patch):
+            logging.warning("[Card patch] Incomplete new card skipped: %s", name)
+            continue
+
+        previous = merged.get(name, {})
+        current = {**previous, **copy.deepcopy(patch)}
+
+        if patch.get("pic") in (None, ""):
+            current["pic"] = previous.get("pic") or ""
+
+        merged[name] = current
+
+    return merged
 
 @app.on_event("startup")
 async def image_backfill_startup():
@@ -1005,23 +1041,18 @@ async def image_backfill_startup():
 
     _image_stopping = False
 
-    _image_cards = {
-        c["name"]: dict(c)
-        for c in carddata_cache
-        if c.get("name")
+    # 使用前面的啟動流程已載入的資料，不重新讀取實體檔案。
+    base = {
+        card["name"]: card
+        for card in carddata_cache
+        if isinstance(card, dict) and card.get("name")
     }
-    base = dict(_image_cards)
 
-    # 避免補丁中的空 pic 蓋回原始檔已確認的卡圖。
-    for patch in carddata_patch_cache:
-        if patch.get("name"):
-            previous = _image_cards.get(patch["name"], {})
-            merged = dict(patch)
-
-            if merged.get("pic") == "" and previous.get("pic"):
-                merged["pic"] = previous["pic"]
-
-            _image_cards[patch["name"]] = merged
+    # 不包含線上補圖 map，僅代表主檔＋補丁的結果。
+    _image_cards = merge_carddata_patch(
+        carddata_cache,
+        carddata_patch_cache,
+    )
 
     image_url_map.clear()
 
@@ -1029,9 +1060,7 @@ async def image_backfill_startup():
         try:
             docs = await asyncio.to_thread(
                 lambda: list(
-                    db.collection(
-                        IMAGE_COLLECTION
-                    ).stream(timeout=20)
+                    db.collection(IMAGE_COLLECTION).stream(timeout=20)
                 )
             )
 
@@ -1047,33 +1076,14 @@ async def image_backfill_startup():
                 ):
                     image_url_map[name] = url
 
-            # 只檢查原始 carddata，不能用補圖後的暫存值判定。
-            # 比對實際載入的檔案資料。
-            base_ready = (
-                (BASE_DIR / "carddata.json").is_file()
-                and bool(base)
-            )
-
-            patch_ready = (
-                BASE_DIR / "patch_carddata.json"
-            ).is_file()
-
-            patch_by_name = {
-                card["name"]: card
-                for card in carddata_patch_cache
-                if isinstance(card, dict) and card.get("name")
-            }
-
             removed_base = 0
             removed_patch = 0
 
             for name, url in list(image_url_map.items()):
                 if base.get(name, {}).get("pic") == url:
                     removed_base += 1
-
-                elif patch_by_name.get(name, {}).get("pic") == url:
+                elif _image_cards.get(name, {}).get("pic") == url:
                     removed_patch += 1
-
                 else:
                     continue
 
@@ -1088,25 +1098,16 @@ async def image_backfill_startup():
                 len(image_url_map),
             )
 
-            # 啟動清理完成後立即同步刪除紀錄。
             await image_flush_changes()
 
         except Exception:
-            _image_save_error = (
-                "Firebase 載入失敗；未清除遠端資料"
-            )
-            logging.exception(
-                "[Card image] Firebase load failed"
-            )
+            _image_save_error = "Firebase 載入／啟動清理失敗，請查看 log"
+            logging.exception("[Card image] Firebase startup cleanup failed")
     else:
-        _image_save_error = (
-            "Firebase 未連線；本次補圖只保存在記憶體"
-        )
+        _image_save_error = "Firebase 未連線；本次補圖只保存在記憶體"
 
     _image_ready = bool(_image_cards)
-    _image_save_task = asyncio.create_task(
-        image_save_loop()
-    )
+    _image_save_task = asyncio.create_task(image_save_loop())
 
 
 @app.on_event("shutdown")
@@ -1705,28 +1706,26 @@ async def export_carddata_images(
             detail="僅限 localhost 與 EtherC 管理員",
         )
 
-    if not _image_ready or not carddata_cache:
+    if not _image_ready or not _image_cards:
         raise HTTPException(
             status_code=503,
-            detail="卡牌原始資料尚未載入",
+            detail="卡牌資料尚未載入",
         )
 
-    data = copy.deepcopy(carddata_cache)
+    data = copy.deepcopy(list(_image_cards.values()))
     snapshot = dict(image_url_map)
     patch = []
 
     for card in data:
         url = snapshot.get(card.get("name"))
 
-        if (
-            card.get("pic") == ""
-            and url
-            and image_url_is_valid(url)
-        ):
+        if card.get("pic") == "" and url and image_url_is_valid(url):
             card["pic"] = url
 
-            # 收錄完整卡牌物件，不只 name、pic。
-            patch.append(card)
+            patch.append({
+                "name": card["name"],
+                "pic": url,
+            })
 
     def build_export():
         files = {
@@ -1970,41 +1969,65 @@ def normalize_search_id(s: str) -> str:
             res.append(ch)
     return re.sub(r'[^A-Z0-9]', '', "".join(res).upper())
 
-def get_og_image(card_name: str, set_code: Optional[str] = None) -> str:
+def get_og_image(
+    card_name: str,
+    set_code: Optional[str] = None,
+) -> str:
     clean_name = card_name.strip()
-    is_strict = False
-    if set_code:
-        upper_code = str(set_code).strip().upper()
-        if upper_code.startswith('D') or upper_code.startswith('O'):
-            is_strict = True
+
+    # 有指定商品時，優先使用該商品自己的圖片。
     if set_code and set_code in setlist_cache:
         set_obj = setlist_cache[set_code]
-        card_list = set_obj.get("setcardlist") or set_obj.get("cardlist") or []
+        card_list = (
+            set_obj.get("setcardlist")
+            or set_obj.get("cardlist")
+            or []
+        )
+
         for item in card_list:
-            item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
-            if item_name == clean_name:
-                if isinstance(item, dict) and item.get("pic"):
-                    pics = item["pic"]
-                    found_pic = pics[0] if isinstance(pics, list) and len(pics) > 0 else pics
-                    if found_pic:
-                        return found_pic
-    if is_strict:
-        return ""
-    for card in carddata_cache:
-        if card.get("name", "").strip() == clean_name and card.get("pic"):
-            return card["pic"]
-    for set_info in setlist_cache.values():
-        card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
-        for item in card_list:
-            item_name = item.get("name", "").strip() if isinstance(item, dict) else str(item).strip()
-            if item_name == clean_name:
-                if isinstance(item, dict) and item.get("pic"):
-                    pics = item["pic"]
-                    if isinstance(pics, list) and len(pics) > 0 and pics[0]:
-                        return pics[0]
-                    elif isinstance(pics, str) and pics:
-                        return pics
-    return ""
+            if not isinstance(item, dict):
+                continue
+
+            if item.get("name", "").strip() != clean_name:
+                continue
+
+            pics = item.get("pic")
+
+            if isinstance(pics, list):
+                found = next(
+                    (
+                        pic for pic in pics
+                        if isinstance(pic, str) and pic.strip()
+                    ),
+                    "",
+                )
+            else:
+                found = (
+                    pics
+                    if isinstance(pics, str) and pics.strip()
+                    else ""
+                )
+
+            if found:
+                return found
+
+    # 只使用通用卡圖，不再掃描其他商品借圖。
+    card = next(
+        (
+            card for card in _image_cards.values()
+            if card.get("name", "").strip() == clean_name
+        ),
+        {},
+    )
+
+    pic = card.get("pic")
+    if isinstance(pic, str) and pic.strip():
+        return pic
+
+    return image_url_map.get(
+        card.get("name", clean_name),
+        "",
+    )
 
 
 async def record_debounce_timer(date_str: str):
@@ -2133,7 +2156,7 @@ async def get_card_page(request: Request, p: Optional[str] = None):
     clean_query = normalize_search_id(query_str)
     target_card_name = ""
     target_set_code = None
-    for card in carddata_cache:
+    for card in _image_cards.values():
         if card.get("name", "").strip() == query_str:
             target_card_name = query_str
             break
@@ -2272,7 +2295,7 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
     matched_card = None
     target_card_name = None
 
-    for card in carddata_cache:
+    for card in _image_cards.values():
         c_name = card.get("name", "").strip()
         if c_name == query_str:
             matched_card = card
@@ -2284,7 +2307,7 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
             nicknames = nick_item.get("nicknames", [])
             if query_str in nicknames:
                 real_name = nick_item.get("realname")
-                matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == real_name), None)
+                matched_card = next((c for c in _image_cards.values() if c.get("name", "").strip() == real_name), None)
                 if matched_card:
                     target_card_name = real_name
                     break
@@ -2292,22 +2315,10 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
     if matched_card and target_card_name:
         card_to_return = copy.deepcopy(matched_card)
         if not card_to_return.get("pic"):
-            borrowed_pic = ""
-            for set_info in setlist_cache.values():
-                card_list = set_info.get("setcardlist") or set_info.get("cardlist") or []
-                for item in card_list:
-                    if isinstance(item, dict) and item.get("name", "").strip() == target_card_name:
-                        pics = item.get("pic")
-                        if isinstance(pics, list) and len(pics) > 0 and pics[0]:
-                            borrowed_pic = pics[0]
-                            break
-                        elif isinstance(pics, str) and pics:
-                            borrowed_pic = pics
-                            break
-                if borrowed_pic:
-                    break
-            if borrowed_pic:
-                card_to_return["pic"] = borrowed_pic
+            card_to_return["pic"] = image_url_map.get(
+                target_card_name,
+                "",
+            )
 
         processed_card = format_card_wdata_types(card_to_return)
         return {
@@ -2359,7 +2370,7 @@ async def get_card_detail(request: Request, p: str = Query(..., description="卡
             matched_setdata, target_card_name, matched_id_val, matched_index = search_by_id(clean_query_stripped)
 
     if matched_setdata and target_card_name:
-        matched_card = next((c for c in carddata_cache if c.get("name", "").strip() == target_card_name), None)
+        matched_card = next((c for c in _image_cards.values() if c.get("name", "").strip() == target_card_name), None)
         if not matched_card:
             matched_card = {"name": target_card_name, "wdata": []}
         processed_card = format_card_wdata_types(matched_card)
@@ -2420,7 +2431,7 @@ async def get_pop_data(set_code: str):
             if clean_name not in order_map:
                 order_map[clean_name] = index
     matched_cards = []
-    for card in carddata_cache:
+    for card in _image_cards.values():
         c_name = card.get("name")
         if c_name and c_name.strip() in order_map:
             matched_cards.append(card)
@@ -2448,7 +2459,7 @@ async def get_pop_custom_data(payload: CustomDeckModel):
             count, cname = 1, item
         custom_card_list.append({"name": cname, "count": count})
     order_map = {str(item["name"]).strip(): index for index, item in enumerate(custom_card_list)}
-    matched_cards = [card for card in carddata_cache if card.get("name") and card.get("name").strip() in order_map]
+    matched_cards = [card for card in _image_cards.values() if card.get("name") and card.get("name").strip() in order_map]
     matched_cards.sort(key=lambda c: order_map.get(c.get("name", "").strip(), 999999))
     return {
         "set_info": {
