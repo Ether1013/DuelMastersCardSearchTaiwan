@@ -2065,7 +2065,19 @@ def trigger_record_sync(date_str: str):
     record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
 
 @app.get("/")
-async def serve_index(): return FileResponse("index.html")
+async def serve_index():
+    return FileResponse(BASE_DIR / "index.html")
+
+
+# 提供查卡頁面拆出的 CSS；與 index.html 放在相同資料夾。
+@app.get("/styles.css", include_in_schema=False)
+async def serve_main_stylesheet():
+    return FileResponse(BASE_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/image-preview.css", include_in_schema=False)
+async def serve_image_preview_stylesheet():
+    return FileResponse(BASE_DIR / "image-preview.css", media_type="text/css")
 
 @app.get("/fabric.do")
 async def serve_index(): return FileResponse("fabric.html")

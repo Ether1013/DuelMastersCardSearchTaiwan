@@ -4,2477 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易決鬥王卡牌效果搜尋器v2(Author:Ether/Coding:Gemini/Supporter:Sky/Picture Source:takaratomy.co.jp)</title>
-    <style>
-        /* ================= 基礎設定與排版 ================= */
-        body { 
-            font-family: "微軟正黑體", sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background-color: #f4f4f9; 
-            padding-bottom: 80px; 
-            transition: padding-bottom 0.2s; 
-        }
-
-        /* Header 與 頁籤 */
-        .header-tabs { 
-            position: sticky; 
-            top: 0; 
-            z-index: 200; 
-            display: flex; 
-            align-items: center; 
-            background: #222; 
-            color: white; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            padding-right: 15px; 
-        }
-
-        .header-counter {
-            margin-left: auto; 
-            display: flex;
-            align-items: center;
-            user-select: none;
-        }
-
-        .header-counter img {
-            display: block;
-            max-width: 100%;
-            height: auto;
-        }
-
-        .tab { 
-            padding: 15px 12px; /* 💡 調整：左右邊距由 25px 縮減為 12px */
-            cursor: pointer; 
-            font-size: 13px;    /* 💡 調整：字級由 15px 微調為 13px */
-            user-select: none;
-            transition: background 0.2s;
-            white-space: nowrap; /* 💡 關鍵保險：強制文字單行顯示，絕不折行 */
-        }
-        .tab:hover { background: #444; }
-        .tab.active { background: #d32f2f; font-weight: bold; }
-        
-        .tab-content { display: none; padding: 20px; }
-        .tab-content.active { display: block; }
-        .tab-content.layout-grid.active { display: flex; }
-
-        h3 { 
-            margin-top: 0; 
-            margin-bottom: 10px; 
-            font-size: 16px; 
-            border-bottom: 2px solid #ddd; 
-            padding-bottom: 5px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-        }
-
-        /* 佈局 (桌機版 Grid) */
-        .layout-grid { flex-direction: column; gap: 20px; }
-        .row-flex { display: flex; gap: 20px; width: 100%; }
-        .col { flex: 1; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .col-half { flex: 0.5; }
-
-        /* ================= 進階模式控制 ================= */
-        .advanced-only { display: none; }
-        body.advanced-mode div.advanced-only { display: block; }
-        body.advanced-mode div.advanced-only-flex { display: flex; }
-        body.advanced-mode span.advanced-only, 
-        body.advanced-mode select.advanced-only, 
-        body.advanced-mode button.advanced-only { display: inline-block; }
-
-        /* ================= Chip 按鈕風格元件 ================= */
-		.checkbox-group { 
-			display: flex; 
-			flex-wrap: wrap; 
-			gap: 8px; /* 縮小間距，讓 Chip 排列更緊湊 */
-		}
-
-		/* 基礎通用 Chip 樣式 */
-		.checkbox-group label { 
-			display: inline-flex; 
-			align-items: center; 
-			justify-content: center;
-			padding: 6px 12px;
-			font-size: 13px; 
-			font-weight: bold;
-			border-radius: 6px; 
-			cursor: pointer; 
-			user-select: none;
-			transition: all 0.15s ease;
-			touch-action: manipulation;
-		}
-
-		/* 隱藏原生的 Checkbox 與 Radio */
-		.checkbox-group label input[type="checkbox"],
-		.checkbox-group label input[type="radio"] {
-			position: absolute;
-			opacity: 0;
-			width: 0;
-			height: 0;
-			pointer-events: none;
-		}
-
-		/* Hover 狀態 */
-		.checkbox-group label:hover {
-			background-color: #e2e8f0;
-			color: #1e293b;
-		}
-
-		/* 💡 選中高亮狀態 (支援雙重相容：:has(input:checked) 或 .chip-active 類別) */
-		.checkbox-group label:has(input:checked),
-		.checkbox-group label.chip-active {
-			background-color: #0284c7;
-			color: #ffffff;
-			border-color: #0369a1;
-			box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
-		}
-
-		/* 點擊按壓反饋 */
-		.checkbox-group label:active {
-			transform: scale(0.96);
-		} 
-		
-		/* ---------------- 區域配色 1：卡種上區 (主卡種/M區) - 翡翠綠色系 ---------------- */
-		#cardtype-top label {
-			color: #065f46;
-			background-color: #ecfdf5;
-			border: 1px solid #a7f3d0;
-		}
-		#cardtype-top label:hover {
-			background-color: #d1fae5;
-		}
-		#cardtype-top label:has(input:checked),
-		#cardtype-top label.chip-active {
-			background-color: #059669;
-			color: #ffffff;
-			border-color: #047857;
-			box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25);
-		}
-
-		/* ---------------- 區域配色 2：卡種下區 (衍生/其他區) - 琥珀橙色系 ---------------- */
-		#cardtype-bottom label {
-			color: #9a3412;
-			background-color: #fff7ed;
-			border: 1px solid #fed7aa;
-		}
-		#cardtype-bottom label:hover {
-			background-color: #ffedd5;
-		}
-		#cardtype-bottom label:has(input:checked),
-		#cardtype-bottom label.chip-active {
-			background-color: #ea580c;
-			color: #ffffff;
-			border-color: #c2410c;
-			box-shadow: 0 2px 4px rgba(234, 88, 12, 0.25);
-		}
-
-		/* ---------------- 區域配色 3：雙極卡設定區 - 靛藍色系 ---------------- */
-		#section-b-group label {
-			color: #3730a3;
-			background-color: #eef2ff;
-			border: 1px solid #c7d2fe;
-		}
-		#section-b-group label:hover {
-			background-color: #e0e7ff;
-		}
-		#section-b-group label:has(input:checked),
-		#section-b-group label.chip-active {
-			background-color: #4f46e5;
-			color: #ffffff;
-			border-color: #4338ca;
-			box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
-		}
-
-		/* ---------------- 需求 2：[查詢衍生卡種] 專用按鈕高亮樣式 (防抖動零重排版) ---------------- */
-		.btn-icon.active {
-			background-color: #0284c7 !important;
-			color: #ffffff !important;
-			font-weight: bold !important;
-			
-			/* 1. 使用外外發光 + 內陰影，打造明顯的「按下沉入感」，完全不改變按鈕實體大小 */
-			box-shadow: 0 0 0 2px #0369a1, inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
-			
-			/* 2. 嚴格鎖定內部邊距與邊框，絕不觸發 Flex 容器重排抖動 */
-			border: none !important;
-			transform: none !important;
-			transition: background-color 0.15s ease, box-shadow 0.15s ease;
-		}
-
-		/* Hover 時微調背景色與發光效果 */
-		.btn-icon.active:hover {
-			background-color: #0369a1 !important;
-			box-shadow: 0 0 0 2px #075985, inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-		}
-
-
-        /* 文明方塊 UI */
-        .civ-row { display: flex; gap: 2px; margin-bottom: 10px; width: 100%; }
-        .civ-box { 
-            flex: 1; text-align: center; padding: 10px 0; background: #ddd; 
-            cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 4px; 
-            user-select: none; transition: 0.2s; color: #555;
-        }
-        .civ-box[data-val="16"].active { background: #ffeb3b; color: #000; }
-        .civ-box[data-val="8"].active { background: #2196f3; color: #fff; }
-        .civ-box[data-val="4"].active { background: #424242; color: #fff; }
-        .civ-box[data-val="2"].active { background: #f44336; color: #fff; }
-        .civ-box[data-val="1"].active { background: #4caf50; color: #fff; }
-        .civ-box[data-val="32"].active { background: #ffffff; color: #000; box-shadow: inset 0 0 0 2px #aaa; }
-        .civ-box.active { background: #607d8b; color: white; }
-
-        select, input[type="text"] { 
-			width: 100%; 
-			padding: 8px; 
-			border: 1px solid #ccc; 
-			border-radius: 4px; 
-			box-sizing: border-box; 
-			margin-bottom: 5px; 
-			font-size: 16px; /* 💡 關鍵：小於 16px 在 iOS 上點擊會自動放大頁面 */
-		}
-        .flex-input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .btn-icon { cursor: pointer; padding: 5px 10px; background: #ddd; border: none; border-radius: 4px; font-weight: bold; font-size: 13px;}
-        .btn-icon:hover { background: #ccc; }
-        .divider { border: 0; border-top: 1px solid #eee; margin: 10px 0; }
-
-        /* ================= 查詢結果列表樣式 ================= */
-        #tab-list { display: none; padding: 20px; flex-direction: column; gap: 10px; }
-        #tab-list.active { display: flex; }
-
-        .card-list-item {
-            padding: 14px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.12);
-            border: 1px solid rgba(0,0,0,0.08);
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
-        .card-list-item:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .card-list-item:active { transform: scale(0.99); }
-        
-        .card-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #111;
-            text-shadow: 1px 1px 3px rgba(255,255,255,0.9), -1px -1px 3px rgba(255,255,255,0.9), 1px -1px 3px rgba(255,255,255,0.9), -1px 1px 3px rgba(255,255,255,0.9);
-            transition: color 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .card-list-item.selected .card-name { color: #d32f2f !important; }
-
-        .empty-state { text-align: center; color: #888; padding: 60px 20px; font-size: 18px; font-weight: bold; }
-
-        /* ================= Footer (Z區) 排版 ================= */
-        .footer { 
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #222; color: white;
-            display: flex; flex-direction: column; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
-        }
-        .footer-bar { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 10px 20px; gap: 15px; 
-        }
-        .footer-top-row {
-			display: flex; 
-			flex-direction: row; 
-			gap: 6px; 
-			align-items: stretch; /* 確保兩個按鈕高度一致 */
-			flex-shrink: 0;
-			min-width: 130px;    /* 設定適合雙行文字的整體最小寬度 */
-		}
-
-		.footer-top-row .btn-icon {
-			flex: 1;             /* 💡 關鍵：強制兩個按鈕平分寬度（1:1 等寬） */
-			width: 0;            /* 防止文字內容撐開不同寬度 */
-			text-align: center; 
-			padding: 6px 8px; 
-			font-size: 12px;
-			line-height: 1.25; 
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			box-sizing: border-box;
-		}
-        #btn-search {
-            background: #d32f2f; color: white; flex: 1; font-size: 16px; padding: 11px 0; letter-spacing: 2px;
-        }
-        .footer-summary { display: none; background: #444; padding: 15px 20px; max-height: 200px; overflow-y: auto; font-size: 14px; }
-        .footer-summary.open { display: block; }
-        .expand-icon { cursor: pointer; font-size: 20px; padding: 0 10px; user-select: none; }
-
-        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; }
-		.summary-tag {
-			background-color: #d32f2f !important;
-			color: #ffffff !important;
-			
-			/* 💡 1. 限制標籤最大寬度為螢幕扣除 margin 的寬度，絕不爆出螢幕 */
-			max-width: calc(100vw - 60px) !important;
-			
-			/* 💡 2. 文字過長時，標籤內部允許滑動 */
-			overflow-x: auto !important;
-			white-space: nowrap !important;
-			
-			font-size: 12px !important;            /* 💡 使用清晰穩定的固定字級 */
-			line-height: 1.2;
-			padding: 6px 12px;
-			border-radius: 20px;
-			display: inline-flex;
-			align-items: center;
-			gap: 8px;
-			box-sizing: border-box;
-			flex-shrink: 0;
-			cursor: pointer;
-			
-			/* 💡 隱藏內部滾動條，保持視覺美觀 */
-			scrollbar-width: none;               /* Firefox */
-			-ms-overflow-style: none;             /* IE / Edge */
-		}
-
-		/* Chrome / Safari 隱藏標籤內部滾動條 */
-		.summary-tag::-webkit-scrollbar {
-			display: none;
-		}
-
-		/* 確保標籤內文字與打叉按鈕都不會折行 */
-		.summary-tag span.tag-text {
-			white-space: nowrap !important;
-		}
-
-		.summary-tag span {
-			font-weight: bold;
-			font-size: 14px;
-			flex-shrink: 0;
-		}
-
-		.summary-tag:hover { 
-			background-color: #b71c1c !important; 
-		}
-
-        /* ================= 卡牌資料彈出視窗 (Modal UI) ================= */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(3px);
-            display: none; justify-content: center; align-items: center;
-            z-index: 1000; opacity: 0; transition: opacity 0.1s ease;
-        }
-        .modal-overlay.active { display: flex; opacity: 1; }
-
-        /* ---------------- Page 2 (Popup 模式) ---------------- */
-		.modal-card {
-			background: #fff; width: 90%; max-width: 650px; max-height: 85vh;
-			border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-			display: flex; flex-direction: column; overflow: hidden;
-			transform: scale(0.9); transition: transform 0.25s ease, max-width 0.3s ease;
-		}
-
-		/* Page 2 撐開 Modal 外框 */
-		.modal-card.card-expanded {
-			max-width: 880px !important;
-		}
-        .modal-overlay.active .modal-card { transform: scale(1); }
-
-        .modal-header {
-			display: flex !important;
-			justify-content: space-between !important;
-			align-items: flex-start !important;
-			padding: 12px 16px !important;
-			position: relative;
-		}
-
-		.modal-header .modal-title {
-			flex: 1;
-			min-width: 0;
-			margin-right: 12px; /* 留出空間給右上角按鈕群組 */
-		}
-		/* 舊有的 controls 容器若沒用到可以直接隱藏或設為 flex */
-		#modal-controls {
-			display: none !important;
-		}
-		.modal-action-btns {
-			display: flex;
-			gap: 6px;
-			align-items: center;
-			flex-shrink: 0;
-		}
-        .modal-title { font-size: 20px; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
-		/* 統一樣式：半透明精緻圓形按鈕 */
-		.action-circle-btn,
-		.modal-close {
-			width: 32px !important;
-			height: 32px !important;
-			border-radius: 50% !important;
-			background: rgba(255, 255, 255, 0.75) !important;
-			border: 1px solid rgba(0, 0, 0, 0.12) !important;
-			display: flex !important;
-			justify-content: center !important;
-			align-items: center !important;
-			font-size: 14px !important;
-			font-weight: bold !important;
-			color: #333 !important;
-			cursor: pointer !important;
-			transition: all 0.2s ease !important;
-			padding: 0 !important;
-			margin: 0 !important;
-			box-sizing: border-box !important;
-			user-select: none;
-			line-height: 1 !important;
-		}
-
-		.action-circle-btn:hover,
-		.modal-close:hover {
-			background: #ffffff !important;
-			transform: scale(1.08);
-			box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-		}
-
-		.action-circle-btn:active,
-		.modal-close:active {
-			transform: scale(0.95);
-		}
-
-		.modal-close:hover {
-			color: #d32f2f !important;
-		}
-
-        .modal-body {
-            padding: 20px; overflow: hidden; display: flex; flex-direction: column; gap: 20px; flex: 1;
-        }
-        .modal-main-content { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-        .detail-info-scroll-panel { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
-        
-        .modal-img-container {
-			position: relative !important;
-		}
-
-        /* ================= 卡圖點擊放大相關樣式 ================= */
-		/* 卡圖基本樣式與動畫 */
-		.modal-img { 
-			width: 100%; 
-			border-radius: 6px; 
-			box-shadow: 0 3px 8px rgba(0,0,0,0.3); 
-			object-fit: contain; 
-			cursor: pointer; /* 提示可點擊 */
-			transition: all 0.3s ease;
-		}
-
-		/* 點擊放大後的卡圖標準尺寸 */
-		.modal-img.img-expanded {
-			width: 250px !important;
-			height: 350px !important;
-		}
-        .no-image-box {
-            height: 250px; background: #e0e0e0; color: #666; display: flex;
-            justify-content: center; align-items: center; font-weight: bold;
-            border-radius: 6px; border: 2px dashed #ccc; font-size: 16px;
-        }
-		/* 虛框 + Loading 容器樣式 */
-		.loading-image-box {
-			width: 100%;
-			height: 250px;
-			background: #f8f9fa;
-			color: #666;
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			font-weight: bold;
-			border-radius: 6px;
-			border: 2px dashed #0284c7; /* 醒目的藍色虛框 */
-			font-size: 14px;
-			gap: 10px;
-		}
-
-		/* 卡圖專用的小型 Spinner */
-		.card-img-spinner {
-			border: 3px solid #f3f3f3;
-			border-top: 3px solid #0284c7;
-			border-radius: 50%;
-			width: 28px;
-			height: 28px;
-			animation: spin 1s linear infinite; /* 複用原本的 spin 動畫 */
-		}
-
-        .modal-info-container { flex: 1; display: flex; flex-direction: column; gap: 12px; }
-
-        /* 單卡 wdata 區塊 UI */
-        .wdata-block {
-            background: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #333;
-            padding: 12px 15px; border-radius: 6px; display: flex; flex-direction: column; gap: 8px;
-        }
-        .card-attr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 14px; }
-        .attr-pill { background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; }
-        .attr-label { font-weight: bold; color: #555; margin-right: 4px; }
-        .attr-value { font-weight: bold; color: #111; }
-        .sp-ability-list { margin: 6px 0 0 0; padding-left: 20px; font-size: 14px; line-height: 1.5; color: #222; }
-        .sp-ability-list li { margin-bottom: 4px; }
-
-        /* ================= 效果標籤 (Effect Tags) 樣式 ================= */
-        .effect-tag { padding: 1px 4px; border-radius: 3px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; display: inline-block; }
-        .effect-tag.tag-card-name { color: #b91c1c; background-color: #fee2e2; border: 1px solid #fca5a5; }
-        .effect-tag.tag-card-name:hover { background-color: #fca5a5; }
-        .effect-tag.tag-category-name { color: #c2410c; background-color: #ffedd5; border: 1px solid #fed7aa; }
-        .effect-tag.tag-category-name:hover { background-color: #fed7aa; }
-        .effect-tag.tag-ability { color: #1d4ed8; background-color: #dbeafe; border: 1px solid #93c5fd; }
-        .effect-tag.tag-ability:hover { background-color: #bfdbfe; }
-        .effect-tag.tag-race { color: #047857; background-color: #d1fae5; border: 1px solid #6ee7b7; }
-        .effect-tag.tag-race:hover { background-color: #a7f3d0; }
-        
-		/* 當卡圖放大時的容器展開寬度 */
-		.modal-img-container.container-expanded {
-			width: 280px !important; 
-		}
-
-		/* 💡 修正 2：確保 3D 堆疊卡片容器內部也是絕對置中 */
-		.card-stack-container {
-			position: relative !important;
-		}
-
-		/* 💡 相機按鈕：掛載於 3D 卡圖框內，但用絕對定位推到卡圖右上方外側 */
-		.card-stack-container .cam-btn-overlay {
-			position: absolute !important;
-			top: 0px !important;
-			right: -36px !important; /* 精確推到卡圖右邊界外側 36px 處（不遮卡圖，緊貼右上） */
-			left: auto !important;   /* 覆蓋掉舊有的 left 計算 */
-			z-index: 30;
-			margin: 0;
-		}
-		/* 💡 修正：左右箭頭改為貼齊卡圖兩側邊緣內側/邊界，避免小圖時超出外容器被裁切 */
-		.ver-arrow-btn {
-			position: absolute; 
-			top: 50%; 
-			transform: translateY(-50%);
-			background: rgba(0, 0, 0, 0.55); 
-			color: white; 
-			border: none;
-			font-size: 18px; 
-			font-weight: bold; 
-			width: 26px; 
-			height: 40px;
-			border-radius: 4px; 
-			cursor: pointer; 
-			display: flex; 
-			align-items: center;
-			justify-content: center; 
-			user-select: none; 
-			transition: all 0.2s ease; 
-			z-index: 25; /* 高於卡圖，低於相機按鈕 */
-		}
-
-		.ver-arrow-btn:hover { 
-			background: rgba(211, 47, 47, 0.9); 
-		}
-
-		/* 💡 將左右箭頭貼齊卡圖邊緣（0px 絕不溢出邊界） */
-		.ver-arrow-btn.prev { 
-			left: 2px !important; 
-		}
-		.ver-arrow-btn.next { 
-			right: 2px !important; 
-		}
-
-		/* 手機版 (RWD) 保持貼齊 */
-		@media (max-width: 768px) {
-			.ver-arrow-btn.prev { left: 2px !important; }
-			.ver-arrow-btn.next { right: 2px !important; }
-			select, input[type="text"], #input-card-id, #ability-text, #card-name {
-				font-size: 16px !important; /* 強制手機版為 16px，防止 iOS 自動聚焦放大 */
-			}
-		}
-
-        /* ================= 最新商品快捷區域 ================= */
-        #latest-sets-container { display: flex; gap: 10px; width: 100%; }
-        .btn-latest-set {
-            flex: 1; padding: 10px 5px; background: #1565c0; color: white; border: none;
-            border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;
-            text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.2s;
-        }
-        .btn-latest-set:hover { background: #0d47a1; }
-
-        /* ================= 外部連結區塊樣式 ================= */
-        .ext-links-block {
-            background: #fdfdfd; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6;
-            padding: 12px 15px; border-radius: 6px; margin-top: 10px;
-        }
-        .ext-links-title { font-size: 14px; font-weight: bold; color: #1e40af; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
-        .ext-group-title { font-size: 12px; font-weight: bold; color: #475569; margin: 8px 0 4px 0; display: flex; align-items: center; gap: 4px; }
-        .ext-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
-        .ext-link-btn {
-            display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 4px; font-size: 11px; font-weight: bold;
-            border-radius: 4px; border: 1px solid #cbd5e1; background-color: #ffffff; color: #334155; cursor: pointer; text-decoration: none; transition: all 0.15s ease; box-sizing: border-box;
-        }
-        .ext-link-btn:hover { background-color: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
-        .ext-link-btn.shop-btn { background-color: #fff7ed; border-color: #ffedd5; color: #c2410c; }
-        .ext-link-btn.shop-btn:hover { background-color: #ffedd5; color: #9a3412; }
-        .ext-link-btn.wiki-btn { background-color: #f0f9ff; border-color: #e0f2fe; color: #0369a1; }
-        .ext-link-btn.wiki-btn:hover { background-color: #e0f2fe; color: #075985; }
-
-        .modal-controls {
-            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            align-self: stretch; padding: 4px 0; gap: 8px;
-        }
-        .modal-btn-icon {
-            font-size: 16px; cursor: pointer; background: rgba(255,255,255,0.8);
-            border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; transition: 0.2s; user-select: none;
-        }
-        .modal-btn-icon:hover { background: #fff; color: #1565c0; transform: scale(1.05); }
-
-        /* 全域 [處理中...] Loading 畫面 */
-        .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px); display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 9999; color: white; font-size: 20px; font-weight: bold;
-        }
-        .loading-spinner {
-            border: 5px solid #f3f3f3; border-top: 5px solid #d32f2f; border-radius: 50%;
-            width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 15px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* ================= 第三頁籤 (雙欄模式) 專用樣式 ================= */
-        .desktop-only-tab { display: block; }
-        #tab-list-split { display: none; padding: 20px; }
-        #tab-list-split.active { display: block; }
-        /* 3. 第三頁 (Split 雙欄式)：擠壓左邊 List 寬度，擴大右邊 Detail */
-		.split-layout-container {
-			display: flex; gap: 20px; align-items: flex-start; position: relative; transition: all 0.3s ease;
-		}
-		/* Page 3：放大時擠壓左側列表，擴大右側 Detail */
-		.split-layout-container.is-expanded .split-left-panel {
-			flex: 0 0 calc(30% - 10px) !important; /* 擠壓左側列表 */
-		}
-
-		.split-layout-container.is-expanded .split-right-panel {
-			flex: 0 0 calc(70% - 10px) !important; /* 擴大右側 Detail */
-		}
-		/* Page 3 (Split 雙欄) 左側面板調整：讓抽屜固定，內部列表可獨立滾動 */
-		.split-left-panel {
-			flex: 0 0 calc(40% - 10px); 
-			display: flex; 
-			flex-direction: column; 
-			gap: 10px; 
-			min-width: 0;
-			transition: flex 0.3s ease;
-			
-			/* 💡 置頂與高度限制 */
-			position: sticky;
-			top: 65px;
-			max-height: calc(100vh - 150px);
-			overflow: visible; /* 允許抽屜正常凸出或貼頂，不使用內部捲軸 */
-		}
-		
-		.split-left-panel .drawer-container {
-			position: static; /* 讓抽屜順應左欄頂部 */
-			margin-bottom: 0;
-			flex-shrink: 0; /* 避免抽屜被壓縮 */
-		}
-
-		/* 💡 新增：將滾動條移至列表本身，抽屜就會固定在最上方不被捲走 */
-		#list-container-split {
-			flex: 1;
-			overflow-y: auto;
-			padding-right: 4px;
-		}
-
-		.split-right-panel {
-			flex: 0 0 calc(60% - 10px); position: sticky; top: 65px; height: calc(100vh - 150px);
-			overflow: hidden; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-			padding: 15px; border: 1px solid #e2e8f0; box-sizing: border-box; display: flex; flex-direction: column;
-			transition: flex 0.3s ease;
-		}
-        .split-detail-info-scroll { flex: 1; overflow-y: auto; padding-right: 5px; overscroll-behavior: contain; }
-		/* Page 3 專用：放大時強制右側資訊欄縮小 flex-basis，讓卡圖容器有充足寬度展開 */
-		.split-layout-container.is-expanded .modal-info-container {
-			flex: 1 1 auto;
-			min-width: 0; /* 擠壓屬性文字區塊，為放大後的卡圖容器留出空間 */
-		}
-        .split-empty-placeholder {
-            display: flex; justify-content: center; align-items: center; height: 300px;
-            color: #888; font-size: 16px; font-weight: bold; border: 2px dashed #cbd5e1; border-radius: 8px;
-        }
-        
-        /* ================= 截圖專用樣式覆蓋 (已集中合併) ================= */
-        .modal-card.is-capturing,
-        .split-right-panel.is-capturing { max-height: none !important; height: auto !important; transform: none !important; }
-        .modal-card.is-capturing .modal-body,
-        .split-right-panel.is-capturing .modal-main-content { max-height: none !important; overflow: visible !important; }
-        /* 修改後 */
-		.is-capturing .ver-arrow-btn,
-		.is-capturing .modal-controls,
-		.is-capturing .abil-explain-btn,
-		.is-capturing .btn-report-error,
-		.is-capturing .set-list-block,
-		.is-capturing .ext-links-block,
-		.is-capturing .modal-action-btns, /* 👈 直接隱藏右上角的按鈕容器包 */
-		.is-capturing .modal-close {       /* 👈 保底隱藏獨立的關閉按鈕 */
-			display: none !important;
-		}
-
-        /* ================= 手機版 (RWD) 統一合併區 ================= */
-        @media (max-width: 768px) {
-            .row-flex { flex-direction: column; gap: 15px; }
-            .col { width: 100%; box-sizing: border-box; }
-            .civ-box { font-size: 12px; padding: 8px 0; }
-            .modal-body { overflow-y: auto; }
-            .modal-main-content { flex-direction: column; align-items: center; overflow: visible; }
-            .detail-info-scroll-panel { overflow-y: visible; }
-            .modal-img-container { position: relative !important; margin-bottom: 15px; width: 100% !important; justify-content: center !important; align-self: center !important; overflow: visible !important;}
-            .modal-info-container { width: 100%; }
-            .footer-bar { padding: 10px 15px; gap: 10px; }
-            .ver-arrow-btn.prev { left: -10px; }
-            .ver-arrow-btn.next { right: -10px; }
-            #latest-sets-container { flex-direction: column; width: 100%; }
-            .btn-latest-set { width: 100%; box-sizing: border-box; }
-            .ext-btn-grid { grid-template-columns: repeat(2, 1fr); }
-            .desktop-only-tab { display: none !important; }
-			.modal-img-container .cam-btn-overlay {
-				top: 0px;
-				left: calc(50% + (var(--stack-w, 180px) / 2) + 6px);
-			}
-			.card-stack-container .cam-btn-overlay {
-				top: 0px !important;
-				right: -36px !important;
-				left: auto !important;
-			}
-			/* 💡 新增：手機版水平切換按鈕樣式 */
-            .hor-arrow-btn {
-                display: flex !important;
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                
-                /* 👇 調整這三行：讓底色與邊框變得極度淡雅 */
-                background: rgba(0, 0, 0, 0.2);          /* 從原本的 0.65 降為 0.2，大幅增加透明度 */
-                border: 1px solid rgba(255, 255, 255, 0.08); /* 邊框調淡到幾乎快看不見 */
-                color: rgba(255, 255, 255, 0.7);         /* 箭頭顏色也稍微調柔和一點 */
-                
-                font-size: 20px;
-                font-weight: bold;
-                width: 140px; 
-                height: 32px;
-                border-radius: 16px;
-                cursor: pointer;
-                align-items: center;
-                justify-content: center;
-                user-select: none;
-                transition: all 0.2s ease;
-                z-index: 1050;
-                backdrop-filter: blur(4px); /* 配合淡淡的背景色，毛玻璃效果會更好看 */
-            }
-            .hor-arrow-btn:active {
-                background: rgba(211, 47, 47, 0.7); /* 點擊時的紅色也跟著調淡一點 */
-                border-color: rgba(211, 47, 47, 0.7);
-                transform: translateX(-50%) scale(0.95);
-            }
-            /* 定位在 Modal 卡片上下的深色留白區 */
-            .hor-arrow-btn.prev { top: 3vh; }
-            .hor-arrow-btn.next { bottom: 3vh; }
-            
-            /* 截圖時隱藏 */
-            .is-capturing .hor-arrow-btn { display: none !important; }
-		}
-			
-		
-		/* ================= 抽屜式工具列 (Sorting & Export Drawer) ================= */
-		/* ================= 抽屜工具列置頂修正 ================= */
-		.drawer-container {
-			background: #fff;
-			border: 1px solid #e2e8f0;
-			border-radius: 8px;
-			margin-bottom: 12px;
-			box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-			overflow: hidden;
-			transition: all 0.2s ease;
-			
-			/* 💡 新增置頂效果 */
-			position: sticky;
-			top: 50px; /* 避開頂部黑色 Header (48px~50px) */
-			z-index: 90;
-		}
-
-		/* 極矮手把/拉桿 Header */
-		.drawer-handle {
-			background: #f1f5f9;
-			padding: 4px 12px;
-			font-size: 12px;
-			font-weight: bold;
-			color: #475569;
-			cursor: pointer;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			user-select: none;
-			border-bottom: 1px solid transparent;
-		}
-		.drawer-handle:hover {
-			background: #e2e8f0;
-			color: #0f172a;
-		}
-		.drawer-container.open .drawer-handle {
-			border-bottom-color: #cbd5e1;
-			background: #e2e8f0;
-		}
-
-		/* 抽屜展開區域 */
-		.drawer-content {
-			display: none;
-			padding: 8px 12px; /* 原本是 10px 15px */
-			gap: 6px;           /* 原本是 10px，縮減區塊之間的垂直間距 */			background: #ffffff;
-			flex-direction: column;
-		}
-		.drawer-container.open .drawer-content {
-			display: flex;
-		}
-
-		.drawer-row {
-			display: flex;
-			align-items: flex-start; /* 💡 改為頂部對齊，確保 label 與第一排按鈕對齊 */
-			gap: 10px;
-			font-size: 13px;
-			margin-bottom: 6px;
-		}
-
-		/* 標題固定寬度，不參與壓縮與折行 */
-		.drawer-row label { 
-			font-weight: bold; 
-			color: #334155; 
-			min-width: 45px; 
-			padding-top: 4px; /* 💡 稍微置頂對齊按鈕 */
-			flex-shrink: 0;   /* 💡 強制標題不可被壓縮 */
-		}
-		/* 💡 新增：按鈕群組容器，負責處理按鈕之間的換行與對齊 */
-		.drawer-btn-group {
-			display: flex;
-			flex-wrap: wrap;  /* 讓按鈕在自身容器內換行 */
-			gap: 6px;         /* 按鈕之間的間距 */
-			flex: 1;          /* 佔滿右側剩餘空間 */
-			min-width: 0;
-		}
-
-		.drawer-row select { 
-			width: auto; 
-			margin-bottom: 0; 
-			padding: 4px 8px; 
-			font-size: 13px; 
-		}
-		.btn-drawer-action {
-			padding: 4px 12px;
-			background: #0284c7;
-			color: white;
-			border: none;
-			border-radius: 4px;
-			font-size: 12px;
-			font-weight: bold;
-			cursor: pointer;
-		}
-		.btn-drawer-action:hover { background: #0369a1; }
-		
-		/* ================= 快速搜尋抽屜與計算機 UI ================= */
-		.quick-search-drawer {
-			position: sticky;
-			top: 50px;
-			z-index: 95;
-			background: #ffffff;
-			border: 2px solid #0284c7;
-			border-radius: 8px;
-			margin-bottom: 15px;
-			padding: 8px 12px; /* 原本是 10px 15px */
-			gap: 6px;           /* 原本是 10px，縮減區塊之間的垂直間距 */
-			/* 💡 核心新增：封鎖 iOS Safari 雙擊放大，同時消除 300ms 點擊延遲 */
-			touch-action: manipulation;
-		}
-
-		.quick-tag-container {
-			min-height: 32px;  /* 原本是 38px */
-			border: 1px dashed #cbd5e1;
-			border-radius: 6px;
-			padding: 4px 8px;   /* 原本是 6px 10px */			background: #f8fafc;
-			display: flex;
-			flex-wrap: wrap;
-			gap: 6px;
-			align-items: center;
-		}
-
-		.quick-placeholder {
-			color: #94a3b8;
-			font-size: 13px;
-			user-select: none;
-		}
-
-		.quick-tag {
-			background: #0284c7;
-			color: #fff;
-			font-size: 13px;
-			font-weight: bold;
-			padding: 3px 10px;
-			border-radius: 16px;
-			cursor: pointer;
-			display: inline-flex;
-			align-items: center;
-			gap: 6px;
-			transition: background 0.15s;
-			user-select: none;
-		}
-		.quick-tag:hover {
-			background: #0369a1;
-		}
-		.quick-tag::after {
-			content: "×";
-			font-size: 14px;
-			font-weight: normal;
-		}
-
-		.quick-num-buffer {
-			min-height: 16px;  /* 原本是 20px */
-			font-size: 13px;   /* 微調字級保持緊湊 */			font-weight: bold;
-			color: #d32f2f;
-			padding-left: 5px;
-			letter-spacing: 1px;
-		}
-
-		/* 計算機按鈕網格排版 */
-		.quick-calc-grid {
-			display: flex;
-			flex-direction: column;
-			gap: 6px;
-		}
-
-		.calc-btn-group {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 6px;
-		}
-
-		.btn-calc {
-			padding: 6px 10px;
-			background: #f1f5f9;
-			border: 1px solid #cbd5e1;
-			border-radius: 6px;
-			font-size: 11px;
-			font-weight: bold;
-			color: #334155;
-			cursor: pointer;
-			user-select: none;
-			transition: all 0.15s;
-			/* 💡 確保連按按鈕時不會觸發 Safari 原生 zoom-in */
-			touch-action: manipulation;
-		}
-		.btn-calc:hover {
-			background: #e2e8f0;
-			border-color: #94a3b8;
-		}
-		.btn-calc:active {
-			transform: scale(0.96);
-		}
-
-		.btn-calc.btn-civ[data-val="16"] { background: #fef08a; color: #854d0e; }
-		.btn-calc.btn-civ[data-val="8"] { background: #bae6fd; color: #0369a1; }
-		.btn-calc.btn-civ[data-val="4"] { background: #cbd5e1; color: #1e293b; }
-		.btn-calc.btn-civ[data-val="2"] { background: #fecaca; color: #991b1b; }
-		.btn-calc.btn-civ[data-val="1"] { background: #bbf7d0; color: #166534; }
-		.btn-calc.btn-civ[data-val="32"] { background: #f8fafc; color: #475569; }
-
-		.calc-num-pad {
-			display: grid;
-			grid-template-columns: repeat(3, 1fr);
-			gap: 5px;
-			max-width: 320px;
-		}
-
-		.btn-num { background: #ffffff; font-size: 16px; }
-		.btn-wave { 
-			background: #e0f2fe; 
-			color: #0369a1; 
-			font-size: 16px; 
-		}
-		/* 💡 新增退格鍵樣式 */
-		.btn-backspace {
-			background: #fef3c7;
-			color: #b45309;
-			font-size: 16px;
-			font-weight: bold;
-		}
-		.btn-backspace:hover {
-			background: #fde68a;
-		}
-		.btn-enter { 
-			background: #16a34a; 
-			color: white; 
-			font-size: 13px; 
-		}
-		.btn-enter:hover { 
-			background: #15803d; 
-		}
-
-		.calc-action-row {
-			display: flex;
-			margin-top: 5px;
-		}
-
-		.btn-calc-action {
-			width: 100%;
-			padding: 10px;
-			border: none;
-			border-radius: 6px;
-			font-weight: bold;
-			font-size: 14px;
-			cursor: pointer;
-			transition: background 0.2s;
-		}
-		.btn-clear { 
-			background: #cbd5e1; 
-			color: #334155; 
-		}
-		.btn-clear:hover { 
-			background: #94a3b8; 
-		}
-		
-		/* 快搜按鈕點擊高亮狀態 */
-		.btn-calc.active {
-			outline: 2px solid #0284c7;
-			box-shadow: inset 0 0 0 1px #0284c7;
-			font-weight: bold;
-		}
-
-		/* 核心卡種點擊高亮 */
-		.btn-calc.btn-cardtype.active {
-			background: #e0f2fe;
-			color: #0369a1;
-			border-color: #0284c7;
-		}
-
-		/* 文明按鈕高亮（加深背景與加粗） */
-		.btn-calc.btn-civ[data-val="16"].active { background: #fef08a; border-color: #ca8a04; color: #713f12; }
-		.btn-calc.btn-civ[data-val="8"].active  { background: #7dd3fc; border-color: #0284c7; color: #0c4a6e; }
-		.btn-calc.btn-civ[data-val="4"].active  { background: #94a3b8; border-color: #475569; color: #0f172a; }
-		.btn-calc.btn-civ[data-val="2"].active  { background: #fca5a5; border-color: #dc2626; color: #7f1d1d; }
-		.btn-calc.btn-civ[data-val="1"].active  { background: #86efac; border-color: #16a34a; color: #14532d; }
-		.btn-calc.btn-civ[data-val="32"].active { background: #cbd5e1; border-color: #64748b; color: #1e293b; }
-
-		/* 單色/多色高亮 */
-		.btn-calc.btn-civ-spec.active {
-			background: #0284c7;
-			color: #ffffff;
-			border-color: #0369a1;
-		}
-		
-		/* 💡 計算機面板底部收回拉桿 */
-		.drawer-footer-handle {
-			margin-top: 6px;   /* 原本是 10px */
-			padding: 4px 0;    /* 原本是 6px 0 */
-			background: #f1f5f9;
-			border-top: 1px dashed #cbd5e1;
-			border-radius: 0 0 6px 6px;
-			text-align: center;
-			font-size: 12px;
-			font-weight: bold;
-			color: #64748b;
-			cursor: pointer;
-			user-select: none;
-			transition: all 0.15s ease;
-		}
-
-		.drawer-footer-handle:hover {
-			background: #e2e8f0;
-			color: #0284c7;
-		}
-
-		.drawer-footer-handle:active {
-			background: #cbd5e1;
-		}
-		
-		/* 商品代碼按鈕樣式 */
-		.btn-calc.btn-setcode {
-			background: #f3e8ff;
-			color: #6b21a8;
-			border-color: #d8b4fe;
-		}
-
-		.btn-calc.btn-setcode:hover {
-			background: #e9d5ff;
-		}
-
-		/* 點擊高亮狀態 */
-		.btn-calc.btn-setcode.active {
-			background: #9333ea;
-			color: #ffffff;
-			border-color: #7e22ce;
-		}
-		/* 雙極按鈕預設與高亮樣式 */
-		.btn-calc.btn-twinpect {
-			background: #f3e8ff;  /* 淺紫色背景 (同商品代碼預設淺紫色) */
-			color: #6b21a8;        /* 深紫色文字 */
-			border-color: #d8b4fe; /* 邊框淡紫色 */
-		}
-		.btn-calc.btn-twinpect:hover {
-			background: #e9d5ff;  /* 滑鼠懸停時稍深的淺紫色 */
-		}
-		.btn-calc.btn-twinpect.active {
-			background: #8b5cf6;  /* 點擊高亮時的鮮艷紫色 */
-			color: #ffffff;
-			border-color: #7c3aed;
-		}
-		
-		/* 官網搜尋引導按鈕樣式 (寬度同卡牌項目，高度約 1/3) */
-		.official-search-footer-btn {
-			padding: 8px 15px;
-			margin-top: 10px;
-			background: #f8fafc;
-			border: 1px dashed #0284c7;
-			border-radius: 8px;
-			color: #0284c7;
-			font-size: 13px;
-			font-weight: bold;
-			text-align: center;
-			cursor: pointer;
-			transition: all 0.2s ease;
-			user-select: none;
-			box-sizing: border-box;
-		}
-		.official-search-footer-btn:hover {
-			background: #e0f2fe;
-			border-color: #0369a1;
-			color: #0369a1;
-		}
-		/* 免責聲明文字樣式 */
-		.disclaimer-note {
-			font-size: 10px;
-			color: #888;
-			text-align: center;
-			margin-top: 8px;
-			opacity: 0;
-			transition: opacity 0.6s ease;
-			user-select: none;
-			width: 100%;
-			white-space: nowrap;
-		}
-
-		/* 當進入視野時淡入顯示 */
-		.disclaimer-note.visible {
-			opacity: 1;
-		}
-		
-		/* ================= 截圖專用卡圖與外框修正 ================= */
-		/* 截圖時，解除卡圖外容器與圖片的溢出裁切與寬度限制 */
-		.is-capturing .modal-img-container {
-			width: auto !important;
-			max-width: none !important;
-			overflow: visible !important;
-		}
-
-		.is-capturing .modal-img {
-			max-width: none !important;
-			max-height: none !important;
-			object-fit: contain !important;
-		}
-
-		/* 橫向卡標準尺寸 (寬 250 / 高 180) */
-		.is-capturing .modal-img.is-horizontal {
-			width: 250px !important;
-			height: 180px !important;
-		}
-
-		/* 橫向卡放大尺寸 (寬 350 / 高 250) */
-		.is-capturing .modal-img.is-horizontal.img-expanded {
-			width: 350px !important;
-			height: 250px !important;
-		}
-		
-		/* ================= 3D 卡片堆疊與抽牌動畫 ================= */
-		.card-stack-container {
-			position: relative;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			user-select: none;
-			perspective: 1000px; /* 增加 3D 景深感 */
-		}
-
-		.modal-img-stack-item {
-			position: absolute;
-			top: 50%;   /* 💡 以中心點定位，解決大圖時擠到右下的問題 */
-			left: 50%;
-			transform-origin: center center;
-			/* 預設中心偏移由 transform 處理 */
-			transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
-						filter 0.35s ease, 
-						opacity 0.35s ease,
-						box-shadow 0.35s ease;
-			box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-			border-radius: 6px;
-			object-fit: contain;
-			cursor: pointer;
-		}
-
-		/* 層級 0：當前第一張（最頂層） */
-		/* 💡 重新校正堆疊 3D 偏移（以 -50%, -50% 置中為基準點） */
-		.modal-img-stack-item.stack-pos-0 {
-			z-index: 10;
-			transform: translate(-50%, -50%) scale(1) rotate(0deg);
-			filter: blur(0px);
-			opacity: 1;
-		}
-
-		.modal-img-stack-item.stack-pos-1 {
-			z-index: 9;
-			transform: translate(calc(-50% + 14px), calc(-50% - 8px)) scale(0.96) rotate(1.5deg);
-			filter: blur(2px) brightness(0.85);
-			opacity: 0.9;
-		}
-
-		.modal-img-stack-item.stack-pos-2 {
-			z-index: 8;
-			transform: translate(calc(-50% + 28px), calc(-50% - 16px)) scale(0.92) rotate(3deg);
-			filter: blur(4px) brightness(0.7);
-			opacity: 0.75;
-		}
-
-		.modal-img-stack-item.stack-pos-hidden {
-			z-index: 5;
-			transform: translate(calc(-50% + 35px), calc(-50% - 20px)) scale(0.88) rotate(4deg);
-			filter: blur(6px);
-			opacity: 0;
-			pointer-events: none;
-		}
-
-		/* --- 動畫軌跡 Class --- */
-		/* 向左抽出放至最後 (Next) */
-		.modal-img-stack-item.anim-slide-out-left {
-			z-index: 20 !important;
-			transform: translate(-140%, -10px) rotate(-12deg) scale(0.95) !important;
-			opacity: 0.4 !important;
-			filter: blur(1px) !important;
-		}
-
-		/* 從最後抽出來壓回第一張 (Prev) */
-		.modal-img-stack-item.anim-slide-in-left {
-			z-index: 20 !important;
-			transform: translate(-140%, -10px) rotate(-12deg) scale(0.95) !important;
-			opacity: 0.4 !important;
-			filter: blur(1px) !important;
-			transition: none !important; /* 快速歸位至左側發射點 */
-		}
-
-		/* 截圖時：僅隱藏非當前顯示的背景堆疊卡片，保留當前第一張 (data-active="true") */
-		.is-capturing .modal-img-stack-item[data-active="false"] {
-			display: none !important;
-		}
-		/* ================= 卡號搜尋偽頁籤與 Modal 樣式 ================= */
-
-		/* 偽頁籤懸停效果 (樣式繼承 .tab，不取得 .active) */
-		.btn-id-search {
-			cursor: pointer;
-			background: transparent;
-			border: none;
-			outline: none;
-			color: white;
-		}
-		.btn-id-search:hover {
-			background-color: rgba(255, 255, 255, 0.15);
-		}
-
-		/* Modal 背景遮罩 */
-		.id-search-modal-backdrop {
-			position: fixed;
-			top: 0; left: 0; right: 0; bottom: 0;
-			background: rgba(0, 0, 0, 0.6);
-			z-index: 9999;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			padding: 15px;
-		}
-
-		/* Modal 視窗主體 */
-		.id-search-modal-content {
-			background: #ffffff;
-			width: 100%;
-			max-width: 400px;
-			border-radius: 12px;
-			box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-			overflow: hidden;
-			animation: fadeInModal 0.2s ease-out;
-		}
-
-		@keyframes fadeInModal {
-			from { opacity: 0; transform: translateY(-10px); }
-			to { opacity: 1; transform: translateY(0); }
-		}
-
-		.id-search-modal-header {
-			background: #1e293b;
-			color: #ffffff;
-			padding: 12px 16px;
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-		.id-search-modal-header h3 { margin: 0; font-size: 16px; }
-		.btn-close-modal { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
-
-		.id-search-modal-body { padding: 16px; }
-		.id-search-desc { font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 8px; }
-
-		#input-card-id {
-			width: 100%;
-			padding: 10px 12px;
-			font-size: 15px;
-			border: 2px solid #cbd5e1;
-			border-radius: 6px;
-			box-sizing: border-box;
-			outline: none;
-			transition: border-color 0.2s;
-			touch-action: manipulation;
-		}
-		#input-card-id:focus { border-color: #0284c7; }
-
-		.id-search-error-msg {
-			color: #ef4444;
-			font-size: 13px;
-			font-weight: bold;
-			margin-top: 8px;
-		}
-
-		.id-search-modal-footer {
-			padding: 12px 16px;
-			background: #f8fafc;
-			border-top: 1px solid #e2e8f0;
-			display: flex;
-			justify-content: flex-end;
-			gap: 8px;
-		}
-
-		.btn-submit-search {
-			background: #0284c7; color: white; border: none;
-			padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;
-		}
-		.btn-submit-search:hover { background: #0369a1; }
-
-		.btn-cancel-search {
-			background: #94a3b8; color: white; border: none;
-			padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;
-		}
-		.btn-cancel-search:hover { background: #64748b; }
-		/* ================= 按鈕橫列與錯誤回報按鈕樣式 ================= */
-		.wdata-btn-row {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			width: 100%;
-			margin-top: 10px;
-		}
-
-		/* 共用按鈕基礎樣式 (繼承/擴充原有的 .btn-icon) */
-		.btn-abil-explain,
-		.btn-report-error {
-			border: none;
-			padding: 5px 10px;
-			border-radius: 4px;
-			font-size: 12px;
-			font-weight: bold;
-			cursor: pointer;
-			color: #ffffff;
-			transition: background-color 0.15s ease;
-		}
-
-		/* 展開能力說明按鈕 (藍色) */
-		.btn-abil-explain {
-			background-color: #2196f3;
-		}
-		.btn-abil-explain:hover {
-			background-color: #1976d2;
-		}
-
-		/* 錯誤回報按鈕 (紅色，靠右推開) */
-		.btn-report-error {
-			background-color: #ef4444;
-			margin-left: auto; /* 💡 關鍵：若沒有能力說明按鈕時，依然自動貼齊最右邊 */
-		}
-		.btn-report-error:hover {
-			background-color: #dc2626;
-		}
-		/* ================= 快捷種族按鈕樣式 (ドラゴン/コマンド/ディスペクター) ================= */
-		.btn-calc.btn-quick-race {
-			background: #ecfdf5;  /* 預設為淺綠色背景 */
-			color: #047857;        /* 深綠色文字 */
-			border-color: #a7f3d0; /* 淡綠色邊框 */
-		}
-
-		/* 滑鼠 Hover (懸停) 狀態：顏色加深 */
-		.btn-calc.btn-quick-race:hover {
-			background: #d1fae5;
-			color: #065f46;
-			border-color: #6ee7b7;
-		}
-
-		/* 點擊「按下去/選取」高亮狀態 (Active) */
-		.btn-calc.btn-quick-race.active {
-			background: #10b981;   /* 鮮豔綠色背景 */
-			color: #ffffff;        /* 白字 */
-			border-color: #059669;
-			font-weight: bold;
-		}
-		/* 💡 新增：圖片退回備援時的 CSS 樣式與 No Pic 標籤 */
-		.modal-img-stack-item.img-fallback {
-			filter: opacity(0.55) grayscale(0.5) !important; /* 半透明與灰階濾鏡 */
-		}
-
-		.no-pic-badge {
-			position: absolute;
-			top: 6px;
-			right: 6px;
-			background: rgba(211, 47, 47, 0.85); /* 警示紅色 */
-			color: #ffffff;
-			font-size: 11px;
-			font-weight: bold;
-			padding: 2px 6px;
-			border-radius: 4px;
-			z-index: 25;
-			pointer-events: none;
-			box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-		}
-		/* 💡 相機與分享按鈕：垂直排列懸浮於卡圖右上方外側 */
-		.card-stack-container .cam-btn-overlay {
-			position: absolute !important;
-			top: 0px !important;
-			right: -36px !important;
-			left: auto !important;
-			z-index: 30;
-			margin: 0;
-		}
-
-		/* 原生能力切換按鈕 (高度與尺寸跟使用技巧對齊) */
-		.btn-native-ability {
-			cursor: pointer;
-			padding: 8px 12px;       /* 💡 與「使用技巧」一樣的內邊距 */
-			background: #ddd;        /* 預設灰底 */
-			color: #333;
-			border: none;
-			border-radius: 4px;
-			font-weight: bold;
-			font-size: 13px;         /* 💡 與「使用技巧」一樣的字級 */
-			white-space: nowrap;     /* 💡 保障文字單行不折行 */
-			transition: all 0.15s ease;
-			touch-action: manipulation;
-			box-sizing: border-box;
-		}
-
-		.btn-native-ability:hover {
-			background-color: #ccc;
-		}
-
-		/* 按下去 / 選取高亮狀態 (亮藍色 + 白字) */
-		.btn-native-ability.active {
-			background-color: #0284c7 !important;
-			color: #ffffff !important;
-		}
-		
-		/* 種族邏輯按鈕群組容器 */
-		.race-logic-group {
-			display: none; /* 預設交由 CSS 的 .advanced-only 類別控制顯示 */
-			gap: 4px;
-			align-items: center;
-		}
-
-		/* 邏輯按鈕基礎樣式 (預設/未選取：淺色較淡) */
-		.btn-race-logic {
-			cursor: pointer;
-			padding: 3px 8px;
-			border: 1px solid #cbd5e1;
-			border-radius: 4px;
-			font-size: 12px;
-			font-weight: bold;
-			color: #64748b;             /* 淡灰色文字 */
-			background-color: #f1f5f9;  /* 淡灰色背景 */
-			transition: all 0.15s ease;
-			touch-action: manipulation;
-			white-space: nowrap;
-			opacity: 0.7;                /* 未被選到時調淡透明度 */
-		}
-
-		.btn-race-logic:hover {
-			opacity: 0.9;
-			background-color: #e2e8f0;
-		}
-
-		/* 💡 選中高亮狀態 (統一為藍色) */
-		.btn-race-logic.active {
-			color: #ffffff !important;
-			background-color: #0284c7 !important;
-			border-color: #0369a1 !important;
-			opacity: 1 !important;
-		}
-		/* 日誌彈窗樣式修正：設定最大高度與捲軸 */
-		#diary-modal .modal-card {
-			max-height: 80vh; /* 限制視窗最高為螢幕高度的 80% */
-			display: flex;
-			flex-direction: column;
-		}
-
-		#diary-modal-body {
-			overflow-y: auto; /* 內容超出時顯示垂直捲軸 */
-			max-height: calc(80vh - 60px); /* 扣除 Header 高度 */
-			padding-right: 8px; /* 預留捲軸邊距，避免文字貼齊 */
-			overscroll-behavior: contain;
-		}
-
-		/* 滾動條美化（選填，讓捲軸更契合網站風格） */
-		#diary-modal-body::-webkit-scrollbar {
-			width: 6px;
-		}
-		#diary-modal-body::-webkit-scrollbar-thumb {
-			background-color: #ccc;
-			border-radius: 3px;
-		}
-		#diary-modal-body::-webkit-scrollbar-thumb:hover {
-			background-color: #999;
-		}
-		/* 💡 [進階選項] 按鈕亮起樣式 (當處於進階模式時，不需使用 !important) */
-		.footer-top-row #toggle-advanced.active {
-			background-color: #0284c7;
-			color: #ffffff;
-			border-color: #0369a1;
-			box-shadow: 0 0 6px rgba(2, 132, 199, 0.5);
-			font-weight: bold;
-		}
-		
-		/* ================= 台灣大賽報表彈窗樣式 ================= */
-		.report-table {
-			width: 100%;
-			border-collapse: collapse;
-			font-size: 13px;
-		}
-		.report-table th, .report-table td {
-			padding: 8px 10px;
-			border: 1px solid #cbd5e1;
-			text-align: left;
-		}
-		.report-table th {
-			background-color: #f1f5f9;
-			color: #1e293b;
-			font-weight: bold;
-			position: sticky;
-			top: 0;
-			z-index: 10;
-		}
-		.report-table tr:nth-child(even) {
-			background-color: #f8fafc;
-		}
-		.report-table tr:hover {
-			background-color: #f1f5f9;
-		}
-		.report-rank {
-			font-weight: bold;
-			text-align: center !important;
-		}
-		.report-rank-1 { color: #d97706; font-size: 15px; } /* 金 */
-		.report-rank-2 { color: #475569; font-size: 14px; } /* 銀 */
-		.report-rank-3 { color: #b45309; font-size: 14px; } /* 銅 */
-		.report-card-link {
-			color: #0284c7;
-			font-weight: bold;
-			cursor: pointer;
-			text-decoration: underline;
-		}
-		.report-card-link:hover {
-			color: #0369a1;
-		}
-		
-		/* ================= RWD 手機版報表優化 ================= */
-		@media (max-width: 768px) {
-			/* 1. 撐開手機版 Modal 寬度 */
-			#championship-report-modal .modal-card {
-				width: 95% !important;
-				max-width: 95% !important;
-				margin: 10px auto;
-			}
-
-			/* 2. 允許表格橫向滑動，防止擠壓文字 */
-			#report-view-deck, #report-view-user {
-				overflow-x: auto;
-				-webkit-overflow-scrolling: touch;
-			}
-
-			/* 3. 重設欄位寬度與換行規則（徹底解決文字直排問題） */
-			.report-table {
-				min-width: 500px; /* 設底限寬度，寬度不夠時自動開啟橫向滾動 */
-			}
-
-			.report-table th, .report-table td {
-				padding: 6px 8px !important;
-				white-space: normal !important; /* 允許正常橫向換行 */
-				word-break: break-word !important;
-			}
-
-			/* 重新分配適當欄位比例 */
-			.report-table th:nth-child(1), .report-table td:nth-child(1) { width: 45px !important; text-align: center; } /* 名次 */
-			.report-table th:nth-child(2), .report-table td:nth-child(2) { width: 140px !important; } /* 卡名 */
-			.report-table th:nth-child(3), .report-table td:nth-child(3) { width: 55px !important; text-align: center; }  /* 人數/數量 */
-			
-			/* 報表 2 的使用者清單欄 */
-			#report-view-user .report-table th:nth-child(4),
-			#report-view-user .report-table td:nth-child(4) { 
-				width: auto !important; 
-				font-size: 11px !important;
-			}
-
-			/* 4. 微調頁籤按鈕字級，避免字體過大疊字 */
-			.report-tab-btn {
-				padding: 8px 4px !important;
-				font-size: 12px !important;
-			}
-		}
-		/* ================= 行動裝置橫向螢幕 (Landscape) 專用修正 ================= */
-		@media screen and (max-height: 500px) and (orientation: landscape) {
-			/* 1. 壓低頂部 Header 高度，釋放垂直空間 */
-			.header-tabs {
-				position: relative !important; /* 打橫時取消黏性置頂，避免遮擋內容 */
-			}
-
-			/* 2. 壓低 sticky 抽屜置頂位置 */
-			.drawer-container, .quick-search-drawer {
-				position: relative !important;
-			}
-
-			/* 3. 確保所有可點擊標籤有足夠的 touch target 與適當層級 */
-			.effect-tag, 
-			.wdata-race-tag, 
-			.summary-tag, 
-			.report-card-link {
-				position: relative;
-				z-index: 5;
-				touch-action: manipulation; /* 消除點擊延遲並提升觸控反應 */
-				padding: 4px 8px !important;  /* 稍微放大觸控熱區 */
-				display: inline-block;
-			}
-
-			/* 4. 修正 Modal 在橫屏時的高度與捲軸，確保內部標籤能順利點擊 */
-			.modal-card {
-				max-height: 95vh !important;
-			}
-			.modal-body, .detail-info-scroll-panel {
-				overscroll-behavior: contain;
-				-webkit-overflow-scrolling: touch;
-			}
-
-			/* 5. 壓低 Footer 避免橫屏時佔用過多空間 */
-			.footer {
-				position: relative !important; /* 打橫時改為隨頁面滾動，不強行固定在底部遮擋 */
-			}
-			body {
-				padding-bottom: 0px !important;
-			}
-		}
-		/* 英文名切換 Icon 樣式 */
-		.btn-toggle-en-name {
-			font-size: 16px;
-			cursor: pointer;
-			user-select: none;
-			transition: transform 0.15s ease;
-			
-			/* 💡 針對手機版 (iOS) 按鈕與特殊字元偏移的修正 */
-			-webkit-appearance: none;           /* 移除 iOS 預設按鈕外觀 */
-			line-height: normal !important;     /* 覆蓋原本的 line-height: 1，避免擠壓字元 */
-			padding: 0 !important;              /* 確保內邊距歸零 */
-			display: flex !important;
-			justify-content: center !important;
-			align-items: center !important;
-		}
-
-		.btn-toggle-en-name:hover {
-			transform: scale(1.15);
-		}
-		
-		/* ================= ⚡ 今天我要... 階層式面板專屬樣式 ================= */
-        .qa-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 700px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        /* 第一層：大分類按鈕 */
-        .qa-btn-lv1 {
-            width: 100%;
-            padding: 16px 18px;
-            font-size: 16px;
-            font-weight: bold;
-            background: #ffffff;
-            border: 2px solid #cbd5e1;
-            border-radius: 8px;
-            text-align: left;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #334155;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            touch-action: manipulation;
-        }
-        .qa-btn-lv1:hover { border-color: #94a3b8; }
-        .qa-btn-lv1.active { border-color: #0284c7; color: #0284c7; background: #f0f9ff; }
-        .qa-btn-lv1::after { content: '▼'; font-size: 12px; transition: transform 0.2s; color: #94a3b8; }
-        .qa-btn-lv1.active::after { transform: rotate(180deg); color: #0284c7; }
-
-        /* 第一層：展開的容器 */
-        .qa-content-lv1 {
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            padding: 5px 0 10px 15px; /* 內縮產生階層感 */
-        }
-        .qa-content-lv1.active { display: flex; }
-
-        /* 第二層：次分類按鈕 */
-        .qa-btn-lv2 {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 15px;
-            font-weight: bold;
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            text-align: left;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #475569;
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-        }
-        .qa-btn-lv2.active { border-color: #ea580c; color: #ea580c; background: #fff7ed; }
-        .qa-btn-lv2::after { content: '▼'; font-size: 10px; transition: transform 0.2s; }
-        .qa-btn-lv2.active::after { transform: rotate(180deg); }
-
-        /* 第二層：展開的輸入與按鈕區塊 */
-        .qa-content-lv2 {
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            padding: 15px;
-            background: #ffffff;
-            border: 1px dashed #cbd5e1;
-            border-left: 3px solid #ea580c; /* 左側醒目顏色邊框 */
-            border-radius: 6px;
-            margin-bottom: 5px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .qa-content-lv2.active { display: flex; }
-
-        /* 共用功能按鈕與輸入框 */
-        .action-btn-group { display: flex; gap: 8px; width: 100%; }
-        .action-btn-group .btn-drawer-action { flex: 1; padding: 12px 0; font-size: 14px; text-align: center; }
-        .qa-full-btn { width: 100%; padding: 14px !important; font-size: 15px !important; border-radius: 6px; display: flex; justify-content: center; align-items: center; }
-        
-        .qa-input {
-            width: 100%; padding: 12px 14px !important; font-size: 15px !important;
-            border: 2px solid #cbd5e1 !important; border-radius: 6px !important;
-            box-sizing: border-box; background: #f8fafc; transition: border-color 0.2s;
-        }
-        .qa-input:focus { border-color: #0284c7 !important; outline: none; background: #ffffff; }
-		/* ================= 聯絡作者 Modal 專用獨立排版修正 ================= */
-		#author-msg-modal .modal-card {
-			max-height: 85vh;
-			display: flex;
-			flex-direction: column;
-		}
-
-		#author-msg-modal .modal-body {
-			overflow-y: auto;
-			max-height: calc(85vh - 60px);
-			gap: 16px;
-			padding: 16px;
-		}
-
-		/* 解除 Modal 內抽屜的 sticky 浮動，維持文件流 */
-		#author-msg-modal .drawer-container {
-			position: static;
-			top: auto;
-			z-index: auto;
-			margin-bottom: 8px;
-			flex-shrink: 0; /* 💡 新增這行：防止展開時被 Flex 容器強制壓縮高度 */
-		}
-		
-		/* 💡 新增這段：確保作者留言板內的所有區塊 (包含表單) 都不會變形，自然撐出捲軸 */
-		#author-msg-modal .modal-body > div {
-			flex-shrink: 0;
-		}
-
-		/* 當抽屜擁有 .open 類別時展開並設為縱向 flex 佈局 */
-		#author-msg-modal #drawer-author-line.open #author-line-drawer-content,
-		#author-msg-modal #drawer-author-line.open .drawer-content {
-			display: flex;
-			flex-direction: column;
-			width: 100%;
-			box-sizing: border-box;
-		}
-		
-		/* ================= 組牌購物車專用樣式 ================= */
-		/* ================= 組牌購物車專用樣式 ================= */
-		.floating-cart-btn {
-			position: fixed;
-			right: 20px;
-			top: 65vh;
-			width: 56px;
-			height: 56px;
-			background-color: #0284c7;
-			color: white;
-			border-radius: 50%;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			font-size: 24px;
-			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-			cursor: pointer;
-			z-index: 900;
-			transition: transform 0.2s, opacity 0.2s;
-			display: none;
-		}
-		.floating-cart-btn:hover { transform: scale(1.08); background-color: #0369a1; }
-		.floating-cart-btn:active { transform: scale(0.95); }
-		.cart-badge {
-			position: absolute;
-			top: -5px;
-			right: -5px;
-			background-color: #ef4444;
-			color: white;
-			font-size: 11px;
-			font-weight: bold;
-			padding: 2px 6px;
-			border-radius: 10px;
-			border: 2px solid #fff;
-		}
-
-		/* 購物車總列表容器 */
-		.cart-list-container {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 10px;
-			padding: 8px;
-			align-items: flex-end;
-			width: 100%;
-			box-sizing: border-box;
-		}
-
-		/* 購物車總列表容器：縮小單位與單位之間的間距與內邊距 */
-		.cart-list-container {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 6px; /* 原本 10px -> 縮小至 6px */
-			padding: 6px; /* 原本 8px -> 縮小至 6px */
-			align-items: flex-end;
-			width: 100%;
-			box-sizing: border-box;
-		}
-
-		/* 單張卡牌（群組）容器：微調左右內邊距以釋放更多水平空間 */
-		.cart-item-group {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			background: #ffffff;
-			padding: 6px 4px; /* 原本 8px 6px -> 縮小至 6px 4px */
-			border-radius: 8px;
-			box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-			border: 1px solid #e2e8f0;
-			max-width: 100%;
-			box-sizing: border-box;
-		}
-
-		/* 多疊並排容器：縮小內部多疊卡片之間的水平間距 */
-		.cart-card-rows-container {
-			display: flex;
-			flex-direction: row;
-			flex-wrap: wrap;
-			justify-content: center;
-			gap: 4px; /* 原本 8px -> 縮小至 4px */
-			align-items: flex-end;
-			margin-bottom: 6px;
-			max-width: 100%;
-		}
-
-		/* 💡 卡牌堆疊外框：按比例縮小為寬 90px，留出頂部給 4 張卡片展開的總高度 (約 171px) */
-		/* 💡 卡牌堆疊外框：再縮小 5% 為寬 76px，留出頂部給 4 張卡片展開的總高度 (約 145px) */
-		.cart-stack-wrapper {
-			display: flex;
-			flex-direction: column;
-			justify-content: flex-end;
-			position: relative;
-			width: 76px;
-			min-height: 145px;  /* 👈 基礎 106px + 3張卡片各往上露13px (39px) = 145px */
-			flex-shrink: 0;
-		}
-
-		/* 基礎卡圖尺寸（維持 126:176 比例 -> 76:106） */
-		.cart-stack-wrapper img, 
-		.cart-stack-wrapper .cart-no-img {
-			width: 76px !important;
-			height: 106px !important;
-			border-radius: 4px;
-			box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.25);
-			transition: transform 0.2s;
-			object-fit: contain;
-			background-color: #fff;
-			flex-shrink: 0;
-		}
-
-		/* 💡 核心展開效果：第 2、3、4 張卡片精確往後上方階梯式位移 */
-		.cart-stack-wrapper img:not(:first-child),
-		.cart-stack-wrapper .cart-no-img:not(:first-child) {
-			margin-top: -93px !important; /* 106px - 13px = 露出上方 13px 邊框與卡名 */
-		}
-
-		.cart-stack-wrapper .cart-no-img {
-			background: #f1f5f9;
-			color: #475569;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			font-weight: bold;
-			border: 2px dashed #cbd5e1;
-			font-size: 10px;
-			text-align: center;
-			padding: 2px;
-			box-sizing: border-box;
-		}
-
-		.cart-stack-wrapper img:hover { 
-			transform: translateY(-3px); 
-		}
-
-		.cart-controls {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			background: #f1f5f9;
-			padding: 3px 6px;
-			border-radius: 10px;
-		}
-		.cart-controls button {
-			width: 22px;
-			height: 22px;
-			border-radius: 50%;
-			border: none;
-			background: #0284c7;
-			color: white;
-			font-weight: bold;
-			cursor: pointer;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			font-size: 12px;
-		}
-		.cart-controls button:hover { background: #0369a1; }
-		.cart-controls span { font-weight: bold; font-size: 13px; min-width: 14px; text-align: center; }
-		
-		/* ================= 購物車文明長條圖統計樣式 ================= */
-		.cart-chart-wrapper {
-			margin-top: 20px;
-			padding: 14px;
-			background: #ffffff;
-			border: 1px solid #e2e8f0;
-			border-radius: 10px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-			box-sizing: border-box;
-			width: 100%;
-		}
-
-		.cart-chart-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 15px;
-			border-bottom: 1px dashed #e2e8f0;
-			padding-bottom: 8px;
-		}
-
-		.cart-chart-title {
-			font-size: 14px;
-			font-weight: bold;
-			color: #334155;
-		}
-
-		.cart-chart-legend {
-			display: flex;
-			gap: 12px;
-			font-size: 12px;
-			color: #64748b;
-			align-items: center;
-		}
-
-		.legend-item {
-			display: flex;
-			align-items: center;
-			gap: 4px;
-		}
-
-		.legend-dot {
-			width: 10px;
-			height: 10px;
-			border-radius: 2px;
-		}
-
-		/* 繪圖長條圖區域 */
-		.chart-bars-area {
-			display: flex;
-			align-items: flex-end;
-			justify-content: space-around;
-			height: 150px;
-			border-bottom: 2px solid #cbd5e1;
-			position: relative;
-			padding: 0 10px;
-			margin-bottom: 8px;
-		}
-
-		/* 背景刻度輔助線 */
-		.chart-grid-line {
-			position: absolute;
-			left: 0;
-			right: 0;
-			border-top: 1px dashed #f1f5f9;
-			pointer-events: none;
-		}
-
-		.chart-col {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: flex-end;
-			height: 100%;
-			flex: 1;
-			max-width: 46px;
-			z-index: 1;
-		}
-
-		.chart-bar-track {
-			width: 24px;
-			display: flex;
-			flex-direction: column;
-			justify-content: flex-end;
-			border-radius: 4px 4px 0 0;
-			overflow: hidden;
-			transition: height 0.3s ease;
-		}
-
-		.chart-bar-segment {
-			width: 100%;
-			transition: height 0.3s ease;
-		}
-
-		.chart-bar-total-val {
-			font-size: 11px;
-			font-weight: bold;
-			color: #475569;
-			margin-bottom: 4px;
-			line-height: 1;
-		}
-
-		/* 下方統計數值表格 */
-		.chart-data-table {
-			width: 100%;
-			border-collapse: collapse;
-			font-size: 12px;
-			text-align: center;
-			margin-top: 6px;
-		}
-
-		.chart-data-table th, .chart-data-table td {
-			padding: 4px 2px;
-			border: 1px solid #e2e8f0;
-		}
-
-		.chart-data-table th {
-			background: #f8fafc;
-			color: #475569;
-			font-weight: bold;
-		}
-
-		.chart-data-table tr.row-total {
-			background: #f1f5f9;
-			font-weight: bold;
-			color: #0f172a;
-		}
-
-		.chart-data-table td.cell-multi {
-			color: #64748b;
-		}
-
-		.chart-data-table td.cell-mono {
-			color: #1e293b;
-			font-weight: 600;
-		}
-		
-		/* ================= 卡圖右側 4 功能按鈕佈局整合 ================= */
-
-		/* 1. 四個按鈕的通用定位基底（直向卡：外浮於卡圖右側） */
-		.card-stack-container .cam-btn-overlay,
-		.card-stack-container .share-btn-overlay,
-		.card-stack-container .cart-add-btn-overlay,
-		.card-stack-container .nickname-apply-btn-overlay {
-			position: absolute !important;
-			right: -36px !important; /* 直向卡：向外懸浮 36px */
-			left: auto !important;
-			z-index: 30;
-			margin: 0;
-			width: 28px;
-			height: 28px;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-
-		/* 2. 由上而下的垂直排列高度 (Top 偏移) */
-		.card-stack-container .cam-btn-overlay            { top: 0px !important; }
-		.card-stack-container .share-btn-overlay          { top: 40px !important; }
-		.card-stack-container .cart-add-btn-overlay       { top: 80px !important; }
-		.card-stack-container .nickname-apply-btn-overlay { top: 120px !important; }
-
-		/* 3. 橫向卡專用修正：收回靠齊卡圖右上內側，不再爆出遮擋右側欄位 */
-		/* 利用一般狀態的高 180px，以及放大狀態的寬 350px 來嚴格鎖定橫卡 */
-		.card-stack-container[style*="height: 180px"] .cam-btn-overlay,
-		.card-stack-container[style*="height: 180px"] .share-btn-overlay,
-		.card-stack-container[style*="height: 180px"] .cart-add-btn-overlay,
-		.card-stack-container[style*="height: 180px"] .nickname-apply-btn-overlay,
-		.card-stack-container[style*="width: 350px"] .cam-btn-overlay,
-		.card-stack-container[style*="width: 350px"] .share-btn-overlay,
-		.card-stack-container[style*="width: 350px"] .cart-add-btn-overlay,
-		.card-stack-container[style*="width: 350px"] .nickname-apply-btn-overlay {
-			right: 8px !important; /* 改為貼齊卡片右內側邊緣 */
-			background: rgba(255, 255, 255, 0.9) !important;
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
-		}
-
-		/* 4. 截圖時統一隱藏全部 4 個按鈕 */
-		.is-capturing .cam-btn-overlay,
-		.is-capturing .share-btn-overlay,
-		.is-capturing .cart-add-btn-overlay,
-		.is-capturing .nickname-apply-btn-overlay {
-			display: none !important;
-		}
-		
-		/* ================= Page 2 / 3：排序、歷史、匯出功能列 ================= */
-		.tab-sticky-row {
-			position: sticky;
-			top: 50px;
-			z-index: 90;
-			display: flex;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: 8px;
-			margin-bottom: 10px;
-			padding: 6px 0;
-			background: #f4f4f9;
-			flex-shrink: 0;
-		}
-		.toolbar-sort {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			flex: 1 1 120px;
-			min-width: 0;
-			font-size: 13px;
-			font-weight: bold;
-			color: #334155;
-		}
-		.toolbar-sort span { flex-shrink: 0; }
-		.toolbar-sort select {
-			flex: 1;
-			width: 100%;
-			min-width: 0;
-			height: 34px;
-			margin: 0;
-			padding: 4px 6px;
-			font-size: 13px;
-			box-sizing: border-box;
-		}
-		.toolbar-menu { position: relative; flex: 0 0 auto; }
-		.toolbar-menu > summary, .toolbar-edit {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			gap: 4px;
-			min-height: 34px;
-			padding: 6px 10px;
-			border: 0;
-			border-radius: 6px;
-			background: #0284c7;
-			color: white;
-			font-size: 13px;
-			font-weight: bold;
-			white-space: nowrap;
-			cursor: pointer;
-			box-sizing: border-box;
-			list-style: none;
-		}
-		.toolbar-menu > summary::-webkit-details-marker { display: none; }
-		.toolbar-menu > summary::after { content: '▾'; font-size: 10px; }
-		.toolbar-menu[open] > summary::after { content: '▴'; }
-		.toolbar-menu > summary:hover { background: #0369a1; }
-		.toolbar-menu-panel {
-			position: fixed;
-			z-index: 100;
-			width: 240px;
-			max-width: calc(100vw - 24px);
-			padding: 6px;
-			border: 1px solid #cbd5e1;
-			border-radius: 8px;
-			background: #fff;
-			box-shadow: 0 8px 24px rgba(0,0,0,0.16);
-			overflow-y: auto;
-			box-sizing: border-box;
-		}
-		.toolbar-menu-panel button {
-			display: block;
-			width: 100%;
-			padding: 10px;
-			border: 0;
-			border-radius: 4px;
-			background: transparent;
-			color: #334155;
-			text-align: left;
-			font-size: 13px;
-			cursor: pointer;
-		}
-		.toolbar-menu-panel button:hover { background: #f1f5f9; }
-		.toolbar-menu-panel .btn-share-deck-link-action { color: #15803d; }
-		.toolbar-edit { background: #a16207; }
-		.tab-sticky-row [hidden] { display: none !important; }
-		.tab-sticky-row :is(summary, button, select):focus-visible {
-			outline: 2px solid #0284c7;
-			outline-offset: 2px;
-		}
-		/* 雙欄模式由左側面板負責固定，功能列本身不再重複 sticky。 */
-		.split-left-panel .tab-sticky-row { position: relative; top: auto; }
-		
-		/* ================= 自訂複合下拉選單 (取代原生 datalist) ================= */
-        .combo-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        .combo-list {
-            position: absolute;
-            top: calc(100% - 4px); /* 稍微蓋住輸入框下邊緣，視覺更一體 */
-            left: 0;
-            width: 100%;
-            background: #ffffff;
-            border: 1px solid #0284c7; /* 配合 focus 時的藍色邊框 */
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-sizing: border-box;
-        }
-        .combo-list.active {
-            display: block;
-        }
-        .combo-item {
-            padding: 10px 12px;
-            font-size: 14px;
-            color: #334155;
-            cursor: pointer;
-            border-bottom: 1px dashed #e2e8f0;
-            transition: background 0.1s ease;
-        }
-        .combo-item:last-child {
-            border-bottom: none;
-        }
-        .combo-item:hover {
-            background: #f0f9ff;
-            color: #0369a1;
-            font-weight: bold;
-        }
-		.combo-separator {
-            padding: 4px 12px;
-            color: #94a3b8;
-            font-size: 12px;
-            text-align: center;
-            user-select: none;
-            pointer-events: none;
-            background: #f8fafc;
-        }
-		/* 💡 新增：預設隱藏水平切換按鈕 */
-        .hor-arrow-btn {
-            display: none;
-        }
-		
-		/* 過濾總覽外層：右側放歷史條件開關 */
-		.footer-summary-shell {
-			display: none;
-			align-items: flex-start;
-			background: #444;
-			min-height: 0;
-		}
-
-		.footer-summary-shell.open {
-			display: flex;
-		}
-
-		.footer-summary-shell .footer-summary {
-			display: block;
-			flex: 1;
-			min-width: 0;
-			max-height: min(22vh, 200px);
-			overflow-y: auto;
-			box-sizing: border-box;
-		}
-
-		#toggle-condition-history {
-			flex: 0 0 auto;
-			margin: 10px 12px 10px 0;
-			padding: 7px;
-			border: 0;
-			border-radius: 6px;
-			background: #333;
-			color: white;
-			font-size: 22px;
-			cursor: pointer;
-		}
-
-		#toggle-condition-history:hover {
-			background: #555;
-		}
-
-		/* 歷史條件面板 */
-		.condition-history-panel {
-			display: flex;
-			flex-direction: column;
-			min-height: 0;
-			max-height: min(38vh, 320px);
-			background: #292929;
-			border-bottom: 1px solid #666;
-		}
-
-		.condition-history-panel[hidden] {
-			display: none !important;
-		}
-
-		.condition-history-heading {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			gap: 10px;
-			padding: 10px 16px;
-			border-bottom: 1px solid #444;
-			font-size: 14px;
-		}
-
-		#condition-history-count {
-			color: #bbb;
-		}
-
-		#condition-history-list {
-			min-height: 0;
-			overflow-y: auto;
-			overflow-x: hidden;
-			padding: 8px 12px;
-			color: #ccc;
-			overscroll-behavior: contain;
-		}
-
-		.condition-history-row {
-			display: flex;
-			align-items: stretch;
-			gap: 8px;
-			margin-bottom: 8px;
-		}
-
-		.condition-history-apply {
-			flex: 1;
-			min-width: 0;
-			padding: 10px 12px;
-			border: 1px solid #555;
-			border-radius: 6px;
-			background: #383838;
-			color: white;
-			text-align: left;
-			font: inherit;
-			font-size: 13px;
-			line-height: 1.6;
-			overflow-wrap: anywhere;
-			cursor: pointer;
-		}
-
-		.condition-history-apply:hover {
-			background: #484848;
-			border-color: #aaa;
-		}
-
-		.condition-history-delete {
-			flex: 0 0 auto;
-			align-self: center;
-			padding: 8px;
-			border: 0;
-			border-radius: 5px;
-			background: #743535;
-			color: white;
-			cursor: pointer;
-		}
-
-		.condition-history-delete:hover {
-			background: #a33b3b;
-		}
-
-		.condition-history-apply:focus-visible,
-		.condition-history-delete:focus-visible,
-		#toggle-condition-history:focus-visible {
-			outline: 2px solid #facc15;
-			outline-offset: 2px;
-		}
-		/* 排序按鈕與歷史、匯出使用相同的功能選單樣式。 */
-		.toolbar-sort {
-			flex: 0 0 auto;
-		}
-
-		.toolbar-sort-menu button[aria-pressed="true"] {
-			background: #e0f2fe;
-			color: #0369a1;
-			font-weight: bold;
-		}
-		/* Page3：扣除頂端頁籤、Footer 預留空間與頁面上下 padding。 */
-		#tab-list-split {
-			--split-panel-height: max(0px, calc(
-				100dvh
-				- var(--app-header-height, 49px)
-				- var(--app-footer-space, 86px)
-				- 40px
-			));
-		}
-
-		#tab-list-split .split-left-panel {
-			max-height: var(--split-panel-height);
-		}
-
-		#tab-list-split .split-right-panel {
-			height: var(--split-panel-height);
-		}
-
-		#list-container-split {
-			min-height: 0;
-		}
-		/* Page2：移除功能列上方額外留白。 */
-		#tab-list {
-			padding-top: 0;
-		}
-
-		/* 功能列緊接頂端頁籤，捲動前後維持相同高度。 */
-		#tab-list > .tab-sticky-row {
-			position: sticky;
-			top: var(--app-header-height, 49px);
-			z-index: 90;
-
-			/* 背景延伸至左右邊緣，按鈕仍保留原本水平縮排。 */
-			margin: 0 -20px;
-			padding: 4px 20px;
-
-			background: #f4f4f9;
-			border-bottom: 1px solid #e2e8f0;
-			box-sizing: border-box;
-		}
-    </style>
+    <link rel="stylesheet" href="./styles.css">
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
@@ -2486,10 +16,10 @@
     <!-- 固定頂部 Header 頁籤 -->
 	<div class="header-tabs">
 		<!-- 將條件過濾與計算機按鈕合併，使用 flex 排版拉開距離 -->
-		<div class="tab active" style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+		<div class="tab active view-html-tab" data-ui-display="flex">
 			<span>條件過濾</span>
-			<div id="btn-toggle-quick-calc" style="display: flex; align-items: center; font-size: 13px;" title="開啟/關閉 快速計算機">
-				🧮<span id="quick-calc-status" style="font-size: 11px; margin-left: 4px; font-weight: bold; color: #ccc;">OFF</span>
+			<div class="view-btn-toggle-quick-calc" id="btn-toggle-quick-calc" title="開啟/關閉 快速計算機" data-ui-display="flex">
+				🧮<span class="view-quick-calc-status" id="quick-calc-status">OFF</span>
 			</div>
 		</div>
 		<div class="tab">查詢結果</div>
@@ -2508,9 +38,9 @@
     <div id="tab-filter" class="tab-content active layout-grid">
         
 		<!-- 拔除 drawer-container 與 handle，直接設為隱藏 -->
-		<div class="quick-search-drawer" id="drawer-quick-search" style="display: none;">
-			<!-- 加上 style="display: flex;" 確保內部排版不受原 css drawer-content 隱藏的影響 -->
-			<div class="drawer-content" style="display: flex;">
+		<div class="quick-search-drawer" id="drawer-quick-search" data-ui-display="none">
+			<!-- 加上 顯示設定 確保內部排版不受原 css drawer-content 隱藏的影響 -->
+			<div class="drawer-content" data-ui-display="flex">
 				<!-- 上方標籤顯示區 -->
 				<div id="quick-tag-display" class="quick-tag-container">
 					<span class="quick-placeholder">請點擊下方按鈕或使用鍵盤輸入條件...</span>
@@ -2550,7 +80,7 @@
 					<!-- 數字與運算鍵網格 -->
 					<div class="calc-num-pad">
 						<!-- 第 1 行：左邊兩格留空，[←] 放在 9 的正上方 -->
-						<div class="num-pad-empty" style="grid-column: span 2;"></div>
+						<div class="num-pad-empty u-grid-column-span-2"></div>
 						<button type="button" class="btn-calc btn-backspace" id="btn-quick-backspace">←</button>
 
 						<!-- 第 2 行 -->
@@ -2591,9 +121,9 @@
         <div class="col" id="section-a">
             <h3>
 				<span>卡種選擇</span> 
-				<div style="display: flex; align-items: center; gap: 6px;">
+				<div class="view-section-a-div" data-ui-display="flex">
 					<!-- 💡 改為與 [全取消] 一模一樣的 .btn-icon 格式，並保留 hidden 的 input 供 JS 讀取 -->
-					<input type="checkbox" id="chk-derived-cardtype" style="display: none;">
+					<input type="checkbox" id="chk-derived-cardtype" data-ui-display="none">
 					<button id="btn-derived-cardtype" class="btn-icon">查詢衍生卡種</button>
 					<button id="btn-all-cardtype" class="btn-icon">全取消</button>
 				</div>
@@ -2607,7 +137,7 @@
 			<!-- B. 雙極卡設定 -->
 			<div class="col col-half" id="section-b-group">
 				<h3>雙極卡設定</h3>
-				<div class="checkbox-group" style="margin-bottom: 10px;">
+				<div class="checkbox-group u-margin-bottom-10px">
 					<label><input type="radio" name="twinpect" value="yes"> 限定雙極</label>
 					<label><input type="radio" name="twinpect" value="no"> 排除雙極</label>
 					<label><input type="radio" name="twinpect" value="all" checked> 都找</label>
@@ -2615,7 +145,7 @@
 				
 				<!-- 💡 解決方案：在外層多包一個純粹的 div 專門負責進階隱藏，避開 CSS flex 衝突 -->
 				<div class="advanced-only">
-					<div class="checkbox-group" style="margin-top: 8px;">
+					<div class="checkbox-group u-margin-top-8px">
 						<label><input type="checkbox" name="twin_adv" value="ability" checked> 能力混找</label>
 						<label><input type="checkbox" name="twin_adv" value="top_big" checked> 上面較大</label>
 						<label><input type="checkbox" name="twin_adv" value="same" checked> 上下一樣</label>
@@ -2629,7 +159,7 @@
 				<h3>文明設定</h3>
 				
 				<!-- 允許文明 標籤提示 -->
-				<div style="font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 4px;">
+				<div class="view-tab-filter-div">
 					允許文明
 				</div>
 				<div class="civ-row" id="civ-permit">
@@ -2644,7 +174,7 @@
 				</div>
 
 				<!-- 必須文明 標籤提示 -->
-				<div style="font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 4px; margin-top: 6px;">
+				<div class="view-tab-filter-div-2">
 					必須文明
 				</div>
 				<div class="civ-row" id="civ-require">
@@ -2691,9 +221,9 @@
 			<!-- D/F. 種族設定 -->
 			<div class="col" id="section-race">
 				<h3>
-					<span style="display: flex; align-items: center; gap: 8px;">
+					<span class="view-section-race-span" data-ui-display="flex">
 						種族設定
-						<button type="button" class="btn-icon btn-lang-toggle" style="background:#0284c7; color:white; font-size:11px; padding:3px 8px;">日</button>
+						<button type="button" class="btn-icon btn-lang-toggle view-section-race-btn-icon">日</button>
 					</span>
 					<div id="race-logic-group" class="race-logic-group advanced-only advanced-only-flex">
 						<button type="button" class="btn-race-logic active" data-logic="AND">全部包含</button>
@@ -2702,8 +232,8 @@
 				</h3>
 				<div id="race-container">
 					<div class="flex-input-row">
-						<button type="button" class="btn-icon advanced-only btn-add-race" style="padding: 8px 12px; font-weight: bold;">+</button>
-						<input type="text" class="combo-input race-input" data-combo-type="race" list="datalist-race" placeholder="請選擇或輸入..." style="margin-bottom: 0;" autocomplete="off">
+						<button type="button" class="btn-icon advanced-only btn-add-race view-race-container-btn-icon">+</button>
+						<input type="text" class="combo-input race-input u-margin-bottom-0" data-combo-type="race" list="datalist-race" placeholder="請選擇或輸入..." autocomplete="off">
 					</div>
 				</div>
 			</div>
@@ -2711,24 +241,24 @@
 			<!-- E/G. 能力過濾 -->
 			<div class="col" id="section-ability">
 				<h3>
-					<span style="display: flex; align-items: center; gap: 8px;">
+					<span class="view-section-race-span" data-ui-display="flex">
 						能力過濾
-						<button type="button" class="btn-icon btn-lang-toggle" style="background:#0284c7; color:white; font-size:11px; padding:3px 8px;">日</button>
+						<button type="button" class="btn-icon btn-lang-toggle view-section-race-btn-icon">日</button>
 					</span>
 				</h3>
 				<!-- 自由輸入框 + [使用技巧] 按鈕容器 -->
-				<div class="flex-input-row" style="margin-bottom: 10px;">
-					<input type="text" id="ability-text" placeholder="自由輸入，以空格表示多項條件，不適用自然語" style="margin-bottom: 0;">
-					<button type="button" id="btn-ability-tips" class="btn-icon" style="white-space: nowrap; padding: 8px 12px; background: #0284c7; color: white; border: none;">使用技巧</button>
+				<div class="flex-input-row u-margin-bottom-10px">
+					<input class="u-margin-bottom-0" type="text" id="ability-text" placeholder="自由輸入，以空格表示多項條件，不適用自然語">
+					<button type="button" id="btn-ability-tips" class="btn-icon view-btn-ability-tips">使用技巧</button>
 				</div>
 				<div id="ability-container">
 					<div class="flex-input-row">
-						<button type="button" class="btn-icon btn-add-ability" style="padding: 8px 12px; font-weight: bold;">+</button>
-						<input type="text" class="combo-input ability-input" data-combo-type="ability" list="datalist-ability" placeholder="請選擇或輸入..." style="margin-bottom: 0;" autocomplete="off">
+						<button type="button" class="btn-icon btn-add-ability view-race-container-btn-icon">+</button>
+						<input type="text" class="combo-input ability-input u-margin-bottom-0" data-combo-type="ability" list="datalist-ability" placeholder="請選擇或輸入..." autocomplete="off">
 						<button type="button" class="btn-native-ability" data-native="false">原生能力</button>
 					</div>
 				</div>
-				<div class="advanced-only" style="margin-top: 10px; width: 100%;">
+				<div class="advanced-only view-section-ability-advanced-only">
 					<input type="text" class="combo-input race-input-adv" data-combo-type="race" list="datalist-race" placeholder="能力裡提到的種族..." autocomplete="off">
 				</div>
 			</div>
@@ -2738,9 +268,9 @@
             <!-- F/H. 卡名指定 -->
 			<div class="col">
 				<h3>卡名指定</h3>
-				<div class="flex-input-row" style="margin-bottom: 0;">
-					<input type="text" id="card-name" placeholder="請輸入卡名...綽號也行..." style="margin-bottom: 0;">
-					<button type="button" id="btn-insert-dot" class="btn-icon" style="white-space: nowrap; padding: 8px 12px; background: #0284c7; color: white; border: none;">・</button>
+				<div class="flex-input-row u-margin-bottom-0">
+					<input class="u-margin-bottom-0" type="text" id="card-name" placeholder="請輸入卡名...綽號也行...">
+					<button type="button" id="btn-insert-dot" class="btn-icon view-btn-ability-tips">・</button>
 				</div>
 			</div>
 
@@ -2775,7 +305,7 @@
 				<h3>
 					<span>系列編號與商品名稱</span>
 					<!-- 💡 新增：清除自訂牌組按鈕 (預設隱藏) -->
-					<button type="button" id="btn-clear-custom-decks" class="btn-icon" style="display: none; background: #ef4444; color: white;">清除自訂牌組</button>
+					<button type="button" id="btn-clear-custom-decks" class="btn-icon view-btn-clear-custom-decks" data-ui-display="none">清除自訂牌組</button>
 				</h3>
 				<select id="series-small" disabled>
 					<option value="">資料載入中……</option>
@@ -2902,20 +432,20 @@
                     <input type="text" id="qa-input-id" class="qa-input" placeholder="例: DM26-EX3-1 或 dm26ex31" autocomplete="off">
                     <div class="action-btn-group">
                         <button type="button" class="btn-drawer-action" id="qa-btn-id-view">👀 看效果</button>
-                        <button type="button" class="btn-drawer-action" id="qa-btn-id-share" style="background:#16a34a;">🔗 拷貝連結</button>
+                        <button type="button" class="btn-drawer-action u-background-16a34a" id="qa-btn-id-share">🔗 拷貝連結</button>
                     </div>
                 </div>
 
                 <!-- 1-2 -->
                 <button type="button" class="qa-btn-lv2" data-target="qa-sub-1-2">🔤 我有卡名</button>
                 <div class="qa-content-lv2" id="qa-sub-1-2">
-                    <div class="flex-input-row" style="margin-bottom: 0;">
-                        <input type="text" id="qa-input-name" class="qa-input" placeholder="請輸入精確卡名或關鍵字" autocomplete="off" style="margin-bottom: 0;">
-                        <button type="button" id="qa-btn-insert-dot" class="btn-icon" style="white-space: nowrap; padding: 12px 14px; background: #0284c7; color: white; border: none; border-radius: 6px;">・</button>
+                    <div class="flex-input-row u-margin-bottom-0">
+                        <input type="text" id="qa-input-name" class="qa-input u-margin-bottom-0" placeholder="請輸入精確卡名或關鍵字" autocomplete="off">
+                        <button type="button" id="qa-btn-insert-dot" class="btn-icon view-qa-btn-insert-dot">・</button>
                     </div>
                     <div class="action-btn-group">
                         <button type="button" class="btn-drawer-action" id="qa-btn-name-view">👀 看效果</button>
-                        <button type="button" class="btn-drawer-action" id="qa-btn-name-share" style="background:#16a34a;">🔗 拷貝連結</button>
+                        <button type="button" class="btn-drawer-action u-background-16a34a" id="qa-btn-name-share">🔗 拷貝連結</button>
                     </div>
                 </div>
 
@@ -2929,25 +459,25 @@
 				<button type="button" class="qa-btn-lv2" data-target="qa-sub-2-1">📦 指定商品 / 預組代號</button>
 				<div class="qa-content-lv2" id="qa-sub-2-1">
 					<!-- 💡 修改：加入 list 屬性並綁定下方 datalist -->
-					<input type="text" id="qa-input-set" list="qa-set-datalist" class="qa-input" placeholder="請輸入或選擇商品代碼/名稱..." style="margin-bottom: 5px;" autocomplete="off">
+					<input type="text" id="qa-input-set" list="qa-set-datalist" class="qa-input u-margin-bottom-5px" placeholder="請輸入或選擇商品代碼/名稱..." autocomplete="off">
 					<datalist id="qa-set-datalist"></datalist>
 					
 					<!-- 最新商品快捷按鈕容器 -->
-					<div id="qa-latest-sets-container" style="display: flex; gap: 6px; margin-bottom: 8px;"></div>
+					<div class="view-qa-latest-sets-container" id="qa-latest-sets-container" data-ui-display="flex"></div>
 
 					<div class="action-btn-group">
-						<button type="button" class="btn-drawer-action" id="qa-btn-set-view" style="background:#ea580c;">📦 開箱看卡表</button>
-						<button type="button" class="btn-drawer-action" id="qa-btn-set-share" style="background:#16a34a;">🔗 拷貝商品連結</button>
+						<button type="button" class="btn-drawer-action u-background-ea580c" id="qa-btn-set-view">📦 開箱看卡表</button>
+						<button type="button" class="btn-drawer-action u-background-16a34a" id="qa-btn-set-share">🔗 拷貝商品連結</button>
 					</div>
 				</div>
 
                 <!-- 2-2 -->
                 <button type="button" class="qa-btn-lv2" data-target="qa-sub-2-2">📋 我有卡表文字 (貼上與轉換)</button>
                 <div class="qa-content-lv2" id="qa-sub-2-2">
-                    <textarea id="qa-input-deck-text" class="qa-input" rows="4" placeholder="請貼上卡表 (例如: 4* 霞み妖精ジャスミン)" style="margin-bottom: 5px; resize: vertical;"></textarea>
+                    <textarea id="qa-input-deck-text" class="qa-input view-qa-input-deck-text" rows="4" placeholder="請貼上卡表 (例如: 4* 霞み妖精ジャスミン)"></textarea>
                     <div class="action-btn-group">
-                        <button type="button" class="btn-drawer-action" id="qa-btn-deck-import" style="background:#7c3aed;">📥 匯入建檔</button>
-                        <button type="button" class="btn-drawer-action" id="qa-btn-deck-en" style="background:#0d9488;">🔤 直接轉英文</button>
+                        <button type="button" class="btn-drawer-action u-background-7c3aed" id="qa-btn-deck-import">📥 匯入建檔</button>
+                        <button type="button" class="btn-drawer-action u-background-0d9488" id="qa-btn-deck-en">🔤 直接轉英文</button>
                     </div>
                 </div>
 
@@ -2957,15 +487,15 @@
             <button type="button" class="qa-btn-lv1" data-target="qa-sec-3">🎯 3. 我要找牌 (構築過濾)</button>
             <div class="qa-content-lv1" id="qa-sec-3">
                 <!-- 找牌比較直覺，不需要 Lv2，直接給三個大按鈕 -->
-                <button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-filter-quick" style="margin-bottom:10px; background:#eab308; color:#000;">
+                <button type="button" class="btn-drawer-action qa-full-btn view-qa-btn-filter-quick" id="qa-btn-filter-quick">
                     ⚡ 快速尋找 (文明/費用/攻擊力)
                 </button>
                 
-                <button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-filter-std" style="margin-bottom:10px; background:#0284c7;">
+                <button type="button" class="btn-drawer-action qa-full-btn view-qa-btn-filter-std" id="qa-btn-filter-std">
                     🔍 標準搜尋 (關鍵字/種族/系列)
                 </button>
                 
-                <button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-filter-adv" style="background:#475569;">
+                <button type="button" class="btn-drawer-action qa-full-btn u-background-475569" id="qa-btn-filter-adv">
                     ⚙️ 精密進階過濾 (複合邏輯篩選)
                 </button>
             </div>
@@ -2973,7 +503,7 @@
  			<!-- ================= 第四大類 ================= -->
 			<button type="button" class="qa-btn-lv1" data-target="qa-sec-4">💬 4. 我要留言給作者</button>
 			<div class="qa-content-lv1" id="qa-sec-4">
-				<button type="button" class="btn-drawer-action qa-full-btn" id="qa-btn-open-author-msg" style="background:#0d9488; color:#fff;">
+				<button type="button" class="btn-drawer-action qa-full-btn view-qa-btn-open-author-msg" id="qa-btn-open-author-msg">
 					✍️ 給作者留言 / 意見回饋
 				</button>
 			</div>
@@ -2981,27 +511,27 @@
 			<button type="button" class="qa-btn-lv1" data-target="qa-sec-5">🛠️ 5. 我要使用其他工具</button>
 			<div class="qa-content-lv1" id="qa-sec-5">
 				<!-- 1. 圓餅圖編輯器 -->
-				<a href="./fabric.do" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn" style="text-decoration:none; box-sizing:border-box; margin-bottom:10px; background:#4f46e5; color:#fff;">
+				<a href="./fabric.do" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn view-qa-sec-5-btn-drawer-action">
 					📊 圓餅圖編輯器
 				</a>
 
 				<!-- 2. 劇情Script編輯與撥放器 -->
-				<a href="https://ether1013.github.io/DuelMastersCardSearchTaiwan/DuelMastersScript.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn" style="text-decoration:none; box-sizing:border-box; margin-bottom:10px; background:#0284c7; color:#fff;">
+				<a href="https://ether1013.github.io/DuelMastersCardSearchTaiwan/DuelMastersScript.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn view-qa-sec-5-btn-drawer-action-2">
 					🎬 劇情Script編輯與撥放器
 				</a>
 
 				<!-- 3. 多邊形數值產生器 -->
-				<a href="https://ether1013.github.io/DuelMastersCardSearchTaiwan/OtherHTMLFunction/AttributesHEX.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn" style="text-decoration:none; box-sizing:border-box; margin-bottom:10px; background:#0d9488; color:#fff;">
+				<a href="https://ether1013.github.io/DuelMastersCardSearchTaiwan/OtherHTMLFunction/AttributesHEX.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn view-qa-sec-5-btn-drawer-action-3">
 					🔷 多邊形數值產生器
 				</a>
 
 				<!-- 4. 年度總結產生器 -->
-				<a href="https://ether1013.github.io/DuelMastersCardSearchTaiwan/OtherHTMLFunction/DMRecord.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn" style="text-decoration:none; box-sizing:border-box; margin-bottom:10px; background:#ea580c; color:#fff;">
+				<a href="https://ether1013.github.io/DuelMastersCardSearchTaiwan/OtherHTMLFunction/DMRecord.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn view-qa-sec-5-btn-drawer-action-4">
 					📅 年度總結產生器
 				</a>
 
 				<!-- 5. 排行編輯器 (新增) -->
-				<a href="./rank.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn" style="text-decoration:none; box-sizing:border-box; background:#d32f2f; color:#fff;">
+				<a href="./rank.html" target="_blank" rel="noopener noreferrer" class="btn-drawer-action qa-full-btn view-qa-sec-5-btn-drawer-action-5">
 					🏆 排行編輯器
 				</a>
 			</div>
@@ -3026,7 +556,7 @@
 		<!-- 過濾總覽及歷史開關 -->
 		<div id="footer-summary-shell" class="footer-summary-shell">
 			<div class="footer-summary" id="footer-summary">
-				<p style="margin:0; color:#aaa;">
+				<p class="view-footer-summary-p">
 					(目前過濾條件與預設值相同)
 				</p>
 			</div>
@@ -3051,11 +581,11 @@
 
 			<button id="btn-search" class="btn-icon">開始查詢</button>
 
-			<div style="display:flex; align-items:center; gap:10px;">
+			<div class="view-html-div" data-ui-display="flex">
 				<div class="expand-icon" id="toggle-summary">▲</div>
 
-				<div id="diary-btn"
-					 style="cursor:pointer; font-size:20px; user-select:none;"
+				<div class="view-diary-btn" id="diary-btn"
+					
 					 title="條款與更新日誌">📖</div>
 			</div>
 		</div>
@@ -3094,21 +624,21 @@
 
     <!-- 購物車 Modal -->
     <div class="modal-overlay" id="cart-modal">
-		<div class="modal-card" style="max-width: 800px; max-height: 90vh;">
+		<div class="modal-card view-cart-modal-modal-card">
 			<!-- 1. 藍色 Header -->
-			<div class="modal-header" style="background: #0284c7; color: white;">
+			<div class="modal-header view-cart-modal-modal-header">
 				<div class="modal-title">🛒 購物車式組牌器</div>
 				<div class="modal-close" id="cart-modal-close">&times;</div>
 			</div>
 
 			<!-- 2. 💡 固定控制列：從 modal-body 移到這裡，緊貼藍色 Header，完全無縫！ -->
-			<div style="background: #ffffff; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding: 12px 16px; flex-shrink: 0;">
-				<div style="font-size: 16px; font-weight: bold;">總張數：<span id="cart-total-count" style="color: #d32f2f; font-size: 20px;">0</span> 張</div>
-				<button id="btn-clear-cart" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">🗑️ 清空全部</button>
+			<div class="view-cart-modal-div" data-ui-display="flex">
+				<div class="view-cart-modal-div-2">總張數：<span class="view-cart-total-count" id="cart-total-count">0</span> 張</div>
+				<button class="view-btn-clear-cart" id="btn-clear-cart">🗑️ 清空全部</button>
 			</div>
 
 			<!-- 3. 滾動區域 (modal-body) -->
-			<div class="modal-body" style="padding: 16px; overflow-y: auto;">
+			<div class="modal-body view-cart-modal-modal-body">
 				<div id="cart-list-container" class="cart-list-container">
 					<!-- 動態縮排陳列於此 -->
 				</div>
@@ -3117,8 +647,8 @@
 			</div>
 
 			<!-- 4. 綠色按鈕 Footer -->
-			<div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; flex-shrink: 0;">
-				<button id="btn-submit-cart" style="width: 100%; background: #16a34a; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer;">✅ 確認送出並建立個人牌組(不會跑去商店)</button>
+			<div class="view-cart-modal-div-3">
+				<button class="view-btn-submit-cart" id="btn-submit-cart">✅ 確認送出並建立個人牌組(不會跑去商店)</button>
 			</div>
 		</div>
 	</div>
@@ -3131,40 +661,40 @@
 	
 	<!-- 隱私聲明、更新日誌與作者資料 Modal -->
 	<div class="modal-overlay" id="diary-modal">
-		<div class="modal-card" style="max-width: 520px;">
+		<div class="modal-card u-max-width-520px">
 			<div class="modal-header">
 				<div class="modal-title">條款、日誌與作者</div>
 				<div class="modal-close" id="diary-modal-close">&times;</div>
 			</div>
 			<!-- 切換頁籤（三個頁籤） -->
-			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-privacy" style="flex: 1; padding: 10px 4px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer; font-size: 13px;">隱私聲明與資料來源</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-changelog" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">更新日誌</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-recent" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">最近新增的卡</button>
-				<button type="button" class="diary-tab-btn" id="btn-diary-tab-author" style="flex: 1; padding: 10px 4px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer; font-size: 13px;">作者資料</button>
+			<div class="view-diary-modal-div" data-ui-display="flex">
+				<button type="button" class="diary-tab-btn view-btn-diary-tab-privacy" id="btn-diary-tab-privacy">隱私聲明與資料來源</button>
+				<button type="button" class="diary-tab-btn view-btn-diary-tab-changelog" id="btn-diary-tab-changelog">更新日誌</button>
+				<button type="button" class="diary-tab-btn view-btn-diary-tab-changelog" id="btn-diary-tab-recent">最近新增的卡</button>
+				<button type="button" class="diary-tab-btn view-btn-diary-tab-changelog" id="btn-diary-tab-author">作者資料</button>
 			</div>
-			<div class="modal-body" style="padding: 16px; max-height: 70vh; overflow-y: auto;">
+			<div class="modal-body view-diary-modal-modal-body">
 				<!-- 視圖 1：隱私權聲明與資料來源 (優化升級版) -->
-				<div id="diary-view-privacy" style="line-height: 1.6; color: #334155; font-size: 0.92rem;">
+				<div class="view-diary-view-privacy" id="diary-view-privacy">
 					
 					<!-- 頂部引言卡片 -->
-					<div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px 14px; border-radius: 6px; margin-bottom: 14px;">
-						<div style="font-weight: bold; color: #0f172a; font-size: 1rem; margin-bottom: 4px;">
+					<div class="view-diary-view-privacy-div">
+						<div class="view-diary-view-privacy-div-2">
 							🛡️ 隱私權聲明與服務條款 (Privacy & Terms)
 						</div>
-						<div style="color: #64748b; font-size: 0.85rem; line-height: 1.5;">
+						<div class="view-diary-view-privacy-div-3">
 							感謝您使用「DM 卡片搜尋工具」。本站致力於保護使用者隱私，所有功能均以去識別化方式運作，特此說明資料收集、持久化留存與第三方服務規範。
 						</div>
 					</div>
 
-					<div style="display: flex; flex-direction: column; gap: 12px;">
+					<div class="view-diary-view-privacy-div-4" data-ui-display="flex">
 
 						<!-- 區塊 1：操作日誌與持久化統計 -->
-						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-								<span style="color: #0284c7;">📊</span> 一、 資料收集與持久化統計
+						<div class="view-diary-view-privacy-div-5">
+							<div class="view-diary-view-privacy-div-6" data-ui-display="flex">
+								<span class="u-color-0284c7">📊</span> 一、 資料收集與持久化統計
 							</div>
-							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+							<ul class="view-diary-view-privacy-ul" data-ui-display="flex">
 								<li><b>去識別化統計：</b>本站僅會記錄去中心化的匿名操作事件（如：搜尋條件、功能點擊、國家/地區分佈），用於改善檢索效能與熱門趨勢分析。</li>
 								<li><b>伺服器日誌留存：</b>為確保服務穩定性與跨日趨勢銜接，操作統計會進行<b>近 3 天（約 48 小時）的定期安全備份</b>，伺服器重啟時亦能平滑載入，歷史舊檔逾期自動歸檔。</li>
 								<li><b>絕不收集個資：</b>本站絕不會記錄任何可辨識個人身分的敏感資訊（如姓名、精確 GPS、密碼或非公開私人資料）。</li>
@@ -3172,70 +702,70 @@
 						</div>
 
 						<!-- 區塊 2：本地快取技術 -->
-						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-								<span style="color: #10b981;">⚡</span> 二、 瀏覽器本地快取技術 (Cache)
+						<div class="view-diary-view-privacy-div-5">
+							<div class="view-diary-view-privacy-div-6" data-ui-display="flex">
+								<span class="u-color-10b981">⚡</span> 二、 瀏覽器本地快取技術 (Cache)
 							</div>
-							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+							<ul class="view-diary-view-privacy-ul" data-ui-display="flex">
 								<li>為達成<b>毫秒級秒開檢索</b>並節省您的手機網路頻寬，卡牌資料庫、種族清單與基礎字典會暫存於您的瀏覽器本地（LocalStorage / IndexedDB）。</li>
 								<li>當官方資料庫更新時系統會自動比對 ETag 刷新，您亦可隨時透過瀏覽器設定手動清除網站暫存。</li>
 							</ul>
 						</div>
 
 						<!-- 區塊 3：第三方資料來源與外部連結 -->
-						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-								<span style="color: #f59e0b;">🌐</span> 三、 第三方資料來源與外鏈責任
+						<div class="view-diary-view-privacy-div-5">
+							<div class="view-diary-view-privacy-div-6" data-ui-display="flex">
+								<span class="u-color-f59e0b">🌐</span> 三、 第三方資料來源與外鏈責任
 							</div>
-							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+							<ul class="view-diary-view-privacy-ul" data-ui-display="flex">
 								<li><b>外部情報檢索：</b>本站整合了 <strong>Duel Masters Fandom Wiki</strong>、TAKARA TOMY 官方資料庫、Cardrush、遊々亭、露天拍賣等公開資源連結。</li>
 								<li><b>第三方規範適用：</b>當您點擊並造訪上述第三方網站時，將適用該網站自身的服務條款與 Cookie 政策，本站不對第三方平台之內容與行為負擔連帶責任。</li>
 							</ul>
 						</div>
 
 						<!-- 區塊 4：智慧財產權與免責聲明 -->
-						<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-							<div style="font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-								<span style="color: #6366f1;">⚖️</span> 四、 智慧財產權與非官方免責
+						<div class="view-diary-view-privacy-div-5">
+							<div class="view-diary-view-privacy-div-6" data-ui-display="flex">
+								<span class="u-color-6366f1">⚖️</span> 四、 智慧財產權與非官方免責
 							</div>
-							<ul style="margin: 0; padding-left: 18px; color: #475569; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;">
+							<ul class="view-diary-view-privacy-ul" data-ui-display="flex">
 								<li>本工具為<b>非營利性質之社群愛好者自製檢索工具</b>，與 TAKARA TOMY、Wizards of the Coast 或 Fandom (Wikia, Inc.) 無官方附屬或商業合作關係。</li>
-								<li>卡牌名稱、卡面圖像與數值著作權均屬原版權方所有；英文對照資料引自 <a href="https://duelmasters.fandom.com/" target="_blank" rel="noopener noreferrer" style="color: #0284c7; text-decoration: underline;">Duel Masters Fandom Wiki</a>。</li>
+								<li>卡牌名稱、卡面圖像與數值著作權均屬原版權方所有；英文對照資料引自 <a class="view-diary-view-privacy-a" href="https://duelmasters.fandom.com/" target="_blank" rel="noopener noreferrer">Duel Masters Fandom Wiki</a>。</li>
 							</ul>
 						</div>
 
 					</div>
 
 					<!-- 底部更新時間標註 -->
-					<div style="margin-top: 14px; font-size: 0.8rem; color: #94a3b8; text-align: right; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+					<div class="view-diary-view-privacy-div-7">
 						最後修訂日期：2026 年 8 月
 					</div>
 
 				</div>
 
 				<!-- 視圖 2：更新日誌 -->
-				<div id="diary-view-changelog" style="display: none;">
-					<div id="diary-modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+				<div id="diary-view-changelog" data-ui-display="none">
+					<div class="view-diary-modal-body" id="diary-modal-body" data-ui-display="flex">
 						<!-- 日誌內容由 JS 動態渲染 -->
 					</div>
 				</div>
 				
 				<!-- 💡 新增 視圖 3：最近新增的卡 -->
-				<div id="diary-view-recent" style="display: none;">
-					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">最近零星新增卡牌(最新10張)</h4>
-					<div id="recent-cards-list-container" style="display: flex; flex-direction: column; gap: 8px;">
+				<div id="diary-view-recent" data-ui-display="none">
+					<h4 class="view-diary-view-recent-h4">最近零星新增卡牌(最新10張)</h4>
+					<div class="view-recent-cards-list-container" id="recent-cards-list-container" data-ui-display="flex">
 						<!-- 由 JS 動態渲染 -->
 					</div>
 				</div>
 
 				<!-- 視圖 3：作者資料 (新增) -->
-				<div id="diary-view-author" style="display: none; line-height: 1.6; color: #334155;">
-					<h4 style="margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">作者與開發資訊</h4>
-					<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 14px; display: flex; flex-direction: column; gap: 10px;">
+				<div class="view-diary-view-author" id="diary-view-author" data-ui-display="none">
+					<h4 class="view-diary-view-recent-h4">作者與開發資訊</h4>
+					<div class="view-diary-view-author-div" data-ui-display="flex">
 						<div><b>作者：</b>Ether</div>
 						<div><b>TCG經歷：</b>PTCG(1996)、ZBCG、DM(2002)</div>
 						<div><b>程式設計：</b>Gemini Pro</div>
-						<div><b>電子信箱：</b><a href="mailto:tairandodx@msn.com" style="color: #0284c7; text-decoration: none; font-weight: bold;">tairandodx@msn.com</a></div>
+						<div><b>電子信箱：</b><a class="view-diary-view-author-a" href="mailto:tairandodx@msn.com">tairandodx@msn.com</a></div>
 					</div>
 				</div>
 			</div>
@@ -3244,23 +774,23 @@
 	
 	<!-- 系統公告 / 通用確認對話框 Modal -->
 	<div class="modal-overlay" id="system-notice-modal">
-		<div class="modal-card" style="max-width: 450px;">
-			<div class="modal-header" style="background: #0284c7; color: white;">
+		<div class="modal-card u-max-width-450px">
+			<div class="modal-header view-cart-modal-modal-header">
 				<div class="modal-title" id="system-notice-title">📢 系統提示</div>
 			</div>
-			<div class="modal-body" style="padding: 16px; gap: 12px;">
+			<div class="modal-body view-system-notice-modal-modal-body">
 				<!-- 公告內容，由 JS 動態填入 -->
-				<div id="system-notice-content" style="font-size: 14px; line-height: 1.6; color: #333;"></div>
+				<div class="view-system-notice-content" id="system-notice-content"></div>
 				
 				<!-- 💡 新增：通用輸入框 (預設隱藏) -->
-				<input type="text" id="system-notice-input" class="qa-input" style="display: none; width: 100%; box-sizing: border-box; margin-top: 5px;" autocomplete="off">
+				<input type="text" id="system-notice-input" class="qa-input view-system-notice-input" autocomplete="off" data-ui-display="none">
 
 				<!-- 雙按鈕容器 (供 confirm / prompt 對話框使用) -->
-				<div id="system-notice-actions" style="display: flex; gap: 8px; margin-top: 10px;">
-					<button type="button" id="btn-notice-cancel" style="flex: 1; padding: 10px; background: #94a3b8; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; display: none;">
+				<div class="view-system-notice-actions" id="system-notice-actions" data-ui-display="flex">
+					<button class="view-btn-notice-cancel" type="button" id="btn-notice-cancel" data-ui-display="none">
 						取消
 					</button>
-					<button type="button" id="btn-notice-understand" style="flex: 1; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">
+					<button class="view-btn-notice-understand" type="button" id="btn-notice-understand">
 						我知道了
 					</button>
 				</div>
@@ -3269,7 +799,7 @@
 	</div>
 	
 	<!-- 卡號搜尋彈窗 Modal -->
-	<div id="id-search-modal" class="id-search-modal-backdrop" style="display: none;">
+	<div id="id-search-modal" class="id-search-modal-backdrop" data-ui-display="none">
 		<div class="id-search-modal-content">
 			<div class="id-search-modal-header">
 				<h3>🔍 輸入ID找卡</h3>
@@ -3279,7 +809,7 @@
 				<!-- 💡 調整：口語化強調不分大小寫與自動忽略符號 -->
 				<p class="id-search-desc">請輸入卡號<br>無需區分大小寫，符號可省略，如：打 <b>dm35</b> 即可找 <b>DM3-5</b></p>
 				<input type="text" id="input-card-id" placeholder="例：DM3-5、dm35、kdm351..." autocomplete="off">
-				<div id="id-search-error" class="id-search-error-msg" style="display: none;"></div>
+				<div id="id-search-error" class="id-search-error-msg" data-ui-display="none"></div>
 			</div>
 			<div class="id-search-modal-footer">
 				<button type="button" id="btn-id-search-submit" class="btn-submit-search">搜尋</button>
@@ -3290,65 +820,65 @@
 	
 	<!-- 卡牌翻譯錯誤回報 Modal 彈窗 -->
 	<div class="modal-overlay" id="report-modal">
-		<div class="modal-card" style="max-width: 440px;">
+		<div class="modal-card u-max-width-440px">
 			<div class="modal-header">
 				<div class="modal-title">🚨 回報卡牌翻譯錯誤</div>
 				<div class="modal-close" id="report-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" style="gap: 12px; padding: 16px;">
+			<div class="modal-body view-report-modal-modal-body">
 				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">卡牌名稱：</label>
-					<input type="text" id="report-card-name" readonly style="background: #f1f5f9; cursor: not-allowed; color: #475569; font-weight: bold;">
+					<label class="view-report-modal-label" data-ui-display="block">卡牌名稱：</label>
+					<input class="view-report-card-name" type="text" id="report-card-name" readonly>
 				</div>
 				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">商品卡號 / ID：</label>
-					<input type="text" id="report-card-id" readonly style="background: #f1f5f9; cursor: not-allowed; color: #0284c7; font-weight: bold;" placeholder="(無對應卡號)">
+					<label class="view-report-modal-label" data-ui-display="block">商品卡號 / ID：</label>
+					<input class="view-report-card-id" type="text" id="report-card-id" readonly placeholder="(無對應卡號)">
 				</div>
 				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">回報者名字：</label>
+					<label class="view-report-modal-label" data-ui-display="block">回報者名字：</label>
 					<input type="text" id="report-author-name" value="熱情的決鬥者" placeholder="請輸入名字">
 				</div>
 
 				<!-- 💡 新增：Email 欄位 (非必填) -->
 				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (選填)：</label>
-					<input type="email" id="report-author-email" class="qa-input" placeholder="如需回報進度請留下您的email" style="font-size: 16px;">
+					<label class="view-report-modal-label" data-ui-display="block">Email (選填)：</label>
+					<input type="email" id="report-author-email" class="qa-input u-font-size-16px" placeholder="如需回報進度請留下您的email">
 					<!-- 💡 新增提示文字 -->
-					<small style="font-size: 11px; color: #64748b; display: block; margin-top: 2px;">Email僅供回覆用，絕不作為其他用途使用</small>
+					<small class="view-report-modal-small" data-ui-display="block">Email僅供回覆用，絕不作為其他用途使用</small>
 				</div>
 
 				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">錯誤內容簡答 (選填)：</label>
-					<textarea id="report-desc" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-size: 16px;" placeholder="請簡述錯誤之處，不講也可以，但我可能會找半天…"></textarea>
+					<label class="view-report-modal-label" data-ui-display="block">錯誤內容簡答 (選填)：</label>
+					<textarea class="view-report-desc" id="report-desc" rows="4" placeholder="請簡述錯誤之處，不講也可以，但我可能會找半天…"></textarea>
 				</div>
-				<button type="button" id="btn-submit-report" style="width: 100%; padding: 10px; background: #d32f2f; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px;">送出回報</button>
+				<button class="view-btn-submit-report" type="button" id="btn-submit-report">送出回報</button>
 			</div>
 		</div>
 	</div>
 	
 	<!-- 申請暱稱 Modal 彈窗 -->
 	<div class="modal-overlay" id="nickname-modal">
-		<div class="modal-card" style="max-width: 440px;">
-			<div class="modal-header" style="background: #0d9488; color: white;">
+		<div class="modal-card u-max-width-440px">
+			<div class="modal-header view-nickname-modal-modal-header">
 				<div class="modal-title">🏷️ 申請卡牌暱稱</div>
 				<div class="modal-close" id="nickname-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" style="gap: 12px; padding: 16px;">
+			<div class="modal-body view-report-modal-modal-body">
 				<div>
-					<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">目標卡牌：</label>
-					<input type="text" id="nickname-target-card" readonly style="background: #f1f5f9; cursor: not-allowed; color: #475569; font-weight: bold; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+					<label class="view-report-modal-label" data-ui-display="block">目標卡牌：</label>
+					<input class="view-nickname-target-card" type="text" id="nickname-target-card" readonly>
 				</div>
 				
-				<div id="nickname-input-list" style="display: flex; flex-direction: column; gap: 8px;">
+				<div class="view-recent-cards-list-container" id="nickname-input-list" data-ui-display="flex">
 					<!-- 動態輸入框生成區 -->
 				</div>
-				<button type="button" id="btn-add-nickname" style="width: 100%; padding: 8px; background: #f0fdfa; color: #0f766e; border: 1px dashed #0d9488; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 5px;">+ 新增一個暱稱</button>
+				<button class="view-btn-add-nickname" type="button" id="btn-add-nickname">+ 新增一個暱稱</button>
 				
-				<div id="nickname-error-msg" style="color: #ef4444; font-size: 13px; font-weight: bold; display: none; margin-top: 5px;"></div>
+				<div class="view-nickname-error-msg" id="nickname-error-msg" data-ui-display="none"></div>
 
-				<div style="display: flex; gap: 8px; margin-top: 10px;">
-					<button type="button" id="btn-check-nickname" style="flex: 1; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">🔍 檢查</button>
-					<button type="button" id="btn-submit-nickname" disabled style="flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; opacity: 0.5;">✅ 送出申請</button>
+				<div class="view-system-notice-actions" data-ui-display="flex">
+					<button class="view-btn-check-nickname" type="button" id="btn-check-nickname">🔍 檢查</button>
+					<button class="view-btn-submit-nickname" type="button" id="btn-submit-nickname" disabled>✅ 送出申請</button>
 				</div>
 			</div>
 		</div>
@@ -3356,34 +886,34 @@
 	
 	<!-- 手動匯入牌組 Modal -->
 	<div class="modal-overlay" id="deck-import-modal">
-		<div class="modal-card" style="max-width: 600px;">
+		<div class="modal-card u-max-width-600px">
 			<div class="modal-header">
 				<div class="modal-title">📥 手動匯入自訂牌組</div>
 				<div class="modal-close" id="deck-import-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" style="padding: 16px; gap: 12px;">
+			<div class="modal-body view-system-notice-modal-modal-body">
 				<!-- 階段一：文字輸入框 -->
 				<div id="deck-input-step">
 <!--
-					<button type="button" id="btn-deckmaker-import" style="width:100%; margin-bottom:10px; padding:10px; background:#7c3aed; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">📄 直接上傳 DeckMaker 卡表 PDF</button>
+					<button type="button" id="btn-deckmaker-import" 顯示設定>📄 直接上傳 DeckMaker 卡表 PDF</button>
 					<input type="file" id="input-deckmaker-pdf" accept="application/pdf,.pdf" hidden>
-					<div id="deckmaker-ocr-status" role="status" style="display:none; margin-bottom:10px; padding:8px; border-radius:6px; background:#f5f3ff; color:#5b21b6; font-size:12px;"></div>
+					<div id="deckmaker-ocr-status" role="status" 顯示設定></div>
 -->
-					<p style="font-size: 13px; color: #64748b; margin-top: 0;">
+					<p class="view-deck-input-step-p">
 						請在下方貼上卡牌列表，支援多種輸入方式（如：<code>A</code>, <code>3*B</code>, <code>4 C</code>, <code>E,E,F</code>）
 					</p>
-					<textarea id="deck-textarea" rows="8" style="width:100%; font-size:14px; padding:8px; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:6px;" placeholder="例如：&#10;4*フェアリー・ライフ&#10;2x 斬隠蒼頭龍バイケン&#10;ボルメテウス・サファイア・ドラゴン"></textarea>
-					<button type="button" id="btn-parse-deck" style="width:100%; margin-top:10px; padding:10px; background:#0284c7; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">🔍 開始解析與模糊比對</button>
+					<textarea class="view-deck-textarea" id="deck-textarea" rows="8" placeholder="例如：&#10;4*フェアリー・ライフ&#10;2x 斬隠蒼頭龍バイケン&#10;ボルメテウス・サファイア・ドラゴン"></textarea>
+					<button class="view-btn-parse-deck" type="button" id="btn-parse-deck">🔍 開始解析與模糊比對</button>
 				</div>
 
 				<!-- 階段二：比對結果與二次 UI 校正清單 -->
-				<div id="deck-verify-step" style="display:none;">
-					<div id="deck-verify-summary" style="font-size:14px; font-weight:bold; margin-bottom:8px; color:#334155;"></div>
-					<div id="deck-verify-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 8px;"></div>
+				<div id="deck-verify-step" data-ui-display="none">
+					<div class="view-deck-verify-summary" id="deck-verify-summary"></div>
+					<div class="view-deck-verify-list" id="deck-verify-list" data-ui-display="flex"></div>
 					
-					<div style="display:flex; gap:8px; margin-top:12px;">
-						<button type="button" id="btn-re-edit-deck" style="flex:1; padding:8px; background:#94a3b8; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">← 返回修改</button>
-						<button type="button" id="btn-confirm-deck-import" disabled style="flex:2; padding:8px; background:#16a34a; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; opacity:0.5;">✅ 確認匯入牌組 (需全數通過)</button>
+					<div class="view-deck-verify-step-div" data-ui-display="flex">
+						<button class="view-btn-re-edit-deck" type="button" id="btn-re-edit-deck">← 返回修改</button>
+						<button class="view-btn-confirm-deck-import" type="button" id="btn-confirm-deck-import" disabled>✅ 確認匯入牌組 (需全數通過)</button>
 					</div>
 				</div>
 			</div>
@@ -3392,52 +922,52 @@
 
 	<!-- 新增：呈現英文卡表結果的 Modal -->
 	<div class="modal-overlay" id="export-en-deck-modal">
-		<div class="modal-card" style="max-width: 480px;">
+		<div class="modal-card u-max-width-480px">
 			<div class="modal-header">
 				<div class="modal-title">🔤 英文牌組列表</div>
 				<div class="modal-close" id="export-en-deck-modal-close">&times;</div>
 			</div>
-			<div class="modal-body" style="padding: 16px; gap: 12px;">
-				<textarea id="en-deck-textarea" rows="12" readonly style="width:100%; font-family: monospace; font-size:14px; padding:10px; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:6px; background:#f8fafc; resize:vertical;"></textarea>
-				<button type="button" id="btn-copy-en-deck" style="width:100%; padding:10px; background:#16a34a; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:15px;">📋 一鍵複製全卡表</button>
+			<div class="modal-body view-system-notice-modal-modal-body">
+				<textarea class="view-en-deck-textarea" id="en-deck-textarea" rows="12" readonly></textarea>
+				<button class="view-btn-copy-en-deck" type="button" id="btn-copy-en-deck">📋 一鍵複製全卡表</button>
 			</div>
 		</div>
 	</div>
 	
 	<!-- 台灣大賽冠軍卡片排行 Modal -->
 	<div class="modal-overlay" id="championship-report-modal">
-		<div class="modal-card" style="max-width: 720px; max-height: 85vh;">
+		<div class="modal-card view-championship-report-modal-modal-card">
 			<div class="modal-header">
 				<div class="modal-title">📊 台灣大賽冠軍使用卡排行</div>
 				<div class="modal-close" id="report-modal-close-btn">&times;</div>
 			</div>
 			<!-- 報表切換頁籤 -->
-			<div style="display: flex; background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-				<button type="button" class="report-tab-btn active" id="btn-report-tab-deck" style="flex: 1; padding: 10px; border: none; background: #0284c7; color: white; font-weight: bold; cursor: pointer;">牌組別 (Top 20+)</button>
-				<button type="button" class="report-tab-btn" id="btn-report-tab-user" style="flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; cursor: pointer;">使用者別 (Top 15+)</button>
+			<div class="view-diary-modal-div" data-ui-display="flex">
+				<button type="button" class="report-tab-btn active view-btn-report-tab-deck" id="btn-report-tab-deck">牌組別 (Top 20+)</button>
+				<button type="button" class="report-tab-btn view-btn-report-tab-user" id="btn-report-tab-user">使用者別 (Top 15+)</button>
 			</div>
-			<div class="modal-body" style="padding: 15px; overflow-y: auto;">
+			<div class="modal-body view-championship-report-modal-modal-body">
 				<!-- 報表 1 內容 -->
 				<div id="report-view-deck" class="report-view-content">
 					<table class="report-table">
 						<thead>
 							<tr>
-								<th style="width: 70px;">名次</th>
+								<th class="u-width-70px">名次</th>
 								<th>卡名</th>
-								<th style="width: 120px;">使用牌組數量</th>
+								<th class="u-width-120px">使用牌組數量</th>
 							</tr>
 						</thead>
 						<tbody id="report-tbody-deck"></tbody>
 					</table>
 				</div>
 				<!-- 報表 2 內容 -->
-				<div id="report-view-user" class="report-view-content" style="display: none;">
+				<div id="report-view-user" class="report-view-content" data-ui-display="none">
 					<table class="report-table">
 						<thead>
 							<tr>
-								<th style="width: 70px;">名次</th>
-								<th style="width: 220px;">卡名</th>
-								<th style="width: 90px;">人數</th>
+								<th class="u-width-70px">名次</th>
+								<th class="u-width-220px">卡名</th>
+								<th class="u-width-90px">人數</th>
 								<th>使用者清單</th>
 							</tr>
 						</thead>
@@ -3450,7 +980,7 @@
 	
 	<!-- 留言給作者 Modal 彈窗 -->
 	<div class="modal-overlay" id="author-msg-modal">
-		<div class="modal-card" style="max-width: 480px;">
+		<div class="modal-card u-max-width-480px">
 			<div class="modal-header">
 				<!-- 💡 調整 1：標題明確強調無需加 LINE -->
 				<div class="modal-title">💬 給作者留言 (無需加 LINE)</div>
@@ -3460,56 +990,56 @@
 			<div class="modal-body">
 				
 				<!-- 表單欄位區塊 (💡 調整 2：移至最上方，作為主要輸入途徑) -->
-				<div style="width: 100%;">
-					<div style="margin-bottom: 10px;">
-						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">暱稱 (必填)：</label>
+				<div class="u-width-100">
+					<div class="u-margin-bottom-10px">
+						<label class="view-report-modal-label" data-ui-display="block">暱稱 (必填)：</label>
 						<input type="text" id="qa-author-nickname" class="qa-input" value="使用者" placeholder="請輸入暱稱">
 					</div>
-					<div style="margin-bottom: 10px;">
-						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Email (非必填)：</label>
+					<div class="u-margin-bottom-10px">
+						<label class="view-report-modal-label" data-ui-display="block">Email (非必填)：</label>
 						<input type="email" id="qa-author-email" class="qa-input" placeholder="example@email.com">
-						<small style="font-size: 11px; color: #64748b; display: block; margin-top: 2px;">Email僅供回覆用，絕不作為其他用途使用</small>
+						<small class="view-report-modal-small" data-ui-display="block">Email僅供回覆用，絕不作為其他用途使用</small>
 					</div>
-					<div style="margin-bottom: 10px;">
-						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">表情 Emoji (非必填，最多 20 個)：</label>
-						<div id="emoji-picker" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;">
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👍</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">❤️</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🔥</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🎉</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">👏</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🙏</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">😊</span>
-							<span class="emoji-opt" style="cursor:pointer; font-size:18px;">🚀</span>
+					<div class="u-margin-bottom-10px">
+						<label class="view-report-modal-label" data-ui-display="block">表情 Emoji (非必填，最多 20 個)：</label>
+						<div class="view-emoji-picker" id="emoji-picker" data-ui-display="flex">
+							<span class="emoji-opt view-emoji-picker-emoji-opt">👍</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">❤️</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">🔥</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">🎉</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">👏</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">🙏</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">😊</span>
+							<span class="emoji-opt view-emoji-picker-emoji-opt">🚀</span>
 						</div>
 						<input type="text" id="qa-author-emojis" class="qa-input" placeholder="點擊上方或自行輸入 Emoji" maxlength="20">
 					</div>
-					<div style="margin-bottom: 10px;">
-						<label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">留言內容 (必填)：</label>
-						<textarea id="qa-author-message" rows="3" style="width: 100%; padding: 8px; border: 2px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; resize: vertical; font-size: 15px;" placeholder="請輸入您想對作者說的話..."></textarea>
+					<div class="u-margin-bottom-10px">
+						<label class="view-report-modal-label" data-ui-display="block">留言內容 (必填)：</label>
+						<textarea class="view-qa-author-message" id="qa-author-message" rows="3" placeholder="請輸入您想對作者說的話..."></textarea>
 					</div>
-					<button type="button" id="btn-submit-author-msg" style="width: 100%; padding: 10px; background: #0d9488; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">送出留言</button>
+					<button class="view-btn-submit-author-msg" type="button" id="btn-submit-author-msg">送出留言</button>
 				</div>
 
 				<!-- 分隔線/提示 -->
-				<div style="text-align: center; margin: 8px 0; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 8px;">
-					<hr style="flex:1; border:0; border-top:1px dashed #cbd5e1;">
+				<div class="view-author-msg-modal-div" data-ui-display="flex">
+					<hr class="view-author-msg-modal-hr">
 					<span>或使用其他管道</span>
-					<hr style="flex:1; border:0; border-top:1px dashed #cbd5e1;">
+					<hr class="view-author-msg-modal-hr">
 				</div>
 
 				<!-- LINE 抽屜區塊 (💡 調整 3：移至最下方，改為可選管道) -->
 				<div class="drawer-container" id="drawer-author-line">
-					<div class="drawer-handle" id="author-line-drawer-handle" style="padding: 10px 12px; background: #f0fdf4; color: #166534; border-radius: 6px;">
+					<div class="drawer-handle view-author-line-drawer-handle" id="author-line-drawer-handle">
 						<span>📱 或是…加 LINE 一對一私訊 (選填)</span>
-						<span class="drawer-arrow" style="font-size: 10px;">▼</span>
+						<span class="drawer-arrow u-font-size-10px">▼</span>
 					</div>
-					<div class="drawer-content" id="author-line-drawer-content" style="padding: 14px; background: #f8fafc; border-top: 1px dashed #cbd5e1;">
-						<div style="text-align: center; width: 100%;">
-							<p style="font-size: 13px; font-weight: bold; color: #334155; margin: 0 0 8px 0;">若想即時對談交流，歡迎加 LINE 好友：</p>
-							<img src="./EtherLineQRCode.jpg" alt="Ether LINE QR Code" style="width: 150px; height: 150px; object-fit: contain; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; padding: 4px; box-sizing: border-box; margin-bottom: 8px;">
+					<div class="drawer-content view-author-line-drawer-content" id="author-line-drawer-content">
+						<div class="view-author-line-drawer-content-div">
+							<p class="view-author-line-drawer-content-p">若想即時對談交流，歡迎加 LINE 好友：</p>
+							<img class="view-author-line-drawer-content-img" src="./EtherLineQRCode.jpg" alt="Ether LINE QR Code">
 							<div>
-								<a href="https://line.me/ti/p/uDnD7usB5B" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 8px 16px; background: #06c755; color: white; font-size: 13px; font-weight: bold; border-radius: 4px; text-decoration: none;">
+								<a class="view-author-line-drawer-content-a" href="https://line.me/ti/p/uDnD7usB5B" target="_blank" rel="noopener noreferrer" data-ui-display="inline-block">
 									🔗 點我直接加 LINE 好友
 								</a>
 							</div>
@@ -3523,6 +1053,19 @@
 
     <!-- ================= JavaScript 邏輯 ================= -->
     <script>
+        // Only data-dependent values become inline custom properties.
+        // Fixed appearances and interaction states live in styles.css.
+        function setUiValue(element, property, value) {
+            const key = 'ui' + property.replace(/(^|-)([a-z])/g, (_, dash, letter) => letter.toUpperCase());
+            if (value === '' || value == null) {
+                element.style.removeProperty('--ui-' + property);
+                delete element.dataset[key];
+                return;
+            }
+            element.style.setProperty('--ui-' + property, String(value));
+            element.dataset[key] = 'dynamic';
+        }
+
 	
 		function mergeCarddataPatch(baseCards, patches) {
 			const merged = new Map();
@@ -3672,9 +1215,8 @@
 		// 📢 系統公告設定區 (直接修改陣列內容，空陣列則不顯示)
 		// ==========================================
 		const SYS_NOTICE_DATA = [
-			"<b style='color:#d32f2f;'>【重要更新與提示】</b>",
-			"1.底部程式更新，如果有發現到程式異常的話，請使用[ 上方選單 > 今天我要 > <b style='color:#d32f2f;'>留言給作者</B> ]進行回報",
-			"2.目前收集使用者回饋中，如果有認為特別喜歡的功能、或是覺得可以調整加強的功能的話，歡迎使用[ 上方選單 > 今天我要 > <b style='color:#d32f2f;'>留言給作者</b> ]進行回饋"
+			"<b class='u-color-d32f2f'>【重要更新與提示】</b>",
+			"程式版型語法整理完成。如果有發現到程式異常的話，請使用[ 上方選單 > 今天我要 > <b class='u-color-d32f2f'>留言給作者</B> ]進行回報",
 		];
 
 		function getCivText(civilVal) {
@@ -3845,10 +1387,9 @@
 				);
 				const top = Math.min(rect.bottom + 6, window.innerHeight - 80);
 
-				panel.style.left = `${left}px`;
-				panel.style.top = `${Math.max(12, top)}px`;
-				panel.style.maxHeight =
-					`${Math.max(60, window.innerHeight - Math.max(12, top) - 12)}px`;
+				setUiValue(panel, 'left', `${left}px`);
+				setUiValue(panel, 'top', `${Math.max(12, top)}px`);
+				setUiValue(panel, 'max-height', `${Math.max(60, window.innerHeight - Math.max(12, top) - 12)}px`);
 			});
 
 			menu.addEventListener('keydown', event => {
@@ -3959,7 +1500,7 @@
 				`${footerSpace}px`
 			);
 
-			document.body.style.paddingBottom = `${footerSpace}px`;
+			// Body spacing uses --app-footer-space from the stylesheet.
 		}
 
 		const resizeObserver = new ResizeObserver(syncPageLayoutHeights);
@@ -3984,7 +1525,7 @@
                 const taggedHint = applyEffectTags(hintContent);
                 return {
                     isHint: true,
-                    html: `<div style="color: #666; font-style: italic; font-size: 13px; margin: 4px 0;">（${taggedHint}）</div>`
+                    html: `<div class="view-render-ability-text-div">（${taggedHint}）</div>`
                 };
             }
 
@@ -3992,8 +1533,8 @@
             if (formatted.includes('#')) {
                 const parts = formatted.split(/#+/).map(p => p.trim()).filter(Boolean);
                 if (parts.length > 0) {
-                    let html = `<div style="font-weight: bold; margin-bottom: 2px;">${applyEffectTags(parts[0])}</div>`;
-                    html += `<ul style="margin: 2px 0 6px 18px; padding-left: 0; list-style-type: disc;">`;
+                    let html = `<div class="view-render-ability-text-div-2">${applyEffectTags(parts[0])}</div>`;
+                    html += `<ul class="view-render-ability-text-ul">`;
                     for (let i = 1; i < parts.length; i++) {
                         html += `<li>${applyEffectTags(parts[i])}</li>`;
                     }
@@ -4015,8 +1556,8 @@
 		btnAdvanced.addEventListener('click', () => {
 		
 			const quickDrawer = document.getElementById('drawer-quick-search');
-			if (quickDrawer && quickDrawer.style.display !== 'none') {
-				quickDrawer.style.display = 'none';
+			if (quickDrawer && quickDrawer.dataset.uiDisplay !== 'none') {
+				quickDrawer.dataset.uiDisplay = "none";
 				updateQuickCalcUI(false); // 💡 同步狀態
 			}
 			
@@ -4151,7 +1692,7 @@
 
 			const safeAttr = sanctuaryMsg.replace(/"/g, '&quot;');
 			const safeAlert = sanctuaryMsg.replace(/'/g, "\\'").replace(/"/g, '\\"');
-			const sanctuaryHtml = sanctuarySymbol ? `<span style="cursor: help; color: #d32f2f; margin-right: 4px;" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>` : '';
+			const sanctuaryHtml = sanctuarySymbol ? `<span class="view-update-modal-title-ui-span" title="${safeAttr}" onclick="alert('${safeAlert}'); event.stopPropagation();">${sanctuarySymbol}</span>` : '';
 			const cleanJpName = cleanCardName(jpName);
 			
 			// 取得擴充資料 (若有)
@@ -4179,8 +1720,8 @@
 			const closeBtnHtml = showCloseBtn ? `<div class="modal-close" id="modal-close-btn">&times;</div>` : '';
 
 			modalTitleEl.innerHTML = `
-				<div class="modal-header-top-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-					<div class="card-id-display" style="font-size: 13px; font-weight: normal; opacity: 0.85;">
+				<div class="modal-header-top-row view-update-modal-title-ui-modal-header-top-row" data-ui-display="flex">
+					<div class="card-id-display view-update-modal-title-ui-card-id-display">
 						${displayId ? `( ${displayId} )` : ''}
 					</div>
 					<div class="modal-action-btns">
@@ -4189,8 +1730,8 @@
 						${closeBtnHtml} <!-- 💡 插入判斷後的按鈕 -->
 					</div>
 				</div>
-				<div class="card-title-text" style="cursor: pointer; margin-top: 6px; word-break: break-all;" title="雙擊標題複製卡名">
-					${sanctuaryHtml}<span class="main-title-display-text" style="font-size: 19px; font-weight: bold; line-height: 1.3;">${displayName}</span>
+				<div class="card-title-text view-update-modal-title-ui-card-title-text" title="雙擊標題複製卡名">
+					${sanctuaryHtml}<span class="main-title-display-text view-update-modal-title-ui-main-title-display-text">${displayName}</span>
 				</div>
 			`;
 
@@ -4203,7 +1744,7 @@
 					
 					const cardModal = document.getElementById('card-modal');
 					cardModal.classList.remove('active');
-					cardModal.style.zIndex = ''; 
+					delete cardModal.dataset.uiZIndex; 
 				};
 			}
 
@@ -4244,7 +1785,7 @@
 					const loadingText = document.getElementById('loading-text');
 					if (loadingOverlay) {
 						if (loadingText) loadingText.innerText = '正在向 Fandom Wiki 查詢卡牌資訊中，此為非同步自動化檢索，查詢結果受外部來源影響可能偶有遺漏';
-						loadingOverlay.style.display = 'flex';
+						loadingOverlay.dataset.uiDisplay = "flex";
 					}
 
 					try {
@@ -4274,7 +1815,7 @@
 						console.error("查詢擴充資訊失敗:", err);
 						showToast("⚠️ 網路請求失敗，請稍後再試");
 					} finally {
-						if (loadingOverlay) loadingOverlay.style.display = 'none';
+						if (loadingOverlay) loadingOverlay.dataset.uiDisplay = "none";
 					}
 				};
 			}
@@ -4536,7 +2077,7 @@
 
             summaryBox.innerHTML = '';
             if (tags.length === 0) {
-                summaryBox.innerHTML = '<p style="margin:0; color:#aaa;">(目前過濾條件與預設值相同)</p>';
+                summaryBox.innerHTML = '<p class="view-footer-summary-p">(目前過濾條件與預設值相同)</p>';
             } else {
                 const wrap = document.createElement('div');
 				wrap.className = 'tag-container';
@@ -4926,7 +2467,7 @@
 				const loadingText = document.getElementById('loading-text');
 				if (loadingOverlay) {
 					if (loadingText) loadingText.innerText = '正在批量轉換英文卡名中...';
-					loadingOverlay.style.display = 'flex';
+					loadingOverlay.dataset.uiDisplay = "flex";
 				}
 
 				try {
@@ -4958,7 +2499,7 @@
 					console.error("轉換英文牌組失敗:", err);
 					alert("轉換失敗，請稍後再試！");
 				} finally {
-					if (loadingOverlay) loadingOverlay.style.display = 'none';
+					if (loadingOverlay) loadingOverlay.dataset.uiDisplay = "none";
 				}
 			});
 
@@ -4970,7 +2511,7 @@
 				tabHeaders[0].click(); 
 				const drawer = document.getElementById('drawer-quick-search');
 				if (drawer) {
-					drawer.style.display = 'block';
+					drawer.dataset.uiDisplay = "block";
 					updateQuickCalcUI(true); // 💡 同步狀態為 ON
 				}
 				showToast("⚡ 已為您開啟快速計算機");
@@ -4979,8 +2520,8 @@
 			// [標準搜尋]
 			document.getElementById('qa-btn-filter-std').addEventListener('click', () => {
 				const quickDrawer = document.getElementById('drawer-quick-search');
-				if (quickDrawer && quickDrawer.style.display !== 'none') {
-					quickDrawer.style.display = 'none';
+				if (quickDrawer && quickDrawer.dataset.uiDisplay !== 'none') {
+					quickDrawer.dataset.uiDisplay = "none";
 					updateQuickCalcUI(false); // 💡 同步狀態
 				}
 				tabHeaders[0].click();
@@ -5062,9 +2603,9 @@
 				e.stopPropagation();
 				
 				const drawer = document.getElementById('drawer-quick-search');
-				const isCurrentlyHidden = drawer.style.display === 'none';
+				const isCurrentlyHidden = drawer.dataset.uiDisplay === 'none';
 				
-				drawer.style.display = isCurrentlyHidden ? 'block' : 'none';
+				drawer.dataset.uiDisplay = isCurrentlyHidden ? "block" : "none";
 				updateQuickCalcUI(isCurrentlyHidden); // 呼叫共用函式切換 ON/OFF
 			});
 		});
@@ -5083,7 +2624,7 @@
 			// 確保 Loading 文字正確且呈現顯示狀態
 			if (loadingOverlay) {
 				if (loadingText) loadingText.innerText = '資料讀取中……';
-				loadingOverlay.style.display = 'flex';
+				loadingOverlay.dataset.uiDisplay = "flex";
 			}
 
 			try {
@@ -5330,7 +2871,7 @@
 		function hideInitialLoading() {
 			const loadingOverlay = document.getElementById('loading-overlay');
 			if (loadingOverlay) {
-				loadingOverlay.style.display = 'none';
+				loadingOverlay.dataset.uiDisplay = "none";
 			}
 		}
         
@@ -5733,11 +3274,11 @@
 							div.className = 'combo-item';
 							
 							if (item.pop) {
-								div.style.color = '#d32f2f';
-								div.style.fontWeight = 'bold';
+								div.dataset.uiColor = "accent";
+								div.dataset.uiFontWeight = "bold";
 							}
 							if (['__NO_ABILITY__', '__SEMI_VANILLA__', '__SOUP__'].includes(item.jap)) {
-								div.style.fontWeight = 'bold';
+								div.dataset.uiFontWeight = "bold";
 							}
 
 							div.innerText = displayText;
@@ -5810,8 +3351,8 @@
 				const nativeBtnHtml = isAbility ? `<button type="button" class="btn-native-ability" data-native="false">原生能力</button>` : '';
 
 				row.innerHTML = `
-					<button type="button" class="btn-icon btn-remove ${advClass}" style="padding: 8px 12px; background: #fee2e2; color: #b91c1c; font-weight: bold;">-</button>
-					<input type="text" class="combo-input ${inputClass}" data-combo-type="${type}" list="datalist-${type}" placeholder="請選擇或輸入..." style="margin-bottom: 0;" autocomplete="off">
+					<button type="button" class="btn-icon btn-remove ${advClass} view-bind-add-remove-events-combo-btn-icon">-</button>
+					<input type="text" class="combo-input ${inputClass} u-margin-bottom-0" data-combo-type="${type}" list="datalist-${type}" placeholder="請選擇或輸入..." autocomplete="off">
 					${nativeBtnHtml}
 				`;
 
@@ -6031,7 +3572,7 @@
 				const btn = document.createElement('button');
 				btn.type = 'button';
 				btn.className = 'btn-drawer-action';
-				btn.style.cssText = 'flex: 1; padding: 6px 4px; font-size: 12px; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+				btn.classList.add('view-btn-2');
 				btn.innerText = `⚡ ${code}`;
 				btn.title = `${code}【${setname}】`;
 
@@ -6143,12 +3684,12 @@
 
         function getCivBackground(totalCiv) {
             const colors = [];
-            if (totalCiv & 16) colors.push('#FFD54F'); // 光
-            if (totalCiv & 8)  colors.push('#4FC3F7'); // 水
-            if (totalCiv & 4)  colors.push('#9E9E9E'); // 闇
-            if (totalCiv & 2)  colors.push('#E57373'); // 火
-            if (totalCiv & 1)  colors.push('#81C784'); // 自
-            if (totalCiv & 32 || colors.length === 0) colors.push('#FAFAFA'); // 無
+            if (totalCiv & 16) colors.push('var(--civ-light-card)'); // 光
+            if (totalCiv & 8)  colors.push('var(--civ-water-card)'); // 水
+            if (totalCiv & 4)  colors.push('var(--civ-darkness-card)'); // 闇
+            if (totalCiv & 2)  colors.push('var(--civ-fire-card)'); // 火
+            if (totalCiv & 1)  colors.push('var(--civ-nature-card)'); // 自
+            if (totalCiv & 32 || colors.length === 0) colors.push('var(--civ-zero-card)'); // 無
 
             if (colors.length === 1) return colors[0];
 
@@ -6183,8 +3724,8 @@
 
 			// 3. 填回文字面板並重置階段畫面
 			document.getElementById('deck-textarea').value = textContent;
-			document.getElementById('deck-input-step').style.display = 'block';
-			document.getElementById('deck-verify-step').style.display = 'none';
+			document.getElementById('deck-input-step').dataset.uiDisplay = "block";
+			document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
 
 			// 4. 開啟 Modal
 			document.getElementById('deck-import-modal').classList.add('active');
@@ -6195,8 +3736,8 @@
 			btn.addEventListener('click', () => {
 				editingDeckCode = null; // 重置為新增狀態
 				closeAllDrawers();
-				document.getElementById('deck-input-step').style.display = 'block';
-				document.getElementById('deck-verify-step').style.display = 'none';
+				document.getElementById('deck-input-step').dataset.uiDisplay = "block";
+				document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
 				document.getElementById('deck-textarea').value = '';
 				document.getElementById('deck-import-modal').classList.add('active');
 			});
@@ -6297,7 +3838,7 @@
 		// =========================================
 		function executeCardSearch(e, { fromHistory = false } = {}) {
 		
-			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.style.display !== 'none';
+			const isQuickDrawerOpen = document.getElementById('drawer-quick-search')?.dataset.uiDisplay !== 'none';
 			const isAdvMode = document.body.classList.contains('advanced-mode');
 			
 			// 取得當前 UI 過濾條件作為 detail 側錄
@@ -6564,7 +4105,7 @@
 
 				const itemDiv = document.createElement('div');
 				itemDiv.className = 'card-list-item';
-				itemDiv.style.background = getCivBackground(combinedCiv);
+				setUiValue(itemDiv, 'background', getCivBackground(combinedCiv));
 				
 				const cleanName = cleanCardName(card.name);
 				let matchedItem = null;
@@ -6584,15 +4125,15 @@
 
 						if (isDeckSet) {
 							if (matchedItem.count !== undefined) {
-								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
-								prefixHtml = `<span class="card-name-count" style="font-weight: bold; color: #d32f2f; margin-right: 6px; ${underlineStyle}">${matchedItem.count} ⅹ </span>`;
+								const versionClass = isMultiVersion ? 'has-multiple-versions' : '';
+								prefixHtml = `<span class="card-name-count ${versionClass} view-create-card-list-item-card-name-count">${matchedItem.count} ⅹ </span>`;
 							}
 						} else {
 							const firstId = Array.isArray(matchedItem.id) ? matchedItem.id[0] : matchedItem.id;
 							if (firstId) {
-								const underlineStyle = isMultiVersion ? 'text-decoration: underline;' : '';
+								const versionClass = isMultiVersion ? 'has-multiple-versions' : '';
 								const displayId = formatDmId(firstId);
-								prefixHtml = `<span class="card-name-id" style="font-size: 12px; color: #1565c0; margin-bottom: 2px; ${underlineStyle}">${displayId}</span>`;
+								prefixHtml = `<span class="card-name-id ${versionClass} view-create-card-list-item-card-name-id">${displayId}</span>`;
 							}
 						}
 					}
@@ -6613,7 +4154,7 @@
 				if (isFuzzyZone && cards.length > 0) {
 					// 插入中間分隔 UI
 					const dividerDiv = document.createElement('div');
-					dividerDiv.style.cssText = 'width: 100%; text-align: center; color: #64748b; font-size: 14px; font-weight: bold; padding: 12px 0; border-top: 2px dashed #cbd5e1; border-bottom: 2px dashed #cbd5e1; margin: 10px 0; background: #f8fafc; grid-column: 1 / -1; box-sizing: border-box;';
+					dividerDiv.classList.add('view-divider-div');
 					dividerDiv.innerText = '--- 以下為數字模糊比對建議區 ---';
 					
 					listContainerPage2.appendChild(dividerDiv);
@@ -6933,7 +4474,7 @@
 			const cards = getRecentStandaloneCards(10);
 
 			if (cards.length === 0) {
-				container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無符合條件的零星新增卡牌</div>';
+				container.innerHTML = '<div class="view-render-recent-cards-list-div">尚無符合條件的零星新增卡牌</div>';
 				return;
 			}
 
@@ -6945,12 +4486,12 @@
 
 				const itemDiv = document.createElement('div');
 				itemDiv.className = 'card-list-item';
-				itemDiv.style.background = getCivBackground(combinedCiv);
-				itemDiv.style.padding = '10px 14px';
+				setUiValue(itemDiv, 'background', getCivBackground(combinedCiv));
+				itemDiv.dataset.uiPadding = "10px-14px";
 
 				const displayName = cleanCardName(card.name);
 				itemDiv.innerHTML = `
-					<div class="card-name" style="font-size: 14px;">
+					<div class="card-name u-font-size-14px">
 						<span class="card-name-text">${displayName}</span>
 					</div>
 				`;
@@ -6960,7 +4501,7 @@
 					recordCardHistory(card.name);
 					const cardModal = document.getElementById('card-modal');
 					if (cardModal) {
-						cardModal.style.zIndex = '1050'; // 暫時給予最高層級
+						cardModal.dataset.uiZIndex = "1050"; // 暫時給予最高層級
 					}
 					openCardModal(card, combinedCiv, null);
 				});
@@ -6991,33 +4532,33 @@
 				// 重置所有按鈕樣式
 				[btnTabPrivacy, btnTabChangelog, btnTabRecent, btnTabAuthor].forEach(btn => {
 					if (btn) {
-						btn.style.background = '#e2e8f0';
-						btn.style.color = '#334155';
+						btn.dataset.uiBackground = "slate-200";
+						btn.dataset.uiColor = "slate-700";
 					}
 				});
 				// 隱藏所有視圖
 				[viewPrivacy, viewChangelog, viewRecent, viewAuthor].forEach(v => {
-					if (v) v.style.display = 'none';
+					if (v) v.dataset.uiDisplay = "none";
 				});
 
 				// 高亮點選的頁籤並顯示對應視圖
 				if (target === 'privacy') {
-					btnTabPrivacy.style.background = '#0284c7';
-					btnTabPrivacy.style.color = '#ffffff';
-					viewPrivacy.style.display = 'block';
+					btnTabPrivacy.dataset.uiBackground = "primary";
+					btnTabPrivacy.dataset.uiColor = "white";
+					viewPrivacy.dataset.uiDisplay = "block";
 				} else if (target === 'changelog') {
-					btnTabChangelog.style.background = '#0284c7';
-					btnTabChangelog.style.color = '#ffffff';
-					viewChangelog.style.display = 'block';
+					btnTabChangelog.dataset.uiBackground = "primary";
+					btnTabChangelog.dataset.uiColor = "white";
+					viewChangelog.dataset.uiDisplay = "block";
 				} else if (target === 'recent') {
-					btnTabRecent.style.background = '#0284c7';
-					btnTabRecent.style.color = '#ffffff';
-					viewRecent.style.display = 'block';
+					btnTabRecent.dataset.uiBackground = "primary";
+					btnTabRecent.dataset.uiColor = "white";
+					viewRecent.dataset.uiDisplay = "block";
 					renderRecentCardsList(); // 每次點開該頁籤時即時重新運算渲染
 				} else if (target === 'author') {
-					btnTabAuthor.style.background = '#0284c7';
-					btnTabAuthor.style.color = '#ffffff';
-					viewAuthor.style.display = 'block';
+					btnTabAuthor.dataset.uiBackground = "primary";
+					btnTabAuthor.dataset.uiColor = "white";
+					viewAuthor.dataset.uiDisplay = "block";
 				}
 			}
 
@@ -7037,42 +4578,33 @@
 					diaryModalBody.innerHTML = '';
 
 					if (!rawDiary || rawDiary.length === 0) {
-						diaryModalBody.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">尚無更新日誌</div>';
+						diaryModalBody.innerHTML = '<div class="view-render-recent-cards-list-div">尚無更新日誌</div>';
 					} else {
 						const sortedDiary = [...rawDiary].sort((a, b) => new Date(b.date) - new Date(a.date));
 						const fragment = document.createDocumentFragment();
 
 						sortedDiary.forEach(item => {
 							const entryBlock = document.createElement('div');
-							entryBlock.style.background = '#f8fafc';
-							entryBlock.style.borderLeft = '4px solid #d32f2f';
-							entryBlock.style.padding = '10px 14px';
-							entryBlock.style.borderRadius = '6px';
-							entryBlock.style.marginBottom = '12px';
+							entryBlock.classList.add('view-entry-block');
 
 							const dateHeader = document.createElement('div');
-							dateHeader.style.fontWeight = 'bold';
-							dateHeader.style.color = '#333';
-							dateHeader.style.marginBottom = '6px';
+							dateHeader.classList.add('view-date-header');
 							dateHeader.innerText = `📅 ${item.date}`;
 							entryBlock.appendChild(dateHeader);
 
 							const ul = document.createElement('ul');
-							ul.style.margin = '0';
-							ul.style.paddingLeft = '20px';
-							ul.style.fontSize = '14px';
-							ul.style.color = '#555';
+							ul.classList.add('view-ul');
 
 							const listItems = Array.isArray(item.content) ? item.content : [];
 
 							listItems.forEach(text => {
 								const li = document.createElement('li');
-								li.style.marginBottom = '3px';
+								li.dataset.uiMarginBottom = "3px";
 								li.innerText = text;
 
 								if (typeof specialIcons !== 'undefined' && specialIcons.some(icon => text.startsWith(icon))) {
-									li.style.listStyleType = 'none';
-									li.style.marginLeft = '-1.2em';
+									li.dataset.uiListStyleType = "none";
+									li.dataset.uiMarginLeft = "1-2em";
 								}
 								ul.appendChild(li);
 							});
@@ -7965,25 +5497,30 @@
 				if (matchedType && matchedType.horizontal === true) isHorizontal = true;
 			}
 
-			const boxWidth = isHorizontal ? '250px' : '180px';
-			const boxHeight = isHorizontal ? '180px' : '250px';
+			const cardSize = getComputedStyle(document.documentElement);
+            const sizeToken = (axis, expanded = false) => cardSize.getPropertyValue(
+                `--card-${isHorizontal ? 'horizontal' : 'portrait'}-${expanded ? 'expanded-' : ''}${axis}`
+            ).trim();
+            const boxWidth = sizeToken('width');
+			const boxHeight = sizeToken('height');
 
 			if (window.innerWidth <= 768) {
-				targetImgBox.style.width = '100%';
+				targetImgBox.dataset.uiWidth = "100pct";
 			} else {
-				targetImgBox.style.width = boxWidth;
+				setUiValue(targetImgBox, 'width', boxWidth);
 			}
 
 			// 強制設定左側卡圖容器為垂直方向由上往下排
-			targetImgBox.style.display = 'flex';
-			targetImgBox.style.flexDirection = 'column';
-			targetImgBox.style.alignItems = 'center';
+			targetImgBox.dataset.uiDisplay = "flex";
+			targetImgBox.dataset.uiFlexDirection = "column";
+			targetImgBox.dataset.uiAlignItems = "center";
 
 			// 建立卡圖 3D 堆疊外框
 			const imgStackContainer = document.createElement('div');
 			imgStackContainer.className = 'card-stack-container';
-			imgStackContainer.style.width = boxWidth;
-			imgStackContainer.style.height = boxHeight;
+            imgStackContainer.classList.toggle('is-horizontal', isHorizontal);
+			setUiValue(imgStackContainer, 'width', boxWidth);
+			setUiValue(imgStackContainer, 'height', boxHeight);
 			
 			let camBtn = imgStackContainer.querySelector('.cam-btn-overlay');
 			if (!camBtn) {
@@ -8037,7 +5574,7 @@
 			}
 
             // 解除 isModal 限制，讓雙欄模式也能顯示申請暱稱按鈕
-            nicknameApplyBtn.style.display = 'flex';
+            nicknameApplyBtn.dataset.uiDisplay = "flex";
             nicknameApplyBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (typeof openNicknameModal === 'function') {
@@ -8047,7 +5584,7 @@
 
             // 解除 isModal 限制，只要不是從購物車裡面打開的，就顯示加入按鈕
             if (!window.isOpenedFromCart) {
-                cartAddBtn.style.display = 'flex';
+                cartAddBtn.dataset.uiDisplay = "flex";
                 cartAddBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (typeof modifyCart === 'function') {
@@ -8056,7 +5593,7 @@
                     }
                 };
             } else {
-                cartAddBtn.style.display = 'none';
+                cartAddBtn.dataset.uiDisplay = "none";
             }
 
 			const filterConfig =
@@ -8090,8 +5627,8 @@
 				validPicUrls.forEach((url, idx) => {
 					const loadingBox = document.createElement('div');
 					loadingBox.className = 'loading-image-box';
-					loadingBox.style.width = boxWidth;
-					loadingBox.style.height = boxHeight;
+					setUiValue(loadingBox, 'width', boxWidth);
+					setUiValue(loadingBox, 'height', boxHeight);
 					loadingBox.innerHTML = `
 						<div class="card-img-spinner"></div>
 						<div>圖片讀取中...</div>
@@ -8103,16 +5640,16 @@
 					if (isFallbackPic) {
 						img.classList.add('img-fallback');
 					}
-					img.style.width = boxWidth;
-					img.style.height = boxHeight;
-					img.style.display = 'none'; 
+					setUiValue(img, 'width', boxWidth);
+					setUiValue(img, 'height', boxHeight);
+					img.dataset.uiDisplay = "none"; 
 					img.dataset.versionIndex = idx;
 
 					img.onload = () => {
 						if (loadingBox.parentNode) {
 							loadingBox.parentNode.removeChild(loadingBox);
 						}
-						img.style.display = 'block';
+						img.dataset.uiDisplay = "block";
 					};
 
 					img.onerror = () => {
@@ -8121,8 +5658,8 @@
 						}
 						const errorBox = document.createElement('div');
 						errorBox.className = 'no-image-box';
-						errorBox.style.width = boxWidth;
-						errorBox.style.height = boxHeight;
+						setUiValue(errorBox, 'width', boxWidth);
+						setUiValue(errorBox, 'height', boxHeight);
 						errorBox.innerText = '無卡圖';
 						imgStackContainer.appendChild(errorBox);
 						
@@ -8145,8 +5682,8 @@
 			} else {
 				const noImgBox = document.createElement('div');
 				noImgBox.className = 'no-image-box';
-				noImgBox.style.width = boxWidth;
-				noImgBox.style.height = boxHeight;
+				setUiValue(noImgBox, 'width', boxWidth);
+				setUiValue(noImgBox, 'height', boxHeight);
 				noImgBox.innerText = '無卡圖';
 				imgStackContainer.appendChild(noImgBox);
 			}
@@ -8199,12 +5736,12 @@
 			const isInitiallyExpanded = savedImgState === 'expanded';
 
 			function applyImageExpandState(expanded) {
-				const curWidth = expanded ? (isHorizontal ? '350px' : '250px') : boxWidth;
-				const curHeight = expanded ? (isHorizontal ? '250px' : '350px') : boxHeight;
+				const curWidth = sizeToken('width', expanded);
+				const curHeight = sizeToken('height', expanded);
 
 				if (imgStackContainer) {
-					imgStackContainer.style.width = curWidth;
-					imgStackContainer.style.height = curHeight;
+					setUiValue(imgStackContainer, 'width', curWidth);
+					setUiValue(imgStackContainer, 'height', curHeight);
 				}
 
 				cardImgElements.forEach(img => {
@@ -8231,21 +5768,13 @@
 				applyImageExpandState(nextState);
 			}
 
-			imgStackContainer.style.cursor = 'pointer';
+			imgStackContainer.dataset.uiCursor = "pointer";
 			imgStackContainer.onclick = handleImageToggle;
 
 			// Flavor 區塊容器
 			const flavorBlock = document.createElement('div');
 			flavorBlock.className = 'flavor-block';
-			flavorBlock.style.backgroundColor = '#fffbe6';
-			flavorBlock.style.border = '1px solid #ffe58f';
-			flavorBlock.style.borderRadius = '6px';
-			flavorBlock.style.padding = '8px 12px';
-			flavorBlock.style.fontSize = '13px';
-			flavorBlock.style.color = '#873800';
-			flavorBlock.style.fontStyle = 'italic';
-			flavorBlock.style.lineHeight = '1.4';
-			flavorBlock.style.marginTop = '10px';
+			flavorBlock.classList.add('view-flavor-block');
 
 			if (flavorList.length === 0) {
 				const cleanTargetName = card.name ? card.name.trim() : "";
@@ -8280,9 +5809,9 @@
 				const currentFlavor = flavorList[currentVerIdx] || flavorList[0];
 				if (currentFlavor && currentFlavor.trim() !== '') {
 					flavorBlock.innerHTML = `${currentFlavor}`;
-					flavorBlock.style.display = 'block';
+					flavorBlock.dataset.uiDisplay = "block";
 				} else {
-					flavorBlock.style.display = 'none';
+					flavorBlock.dataset.uiDisplay = "none";
 				}
 
 				if (idList && idList.length > 0) {
@@ -8389,15 +5918,7 @@
 					if (hasHyperMode) {
 						hyperBtn = document.createElement('button');
 						hyperBtn.className = 'btn-icon';
-						hyperBtn.style.alignSelf = 'flex-start';
-						hyperBtn.style.marginBottom = '8px';
-						hyperBtn.style.backgroundColor = '#d32f2f';
-						hyperBtn.style.color = '#fff';
-						hyperBtn.style.border = 'none';
-						hyperBtn.style.padding = '6px 12px';
-						hyperBtn.style.borderRadius = '4px';
-						hyperBtn.style.cursor = 'pointer';
-						hyperBtn.style.fontWeight = 'bold';
+						hyperBtn.classList.add('view-hyper-btn');
 						hyperBtn.innerText = '>> 超化模式';
 						block.appendChild(hyperBtn);
 					}
@@ -8438,20 +5959,20 @@
 
 					if (w.race && Array.isArray(w.race) && w.race.length > 0) {
 						const raceRow = document.createElement('div');
-						raceRow.style.cssText = 'margin-top: 8px; width: 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 13px;';
+						raceRow.classList.add('view-race-row');
 						
 						const raceLabel = document.createElement('span');
-						raceLabel.style.cssText = 'font-weight: bold; color: #555; flex-shrink: 0;';
+						raceLabel.classList.add('view-race-label');
 						raceLabel.innerText = '種族:';
 						raceRow.appendChild(raceLabel);
 
 						const raceBox = document.createElement('div');
-						raceBox.style.cssText = 'display: flex; flex-wrap: wrap; gap: 4px; align-items: center;';
+						raceBox.classList.add('view-race-box');
 
 						w.race.forEach(r => {
 							const rTag = document.createElement('span');
 							rTag.className = 'wdata-race-tag';
-							rTag.style.cssText = 'background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;';
+							rTag.classList.add('view-r-tag');
 							
 							// 💡 若為英文模式，嘗試翻譯種族標籤
 							let raceTextToDisplay = r;
@@ -8475,32 +5996,22 @@
 					}
 
 					const spContainer = document.createElement('div');
-					spContainer.style.marginTop = '8px';
+					spContainer.dataset.uiMarginTop = "8px";
 					block.appendChild(spContainer);
 
 					const btnRow = document.createElement('div');
 					btnRow.className = 'wdata-btn-row';
-					btnRow.style.display = 'flex';
-					btnRow.style.justifyContent = 'space-between';
-					btnRow.style.alignItems = 'center';
-					btnRow.style.marginTop = '10px';
+					btnRow.classList.add('view-btn-row');
 
 					const abilExplainBtn = document.createElement('button');
 					abilExplainBtn.className = 'btn-icon abil-explain-btn btn-abil-explain';
-					abilExplainBtn.style.backgroundColor = '#2196f3';
-					abilExplainBtn.style.color = '#fff';
-					abilExplainBtn.style.border = 'none';
-					abilExplainBtn.style.padding = '5px 10px';
-					abilExplainBtn.style.borderRadius = '4px';
-					abilExplainBtn.style.cursor = 'pointer';
-					abilExplainBtn.style.fontSize = '12px';
-					abilExplainBtn.style.fontWeight = 'bold';
+					abilExplainBtn.classList.add('view-abil-explain-btn');
 					abilExplainBtn.innerText = '[展開能力說明]';
-					abilExplainBtn.style.display = 'none';
+					abilExplainBtn.dataset.uiDisplay = "none";
 
 					const reportErrorBtn = document.createElement('button');
 					reportErrorBtn.className = 'btn-icon btn-report-error';
-					reportErrorBtn.style.marginLeft = 'auto';
+					reportErrorBtn.dataset.uiMarginLeft = "auto";
 					reportErrorBtn.innerText = '🚨 [錯誤回報]';
 					reportErrorBtn.addEventListener('click', () => {
 						openReportModal(card, matchedItem);
@@ -8510,19 +6021,12 @@
 					btnRow.appendChild(reportErrorBtn);
 
 					const abilExplainBox = document.createElement('div');
-					abilExplainBox.style.display = 'none';
-					abilExplainBox.style.marginTop = '8px';
-					abilExplainBox.style.padding = '10px';
-					abilExplainBox.style.backgroundColor = '#eef6ff';
-					abilExplainBox.style.border = '1px solid #bbdefb';
-					abilExplainBox.style.borderRadius = '6px';
-					abilExplainBox.style.fontSize = '13px';
-					abilExplainBox.style.lineHeight = '1.5';
+					abilExplainBox.classList.add('view-abil-explain-box');
 
 					let isExplainOpen = false;
 					abilExplainBtn.addEventListener('click', () => {
 						isExplainOpen = !isExplainOpen;
-						abilExplainBox.style.display = isExplainOpen ? 'block' : 'none';
+						abilExplainBox.dataset.uiDisplay = isExplainOpen ? "block" : "none";
 						abilExplainBtn.innerText = isExplainOpen ? '[收合能力說明]' : '[展開能力說明]';
 					});
 
@@ -8550,9 +6054,7 @@
 
 						if (currentSpList.length > 0) {
 							const spTitle = document.createElement('div');
-							spTitle.style.fontSize = '13px';
-							spTitle.style.fontWeight = 'bold';
-							spTitle.style.color = '#555';
+							spTitle.classList.add('view-sp-title');
 							spTitle.innerText = '特殊能力：';
 							spContainer.appendChild(spTitle);
 
@@ -8573,8 +6075,8 @@
 									li.innerHTML = result.html;
 									
 									if (typeof specialIcons !== 'undefined' && specialIcons.some(icon => abilityStr.startsWith(icon))) {
-										li.style.listStyleType = 'none';
-										li.style.marginLeft = '-1.2em';
+										li.dataset.uiListStyleType = "none";
+										li.dataset.uiMarginLeft = "1-2em";
 									}
 									
 									ul.appendChild(li);
@@ -8594,7 +6096,7 @@
 							});
 
 							if (detectedAbilityKeys.size > 0) {
-								abilExplainBtn.style.display = 'inline-block';
+								abilExplainBtn.dataset.uiDisplay = "inline-block";
 								detectedAbilityKeys.forEach(key => {
 									// 對應中/英/日統一尋找對應的中文解說
 									const info = (typeof buildTagDictionaries === 'function') 
@@ -8603,9 +6105,7 @@
 										
 									if (info) {
 										const itemDiv = document.createElement('div');
-										itemDiv.style.marginBottom = '10px';
-										itemDiv.style.borderBottom = '1px dashed #90caf9';
-										itemDiv.style.paddingBottom = '6px';
+										itemDiv.classList.add('view-item-div');
 
 										const japStr = info.jap || '';
 										const chiStr = info.chi || info.cht || '';
@@ -8614,31 +6114,29 @@
 
 										const headerLine = [japStr, chiStr, engStr].filter(Boolean).join(' / ');
 										itemDiv.innerHTML = `
-											<div style="font-weight: bold; color: #1565c0;">${headerLine}</div>
-											<div style="color: #333; margin-top: 2px;">效果說明：${descStr}</div>
+											<div class="view-render-sp-abilities-div">${headerLine}</div>
+											<div class="view-render-sp-abilities-div-2">效果說明：${descStr}</div>
 										`;
 										abilExplainBox.appendChild(itemDiv);
 									}
 								});
 								if (abilExplainBox.lastElementChild) {
-									abilExplainBox.lastElementChild.style.borderBottom = 'none';
-									abilExplainBox.lastElementChild.style.marginBottom = '0';
-									abilExplainBox.lastElementChild.style.paddingBottom = '0';
+									abilExplainBox.lastElementChild.dataset.uiBorderBottom = "none";
+									abilExplainBox.lastElementChild.dataset.uiMarginBottom = "0";
+									abilExplainBox.lastElementChild.dataset.uiPaddingBottom = "0";
 								}
 							} else {
-								abilExplainBtn.style.display = 'none';
-								abilExplainBox.style.display = 'none';
+								abilExplainBtn.dataset.uiDisplay = "none";
+								abilExplainBox.dataset.uiDisplay = "none";
 							}
 						} else {
 							const noSpDiv = document.createElement('div');
-							noSpDiv.style.fontSize = '13px';
-							noSpDiv.style.color = '#777';
-							noSpDiv.style.fontStyle = 'italic';
+							noSpDiv.classList.add('view-no-sp-div');
 							noSpDiv.innerText = '( 無能力 )';
 							spContainer.appendChild(noSpDiv);
 
-							abilExplainBtn.style.display = 'none';
-							abilExplainBox.style.display = 'none';
+							abilExplainBtn.dataset.uiDisplay = "none";
+							abilExplainBox.dataset.uiDisplay = "none";
 						}
 					}
 
@@ -8649,11 +6147,11 @@
 							isHyperModeActive = !isHyperModeActive;
 							if (isHyperModeActive) {
 								hyperBtn.innerText = '一般模式 <<';
-								hyperBtn.style.backgroundColor = '#424242';
+								hyperBtn.dataset.uiBackgroundColor = "424242";
 								if (w.hypermode.power !== undefined && w.hypermode.power !== null) renderPowerValue(w.hypermode.power, w.pc);
 							} else {
 								hyperBtn.innerText = '>> 超化模式';
-								hyperBtn.style.backgroundColor = '#d32f2f';
+								hyperBtn.dataset.uiBackgroundColor = "accent";
 								if (w.power !== undefined && w.power !== null) renderPowerValue(w.power, w.pc);
 							}
 							renderSpAbilities();
@@ -8666,33 +6164,21 @@
 				if (card.back && Array.isArray(card.back) && card.back.length > 0) {
 					const backBlock = document.createElement('div');
 					backBlock.className = 'wdata-block';
-					backBlock.style.borderLeft = '4px solid #7c4dff';
-					backBlock.style.marginTop = '10px';
+					backBlock.dataset.uiBorderLeft = "4px-solid-7c4dff";
+					backBlock.dataset.uiMarginTop = "10px";
 
 					const backTitle = document.createElement('div');
-					backTitle.style.fontSize = '14px';
-					backTitle.style.fontWeight = 'bold';
-					backTitle.style.color = '#512da8';
-					backTitle.style.marginBottom = '8px';
+					backTitle.classList.add('view-back-title');
 					backTitle.innerText = '翻面/關聯卡牌：';
 					backBlock.appendChild(backTitle);
 
 					const backContainer = document.createElement('div');
-					backContainer.style.display = 'flex';
-					backContainer.style.flexWrap = 'wrap';
-					backContainer.style.gap = '8px';
+					backContainer.classList.add('view-back-container');
 
 					card.back.forEach(backCardName => {
 						const backBtn = document.createElement('button');
 						backBtn.className = 'btn-icon';
-						backBtn.style.backgroundColor = '#7c4dff';
-						backBtn.style.color = '#fff';
-						backBtn.style.border = 'none';
-						backBtn.style.padding = '6px 12px';
-						backBtn.style.borderRadius = '4px';
-						backBtn.style.cursor = 'pointer';
-						backBtn.style.fontWeight = 'bold';
-						backBtn.style.fontSize = '13px';
+						backBtn.classList.add('view-back-btn');
 						backBtn.innerText = `🔄 ${backCardName}`;
 
 						backBtn.addEventListener('click', () => {
@@ -8708,19 +6194,14 @@
 					targetInfoContainer.appendChild(backBlock);
 				}
 			} else {
-				targetInfoContainer.innerHTML = '<div style="color:#888;">(尚無詳細屬性資料)</div>';
+				targetInfoContainer.innerHTML = '<div class="u-color-888">(尚無詳細屬性資料)</div>';
 			}
 
 			// Mana 區塊
 			if (card.mana !== null && card.mana !== undefined) {
 				const manaBlock = document.createElement('div');
 				manaBlock.className = 'wdata-block mana-block';
-				manaBlock.style.borderLeft = '4px solid #4caf50';
-				manaBlock.style.padding = '8px 12px';
-				manaBlock.style.fontSize = '14px';
-				manaBlock.style.fontWeight = 'bold';
-				manaBlock.style.color = '#2e7d32';
-				manaBlock.style.marginTop = '10px';
+				manaBlock.classList.add('view-mana-block');
 
 				manaBlock.innerHTML = `<div><span class="attr-label">魔力供應: </span> <span class="attr-value">${card.mana}</span></div>`;
 
@@ -8766,7 +6247,7 @@
 			const statusSpan = document.getElementById('quick-calc-status');
 			if (statusSpan) {
 				statusSpan.innerText = isOn ? 'ON' : 'OFF';
-				statusSpan.style.color = isOn ? '#ffffff' : '#cccccc';
+				statusSpan.dataset.uiColor = isOn ? "white" : "gray-300";
 			}
 		}
 		
@@ -8816,21 +6297,14 @@
 			if (totalSetsCount > 0) {
 				const setBlock = document.createElement('div');
 				setBlock.className = 'wdata-block set-list-block';
-				setBlock.style.borderLeft = '4px solid #009688';
-				setBlock.style.marginTop = '10px';
+				setBlock.dataset.uiBorderLeft = "4px-solid-009688";
+				setBlock.dataset.uiMarginTop = "10px";
 
 				const autoExpand = window._autoExpandSetBlock === true;
 				window._autoExpandSetBlock = false;
 
 				const setBlockTitle = document.createElement('div');
-				setBlockTitle.style.fontSize = '14px';
-				setBlockTitle.style.fontWeight = 'bold';
-				setBlockTitle.style.color = '#00695c';
-				setBlockTitle.style.cursor = 'pointer';
-				setBlockTitle.style.display = 'flex';
-				setBlockTitle.style.justifyContent = 'space-between';
-				setBlockTitle.style.alignItems = 'center';
-				setBlockTitle.style.userSelect = 'none';
+				setBlockTitle.classList.add('view-set-block-title');
 
 				const arrowSpan = document.createElement('span');
 				arrowSpan.innerText = autoExpand ? '▲' : '▼';
@@ -8841,44 +6315,35 @@
 
 				const setContentBody = document.createElement('div');
 				setContentBody.className = 'set-content-body';
-				setContentBody.style.marginTop = '8px';
-				setContentBody.style.display = autoExpand ? 'block' : 'none';
+				setContentBody.dataset.uiMarginTop = "8px";
+				setContentBody.dataset.uiDisplay = autoExpand ? "block" : "none";
 				setBlock.appendChild(setContentBody);
 
 				setBlockTitle.addEventListener('click', () => {
-					const isHidden = setContentBody.style.display === 'none';
-					setContentBody.style.display = isHidden ? 'block' : 'none';
+					const isHidden = setContentBody.dataset.uiDisplay === 'none';
+					setContentBody.dataset.uiDisplay = isHidden ? "block" : "none";
 					arrowSpan.innerText = isHidden ? '▲' : '▼';
 				});
 
 				const renderSetGroup = (sets, groupTitle) => {
 					if (sets.length === 0) return;
 					const groupDiv = document.createElement('div');
-					groupDiv.style.marginBottom = '6px';
+					groupDiv.dataset.uiMarginBottom = "6px";
 
 					if (groupTitle) {
 						const subTitle = document.createElement('div');
-						subTitle.style.fontSize = '11px';
-						subTitle.style.color = '#666';
-						subTitle.style.fontWeight = 'bold';
-						subTitle.style.marginBottom = '4px';
+						subTitle.classList.add('view-sub-title');
 						subTitle.innerText = groupTitle;
 						groupDiv.appendChild(subTitle);
 					}
 
 					const btnContainer = document.createElement('div');
-					btnContainer.style.display = 'flex';
-					btnContainer.style.flexWrap = 'wrap';
-					btnContainer.style.gap = '6px';
+					btnContainer.classList.add('view-btn-container');
 
 					sets.forEach(item => {
 						const btn = document.createElement('button');
 						btn.className = 'btn-icon';
-						btn.style.fontSize = '11px';
-						btn.style.padding = '3px 8px';
-						btn.style.backgroundColor = '#e0f2f1';
-						btn.style.color = '#004d40';
-						btn.style.border = '1px solid #b2dfdb';
+						btn.classList.add('view-btn');
 						btn.value = item.setcode;
 						btn.innerText = `${item.setcode}${item.setname}`;
 
@@ -9010,13 +6475,13 @@
 			extBlock.appendChild(extTitle);
 
 			const extBody = document.createElement('div');
-			extBody.style.marginTop = '8px';
-			extBody.style.display = 'none';
+			extBody.dataset.uiMarginTop = "8px";
+			extBody.dataset.uiDisplay = "none";
 			extBlock.appendChild(extBody);
 
 			extTitle.addEventListener('click', () => {
-				const isHidden = extBody.style.display === 'none';
-				extBody.style.display = isHidden ? 'block' : 'none';
+				const isHidden = extBody.dataset.uiDisplay === 'none';
+				extBody.dataset.uiDisplay = isHidden ? "block" : "none";
 				extArrow.innerText = isHidden ? '▲' : '▼';
 
 				if (isHidden) {
@@ -9038,7 +6503,7 @@
 				a.href = url;
 				a.target = '_blank';
 				a.rel = 'noopener noreferrer';
-				a.innerHTML = `${label} <span style="font-size:9px; opacity:0.7;">↗</span>`;
+				a.innerHTML = `${label} <span class="view-render-set-block-and-ext-links-span">↗</span>`;
 
 				// 💡 新增：點擊外部連結時觸發側錄
 				a.onclick = () => {
@@ -9079,7 +6544,7 @@
 			const jpWikiBtn = document.createElement('button');
 			jpWikiBtn.type = 'button';
 			jpWikiBtn.className = 'ext-link-btn wiki-btn';
-			jpWikiBtn.innerHTML = `🌐 日文 Wiki <span style="font-size:9px; opacity:0.7;">↗</span>`;
+			jpWikiBtn.innerHTML = `🌐 日文 Wiki <span class="view-render-set-block-and-ext-links-span">↗</span>`;
 			jpWikiBtn.onclick = async (e) => {
 				e.preventDefault();
 				if (!rawCardName) return;
@@ -9136,7 +6601,7 @@
 			const enWikiBtn = document.createElement('button');
 			enWikiBtn.type = 'button';
 			enWikiBtn.className = 'ext-link-btn wiki-btn';
-			enWikiBtn.innerHTML = `🌐 英文 Wiki <span style="font-size:9px; opacity:0.7;">↗</span>`;
+			enWikiBtn.innerHTML = `🌐 英文 Wiki <span class="view-render-set-block-and-ext-links-span">↗</span>`;
 			enWikiBtn.onclick = async (e) => {
 				e.preventDefault();
 				if (!rawCardName) return;
@@ -9213,18 +6678,12 @@
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'toast-msg';
-                toast.style.cssText = `
-                    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-                    background: rgba(0, 0, 0, 0.85); color: #fff; padding: 10px 20px;
-                    border-radius: 20px; font-size: 14px; font-weight: bold; z-index: 10000;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: opacity 0.3s; opacity: 0;
-                    pointer-events: none; text-align: center; max-width: 80%;
-                `;
+                toast.classList.add('view-toast');
                 document.body.appendChild(toast);
             }
             toast.innerText = message;
-            toast.style.opacity = '1';
-            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+            toast.dataset.uiOpacity = "1";
+            setTimeout(() => { toast.dataset.uiOpacity = "0"; }, 2000);
         }
 		
 		// 💡 通用式 Modal 對話框 (支援 Prompt / Confirm / Alert)
@@ -9257,11 +6716,11 @@
 				// 依據參數決定是否顯示輸入框與取消按鈕
 				inputEl.value = "";
 				inputEl.placeholder = placeholder;
-				inputEl.style.display = showInput ? 'block' : 'none';
+				inputEl.dataset.uiDisplay = showInput ? "block" : "none";
 
 				btnConfirm.innerText = confirmText;
 				btnCancel.innerText = cancelText;
-				btnCancel.style.display = showCancel ? 'block' : 'none';
+				btnCancel.dataset.uiDisplay = showCancel ? "block" : "none";
 
 				// 重新綁定事件避免重複觸發
 				const newConfirm = btnConfirm.cloneNode(true);
@@ -9270,7 +6729,7 @@
 				btnCancel.parentNode.replaceChild(newCancel, btnCancel);
 
 				const cleanup = () => {
-					inputEl.style.display = 'none';
+					inputEl.dataset.uiDisplay = "none";
 					modal.classList.remove('active');
 				};
 
@@ -9321,8 +6780,8 @@
                     // 行動裝置 / 非 HTTPS 備援方式
                     const textArea = document.createElement("textarea");
                     textArea.value = text;
-                    textArea.style.position = "fixed";
-                    textArea.style.left = "-9999px";
+                    textArea.dataset.uiPosition = "fixed";
+                    textArea.dataset.uiLeft = "9999px";
                     document.body.appendChild(textArea);
                     textArea.focus();
                     textArea.select();
@@ -9374,7 +6833,7 @@
 
             updateModalTitleUI(card, modalTitle, matchedItem, targetIdIndex, reRenderCallback);
 
-            modalHeader.style.background = getCivBackground(combinedCiv);
+            setUiValue(modalHeader, 'background', getCivBackground(combinedCiv));
             modalInfoContainer.className = 'modal-info-container detail-info-scroll-panel';
 
             renderDetailContentToContainer(card, combinedCiv, matchedItem, modalImgBox, modalInfoContainer, true);
@@ -9399,10 +6858,10 @@
 
             const headerDiv = document.createElement('div');
             headerDiv.className = 'modal-header';
-            headerDiv.style.borderRadius = '8px';
-            headerDiv.style.marginBottom = '15px';
-            headerDiv.style.background = getCivBackground(combinedCiv);
-            headerDiv.style.flexShrink = '0';
+            headerDiv.dataset.uiBorderRadius = "8px";
+            headerDiv.dataset.uiMarginBottom = "15px";
+            setUiValue(headerDiv, 'background', getCivBackground(combinedCiv));
+            headerDiv.dataset.uiFlexShrink = "0";
 
             const titleDiv = document.createElement('div');
             titleDiv.className = 'modal-title';
@@ -9423,12 +6882,12 @@
 
             const mainContent = document.createElement('div');
             mainContent.className = 'modal-main-content';
-            mainContent.style.flex = '1';
-            mainContent.style.overflow = 'hidden';
+            mainContent.dataset.uiFlex = "1";
+            mainContent.dataset.uiOverflow = "hidden";
 
             const imgBox = document.createElement('div');
             imgBox.className = 'modal-img-container';
-            imgBox.style.flexShrink = '0';
+            imgBox.dataset.uiFlexShrink = "0";
 
             const infoContainer = document.createElement('div');
             infoContainer.className = 'modal-info-container detail-info-scroll-panel';
@@ -9503,7 +6962,7 @@
 						if (cardViewTimer) clearTimeout(cardViewTimer);
 						
 						cardModal.classList.remove('active');
-						cardModal.style.zIndex = ''; // 💡 還原 z-index
+						delete cardModal.dataset.uiZIndex; // 💡 還原 z-index
 					}
 				});
 			}
@@ -9554,31 +7013,9 @@
 						<head>
 							<meta name="viewport" content="width=device-width, initial-scale=1.0">
 							<title>${fileName}</title>
-							<style>
-								body { 
-									margin: 0; 
-									background: #111; 
-									color: #fff; 
-									display: flex; 
-									flex-direction: column; 
-									align-items: center; 
-									justify-content: center; 
-									min-height: 100vh;
-									font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-								}
-								.tip { 
-									background: rgba(213, 47, 47, 0.9); 
-									padding: 10px 16px; 
-									border-radius: 20px; 
-									font-size: 14px; 
-									font-weight: bold; 
-									margin-bottom: 15px; 
-									box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-								}
-								img { max-width: 95%; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
-							</style>
+							<link rel="stylesheet" href="${new URL('./image-preview.css', document.baseURI).href}">
 						</head>
-						<body>
+						<body class="image-preview--mobile">
 							<div class="tip">💡 請長按下方圖片，選擇「加入照片」即可存入相簿</div>
 							<img src="${dataUrl}" alt="${fileName}"/>
 						</body>
@@ -9594,7 +7031,7 @@
 			const a = document.createElement('a');
 			a.href = blobUrl;
 			a.download = fileName;
-			a.style.display = 'none';
+			a.dataset.uiDisplay = "none";
 			document.body.appendChild(a);
 			a.click();
 			
@@ -9613,12 +7050,11 @@
 
 			if (loadingOverlay) {
 				if (loadingText) loadingText.innerText = '正在生成卡牌截圖...';
-				loadingOverlay.style.display = 'flex';
+				loadingOverlay.dataset.uiDisplay = "flex";
 			}
 
 			const scrollPanel = targetElement.querySelector('.detail-info-scroll-panel');
-			let prevMaxHeight = '';
-			let prevOverflow = '';
+			const wasCaptureScroll = scrollPanel?.classList.contains('capture-scroll') || false;
 
 			// 💡 關鍵修正：精確鎖定「當前第一張」卡圖 (data-active="true" 或 .stack-pos-0)
 			const activeImg = targetElement.querySelector('.modal-img[data-active="true"]') 
@@ -9628,10 +7064,7 @@
 
 			try {
 				if (scrollPanel) {
-					prevMaxHeight = scrollPanel.style.maxHeight;
-					prevOverflow = scrollPanel.style.overflow;
-					scrollPanel.style.maxHeight = 'none';
-					scrollPanel.style.overflow = 'visible';
+					scrollPanel.classList.add('capture-scroll');
 				}
 
 				if (activeImg) {
@@ -9683,12 +7116,9 @@
 							<html>
 							<head>
 								<title>${cleanName} - Detail 截圖</title>
-								<style>
-									body { margin: 0; display: flex; justify-content: center; align-items: center; background: #333; min-height: 100vh; }
-									img { max-width: 100%; height: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.5); background: white; }
-								</style>
+								<link rel="stylesheet" href="${new URL('./image-preview.css', document.baseURI).href}">
 							</head>
-							<body>
+							<body class="image-preview--desktop">
 								<img src="${image}" alt="${cleanName}"/>
 							</body>
 							</html>
@@ -9710,12 +7140,11 @@
 				}
 				
 				if (scrollPanel) {
-					scrollPanel.style.maxHeight = prevMaxHeight;
-					scrollPanel.style.overflow = prevOverflow;
+					scrollPanel.classList.toggle('capture-scroll', wasCaptureScroll);
 				}
 
 				if (loadingOverlay) {
-					loadingOverlay.style.display = 'none';
+					loadingOverlay.dataset.uiDisplay = "none";
 				}
 			}
 		}
@@ -10093,7 +7522,7 @@
 			const bufEl = document.getElementById('quick-num-buffer');
 			if (bufEl) {
 				bufEl.innerText = errMsg;
-				bufEl.style.color = '#d32f2f'; // 顯示警告紅字
+				bufEl.dataset.uiColor = "accent"; // 顯示警告紅字
 			}
 		}
 
@@ -10373,7 +7802,7 @@
 					}
 
 					// 2. 當快搜抽屜開啟且有條件時，先套用至 UI
-					if (drawer && drawer.style.display !== 'none') { // 💡 修正：改用 display 判斷
+					if (drawer && drawer.dataset.uiDisplay !== 'none') { // 💡 修正：改用 display 判斷
 						if (quickTags.length > 0) {
 							applyQuickSearchToUI();
 						}
@@ -10437,7 +7866,7 @@
 				// B. 快搜計算機抽屜熱鍵邏輯 (原有邏輯)[cite: 1]
 				// ==========================================
 				const drawer = document.getElementById('drawer-quick-search');
-				if (!drawer || drawer.style.display === 'none') return;
+				if (!drawer || drawer.dataset.uiDisplay === 'none') return;
 
 				if (e.key >= '0' && e.key <= '9') {
 					e.preventDefault();
@@ -10469,7 +7898,7 @@
 			document.getElementById('btn-quick-close-footer')?.addEventListener('click', () => {
 				const drawer = document.getElementById('drawer-quick-search');
 				if (drawer) {
-					drawer.style.display = 'none';
+					drawer.dataset.uiDisplay = "none";
 					updateQuickCalcUI(false); // 💡 同步狀態
 				}
 			});
@@ -10775,12 +8204,12 @@
 			const query = normalizeIdString(rawQuery);
 			trackFeature('用卡號搜尋(Banner)', { input_card_id: rawQuery });
 
-			errorEl.style.display = 'none';
+			errorEl.dataset.uiDisplay = "none";
 			errorEl.innerText = '';
 
 			if (!query) {
 				errorEl.innerText = '⚠️ 請輸入要搜尋的卡號';
-				errorEl.style.display = 'block';
+				errorEl.dataset.uiDisplay = "block";
 				return;
 			}
 
@@ -10829,7 +8258,7 @@
 			// ❌ 情況 0：找不到卡片
 			if (matchedResults.length === 0) {
 				errorEl.innerText = `⚠️ 找不到符合「${rawQuery}」的卡號`;
-				errorEl.style.display = 'block';
+				errorEl.dataset.uiDisplay = "block";
 				return;
 			}
 
@@ -10882,15 +8311,15 @@
 			const errorEl = document.getElementById('id-search-error');
 			
 			input.value = '';
-			errorEl.style.display = 'none';
-			modal.style.display = 'flex';
+			errorEl.dataset.uiDisplay = "none";
+			modal.dataset.uiDisplay = "flex";
 			
 			// 自動 focus 輸入框（延遲 100ms 確保彈窗已完全渲染）
 			setTimeout(() => input.focus(), 100);
 		}
 
 		function closeIdSearchModal() {
-			document.getElementById('id-search-modal').style.display = 'none';
+			document.getElementById('id-search-modal').dataset.uiDisplay = "none";
 		}
 
 		// 初始化事件監聽
@@ -11541,9 +8970,9 @@
 			const status = document.getElementById('deckmaker-ocr-status');
 			if (!status) return;
 			status.textContent = message;
-			status.style.display = 'block';
-			status.style.background = isError ? '#fef2f2' : '#f5f3ff';
-			status.style.color = isError ? '#b91c1c' : '#5b21b6';
+			status.dataset.uiDisplay = "block";
+			status.dataset.uiBackground = isError ? "fef2f2" : "f5f3ff";
+			status.dataset.uiColor = isError ? "b91c1c" : "5b21b6";
 		}
 
 		function loadDeckMakerScript(src, globalName) {
@@ -11727,8 +9156,8 @@
 			});
 
 			renderVerifyListUI();
-			document.getElementById('deck-input-step').style.display = 'none';
-			document.getElementById('deck-verify-step').style.display = 'block';
+			document.getElementById('deck-input-step').dataset.uiDisplay = "none";
+			document.getElementById('deck-verify-step').dataset.uiDisplay = "block";
 		});
 		
 		// 2. 匯出英文牌組非同步處理流程
@@ -11753,7 +9182,7 @@
 			const loadingText = document.getElementById('loading-text');
 			if (loadingOverlay) {
 				if (loadingText) loadingText.innerText = '正在批量查詢英文卡名中...';
-				loadingOverlay.style.display = 'flex';
+				loadingOverlay.dataset.uiDisplay = "flex";
 			}
 
 			try {
@@ -11786,7 +9215,7 @@
 				console.error("匯出英文牌組失敗:", err);
 				alert("匯出英文牌組失敗，請稍後再試！");
 			} finally {
-				if (loadingOverlay) loadingOverlay.style.display = 'none';
+				if (loadingOverlay) loadingOverlay.dataset.uiDisplay = "none";
 			}
 		}
 
@@ -11937,7 +9366,7 @@
 				tr.innerHTML = `
 					<td class="report-rank ${rankClass}">${currentRank}</td>
 					<td><span class="report-card-link" data-name="${item.cardName}">${item.cardName}</span></td>
-					<td style="text-align: center; font-weight: bold;">${item.count}</td>
+					<td class="view-generate-deck-report-td">${item.count}</td>
 				`;
 				tbody.appendChild(tr);
 			});
@@ -12034,8 +9463,8 @@
 				tr.innerHTML = `
 					<td class="report-rank ${rankClass}">${currentRank}</td>
 					<td><span class="report-card-link" data-name="${item.cardName}">${item.cardName}</span></td>
-					<td style="text-align: center; font-weight: bold;">${item.userCount} 人</td>
-					<td style="color: #475569; font-size: 12px; word-break: break-all;">${item.userList}</td>
+					<td class="view-generate-deck-report-td">${item.userCount} 人</td>
+					<td class="view-generate-user-report-td">${item.userList}</td>
 				`;
 				tbody.appendChild(tr);
 			});
@@ -12051,7 +9480,7 @@
 
 			// 2. 若本次公告與上次紀錄不同，則彈窗提示
 			if (currentNoticeStr !== cachedNoticeStr) {
-				const messageHtml = SYS_NOTICE_DATA.map(line => `<div>${line}</div>`).join('<div style="height:6px;"></div>');
+				const messageHtml = SYS_NOTICE_DATA.map(line => `<div>${line}</div>`).join('<div class="u-height-6px"></div>');
 
 				if (typeof showNoticeModalPrompt === 'function') {
 					showNoticeModalPrompt({
@@ -12096,22 +9525,22 @@
 
 			// 切換至頁籤 1 (牌組別)
 			btnTabDeck?.addEventListener('click', () => {
-				btnTabDeck.style.background = '#0284c7';
-				btnTabDeck.style.color = '#ffffff';
-				btnTabUser.style.background = '#e2e8f0';
-				btnTabUser.style.color = '#334155';
-				viewDeck.style.display = 'block';
-				viewUser.style.display = 'none';
+				btnTabDeck.dataset.uiBackground = "primary";
+				btnTabDeck.dataset.uiColor = "white";
+				btnTabUser.dataset.uiBackground = "slate-200";
+				btnTabUser.dataset.uiColor = "slate-700";
+				viewDeck.dataset.uiDisplay = "block";
+				viewUser.dataset.uiDisplay = "none";
 			});
 
 			// 切換至頁籤 2 (使用者別)
 			btnTabUser?.addEventListener('click', () => {
-				btnTabUser.style.background = '#0284c7';
-				btnTabUser.style.color = '#ffffff';
-				btnTabDeck.style.background = '#e2e8f0';
-				btnTabDeck.style.color = '#334155';
-				viewUser.style.display = 'block';
-				viewDeck.style.display = 'none';
+				btnTabUser.dataset.uiBackground = "primary";
+				btnTabUser.dataset.uiColor = "white";
+				btnTabDeck.dataset.uiBackground = "slate-200";
+				btnTabDeck.dataset.uiColor = "slate-700";
+				viewUser.dataset.uiDisplay = "block";
+				viewDeck.dataset.uiDisplay = "none";
 			});
 
 			// 點擊報表卡名連動開啟 Detail Modal（加入動態高 z-index）
@@ -12130,7 +9559,7 @@
 						// 💡 1. 取得卡牌彈窗 DOM，臨時將 z-index 提升至 10000（壓過報表彈窗的 1000）
 						const cardModalEl = document.getElementById('card-modal');
 						if (cardModalEl) {
-							cardModalEl.style.zIndex = '10000';
+							cardModalEl.dataset.uiZIndex = "10000";
 						}
 
 						if (typeof openCardModal === 'function') {
@@ -12187,14 +9616,14 @@
 		
 		if (modalCloseBtn && cardModalEl) {
 			modalCloseBtn.addEventListener('click', () => {
-				cardModalEl.style.zIndex = '';
+				delete cardModalEl.dataset.uiZIndex;
 			});
 		}
 		
 		if (cardModalEl) {
 			cardModalEl.addEventListener('click', (e) => {
 				if (e.target === cardModalEl) {
-					cardModalEl.style.zIndex = '';
+					delete cardModalEl.dataset.uiZIndex;
 				}
 			});
 		}
@@ -12214,9 +9643,9 @@
 
 			// 兩者皆滿足才顯示按鈕
 			if (isAdvMode && isCustomDeckSelected) {
-				clearBtn.style.display = 'inline-block';
+				clearBtn.dataset.uiDisplay = "inline-block";
 			} else {
-				clearBtn.style.display = 'none';
+				clearBtn.dataset.uiDisplay = "none";
 			}
 		}
 
@@ -12231,16 +9660,16 @@
 
 			parsedVerifyItems.forEach((item, idx) => {
 				const row = document.createElement('div');
-				row.style.cssText = "display:flex; align-items:center; gap:8px; padding:6px; background:#f8fafc; border-radius:4px; font-size:13px;";
+				row.classList.add('view-row-2');
 
 				const info = document.createElement('div');
-				info.style.flex = "1";
-				info.innerHTML = `<b>${item.count}ⅹ</b> <span style="color:#64748b;">${item.rawName}</span>`;
+				info.dataset.uiFlex = "1";
+				info.innerHTML = `<b>${item.count}ⅹ</b> <span class="u-color-64748b">${item.rawName}</span>`;
 
 				const select = document.createElement('select');
-				select.style.cssText = "flex:2; padding:4px; font-size:13px; margin-bottom:0;";
+				select.classList.add('view-select');
 
-				let selectHtml = `<option value="__NOT_FOUND__" style="color:#ef4444;">❌ [未找到對應卡牌]</option>`;
+				let selectHtml = `<option class="u-color-ef4444" value="__NOT_FOUND__">❌ [未找到對應卡牌]</option>`;
 				
 				item.candidates.forEach(cand => {
 					const selectedAttr = (cand === item.matchedName) ? 'selected' : '';
@@ -12275,20 +9704,20 @@
 			const totalItems = parsedVerifyItems.length;
 
 			if (notFoundCount > 0) {
-				summary.innerHTML = `<span style="color:#ef4444;">⚠️ 共 ${totalItems} 項，尚有 ${notFoundCount} 項「未找到」</span>`;
+				summary.innerHTML = `<span class="u-color-ef4444">⚠️ 共 ${totalItems} 項，尚有 ${notFoundCount} 項「未找到」</span>`;
 				btnConfirm.disabled = true;
-				btnConfirm.style.opacity = '0.5';
+				btnConfirm.dataset.uiOpacity = "0-5";
 			} else {
-				summary.innerHTML = `<span style="color:#16a34a;">✅ 全數匹配成功 (${totalItems} 項)！可以匯入。</span>`;
+				summary.innerHTML = `<span class="u-color-16a34a">✅ 全數匹配成功 (${totalItems} 項)！可以匯入。</span>`;
 				btnConfirm.disabled = false;
-				btnConfirm.style.opacity = '1';
+				btnConfirm.dataset.uiOpacity = "1";
 			}
 		}
 
 		// 返回修改
 		document.getElementById('btn-re-edit-deck')?.addEventListener('click', () => {
-			document.getElementById('deck-input-step').style.display = 'block';
-			document.getElementById('deck-verify-step').style.display = 'none';
+			document.getElementById('deck-input-step').dataset.uiDisplay = "block";
+			document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
 		});
 
 		// 確認匯入牌組
@@ -12420,8 +9849,8 @@
 		document.querySelectorAll('#btn-open-deck-import, .btn-open-deck-import-action').forEach(btn => {
 			btn.addEventListener('click', () => {
 				closeAllDrawers(); // 💡 點擊後收合抽屜
-				document.getElementById('deck-input-step').style.display = 'block';
-				document.getElementById('deck-verify-step').style.display = 'none';
+				document.getElementById('deck-input-step').dataset.uiDisplay = "block";
+				document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
 				document.getElementById('deck-textarea').value = '';
 				document.getElementById('deck-import-modal').classList.add('active');
 			});
@@ -12593,9 +10022,9 @@
 			if (totalSpan) totalSpan.innerText = totalCount;
 
 			if (totalCount > 0) {
-				floatBtn.style.display = 'flex';
+				floatBtn.dataset.uiDisplay = "flex";
 			} else {
-				floatBtn.style.display = 'none';
+				floatBtn.dataset.uiDisplay = "none";
 				document.getElementById('cart-modal')?.classList.remove('active'); // 清空自動關閉
 			}
 
@@ -12631,15 +10060,15 @@
 							if (imgUrl) {
 								const img = document.createElement('img');
 								img.src = imgUrl;
-								img.style.zIndex = i + 1;
-								if (i > 0) img.style.marginTop = '-175px'; // 向上疊加
+								setUiValue(img, 'z-index', i + 1);
+								if (i > 0) img.dataset.uiMarginTop = "175px"; // 向上疊加
 								stackWrapper.appendChild(img);
 							} else {
 								const noImg = document.createElement('div');
 								noImg.className = 'cart-no-img';
 								noImg.innerText = name;
-								noImg.style.zIndex = i + 1;
-								if (i > 0) noImg.style.marginTop = '-175px';
+								setUiValue(noImg, 'z-index', i + 1);
+								if (i > 0) noImg.dataset.uiMarginTop = "175px";
 								stackWrapper.appendChild(noImg);
 							}
 						}
@@ -12699,12 +10128,12 @@
 
 			// 定義文明設定與色票 (Dark: 單色, Light: 多色)
 			const CIV_CONFIGS = [
-				{ bit: 16, name: '光', dark: '#ca8a04', light: '#fef08a' },
-				{ bit: 8,  name: '水', dark: '#0284c7', light: '#bae6fd' },
-				{ bit: 4,  name: '闇', dark: '#475569', light: '#cbd5e1' },
-				{ bit: 2,  name: '火', dark: '#dc2626', light: '#fca5a5' },
-				{ bit: 1,  name: '自然', dark: '#16a34a', light: '#86efac' },
-				{ bit: 32, name: '無', dark: '#64748b', light: '#e2e8f0' }
+				{ bit: 16, name: '光', dark: 'var(--civ-light-dark)', light: 'var(--civ-light-light)' },
+				{ bit: 8,  name: '水', dark: 'var(--civ-water-dark)', light: 'var(--civ-water-light)' },
+				{ bit: 4,  name: '闇', dark: 'var(--civ-darkness-dark)', light: 'var(--civ-darkness-light)' },
+				{ bit: 2,  name: '火', dark: 'var(--civ-fire-dark)', light: 'var(--civ-fire-light)' },
+				{ bit: 1,  name: '自然', dark: 'var(--civ-nature-dark)', light: 'var(--civ-nature-light)' },
+				{ bit: 32, name: '無', dark: 'var(--civ-zero-dark)', light: 'var(--civ-zero-light)' }
 			];
 
 			const stats = {};
@@ -12776,11 +10205,11 @@
 				const monoHeightPercent = civ.total > 0 ? (civ.mono / civ.total) * 100 : 0;
 
 				barsHtml += `
-					<div class="chart-col" style="max-width: none;">
+					<div class="chart-col u-max-width-none">
 						<div class="chart-bar-total-val">${civ.total}</div>
-						<div class="chart-bar-track" style="width: ${barWidth}px; height: ${totalHeightPercent}%;">
-							<div class="chart-bar-segment" style="height: ${multiHeightPercent}%; background-color: ${civ.light};" title="${civ.name} (多色): ${civ.multi}張"></div>
-							<div class="chart-bar-segment" style="height: ${monoHeightPercent}%; background-color: ${civ.dark};" title="${civ.name} (單色): ${civ.mono}張"></div>
+						<div class="chart-bar-track view-render-cart-civ-chart-chart-bar-track" style="--template-width: ${barWidth}px; --template-height: ${totalHeightPercent}%;">
+							<div class="chart-bar-segment view-render-cart-civ-chart-chart-bar-segment" style="--template-height: ${multiHeightPercent}%; --template-background-color: ${civ.light};" title="${civ.name} (多色): ${civ.multi}張"></div>
+							<div class="chart-bar-segment view-render-cart-civ-chart-chart-bar-segment" style="--template-height: ${monoHeightPercent}%; --template-background-color: ${civ.dark};" title="${civ.name} (單色): ${civ.mono}張"></div>
 						</div>
 					</div>
 				`;
@@ -12800,25 +10229,25 @@
 			});
 
 			container.innerHTML = `
-				<div class="cart-chart-wrapper" style="overflow-x: hidden;">
+				<div class="cart-chart-wrapper u-overflow-x-hidden">
 					<div class="cart-chart-header">
 						<div class="cart-chart-title">📊 各文明卡牌張數統計</div>
 						<div class="cart-chart-legend">
 							<div class="legend-item">
-								<span class="legend-dot" style="background: #475569;"></span>
+								<span class="legend-dot u-background-475569"></span>
 								<span>單色 ${totalDeckMono}</span>
 							</div>
 							<div class="legend-item">
-								<span class="legend-dot" style="background: #cbd5e1;"></span>
+								<span class="legend-dot u-background-cbd5e1"></span>
 								<span>多色 ${totalDeckMulti}</span>
 							</div>
 						</div>
 					</div>
 					
-					<div class="chart-bars-area" style="padding: 0 4px;">
-						<div class="chart-grid-line" style="top: 25%;"></div>
-						<div class="chart-grid-line" style="top: 50%;"></div>
-						<div class="chart-grid-line" style="top: 75%;"></div>
+					<div class="chart-bars-area u-padding-0-4px">
+						<div class="chart-grid-line u-top-25"></div>
+						<div class="chart-grid-line u-top-50"></div>
+						<div class="chart-grid-line u-top-75"></div>
 						${barsHtml}
 					</div>
 
@@ -12910,7 +10339,7 @@
 			// 關閉 Modal 時還原預設 z-index
 			const resetModalZIndex = () => {
 				const cardModalEl = document.getElementById('card-modal');
-				if (cardModalEl) cardModalEl.style.zIndex = '';
+				if (cardModalEl) delete cardModalEl.dataset.uiZIndex;
 			};
 
 			document.getElementById('modal-close')?.addEventListener('click', resetModalZIndex);
@@ -12938,17 +10367,15 @@
 			
 			currentNicknameInputs.forEach((val, idx) => {
 				const row = document.createElement('div');
-				row.style.display = 'flex';
-				row.style.alignItems = 'center';
-				row.style.gap = '6px';
+				row.classList.add('view-row');
 				
 				const input = document.createElement('input');
 				input.type = 'text';
 				input.className = 'qa-input';
 				input.value = val;
 				input.placeholder = '請輸入您想申請的暱稱';
-				input.style.flex = '1';
-				input.style.fontSize = '15px';
+				input.dataset.uiFlex = "1";
+				input.dataset.uiFontSize = "15px";
 				
 				// 💡 一旦修改了文字，就必須重新檢查 (封鎖送出按鈕)
 				input.addEventListener('input', (e) => {
@@ -12958,16 +10385,12 @@
 
 				const statusIcon = document.createElement('span');
 				statusIcon.id = `nick-status-${idx}`;
-				statusIcon.style.minWidth = '24px';
-				statusIcon.style.textAlign = 'center';
-				statusIcon.style.fontWeight = 'bold';
+				statusIcon.classList.add('view-status-icon');
 				
 				const delBtn = document.createElement('button');
 				delBtn.innerText = '🗑️';
 				delBtn.className = 'btn-icon';
-				delBtn.style.padding = '8px';
-				delBtn.style.background = '#f1f5f9';
-				delBtn.style.border = '1px solid #cbd5e1';
+				delBtn.classList.add('view-del-btn');
 				
 				// 刪除按鈕邏輯：最少要留 1 個
 				delBtn.onclick = () => {
@@ -12991,8 +10414,8 @@
 			isNicknameChecked = false;
 			const btnSubmit = document.getElementById('btn-submit-nickname');
 			btnSubmit.disabled = true;
-			btnSubmit.style.opacity = '0.5';
-			document.getElementById('nickname-error-msg').style.display = 'none';
+			btnSubmit.dataset.uiOpacity = "0-5";
+			document.getElementById('nickname-error-msg').dataset.uiDisplay = "none";
 			
 			currentNicknameInputs.forEach((_, idx) => {
 				const icon = document.getElementById(`nick-status-${idx}`);
@@ -13076,11 +10499,11 @@
 
 				if (hasError) {
 					statusIcon.innerText = '❌';
-					statusIcon.style.color = '#ef4444';
+					statusIcon.dataset.uiColor = "danger";
 					allPassed = false;
 				} else {
 					statusIcon.innerText = '√';
-					statusIcon.style.color = '#16a34a';
+					statusIcon.dataset.uiColor = "success";
 				}
 			});
 
@@ -13089,13 +10512,13 @@
 			
 			if (!allPassed) {
 				errorDiv.innerText = errorMsg;
-				errorDiv.style.display = 'block';
+				errorDiv.dataset.uiDisplay = "block";
 				btnSubmit.disabled = true;
-				btnSubmit.style.opacity = '0.5';
+				btnSubmit.dataset.uiOpacity = "0-5";
 			} else {
-				errorDiv.style.display = 'none';
+				errorDiv.dataset.uiDisplay = "none";
 				btnSubmit.disabled = false;
-				btnSubmit.style.opacity = '1';
+				btnSubmit.dataset.uiOpacity = "1";
 				isNicknameChecked = true;
 				showToast('✅ 檢查通過，可送出申請！');
 			}
@@ -13752,7 +11175,7 @@
 				// 歷史重播直接呼叫核心，不經過搜尋按鈕的 Capture。
 				// 同時清除計算機暫存，避免下次搜尋又覆蓋歷史條件。
 				clearQuickSearch();
-				$('drawer-quick-search').style.display = 'none';
+				$('drawer-quick-search').dataset.uiDisplay = "none";
 				updateQuickCalcUI(false);
 
 				// 直接設定模式，不觸發會跳回條件頁的進階按鈕。
