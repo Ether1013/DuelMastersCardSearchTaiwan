@@ -2434,6 +2434,46 @@
 			color: #0369a1;
 			font-weight: bold;
 		}
+		/* Page3：扣除頂端頁籤、Footer 預留空間與頁面上下 padding。 */
+		#tab-list-split {
+			--split-panel-height: max(0px, calc(
+				100dvh
+				- var(--app-header-height, 49px)
+				- var(--app-footer-space, 86px)
+				- 40px
+			));
+		}
+
+		#tab-list-split .split-left-panel {
+			max-height: var(--split-panel-height);
+		}
+
+		#tab-list-split .split-right-panel {
+			height: var(--split-panel-height);
+		}
+
+		#list-container-split {
+			min-height: 0;
+		}
+		/* Page2：移除功能列上方額外留白。 */
+		#tab-list {
+			padding-top: 0;
+		}
+
+		/* 功能列緊接頂端頁籤，捲動前後維持相同高度。 */
+		#tab-list > .tab-sticky-row {
+			position: sticky;
+			top: var(--app-header-height, 49px);
+			z-index: 90;
+
+			/* 背景延伸至左右邊緣，按鈕仍保留原本水平縮排。 */
+			margin: 0 -20px;
+			padding: 4px 20px;
+
+			background: #f4f4f9;
+			border-bottom: 1px solid #e2e8f0;
+			box-sizing: border-box;
+		}
     </style>
 	<!-- 引入 html2canvas 截圖套件 -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -3900,14 +3940,33 @@
             return String(val);
         }
 
-        // --- 動態 Footer 高度偵測 ---
-        const footer = document.querySelector('.footer');
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                document.body.style.paddingBottom = (entry.contentRect.height + 20) + 'px';
-            }
-        });
-        resizeObserver.observe(footer);
+        // --- 同步 Header／Footer 與 Page3 可用高度 ---
+		const footer = document.querySelector('.footer');
+		const headerTabs = document.querySelector('.header-tabs');
+
+		function syncPageLayoutHeights() {
+			const footerSpace = footer.getBoundingClientRect().height + 20;
+			const headerHeight = headerTabs.getBoundingClientRect().height;
+			const root = document.documentElement;
+
+			root.style.setProperty(
+				'--app-header-height',
+				`${headerHeight}px`
+			);
+
+			root.style.setProperty(
+				'--app-footer-space',
+				`${footerSpace}px`
+			);
+
+			document.body.style.paddingBottom = `${footerSpace}px`;
+		}
+
+		const resizeObserver = new ResizeObserver(syncPageLayoutHeights);
+		resizeObserver.observe(footer);
+		resizeObserver.observe(headerTabs);
+
+		syncPageLayoutHeights();
 		
 		// 1. 卡種代號轉換為中文
         function getCardTypeText(typeVal) {
