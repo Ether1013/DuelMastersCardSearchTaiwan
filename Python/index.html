@@ -6362,9 +6362,10 @@
 					e?.detail?.recordConditionHistory === true
 				);
 
-			if (shouldRecord) {
-				conditionHistory.record();
-			}
+			// 至少找到一筆結果，才記錄過濾條件。
+            if (shouldRecord && currentFilterResults.length > 0) {
+                conditionHistory.record();
+            }
 
 			const noResults =
 				exactResults.length === 0 &&
