@@ -2072,12 +2072,12 @@ async def serve_index():
 # 提供查卡頁面拆出的 CSS；與 index.html 放在相同資料夾。
 @app.get("/styles.css", include_in_schema=False)
 async def serve_main_stylesheet():
-    return FileResponse(BASE_DIR / "styles.css", media_type="text/css")
+    return FileResponse(BASE_DIR / "styles.css", media_type="text/css",headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/image-preview.css", include_in_schema=False)
 async def serve_image_preview_stylesheet():
-    return FileResponse(BASE_DIR / "image-preview.css", media_type="text/css")
+    return FileResponse(BASE_DIR / "image-preview.css", media_type="text/css",headers={"Cache-Control": "no-cache"})
 
 @app.get("/fabric.do")
 async def serve_index(): return FileResponse("fabric.html")
