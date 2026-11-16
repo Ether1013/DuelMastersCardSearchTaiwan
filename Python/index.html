@@ -2641,28 +2641,16 @@
 
 				if (currentServerId) {
 					const cachedServerId = localStorage.getItem('dm_server_instance_id');
-					
-					// 第一次打開網頁，先記錄 ID
-					if (!cachedServerId) {
-						localStorage.setItem('dm_server_instance_id', currentServerId);
-					} 
-					// 發現 Server ID 變了（代表你部署了新版或 Render 重啟）
-					else if (currentServerId !== cachedServerId) {
-						console.log("偵測到伺服器已更新，清空快取並重新載入網頁...");
-						
-						// 1. 寫入最新的 ID
-						localStorage.setItem('dm_server_instance_id', currentServerId);
-						
-						// 2. 清空 Cache API 與 IndexedDB 大檔快取
-						try { await caches.delete(CACHE_NAME); } catch (e) {}
-						try { await localforage.clear(); } catch (e) {} // 💡 新增：清空 localForage
-						
-						// 💡 2. 確定要重整時，將狀態標記設為 true
+
+					// 先記錄最新 ID，避免重新載入後再次觸發刷新。
+					localStorage.setItem('dm_server_instance_id', currentServerId);
+
+					if (cachedServerId && currentServerId !== cachedServerId) {
+						console.log('偵測到伺服器重啟，重新載入頁面並保留資料快取。');
+
 						isReloading = true;
-						
-						// 3. 🎯 核心補強：直接命令瀏覽器重載全頁，讓 HTML/JS 一併更新到最新版！
-						window.location.reload(true);
-						return; // 中斷後續執行，讓頁面直接刷新
+						window.location.reload();
+						return;
 					}
 				}
 

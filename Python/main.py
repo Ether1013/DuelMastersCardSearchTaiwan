@@ -2066,7 +2066,11 @@ def trigger_record_sync(date_str: str):
 
 @app.get("/")
 async def serve_index():
-    return FileResponse(BASE_DIR / "index.html")
+    return FileResponse(
+        BASE_DIR / "index.html",
+        media_type="text/html",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 # 提供查卡頁面拆出的 CSS；與 index.html 放在相同資料夾。
