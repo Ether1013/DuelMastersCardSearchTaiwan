@@ -550,6 +550,102 @@
 			} catch (err) { alert(err.message); }
 		}
 		
+		const FEATURE_GROUPS = {
+			'搜尋': [
+				'搜尋(標準)',
+				'搜尋(進階)',
+				'搜尋(計算機)'
+			],
+			'過濾總覽': [
+				'開啟過濾總覽',
+				'點擊舊過濾條件'
+			],
+			'匯出列表': [
+				'匯出列表圖片(展開)',
+				'匯出列表圖片(縮排)',
+				'匯出列表圖文',
+				'匯出列表效果文'
+			]
+		};
+
+		const FEATURE_COLORS = {
+			'搜尋(標準)': '#38bdf8',
+			'搜尋(進階)': '#a78bfa',
+			'搜尋(計算機)': '#fb923c',
+
+			'開啟過濾總覽': '#34d399',
+			'點擊舊過濾條件': '#f472b6',
+
+			'匯出列表圖片(展開)': '#fbbf24',
+			'匯出列表圖片(縮排)': '#f97316',
+			'匯出列表圖文': '#2dd4bf',
+			'匯出列表效果文': '#818cf8'
+		};
+		function buildFeatureRows(stats) {
+			const groups = new Map();
+
+			for (const [feature, value] of Object.entries(stats)) {
+				const count = Number(value);
+				if (!Number.isFinite(count) || count <= 0) continue;
+
+				const group = Object.keys(FEATURE_GROUPS).find(name =>
+					FEATURE_GROUPS[name].includes(feature)
+				);
+
+				const key = group
+					? `group:${group}`
+					: `feature:${feature}`;
+
+				if (!groups.has(key)) {
+					groups.set(key, {
+						label: group || feature,
+						total: 0,
+						parts: []
+					});
+				}
+
+				const row = groups.get(key);
+				row.total += count;
+				row.parts.push({ name: feature, count });
+			}
+
+			const rows = [...groups.values()].sort((a, b) =>
+				b.total - a.total || a.label.localeCompare(b.label)
+			);
+
+			// 合併後取前五名，第五名同分的項目一併保留。
+			const threshold = rows.length > 5 ? rows[4].total : 0;
+			const visible = rows.filter(row => row.total >= threshold);
+			const others = rows.filter(row => row.total < threshold);
+
+			if (others.length) {
+				const total = others.reduce(
+					(sum, row) => sum + row.total, 0
+				);
+
+				visible.push({
+					label: '其他 (Other)',
+					total,
+					isOther: true,
+					parts: [{ name: '其他 (Other)', count: total }],
+					details: others.flatMap(row =>
+						row.parts.map(part =>
+							`${part.name}：${part.count} 次`
+						)
+					)
+				});
+			}
+
+			// 固定群組內的色塊順序。
+			const order = Object.values(FEATURE_GROUPS).flat();
+
+			visible.forEach(row => row.parts.sort((a, b) =>
+				order.indexOf(a.name) - order.indexOf(b.name)
+			));
+
+			return visible;
+		}
+		
         function initCharts() {
 		
 			// 💡 確保加入這行全域設定，強制所有圖例和文字為白色
@@ -559,38 +655,94 @@
             const ctxFeature = document.getElementById('featureChart').getContext('2d');
 			featureChart = new Chart(ctxFeature, {
 				type: 'bar',
-				data: { labels: [], datasets: [{ label: 'Triggers', data: [], backgroundColor: '#6366f1', borderRadius: 4 }] },
+				data: {
+					labels: [],
+					datasets: []
+				},
 				options: {
-					responsive: true, maintainAspectRatio: false,
-					plugins: { 
-						legend: { 
-							position: 'bottom', 
-							labels: { color: '#ffffff' },
+					responsive: true,
+					maintainAspectRatio: false,
+
+					interaction: {
+						mode: 'index',
+						intersect: false
+					},
+
+					plugins: {
+						legend: {
+							position: 'bottom',
+							labels: {
+								color: '#ffffff',
+								boxWidth: 12
+							},
+
+							// 圖例只說明顏色，避免隱藏子項後改變比例。
+							onClick: () => {}
 						},
-						datalabels: { display: false },
+
+						datalabels: {
+							display: false
+						},
+
 						tooltip: {
+							// 不顯示該長條中數值為零的其他操作。
+							filter: item => Number(item.raw) > 0,
+
 							callbacks: {
-								label: function(context) {
-									const label = context.label || '';
-									const val = context.raw;
-									if (label === 'Other' || label.startsWith('其他')) {
-										const details = featureChart.otherDetails || [];
-										return [`總計: ${val} 次`, '----------------', ...details];
-									}
-									return `觸發: ${val} 次`;
+								title(items) {
+									if (!items.length) return '';
+
+									const item = items[0];
+									const row =
+										item.chart.featureRows[item.dataIndex];
+
+									return `${row.label}（合計 ${row.total} 次）`;
+								},
+
+								label(context) {
+									const row =
+										context.chart.featureRows[context.dataIndex];
+
+									const percent = (
+										context.raw / row.total * 100
+									).toFixed(1);
+
+									return `${context.dataset.label}：`
+										+ `${context.raw} 次（${percent}%）`;
+								},
+
+								afterBody(items) {
+									if (!items.length) return [];
+
+									const item = items[0];
+
+									return item.chart.featureRows[item.dataIndex]
+										.details || [];
 								}
 							}
 						}
 					},
+
 					scales: {
-						x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2937' } },
-						y: { 
-							type: 'logarithmic',
-							ticks: { 
-								color: '#9ca3af',
-								callback: function(value) { return [0, 1, 10, 100, 1000, 10000, 100000].includes(value) ? value : null; }
-							}, 
+						x: {
+							stacked: true,
+							ticks: { color: '#9ca3af' },
 							grid: { color: '#1f2937' }
+						},
+
+						y: {
+							type: 'logarithmic',
+							stacked: true,
+							ticks: {
+								color: '#9ca3af',
+								callback(value) {
+									return [1, 10, 100, 1000, 10000, 100000]
+										.includes(value) ? value : null;
+								}
+							},
+							grid: {
+								color: '#1f2937'
+							}
 						}
 					}
 				}
@@ -857,38 +1009,29 @@
 				if (userElem) userElem.innerText = totalUsersCount;
 
 				if (featureChart) {
-					const rawEntries = Object.entries(featureStats).sort((a, b) => b[1] - a[1]);
-					const BASE_TOP_N = 5;
-					let displayLabels = [];
-					let displayData = [];
-					let otherDetails = [];
+					const rows = buildFeatureRows(featureStats);
 
-					if (rawEntries.length > BASE_TOP_N) {
-						const thresholdCount = rawEntries[BASE_TOP_N - 1][1];
-						let otherSum = 0;
+					featureChart.featureRows = rows;
+					featureChart.data.labels = rows.map(row => row.label);
 
-						rawEntries.forEach(([feat, count]) => {
-							if (count >= thresholdCount) {
-								displayLabels.push(feat);
-								displayData.push(count);
-							} else {
-								otherSum += count;
-								otherDetails.push(`${feat}: ${count}次`);
-							}
-						});
+					featureChart.data.datasets = rows.flatMap((row, index) =>
+						row.parts.map(part => ({
+							label: part.name,
 
-						if (otherSum > 0) {
-							displayLabels.push('其他 (Other)');
-							displayData.push(otherSum);
-						}
-					} else {
-						displayLabels = rawEntries.map(e => e[0]);
-						displayData = rawEntries.map(e => e[1]);
-					}
+							data: rows.map((_, i) =>
+								i === index ? part.count : 0
+							),
 
-					featureChart.otherDetails = otherDetails;
-					featureChart.data.labels = displayLabels;
-					featureChart.data.datasets[0].data = displayData;
+							backgroundColor: row.isOther
+								? '#64748b'
+								: FEATURE_COLORS[part.name] || '#6366f1',
+
+							stack: 'features',
+							borderWidth: 0,
+							borderRadius: 0
+						}))
+					);
+
 					featureChart.update();
 				}
 
