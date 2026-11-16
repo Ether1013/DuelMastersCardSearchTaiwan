@@ -1001,20 +1001,6 @@
 						<small class="view-report-modal-small" data-ui-display="block">Email僅供回覆用，絕不作為其他用途使用</small>
 					</div>
 					<div class="u-margin-bottom-10px">
-						<label class="view-report-modal-label" data-ui-display="block">表情 Emoji (非必填，最多 20 個)：</label>
-						<div class="view-emoji-picker" id="emoji-picker" data-ui-display="flex">
-							<span class="emoji-opt view-emoji-picker-emoji-opt">👍</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">❤️</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">🔥</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">🎉</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">👏</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">🙏</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">😊</span>
-							<span class="emoji-opt view-emoji-picker-emoji-opt">🚀</span>
-						</div>
-						<input type="text" id="qa-author-emojis" class="qa-input" placeholder="點擊上方或自行輸入 Emoji" maxlength="20">
-					</div>
-					<div class="u-margin-bottom-10px">
 						<label class="view-report-modal-label" data-ui-display="block">留言內容 (必填)：</label>
 						<textarea class="view-qa-author-message" id="qa-author-message" rows="3" placeholder="請輸入您想對作者說的話..."></textarea>
 					</div>
@@ -1143,6 +1129,21 @@
 		// 全域變數：紀錄目前正在編輯/覆蓋的自訂牌組代碼 (例如 'NET-900')，若為 null 則代表新增
 		let editingDeckCode = null;
 		const CLIENT_INFO_KEY = 'dm_client_info';
+		function getAssignedClientId() {
+			try {
+				const info = JSON.parse(
+					localStorage.getItem(CLIENT_INFO_KEY) || '{}'
+				);
+
+				const userId = typeof info?.user_id === 'string'
+					? info.user_id.trim()
+					: '';
+
+				return userId.toLowerCase() === 'unknown' ? '' : userId;
+			} catch (error) {
+				return '';
+			}
+		}
 		const CIV_MAP = [
 			{ bit: 16, name: '光' },
 			{ bit: 8,  name: '水' },
@@ -7971,7 +7972,6 @@
 			const openBtn = document.getElementById('qa-btn-open-author-msg');
 			const closeBtn = document.getElementById('author-msg-modal-close');
 			const submitBtn = document.getElementById('btn-submit-author-msg');
-			const emojiInput = document.getElementById('qa-author-emojis');
 
 			// 💡 修正：LINE 抽屜點擊開關事件（展開時自動平滑捲動到底部）
 			const lineDrawerHandle = document.getElementById('author-line-drawer-handle');
@@ -8005,7 +8005,6 @@
 			openBtn?.addEventListener('click', () => {
 				document.getElementById('qa-author-nickname').value = "使用者";
 				document.getElementById('qa-author-email').value = "";
-				document.getElementById('qa-author-emojis').value = "";
 				document.getElementById('qa-author-message').value = "";
 
 				const lineDrawerContainer = document.getElementById('drawer-author-line');
@@ -8023,22 +8022,10 @@
 				if (e.target === authorModal) authorModal.classList.remove('active');
 			});
 
-			// 快捷點選 Emoji
-			document.querySelectorAll('.emoji-opt').forEach(el => {
-				el.addEventListener('click', () => {
-					const current = emojiInput.value;
-					// 限制最多 20 個字元/表情
-					if ([...current].length < 20) {
-						emojiInput.value = current + el.innerText;
-					}
-				});
-			});
-
 			// 送出 API 請求
 			submitBtn?.addEventListener('click', async () => {
 				const nickname = document.getElementById('qa-author-nickname').value.trim() || "使用者";
 				const email = document.getElementById('qa-author-email').value.trim();
-				const emojis = emojiInput.value.trim();
 				const message = document.getElementById('qa-author-message').value.trim();
 
 				if (!message) {
@@ -8054,9 +8041,9 @@
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
+							user_id: getAssignedClientId(),
 							nickname: nickname,
 							email: email,
-							emojis: emojis,
 							message: message
 						})
 					});
@@ -8141,6 +8128,7 @@
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
+						user_id: getAssignedClientId(),
 						card_name: cardName,
 						card_id: cardId === '(無對應卡號)' ? '' : cardId,
 						reporter_name: reporterName,
@@ -10528,6 +10516,7 @@
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
+					user_id: getAssignedClientId(),
 						card_name: cardName,
 						nicknames: nicks
 					})
@@ -11028,7 +11017,16 @@
 					apply.textContent =
 						`${index + 1}. ${describe(item.state)}`;
 
-					apply.onclick = () => replay(item.id);
+					apply.onclick = () => {
+						if (busy) return;
+
+						trackFeature('點擊舊過濾條件', {
+							history_id: item.id,
+							conditions: describe(item.state)
+						});
+
+						replay(item.id);
+					};
 
 					const remove = document.createElement('button');
 					remove.type = 'button';

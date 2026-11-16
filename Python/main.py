@@ -228,6 +228,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("api_cache")
 
 class NicknameApplyModel(BaseModel):
+    user_id: Optional[str] = None
     card_name: str
     nicknames: List[str]
     
@@ -1818,6 +1819,7 @@ class LineNotificationModel(BaseModel):
     message: str = ""
     
 class ReportModel(BaseModel):
+    user_id: Optional[str] = None
     card_name: str
     card_id: str = ""
     reporter_name: str = "熱情的決鬥者"
@@ -1825,9 +1827,9 @@ class ReportModel(BaseModel):
     error_desc: str = ""
 
 class AuthorMessageModel(BaseModel):
+    user_id: Optional[str] = None
     nickname: str = "使用者"
     email: str = ""
-    emojis: str = ""
     message: str
     
 def push_line_message(msg_text: str):
@@ -1846,13 +1848,24 @@ def push_line_message(msg_text: str):
     except Exception as e:
         print(f"[LINE Push Error]: {e}")
         
+def format_submitter_identity(
+    user_id: Optional[str],
+    country: str,
+) -> str:
+    clean_id = (user_id or "").strip()
+
+    if clean_id and clean_id.lower() != "unknown":
+        return f"🆔 配給ID：{clean_id}"
+
+    return f"🌐 國籍：{country}"
+
 def send_line_notification(report: ReportModel, base_url: str = "", country: str = "Unknown"):
     raw_id = report.card_id.strip() if report.card_id and report.card_id.strip() != "(無對應卡號)" else ""
     target_param = raw_id if raw_id else report.card_name.strip()
     card_link = f"{base_url.rstrip('/')}/card.html?p={quote(target_param)}" if base_url else f"https://your-site.com/card.html?p={quote(target_param)}"
     lines = [
         "🚨 【卡牌翻譯錯誤回報】\n",
-        f"🌐 國籍：{country}",
+        format_submitter_identity(report.user_id, country),
         f"📌 卡名：{report.card_name}"
     ]
     if raw_id:
@@ -1865,13 +1878,15 @@ def send_line_notification(report: ReportModel, base_url: str = "", country: str
     lines.append(f"📝 錯誤內容：{report.error_desc or '（無簡答內容）'}")
     push_line_message("\n".join(lines))
 
-def send_author_message_notification(msg_data: AuthorMessageModel, country: str = "Unknown"):
+def send_author_message_notification(
+    msg_data: AuthorMessageModel,
+    country: str = "Unknown",
+):
     msg_text = (
         f"💬 【收到給作者的新留言】\n\n"
-        f"🌐 國籍：{country}\n"
+        f"{format_submitter_identity(msg_data.user_id, country)}\n"
         f"👤 暱稱：{msg_data.nickname or '使用者'}\n"
-        f"📧 Email：{msg_data.email or '未提供'}\n"
-        f"😀 表情：{msg_data.emojis or '無'}\n\n"
+        f"📧 Email：{msg_data.email or '未提供'}\n\n"
         f"📝 留言內容：\n{msg_data.message}"
     )
     push_line_message(msg_text)
@@ -1879,7 +1894,7 @@ def send_author_message_notification(msg_data: AuthorMessageModel, country: str 
 def send_nickname_application_notification(payload: NicknameApplyModel, country: str):
     lines = [
         "🏷️ 【新暱稱申請通知】",
-        f"🌐 國籍：{country}",
+        format_submitter_identity(payload.user_id, country),
         f"📌 目標卡名：{payload.card_name}",
         "📝 申請暱稱："
     ]
@@ -2536,8 +2551,6 @@ async def apply_nickname(request: Request, payload: NicknameApplyModel, backgrou
 async def message_author(request: Request, payload: AuthorMessageModel, background_tasks: BackgroundTasks):
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="留言內容為必填項目")
-    if len(payload.emojis) > 20:
-        raise HTTPException(status_code=400, detail="表情符號最多選擇 20 個")
     country = get_client_country(request)
     background_tasks.add_task(send_author_message_notification, payload, country)
     nickname = payload.nickname.strip() if payload.nickname and payload.nickname.strip() else "使用者"
