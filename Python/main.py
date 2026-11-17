@@ -849,7 +849,6 @@ def image_name_key(name):
         r"\s+", "",
         unicodedata.normalize("NFKC", name or "")
     )
-    )
 
 
 def image_card_is_eligible(card):
