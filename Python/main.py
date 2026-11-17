@@ -844,10 +844,11 @@ def image_url_is_valid(url):
 
 
 def image_name_key(name):
-    # 只用於官方名稱核對；map 保留 carddata 原始卡名。
+    name = re.sub(r"[（(][ぁ-ゖァ-ヺー・\s]+[）)]", "", name or "")
     return re.sub(
         r"\s+", "",
         unicodedata.normalize("NFKC", name or "")
+    )
     )
 
 
@@ -1257,7 +1258,7 @@ async def official_first_page(client, name):
         "POST",
         search_url,
         data={
-            "keyword": name,
+            "keyword": re.sub(r"[（(][ぁ-ゖァ-ヺー・\s]+[）)]", "", name),
             "keyword_type[]": "card_name",
             "pagenum": "1",
             "sort": "release_new",
