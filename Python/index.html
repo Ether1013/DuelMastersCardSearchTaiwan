@@ -908,9 +908,12 @@
 
 				<!-- 階段二：比對結果與二次 UI 校正清單 -->
 				<div id="deck-verify-step" data-ui-display="none">
+					<label for="deck-name-input">牌組名稱（選填）</label>
+					<input id="deck-name-input" class="qa-input" type="text">
+
 					<div class="view-deck-verify-summary" id="deck-verify-summary"></div>
 					<div class="view-deck-verify-list" id="deck-verify-list" data-ui-display="flex"></div>
-					
+
 					<div class="view-deck-verify-step-div" data-ui-display="flex">
 						<button class="view-btn-re-edit-deck" type="button" id="btn-re-edit-deck">← 返回修改</button>
 						<button class="view-btn-confirm-deck-import" type="button" id="btn-confirm-deck-import" disabled>✅ 確認匯入牌組 (需全數通過)</button>
@@ -2420,27 +2423,16 @@
 				if (e.key === 'Enter') document.getElementById('qa-btn-set-view').click();
 			});
 
-			// [貼上卡表並建檔]
 			document.getElementById('qa-btn-deck-import').addEventListener('click', () => {
 				const text = document.getElementById('qa-input-deck-text').value.trim();
 				if (!text) {
-					showToast("請先貼上卡表文字");
+					showToast('請先貼上卡表文字');
 					return;
 				}
-				
-				// 將這裡貼上的文字同步帶入 Modal 的輸入框
-				const modalTextArea = document.getElementById('deck-textarea');
-				if (modalTextArea) modalTextArea.value = text; 
-				
-				// 打開系統原本的匯入 Modal
-				document.getElementById('deck-import-modal').classList.add('active');
 
-				// 💡 關鍵：自動觸發原本的「開始解析與模糊比對」邏輯，直接跳轉至校正畫面！
-				const btnParse = document.getElementById('btn-parse-deck');
-				if (btnParse) {
-					btnParse.click();
-				}
-				trackFeature('索引－輸入牌組', { raw_text: text }); // 💡 補上原始卡表文字
+				openDeckImport({ text });
+				document.getElementById('btn-parse-deck')?.click();
+				trackFeature('索引－輸入牌組', { raw_text: text });
 			});
 
 			// [直接轉換為英文卡表] - 不需建檔，直接解析後打 API 產出
@@ -3422,7 +3414,7 @@
 			if (!bigSelect || !smallSelect) return;
 
 			function updateSmallDropdown(selectedBigValue) {
-				smallSelect.innerHTML = ''; 
+				smallSelect.innerHTML = '';
 
 				const defaultOpt = document.createElement('option');
 				defaultOpt.value = '';
@@ -3430,32 +3422,31 @@
 				smallSelect.appendChild(defaultOpt);
 
 				let matchCount = 0;
-
-				// 1. 將物件轉為陣列並整理 setcode 欄位
 				const setListArray = Object.entries(rawSetlist).map(([key, setInfo]) => {
 					const setcode = setInfo.setcode || setInfo.code || setInfo.id || key;
-					const setname = setInfo.setname || setInfo.name || setcode;
-					const isdeck = Boolean(setInfo.isdeck === true);
-					return { key, setcode, setname, isdeck };
+					const setname = setInfo.deckName || setInfo.setname || setInfo.name || setcode;
+					const isdeck = setInfo.isdeck === true;
+					const label = `${setcode} - ${setname}`;
+
+					return { key, setcode, label, isdeck };
 				});
 
-				// 2. 依照 setcode 進行降冪排序
-				setListArray.sort((a, b) => a.setcode.localeCompare(b.setcode, undefined, { numeric: true, sensitivity: 'base' }));
+				setListArray.sort((a, b) => a.setcode.localeCompare(b.setcode, undefined, {
+					numeric: true,
+					sensitivity: 'base'
+				}));
 
-				// 💡 3. 同步填入「今天我要」的 datalist (只在初始全部渲染或需要時更新)
 				if (qaDatalist) {
 					qaDatalist.innerHTML = '';
-					setListArray.forEach(({ key, setcode, setname }) => {
+					setListArray.forEach(({ key, label }) => {
 						const opt = document.createElement('option');
-						// value 放 key (如 DM26-EX3)，label/提示放商品名稱
 						opt.value = key;
-						opt.textContent = `${setcode} - ${setname}`;
+						opt.textContent = label;
 						qaDatalist.appendChild(opt);
 					});
 				}
 
-				// 4. 依序填入原本的 series-small 下拉選單
-				setListArray.forEach(({ key, setcode, setname, isdeck }) => {
+				setListArray.forEach(({ key, setcode, label, isdeck }) => {
 					let isMatch = false;
 					const upperCode = String(setcode).trim().toUpperCase();
 
@@ -3471,13 +3462,13 @@
 					if (isMatch) {
 						const opt = document.createElement('option');
 						opt.value = key;
-						opt.textContent = `${setcode} - ${setname}`;
+						opt.textContent = label;
 						smallSelect.appendChild(opt);
 						matchCount++;
 					}
 				});
 
-				smallSelect.disabled = (matchCount === 0);
+				smallSelect.disabled = matchCount === 0;
 				if (matchCount === 0) defaultOpt.textContent = '(無對應商品)';
 			}
 
@@ -3692,52 +3683,59 @@
             return `linear-gradient(135deg, ${gradientStops.join(', ')})`;
         }
 		
-		// 💡 新增：開啟手動匯入面板並回填指定 NET-900+ 牌組內容
-		function openDeckImportForEdit(deckKey) {
-			const targetSetObj = rawSetlist[deckKey];
-			if (!targetSetObj) {
-				alert("找不到欲修改的卡表資料！");
-				return;
-			}
-
-			// 1. 設定為修改模式，紀錄目前修改的 Target Key
-			editingDeckCode = deckKey;
-
-			// 2. 將卡表內容還原為手動匯入的文字格式 (如: "4*卡牌名稱")
-			const cardList = targetSetObj.setcardlist || targetSetObj.cardlist || [];
-			const textContent = cardList.map(item => {
-				const count = item.count || 1;
-				const name = (typeof item === 'object' && item !== null) ? item.name : item;
-				return `${count}*${name}`;
-			}).join('\n');
-
-			// 3. 填回文字面板並重置階段畫面
-			document.getElementById('deck-textarea').value = textContent;
-			document.getElementById('deck-input-step').dataset.uiDisplay = "block";
-			document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
-
-			// 4. 開啟 Modal
+		function openDeckImport({ deckCode = null, text = '', deckName = '' } = {}) {
+			editingDeckCode = deckCode;
+			document.getElementById('deck-textarea').value = text;
+			document.getElementById('deck-name-input').value = deckName;
+			document.getElementById('deck-input-step').dataset.uiDisplay = 'block';
+			document.getElementById('deck-verify-step').dataset.uiDisplay = 'none';
 			document.getElementById('deck-import-modal').classList.add('active');
 		}
 
-		// 💡 綁定一般點擊「📥 手動匯入卡表」按鈕時，重置為新增模式 (editingDeckCode = null)
+		function openDeckImportForEdit(deckKey) {
+			const targetSetObj = rawSetlist[deckKey];
+			if (!targetSetObj) {
+				alert('找不到欲修改的卡表資料！');
+				return;
+			}
+
+			const cardList = targetSetObj.setcardlist || targetSetObj.cardlist || [];
+			const textContent = cardList.map(item => {
+				const count = item.count || 1;
+				const name = typeof item === 'object' && item !== null ? item.name : item;
+				return `${count}*${name}`;
+			}).join('\n');
+
+			openDeckImport({
+				deckCode: deckKey,
+				text: textContent,
+				deckName: targetSetObj.deckName || ''
+			});
+		}
+
 		document.querySelectorAll('#btn-open-deck-import, .btn-open-deck-import-action').forEach(btn => {
 			btn.addEventListener('click', () => {
-				editingDeckCode = null; // 重置為新增狀態
 				closeAllDrawers();
-				document.getElementById('deck-input-step').dataset.uiDisplay = "block";
-				document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
-				document.getElementById('deck-textarea').value = '';
-				document.getElementById('deck-import-modal').classList.add('active');
+				openDeckImport();
 			});
 		});
 
-		// 💡 修改：確認匯入牌組按鈕的事件處理器（支援覆蓋）
 		document.getElementById('btn-confirm-deck-import')?.addEventListener('click', () => {
-			// 若為修改模式則沿用 editingDeckCode；否則取得下一個流水號
-			const targetCode = editingDeckCode ? editingDeckCode : getNextNetCode();
-			const now = Date.now();
+			const modal = document.getElementById('deck-import-modal');
+			if (!modal.classList.contains('active')) return;
 
+			const customDecks = getValidCustomDecks();
+			const isEditing = editingDeckCode !== null;
+			const previous = isEditing ? customDecks[editingDeckCode] : null;
+
+			if (isEditing && !previous) {
+				showToast('找不到原牌組，請關閉視窗後重新選取。');
+				return;
+			}
+
+			const targetCode = editingDeckCode ?? getNextNetCode();
+			const deckName = document.getElementById('deck-name-input').value.trim();
+			const now = Date.now();
 			const setCardList = parsedVerifyItems.map(item => ({
 				name: item.matchedName,
 				count: item.count
@@ -3745,27 +3743,22 @@
 
 			const updatedSetObj = {
 				setcode: targetCode,
-				setname: `自訂套牌 (${targetCode})`,
+				setname: deckName || `自訂套牌 (${targetCode})`,
+				deckName,
 				isdeck: true,
 				istw: true,
-				createdTime: rawSetlist[targetCode]?.createdTime || now,
+				createdTime: previous?.createdTime ?? now,
 				lastUsed: now,
 				setcardlist: setCardList
 			};
 
-			// 1. 寫入 LocalStorage
-			const customDecks = getValidCustomDecks();
 			customDecks[targetCode] = updatedSetObj;
 			localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(customDecks));
-
-			// 2. 更新全域 rawSetlist
 			rawSetlist[targetCode] = updatedSetObj;
 			initSeriesDropdown();
+			modal.classList.remove('active');
 
-			// 3. 關閉匯入 Modal 彈窗
-			document.getElementById('deck-import-modal').classList.remove('active');
-
-			// 4. 重置「商品以外」的所有過濾條件
+			// 重置篩選，讓查詢結果顯示整副牌組。
 			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
 			checkAllStatus();
 
@@ -3776,8 +3769,8 @@
 			document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
 			document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
 
-			document.querySelectorAll('select:not(#series-big):not(#series-small)').forEach(sel => sel.value = "");
-			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+			document.querySelectorAll('select:not(#series-big):not(#series-small)').forEach(sel => sel.value = '');
+			document.querySelectorAll('input[type="text"]').forEach(input => input.value = '');
 
 			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
 			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
@@ -3787,8 +3780,7 @@
 			});
 
 			document.querySelectorAll('.btn-race-logic').forEach(btn => {
-				if (btn.dataset.logic === 'AND') btn.classList.add('active');
-				else btn.classList.remove('active');
+				btn.classList.toggle('active', btn.dataset.logic === 'AND');
 			});
 
 			document.body.classList.remove('advanced-mode');
@@ -3799,27 +3791,28 @@
 				clearQuickSearch();
 			}
 
-			// 5. 確保下拉選單選取該目標商品
 			const bigSelect = document.getElementById('series-big');
 			const smallSelect = document.getElementById('series-small');
 			if (bigSelect && smallSelect) {
-				bigSelect.value = "";
+				bigSelect.value = '';
 				bigSelect.dispatchEvent(new Event('change'));
 				smallSelect.value = targetCode;
 			}
-			
-			checkAndToggleClearCustomBtn();
 
+			checkAndToggleClearCustomBtn();
 			if (typeof updateSummaryText === 'function') {
 				updateSummaryText();
 			}
 
-			// 6. 重置修改標記狀態
 			editingDeckCode = null;
-
-			// 7. 觸發重新查詢與渲染畫面結果
+			closeToolbarMenus();
 			document.getElementById('btn-search')?.click();
-			showToast(`✅ 牌組 ${targetCode} 已成功覆蓋並更新結果！`);
+			showToast(`✅ 牌組 ${targetCode} ${isEditing ? '已更新' : '已新增'}`);
+
+			trackFeature('匯入牌組', {
+				total_items: setCardList.length,
+				deck_content: setCardList.map(({ count, name }) => `${count}x ${name}`)
+			});
 		});
 
 		// =========================================
@@ -9695,113 +9688,6 @@
 			document.getElementById('deck-input-step').dataset.uiDisplay = "block";
 			document.getElementById('deck-verify-step').dataset.uiDisplay = "none";
 		});
-
-		// 確認匯入牌組
-		document.getElementById('btn-confirm-deck-import')?.addEventListener('click', () => {
-		
-			// 💡 側錄解析解碼後的卡表細節 (包含張數與正名後的卡名)
-			const decodedDeckList = parsedVerifyItems.map(item => `${item.count}x ${item.matchedName}`);
-			trackFeature('匯入牌組', { 
-				total_items: parsedVerifyItems.length,
-				deck_content: decodedDeckList 
-			});
-		
-			const newCode = getNextNetCode();
-			const now = Date.now();
-
-			const setCardList = parsedVerifyItems.map(item => ({
-				name: item.matchedName,
-				count: item.count
-			}));
-
-			const newSetObj = {
-				setcode: newCode,
-				setname: `自訂套牌 (${newCode})`,
-				isdeck: true,
-				istw: true,
-				createdTime: now,
-				lastUsed: now,
-				setcardlist: setCardList
-			};
-
-			// 寫入 LocalStorage
-			const customDecks = getValidCustomDecks();
-			customDecks[newCode] = newSetObj;
-			localStorage.setItem(CUSTOM_DECKS_STORAGE_KEY, JSON.stringify(customDecks));
-
-			// 合併至 rawSetlist
-			rawSetlist[newCode] = newSetObj;
-			initSeriesDropdown();
-
-			// 關閉匯入 Modal 彈窗 (維持 Modal 關閉)
-			document.getElementById('deck-import-modal').classList.remove('active');
-
-			// 💡 關鍵修正：將「商品以外」的所有過濾條件重置/初始化
-			// A. 重置卡種（全不選）
-			document.querySelectorAll('.chk-cardtype').forEach(cb => cb.checked = false);
-			checkAllStatus();
-
-			// B. 重置雙極卡
-			document.querySelector('input[name="twinpect"][value="all"]').checked = true;
-			document.querySelectorAll('input[name="twin_adv"]').forEach(cb => cb.checked = true);
-
-			// C. 重置文明（許可文明全選、必須文明清空）
-			document.querySelectorAll('#civ-permit .civ-box').forEach(box => box.classList.add('active'));
-			document.querySelectorAll('#civ-require .civ-box').forEach(box => box.classList.remove('active'));
-			document.querySelector('#civ-require .civ-box[data-val="and"]').classList.add('active');
-
-			// D. 重置費用、攻擊力與文字輸入框 (卡名、能力自由輸入等)
-			document.querySelectorAll('select:not(#series-big):not(#series-small)').forEach(sel => sel.value = "");
-			document.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
-
-			// E. 清空動態種族與能力區塊
-			document.querySelectorAll('#race-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
-			document.querySelectorAll('#ability-container .flex-input-row:not(:first-child)').forEach(row => row.remove());
-			document.querySelectorAll('#ability-container .btn-native-ability').forEach(btn => {
-				btn.classList.remove('active');
-				btn.dataset.native = 'false';
-			});
-
-			// F. 重置種族邏輯按鈕
-			document.querySelectorAll('.btn-race-logic').forEach(btn => {
-				if (btn.dataset.logic === 'AND') btn.classList.add('active');
-				else btn.classList.remove('active');
-			});
-
-			// G. 關閉進階模式
-			document.body.classList.remove('advanced-mode');
-			const btnAdvanced = document.getElementById('toggle-advanced');
-			if (btnAdvanced) btnAdvanced.innerHTML = '進階<br>選項';
-
-			// H. 清除快速計算機的標籤與緩衝區 (若有)
-			if (typeof clearQuickSearch === 'function') {
-				clearQuickSearch();
-			}
-
-			// 🎯 自動切換下拉選單至剛匯入的自訂牌組
-			const bigSelect = document.getElementById('series-big');
-			const smallSelect = document.getElementById('series-small');
-			if (bigSelect && smallSelect) {
-				bigSelect.value = "";
-				bigSelect.dispatchEvent(new Event('change'));
-				smallSelect.value = newCode;
-			}
-			
-			// 💡 新增：觸發按鈕狀態檢查 (若當前處於進階模式，按鈕會在此刻立刻跑出來)
-			checkAndToggleClearCustomBtn();
-
-			// 更新 Z 區條件摘要
-			if (typeof updateSummaryText === 'function') {
-				updateSummaryText();
-			}
-
-			// 新功能列不需要展開抽屜；搜尋完成後會更新編輯按鈕。
-			closeToolbarMenus();
-
-			// 執行搜尋與列表渲染
-			document.getElementById('btn-search')?.click();
-			showToast(`✅ 牌組 ${newCode} 匯入成功！`);
-		});
 		
 		// 修改原有的追蹤紀錄函式
 		function trackFeature(featureName, detail = null) {
@@ -9833,6 +9719,7 @@
 		});
 
 		document.getElementById('deck-import-modal-close')?.addEventListener('click', () => {
+			editingDeckCode = null;
 			document.getElementById('deck-import-modal').classList.remove('active');
 		});
 		

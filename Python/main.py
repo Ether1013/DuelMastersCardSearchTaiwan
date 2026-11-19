@@ -96,7 +96,11 @@ RECORD_DIR.mkdir(exist_ok=True)
 
 current_daily_date = ""
 current_daily_logs = []
-record_sync_task = None
+RECORD_SYNC_DELAY = 120
+record_sync_pending = {}
+record_sync_tasks = {}
+record_write_lock = asyncio.Lock()
+tracking_rollover_task = None
 EXCLUDED_COUNTRIES = ["JP", "TW" ,"KR"]
 one_time_tokens = {}
 
@@ -143,27 +147,85 @@ view_records = defaultdict(lambda: defaultdict(int))
 RECENT_CARD_VIEW_LIMIT = 20  # 日後要改成 30、50，只需修改這個數字
 recent_card_views = []
 
+tracking_counts_by_day = defaultdict(lambda: (defaultdict(int), defaultdict(int)))
+
+
+def add_tracking_totals(date_key, feature, country, count):
+    feature_counter[feature] += count
+    country_counter[country] += count
+    country_feature_counter[country][feature] += count
+    daily_total_counter[date_key] += count
+    country_daily_total_counter[country][date_key] += count
+
+
+def add_tracking_user(country, user_id, count):
+    user_counter[user_id] += count
+    country_user_counter[country][user_id] += count
+
+
+def count_tracking_event(date_key, feature, country, user_id):
+    events, users = tracking_counts_by_day[date_key]
+    events[feature, country] += 1
+    users[country, user_id] += 1
+    add_tracking_totals(date_key, feature, country, 1)
+    add_tracking_user(country, user_id, 1)
+
+
+def clear_tracking_totals():
+    feature_counter.clear()
+    country_counter.clear()
+    user_counter.clear()
+    country_feature_counter.clear()
+    country_user_counter.clear()
+    daily_total_counter.clear()
+    country_daily_total_counter.clear()
+
+
+def tracking_cutoff(now):
+    return (now - timedelta(days=2)).strftime("%Y%m%d")
+
+
+def rollover_tracking_day(now):
+    global current_daily_date, current_daily_logs
+
+    date_key = now.strftime("%Y%m%d")
+    if current_daily_date == date_key:
+        return
+
+    current_daily_date = date_key
+    current_daily_logs = []
+    cutoff = tracking_cutoff(now)
+
+    for day in tuple(record_sync_pending):
+        if day is not None and day < cutoff:
+            del record_sync_pending[day]
+
+    expired = [day for day in tracking_counts_by_day if day < cutoff]
+    if expired:
+        for day in expired:
+            del tracking_counts_by_day[day]
+
+        clear_tracking_totals()
+        for day, (events, users) in tracking_counts_by_day.items():
+            for (feature, country), count in events.items():
+                add_tracking_totals(day, feature, country, count)
+            for (country, user_id), count in users.items():
+                add_tracking_user(country, user_id, count)
+
+
 def get_recent_three_day_totals(country=None):
     now = datetime.now(TZ_UTC8)
-
+    rollover_tracking_day(now)
     date_keys = [
-        (now - timedelta(days=2)).strftime("%Y%m%d"),
-        (now - timedelta(days=1)).strftime("%Y%m%d"),
-        now.strftime("%Y%m%d"),
+        (now - timedelta(days=offset)).strftime("%Y%m%d")
+        for offset in (2, 1, 0)
     ]
-
     source = (
         daily_total_counter
         if country is None
-        else country_daily_total_counter[country]
+        else country_daily_total_counter.get(country, {})
     )
-
-    # 只取指定三天；沒有紀錄的日期顯示 0
-    daily_totals = {
-        date_key: source.get(date_key, 0)
-        for date_key in date_keys
-    }
-
+    daily_totals = {day: source.get(day, 0) for day in date_keys}
     return daily_totals, sum(daily_totals.values())
 
 def convert_legacy_hot_cards(legacy_data):
@@ -641,64 +703,47 @@ def load_and_process_caches():
     try:
         now = datetime.now(TZ_UTC8)
         current_daily_date = now.strftime("%Y%m%d")
-        
+        current_daily_logs = []
         dates_to_load = [
-            (now - timedelta(days=2)).strftime("%Y%m%d"),
-            (now - timedelta(days=1)).strftime("%Y%m%d"),
-            current_daily_date
+            (now - timedelta(days=offset)).strftime("%Y%m%d")
+            for offset in (2, 1, 0)
         ]
-        
         all_records = []
-        if db:
-            for d in dates_to_load:
-                try:
-                    doc_ref = db.collection('daily_records').document(d)
-                    doc = doc_ref.get()
-                    if doc.exists:
-                        day_logs = doc.to_dict().get("logs", [])
-                        if isinstance(day_logs, list):
-                            all_records.extend(day_logs)
-                            if d == current_daily_date:
-                                current_daily_logs = day_logs
-                except Exception as e:
-                    print(f"載入 Firebase 紀錄 {d} 失敗: {e}")
-        
-        all_records.sort(key=lambda x: x.get("time", ""))
-        
-        feature_counter.clear()
-        country_counter.clear()
-        user_counter.clear()
-        country_feature_counter.clear()
-        country_user_counter.clear()
-        daily_total_counter.clear()
-        country_daily_total_counter.clear()
+
+        clear_tracking_totals()
+        tracking_counts_by_day.clear()
         action_details_log.clear()
-        
-        valid_date_keys = set(dates_to_load)
+
+        if db:
+            for day in dates_to_load:
+                try:
+                    doc = db.collection("daily_records").document(day).get()
+                    if not doc.exists:
+                        continue
+                    day_logs = doc.to_dict().get("logs", [])
+                    if isinstance(day_logs, list):
+                        all_records.extend(day_logs)
+                        if day == current_daily_date:
+                            current_daily_logs = day_logs
+                except Exception as e:
+                    print(f"載入 Firebase 紀錄 {day} 失敗: {e}")
+
+        all_records.sort(key=lambda entry: entry.get("time", ""))
+        valid_dates = set(dates_to_load)
 
         for entry in all_records:
-
-            time_str = entry.get("time", "")
-            date_key = time_str[:10].replace("-", "") if time_str else current_daily_date
-            
-            if date_key not in valid_date_keys:
+            timestamp = entry.get("time", "")
+            date_key = timestamp[:10].replace("-", "") if timestamp else current_daily_date
+            if date_key not in valid_dates:
                 continue
 
-            feat = entry.get("feature")
-            u = entry.get("user", "Unknown")
-            c = str(entry.get("country", "Unknown")).upper()
-            if c == "UNKNOWN" and u != "Unknown" and "-" in u:
-                c = u.split("-")[0].upper()
-                
-            feature_counter[feat] += 1
-            country_counter[c] += 1
-            user_counter[u] += 1
-            daily_total_counter[date_key] += 1
-            
-            country_feature_counter[c][feat] += 1
-            country_user_counter[c][u] += 1
-            country_daily_total_counter[c][date_key] += 1
-            
+            feature = entry.get("feature")
+            user_id = entry.get("user", "Unknown")
+            country = str(entry.get("country", "Unknown")).upper()
+            if country == "UNKNOWN" and user_id != "Unknown" and "-" in user_id:
+                country = user_id.split("-")[0].upper()
+
+            count_tracking_event(date_key, feature, country, user_id)
             action_details_log.appendleft(entry)
 
         if all_records and all_records[0].get("time"):
@@ -1247,6 +1292,8 @@ async def official_first_page(client, name):
         return page_url
 
     search_url = "https://dm.takaratomy.co.jp/card/"
+    keyword = re.sub(r"[（(][ぁ-ゖァ-ヺー・\s]+[）)]", "", name)
+    keyword = re.sub(r"\s+", "", keyword)
 
     logging.info(
         "[Card image] Official name search: %s",
@@ -1257,7 +1304,7 @@ async def official_first_page(client, name):
         "POST",
         search_url,
         data={
-            "keyword": re.sub(r"[（(][ぁ-ゖァ-ヺー・\s]+[）)]", "", name),
+            "keyword": keyword,
             "keyword_type[]": "card_name",
             "pagenum": "1",
             "sort": "release_new",
@@ -2045,39 +2092,82 @@ def get_og_image(
     )
 
 
-async def record_debounce_timer(date_str: str):
-    await asyncio.sleep(120)
+async def write_record_snapshot(date_key, logs, save_views=False):
+    if not db:
+        return
+
+    async with record_write_lock:
+        snapshot = copy.deepcopy(logs) if logs is not None else None
+        views = get_view_records_data() if save_views else None
+
+        def write_to_firestore():
+            if snapshot is not None:
+                db.collection("daily_records").document(date_key).set({
+                    "logs": snapshot,
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }, merge=True)
+
+            if views is not None:
+                db.collection("analytics").document("view_records").set({
+                    "data": views,
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }, merge=True)
+
+        await asyncio.to_thread(write_to_firestore)
+
+
+async def record_debounce_timer(date_key):
+    loop = asyncio.get_running_loop()
     try:
-        def _safe_write_to_firestore():
-            global current_daily_logs
+        while date_key in record_sync_pending:
+            delay = record_sync_pending[date_key][0] - loop.time()
+            if delay > 0:
+                await asyncio.sleep(delay)
+                continue
 
-            if db:
-                # 一般操作日誌維持原本的存檔位置。
-                doc_ref = db.collection("daily_records").document(date_str)
-                doc_ref.set({
-                    "logs": current_daily_logs,
-                    "updated_at": firestore.SERVER_TIMESTAMP
-                }, merge=True)
-
-                # 瀏覽紀錄只寫入新的文件。
-                view_doc_ref = db.collection("analytics").document("view_records")
-                view_doc_ref.set({
-                    "data": get_view_records_data(),
-                    "updated_at": firestore.SERVER_TIMESTAMP
-                }, merge=True)
-
-        await asyncio.to_thread(_safe_write_to_firestore)
-        print(f"[Record] 成功同步 {date_str} 日誌與新格式瀏覽紀錄！")
-
-    except Exception as e:
-        print(f"[Record Debounce Error]: {e}")
+            _, logs = record_sync_pending.pop(date_key)
+            try:
+                await write_record_snapshot(date_key, logs, save_views=True)
+            except Exception:
+                logger.exception("同步操作紀錄或卡牌瀏覽統計失敗: %s", date_key)
+                if date_key is None or date_key >= tracking_cutoff(datetime.now(TZ_UTC8)):
+                    record_sync_pending.setdefault(
+                        date_key, (loop.time() + RECORD_SYNC_DELAY, logs)
+                    )
+            finally:
+                del logs
+    finally:
+        record_sync_tasks.pop(date_key, None)
 
 
-def trigger_record_sync(date_str: str):
-    global record_sync_task
-    if record_sync_task:
-        record_sync_task.cancel()
-    record_sync_task = asyncio.create_task(record_debounce_timer(date_str))
+def trigger_record_sync(date_key=None, logs=None):
+    if not db:
+        return
+
+    loop = asyncio.get_running_loop()
+    record_sync_pending[date_key] = (loop.time() + RECORD_SYNC_DELAY, logs)
+    if date_key not in record_sync_tasks:
+        record_sync_tasks[date_key] = asyncio.create_task(
+            record_debounce_timer(date_key)
+        )
+
+
+async def tracking_midnight_loop():
+    while True:
+        now = datetime.now(TZ_UTC8)
+        rollover_tracking_day(now)
+        midnight = (now + timedelta(days=1)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        await asyncio.sleep((midnight - now).total_seconds())
+        rollover_tracking_day(datetime.now(TZ_UTC8))
+        await console_manager.broadcast()
+
+
+@app.on_event("startup")
+async def start_tracking_rollover():
+    global tracking_rollover_task
+    tracking_rollover_task = asyncio.create_task(tracking_midnight_loop())
 
 @app.get("/")
 async def serve_index():
@@ -2583,67 +2673,53 @@ async def track_feature(request: Request):
         real_ip_country = data.get("real_ip_country", "Unknown")
 
         if feature_name:
-            now_utc8 = datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
-            last_user_log = None
-            for log in action_details_log:
-                if log.get("user") == user_id:
-                    last_user_log = log
-                    break
+            now = datetime.now(TZ_UTC8)
+            rollover_tracking_day(now)
+            date_key = now.strftime("%Y%m%d")
+            calendar_date = now.strftime("%Y-%m-%d")
+            timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+            previous = next((
+                log for log in action_details_log
+                if log.get("user") == user_id
+                and log.get("time", "")[:10] == calendar_date
+            ), None)
+            merged = False
 
-            is_skip = False
-            is_merge = False
-            chained_key = None
+            if previous is not None and previous.get("feature") == feature_name:
+                old_detail = previous.get("_raw_detail")
+                if old_detail == detail:
+                    await console_manager.broadcast()
+                    return {"status": "ok"}
 
-            if last_user_log and last_user_log.get("feature") == feature_name:
-                old_raw = last_user_log.get("_raw_detail")
-                new_raw = detail
-                if old_raw == new_raw:
-                    is_skip = True
-                elif isinstance(old_raw, dict) and isinstance(new_raw, dict):
-                    if set(old_raw.keys()) == set(new_raw.keys()):
-                        diff_keys = [k for k in old_raw.keys() if old_raw[k] != new_raw[k]]
-                        if len(diff_keys) == 1:
-                            changed_k = diff_keys[0]
-                            last_chained_key = last_user_log.get("_chained_key")
-                            if last_chained_key is None or last_chained_key == changed_k:
-                                is_merge = True
-                                chained_key = changed_k
-                                current_display_detail = copy.deepcopy(last_user_log["detail"])
-                                old_disp_val = str(current_display_detail[changed_k])
-                                new_raw_val = str(new_raw[changed_k])
-                                current_display_detail[changed_k] = f"{old_disp_val} > {new_raw_val}"
-                                last_user_log["detail"] = current_display_detail
-                                last_user_log["_raw_detail"] = copy.deepcopy(new_raw)
-                                last_user_log["_chained_key"] = changed_k
-                                last_user_log["time"] = now_utc8
-                                action_details_log.remove(last_user_log)
-                                action_details_log.appendleft(last_user_log)
-                elif isinstance(old_raw, str) and isinstance(new_raw, str):
-                    last_chained_key = last_user_log.get("_chained_key")
-                    if last_chained_key is None or last_chained_key == "_string_chain":
-                        is_merge = True
-                        chained_key = "_string_chain"
-                        old_disp_val = str(last_user_log["detail"])
-                        new_raw_val = str(new_raw)
-                        last_user_log["detail"] = f"{old_disp_val} > {new_raw_val}"
-                        last_user_log["_raw_detail"] = new_raw
-                        last_user_log["_chained_key"] = chained_key
-                        last_user_log["time"] = now_utc8
-                        action_details_log.remove(last_user_log)
-                        action_details_log.appendleft(last_user_log)
+                chain_key = previous.get("_chained_key")
+                display_detail = previous["detail"]
 
-            if is_skip or is_merge:
-                pass
-            else:
-                feature_counter[feature_name] += 1
-                country_counter[country] += 1
-                user_counter[user_id] += 1
-                country_feature_counter[country][feature_name] += 1
-                country_user_counter[country][user_id] += 1
-                now_date_key = now_utc8[:10].replace("-", "")
-                daily_total_counter[now_date_key] += 1
-                country_daily_total_counter[country][now_date_key] += 1
+                if isinstance(old_detail, dict) and isinstance(detail, dict):
+                    if old_detail.keys() == detail.keys():
+                        changed = [key for key in old_detail if old_detail[key] != detail[key]]
+                        if len(changed) == 1 and chain_key in (None, changed[0]):
+                            chain_key = changed[0]
+                            display_detail = copy.deepcopy(display_detail)
+                            display_detail[chain_key] = f"{display_detail[chain_key]} > {detail[chain_key]}"
+                            merged = True
+                elif isinstance(old_detail, str) and isinstance(detail, str):
+                    if chain_key in (None, "_string_chain"):
+                        chain_key = "_string_chain"
+                        display_detail = f"{display_detail} > {detail}"
+                        merged = True
 
+                if merged:
+                    previous["detail"] = display_detail
+                    previous["_raw_detail"] = copy.deepcopy(detail)
+                    previous["_chained_key"] = chain_key
+                    previous["time"] = timestamp
+                    action_details_log.remove(previous)
+                    action_details_log.appendleft(previous)
+                    if previous not in current_daily_logs:
+                        current_daily_logs.append(previous)
+
+            if not merged:
+                count_tracking_event(date_key, feature_name, country, user_id)
                 entry = {
                     "feature": feature_name,
                     "country": country,
@@ -2651,29 +2727,14 @@ async def track_feature(request: Request):
                     "is_vpn": is_vpn,
                     "real_ip_country": real_ip_country,
                     "detail": copy.deepcopy(detail),
-                    "_raw_detail": copy.deepcopy(detail), 
+                    "_raw_detail": copy.deepcopy(detail),
                     "_chained_key": None,
-                    "time": now_utc8
+                    "time": timestamp,
                 }
                 action_details_log.appendleft(entry)
+                current_daily_logs.append(entry)
 
-            global current_daily_date, current_daily_logs
-            now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
-            if now_date_str != current_daily_date:
-                current_daily_date = now_date_str
-                current_daily_logs = []
-
-            if not is_skip:
-                if is_merge:
-                    if last_user_log not in current_daily_logs:
-                        current_daily_logs.append(last_user_log)
-                else:
-                    current_daily_logs.append(entry)
-                trigger_record_sync(now_date_str)
-
-            sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-            sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
-
+            trigger_record_sync(date_key, current_daily_logs)
             await console_manager.broadcast()
             
     except Exception as e:
@@ -2703,25 +2764,17 @@ async def track_card_view(request: Request, payload: CardViewTrackModel):
         return {"status": "skipped", "reason": "localhost environment"}
 
     country = get_client_country(request)
-
-    # 新結構只記錄卡名與國家，不再按商品重複累加。
     view_records[card_name][country] += 1
 
-    # 新增功能：記錄最新卡牌瀏覽紀錄
     recent_card_views.insert(0, {
         "card_name": card_name,
         "country": country,
-        "time": datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S")
+        "time": datetime.now(TZ_UTC8).strftime("%Y-%m-%d %H:%M:%S"),
     })
-    
-    # 只保留指定筆數，超出部分刪除最舊的紀錄
     del recent_card_views[RECENT_CARD_VIEW_LIMIT:]
 
-    # 如果有 Console 正在連線，就即時推送更新
     await console_manager.broadcast_recent_card_views()
-
-    now_date_str = datetime.now(TZ_UTC8).strftime("%Y%m%d")
-    trigger_record_sync(now_date_str)
+    trigger_record_sync()
 
     return {"status": "success"}
 
@@ -2895,26 +2948,21 @@ async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(N
 async def force_manual_save(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
+
     try:
         def _write_tags():
-            with open(TAGS_FILE, 'w', encoding='utf-8') as f:
+            with open(TAGS_FILE, "w", encoding="utf-8") as f:
                 json.dump(tags_cache, f, ensure_ascii=False, indent=2)
+
         await asyncio.to_thread(_write_tags)
         await push_tags_to_github()
 
-        global current_daily_date, current_daily_logs
-        if db and current_daily_date and current_daily_logs:
-            def _write_records():
-                doc_ref = db.collection('daily_records').document(current_daily_date)
-                doc_ref.set({
-                    "logs": current_daily_logs,
-                    "updated_at": firestore.SERVER_TIMESTAMP
-                }, merge=True)
-            await asyncio.to_thread(_write_records)
+        if current_daily_date and current_daily_logs:
+            await write_record_snapshot(current_daily_date, current_daily_logs)
 
         return {"status": "success", "message": "手動存檔成功！"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"儲存失敗: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"儲存失敗: {e}")
 
 @app.get("/api/console/online_users")
 async def get_online_users(admin: Optional[str] = Query(None)):
@@ -3045,8 +3093,10 @@ async def get_historical_report(
     return {"status": "success", "data": result}
     
 @app.on_event("shutdown")
-def on_shutdown():
-    pass
+async def on_shutdown():
+    if tracking_rollover_task:
+        tracking_rollover_task.cancel()
+        await asyncio.gather(tracking_rollover_task, return_exceptions=True)
     
 @app.get("/tags.html")
 async def get_tags_page(): 
@@ -3190,55 +3240,46 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
     return result_data
     
 @app.delete("/api/track/delete_user_logs")
-async def delete_user_logs(user_id: str = Query(..., description="要刪除 Log 的使用者代稱"), admin: Optional[str] = Query(None)):
+async def delete_user_logs(
+    user_id: str = Query(..., description="要刪除 Log 的使用者代稱"),
+    admin: Optional[str] = Query(None),
+):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
+
     global action_details_log
-    filtered_logs = [log for log in action_details_log if log.get("user") != user_id]
-    action_details_log = deque(filtered_logs, maxlen=50)
-    if user_id in user_counter:
-        del user_counter[user_id]
-    country = user_id.split("-")[0].upper() if "-" in user_id else "Unknown"
-    if country in country_user_counter and user_id in country_user_counter[country]:
-        del country_user_counter[country][user_id]
+    action_details_log = deque(
+        (log for log in action_details_log if log.get("user") != user_id),
+        maxlen=50,
+    )
 
-    sorted_stats = dict(sorted(feature_counter.items(), key=lambda item: item[1], reverse=True))
-    sorted_country_stats = dict(sorted(country_counter.items(), key=lambda item: item[1], reverse=True))
-    sorted_user_stats = dict(sorted(user_counter.items(), key=lambda item: item[1], reverse=True))
+    user_counter.pop(user_id, None)
+    for users in country_user_counter.values():
+        users.pop(user_id, None)
 
-    await console_manager.broadcast({
-        "total_events": sum(sorted_stats.values()),
-        "stats": sorted_stats,
-        "country_stats": sorted_country_stats,
-        "user_stats": sorted_user_stats,
-        "recent_50_details": get_clean_recent_logs()
-    })
+    for _, users in tracking_counts_by_day.values():
+        for country, recorded_user in tuple(users):
+            if recorded_user == user_id:
+                del users[country, recorded_user]
+
+    await console_manager.broadcast()
     return {"status": "success", "message": f"已刪除使用者 {user_id} 的紀錄"}
-    
+
+
 @app.delete("/api/track/reset")
 async def reset_track_stats(admin: Optional[str] = Query(None)):
     if not admin or admin != TRACK_STATS_USER:
         raise HTTPException(status_code=403, detail="Forbidden")
-    global action_details_log, last_reset_time
-    feature_counter.clear()
-    country_counter.clear()
-    user_counter.clear()
+
+    global last_reset_time
+    tracking_counts_by_day.clear()
+    clear_tracking_totals()
     action_details_log.clear()
     data_transfer_stats.clear()
     view_records.clear()
-    daily_total_counter.clear()
-    country_daily_total_counter.clear()
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 
-    await console_manager.broadcast({
-        "total_events": 0,
-        "stats": {},
-        "country_stats": {},
-        "country_user_counts": {},
-        "user_stats": {},
-        "recent_50_details": [],
-        "start_time": last_reset_time
-    })
+    await console_manager.broadcast()
     return {"status": "success", "message": "所有統計數據與國籍計數已徹底重置！"}
     
 @app.get("/api/get_wiki_card_details")
