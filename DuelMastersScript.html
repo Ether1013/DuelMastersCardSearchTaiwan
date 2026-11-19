@@ -4718,10 +4718,12 @@
             <span data-i18n="msg_paste_hint_modal">💡 提示：點擊卡片選取後，可直接按 Ctrl+V 貼上圖片或網址來更換卡圖。</span>
         </div>
         <div id="modal-body"></div>
-        <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
+        <div style="margin-top:15px; display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end;">
+			<button type="button" onclick="copyToAbility(false, selectedCardsInModal)" style="background:#e67e22;" data-i18n="btn_add_trigger_card">⚡ 新增觸發效果小卡</button>
+			<button type="button" onclick="copyToAbility(true, selectedCardsInModal)" style="background:#9b59b6;" data-i18n="btn_add_continuous_card">∞ 新增持續效果小卡</button>
 			<button onclick="actionShuffleZone()" style="background:#8e44ad;" data-i18n="btn_shuffle_zone">洗牌此區</button>
 			<button onclick="prepareMove(true)" style="background:#d35400;" data-i18n="btn_shuffle_move">洗牌選取牌並移動...</button>
-            <button onclick="flipSelectedInModal()" style="background:#f39c12; border-color:#e67e22;" data-i18n="act_flip">🔁 翻面</button>
+			<button onclick="flipSelectedInModal()" style="background:#f39c12; border-color:#e67e22;" data-i18n="act_flip">🔁 翻面</button>
 			<button onclick="revealFromSelector()" style="background:#3498db;" data-i18n="btn_reveal_sel">👁️ 展示</button>
 			<button onclick="prepareMove(false)" style="background:#2980b9;" data-i18n="btn_move_sel">移動選取牌...</button>
 		</div>
@@ -5859,7 +5861,7 @@
 			msg_no_recall_cards: "沒有需要收回的卡片。",
 			log_blind_move: "[盲移]",
 			log_recall: "[重置] 全卡回牌庫",
-			msg_paste_hint_modal: "💡 提示：點擊卡片選取後，可直接按 Ctrl+V 貼上圖片或網址來更換卡圖。",
+			msg_paste_hint_modal: "💡 先選卡，再按 Ctrl+V。貼上一張圖會套用到所有選取的卡片。貼上多張圖時，依選取順序一對一套用。圖片網址每行一個。",
 			'tab_import_script': '📜 匯入劇本',
 			'tab_import_deck': '🎴 匯入牌組',
 			'lbl_import_target': '匯入目標:',
@@ -6062,7 +6064,7 @@
 			msg_no_recall_cards: "No cards found to recall.",
 			log_blind_move: "[Blind Move]",
 			log_recall: "[Reset] Recall All",
-			msg_paste_hint_modal: "💡 Tip: Select a card and press Ctrl+V to paste an image or URL to update it.",
+			msg_paste_hint_modal: "💡 Select cards and press Ctrl+V. Images are assigned in selection order. Paste one image per card, or one image URL per line.",
 			'tab_import_script': '📜 Import Script',
 			'tab_import_deck': '🎴 Import Deck',
 			'lbl_import_target': 'Target:',
@@ -6264,7 +6266,7 @@
 			msg_no_recall_cards: "回収するカードがありません。",
 			log_blind_move: "[山札移動]",
 			log_recall: "[リセット] 全回収",
-			msg_paste_hint_modal: "💡 ヒント：カードを選択し、Ctrl+Vで画像やURLを貼り付けてカード画像を変更できます。",
+			msg_paste_hint_modal: "💡 カードを選択して Ctrl+V を押してください。画像は選択順に割り当てます。カードと画像の枚数をそろえ、画像URLは1行に1件入力してください。",
 			'tab_import_script': '📜 シナリオ',
 			'tab_import_deck': '🎴 デッキ',
 			'lbl_import_target': 'インポート先:',
@@ -6980,42 +6982,38 @@
 	}
     
     function pasteImageMode() {
-        if (!pendingMove || pendingMove.cardIds.length !== 1) {
-            alert(t('msg_paste_img_hint'));
-            return;
-        }
-        window.focus();
-    }
-    
-    // --- [修改] 圖片處理 (畫質提升至 200x280) ---
-	function processImage(dataUrl, targetId = null) {
-		const img = new Image();
-		img.onload = () => {
+		if (!pendingMove?.cardIds.length) {
+			alert(t('msg_paste_hint_modal'));
+			return;
+		}
+		window.focus();
+	}
+
+	function loadPasteImage(src) {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => resolve(img);
+			img.onerror = () => reject(new Error('Cannot load pasted image'));
+			img.src = src;
+		});
+	}
+
+	async function processImage(file) {
+		const src = URL.createObjectURL(file);
+		try {
+			const img = await loadPasteImage(src);
 			const canvas = document.createElement('canvas');
+			canvas.width = 240;
+			canvas.height = 336;
+
 			const ctx = canvas.getContext('2d');
-			
-			// [修改 1] 解析度提升 (原本 100x140 -> 200x280)
-			// 這樣在手機版放大時依然清晰
-			const targetW = 240;
-			const targetH = 336;
-			
-			canvas.width = targetW;
-			canvas.height = targetH;
-			
-			ctx.fillStyle = "#fff"; 
-			ctx.fillRect(0, 0, targetW, targetH);
-			ctx.drawImage(img, 0, 0, targetW, targetH);
-			
-			// 使用 0.85 品質壓縮，取得平衡
-			const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-			
-			const idToUse = targetId || (pendingMove ? pendingMove.cardIds[0] : null);
-			
-			if (idToUse) {
-				updateCardImageGlobal(idToUse, compressedBase64);
-			}
-		};
-		img.src = dataUrl;
+			ctx.fillStyle = '#fff';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+			return canvas.toDataURL('image/jpeg', 0.85);
+		} finally {
+			URL.revokeObjectURL(src);
+		}
 	}
     
 	// --- [修正版] 垃圾回收輔助：找出所有正在使用的圖片 Key (含多面卡支援) ---
@@ -7096,91 +7094,54 @@
 		return used;
 	}
 
-	// --- [修改] 全域圖片更新 (含去重複化與引用更新) ---
-	// --- [修正版] 全域圖片更新 (具備超次元多面卡意識) ---
-	function updateCardImageGlobal(cardId, base64) {
-		// 1. 先取得當前顯示狀態，確認使用者是在哪一面進行編輯
-		const currentState = getCurrentDisplayState();
-		const targetCard = currentState.cards.find(c => c.id === cardId);
-		if (!targetCard) return;
+	function updateCardImagesGlobal(targets, images) {
+		const imageKeys = new Map();
+		for (const [key, image] of Object.entries(globalImageRegistry)) {
+			if (!imageKeys.has(image)) imageKeys.set(image, key);
+		}
 
-		// 判斷當前編輯的是哪一面 (預設為 0)
-		const currentFaceIndex = targetCard.faceIndex || 0; 
-		// 判斷是否為超次元卡
-		const isHyper = targetCard.isHyper || (targetCard.initialZone && targetCard.initialZone.includes('hyper'));
-		// 判斷是否正在更新背面 (超次元背面不分面數，統一處理)
-		const isUpdatingBack = (isHyper && !targetCard.faceUp);
+		const updates = new Map(targets.map(({ id, isHyper, faceIndex, isBack }, index) => {
+			const image = images[index];
+			let key = imageKeys.get(image);
+			if (!key) {
+				do {
+					key = `img_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+				} while (key in globalImageRegistry);
+				globalImageRegistry[key] = image;
+				imageKeys.set(image, key);
+			}
+			return [id, { key, isHyper, faceIndex, isBack }];
+		}));
 
-		// 2. [去重複化] 檢查圖片 Key
-		let finalKey = null;
-		for (const [key, value] of Object.entries(globalImageRegistry)) {
-			if (value === base64) {
-				finalKey = key;
-				break;
+		const states = new Set([initialState, tempState]);
+		for (const step of history) {
+			states.add(step.state);
+			states.add(step.detachedStartState);
+		}
+
+		for (const state of states) {
+			if (!state?.cards) continue;
+
+			for (const card of state.cards) {
+				const update = updates.get(card.id);
+				if (!update) continue;
+
+				if (update.isBack) {
+					card.backImageKey = update.key;
+					continue;
+				}
+				if (update.isHyper) {
+					card.hyperFaces ||= [];
+					card.hyperFaces[update.faceIndex] = update.key;
+					if ((card.faceIndex || 0) !== update.faceIndex) continue;
+				}
+				card.imageKey = update.key;
+				card.image = true;
 			}
 		}
-		if (!finalKey) {
-			finalKey = `img_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-			globalImageRegistry[finalKey] = base64;
-		}
 
-		// 3. 定義更新邏輯
-		const updateCardRef = (s) => {
-			s.cards.forEach(c => {
-				if (c.id === cardId) {
-					if (isUpdatingBack) {
-						// 更新背面 (維持原樣)
-						c.backImageKey = finalKey;
-					} else {
-						if (isHyper) {
-							// --- [修正重點] 超次元卡特殊處理 ---
-							if (!c.hyperFaces) c.hyperFaces = [];
-							
-							// A. 無論該狀態處於哪一面，都將圖片 Key 寫入對應的 Slot (確保資料永續)
-							// 這樣即使在 Face 1 的狀態下，Face 4 的圖片資料也會被同步更新
-							c.hyperFaces[currentFaceIndex] = finalKey;
-							
-							// B. 只有當該歷史狀態的 faceIndex 與「當前編輯的面」一致時，才更新顯示圖片
-							// 這樣就不會把 Face 1 的歷史畫面覆蓋成 Face 4 的圖
-							if ((c.faceIndex || 0) === currentFaceIndex) {
-								c.imageKey = finalKey;
-								c.image = true;
-							}
-						} else {
-							// 一般卡片：直接更新所有歷史，保持一致
-							c.imageKey = finalKey;
-							c.image = true;
-						}
-					}
-				}
-			});
-		};
-
-		// 4. 執行全面更新
-		updateCardRef(initialState);
-		history.forEach(h => updateCardRef(h.state));
-		if (tempState) updateCardRef(tempState);
-
-		// 5. 存檔與重繪
 		renderUI();
 		saveToStorage();
-		// A. 取消桌面上的選取 (清除 pendingMove 與綠框)
-		cancelSelection(); 
-
-		// B. 取消選單內的選取記憶 (防止重繪時又選上)
-		if (typeof selectedCardsInModal !== 'undefined') {
-			selectedCardsInModal = [];
-		}
-
-		// C. 重新整理選單視窗 (如果有開)
-		const selectorModal = document.getElementById('card-selector-modal');
-		if (selectorModal && selectorModal.style.display === 'flex') {
-			const zoneId = document.getElementById('modal-title').getAttribute('data-zone-id');
-			if (zoneId) {
-				// 這裡傳入 false (或不傳)，代表「不保留選取狀態」
-				openSelectorModal(zoneId, false);
-			}
-		}
 	}
     
     function removeImage() {
@@ -9804,27 +9765,22 @@
         updateSelectionUI();
 	}
 	
-	// --- [修正版] 複製到能力區 (同步選取版) ---
-	function copyToAbility(isContinuous = false) {
-		if (!pendingMove) return;
-		if (pendingMove.cardIds.length !== 1) return alert(t('msg_select_one_copy'));
-		
-		const state = getCurrentDisplayState();
-		const card = state.cards.find(c => c.id === pendingMove.cardIds[0]);
+	function copyToAbility(isContinuous = false, cardIds = pendingMove?.cardIds) {
+		if (!cardIds) return;
+		if (cardIds.length !== 1) {
+			alert(t('msg_select_one_copy'));
+			return;
+		}
+
+		const card = getCurrentDisplayState()?.cards.find(c => c.id === cardIds[0]);
 		if (!card) return;
-		
-		const targetZone = card.ownerId === 1 ? 'p1-ability' : 'p2-ability';
-		
-		// 使用時間戳記 + 隨機數生成「絕對唯一 ID」
-		const fixedId = parseInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`);
-		
-		// 1. 執行新增動作 (這會觸發第一次 renderUI，產生卡片 DOM)
-		addOperation({ 
-			type: 'CREATE_ABILITY', 
-			sourceCardId: card.id, 
-			targetZone: targetZone, 
-			newId: fixedId, 
-			isContinuous: isContinuous 
+
+		addOperation({
+			type: 'CREATE_ABILITY',
+			sourceCardId: card.id,
+			targetZone: card.ownerId === 1 ? 'p1-ability' : 'p2-ability',
+			newId: Number(`${Date.now()}${Math.floor(Math.random() * 1000)}`),
+			isContinuous
 		});
 	}
 
@@ -10426,7 +10382,7 @@
 				panel.style.display = 'flex';
         
 				// 1. 隱藏不支援多選的按鈕 (更名、上圖等)
-				btnPaste.style.display = 'none';
+				btnPaste.style.display = '';
 				btnRemoveImg.style.display = 'none';
 				inputRename.style.display = 'none';
 				btnRename.style.display = 'none';
@@ -16589,177 +16545,146 @@
         document.getElementById('edit-p2-text').value = '';
     }
 
-    // --- 統一的貼上監聽器 (Unified Paste Handler) ---
-	// --- [修改] 統一的貼上監聽器 (支援 圖片檔 與 圖片網址) ---
-	document.addEventListener('paste', (e) => {
-        // 1. 取得剪貼簿資料
-		const clipboardData = (e.clipboardData || e.originalEvent.clipboardData);
-		const items = clipboardData.items;
-		let blob = null;
+    let cardImagePasteQueue = Promise.resolve();
 
-        // 2. 優先檢查是否有圖片檔案 (Blob)
-		for (let item of items) {
-			if (item.kind === 'file' && item.type.startsWith('image/')) {
-				blob = item.getAsFile();
-				break;
-			}
+	document.addEventListener('paste', (e) => {
+		const clipboard = e.clipboardData || e.originalEvent?.clipboardData;
+		if (!clipboard) return;
+
+		let files = Array.from(clipboard.files || []).filter(file => file.type.startsWith('image/'));
+		if (!files.length) {
+			files = Array.from(clipboard.items || [])
+				.filter(item => item.kind === 'file' && item.type.startsWith('image/'))
+				.map(item => item.getAsFile())
+				.filter(Boolean);
 		}
 
-        // -------------------------------------------------------------
-        // 分支 A: 貼上的是圖片檔案 -> 走原本的壓縮 Base64 流程
-        // -------------------------------------------------------------
-		if (blob) {
-            // [情境 D] 次元破裂編輯器
-            if (rbEditorState && rbEditorState.active) {
-                handleRbPaste(blob);
-                e.preventDefault();
-                return;
-            }
-            
-            //[情境 A] 對話頭像 (維持 Base64，因為需要裁切)
-			const diagModal = document.getElementById('dialogue-modal');
-			if (diagModal && diagModal.style.display === 'flex') {
-				const url = URL.createObjectURL(blob);
-				const img = new Image();
-				img.onload = () => {
-					const currentEmo = document.getElementById(`edit-${lastFocusPid}-emotion`).value;
-					
-					// --- [修改重點] ---
-					// 1. 決定目標高度 (固定高度)
-					const targetH = currentEmo.endsWith('_hd') ? 480 : 200;
-					
-					// 2. 根據原始圖片比例計算寬度 (等比例縮放)
-					const aspectRatio = img.width / img.height;
-					const targetW = targetH * aspectRatio;
+		const text = clipboard.getData('text/plain');
+		const urls = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+		const hasUrls = urls.length > 0 && urls.every(url => /^https?:\/\/\S+$/i.test(url));
+		if (!files.length && !hasUrls) return;
 
-					const canvas = document.createElement('canvas');
-					canvas.width = targetW;   // 寬度現在是動態的
-					canvas.height = targetH;  // 高度維持限制
-					const ctx = canvas.getContext('2d');
-					
-					ctx.clearRect(0, 0, targetW, targetH);
-					
-					// 3. 直接將圖片繪製滿整個 Canvas，不需裁切
-					ctx.drawImage(img, 0, 0, targetW, targetH);
-					
-					const base64 = canvas.toDataURL('image/png');
-					
-					const key = `avatar_${lastFocusPid}_${currentEmo}`;
-					globalImageRegistry[key] = base64;
-					
-					const activeOpt = document.querySelector(`#emotion-grid-${lastFocusPid} .emotion-opt[data-emo="${currentEmo}"]`);
-					if (activeOpt) {
-						activeOpt.style.backgroundImage = `url(${base64})`;
-						// 為了讓預覽格也能看到全貌，建議改為 contain
-						activeOpt.style.backgroundSize = 'contain';
-						activeOpt.style.backgroundRepeat = 'no-repeat';
-					}
-					URL.revokeObjectURL(url);
-					saveToStorage();
-				};
-                img.src = url;
-                e.preventDefault();
-                return;
-            }
+		if (rbEditorState?.active) {
+			e.preventDefault();
+			if (files.length) handleRbPaste(files[0]);
+			else loadRbUrl(urls[0]);
+			return;
+		}
 
-            // [情境 C] 卡片清單視窗 (單選)
-            const selectorModal = document.getElementById('card-selector-modal');
-            if (selectorModal && selectorModal.style.display === 'flex') {
-                if (selectedCardsInModal.length === 1) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => processImage(ev.target.result, selectedCardsInModal[0]);
-                    reader.readAsDataURL(blob);
-                    e.preventDefault();
-                    return;
-                }
-            }
+		const dialog = document.getElementById('dialogue-modal');
+		if (files.length && dialog?.style.display === 'flex') {
+			e.preventDefault();
+			pasteDialogueAvatar(files[0]);
+			return;
+		}
 
-            // [情境 B] 桌面單選
-            if (pendingMove && pendingMove.cardIds.length === 1) {
-                const reader = new FileReader();
-                reader.onload = (ev) => processImage(ev.target.result);
-                reader.readAsDataURL(blob);
-                e.preventDefault();
-                return;
-            }
-            return; // 有檔案但無處可貼，結束
-        }
+		const selector = document.getElementById('card-selector-modal');
+		const selectorTitle = document.getElementById('modal-title');
+		const inSelector = selector?.style.display === 'flex';
+		const zoneId = inSelector ? selectorTitle.getAttribute('data-zone-id') : null;
+		const cardIds = [...(inSelector ? selectedCardsInModal : pendingMove?.cardIds || [])];
+		if (!cardIds.length) return;
 
-        // -------------------------------------------------------------
-        // 分支 B: 沒有檔案 -> 檢查是否為「文字網址」
-        // -------------------------------------------------------------
-        const pastedText = clipboardData.getData('text');
-        
-        // 簡單的正則表達式檢查是否為 http/https 開頭
-        if (pastedText && pastedText.match(/^https?:\/\/.+/i)) {
-            
-            // [情境 D] 次元破裂編輯器 (直接載入 URL)
-            if (rbEditorState && rbEditorState.active) {
-                loadRbUrl(pastedText); // 呼叫既有的載入函式
-                e.preventDefault();
-                return;
-            }
+		e.preventDefault();
+		const sources = files.length ? files : urls;
+		const useSameImage = sources.length === 1;
 
-            // 判斷目標卡片 ID
-            let targetCardId = null;
+		if (!useSameImage && cardIds.length !== sources.length) {
+			alert(`已選取 ${cardIds.length} 張卡，剪貼簿收到 ${sources.length} 張圖。貼上多張圖時，圖片與卡片數量須相同。`);
+			return;
+		}
 
-            // [情境 C] Modal 單選
-            const selectorModal = document.getElementById('card-selector-modal');
-            if (selectorModal && selectorModal.style.display === 'flex') {
-                if (selectedCardsInModal.length === 1) {
-                    targetCardId = selectedCardsInModal[0];
-                }
-            }
-            // [情境 B] 桌面單選
-            else if (pendingMove && pendingMove.cardIds.length === 1) {
-                targetCardId = pendingMove.cardIds[0];
-            }
+		const state = getCurrentDisplayState();
+		const game = initialState;
+		const cards = cardIds.map(id => state?.cards.find(card => card.id === id));
+		if (cards.some(card => !card)) return;
 
-            // 如果有目標卡片，執行網址處理
-            if (targetCardId) {
-                processPastedUrl(pastedText, targetCardId);
-                e.preventDefault();
-            }
-        }
+		const targets = cards.map(card => {
+			const isHyper = Boolean(card.isHyper || card.initialZone?.includes('hyper'));
+			return {
+				id: card.id,
+				isHyper,
+				faceIndex: card.faceIndex || 0,
+				isBack: isHyper && !card.faceUp
+			};
+		});
+
+		const sameSelection = (ids) =>
+			ids?.length === cardIds.length && ids.every((id, index) => id === cardIds[index]);
+		const isSameStep = () => initialState === game && getCurrentDisplayState() === state;
+
+		cardImagePasteQueue = cardImagePasteQueue.then(async () => {
+			if (!isSameStep()) return;
+
+			let images;
+			try {
+				images = await Promise.all(sources.map(source =>
+					files.length ? processImage(source) : processPastedUrl(source, sources.length === 1, isSameStep)
+				));
+			} catch (error) {
+				console.error(error);
+				if (isSameStep()) alert(t('msg_paste_failed'));
+				return;
+			}
+			if (!isSameStep() || images.some(image => image === null)) return;
+
+			const openZone = selector?.style.display === 'flex'
+				? selectorTitle.getAttribute('data-zone-id')
+				: null;
+			if (inSelector && openZone === zoneId && sameSelection(selectedCardsInModal)) {
+				selectedCardsInModal = [];
+			} else if (!inSelector && sameSelection(pendingMove?.cardIds)) {
+				cancelSelection();
+			}
+
+			const imagesToApply = useSameImage
+				? targets.map(() => images[0])
+				: images;
+
+			updateCardImagesGlobal(targets, imagesToApply);
+			if (openZone) openSelectorModal(openZone, true);
+		}).catch(error => console.error(error));
 	});
-	
-	// --- [新增] 處理貼上的網址 (不壓縮，直接儲存) ---
-    function processPastedUrl(url, targetId) {
-        // 1. 顯示簡易 Loading (可選)
-        const cardEl = document.querySelector(`.card[data-id="${targetId}"]`);
-        if (cardEl) cardEl.style.opacity = '0.5';
 
-        // 2. 驗證網址是否為有效圖片
-        const img = new Image();
-//        img.crossOrigin = "Anonymous"; // 嘗試跨域，雖然存網址不需要，但有些圖源需要
-        
-        img.onload = () => {
-            // 載入成功！
-            if (cardEl) cardEl.style.opacity = '1';
-            
-            console.log("網址圖片驗證成功，直接儲存 URL:", url);
-            
-            // [核心] 直接呼叫 updateCardImageGlobal
-            // 該函式會將此 URL 視為 key 對應的 value 存入 globalImageRegistry
-            // CSS 的 background-image: url('...') 可以完美支援 http 網址
-            updateCardImageGlobal(targetId, url);
-        };
-        
-        img.onerror = () => {
-            // 載入失敗 (可能不是圖片，或是由 CORS 阻擋導致無法 Image onload)
-            // 但即使 CORS 阻擋，如果瀏覽器能顯示，我們還是可以存存看，但為了安全通常建議失敗就不存
-            // 這裡採取寬容策略：如果是 404 就真的失敗，如果是 CORS 還是可以試著顯示
-            
-            if (cardEl) cardEl.style.opacity = '1';
-            
-            // 簡單提示
-            if (confirm("無法驗證此網址為有效圖片 (或存取被拒)。\n是否仍要強制設為卡圖？")) {
-                updateCardImageGlobal(targetId, url);
-            }
-        };
-        
-        img.src = url;
-    }
+	async function pasteDialogueAvatar(file) {
+		const player = lastFocusPid;
+		const emotion = document.getElementById(`edit-${player}-emotion`).value;
+		const src = URL.createObjectURL(file);
+		try {
+			const img = await loadPasteImage(src);
+			const canvas = document.createElement('canvas');
+			canvas.height = emotion.endsWith('_hd') ? 480 : 200;
+			canvas.width = canvas.height * img.width / img.height;
+			canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+			const image = canvas.toDataURL('image/png');
+			globalImageRegistry[`avatar_${player}_${emotion}`] = image;
+
+			const preview = document.querySelector(`#emotion-grid-${player} .emotion-opt[data-emo="${emotion}"]`);
+			if (preview) {
+				preview.style.backgroundImage = `url(${image})`;
+				preview.style.backgroundSize = 'contain';
+				preview.style.backgroundRepeat = 'no-repeat';
+			}
+			saveToStorage();
+		} catch (error) {
+			console.error(error);
+		} finally {
+			URL.revokeObjectURL(src);
+		}
+	}
+
+	async function processPastedUrl(url, allowUnverified, isSameStep) {
+		try {
+			await loadPasteImage(url);
+			return url;
+		} catch (error) {
+			if (allowUnverified) {
+				return isSameStep() && confirm(t('msg_paste_force_url')) ? url : null;
+			}
+			throw error;
+		}
+	}
 	
 	// --- [新增] 次元破裂 (Reality Break) 系統 ---
 
