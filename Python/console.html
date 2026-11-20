@@ -69,6 +69,7 @@
                     <button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-bullhorn"></i> 廣播
                     </button>
+					<button id="deck-admin-open" type="button" onclick="openDeckAdmin()" style="display:none" class="rounded border border-rose-700 bg-rose-950 px-3 py-1.5 text-xs text-rose-200">刪除牌組</button>
                     <button id="historyReportBtn" onclick="openHistoryModal()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white text-xs rounded-lg transition border border-cyan-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-chart-pie"></i> 歷史報表
                     </button>            
@@ -1297,6 +1298,8 @@
                 const response = await fetch(`/api/track/stats?${authParam}&format=json`);
                 if (response.ok) {
                     const data = await response.json();
+                    document.getElementById("deck-admin-open").style.display =
+                        data.can_manage_decks === true ? "inline-flex" : "none";
                     updateDashboard(data);
 
                     canExportCarddata =
@@ -1716,5 +1719,127 @@
 			initUptimeTimer(); 
 		});
     </script>
+	<dialog id="deck-admin-dialog" class="w-[95vw] max-w-5xl rounded-xl bg-gray-900 p-5 text-gray-100"
+			oncancel="if (deckAdminBusy) event.preventDefault()">
+		<h2 class="mb-3 text-lg font-semibold">刪除牌組</h2>
+		<div class="flex flex-wrap items-center gap-2">
+			<label for="deck-admin-select">牌組</label>
+			<select id="deck-admin-select" class="min-w-48 rounded bg-gray-800 p-2" onchange="previewDeckAdmin()"></select>
+			<button id="deck-admin-delete" type="button" class="rounded bg-rose-700 px-3 py-2 disabled:opacity-50"
+					onclick="deleteDeckAdmin()" disabled>確認刪除</button>
+			<button id="deck-admin-close" type="button" class="rounded bg-gray-700 px-3 py-2"
+					onclick="this.closest('dialog').close()">關閉</button>
+		</div>
+		<p id="deck-admin-status" role="status" class="my-3 text-sm"></p>
+		<div id="deck-admin-cards" class="grid max-h-[58vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-4 lg:grid-cols-6"></div>
+	</dialog>
+	<script>
+		let deckAdminSnapshot = null;
+		let deckAdminRead = 0;
+		let deckAdminBusy = false;
+
+		async function deckAdminRequest(path, options = {}) {
+			const response = await fetch(path, { ...options, cache: 'no-store' });
+			if (response.status === 204) return;
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.detail || `操作失敗（${response.status}）`);
+			return data;
+		}
+
+		async function openDeckAdmin() {
+			const menu = document.getElementById('deck-admin-select');
+			const status = document.getElementById('deck-admin-status');
+			document.getElementById('deck-admin-dialog').showModal();
+			const read = ++deckAdminRead;
+			deckAdminSnapshot = null;
+			document.getElementById('deck-admin-delete').disabled = true;
+			document.getElementById('deck-admin-cards').replaceChildren();
+			menu.replaceChildren(new Option('請選擇牌組', ''));
+			status.textContent = '載入牌組…';
+			try {
+				const { decks } = await deckAdminRequest('/api/decks');
+				if (read !== deckAdminRead) return;
+				menu.append(...decks.map(deck => new Option(
+					`${deck.title}${deck.kind === 'system' ? '（範例）' : ''} · ${deck.id}`, deck.id
+				)));
+				status.textContent = decks.length ? '請選擇牌組以預覽全部卡牌。' : '目前沒有牌組。';
+			} catch (error) {
+				if (read === deckAdminRead) status.textContent = error.message;
+			}
+		}
+
+		async function previewDeckAdmin() {
+			const id = document.getElementById('deck-admin-select').value;
+			const status = document.getElementById('deck-admin-status');
+			const grid = document.getElementById('deck-admin-cards');
+			const remove = document.getElementById('deck-admin-delete');
+			const read = ++deckAdminRead;
+			deckAdminSnapshot = null;
+			remove.disabled = true;
+			grid.replaceChildren();
+			status.textContent = id ? '載入卡牌…' : '請選擇牌組以預覽全部卡牌。';
+			if (!id) return;
+			try {
+				const deck = await deckAdminRequest('/api/decks/' + encodeURIComponent(id));
+				if (read !== deckAdminRead) return;
+				const images = deck.imageRegistry || {};
+				for (const card of deck.cards) {
+					const figure = document.createElement('figure');
+					figure.className = 'rounded bg-gray-800 p-2 text-center text-sm break-words';
+					const code = String(card.cardCode || card.code || card.text || card.id);
+					const keys = [card.imageKey, card.backImageKey, card.exLifeKey, ...(card.hyperFaces || [])];
+					const urls = new Set(keys.filter(key => Object.hasOwn(images, key)).map(key => images[key]));
+					if (typeof card.image === 'string') urls.add(card.image);
+					for (const url of urls) {
+						if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) continue;
+						const img = document.createElement('img');
+						img.alt = code;
+						img.className = 'mx-auto mb-1 max-h-40 max-w-full';
+						img.referrerPolicy = 'no-referrer';
+						img.addEventListener('error', () => img.remove(), { once: true });
+						img.src = url;
+						figure.append(img);
+					}
+					const caption = document.createElement('figcaption');
+					caption.textContent = code;
+					figure.append(caption);
+					grid.append(figure);
+				}
+				deckAdminSnapshot = { id, title: deck.title, revision: deck.revision };
+				status.textContent = `「${deck.title}」共 ${deck.cards.length} 張卡。`;
+				remove.disabled = !Number.isInteger(deck.revision);
+			} catch (error) {
+				if (read === deckAdminRead) status.textContent = error.message;
+			}
+		}
+
+		async function deleteDeckAdmin() {
+			if (deckAdminBusy || !deckAdminSnapshot) return;
+			const { id, title, revision } = deckAdminSnapshot;
+			if (!confirm(`確定刪除「${title}」？`)) return;
+			const menu = document.getElementById('deck-admin-select');
+			const status = document.getElementById('deck-admin-status');
+			const remove = document.getElementById('deck-admin-delete');
+			const close = document.getElementById('deck-admin-close');
+			deckAdminBusy = true;
+			menu.disabled = remove.disabled = close.disabled = true;
+			try {
+				await deckAdminRequest(`/api/console/decks/${encodeURIComponent(id)}?revision=${revision}`, {
+					method: 'DELETE', headers: { 'X-Deck-Admin': encodeURIComponent(adminKey) }
+				});
+				menu.options[menu.selectedIndex].remove();
+				menu.value = '';
+				document.getElementById('deck-admin-cards').replaceChildren();
+				status.textContent = `已刪除「${title}」。`;
+			} catch (error) {
+				status.textContent = error.message;
+				menu.value = '';
+			} finally {
+				deckAdminSnapshot = null;
+				deckAdminBusy = false;
+				menu.disabled = close.disabled = false;
+			}
+		}
+	</script>
 </body>
 </html>

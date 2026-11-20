@@ -35,6 +35,10 @@ import random, string
 import io
 import zipfile
 
+import hmac
+import secrets
+from google.cloud.firestore_v1.base_query import FieldFilter
+
 # 👇 Firebase 套件
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -2177,6 +2181,264 @@ async def serve_index():
         headers={"Cache-Control": "no-cache"},
     )
 
+# Cloud decks
+DECK_BODY_LIMIT = 768 * 1024
+DECK_IMAGE_FIELDS = ("imageKey", "backImageKey", "exLifeKey", "styleKey")
+DECK_SUMMARY_FIELDS = ("title", "description", "lang", "oAuthor", "colors", "kind", "sortOrder")
+
+
+@app.get("/DuelMastersScript.html")
+def serve_duel_masters_script():
+    return FileResponse(BASE_DIR / "DuelMastersScript.html", media_type="text/html")
+
+
+@app.get("/scripts/{filename:path}", include_in_schema=False)
+@app.get("/bgm/{filename:path}", include_in_schema=False)
+@app.get("/cardPic/{filename:path}", include_in_schema=False)
+def serve_duel_masters_asset(request: Request, filename: str):
+    folder = request.scope["route"].path.split("/")[1]
+    root = (BASE_DIR / folder).resolve()
+    asset = (root / filename).resolve()
+    if not filename or not asset.is_relative_to(root):
+        raise HTTPException(404)
+    if asset.is_file():
+        return FileResponse(asset)
+    source = "https://ether1013.github.io/DuelMastersCardSearchTaiwan/"
+    return RedirectResponse(source + quote(f"{folder}/{filename}"))
+
+
+def cloud_deck_admin(key):
+    return bool(
+        key and TRACK_STATS_USER and TRACK_STATS_USER != "admin"
+        and hmac.compare_digest(key.encode(), TRACK_STATS_USER.encode())
+    )
+
+
+def cloud_deck_store():
+    if db is None:
+        raise HTTPException(503, "Firebase 暫時無法使用")
+    return db.collection("decks")
+
+
+def cloud_deck_hash(request):
+    key = request.headers.get("X-Deck-Key", "")
+    if re.fullmatch(r"[A-Za-z0-9_-]{43}", key):
+        return hashlib.sha256(key.encode()).hexdigest()
+    return None
+
+
+def cloud_deck_key(value):
+    return isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", value) is not None
+
+
+def cloud_deck_image_url(value):
+    if not isinstance(value, str) or any(char.isspace() for char in value):
+        return False
+    try:
+        url = urlsplit(value)
+        return url.scheme in ("http", "https") and bool(url.hostname) and url.username is None
+    except ValueError:
+        return False
+
+
+async def read_cloud_deck(request):
+    body = bytearray()
+    async for chunk in request.stream():
+        if len(body) + len(chunk) > DECK_BODY_LIMIT:
+            raise HTTPException(413, "牌組過大。雲端儲存只接受卡圖網址")
+        body.extend(chunk)
+    try:
+        payload = json.loads(body.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError()
+        json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
+    except (ValueError, RecursionError) as error:
+        raise HTTPException(422, "牌組 JSON 格式錯誤") from error
+    return payload
+
+
+def validate_cloud_deck(payload):
+    title, cards = payload.get("title"), payload.get("cards")
+    owner, images = payload.get("ownerId"), payload.get("imageRegistry")
+    if not isinstance(title, str) or not 1 <= len(title.strip()) <= 100:
+        raise HTTPException(422, "牌組名稱須為 1 至 100 字")
+    if type(owner) is not int or owner not in (1, 2) or not isinstance(cards, list) or not cards:
+        raise HTTPException(422, "請選擇有卡牌的 1P 或 2P 牌組")
+    if not isinstance(images, dict) or any(
+        not cloud_deck_key(key) or not cloud_deck_image_url(url) for key, url in images.items()
+    ):
+        raise HTTPException(422, "卡圖須使用 HTTP(S) 圖片網址，請先替換內嵌或本機卡圖")
+
+    seen = set()
+    for index, card in enumerate(cards, 1):
+        def invalid():
+            raise HTTPException(422, f"第 {index} 張卡的資料或圖片網址格式錯誤")
+
+        if not isinstance(card, dict):
+            invalid()
+        card_id, card_owner, zone = card.get("id"), card.get("ownerId"), card.get("zone")
+        if (type(card_id) is not int or not 0 < card_id <= 9007199254740991 or card_id in seen
+                or type(card_owner) is not int or card_owner != owner
+                or not isinstance(zone, str) or not re.fullmatch(rf"p{owner}-[\w-]+", zone)
+                or not isinstance(card.get("text"), str)):
+            invalid()
+        seen.add(card_id)
+
+        if any(card.get(field) not in (None, "") and not cloud_deck_key(card[field])
+               for field in DECK_IMAGE_FIELDS):
+            invalid()
+        faces = card.get("hyperFaces")
+        if faces is not None and (not isinstance(faces, list) or any(
+            key not in (None, "") and not cloud_deck_key(key) for key in faces
+        )):
+            invalid()
+        image = card.get("image")
+        if image is not None and type(image) is not bool and not cloud_deck_image_url(image):
+            invalid()
+
+        for field, value in card.items():
+            if field == "hyperFaces":
+                continue
+            if (not cloud_deck_key(field) or field in {"__proto__", "constructor", "prototype"}
+                    or isinstance(value, (list, dict))
+                    or (type(value) is int and abs(value) > 9007199254740991)
+                    or (isinstance(value, str) and value.lstrip().lower().startswith(("data:", "blob:")))):
+                invalid()
+        for field in ("stackType", "initialZone", "glow"):
+            value = card.get(field)
+            if value not in (None, "") and not cloud_deck_key(value):
+                invalid()
+
+    document = {
+        "title": title.strip(),
+        "ownerId": owner,
+        "cards": cards,
+        "imageRegistry": images,
+        "timestamp": int(time.time() * 1000),
+        "updatedAt": firestore.SERVER_TIMESTAMP,
+    }
+    if "description" in payload:
+        description = payload["description"]
+        if not isinstance(description, str):
+            raise HTTPException(422, "牌組敘述須為文字")
+        document["description"] = description
+
+    if "oAuthor" in payload:
+        author = payload["oAuthor"]
+        if not isinstance(author, str):
+            raise HTTPException(422, "牌組作者須為文字")
+        document["oAuthor"] = author.strip()
+        
+    if "colors" in payload:
+        colors = payload["colors"]
+        if type(colors) is not int or not 0 <= colors <= 63:
+            raise HTTPException(422, "牌組文明格式錯誤")
+        document["colors"] = colors
+
+    return document
+
+
+def cloud_deck_document(deck_id):
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", deck_id):
+        raise HTTPException(404, "找不到牌組")
+    return cloud_deck_store().document(deck_id)
+
+
+def cloud_deck_public(snapshot):
+    deck = snapshot.to_dict()
+    if deck is None or deck.get("visibility") != "public":
+        raise HTTPException(404, "找不到牌組")
+    return deck
+
+
+def cloud_deck_owned(deck, key_hash):
+    return bool(key_hash and deck.get("kind") == "user"
+                and hmac.compare_digest(deck.get("ownerKeyHash") or "", key_hash))
+
+
+@app.post("/api/decks/identity")
+@limiter.limit("30/minute")
+def issue_cloud_deck_identity(request: Request):
+    return JSONResponse({"key": secrets.token_urlsafe(32)}, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/decks")
+def list_cloud_decks():
+    items = [
+        {"id": snapshot.id, **snapshot.to_dict()}
+        for snapshot in cloud_deck_store().where(
+            filter=FieldFilter("visibility", "==", "public")
+        ).select(DECK_SUMMARY_FIELDS).stream()
+    ]
+    items.sort(key=lambda item: (
+        item.get("kind") != "system", item.get("sortOrder", 0), item["title"], item["id"]
+    ))
+    return {"decks": items}
+
+
+@app.get("/api/decks/{deck_id}")
+def get_cloud_deck(deck_id: str, request: Request):
+    snapshot = cloud_deck_document(deck_id).get()
+    deck = cloud_deck_public(snapshot)
+    fields = DECK_SUMMARY_FIELDS + ("revision", "type", "ownerId", "timestamp", "cards", "imageRegistry")
+    return JSONResponse(
+        {"id": snapshot.id, "canOverwrite": cloud_deck_owned(deck, cloud_deck_hash(request)),
+         **{field: deck.get(field) for field in fields}},
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@app.post("/api/decks", status_code=201)
+@limiter.limit("12/minute")
+async def copy_cloud_deck(request: Request):
+    key_hash = cloud_deck_hash(request)
+    if key_hash is None:
+        raise HTTPException(403, "缺少編輯憑證")
+    deck = validate_cloud_deck(await read_cloud_deck(request))
+    ref = cloud_deck_store().document()
+    await asyncio.to_thread(ref.create, {
+        **deck, "type": "deck", "schemaVersion": 1, "kind": "user", "visibility": "public",
+        "ownerKeyHash": key_hash, "revision": 1, "createdAt": firestore.SERVER_TIMESTAMP,
+    })
+    return {"id": ref.id, "title": deck["title"], "revision": 1}
+
+
+@firestore.transactional
+def change_cloud_deck(transaction, ref, revision, update, key_hash=None):
+    deck = cloud_deck_public(ref.get(transaction=transaction))
+    if update is not None and not cloud_deck_owned(deck, key_hash):
+        raise HTTPException(403, "這個瀏覽器沒有修改此牌組的權限")
+    if deck.get("revision") != revision:
+        raise HTTPException(409, "牌組已更新，請重新載入確認")
+    if update is None:
+        transaction.delete(ref)
+    else:
+        transaction.update(ref, {**update, "revision": revision + 1})
+
+
+@app.put("/api/decks/{deck_id}")
+@limiter.limit("12/minute")
+async def overwrite_cloud_deck(deck_id: str, request: Request):
+    key_hash = cloud_deck_hash(request)
+    if key_hash is None:
+        raise HTTPException(403, "缺少編輯憑證")
+    payload = await read_cloud_deck(request)
+    revision = payload.get("revision")
+    if type(revision) is not int or revision < 1:
+        raise HTTPException(422, "缺少牌組版本")
+    update = validate_cloud_deck(payload)
+    ref = cloud_deck_document(deck_id)
+    await asyncio.to_thread(change_cloud_deck, db.transaction(), ref, revision, update, key_hash)
+    return {"id": ref.id, "title": update["title"], "revision": revision + 1}
+
+
+@app.delete("/api/console/decks/{deck_id}", status_code=204)
+def delete_cloud_deck(deck_id: str, request: Request, revision: int = Query(..., ge=1)):
+    if not cloud_deck_admin(unquote(request.headers.get("X-Deck-Admin", ""))):
+        raise HTTPException(403, "需要管理員權限")
+    ref = cloud_deck_document(deck_id)
+    change_cloud_deck(db.transaction(), ref, revision, None)
+    return Response(status_code=204)
 
 # 提供查卡頁面拆出的 CSS；與 index.html 放在相同資料夾。
 @app.get("/styles.css", include_in_schema=False)
@@ -2882,6 +3144,7 @@ async def get_feature_stats(
 
     result["card_image_backfill"] = image_backfill_stats()
     result["can_export_carddata"] = image_export_allowed(request, admin)
+    result["can_manage_decks"] = auth_level == "admin" and cloud_deck_admin(admin)
 
     return PrettyJSONResponse(content=result)
 
