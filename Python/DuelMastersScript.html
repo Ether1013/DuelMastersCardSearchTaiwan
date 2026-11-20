@@ -3747,6 +3747,30 @@
         cursor: pointer;
         transition: background .2s;
       }
+	  
+	  button.export-share-option {
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		text-align: start;
+		transform: none;
+	}
+
+	button.export-share-option:disabled {
+		opacity: .6;
+		cursor: default;
+	}
+
+	button.export-share-option::before {
+		content: "";
+		width: 13px;
+		height: 13px;
+		margin: 3px 10px 0 5px;
+		border: 1px solid #767676;
+		border-radius: 50%;
+		box-sizing: border-box;
+		flex-shrink: 0;
+	}
 
       .export-option-label:hover {
         background: #f0f8ff;
@@ -5507,6 +5531,10 @@
 		justify-self: end;
 		white-space: nowrap;
 	}
+	#script-list-body > button.script-item {
+		width: 100%;
+		text-align: start;
+	}
 </style>
 </head>
 <body>
@@ -5557,6 +5585,7 @@
 	<button onclick="openImportModal()" data-i18n="btn_import">匯入 (Import)</button>
 	<input type="file" id="import-input" style="display:none" onchange="importData(this)">	
     <button onclick="exportData()" data-i18n="btn_export">匯出 (Export)</button>
+	<button type="button" onclick="openCloudScriptSave()">雲端儲存劇本</button>
 	<button onclick="openAboutModal()" style="background:#7f8c8d; border-color:#616a6b;" data-i18n="btn_about">ℹ️ About</button>
 </div>
 
@@ -6234,24 +6263,264 @@
 	// --- [新增] 預設/全域 計數器 (桌機版或無劇本時使用) ---
     // 請填入您申請的「主頁/大廳」專用計數器網址
     const DEFAULT_COUNTER_URL = 'https://www.f-counter.net/j/66/1765258234/';
-	// --- [新增] 劇本清單設定 ---
-    const AVAILABLE_SCRIPTS = [
-		/*
-        {
-            filename: 'script20260716.txt',
-            title: 'ミズカミ VS デモニオ',
-            description: 'TEST Demo',
-			counter_url: 'https://www.f-counter.net/j/66/1765355583/',
-			speed: 1.0,
-            lang: 'jp',
-			credits: [
-                { role: 'Decklist Credit ', name: 'Tokitsu/Lian' },
-            ]
-			
-        },
-		*/
-        // 您可以在此擴充更多劇本...
-    ];
+	    const SCRIPT_PAGES = 'https://ether1013.github.io/DuelMastersCardSearchTaiwan/scripts/';
+    let scriptDocument = null;
+    let pendingScriptConfig = null;
+    let scriptSaving = false;
+    let scriptStatusTimer;
+
+    function isScriptId(value) {
+        return typeof value === 'string' &&
+            /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
+    }
+
+    function escapeScriptText(value) {
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
+    }
+
+    async function scriptApi(path = '', options = {}) {
+        const response = await fetch('/api/scripts' + path, { ...options, cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.detail || `劇本服務發生錯誤（${response.status}）`);
+        return data;
+    }
+
+    async function scriptCatalog() {
+        return (await scriptApi()).scripts;
+    }
+	
+	let scriptShareCheck = 0;
+
+	async function prepareScriptShare() {
+		const check = ++scriptShareCheck;
+		const button = document.getElementById('export-share-script');
+		const status = document.getElementById('export-share-status');
+		const active = scriptDocument;
+		const scriptId = active?.scriptId;
+
+		button.disabled = true;
+		delete button.dataset.scriptId;
+		if (!isScriptId(scriptId)) {
+			status.textContent = t('msg_share_script_unpublished');
+			return;
+		}
+
+		status.textContent = t('msg_share_script_checking');
+		try {
+			const entries = await scriptCatalog();
+			if (check !== scriptShareCheck || scriptDocument !== active) return;
+			if (!entries.some(entry => entry.scriptId === scriptId)) {
+				status.textContent = t('msg_share_script_unpublished');
+				return;
+			}
+			button.dataset.scriptId = scriptId;
+			button.disabled = false;
+			status.textContent = '';
+		} catch {
+			if (check === scriptShareCheck && scriptDocument === active) {
+				status.textContent = t('msg_share_script_unavailable');
+			}
+		}
+	}
+
+	async function copyScriptShareLink(button) {
+		const scriptId = button.dataset.scriptId;
+		if (!scriptId || scriptId !== scriptDocument?.scriptId) return;
+
+		const url = new URL('/DuelMastersScript.html', location.origin);
+		url.searchParams.set('scriptUrl', scriptId);
+
+		try {
+			await navigator.clipboard.writeText(url.href);
+			document.getElementById('export-share-status').textContent = t('msg_share_script_copied');
+		} catch {
+			window.prompt(t('msg_share_script_manual'), url.href);
+		}
+	}
+
+    async function readPublishedScript(entry) {
+        const url = new URL(entry.downloadUrl);
+        if (!url.href.startsWith(SCRIPT_PAGES) || url.username || url.password) {
+            throw new Error('劇本下載網址無效');
+        }
+        const response = await fetch(url, { redirect: 'error' });
+        if (!response.ok) throw new Error(`劇本下載失敗（${response.status}）`);
+        const data = await response.json();
+        if (!data.initialState || !Array.isArray(data.history) || !data.history.length) {
+            throw new Error('劇本格式錯誤');
+        }
+        return data;
+    }
+
+    function applyPublishedScript(data, entry, language) {
+        processGameData(data, true, entry);
+
+        const lang = language || entry.lang || 'zh';
+        const target = lang === 'tw' ? 'zh' : lang;
+        changeLanguage(target);
+        const select = document.getElementById('lang-select');
+        if (select) select.value = target;
+
+        changePlaybackSpeed(entry.speed ?? 1);
+        updateVisitorCounter(entry.counter_url);
+    }
+
+    async function initializeScriptIdentity() {
+        await cloudDeckKey();
+
+        const infoKey = 'dm_client_info';
+        let info;
+        try { info = JSON.parse(localStorage.getItem(infoKey) || '{}'); }
+        catch { info = {}; }
+
+        if (info?.user_id) return info.user_id;
+
+        const response = await fetch('/api/server_id', { cache: 'no-store' });
+        if (!response.ok) return '';
+        const data = await response.json();
+
+        let previous;
+        try { previous = JSON.parse(localStorage.getItem(infoKey) || '{}'); }
+        catch { previous = {}; }
+
+        if (previous?.user_id) return previous.user_id;
+
+        localStorage.setItem(infoKey, JSON.stringify({
+            user_id: data.client_id,
+            primary_country: data.ip_country,
+            country_history: [data.ip_country],
+            is_vpn: false,
+            real_ip_country: data.ip_country
+        }));
+        return data.client_id;
+    }
+
+    function cloudScriptField(name) {
+        return document.getElementById('cloud-script-' + name);
+    }
+
+    function openCloudScriptSave() {
+        const dialog = cloudScriptField('save');
+        const config = currentScriptConfig || {};
+
+        cloudScriptField('title').value = config.title || '';
+        cloudScriptField('description').value = config.description || '';
+        cloudScriptField('lang').value = config.lang === 'tw' ? 'zh' : (config.lang || currentLang || 'zh');
+        cloudScriptField('speed').value = config.speed ?? 1;
+        cloudScriptField('dialog-speed').value = config.dialogSpeed ?? currentDialogSpeed;
+
+        dialog.showModal();
+        refreshCloudScriptStatus();
+    }
+
+    async function refreshCloudScriptStatus() {
+        clearTimeout(scriptStatusTimer);
+        if (scriptSaving) return;
+
+        const active = scriptDocument;
+        const status = cloudScriptField('status');
+        const submit = cloudScriptField('submit');
+        submit.disabled = true;
+
+        if (!isScriptId(active?.scriptId) || !initialState?.cards) {
+            status.textContent = '這份本機劇本未配置雲端 ID，可使用本機匯出。';
+            return;
+        }
+
+        status.textContent = '確認雲端版本及儲存權限…';
+        try {
+            const key = await cloudDeckKey();
+            const result = await scriptApi('/' + active.scriptId + '/status', {
+                headers: { 'X-Deck-Key': key }
+            });
+            if (scriptDocument !== active || scriptSaving) return;
+
+            if (!result.canSave) {
+                status.textContent = '只有原擁有者可以雲端儲存，你仍可匯出本機檔案。';
+                return;
+            }
+
+            const justPublished = active.uploadId && result.publishedId === active.uploadId;
+            if (justPublished) {
+                active.uploadId = null;
+                active.revision = result.revision;
+                saveToStorage();
+            }
+
+            if (result.revision !== active.revision) {
+                status.textContent = '雲端已有較新版本，請重新匯入後再修改。';
+                return;
+            }
+
+            if (result.busy) {
+                status.textContent = result.state === 'pending'
+                    ? '已寫入 GitHub，等待 GitHub Pages 發布。'
+                    : '此劇本正在上傳…';
+                scriptStatusTimer = setTimeout(refreshCloudScriptStatus, 5000);
+                return;
+            }
+
+            status.textContent = justPublished ? '已上架，可從清單選擇。'
+                : result.state === 'pending' ? '尚未確認發布，可重新嘗試儲存。' : '';
+            submit.disabled = false;
+        } catch (error) {
+            if (scriptDocument !== active) return;
+            status.textContent = error.message;
+            if (active.uploadId) scriptStatusTimer = setTimeout(refreshCloudScriptStatus, 5000);
+        }
+    }
+
+    async function saveCloudScript() {
+        const active = scriptDocument;
+        const status = cloudScriptField('status');
+        const submit = cloudScriptField('submit');
+
+        if (scriptSaving || submit.disabled || !isScriptId(active?.scriptId) || !initialState?.cards) return;
+
+        if (isDrafting || deckCardImagesRestoring) {
+            status.textContent = '請等圖像載入完成，並先完成或取消正在編輯的步驟。';
+            return;
+        }
+
+        const form = cloudScriptField('fields');
+        scriptSaving = true;
+        form.disabled = true;
+        submit.disabled = true;
+        status.textContent = '正在上傳至 GitHub…';
+
+        try {
+            const metadata = {
+                title: cloudScriptField('title').value,
+                description: cloudScriptField('description').value,
+                lang: cloudScriptField('lang').value,
+                speed: Number(cloudScriptField('speed').value),
+                dialogSpeed: Number(cloudScriptField('dialog-speed').value),
+            };
+            const script = buildScriptPayload();
+            const visitor = await initializeScriptIdentity().catch(() => '');
+            const authorId = /^[A-Z]{2}-\d{6}-[a-z0-9]{4}$/.test(visitor) ? visitor : '';
+            const key = await cloudDeckKey();
+            const result = await scriptApi('/' + active.scriptId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Deck-Key': key },
+                body: JSON.stringify({ ...metadata, authorId, revision: active.revision, script }),
+            });
+
+            if (scriptDocument !== active) return;
+            active.uploadId = result.uploadId;
+            currentScriptConfig = { ...currentScriptConfig, ...metadata };
+            saveToStorage();
+        } catch (error) {
+            status.textContent = error.message;
+            submit.disabled = false;
+        } finally {
+            scriptSaving = false;
+            form.disabled = false;
+        }
+
+        if (active === scriptDocument && active.uploadId) refreshCloudScriptStatus();
+    }
 	// [新增] 用來記錄當前正在運行的劇本設定 (包含 credits)
 	let currentScriptConfig = null;
 	let currentDialogSpeed = 100; // 預設對話速度 (ms/字)
@@ -6637,6 +6906,12 @@
 			'title_export': '選擇匯出類型',
 			'lbl_export_type': '請問要匯出什麼？',
 			'opt_export_script': '完整劇本 (Full Script)',
+			'opt_share_script': '取得劇本分享連結',
+			'msg_share_script_checking': '正在確認劇本是否已發布…',
+			'msg_share_script_unpublished': '劇本公開發布後即可分享。',
+			'msg_share_script_unavailable': '無法取得已發布劇本清單，請重新開啟匯出選單再試。',
+			'msg_share_script_copied': '已複製劇本分享連結。',
+			'msg_share_script_manual': '無法寫入剪貼簿，請手動複製以下連結。',
 			'opt_export_deck_1p': '僅 1P 牌組 (1P Deck)',
 			'opt_export_deck_2p': '僅 2P 牌組 (2P Deck)',
 			'btn_do_export': '確認匯出',
@@ -6840,6 +7115,12 @@
 			'title_export': 'Export Options',
 			'lbl_export_type': 'What to export?',
 			'opt_export_script': 'Full Script',
+			'opt_share_script': 'Copy Script Share Link',
+			'msg_share_script_checking': 'Checking whether the script has been published…',
+			'msg_share_script_unpublished': 'Publish the script publicly to share it.',
+			'msg_share_script_unavailable': 'Could not load published scripts. Reopen the export menu to try again.',
+			'msg_share_script_copied': 'Script share link copied.',
+			'msg_share_script_manual': 'Could not access the clipboard. Copy the link below.',
 			'opt_export_deck_1p': '1P Deck Only',
 			'opt_export_deck_2p': '2P Deck Only',
 			'btn_do_export': 'Export',
@@ -7042,6 +7323,12 @@
 			'title_export': 'エクスポート選択',
 			'lbl_export_type': '出力タイプを選択:',
 			'opt_export_script': '完全なシナリオ (Script)',
+			'opt_share_script': 'シナリオの共有リンクをコピー',
+			'msg_share_script_checking': 'シナリオの公開状況を確認しています…',
+			'msg_share_script_unpublished': 'シナリオを公開すると共有できます。',
+			'msg_share_script_unavailable': '公開済みシナリオを取得できません。エクスポート画面を開き直してください。',
+			'msg_share_script_copied': 'シナリオの共有リンクをコピーしました。',
+			'msg_share_script_manual': 'クリップボードに書き込めません。以下のリンクをコピーしてください。',
 			'opt_export_deck_1p': '1P デッキのみ',
 			'opt_export_deck_2p': '2P デッキのみ',
 			'btn_do_export': '出力実行',
@@ -7977,6 +8264,9 @@
         if(!confirm(t('msg_confirm_delete_all'))) return;
         
         history = [];
+		scriptDocument = null;
+        currentScriptConfig = null;
+        clearTimeout(scriptStatusTimer);
 		cloudDeckLinks = {};
         initialState = null;
         currentIndex = -1;
@@ -8062,6 +8352,12 @@
 	}
 
     function initGame(config) {
+	
+		scriptDocument = { scriptId: crypto.randomUUID(), revision: 0, uploadId: null };
+        currentScriptConfig = null;
+        currentDialogSpeed = 100;
+        clearTimeout(scriptStatusTimer);
+	
 		cloudDeckLinks = {};
         const state = new GameState();
         globalImageRegistry = {}; 
@@ -8137,6 +8433,8 @@
 			});
 
 			const coreData = {
+				scriptDocument,
+                scriptConfig: currentScriptConfig,
                 cloudDeckLinks,
                 timestamp: Date.now(),
                 history: leanHistory,
@@ -8235,6 +8533,10 @@
                 Object.assign(data.initialState.moonless, data.moonlessRegistry);
             }
 
+			scriptDocument = data.scriptDocument ?? null;
+            currentScriptConfig = data.scriptConfig ?? null;
+            currentDialogSpeed = currentScriptConfig?.dialogSpeed ?? 100;
+			
             // 重建狀態
             cloudDeckLinks = data.cloudDeckLinks ?? {};
             initialState = data.initialState;
@@ -8335,7 +8637,11 @@
             // ... (使用原本的解析邏輯) ...
             globalImageRegistry = data.imageRegistry || {};
             globalAbilityStyleRegistry = data.abilityRegistry || {};
-            cloudDeckLinks = {};
+            scriptDocument = data.scriptId
+                ? { scriptId: data.scriptId, revision: data.scriptRevision ?? 0 }
+                : null;
+            currentScriptConfig = null;
+			cloudDeckLinks = {};
 			initialState = data.initialState;
             // ... Replay logic ...
             let loadedHistory = data.history;
@@ -11360,6 +11666,7 @@
 		// 0. [修正] 先取得當前狀態，供全函式使用
 		// =========================================================
 		const state = getCurrentDisplayState();
+		if (!state) return;
 		
 		// --- [修復 Cut In 卡住問題] -------------------------------
 		// 每次重繪介面時，檢查當前步驟是否包含 REALITY_BREAK 特效。
@@ -14721,12 +15028,14 @@
 		const theme = THEME_PALETTE[colorKey] || (targetPlayer === 1 ? THEME_PALETTE.blue : THEME_PALETTE.red);
 		const mainColor = theme.main;
 
-		const subHtml = subText ? `<div style="font-size: 1.5rem; font-weight:normal; margin-top:-10px; opacity:0.8; letter-spacing:2px;">${subText}</div>` : '';
+		const subHtml = subText
+          ? `<div style="font-size:1.5rem;font-weight:normal;margin-top:-10px;opacity:0.8;letter-spacing:2px;">${escapeScriptText(subText)}</div>`
+          : '';
 
 		content.innerHTML = `
 			<div class="tto-line" style="background:${mainColor}; box-shadow:0 0 15px ${mainColor}"></div>
 			<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-				<span style="color:${mainColor}; border-bottom: 3px solid ${mainColor}; padding-bottom:5px;">${mainText}</span>
+				<span style="color:${mainColor}; border-bottom: 3px solid ${mainColor}; padding-bottom:5px;">${escapeScriptText(mainText)}</span>
 				${subHtml}
 			</div>
 			<div class="tto-line" style="background:${mainColor}; box-shadow:0 0 15px ${mainColor}"></div>
@@ -15112,7 +15421,14 @@
 		}
 	}
 
-    function processGameData(data, resetToStart = false) {
+    function processGameData(data, resetToStart = false, entry = null) {
+        clearTimeout(scriptStatusTimer);
+        const scriptId = entry?.scriptId ?? data.scriptId;
+        scriptDocument = isScriptId(scriptId)
+            ? { scriptId, revision: entry?.revision ?? data.scriptRevision ?? 0, uploadId: null }
+            : null;
+        currentScriptConfig = entry;
+        currentDialogSpeed = entry?.dialogSpeed ?? 100;
 	    cloudDeckLinks = {};
 		globalImageRegistry = data.imageRegistry || {};
 		
@@ -15198,15 +15514,22 @@
 
     function resolveImportConflict(choice) {
         document.getElementById('import-conflict-modal').style.display = 'none';
-        if (choice === 'cancel') { pendingImportData = null; return; }
-        if (choice === 'save') exportData(); 
+        const data = pendingImportData;
+        const config = pendingScriptConfig;
+        pendingImportData = pendingScriptConfig = null;
+
+        if (!data || choice === 'cancel') return;
+
+        if (choice === 'save') performExportScript();
         if (choice === 'save' || choice === 'overwrite') {
-            if (pendingImportData) {
-                try { processGameData(pendingImportData, true); alert(t('msg_import_success')); } 
-                catch(e) { alert(t('msg_import_fail')); }
+            try {
+                if (config) applyPublishedScript(data, config.entry, config.language);
+                else processGameData(data, true);
+                alert(t('msg_import_success'));
+            } catch {
+                alert(t('msg_import_fail'));
             }
         }
-        pendingImportData = null;
     }
 
     // --- [修正版] 開啟卡片選單 (視覺化階層排序) ---
@@ -15225,7 +15548,7 @@
 		const isHyperZone = zoneId.includes('hyper');
 
 		title.innerHTML = `
-			${getZoneName(zoneId)} (${rawCards.length}) 
+			${escapeScriptText(getZoneName(zoneId))} (${rawCards.length}) 
 			<button class="unseen-check-btn" style="position:relative; top:0; left:10px; display:inline-block;" onclick="toggleUnseenHighlight()" data-i18n="btn_check_unseen">👁️‍🗨️ 未見</button>
 		`;
 		title.setAttribute('data-zone-id', zoneId);
@@ -15530,7 +15853,7 @@
         
         // 如果有傳入文字(底/頂)就顯示文字，否則顯示一個 '+'
         if (text) {
-            div.innerHTML = `<span style="font-weight:bold; ${isTop ? 'color:#e74c3c;' : ''}">${text}</span>`;
+			div.innerHTML = `<span style="font-weight:bold; ${isTop ? 'color:#e74c3c;' : ''}">${escapeScriptText(text)}</span>`;
         } else {
             div.innerHTML = `<span style="opacity:0.3; font-size:1.2rem;">+</span>`;
         }
@@ -15552,106 +15875,63 @@
         }
     });
 
-	// --- [新增] 手機版劇本選擇器邏輯 ---
-    // --- [修正] 手機版劇本選擇器邏輯 (含預選修復) ---
-    let selectedMobileScript = null;
+	    let selectedMobileScript = null;
 
-    function showMobileScriptSelector(defaultFilename) {
+    async function showMobileScriptSelector() {
         const modal = document.getElementById('mobile-script-selector');
-        const listBody = document.getElementById('script-list-body');
-        const startBtn = document.getElementById('btn-mobile-start');
-        
-        listBody.innerHTML = '';
-        selectedMobileScript = null;
-        startBtn.disabled = true;
+        const list = document.getElementById('script-list-body');
+        const start = document.getElementById('btn-mobile-start');
 
-        // 1. 處理傳入的預設值 (移除路徑前綴，只留檔名，以防參數帶有 scripts/)
-        const cleanDefault = defaultFilename ? defaultFilename.replace(/^scripts\//, '') : '';
-
-        // 2. 渲染清單 (修改：使用 [...].reverse() 倒序呈現，讓最新的在最上面)
-        [...AVAILABLE_SCRIPTS].reverse().forEach(script => {
-            const el = document.createElement('div');
-            el.className = 'script-item';
-			
-			// [新增] 取得語言代碼，預設為 ZH
-            const langCode = script.lang || 'zh';
-            
-            // [修改] 插入 .script-item-lang
-            el.innerHTML = `
-                <div class="script-item-title">${script.title}</div>
-                <div class="script-item-desc">${script.description}</div>
-                <div class="script-item-lang">${langCode}</div>
-            `;
-            
-            // 點擊事件
-            el.onclick = () => {
-                document.querySelectorAll('.script-item').forEach(i => i.classList.remove('selected'));
-                el.classList.add('selected');
-                selectedMobileScript = script.filename;
-                startBtn.disabled = false;
-            };
-
-            // 3. [修正] 預選邏輯 (比對純檔名)
-            const cleanScript = script.filename.replace(/^scripts\//, '');
-            
-            if (cleanDefault && cleanScript === cleanDefault) {
-                // 加樣式
-                el.classList.add('selected');
-                // 設定值
-                selectedMobileScript = script.filename;
-                // 開按鈕
-                startBtn.disabled = false;
-                
-                // [新增] 自動捲動到該項目 (延遲一下確保 DOM 渲染完畢)
-                setTimeout(() => {
-                    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                }, 100);
-            }
-
-            listBody.appendChild(el);
-        });
-
-        // 顯示介面
         modal.style.display = 'flex';
+        selectedMobileScript = null;
+        start.disabled = true;
+        list.textContent = '載入劇本…';
+
+        try {
+            const entries = await scriptCatalog();
+            list.textContent = entries.length ? '' : '目前沒有已上架的劇本';
+
+            for (const entry of entries) {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'script-item';
+
+                for (const [className, text] of [
+                    ['script-item-title', entry.title],
+                    ['script-item-desc', entry.description || ''],
+                    ['script-item-lang', entry.lang || 'zh'],
+                ]) {
+                    const field = document.createElement('div');
+                    field.className = className;
+                    field.textContent = text;
+                    item.append(field);
+                }
+
+                item.onclick = () => {
+                    list.querySelector('.selected')?.classList.remove('selected');
+                    item.classList.add('selected');
+                    selectedMobileScript = entry;
+                    start.disabled = false;
+                };
+                list.append(item);
+            }
+        } catch (error) {
+            list.textContent = error.message;
+        }
     }
 
-	// --- [修改] 通用計數器載入函式 (圖片版) ---
     function updateVisitorCounter(targetUrl) {
-        const counterDiv = document.getElementById('visitor-counter');
-        
-        // 1. 如果沒有網址，就隱藏計數器並離開
-        if (!targetUrl) {
-            counterDiv.style.display = 'none';
-            counterDiv.innerHTML = '';
-            return;
-        }
+        const container = document.getElementById('visitor-counter');
+        container.replaceChildren();
+        container.style.display = 'none';
 
-        // 2. 清空舊的，顯示容器
-        counterDiv.innerHTML = '';
-        counterDiv.style.display = 'block';
+        if (typeof targetUrl !== 'string' || !/^https?:\/\//i.test(targetUrl)) return;
 
-        // 3. 建立 Iframe
-        const iframe = document.createElement('iframe');
-        iframe.style.width = "120px";
-        iframe.style.height = "25px";
-        iframe.style.border = "none";
-        iframe.style.overflow = "hidden";
-        iframe.scrolling = "no";
-        
-        counterDiv.appendChild(iframe);
-
-        // 4. [關鍵修改] 改用 img 標籤來載入
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        // 設定 body 樣式讓圖片垂直置中
-        doc.write(`<body style="margin:0; padding:0; background:transparent; display:flex; align-items:center;">`);
-        
-        // 舊的寫法 (錯誤原因)： doc.write(`<script src="${targetUrl}"><\/script>`);
-        // 新的寫法 (正確)：當作圖片載入
-        doc.write(`<img src="${targetUrl}" alt="counter" border="0" style="display:block;">`);
-        
-        doc.write(`</body>`);
-        doc.close();
+        const image = document.createElement('img');
+        image.alt = 'counter';
+        image.src = targetUrl;
+        container.append(image);
+        container.style.display = 'block';
     }
 
 	// --- 牌組視窗最大化切換功能 (↗ <-> ↙) ---
@@ -15690,141 +15970,46 @@
 		}
 	};
 
-    function confirmMobileScript() {
-		if (!selectedMobileScript) return;
-		document.getElementById('mobile-script-selector').style.display = 'none';
-		const timestamp = Date.now();
-		const fullPath = 'scripts/' + selectedMobileScript + '?v=' + timestamp;
-		initMobileMode(fullPath);
-		
-		const scriptData = AVAILABLE_SCRIPTS.find(s => s.filename === selectedMobileScript);
-		if (scriptData && scriptData.dialogSpeed !== undefined) {
-			currentDialogSpeed = scriptData.dialogSpeed;
-		} else {
-			currentDialogSpeed = 100; // 恢復預設值
-		}
-		currentScriptConfig = scriptData;
+        async function confirmMobileScript() {
+        if (!selectedMobileScript) return;
+        await initMobileMode(selectedMobileScript);
+    }
 
-		// --- 語言設定邏輯 ---
-		const urlLang = getUrlParameter('lang');
-		const scriptLang = (scriptData && scriptData.lang) ? scriptData.lang : 'zh';
-
-		let targetLang = 'zh';
-		// [修改] 允許網址參數帶入 'tw'
-		if (urlLang && ['zh', 'en', 'jp', 'tw'].includes(urlLang)) {
-			targetLang = urlLang;
-		} else {
-			targetLang = scriptLang;
-		}
-
-		// [新增] 關鍵攔截：如果是 'tw'，強制轉回 'zh' 讓系統運作正常
-		if (targetLang === 'tw') {
-			targetLang = 'zh';
-		}
-
-		changeLanguage(targetLang);
-		// -------------------
-
-		const langSelect = document.getElementById('lang-select');
-		if (langSelect) langSelect.value = targetLang;
-
-		let targetSpeed = 1.0;
-		if (scriptData && scriptData.speed !== undefined) {
-			targetSpeed = scriptData.speed;
-		}
-		changePlaybackSpeed(targetSpeed);
-
-		globalAudioPlayer.muted = true;
-		globalAudioPlayer.play().catch(e => { console.log("Audio context unlocked (muted)"); });
-
-		let urlToLoad = (scriptData && scriptData.counter_url) ? scriptData.counter_url : null;
-		updateVisitorCounter(urlToLoad);
-		
-		updateMuteButtonUI();
-	}
-
-    // 3. 載入內建劇本 (Fetch & Load)
-    function loadInternalScript(scriptData) {
-		if (!confirm(t('msg_confirm_load_script').replace('{title}', scriptData.title))) return;
-		// --- [新增這段] ---
-		if (scriptData.dialogSpeed !== undefined) {
-			currentDialogSpeed = scriptData.dialogSpeed;
-		} else {
-			currentDialogSpeed = 100;
-		}
-		// -----------------
-		
-		currentScriptConfig = scriptData;
-		document.getElementById('import-selector-modal').style.display = 'none';
-		const path = 'scripts/' + scriptData.filename + '?v=' + Date.now();
-
-		console.log("Loading script:", path);
-		fetch(path, { cache: "no-store" })
-			.then(res => {
-				if(!res.ok) throw new Error(`HTTP ${res.status}`);
-				return res.json();
-			})
-			.then(data => {
-				if(!data.history || !data.initialState) throw new Error("Invalid script format");
-				processGameData(data, true);
-
-				// [修改] 語言設定與攔截
-				if (scriptData.lang) {
-					let lang = scriptData.lang;
-					// ★ 關鍵修正：如果是 'tw'，騙系統說是 'zh'
-					// 這樣接下來的 changeLanguage('zh') 會載入繁中字典
-					// 下面的 alert(t('msg_import_success')) 就能正確顯示中文
-					if (lang === 'tw') lang = 'zh'; 
-					
-					changeLanguage(lang);
-				}
-
-				if (scriptData.speed) changePlaybackSpeed(scriptData.speed);
-				if (scriptData.counter_url) updateVisitorCounter(scriptData.counter_url);
-				
-				alert(t('msg_import_success'));
-			})
-			.catch(err => {
-				console.error(err);
-				alert(t('msg_import_fail') + ": " + err.message);
-			});
-	}
-
-// --- 新增的手機端邏輯 ---
+    async function loadInternalScript(entry) {
+        if (!confirm(t('msg_confirm_load_script').replace('{title}', entry.title))) return;
+        try {
+            applyPublishedScript(await readPublishedScript(entry), entry);
+            document.getElementById('import-selector-modal').style.display = 'none';
+            alert(t('msg_import_success'));
+        } catch (error) {
+            alert(t('msg_import_fail') + ': ' + error.message);
+        }
+    }
 
     function isMobileDevice() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-	function initMobileMode(scriptUrl) {
-		// document.body.classList.add('mobile-mode'); // 這行 onload 已經加過了，這裡可以註解或保留皆可
-		
-		if (isMobileDevice()) {
-			globalAudioPlayer.muted = true;
-		} 
-
-        let finalUrl = scriptUrl;
-        if (!finalUrl.includes('?')) {
-             finalUrl += '?v=' + Date.now();
+    async function initMobileMode(entry) {
+        globalAudioPlayer.muted = true;
+        globalAudioPlayer.play().catch(() => {});
+        try {
+            const lang = new URLSearchParams(location.search).get('lang');
+            applyPublishedScript(
+                await readPublishedScript(entry),
+                entry,
+                ['zh', 'en', 'jp', 'tw'].includes(lang) ? lang : undefined
+            );
+            document.getElementById('mobile-script-selector').style.display = 'none';
+            updateMuteButtonUI();
+            handleOrientation();
+        } catch (error) {
+            alert('無法載入劇本：' + error.message);
+            if (document.getElementById('mobile-script-selector').style.display !== 'flex') {
+                await showMobileScriptSelector();
+            }
         }
-
-		fetch(finalUrl, { cache: "no-store" })
-			.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
-			.then(data => {
-				if(!data.history || !data.initialState) throw new Error("Invalid script");
-				processGameData(data, true);
-				
-				// [修正] 這裡不需要再 addEventListener 了，因為 onload 已經做過
-				// window.addEventListener('resize', handleOrientation);
-				// window.addEventListener('orientationchange', handleOrientation);
-				
-				// 資料載入完成，手動觸發一次判斷，這會啟動自動播放 (因為此時 isGameActive 為 true)
-				handleOrientation();
-			})
-			.catch(e => {
-				alert("無法載入劇本: " + e.message);
-			});
-	}
+    }
 
 	function handleOrientation() {
         const overlay = document.getElementById('orientation-overlay');
@@ -16683,109 +16868,66 @@
 	}
 
     // --- 修正後的 window.onload ---
-	window.onload = function() {
-		// 1. 基本初始化
-		applyThemeVariables();
-		generateDefaultPortraits();
-		generateRpsPlaceholders();
+	    window.onload = async function() {
+        applyThemeVariables();
+        generateDefaultPortraits();
+        generateRpsPlaceholders();
 
-		const urlParams = new URLSearchParams(window.location.search);
-		const isMobile = isMobileDevice();
-		
-		// --- [關鍵修正] 定義 rawScriptParam 並從 AVAILABLE_SCRIPTS 讀取設定 ---
-		const rawScriptParam = urlParams.get('scriptUrl'); 
-		let scriptConfig = null;
+        const params = new URLSearchParams(location.search);
+        const link = params.get('scriptUrl')?.replace(/^scripts\//, '');
+        const lang = params.get('lang');
+        const language = ['zh', 'en', 'jp', 'tw'].includes(lang) ? lang : undefined;
+        if (language) changeLanguage(language === 'tw' ? 'zh' : language);
 
-		if (rawScriptParam) {
-			// 比對檔名尋找配置 (忽略路徑前綴，例如 "scripts/test.txt" 只取 "test.txt")
-			const cleanParam = rawScriptParam.replace(/^scripts\//, '');
-			scriptConfig = AVAILABLE_SCRIPTS.find(s => s.filename.replace(/^scripts\//, '') === cleanParam);
-		}
+        const mobile = isMobileDevice();
+        const hasLocal = !mobile && loadFromStorage();
+        initializeScriptIdentity().catch(() => {});
 
-		// 2. 如果找到了對應劇本配置，優先套用語系與速度
-		if (scriptConfig) {
-			console.log("偵測到劇本配置:", scriptConfig.title);
-			
-			// 處理語系 (含 tw 映射)
-			let targetLang = scriptConfig.lang || 'zh';
-			if (targetLang === 'tw') targetLang = 'zh';
-			
-			// 切換 UI 語言
-			changeLanguage(targetLang);
-			const langSelect = document.getElementById('lang-select');
-			if (langSelect) langSelect.value = targetLang;
+        if (mobile) {
+            document.body.classList.add('mobile-mode');
+            window.addEventListener('resize', handleOrientation);
+            window.addEventListener('orientationchange', handleOrientation);
+        } else {
+            updateVisitorCounter(DEFAULT_COUNTER_URL);
+            if (scriptDocument?.uploadId) refreshCloudScriptStatus();
+        }
 
-			// 套用播放速度
-			if (scriptConfig.speed !== undefined) {
-				changePlaybackSpeed(scriptConfig.speed);
-			}
+        if (link) {
+            try {
+                const entry = (await scriptCatalog()).find(
+                    item => item.scriptId === link || item.filename === link
+                );
+                if (!entry) throw new Error('找不到已上架的劇本');
 
-			// 套用對話速度
-			if (scriptConfig.dialogSpeed !== undefined) {
-				currentDialogSpeed = scriptConfig.dialogSpeed;
-			}
-			
-			// 儲存配置供 Ending Credits 使用
-			currentScriptConfig = scriptConfig;
-		} else {
-			// 若無劇本配置，則檢查 URL 是否有單獨傳入 lang 參數
-			const urlLang = urlParams.get('lang');
-			if (urlLang && ['zh', 'en', 'jp'].includes(urlLang)) {
-				changeLanguage(urlLang);
-			}
-		}
+                if (mobile) {
+                    await initMobileMode(entry);
+                    return;
+                }
 
-		// 3. 根據裝置載入資料
-		if (isMobile) {
-			document.body.classList.add('mobile-mode');
-			window.addEventListener('resize', handleOrientation);
-			window.addEventListener('orientationchange', handleOrientation);
-			
-			if (!rawScriptParam) {
-				showMobileScriptSelector(null);
-			} else {
-				// 手機版載入流程
-				const fullPath = 'scripts/' + rawScriptParam;
-				initMobileMode(fullPath);
-				
-				// 若劇本有計數器，則套用
-				if (scriptConfig && scriptConfig.counter_url) {
-					updateVisitorCounter(scriptConfig.counter_url);
-				}
-			}
-		} else {
-			// 電腦版載入流程
-			updateVisitorCounter(DEFAULT_COUNTER_URL);
-			const hasLocalData = loadFromStorage();
+                const data = await readPublishedScript(entry);
+                if (hasLocal) {
+                    pendingImportData = data;
+                    pendingScriptConfig = { entry, language };
+                    document.getElementById('import-conflict-modal').style.display = 'flex';
+                } else {
+                    applyPublishedScript(data, entry, language);
+                }
 
-			if (rawScriptParam) {
-				console.log("Found scriptUrl:", rawScriptParam);
-				const noCacheUrl = 'scripts/' + rawScriptParam + '?v=' + Date.now();
-				
-				fetch(noCacheUrl, { cache: 'no-cache' })
-					.then(res => { if(!res.ok) throw new Error(res.status); return res.json(); })
-					.then(data => {
-						if(!data.history || !data.initialState) throw new Error("Invalid script");
-						
-						if (hasLocalData) {
-							pendingImportData = data;
-							document.getElementById('import-conflict-modal').style.display = 'flex';
-						} else {
-							processGameData(data, true);
-						}
-						
-						// 清除 URL 參數避免重新整理重複觸發 (選用)
-						window.history.replaceState({}, document.title, window.location.pathname);
-					})
-					.catch(e => {
-						alert(t('msg_load_script_fail') + e.message);
-						if(!hasLocalData) openSetupModal();
-					});
-			} else {
-				if (!hasLocalData) openSetupModal();
-			}
-		}
-	};
+                params.delete('scriptUrl');
+                const query = params.toString();
+                window.history.replaceState(
+                    {}, document.title,
+                    location.pathname + (query ? '?' + query : '') + location.hash
+                );
+                return;
+            } catch (error) {
+                alert(t('msg_load_script_fail') + error.message);
+            }
+        }
+
+        if (mobile) await showMobileScriptSelector();
+        else if (!hasLocal) openSetupModal();
+    };
 	
 	// --- [新增需求 5 & 6] 全域 ESC 鍵監聽 ---
 	document.addEventListener('keydown', function(e) {
@@ -17220,7 +17362,7 @@
     let cardImagePasteQueue = Promise.resolve();
 
 	document.addEventListener('paste', (e) => {
-		if (document.getElementById('cloud-deck-save').open) return;
+		if (document.getElementById('cloud-deck-save').open || cloudScriptField('save').open) return;
 		const clipboard = e.clipboardData || e.originalEvent?.clipboardData;
 		if (!clipboard) return;
 
@@ -18247,8 +18389,8 @@
 						currentScriptConfig.credits.forEach(c => {
 							html += `
 								<div class="credit-group">
-									<div class="credit-role">${c.role}</div>
-									<div class="credit-name">${c.name}</div>
+									<div class="credit-role">${escapeScriptText(c.role)}</div>
+									<div class="credit-name">${escapeScriptText(c.name)}</div>
 								</div>
 							`;
 						});
@@ -18907,6 +19049,7 @@
 					const hasLocalData = (typeof loadFromStorage === 'function') ? loadFromStorage() : false;
 					
 					if (hasLocalData) {
+						pendingScriptConfig = null;
 						// 有衝突 -> 暫存資料並顯示詢問視窗
 						pendingImportData = data;
 						document.getElementById('import-conflict-modal').style.display = 'flex';
@@ -18950,9 +19093,9 @@
         const list = document.getElementById(containerId);
         if (!list) return;
         const isDeck = type === 'deck';
-        list.textContent = isDeck ? '載入雲端牌組…' : '';
+        list.textContent = isDeck ? '載入雲端牌組…' : '載入雲端劇本…';
         try {
-            const entries = isDeck ? (await cloudDeckApi('')).decks : [...AVAILABLE_SCRIPTS].reverse();
+            const entries = isDeck ? (await cloudDeckApi('')).decks : await scriptCatalog();
             if (!entries.length) {
                 list.textContent = isDeck ? '目前沒有雲端牌組' : t('lbl_no_script');
                 return;
@@ -19105,6 +19248,7 @@
 			const modal = document.getElementById('export-selector-modal');
 			if (modal) {
 				modal.style.display = 'flex';
+				prepareScriptShare();
 			} else {
 				performExportScript(); // Fallback
 			}
@@ -19122,7 +19266,7 @@
 	}
 
 	// 這是您原本的匯出邏輯 (改名保留)
-	function performExportScript() {
+	function buildScriptPayload() {
 		// 確保圖片優化
 		if(typeof optimizeAndMigrateImages === 'function') optimizeAndMigrateImages();
 		
@@ -19158,8 +19302,16 @@
 			aceRegistry: globalAceRegistry,
 			themeSettings: (typeof globalThemeSettings !== 'undefined') ? globalThemeSettings : {}
 		};
-		downloadJSON(data, `dm-script-${Date.now()}.txt`);
-	}
+		if (scriptDocument?.scriptId) {
+            data.scriptId = scriptDocument.scriptId;
+            data.scriptRevision = scriptDocument.revision;
+        }
+        return data;
+    }
+
+    function performExportScript() {
+        downloadJSON(buildScriptPayload(), `dm-script-${Date.now()}.txt`);
+    }
 
 	function performExportDeck(playerId) {
         if (!initialState?.cards) return alert('請先建立或匯入牌組');
@@ -19637,7 +19789,12 @@
                 <input type="radio" name="export-type" value="deck_1p">
                 <span data-i18n="opt_export_deck_1p">僅 1P 牌組 (1P Deck)</span>
             </label>
+			<button type="button" id="export-share-script" class="export-option-label export-share-option"
+					onclick="copyScriptShareLink(this)" aria-describedby="export-share-status" disabled>
+				<span data-i18n="opt_share_script">取得劇本分享連結</span>
+			</button>
         </div>
+		<p id="export-share-status" role="status" style="margin:0; font-size:.85rem"></p>
 
         <div style="margin-top:15px; display:flex; justify-content:space-between;">
             <button class="danger" onclick="document.getElementById('export-selector-modal').style.display='none'" data-i18n="btn_cancel">取消</button>
@@ -19782,6 +19939,33 @@
             </div>
         </fieldset>
         <p id="cloud-deck-status" role="status"></p>
+    </form>
+</dialog>
+<dialog id="cloud-script-save" oncancel="if (scriptSaving) event.preventDefault()"
+        style="width:min(480px,90vw);border:1px solid #95a5a6;border-radius:10px;padding:18px;background:#fff;color:#222">
+    <h3 style="margin-top:0">雲端儲存劇本</h3>
+    <form onsubmit="event.preventDefault(); saveCloudScript()">
+        <fieldset id="cloud-script-fields" style="border:0;padding:0;margin:0">
+            <p><label>劇本名稱 <input id="cloud-script-title" required maxlength="100"></label></p>
+            <p>
+                <label for="cloud-script-description">描述</label><br>
+                <textarea id="cloud-script-description" rows="3" maxlength="2000" style="width:100%"></textarea>
+            </p>
+            <p>
+                <label>語言
+                    <select id="cloud-script-lang">
+                        <option value="zh">繁體中文</option>
+                        <option value="en">English</option>
+                        <option value="jp">日本語</option>
+                    </select>
+                </label>
+            </p>
+            <p><label>播放速度 <input id="cloud-script-speed" type="number" min=".25" max="4" step="any" required></label></p>
+            <p><label>對話速度（毫秒／字） <input id="cloud-script-dialog-speed" type="number" min="1" max="2000" required></label></p>
+            <button id="cloud-script-submit" type="submit" disabled>儲存並發布</button>
+            <button type="button" onclick="this.closest('dialog').close()">關閉</button>
+        </fieldset>
+        <p id="cloud-script-status" role="status" aria-live="polite"></p>
     </form>
 </dialog>
 </body>

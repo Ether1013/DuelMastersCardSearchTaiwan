@@ -37,6 +37,8 @@ import zipfile
 
 import hmac
 import secrets
+from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable
+from google.api_core.retry import Retry
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 # 👇 Firebase 套件
@@ -2440,6 +2442,527 @@ def delete_cloud_deck(deck_id: str, request: Request, revision: int = Query(...,
     change_cloud_deck(db.transaction(), ref, revision, None)
     return Response(status_code=204)
 
+# Cloud scripts
+SCRIPT_PAGES = "https://ether1013.github.io/DuelMastersCardSearchTaiwan/"
+SCRIPT_LIMIT = int(os.getenv("SCRIPT_MAX_BYTES", str(24 * 1024 * 1024)))
+SCRIPT_FIELDS = (
+    "filename", "title", "description", "lang", "speed", "dialogSpeed", "credits",
+    "counter_url", "kind", "revision", "downloadUrl", "sortOrder", "authorId",
+)
+# 整份查詢失敗時由背景工作重試，避免使用只讀到一部分的清單。
+SCRIPT_SCAN_RETRY = Retry(predicate=lambda _error: False)
+SCRIPT_SCAN_TIMEOUT = 10
+SCRIPT_FIRESTORE_TRANSIENT = (ServiceUnavailable, DeadlineExceeded)
+script_publish_task = None
+
+
+def script_store():
+    if db is None:
+        raise HTTPException(503, "Firebase 暫時無法使用")
+    return db.collection("scripts")
+
+
+def script_ref(script_id):
+    try:
+        value = uuid.UUID(script_id)
+        if value.version == 4 and str(value) == script_id:
+            return script_store().document(script_id)
+    except ValueError:
+        pass
+    raise HTTPException(404, "無效的劇本 ID")
+
+
+def script_owner(request):
+    owner = cloud_deck_hash(request)
+    if owner is None:
+        raise HTTPException(403, "缺少匿名編輯憑證")
+    return owner
+
+
+def script_owned(document, owner):
+    return document.get("kind") == "user" and document.get("ownerUserId") == owner
+
+
+def script_upload_busy(document):
+    window = {"uploading": 180, "pending": 900}.get(document.get("publishState"), 0)
+    return time.time() - (document.get("pending") or {}).get("startedAt", 0) < window
+
+
+def script_result(document):
+    pending = document.get("pending") or {}
+    return {
+        "revision": document.get("revision", 0),
+        "state": document.get("publishState", "idle"),
+        "busy": script_upload_busy(document),
+        "pendingId": pending.get("id"),
+        "publishedId": document.get("publishedId"),
+    }
+
+
+@app.get("/api/scripts")
+def list_scripts():
+    query = script_store().where(filter=FieldFilter("status", "==", "published"))
+    entries = []
+    for snapshot in query.select(SCRIPT_FIELDS + ("visibility",)).stream():
+        document = snapshot.to_dict()
+        if document.get("visibility") == "public":
+            entries.append({
+                "scriptId": snapshot.id,
+                **{key: document[key] for key in SCRIPT_FIELDS if key in document},
+            })
+    entries.sort(key=lambda doc: (
+        doc.get("kind") == "system",
+        doc.get("sortOrder", 0),
+        doc.get("title", ""),
+        doc["scriptId"],
+    ))
+    return {"scripts": entries}
+
+
+@app.get("/api/scripts/{script_id}/status")
+def get_script_status(script_id: str, request: Request):
+    owner = script_owner(request)
+    document = script_ref(script_id).get().to_dict()
+    allowed = document is None or script_owned(document, owner)
+    return JSONResponse(
+        {"canSave": allowed, **(script_result(document or {}) if allowed else {})},
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+def script_json_object(pairs):
+    document = dict(pairs)
+    if any(key in document for key in ("__proto__", "prototype", "constructor")):
+        raise ValueError("Invalid object key")
+    return document
+
+
+async def read_cloud_script(request):
+    body = bytearray()
+    async for chunk in request.stream():
+        if len(body) + len(chunk) > SCRIPT_LIMIT:
+            raise HTTPException(413, "劇本超出上傳大小限制，仍可下載到本機")
+        body.extend(chunk)
+
+    try:
+        payload = json.loads(body, object_pairs_hook=script_json_object)
+    except (ValueError, RecursionError) as error:
+        raise HTTPException(422, "劇本 JSON 格式錯誤") from error
+
+    if not isinstance(payload, dict):
+        raise HTTPException(422, "劇本 JSON 格式錯誤")
+
+    revision, script = payload.get("revision"), payload.get("script")
+    title, description = payload.get("title"), payload.get("description", "")
+    lang, speed, dialog_speed = payload.get("lang"), payload.get("speed"), payload.get("dialogSpeed")
+    author = payload.get("authorId", "")
+
+    if (type(revision) is not int or revision < 0
+            or not isinstance(title, str) or not 1 <= len(title.strip()) <= 100
+            or not isinstance(description, str) or len(description) > 2000
+            or lang not in ("zh", "en", "jp", "tw")
+            or type(speed) not in (int, float) or not 0.25 <= speed <= 4
+            or type(dialog_speed) is not int or not 1 <= dialog_speed <= 2000
+            or not isinstance(author, str)
+            or (author and not re.fullmatch(r"[A-Z]{2}-\d{6}-[a-z0-9]{4}", author))):
+        raise HTTPException(422, "名稱、語言、速度、作者或版本資料有誤")
+
+    if (not isinstance(script, dict)
+            or not isinstance(script.get("initialState"), dict)
+            or not isinstance(script["initialState"].get("cards"), list)
+            or not isinstance(script.get("history"), list) or not script["history"]
+            or not all(isinstance(step, dict) and isinstance(step.get("action"), dict)
+                       for step in script["history"])
+            or not isinstance(script.get("imageRegistry", {}), dict)):
+        raise HTTPException(422, "劇本缺少初始狀態或操作紀錄")
+
+    fields = (
+        "history", "initialState", "currentIndex", "timestamp", "imageRegistry",
+        "abilityRegistry", "aceRegistry", "themeSettings",
+    )
+    safe_script = {key: script[key] for key in fields if key in script}
+    metadata = {
+        "title": title.strip(),
+        "description": description,
+        "lang": lang,
+        "speed": speed,
+        "dialogSpeed": dialog_speed,
+        "authorId": author,
+    }
+    return revision, metadata, safe_script
+
+
+@firestore.transactional
+def change_script_upload(transaction, ref, action, pending, owner=None, revision=None):
+    document = ref.get(transaction=transaction).to_dict()
+    current = document or {}
+    existing = current.get("pending") or {}
+
+    if action == "reserve":
+        if document is not None and not script_owned(document, owner):
+            raise HTTPException(403, "只有原擁有者可以雲端儲存")
+        if current.get("revision", 0) != revision:
+            raise HTTPException(409, "雲端已有較新版本，請重新匯入後再儲存")
+        if script_upload_busy(current):
+            raise HTTPException(409, "此劇本正在上傳或發布，請稍後再試")
+
+        values = {"pending": pending, "publishState": "uploading"}
+        if document is None:
+            transaction.create(ref, {
+                **values,
+                "scriptId": ref.id,
+                "ownerUserId": owner,
+                "kind": "user",
+                "status": "draft",
+                "visibility": "private",
+                "revision": 0,
+            })
+        else:
+            transaction.update(ref, values)
+        return True
+
+    if existing.get("id") != pending["id"]:
+        return False
+
+    if action == "uploaded" and current.get("publishState") == "uploading":
+        transaction.update(ref, {"pending": pending, "publishState": "pending"})
+    elif action == "release" and current.get("publishState") == "uploading":
+        transaction.update(ref, {"pending": firestore.DELETE_FIELD, "publishState": "idle"})
+    elif action == "publish" and current.get("publishState") == "pending":
+        metadata = dict(pending["metadata"])
+        if current.get("authorId"):
+            metadata["authorId"] = current["authorId"]
+
+        transaction.update(ref, {
+            **metadata,
+            "status": "published",
+            "visibility": "public",
+            "publishState": "idle",
+            "revision": pending["revision"],
+            "githubPath": pending["path"],
+            "downloadUrl": pending["url"],
+            "filename": pending["filename"],
+            "commitSha": pending["commitSha"],
+            "publishedId": pending["id"],
+            "sortOrder": -int(pending["startedAt"] * 1000),
+            "pending": firestore.DELETE_FIELD,
+            "updatedAt": firestore.SERVER_TIMESTAMP,
+        })
+    else:
+        return False
+
+    return True
+
+
+@app.put("/api/scripts/{script_id}", status_code=202)
+@limiter.limit("6/minute")
+async def save_cloud_script(script_id: str, request: Request):
+    owner = script_owner(request)
+    ref = script_ref(script_id)
+    if not GITHUB_TOKEN or not re.fullmatch(r"[\w.-]+/[\w.-]+", GITHUB_REPO):
+        raise HTTPException(503, "GitHub 上傳尚未設定")
+
+    revision, metadata, script = await read_cloud_script(request)
+    upload_id = uuid.uuid4().hex
+    filename = f"{script_id}-r{revision + 1}-{upload_id}.json"
+    path = f"scripts/{filename}"
+    pending = {
+        "id": upload_id,
+        "startedAt": time.time(),
+        "revision": revision + 1,
+        "path": path,
+        "url": SCRIPT_PAGES + path,
+        "filename": filename,
+        "metadata": metadata,
+    }
+
+    try:
+        content = json.dumps(
+            {**script, "scriptId": script_id, "scriptRevision": revision + 1},
+            ensure_ascii=False,
+            allow_nan=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    except (ValueError, RecursionError) as error:
+        raise HTTPException(422, "劇本資料無法儲存為 JSON") from error
+
+    await asyncio.to_thread(
+        change_script_upload, db.transaction(), ref, "reserve", pending, owner, revision
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=40) as client:
+            response = await client.put(
+                f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}",
+                headers={
+                    "Authorization": f"Bearer {GITHUB_TOKEN}",
+                    "Accept": "application/vnd.github+json",
+                },
+                json={
+                    "message": f"Publish script {script_id} revision {revision + 1} [skip render]",
+                    "content": base64.b64encode(content).decode("ascii"),
+                    "branch": os.getenv("SCRIPT_GITHUB_BRANCH", "main"),
+                },
+            )
+            response.raise_for_status()
+            pending["commitSha"] = response.json()["commit"]["sha"]
+    except (httpx.HTTPError, ValueError, KeyError) as error:
+        await asyncio.to_thread(change_script_upload, db.transaction(), ref, "release", pending)
+        raise HTTPException(502, "GitHub 儲存失敗，請稍後重試") from error
+
+    confirmed = await asyncio.to_thread(
+        change_script_upload, db.transaction(), ref, "uploaded", pending
+    )
+    if not confirmed:
+        raise HTTPException(409, "這次上傳已被其他版本取代")
+
+    return {"state": "pending", "uploadId": upload_id, "revision": revision}
+
+
+async def publish_ready_scripts():
+    query = script_store().where(filter=FieldFilter("publishState", "==", "pending"))
+    snapshots = await asyncio.to_thread(
+        lambda: list(query.stream(retry=SCRIPT_SCAN_RETRY, timeout=SCRIPT_SCAN_TIMEOUT))
+    )
+
+    async with httpx.AsyncClient(timeout=8) as client:
+        for snapshot in snapshots:
+            pending = snapshot.to_dict().get("pending") or {}
+            url = pending.get("url", "")
+            if not re.fullmatch(re.escape(SCRIPT_PAGES) + r"scripts/[a-z0-9-]+\.json", url):
+                continue
+            try:
+                response = await client.head(url)
+            except httpx.HTTPError:
+                continue
+
+            if response.status_code == 200 and response.headers.get("Access-Control-Allow-Origin") == "*":
+                await asyncio.to_thread(
+                    change_script_upload, db.transaction(), snapshot.reference, "publish", pending
+                )
+
+
+script_cleanup_task = None
+
+
+def referenced_script_paths():
+    paths = set()
+    fields = ("status", "githubPath", "filename", "downloadUrl", "pending")
+    query = script_store().select(fields)
+    for snapshot in query.stream(retry=SCRIPT_SCAN_RETRY, timeout=SCRIPT_SCAN_TIMEOUT):
+        document = snapshot.to_dict()
+        pending = document.get("pending") or {}
+        published = document if document.get("status") != "superseded" else {}
+        for entry, path_key, url_key in (
+            (published, "githubPath", "downloadUrl"),
+            (pending, "path", "url"),
+        ):
+            path = entry.get(path_key)
+            filename = entry.get("filename")
+            url = entry.get(url_key)
+            if isinstance(path, str) and path:
+                paths.add(path)
+            if isinstance(filename, str) and filename:
+                paths.add(f"scripts/{filename}")
+            if isinstance(url, str) and url.startswith(SCRIPT_PAGES):
+                paths.add(unquote(urlsplit(url[len(SCRIPT_PAGES):]).path))
+    return paths
+
+
+async def script_path_older_than(github, path, head, cutoff):
+    page = 1
+    while True:
+        history = await github("GET", "/commits", params={
+            "sha": head, "path": path, "per_page": 100, "page": page,
+        })
+        for commit in history.json():
+            date = datetime.fromisoformat(
+                commit["commit"]["committer"]["date"].replace("Z", "+00:00")
+            )
+            if date < cutoff:
+                return True
+
+            # 最近的編輯可能屬於舊檔，最近新增或改名則代表這個路徑是新的。
+            change_page = 1
+            while True:
+                details = await github(
+                    "GET", f"/commits/{commit['sha']}", params={"page": change_page},
+                )
+                changed = next(
+                    (item for item in details.json()["files"] if item["filename"] == path),
+                    None,
+                )
+                if changed is not None:
+                    if changed["status"] not in ("modified", "changed"):
+                        return False
+                    break
+                if "next" not in details.links:
+                    return False
+                change_page += 1
+
+        if "next" not in history.links:
+            return False
+        page += 1
+
+
+async def is_script_file(github, path, head):
+    if re.fullmatch(
+        r"scripts/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+        r"-r[1-9][0-9]*-[0-9a-f]{32}\.json",
+        path,
+    ):
+        return True
+
+    # 舊版匯出的劇本可能用 .txt 副檔名儲存 JSON。
+    response = await github(
+        "GET", f"/contents/{quote(path, safe='/')}", params={"ref": head},
+        headers={"Accept": "application/vnd.github.raw+json"},
+    )
+    try:
+        document = response.json()
+    except (ValueError, RecursionError):
+        return False
+    return (
+        isinstance(document, dict)
+        and isinstance(document.get("initialState"), dict)
+        and isinstance(document.get("history"), list)
+        and bool(document["history"])
+    )
+
+
+async def cleanup_unreferenced_scripts():
+    if db is None or not GITHUB_TOKEN or not re.fullmatch(r"[\w.-]+/[\w.-]+", GITHUB_REPO):
+        return
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=3)
+    branch = os.getenv("SCRIPT_GITHUB_BRANCH", "main")
+    referenced = await asyncio.to_thread(referenced_script_paths)
+    async with httpx.AsyncClient(
+        base_url=f"https://api.github.com/repos/{GITHUB_REPO}", timeout=30,
+        headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"},
+    ) as client:
+        async def github(method, path, **kwargs):
+            response = await client.request(method, path, **kwargs)
+            response.raise_for_status()
+            return response
+
+        branch_commit = (await github("GET", f"/commits/{quote(branch, safe='')}")).json()
+        head, tree_sha = branch_commit["sha"], branch_commit["commit"]["tree"]["sha"]
+        root = (await github("GET", f"/git/trees/{tree_sha}")).json()
+        if root["truncated"]:
+            raise RuntimeError("Incomplete GitHub root tree")
+        scripts = next(
+            (item for item in root["tree"] if item["path"] == "scripts" and item["type"] == "tree"),
+            None,
+        )
+        if scripts is None:
+            return
+        folder = (await github("GET", f"/git/trees/{scripts['sha']}")).json()
+        if folder["truncated"]:
+            raise RuntimeError("Incomplete GitHub scripts tree")
+
+        deletions = []
+        for item in folder["tree"]:
+            if (
+                item["type"] != "blob"
+                or item["mode"] not in ("100644", "100755")
+                or not item["path"].lower().endswith((".json", ".txt"))
+            ):
+                continue
+            path = f"scripts/{item['path']}"
+            if path in referenced:
+                continue
+            if await script_path_older_than(github, path, head, cutoff) and await is_script_file(github, path, head):
+                deletions.append({"path": path, "mode": item["mode"], "type": "blob", "sha": None})
+
+        if not deletions:
+            return
+        referenced = await asyncio.to_thread(referenced_script_paths)
+        deletions = [item for item in deletions if item["path"] not in referenced]
+        if not deletions:
+            return
+
+        tree = (await github("POST", "/git/trees", json={
+            "base_tree": tree_sha, "tree": deletions,
+        })).json()
+        commit = (await github("POST", "/git/commits", json={
+            "message": "Clean up unreferenced script files [skip render]",
+            "tree": tree["sha"], "parents": [head],
+        })).json()
+
+        # 若掃描期間有人提交新版，GitHub 會拒絕非快轉的分支更新。
+        await github("PATCH", f"/git/refs/heads/{quote(branch, safe='/')}", json={
+            "sha": commit["sha"], "force": False,
+        })
+        logging.info("Script startup cleanup removed %d file(s)", len(deletions))
+
+
+async def run_script_cleanup():
+    for attempt in range(3):
+        try:
+            await cleanup_unreferenced_scripts()
+            return
+        except SCRIPT_FIRESTORE_TRANSIENT as error:
+            if attempt == 2:
+                logging.warning(
+                    "Script startup cleanup deferred until the next startup: Firestore unavailable (%s)",
+                    type(error).__name__,
+                )
+                return
+            delay = 15 * (attempt + 1)
+            logging.warning(
+                "Script startup cleanup: Firestore unavailable (%s), retrying in %ds",
+                type(error).__name__, delay,
+            )
+            await asyncio.sleep(delay)
+        except httpx.HTTPStatusError as error:
+            if error.response.status_code == 401:
+                logging.error(
+                    "Script startup cleanup failed: GitHub rejected GITHUB_TOKEN (HTTP 401). "
+                    "Check the token loaded by this server."
+                )
+            else:
+                logging.exception("Script startup cleanup failed")
+            return
+        except Exception:
+            logging.exception("Script startup cleanup failed")
+            return
+
+
+@app.on_event("startup")
+async def start_script_publisher():
+    async def run():
+        delay = 15
+        while True:
+            if db is not None:
+                try:
+                    await publish_ready_scripts()
+                except SCRIPT_FIRESTORE_TRANSIENT as error:
+                    if delay == 15:
+                        logging.warning(
+                            "Script publication scan: Firestore unavailable (%s), retrying with backoff",
+                            type(error).__name__,
+                        )
+                    delay = min(delay * 2, 120)
+                except Exception:
+                    logging.exception("Script publication scan failed")
+                    delay = 15
+                else:
+                    delay = 15
+            await asyncio.sleep(delay)
+
+    global script_publish_task, script_cleanup_task
+    script_publish_task = asyncio.create_task(run())
+    script_cleanup_task = asyncio.create_task(run_script_cleanup())
+
+
+@app.on_event("shutdown")
+async def stop_script_publisher():
+    tasks = [task for task in (script_publish_task, script_cleanup_task) if task is not None]
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+        
 # 提供查卡頁面拆出的 CSS；與 index.html 放在相同資料夾。
 @app.get("/styles.css", include_in_schema=False)
 async def serve_main_stylesheet():
