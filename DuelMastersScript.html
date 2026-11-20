@@ -5361,6 +5361,103 @@
         box-shadow: -5px -5px 20px rgba(255, 255, 255, .8), 0 0 15px magenta;
       }
     }
+	
+	/* CUT IN：紙張撕開 */
+	#rb-paper-layer.rb-tear-world {
+		z-index: 15;
+		background: transparent;
+		clip-path: none;
+		transition: none;
+		isolation: isolate;
+	}
+	.rb-tear-art, .rb-tear-core, .rb-tear-stock, .rb-tear-cover,
+	.rb-tear-removable, .rb-tear-sheet, .rb-tear-fold {
+		position: absolute;
+		inset: 0;
+	}
+	.rb-tear-art {
+		background: #000 center / cover no-repeat;
+	}
+	.rb-tear-core {
+		filter: drop-shadow(1px 2px 2px rgba(40, 21, 16, .65));
+	}
+	.rb-tear-stock, .rb-tear-sheet {
+		--rb-paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='125' height='125'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.77' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='125' height='125' filter='url(%23grain)' opacity='.14'/%3E%3C/svg%3E");
+		background-image: var(--rb-paper-grain);
+		background-blend-mode: multiply;
+	}
+	.rb-tear-stock {
+		background-color: #fff0ca;
+	}
+	.rb-tear-sheet {
+		background-color: #d7c8aa;
+		background-image: var(--rb-paper-grain), radial-gradient(ellipse at 58% 27%, #ece1c5, #b9a88c 82%);
+	}
+	.rb-tear-fold {
+		background: linear-gradient(to bottom,
+			transparent calc(var(--crease) - 9%),
+			#4b2b226e calc(var(--crease) - 2%),
+			#fff5d6d9 calc(var(--crease) + 1%),
+			#fdedca91 calc(var(--crease) + 3%),
+			#785a3a3d calc(var(--crease) + 6%),
+			transparent calc(var(--crease) + 11%));
+	}
+	#rb-overlay.editing #rb-controls {
+		width: max-content;
+		max-width: calc(100% - 1rem);
+		max-height: calc(100% - 2rem);
+		overflow: auto;
+		flex-direction: column;
+	}
+	#rb-controls .rb-controls-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: .6rem;
+		padding: .7rem;
+		border-radius: .7rem;
+		color: #fff;
+		background: rgba(0, 0, 0, .88);
+	}
+	#rb-tear-settings {
+		padding: .65rem;
+		border-radius: .7rem;
+		color: #fff;
+		background: rgba(0, 0, 0, .88);
+	}
+	.rb-tear-group {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		gap: .55rem;
+		margin: 0 0 .55rem;
+		padding: .45rem .6rem .6rem;
+		border: 1px solid #777;
+		border-radius: .35rem;
+	}
+	.rb-tear-group label {
+		display: grid;
+		gap: .2rem;
+		font-size: .85rem;
+	}
+	.rb-tear-group input, .rb-tear-group select, #rb-pattern-select {
+		color: #fff;
+		background: #292929;
+		border: 1px solid #777;
+		border-radius: .25rem;
+		padding: .28rem;
+	}
+	.rb-tear-group input { width: 5.4rem; }
+	.rb-tear-preset-buttons { display: flex; flex-wrap: wrap; gap: .45rem; }
+	.rb-tear-help { margin: 0 0 .55rem; color: #ddd; font-size: .85rem; }
+	#rb-overlay.editing #rb-paper-layer.rb-tear-world {
+		z-index: 25;
+		pointer-events: none;
+	}
+
+	#rb-overlay.editing #rb-paper-layer .rb-tear-art {
+		display: none;
+	}
 </style>
 </head>
 <body>
@@ -11586,129 +11683,6 @@
         return zoneId.toUpperCase(); 
     }
 	
-	// --- [新增] 鋸齒路徑生成器 ---
-    // progress: 0 (閉合) ~ 1 (全開)
-    // pattern: 'center', 'corner-tl', 'corner-br'
-    // seedArr: 預先生成的亂數陣列 (確保紙張層和圖片層的鋸齒形狀一致)
-    // layerType: 'image' 或 'paper' (紙張層會比圖片層稍微寬一點)
-    // --- [修正版] 鋸齒路徑生成器 (動態白邊寬度) ---
-    function generateJaggedPoly(progress, pattern, seedArr, layerType) {
-        const points = [];
-        const segments = 40; // 鋸齒密度
-        
-        // [參數設定]
-        // 1. 基礎雜訊強度 (數字越大，鋸齒越深)
-        const noiseIntensity = 0.5; 
-        // 2. 隨機變化幅度 (數字越大，形狀越亂)
-        const randomFactor = 6.0; 
-
-        if (pattern === 'center') {
-            // 中間垂直撕裂
-            const centerX = 50;
-            const maxOpenWidth = 60; 
-            
-            // 左邊界
-            for (let i = 0; i <= segments; i++) {
-                const y = (i / segments) * 100;
-                const baseOpen = (progress * maxOpenWidth);
-                
-                // [核心修改 1] 只有打開時才計算雜訊，避免閉合時有縫
-                let noise = 0;
-                let dynamicGap = 0;
-
-                if (progress > 0.01) {
-                    // 圖片層與紙張層使用各自的 seed，產生不同的抖動
-                    noise = seedArr[i] * randomFactor;
-                    
-                    // [核心修改 2] 如果是紙張層，額外加上隨機寬度 (1% ~ 5%)
-                    // 使用 Math.abs 確保紙張永遠比圖片寬 (或相等)，不會縮進去
-                    if (layerType === 'paper') {
-                        // 利用 seed 產生變動寬度：基礎 1.5% + 隨機 0~3.5%
-                        dynamicGap = 1.5 + Math.abs(seedArr[i] * 3.5);
-                    }
-                }
-                
-                const x = centerX - baseOpen - noise - dynamicGap;
-                points.push(`${x}% ${y}%`);
-            }
-            
-            // 右邊界
-            for (let i = segments; i >= 0; i--) {
-                const y = (i / segments) * 100;
-                const baseOpen = (progress * maxOpenWidth);
-                
-                let noise = 0;
-                let dynamicGap = 0;
-
-                if (progress > 0.01) {
-                    // 使用後半段 seed
-                    noise = seedArr[i + segments] * randomFactor;
-                    
-                    if (layerType === 'paper') {
-                        // 右邊也要獨立的隨機寬度
-                        dynamicGap = 1.5 + Math.abs(seedArr[i + segments] * 3.5);
-                    }
-                }
-                
-                const x = centerX + baseOpen + noise + dynamicGap;
-                points.push(`${x}% ${y}%`);
-            }
-
-        } else if (pattern === 'corner-tl') {
-            // 左上角撕裂
-            points.push('0% 0%'); // 頂點
-
-            for (let i = 0; i <= segments; i++) {
-                const ratio = i / segments; 
-                const angle = (Math.PI / 2) * ratio; 
-                
-                // 基礎半徑
-                let radius = progress * 180;
-                
-                if (progress > 0.01) {
-                    // 加入雜訊
-                    radius += (seedArr[i] * randomFactor);
-                    
-                    // 加入紙張層隨機厚度
-                    if (layerType === 'paper') {
-                        radius += (1.5 + Math.abs(seedArr[i] * 4.0));
-                    }
-                }
-
-                const finalX = radius * Math.sin(angle);
-                const finalY = radius * Math.cos(angle);
-                
-                points.push(`${finalX}% ${finalY}%`);
-            }
-            points.push('0% 0%'); 
-
-        } else {
-            // 右下角撕裂
-            points.push('100% 100%'); 
-            
-            for (let i = 0; i <= segments; i++) {
-                const ratio = i / segments; 
-                const angle = (Math.PI / 2) * ratio; 
-                
-                let radius = progress * 180;
-                
-                if (progress > 0.01) {
-                    radius += (seedArr[i] * randomFactor);
-                    if (layerType === 'paper') {
-                        radius += (1.5 + Math.abs(seedArr[i] * 4.0));
-                    }
-                }
-                
-                const offX = radius * Math.sin(angle);
-                const offY = radius * Math.cos(angle);
-                
-                points.push(`${100 - offX}% ${100 - offY}%`);
-            }
-        }
-
-        return `polygon(${points.join(',')})`;
-    }
-
 	// =========================================================
 	// [效能優化模組] Dirty Checking (髒區檢查)
 	// =========================================================
@@ -11747,9 +11721,10 @@
 				const rbOverlay = document.getElementById('rb-overlay');
 				// 如果遮罩是開著的，就強制關閉
 				if (rbOverlay && rbOverlay.style.display !== 'none') {
-					rbOverlay.style.display = 'none';
-					document.body.style.overflow = ''; // 解鎖捲軸
-				}
+                    cancelRbPlayback();
+                    rbOverlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
 			}
 		}
 		// ---------------------------------------------------------
@@ -12721,10 +12696,8 @@
 					playRealityBreak(rbOp.data);
 				}
 				// 情況 B：這一步沒有特效 -> 解鎖 (關鍵修改！)
-				else {
-					// 只要離開了有特效的那一步，就重置變數
-					// 這樣下次再回來時，currentIndex(5) != lastRbStep(-1) 就會成立，特效就會重播
-					lastRbStep = -1; 
+				else if (!rbOp) {
+					lastRbStep = -1;
 				}
 			}
 
@@ -15031,6 +15004,13 @@
 				if (prevCard && prevCard.zone.includes('battle')) return;
 				battleEntryIds.push(currCard.id);
 			});
+		}
+
+		const tearOp = currAction.operations?.find(op => op.type === 'REALITY_BREAK');
+		if (tearOp && isRbTearPattern(tearOp.data?.pattern)) {
+			const timing = getRbTearTimingsMs(tearOp.data);
+			playTimeout = setTimeout(playNextStep, timing.duration + timing.hold);
+			return;
 		}
 
 		let finalDelay = delay * currentSpeedFactor;
@@ -17720,126 +17700,396 @@
         pattern: 'random'
     };
 
-    // 1. 開啟特效編輯器
-    function openRealityBreakEditor() {
-        // 如果正在編輯其他動作，先阻擋
-        if (isDrafting && draftOperations.length > 0 && !draftOperations.some(o => o.type === 'REALITY_BREAK')) {
-            alert(t('msg_finish_edit_first'));
-            return;
-        }
+        const RB_TEAR_DEFAULT_TIMING = { tearDurationSeconds: .36, tearHoldSeconds: 2.44 };
+	const RB_TEAR_MAX_SECONDS = Math.floor(0x7fffffff / 2000);
+	const RB_TEAR_KEYS = ['Xt1', 'Xt2', 'Xb1', 'Xb2'];
+	const RB_TEAR_DEFAULTS = {
+		center: { Xt1: 26, Xt2: 74, Xb1: 26, Xb2: 74, direction: 'down' },
+		'corner-tl': { Xt1: -4, Xt2: 39, Xb1: -4, Xb2: 75, direction: 'down' },
+		'corner-br': { Xt1: 61, Xt2: 104, Xb1: 25, Xb2: 104, direction: 'down' }
+	};
 
-        const overlay = document.getElementById('rb-overlay');
-        const layer = document.getElementById('rb-inner-layer');
-        const patternSel = document.getElementById('rb-pattern-select');
-        const hint = document.getElementById('rb-edit-hint');
-		const urlInput = document.getElementById('rb-url-input'); // 取得輸入框
+	const RB_TEAR_TEXT = {
+		zh: {
+			lbl_rb_tear_duration: '撕開耗時（秒）', lbl_rb_tear_hold: '撕開後停留（秒）',
+			msg_rb_tear_timing: '請輸入有效時間。撕開耗時至少 0.001 秒，停留時間可以是 0 秒。',
+			opt_rb_center: '⚡ 撕開', lbl_rb_tear: '撕開參數',
+			lbl_rb_xt1: '頂邊左 Xt1 (%)', lbl_rb_xt2: '頂邊右 Xt2 (%)',
+			lbl_rb_xb1: '底邊左 Xb1 (%)', lbl_rb_xb2: '底邊右 Xb2 (%)',
+			lbl_rb_tear_direction: '撕開方向', opt_rb_tear_up: '上撕（由下往上）',
+			opt_rb_tear_down: '下撕（由上往下）', lbl_rb_tear_roughness: '撕邊粗糙度',
+			lbl_rb_tear_shake: '整體搖晃', msg_rb_tear_coords: 'X 從左側起算，可輸入負值或超過 100。',
+			msg_rb_tear_invalid: '請輸入有效的 X 座標。左右座標不可交叉，且至少一端要有寬度。',
+		},
+		en: {
+			lbl_rb_tear_duration: 'Tear duration (seconds)', lbl_rb_tear_hold: 'Hold after tear (seconds)',
+			msg_rb_tear_timing: 'Enter valid times. The tear must take at least 0.001 seconds, and the hold may be zero.',
+			opt_rb_center: '⚡ Paper Tear', lbl_rb_tear: 'Tear settings',
+			lbl_rb_xt1: 'Top left Xt1 (%)', lbl_rb_xt2: 'Top right Xt2 (%)',
+			lbl_rb_xb1: 'Bottom left Xb1 (%)', lbl_rb_xb2: 'Bottom right Xb2 (%)',
+			lbl_rb_tear_direction: 'Tear direction', opt_rb_tear_up: 'Up (bottom to top)',
+			opt_rb_tear_down: 'Down (top to bottom)', lbl_rb_tear_roughness: 'Edge roughness',
+			lbl_rb_tear_shake: 'Shake entire cut-in', msg_rb_tear_coords: 'X is measured from the left. Values below 0 or above 100 are allowed.',
+			msg_rb_tear_invalid: 'Enter valid X values. The edges cannot cross, and at least one end must have width.',
+		},
+		jp: {
+			lbl_rb_tear_duration: '裂く時間（秒）', lbl_rb_tear_hold: '裂いた後の表示時間（秒）',
+			msg_rb_tear_timing: '有効な時間を入力してください。裂く時間は 0.001 秒以上、表示時間は 0 秒以上です。',
+			opt_rb_center: '⚡ 紙を裂く', lbl_rb_tear: '裂き方の設定',
+			lbl_rb_xt1: '上辺左 Xt1 (%)', lbl_rb_xt2: '上辺右 Xt2 (%)',
+			lbl_rb_xb1: '下辺左 Xb1 (%)', lbl_rb_xb2: '下辺右 Xb2 (%)',
+			lbl_rb_tear_direction: '裂く方向', opt_rb_tear_up: '上向き（下から上）',
+			opt_rb_tear_down: '下向き（上から下）', lbl_rb_tear_roughness: '裂け目の粗さ',
+			lbl_rb_tear_shake: 'カットイン全体を揺らす', msg_rb_tear_coords: 'X は左端から測ります。0 未満や 100 超も指定できます。',
+			msg_rb_tear_invalid: '有効な X 座標を指定してください。左右の線は交差できず、少なくとも片方の辺に幅が必要です。',
+		}
+	};
 
-        let existingData = null;
-        let targetIdx = -1; // [關鍵變數] -1 代表新增，其他數字代表編輯該步驟
+	for (const [lang, labels] of Object.entries(RB_TEAR_TEXT)) {
+		Object.assign(TRANSLATIONS[lang], labels);
+	}
 
-        // A. 如果正在 Draft 模式，優先檢查 Draft 內容
-        if (isDrafting) {
-            const op = draftOperations.find(o => o.type === 'REALITY_BREAK');
-            if (op) {
-                existingData = op.data;
-                targetIdx = insertIndex; // 鎖定當前的插入點索引
-            }
-        } 
-        // B. 如果不在 Draft，檢查當前所在的歷史步驟
-        else if (currentIndex >= 0 && history[currentIndex]) {
-            const op = history[currentIndex].action.operations.find(o => o.type === 'REALITY_BREAK');
-            if (op) {
-                existingData = op.data;
-                targetIdx = currentIndex; // 鎖定當前步驟索引
-            }
-        }
-		
-		// 初始化狀態
-		rbEditorState = {
-			active: true,
-			imgData: null,
-			imgUrl: null,
-			sourceType: 'base64', // 預設
-			x: 50, y: 50, scale: 1.0, pattern: 'random',
-			editingIndex: targetIdx
+	function isRbTearPattern(pattern) {
+		return !pattern || pattern === 'random' || Object.hasOwn(RB_TEAR_DEFAULTS, pattern);
+	}
+
+	function validRbTearSettings(settings) {
+		return !!settings && RB_TEAR_KEYS.every(key => Number.isFinite(settings[key]))
+			&& settings.Xt1 <= settings.Xt2 && settings.Xb1 <= settings.Xb2
+			&& (settings.Xt1 < settings.Xt2 || settings.Xb1 < settings.Xb2)
+			&& (settings.direction === 'up' || settings.direction === 'down');
+	}
+
+	function getRbTearSettings(data) {
+		if (validRbTearSettings(data?.tearSettings)) return { ...data.tearSettings };
+		const legacy = Object.hasOwn(RB_TEAR_DEFAULTS, data?.pattern) ? data.pattern : 'center';
+		return { ...RB_TEAR_DEFAULTS[legacy] };
+	}
+
+	function validRbTearSeconds(seconds, minimum) {
+		return Number.isFinite(seconds) && seconds >= minimum && seconds <= RB_TEAR_MAX_SECONDS;
+	}
+
+	function getRbTearTiming(data) {
+		const { tearDurationSeconds, tearHoldSeconds } = data ?? {};
+		return {
+			tearDurationSeconds: validRbTearSeconds(tearDurationSeconds, .001)
+				? tearDurationSeconds : RB_TEAR_DEFAULT_TIMING.tearDurationSeconds,
+			tearHoldSeconds: validRbTearSeconds(tearHoldSeconds, 0)
+				? tearHoldSeconds : RB_TEAR_DEFAULT_TIMING.tearHoldSeconds
+		};
+	}
+
+	function getRbTearTimingsMs(data) {
+		const { tearDurationSeconds, tearHoldSeconds } = getRbTearTiming(data);
+		return {
+			duration: Math.round(tearDurationSeconds * 1000),
+			hold: Math.round(tearHoldSeconds * 1000)
+		};
+	}
+
+	function readRbTearTimingFields() {
+		const tearDurationSeconds = document.getElementById('rb-tear-duration').valueAsNumber;
+		const tearHoldSeconds = document.getElementById('rb-tear-hold').valueAsNumber;
+		if (!validRbTearSeconds(tearDurationSeconds, .001) || !validRbTearSeconds(tearHoldSeconds, 0)) {
+			alert(t('msg_rb_tear_timing'));
+			return null;
+		}
+		return { tearDurationSeconds, tearHoldSeconds };
+	}
+
+	function syncRbTearControls() {
+		const tearing = isRbTearPattern(document.getElementById('rb-pattern-select').value);
+		document.getElementById('rb-tear-settings').hidden = !tearing;
+		document.getElementById('rb-tear-intensity-control').hidden = !tearing;
+		const label = document.getElementById('rb-shake-inner-label');
+		const key = tearing ? 'lbl_rb_tear_shake' : 'lbl_rb_shake_in';
+		label.dataset.i18n = key;
+		label.textContent = t(key);
+		updateRbTearEditorPreview();
+	}
+
+	function fillRbTearFields(settings, roughness) {
+		for (const key of RB_TEAR_KEYS) {
+			document.getElementById('rb-tear-' + key).value = settings[key];
+		}
+		document.getElementById('rb-tear-direction').value = settings.direction;
+		const intensity = document.getElementById('rb-intensity');
+		intensity.value = Number.isFinite(roughness) ? roughness : .7;
+		document.getElementById('rb-intensity-val').value = intensity.value;
+	}
+
+	function readRbTearFields({ silent = false } = {}) {
+		const settings = {
+			direction: document.getElementById('rb-tear-direction').value
 		};
 
-		if (existingData) {
-			// [載入舊資料]
-			rbEditorState.x = existingData.style.x;
-			rbEditorState.y = existingData.style.y;
-			rbEditorState.scale = existingData.style.scale;
-			rbEditorState.pattern = existingData.pattern;
-
-			// --- [新增] 判斷來源類型 ---
-			if (existingData.imgUrl) {
-				// 情況 A: 是 URL
-				rbEditorState.sourceType = 'url';
-				rbEditorState.imgUrl = existingData.imgUrl;
-				urlInput.value = existingData.imgUrl; // 填入輸入框
-				
-				layer.style.backgroundImage = `url(${existingData.imgUrl})`;
-				layer.style.backgroundColor = 'transparent';
-				if(hint) hint.style.display = 'none';
-
-			} else {
-				// 情況 B: 是 Base64 (Key or Data)
-				rbEditorState.sourceType = 'base64';
-				urlInput.value = ''; // 清空輸入框
-
-				let finalImgData = existingData.imgData;
-				if (!finalImgData && existingData.imgKey) {
-					finalImgData = globalImageRegistry[existingData.imgKey];
-				}
-				rbEditorState.imgData = finalImgData;
-
-				if (finalImgData) {
-					layer.style.backgroundImage = `url(${finalImgData})`;
-					layer.style.backgroundColor = 'transparent';
-					if(hint) hint.style.display = 'none';
-				} else {
-					// 有資料但圖不見了
-					layer.style.backgroundImage = 'none';
-					layer.style.backgroundColor = '#222';
-					if(hint) hint.style.display = 'block';
-				}
-			}
-			
-			// 載入其他參數 (震動、裂度)
-			const sIn = (existingData.shakeInner !== undefined) ? existingData.shakeInner : true;
-			const sOut = (existingData.shakeOuter !== undefined) ? existingData.shakeOuter : false;
-			const intensity = (existingData.tearScale !== undefined) ? existingData.tearScale : 0.7;
-			
-			document.getElementById('rb-shake-inner').checked = sIn;
-			document.getElementById('rb-shake-outer').checked = sOut;
-			document.getElementById('rb-intensity').value = intensity;
-			document.getElementById('rb-intensity-val').innerText = intensity;
-			
-		} else {
-			// [新增模式]
-			urlInput.value = ''; // 清空
-			layer.style.backgroundImage = 'none';
-			layer.style.backgroundColor = '#222';
-			if(hint) hint.style.display = 'block';
-			
-			// 重置參數
-			document.getElementById('rb-shake-inner').checked = true;
-			document.getElementById('rb-shake-outer').checked = false;
-			document.getElementById('rb-intensity').value = 0.7;
-			document.getElementById('rb-intensity-val').innerText = '0.7';
+		for (const key of RB_TEAR_KEYS) {
+			settings[key] = document.getElementById('rb-tear-' + key).valueAsNumber;
 		}
 
-		layer.style.backgroundPosition = `${rbEditorState.x}% ${rbEditorState.y}%`;
-		layer.style.backgroundSize = `auto ${rbEditorState.scale * 100}%`;
-		patternSel.value = rbEditorState.pattern || 'random';
+		if (validRbTearSettings(settings)) return settings;
+		if (!silent) alert(t('msg_rb_tear_invalid'));
+		return null;
+	}
 
-		// 隱藏紙張層
-		const paperLayer = document.getElementById('rb-paper-layer');
-		if (paperLayer) paperLayer.style.display = 'none';
+	function updateRbTearEditorPreview() {
+		const overlay = document.getElementById('rb-overlay');
+		if (!overlay.classList.contains('editing')) return;
 
+		const world = document.getElementById('rb-paper-layer');
+		const pattern = document.getElementById('rb-pattern-select').value;
+
+		if (!isRbTearPattern(pattern)) {
+			world.style.display = 'none';
+			return;
+		}
+
+		const settings = readRbTearFields({ silent: true });
+		if (!settings) return;
+
+		const roughness = document.getElementById('rb-intensity').valueAsNumber;
+		const draw = rbPaperEngine.prepare(
+			world,
+			settings,
+			Number.isFinite(roughness) ? roughness : .7
+		);
+
+		draw(1, false);
+		world.style.display = 'block';
+	}
+
+	document.addEventListener('input', ({ target }) => {
+		if (
+			target.id === 'rb-intensity' ||
+			RB_TEAR_KEYS.some(key => target.id === 'rb-tear-' + key)
+		) {
+			updateRbTearEditorPreview();
+		}
+	});
+
+	const rbPaperEngine = (() => {
+		const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(value, max));
+		const smooth = value => {
+		  const t = clamp(value);
+		  return t * t * (3 - 2 * t);
+		};
+
+		const point = (x, y) => `${x.toFixed(3)}% ${y.toFixed(3)}%`;
+		const polygon = points => `polygon(${points.join(',')})`;
+		const outside = side => side === 'left' ? 0 : 100;
+
+		function makeEdge(top, bottom, seed, direction, detail) {
+		  const samples = [];
+		  for (let index = 0; index <= 156; index++) {
+			seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+			const grain = seed / 4294967296;
+			const y = index / 156 * 100;
+			const t = index / 156;
+			const position = top * (1 - t) + bottom * t;
+			const drift = 1.45 * Math.sin(y * .108 + top) + .68 * Math.sin(y * .34);
+			const edgeDetail = detail * Math.min(1, index / 5, (156 - index) / 5);
+			const irregularity = drift + (grain - .5) * 1.12 + (index % 7 === 2 ? direction * 1.28 : 0);
+			const face = position + irregularity * edgeDetail;
+			const tooth = index % 13 === 3 ? .60 : 0;
+			const stock = face + direction * (.27 + grain * .55 + tooth) * edgeDetail;
+			samples.push({ face, stock, y });
+		  }
+		  return samples;
+		}
+
+		const coveringSide = (side, edge, property) => {
+		  const x = outside(side);
+		  return polygon([point(x, 0), ...edge.map(row => point(row[property], row.y)), point(x, 100)]);
+		};
+
+		function tearFront(progress, baseTilt, upward, offsets, aspect) {
+		  // Match the clip and the fold in the same percentage coordinates.
+		  // The sweep advances faster than the tilt can change at either edge.
+		  const travel = -32 + (progress * .80 + smooth(progress) * .20) * 164;
+		  const tilt = baseTilt * (.70 + .30 * Math.sin(progress * Math.PI));
+		  const coveredEdge = upward ? 0 : 100;
+		  const points = offsets.map(({ x, delay }) => {
+			const distance = clamp(travel + tilt * (x / 100 - .5) - delay, 0, 100);
+			return point(x, upward ? 100 - distance : distance);
+		  });
+
+		  return {
+			clip: polygon([...points, point(100, coveredEdge), point(0, coveredEdge)]),
+			crease: travel - 2,
+			angle: Math.atan((upward ? -1 : 1) * tilt * aspect / 100) * 180 / Math.PI
+		  };
+		}
+
+
+		function prepare(world, settings, roughness) {
+			const { Xt1, Xt2, Xb1, Xb2, direction } = settings;
+			const width = Math.min(Xt2 - Xt1, Xb2 - Xb1);
+			const detail = Math.min(clamp(roughness / .7, .12, 2.15), width / 12);
+			const left = makeEdge(Xt1, Xb1, 371, 1, detail);
+			const right = makeEdge(Xt2, Xb2, 191, -1, detail);
+			world.querySelector('.rb-tear-fixed-left').style.clipPath = coveringSide('left', left, 'face');
+			world.querySelector('.rb-tear-fixed-right').style.clipPath = coveringSide('right', right, 'face');
+			world.querySelector('.rb-tear-stock-left').style.clipPath = coveringSide('left', left, 'stock');
+			world.querySelector('.rb-tear-stock-right').style.clipPath = coveringSide('right', right, 'stock');
+			world.querySelector('.rb-tear-removable').style.clipPath = polygon([
+				...left.map(row => point(row.face - .27, row.y)),
+				...right.slice().reverse().map(row => point(row.face + .27, row.y))
+			]);
+
+			const leftLean = clamp((Xb1 - Xt1) * .78, -48, 48);
+			const rightLean = clamp((Xb2 - Xt2) * .78, -48, 48);
+			const pull = clamp(Xt1 / 400 + Xt2 / 400 + Xb1 / 400 + Xb2 / 400);
+			const tilt = clamp(leftLean * .45 + rightLean * .55 + 9, -56, 56);
+			const offsets = Array.from({ length: 31 }, (_, i) => {
+				const x = i / 30;
+				return { x: x * 100, delay: 4 * (x - pull) ** 2 };
+			});
+			const cover = world.querySelector('.rb-tear-cover');
+			const fold = world.querySelector('.rb-tear-fold');
+			const wholeSheet = world.querySelector('.rb-tear-full');
+			const upward = direction === 'up';
+
+			return function draw(progress, shake) {
+				wholeSheet.hidden = progress > 0;
+				cover.hidden = progress === 0 || progress === 1;
+				const envelope = shake && progress > 0 && progress < 1 ? Math.sin(progress * Math.PI) ** 2 : 0;
+				world.style.transform = envelope ? `translate(${Math.sin(progress * Math.PI * 22) * 2.7 * envelope}px, ${Math.sin(progress * Math.PI * 29) * 1.5 * envelope}px)` : '';
+				if (cover.hidden) return;
+
+				const aspect = world.clientHeight / (world.clientWidth || 1);
+				const front = tearFront(progress, tilt, upward, offsets, aspect);
+				cover.style.clipPath = front.clip;
+				fold.style.transform = `skewY(${front.angle}deg) scaleY(${upward ? -1 : 1})`;
+				fold.style.setProperty('--crease', `${front.crease}%`);
+			};
+		}
+		return { prepare };
+	})();
+
+	let activeRbPaperTear = null;
+
+	function stopRbPaperTear() {
+		if (!activeRbPaperTear) return;
+		const tear = activeRbPaperTear;
+		activeRbPaperTear = null;
+		cancelAnimationFrame(tear.frame);
+		clearTimeout(tear.endTimer);
+		for (const animation of tear.outerAnimations) animation.cancel();
+		tear.world.style.display = 'none';
+		tear.world.style.transform = '';
+		if (document.body.style.overflow === 'hidden') document.body.style.overflow = tear.overflow;
+	}
+
+	function playRbPaperTear(data, onComplete) {
+		const overlay = document.getElementById('rb-overlay');
+		const world = document.getElementById('rb-paper-layer');
+		const art = world.querySelector('.rb-tear-art');
+		const image = data.imgUrl || globalImageRegistry[data.imgKey] || data.imgData;
+		const imageStyle = data.style ?? {};
+		art.style.backgroundImage = image ? `url(${JSON.stringify(String(image))})` : 'none';
+		art.style.backgroundColor = image ? 'transparent' : '#fff';
+		art.style.backgroundPosition = `${imageStyle.x ?? 50}% ${imageStyle.y ?? 50}%`;
+		art.style.backgroundSize = `auto ${(imageStyle.scale ?? 1) * 100}%`;
+
+		const tear = { world, overflow: document.body.style.overflow, frame: 0, endTimer: 0, outerAnimations: [] };
+		activeRbPaperTear = tear;
+		document.body.style.overflow = 'hidden';
+		document.getElementById('rb-edit-hint').style.display = 'none';
+		document.getElementById('swoop-wrapper').style.display = 'none';
+		document.getElementById('rb-inner-layer').style.display = 'none';
+		overlay.classList.remove('editing');
+		overlay.style.display = 'block';
+		world.style.display = 'block';
+
+		const roughness = Number.isFinite(data.tearScale) ? data.tearScale : .7;
+		const draw = rbPaperEngine.prepare(world, getRbTearSettings(data), roughness);
+		const timing = getRbTearTimingsMs(data);
+		const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (motion && data.shakeOuter) {
+			for (const element of document.querySelectorAll('#workspace, #toolbar')) {
+				const frames = ['0 0', '-3px 1px', '4px -2px', '-2px 1px', '0 0'];
+				tear.outerAnimations.push(element.animate(frames.map(translate => ({ translate })), timing.duration));
+			}
+		}
+
+		const start = performance.now();
+		function step(now) {
+			if (activeRbPaperTear !== tear) return;
+			const progress = Math.max(0, Math.min(1, (now - start) / timing.duration));
+			draw(progress, motion && (data.shakeInner ?? true));
+			if (progress < 1) tear.frame = requestAnimationFrame(step);
+		}
+
+		draw(0, false);
+		tear.frame = requestAnimationFrame(step);
+		tear.endTimer = setTimeout(() => {
+			if (activeRbPaperTear !== tear) return;
+			stopRbPaperTear();
+			if (onComplete) onComplete();
+			else overlay.style.display = 'none';
+		}, timing.duration + timing.hold);
+	}
+
+	function openRealityBreakEditor() {
+		if (isDrafting && draftOperations.length > 0 && !draftOperations.some(op => op.type === 'REALITY_BREAK')) {
+			alert(t('msg_finish_edit_first'));
+			return;
+		}
+		cancelRbPlayback();
+
+		const currentOps = isDrafting ? draftOperations : history[currentIndex]?.action?.operations;
+		const op = currentOps?.find(item => item.type === 'REALITY_BREAK');
+		const data = op?.data;
+		const style = data?.style ?? {};
+		const imageData = data?.imgData || globalImageRegistry[data?.imgKey] || null;
+		const imgUrl = data?.imgUrl || null;
+		const pattern = isRbTearPattern(data?.pattern) ? 'center' : data.pattern;
+
+		rbEditorState = {
+			active: true,
+			imgData: imageData,
+			imgUrl,
+			sourceType: imgUrl ? 'url' : 'base64',
+			x: style.x ?? 50,
+			y: style.y ?? 50,
+			scale: style.scale ?? 1,
+			pattern,
+			editingIndex: op ? (isDrafting ? insertIndex : currentIndex) : -1
+		};
+
+		document.getElementById('rb-url-input').value = imgUrl ?? '';
+		document.getElementById('rb-pattern-select').value = pattern;
+		document.getElementById('rb-shake-inner').checked = data?.shakeInner ?? true;
+		document.getElementById('rb-shake-outer').checked = data?.shakeOuter ?? false;
+		fillRbTearFields(getRbTearSettings(data), data?.tearScale);
+		const timing = getRbTearTiming(data);
+		document.getElementById('rb-tear-duration').value = timing.tearDurationSeconds;
+		document.getElementById('rb-tear-hold').value = timing.tearHoldSeconds;
+		syncRbTearControls();
+		showRbEditorImage();
+	}
+
+	function showRbEditorImage() {
+		const overlay = document.getElementById('rb-overlay');
+		const layer = document.getElementById('rb-inner-layer');
+		const { imgUrl, imgData, x, y, scale } = rbEditorState;
+		const image = imgUrl || imgData;
+
+		layer.style.display = 'block';
+		layer.style.opacity = '1';
+		layer.style.clipPath = 'none';
+		layer.style.backgroundImage = image ? `url(${JSON.stringify(String(image))})` : 'none';
+		layer.style.backgroundColor = image ? 'transparent' : '#222';
+		layer.style.backgroundPosition = `${x}% ${y}%`;
+		layer.style.backgroundSize = `auto ${scale * 100}%`;
+		document.getElementById('rb-edit-hint').style.display = image ? 'none' : 'block';
+		document.getElementById('swoop-wrapper').style.display = 'none';
+		document.getElementById('rb-paper-layer').style.display = 'none';
 		overlay.style.display = 'block';
 		overlay.classList.add('editing');
 		initRbInteraction(layer);
+		updateRbTearEditorPreview();
 	}
 
     // 2. 編輯器互動邏輯 (拖曳與滾輪)
@@ -17916,389 +18166,280 @@
 		reader.readAsDataURL(blob);
 	}
 
-    // 4. 預覽特效
-    function previewRbEffect() {
-	
-		const pattern = document.getElementById('rb-pattern-select').value;
-			
-		// --- [新增] 從 UI 讀取參數 ---
-		const sIn = document.getElementById('rb-shake-inner').checked;
-		const sOut = document.getElementById('rb-shake-outer').checked;
-		const intensity = parseFloat(document.getElementById('rb-intensity').value);
-		
+    function readRbEffectConfig() {
+		const pattern = document.getElementById('rb-pattern-select').value || 'center';
 		const config = {
-			imgUrl: (rbEditorState.sourceType === 'url') ? rbEditorState.imgUrl : null,
-			imgData: (rbEditorState.sourceType === 'base64') ? rbEditorState.imgData : null,
 			style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
-			pattern: pattern,
-			// 傳入預覽參數
-			shakeInner: sIn,
-			shakeOuter: sOut,
-			tearScale: intensity
+			pattern,
+			shakeInner: document.getElementById('rb-shake-inner').checked,
+			shakeOuter: document.getElementById('rb-shake-outer').checked
 		};
-        
-        // 暫時隱藏 UI
-        document.getElementById('rb-overlay').classList.remove('editing');
-        
-        playRealityBreak(config, () => {
-            // Callback: 動畫結束後恢復編輯狀態
-            document.getElementById('rb-overlay').classList.add('editing');
-            // 恢復原本的 style (因為播放時會亂改 clip-path)
-            const layer = document.getElementById('rb-inner-layer');
-            layer.style.clipPath = 'none'; 
-            layer.style.opacity = '1';
-        });
-    }
-
-    // 5. 確認儲存
-    function confirmRbEffect() {
-        // 讀取剛剛存下來的索引
-        const targetIdx = rbEditorState.editingIndex;
-        const isEditingExisting = (targetIdx !== -1);
-
-        // 如果目前不在 Draft 模式，我們需要手動啟動正確的模式
-        if (!isDrafting) {
-            if (isEditingExisting) {
-                // 明確告訴系統：我要編輯 targetIdx 這一步
-                // 這會設定 editModeType = 'EDIT'，saveDraft 就會執行「取代」
-                editAction(targetIdx); 
-            } else {
-                // 這是新資料 -> 開啟新步驟
-                startDraftAtEnd();
-            }
-        }
-        // 強制清空 draftOperations (確保這一步只有這一個特效動作)
-        draftOperations = [];
-
-        const pattern = document.getElementById('rb-pattern-select').value;
-        
-        // --- [新增] 從 UI 讀取參數並寫入 data ---
-		const sIn = document.getElementById('rb-shake-inner').checked;
-		const sOut = document.getElementById('rb-shake-outer').checked;
-		const intensity = parseFloat(document.getElementById('rb-intensity').value);
-
-		// 準備資料物件
-		const dataObj = {
-			style: { x: rbEditorState.x, y: rbEditorState.y, scale: rbEditorState.scale },
-			pattern: pattern,
-			shakeInner: sIn,
-			shakeOuter: sOut,
-			tearScale: intensity
-		};
-
-		// --- [新增] 判斷並儲存對應的圖片來源 ---
-		if (rbEditorState.sourceType === 'url') {
-			// 模式 A: 儲存 URL
-			dataObj.imgUrl = rbEditorState.imgUrl;
-			dataObj.imgKey = null; // 清除 Key 引用
-		} else {
-			// 模式 B: 儲存 Base64 Key
-			// 只有當真的有資料時才註冊
-			if (rbEditorState.imgData) {
-				const imgKey = registerImageToGlobal(rbEditorState.imgData);
-				dataObj.imgKey = imgKey;
-			}
-			dataObj.imgUrl = null; // 清除 URL
+		if (isRbTearPattern(pattern)) {
+			const settings = readRbTearFields();
+			if (!settings) return null;
+			const timing = readRbTearTimingFields();
+			if (!timing) return null;
+			Object.assign(config, timing);
+			config.tearSettings = settings;
+			config.tearScale = document.getElementById('rb-intensity').valueAsNumber;
 		}
-		// ------------------------------------
+		return config;
+	}
 
-		addOperation({
-			type: 'REALITY_BREAK',
-			data: dataObj
+	function previewRbEffect() {
+		const config = readRbEffectConfig();
+		if (!config) return;
+		const editor = rbEditorState;
+		config.imgUrl = editor.sourceType === 'url' ? editor.imgUrl : null;
+		config.imgData = editor.sourceType === 'base64' ? editor.imgData : null;
+		playRealityBreak(config, () => {
+			if (rbEditorState === editor && editor.active) showRbEditorImage();
 		});
+	}
 
+	function confirmRbEffect() {
+		const data = readRbEffectConfig();
+		if (!data) return;
+
+		if (!isDrafting) {
+			if (rbEditorState.editingIndex !== -1) editAction(rbEditorState.editingIndex);
+			else startDraftAtEnd();
+		}
+
+		if (rbEditorState.sourceType === 'url') {
+			data.imgUrl = rbEditorState.imgUrl;
+			data.imgKey = null;
+		} else {
+			data.imgUrl = null;
+			if (rbEditorState.imgData) data.imgKey = registerImageToGlobal(rbEditorState.imgData);
+		}
+		draftOperations = [];
+		addOperation({ type: 'REALITY_BREAK', data });
 		saveDraft(t('desc_rb'));
 		closeRbEditor();
-    }
+	}
 
-    function closeRbEditor() {
-        rbEditorState.active = false;
-        
-        // 1. 關閉特效層
-        const overlay = document.getElementById('rb-overlay');
-        overlay.style.display = 'none';
-        overlay.classList.remove('editing');
-        
-        // 2. 清理內容
-        document.getElementById('rb-inner-layer').style.backgroundImage = 'none';
-        const hint = document.getElementById('rb-edit-hint');
-        if(hint) hint.style.display = 'block';
+	function closeRbEditor() {
+		rbEditorState.active = false;
+		cancelRbPlayback();
 
-		// [新增] 隱藏紙張層
-        const paperLayer = document.getElementById('rb-paper-layer');
-        if(paperLayer) paperLayer.style.display = 'none';
-		
-        // --- [新增] 3. 恢復 Action Log 介面狀態 ---
-        const list = document.getElementById('action-list');
-        if (list) {
-            // 解鎖捲軸 (移除 overflow: hidden)
-            list.classList.remove('locked'); 
-        }
+		const overlay = document.getElementById('rb-overlay');
+		overlay.style.display = 'none';
+		overlay.classList.remove('editing');
+		document.getElementById('rb-inner-layer').style.backgroundImage = 'none';
+		document.getElementById('rb-edit-hint').style.display = 'block';
+		document.getElementById('rb-paper-layer').style.display = 'none';
+		document.getElementById('action-list')?.classList.remove('locked');
+		setTimeout(scrollToActiveStep, 100);
+	}
 
-        // --- [新增] 4. 自動捲動回當前步驟 ---
-        // 使用 setTimeout 確保 DOM 狀態 (如 display:none) 更新完畢後才捲動
-        setTimeout(() => {
-            scrollToActiveStep();
-        }, 100);
-    }
+    let rbPlaybackVersion = 0;
+	let rbNonTearOverflow = null;
 
-    // 6. 播放特效 (核心動畫邏輯)
-    function playRealityBreak(data, onComplete) {
-        // [新增] 鎖定捲軸，防止震動時出現 Scrollbar
-        document.body.style.overflow = 'hidden';
+	function releaseRbNonTearOverflow() {
+		if (rbNonTearOverflow === null) return;
+		if (document.body.style.overflow === 'hidden') document.body.style.overflow = rbNonTearOverflow;
+		rbNonTearOverflow = null;
+	}
 
-        // 優先讀取 data 中的設定，若無則使用預設值
-        const ENABLE_OUTER_SHAKE = (data.shakeOuter !== undefined) ? data.shakeOuter : false;
-        const ENABLE_INNER_SHAKE = (data.shakeInner !== undefined) ? data.shakeInner : true;
-        const TEAR_INTENSITY = (data.tearScale !== undefined) ? data.tearScale : 0.7;
+	function cancelRbPlayback() {
+		rbPlaybackVersion++;
+		stopRbPaperTear();
+		releaseRbNonTearOverflow();
+	}
 
-		// --- [新增] 宣告並初始化 Swoop 專屬 DOM ---
-        const swoopWrapper = document.getElementById('swoop-wrapper');
-        const swoopImg = document.getElementById('swoop-image');
-        const imgLayer = document.getElementById('rb-inner-layer');
-        if (swoopWrapper) swoopWrapper.style.display = 'none';
-        if (imgLayer) imgLayer.style.display = 'block'; // 確保預設背景層顯示
+	function playRealityBreak(data = {}, onComplete) {
+		data ||= {};
+		cancelRbPlayback();
+		const version = rbPlaybackVersion;
+		const supported = ['swoop', 'zoom_blur', 'zoom_in', 'pan_up', 'pan_down'];
+		if (!supported.includes(data.pattern)) {
+			playRbPaperTear(data, onComplete);
+			return;
+		}
+			// [新增] 鎖定捲軸，防止震動時出現 Scrollbar
+			rbNonTearOverflow = document.body.style.overflow;
+			document.body.style.overflow = 'hidden';
 
-        const overlay = document.getElementById('rb-overlay');
-        const paperLayer = document.getElementById('rb-paper-layer');
-        const body = document.body;
+			// 優先讀取 data 中的設定，若無則使用預設值
 
-        // 解析圖片來源
-        let srcImage = null;
-        if (data.imgUrl) {
-            srcImage = data.imgUrl;
-        } else if (data.imgKey) {
-            srcImage = globalImageRegistry[data.imgKey];
-        } else if (data.imgData) {
-            srcImage = data.imgData;
-        }
+			// --- [新增] 宣告並初始化 Swoop 專屬 DOM ---
+			const swoopWrapper = document.getElementById('swoop-wrapper');
+			const swoopImg = document.getElementById('swoop-image');
+			const imgLayer = document.getElementById('rb-inner-layer');
+			if (swoopWrapper) swoopWrapper.style.display = 'none';
+			if (imgLayer) imgLayer.style.display = 'block'; // 確保預設背景層顯示
 
-        const hint = document.getElementById('rb-edit-hint');
-        
-        // A. 初始化顯示
-        overlay.style.display = 'block';
-        overlay.classList.remove('editing');
-        if (hint) hint.style.display = 'none';
+			const overlay = document.getElementById('rb-overlay');
+			const paperLayer = document.getElementById('rb-paper-layer');
+			const body = document.body;
 
-        // 取得基本位置設定
-        const st = data.style || {x:50, y:50, scale:1};
-        let pattern = data.pattern;
-        if (!pattern || pattern === 'random') {
-            const opts = ['center', 'corner-tl', 'corner-br'];
-            pattern = opts[Math.floor(Math.random() * opts.length)];
-        }
+			// 解析圖片來源
+			let srcImage = null;
+			if (data.imgUrl) {
+				srcImage = data.imgUrl;
+			} else if (data.imgKey) {
+				srcImage = globalImageRegistry[data.imgKey];
+			} else if (data.imgData) {
+				srcImage = data.imgData;
+			}
 
-		// ===============================================
-        // [新增] Swoop-in 弧線俯衝特效 (無裁切版)
-        // ===============================================
-        if (pattern === 'swoop') {
-            paperLayer.style.display = 'none';
-            imgLayer.style.display = 'none'; 
-            swoopWrapper.style.display = 'block'; 
+			const hint = document.getElementById('rb-edit-hint');
+			
+			// A. 初始化顯示
+			overlay.style.display = 'block';
+			overlay.classList.remove('editing');
+			if (hint) hint.style.display = 'none';
 
-            const userScale = (st.scale !== undefined) ? st.scale : 1;
-            const userX = (st.x !== undefined) ? st.x : 50;
-            const userY = (st.y !== undefined) ? st.y : 50;
+			// 取得基本位置設定
+			const st = data.style || {x:50, y:50, scale:1};
+			const pattern = data.pattern;
 
-            if (srcImage) {
-                swoopImg.src = srcImage;
-            }
+			// ===============================================
+			// [新增] Swoop-in 弧線俯衝特效 (無裁切版)
+			// ===============================================
+			if (pattern === 'swoop') {
+				paperLayer.style.display = 'none';
+				imgLayer.style.display = 'none'; 
+				swoopWrapper.style.display = 'block'; 
 
-            // 精準對齊與縮放
-            swoopImg.style.left = `${userX}vw`;
-            swoopImg.style.top = `${userY}vh`;
-            swoopImg.style.height = `${userScale * 100}vh`; // 【修復 X 偏移】: 改用 % 而非 vh，完全參照編輯器比例
-            swoopImg.style.width = `auto`; 
-            swoopImg.style.transform = `translate(-${userX}%, -${userY}%)`;
+				const userScale = (st.scale !== undefined) ? st.scale : 1;
+				const userX = (st.x !== undefined) ? st.x : 50;
+				const userY = (st.y !== undefined) ? st.y : 50;
 
-            // 重置並觸發動畫
-            swoopWrapper.classList.remove('rb-swoop-anim');
-            void swoopWrapper.offsetWidth; // Force Reflow
-            swoopWrapper.classList.add('rb-swoop-anim');
+				if (srcImage) {
+					swoopImg.src = srcImage;
+				}
 
-            // 【需求 2】: 改為 2.2s 後結束清理 (1.2s 動畫 + 1.0s 定格)
-            setTimeout(() => {
-                swoopWrapper.classList.remove('rb-swoop-anim');
-                swoopWrapper.style.display = 'none';
-                imgLayer.style.display = 'block'; 
-                overlay.style.display = 'none';
-                if (onComplete) onComplete();
-                document.body.style.overflow = '';
-            }, 2200);
+				// 精準對齊與縮放
+				swoopImg.style.left = `${userX}vw`;
+				swoopImg.style.top = `${userY}vh`;
+				swoopImg.style.height = `${userScale * 100}vh`; // 【修復 X 偏移】: 改用 % 而非 vh，完全參照編輯器比例
+				swoopImg.style.width = `auto`; 
+				swoopImg.style.transform = `translate(-${userX}%, -${userY}%)`;
 
-            return; 
-        }
-        // ===============================================
-		// [合併版] Zoom Blur (衝擊) & Zoom In (逼近)
-		// ===============================================
-		if (pattern === 'zoom_blur' || pattern === 'zoom_in') {
-            paperLayer.style.display = 'none';
+				// 重置並觸發動畫
+				swoopWrapper.classList.remove('rb-swoop-anim');
+				void swoopWrapper.offsetWidth; // Force Reflow
+				swoopWrapper.classList.add('rb-swoop-anim');
 
-            // 【修正 1】正確從 st (data.style) 讀取使用者在編輯器調整的參數
-            const userScale = (st.scale !== undefined) ? st.scale : 1;
-            const userX = (st.x !== undefined) ? st.x : 50;
-            const userY = (st.y !== undefined) ? st.y : 50;
+				// 【需求 2】: 改為 2.2s 後結束清理 (1.2s 動畫 + 1.0s 定格)
+				setTimeout(() => {
+					if (version !== rbPlaybackVersion) return;
+					swoopWrapper.classList.remove('rb-swoop-anim');
+					swoopWrapper.style.display = 'none';
+					imgLayer.style.display = 'block'; 
+					overlay.style.display = 'none';
+					releaseRbNonTearOverflow();
+					if (onComplete) onComplete();
+				}, 2200);
 
-            if (srcImage) {
-                imgLayer.style.backgroundImage = `url(${srcImage})`;
-                imgLayer.style.backgroundColor = 'transparent';
-                
-                // 【修正 2】捨棄寫死的 cover，套用編輯器算出的百分比大小與位置
-                imgLayer.style.backgroundSize = `auto ${userScale * 100}%`;
-                imgLayer.style.backgroundPosition = `${userX}% ${userY}%`;
-                imgLayer.style.backgroundRepeat = 'no-repeat';
-            }
-            
-            imgLayer.style.clipPath = 'none'; 
-            imgLayer.style.opacity = '1';
+				return; 
+			}
+			// ===============================================
+			// [合併版] Zoom Blur (衝擊) & Zoom In (逼近)
+			// ===============================================
+			if (pattern === 'zoom_blur' || pattern === 'zoom_in') {
+				paperLayer.style.display = 'none';
 
-            // 【修正 3】由於已經將使用者的 scale 應用在 backgroundSize 上了，
-            // 這裡傳給 CSS 動畫的基準倍率固定為 1 即可，讓動畫(2.5x -> 1.0x)能完美吻合編輯器的視覺
-            imgLayer.style.setProperty('--rb-zoom-scale', 1);
+				// 【修正 1】正確從 st (data.style) 讀取使用者在編輯器調整的參數
+				const userScale = (st.scale !== undefined) ? st.scale : 1;
+				const userX = (st.x !== undefined) ? st.x : 50;
+				const userY = (st.y !== undefined) ? st.y : 50;
 
-            // ---[關鍵差異] 根據模式選擇不同的動畫 Class ---
-            const animClass = (pattern === 'zoom_in') ? 'rb-zoom-in-anim' : 'rb-zoom-blur-anim';
+				if (srcImage) {
+					imgLayer.style.backgroundImage = `url(${srcImage})`;
+					imgLayer.style.backgroundColor = 'transparent';
+					
+					// 【修正 2】捨棄寫死的 cover，套用編輯器算出的百分比大小與位置
+					imgLayer.style.backgroundSize = `auto ${userScale * 100}%`;
+					imgLayer.style.backgroundPosition = `${userX}% ${userY}%`;
+					imgLayer.style.backgroundRepeat = 'no-repeat';
+				}
+				
+				imgLayer.style.clipPath = 'none'; 
+				imgLayer.style.opacity = '1';
 
-            // 重置並觸發動畫
-            imgLayer.classList.remove('rb-zoom-blur-anim', 'rb-zoom-in-anim'); // 清除舊的
-            void imgLayer.offsetWidth; // Force Reflow
-            imgLayer.classList.add(animClass); // 加入新的
+				// 【修正 3】由於已經將使用者的 scale 應用在 backgroundSize 上了，
+				// 這裡傳給 CSS 動畫的基準倍率固定為 1 即可，讓動畫(2.5x -> 1.0x)能完美吻合編輯器的視覺
+				imgLayer.style.setProperty('--rb-zoom-scale', 1);
 
-            // 設定結束清理
-            setTimeout(() => {
-                imgLayer.style.opacity = '0';
-                imgLayer.classList.remove(animClass);
-                imgLayer.style.backgroundSize = '';
-                imgLayer.style.backgroundPosition = '';
-                imgLayer.style.removeProperty('--rb-zoom-scale');
-                
-                if (onComplete) onComplete();
-                document.body.style.overflow = '';
-            }, 2500);
+				// ---[關鍵差異] 根據模式選擇不同的動畫 Class ---
+				const animClass = (pattern === 'zoom_in') ? 'rb-zoom-in-anim' : 'rb-zoom-blur-anim';
 
-            return; 
-        }
-        
-        if (pattern === 'pan_up' || pattern === 'pan_down') {
-            // 1. 隱藏不需要的撕裂層
-            paperLayer.style.display = 'none';
-            
-            // 2. 設定內層圖片初始狀態
-            if (srcImage) {
-                imgLayer.style.backgroundImage = `url(${srcImage})`;
-                imgLayer.style.backgroundColor = 'transparent';
-            }
-            imgLayer.style.clipPath = 'none'; // 不裁切
-            
-            let startOffset = 15;
-            let endOffset = -15;
+				// 重置並觸發動畫
+				imgLayer.classList.remove('rb-zoom-blur-anim', 'rb-zoom-in-anim'); // 清除舊的
+				void imgLayer.offsetWidth; // Force Reflow
+				imgLayer.classList.add(animClass); // 加入新的
 
-            if (pattern === 'pan_down') {
-                startOffset = -15;
-                endOffset = 15;
-            }
+				// 設定結束清理
+				setTimeout(() => {
+					if (version !== rbPlaybackVersion) return;
+					imgLayer.style.opacity = '0';
+					imgLayer.classList.remove(animClass);
+					imgLayer.style.backgroundSize = '';
+					imgLayer.style.backgroundPosition = '';
+					imgLayer.style.removeProperty('--rb-zoom-scale');
+					
+					releaseRbNonTearOverflow();
+					if (onComplete) onComplete();
+				}, 2500);
 
-            const startY = st.y + startOffset;
-            const endY = st.y + endOffset;
-            
-            imgLayer.style.backgroundPosition = `${st.x}% ${startY}%`;
-            // 【修正 4】加上 auto，與編輯器邏輯 (寬度自動、高度縮放) 保持一致
-            imgLayer.style.backgroundSize = `auto ${st.scale * 100}%`;
-            imgLayer.style.opacity = '0';      // 初始透明
-            imgLayer.style.transition = 'none'; // 瞬間重置
+				return; 
+			}
+			
+			if (pattern === 'pan_up' || pattern === 'pan_down') {
+				// 1. 隱藏不需要的撕裂層
+				paperLayer.style.display = 'none';
+				
+				// 2. 設定內層圖片初始狀態
+				if (srcImage) {
+					imgLayer.style.backgroundImage = `url(${srcImage})`;
+					imgLayer.style.backgroundColor = 'transparent';
+				}
+				imgLayer.style.clipPath = 'none'; // 不裁切
+				
+				let startOffset = 15;
+				let endOffset = -15;
 
-            void imgLayer.offsetWidth;
+				if (pattern === 'pan_down') {
+					startOffset = -15;
+					endOffset = 15;
+				}
 
-            setTimeout(() => {
-                imgLayer.style.transition = 'opacity 0.8s ease-out, background-position 4s linear';
-                imgLayer.style.opacity = '1';
-                imgLayer.style.backgroundPosition = `${st.x}% ${endY}%`;
+				const startY = st.y + startOffset;
+				const endY = st.y + endOffset;
+				
+				imgLayer.style.backgroundPosition = `${st.x}% ${startY}%`;
+				// 【修正 4】加上 auto，與編輯器邏輯 (寬度自動、高度縮放) 保持一致
+				imgLayer.style.backgroundSize = `auto ${st.scale * 100}%`;
+				imgLayer.style.opacity = '0';      // 初始透明
+				imgLayer.style.transition = 'none'; // 瞬間重置
 
-                setTimeout(() => {
-                    imgLayer.style.transition = 'opacity 0.5s ease-in'; 
-                    imgLayer.style.opacity = '0';
-                }, 3500);
+				void imgLayer.offsetWidth;
 
-            }, 50);
+				setTimeout(() => {
+					if (version !== rbPlaybackVersion) return;
+					imgLayer.style.transition = 'opacity 0.8s ease-out, background-position 4s linear';
+					imgLayer.style.opacity = '1';
+					imgLayer.style.backgroundPosition = `${st.x}% ${endY}%`;
 
-            if (onComplete) setTimeout(onComplete, 4000);
-            return;
-        }
+					setTimeout(() => {
+						if (version !== rbPlaybackVersion) return;
+						imgLayer.style.transition = 'opacity 0.5s ease-in'; 
+						imgLayer.style.opacity = '0';
+					}, 3500);
 
-        // ===============================================
-        // 以下為原本的撕裂 (Tearing) 邏輯
-        // ===============================================
+				}, 50);
 
-        const setLayerStyle = (el, isPaper) => {
-            if (!isPaper && srcImage) {
-                el.style.backgroundImage = `url(${srcImage})`;
-                el.style.backgroundColor = 'transparent';
-            } else if (isPaper) {
-                el.style.backgroundImage = '';
-                el.style.backgroundColor = '';
-            } else {
-                el.style.backgroundImage = 'none';
-                el.style.backgroundColor = 'white';
-            }
-            
-            let startY = st.y;
-
-            el.style.backgroundPosition = `${st.x}% ${startY}%`;
-            // 【修正 5】加上 auto，與編輯器邏輯保持一致
-            el.style.backgroundSize = `auto ${st.scale * 100}%`;
-            el.style.opacity = '1';
-            el.style.transition = 'none';
-        };
-        setLayerStyle(imgLayer, false);
-        setLayerStyle(paperLayer, true);
-        paperLayer.style.display = 'block';
-
-        // B. 準備隨機鋸齒種子
-        const seedImg = Array.from({length: 100}, () => (Math.random() - 0.5));
-        const seedPaper = Array.from({length: 100}, () => (Math.random() - 0.5));
-
-        // C. 設定初始狀態 (閉合)
-        const startPolyImg = generateJaggedPoly(0, pattern, seedImg, 'image');
-        const startPolyPaper = generateJaggedPoly(0, pattern, seedPaper, 'paper');
-        
-        imgLayer.style.clipPath = startPolyImg;
-        paperLayer.style.clipPath = startPolyPaper;
-
-        // D. 開始動畫序列
-        // 1. 套用震動
-        if (ENABLE_OUTER_SHAKE) body.classList.add('shaking-outer');
-        if (ENABLE_INNER_SHAKE) body.classList.add('shaking-inner');
-        void imgLayer.offsetWidth; // 強制重繪
-
-        // 2. 撕裂過程 & 鏡頭移動
-        setTimeout(() => {
-            // 在 transition 中加入 background-position 的平滑過渡
-            const transitionCSS = 'clip-path 2.0s cubic-bezier(0.2, 1, 0.3, 1), background-position 2.5s ease-out';
-            imgLayer.style.transition = transitionCSS;
-            paperLayer.style.transition = transitionCSS;
-            
-            const endPolyImg = generateJaggedPoly(TEAR_INTENSITY, pattern, seedImg, 'image');
-            const endPolyPaper = generateJaggedPoly(TEAR_INTENSITY, pattern, seedPaper, 'paper');
-            
-            imgLayer.style.clipPath = endPolyImg;
-            paperLayer.style.clipPath = endPolyPaper;
-
-            imgLayer.style.backgroundPosition = `${st.x}% ${st.y}%`;
-
-        }, 100);
-
-        // 3. 結束震動
-        setTimeout(() => {
-            body.classList.remove('shaking-outer');
-            body.classList.remove('shaking-inner');
-            if (onComplete) onComplete();
-        }, 500);
-
-        // 4. 退場 (撕裂版通常不自動消退，因為可能會連續播放，這裡維持原樣)
-        setTimeout(() => {
-            document.body.style.overflow = ''; // 解鎖捲軸
-        }, 2500);
-    }
+				setTimeout(() => {
+					if (version !== rbPlaybackVersion) return;
+					releaseRbNonTearOverflow();
+					if (onComplete) onComplete();
+				}, 4000);
+				return;
+			}
+	}
 	
 	// --- [修正版] 洗牌動畫特效 (隱藏原卡版) ---
     // --- [優化版] 洗牌動畫特效 (全序列化 + 隱藏原卡) ---
@@ -19609,7 +19750,22 @@
 <div id="rps-overlay"></div>
 <div id="emotion-preview-tooltip"></div>
 <div id="rb-overlay">
-    <div id="rb-paper-layer"></div>
+    <div id="rb-paper-layer" class="rb-tear-world" style="display:none">
+		<div class="rb-tear-art"></div>
+		<div class="rb-tear-core">
+			<div class="rb-tear-stock rb-tear-stock-left"></div>
+			<div class="rb-tear-stock rb-tear-stock-right"></div>
+		</div>
+		<div class="rb-tear-cover">
+			<div class="rb-tear-removable">
+				<div class="rb-tear-sheet"></div>
+				<div class="rb-tear-fold"></div>
+			</div>
+		</div>
+		<div class="rb-tear-sheet rb-tear-fixed-left"></div>
+		<div class="rb-tear-sheet rb-tear-fixed-right"></div>
+		<div class="rb-tear-sheet rb-tear-full"></div>
+	</div>
     
     <div id="rb-inner-layer"></div>
     
@@ -19622,44 +19778,50 @@
         <img id="swoop-image" src="" alt="swoop-cut-in">
     </div>
     <div id="rb-controls">
-		<div style="background:rgba(0,0,0,0.85); padding:8px 20px; border-radius:40px; color:white; display:flex; gap:12px; align-items:center;">
-			<div style="display:flex; flex-direction:column; gap:2px;">
-				<span data-i18n="lbl_rb_style" style="font-size:0.75rem; color:#aaa;">特效樣式:</span>
-				<select id="rb-pattern-select" style="background:#333; color:white; border:1px solid #555; padding:2px; width:100px;">
-					<option value="center" data-i18n="opt_rb_center">⚡ 中間撕裂 (Center)</option>
-					<option value="corner-tl" data-i18n="opt_rb_tl">📐 左上撕裂 (Top-Left)</option>
-					<option value="corner-br" data-i18n="opt_rb_br">📐 右下撕裂 (Btm-Right)</option>
-					<option value="pan_up" data-i18n="opt_rb_pan_up">🔼 緩緩上升 (Pan Up)</option>
-					<option value="pan_down" data-i18n="opt_rb_pan_down">🔽 緩緩下降 (Pan Down)</option>
-					<option value="zoom_blur" data-i18n="opt_rb_zoom_blur">💨 衝擊縮放 (Zoom Blur)</option>
-					<option value="zoom_in" data-i18n="opt_rb_zoom_in">🚀 急速逼近 (Zoom In)</option>
-					<option value="swoop" data-i18n="opt_rb_swoop">🦅 弧線俯衝 (Swoop)</option>
+		<div id="rb-tear-settings" hidden>
+			<p class="rb-tear-help" data-i18n="msg_rb_tear_coords">X 從左側起算，可輸入負值或超過 100。</p>
+			<fieldset class="rb-tear-group">
+				<legend data-i18n="lbl_rb_tear">撕開參數</legend>
+				<label><span data-i18n="lbl_rb_xt1">頂邊左 Xt1 (%)</span><input id="rb-tear-Xt1" type="number" step="any" required></label>
+				<label><span data-i18n="lbl_rb_xt2">頂邊右 Xt2 (%)</span><input id="rb-tear-Xt2" type="number" step="any" required></label>
+				<label><span data-i18n="lbl_rb_xb1">底邊左 Xb1 (%)</span><input id="rb-tear-Xb1" type="number" step="any" required></label>
+				<label><span data-i18n="lbl_rb_xb2">底邊右 Xb2 (%)</span><input id="rb-tear-Xb2" type="number" step="any" required></label>
+				<label><span data-i18n="lbl_rb_tear_direction">撕開方向</span>
+					<select id="rb-tear-direction">
+						<option value="down" data-i18n="opt_rb_tear_down">下撕（由上往下）</option>
+						<option value="up" data-i18n="opt_rb_tear_up">上撕（由下往上）</option>
+					</select>
+				</label>
+				<label><span data-i18n="lbl_rb_tear_duration">撕開耗時（秒）</span><input id="rb-tear-duration" type="number" step="any" min="0.001" required></label>
+				<label><span data-i18n="lbl_rb_tear_hold">撕開後停留（秒）</span><input id="rb-tear-hold" type="number" step="any" min="0" required></label>
+			</fieldset>
+		</div>
+		<div class="rb-controls-bar">
+			<label>
+				<span data-i18n="lbl_rb_style">特效樣式</span>
+				<select id="rb-pattern-select" onchange="syncRbTearControls()">
+					<option value="center" data-i18n="opt_rb_center">⚡ 撕開</option>
+					<option value="pan_up" data-i18n="opt_rb_pan_up">🔼 緩緩上升</option>
+					<option value="pan_down" data-i18n="opt_rb_pan_down">🔽 緩緩下降</option>
+					<option value="zoom_blur" data-i18n="opt_rb_zoom_blur">💨 衝擊縮放</option>
+					<option value="zoom_in" data-i18n="opt_rb_zoom_in">🚀 急速逼近</option>
+					<option value="swoop" data-i18n="opt_rb_swoop">🦅 弧線俯衝</option>
 				</select>
-			</div>
-			<div style="display:flex; flex-direction:column; gap:2px;">
-				<span style="font-size:0.75rem; color:#aaa;">Image URL / Paste:</span>
+			</label>
+			<label>
+				<span>Image URL / Paste</span>
 				<input type="text" id="rb-url-input" placeholder="https://..." onchange="loadRbUrl(this.value)" onkeydown="if(event.key==='Enter') loadRbUrl(this.value)">
-			</div>
-			<div style="width:1px; height:30px; background:#555;"></div>
-
-			<div style="display:flex; flex-direction:column; gap:4px; font-size:0.8rem;">
-				<label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="rb-shake-inner" checked> <span data-i18n="lbl_rb_shake_in" style="margin-left:4px;">內震</span></label>
-				<label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="rb-shake-outer"> <span data-i18n="lbl_rb_shake_out" style="margin-left:4px;">外震</span></label>
-			</div>
-
-			<div style="display:flex; flex-direction:column; align-items:center; width:80px;">
-				<div style="display:flex; justify-content:space-between; width:100%; font-size:0.7rem; color:#aaa;">
-					<span data-i18n="lbl_rb_intensity">裂度:</span>
-					<span id="rb-intensity-val">0.7</span>
-				</div>
-				<input type="range" id="rb-intensity" min="0.1" max="1.5" step="0.1" value="0.7" style="width:100%; cursor:pointer;" oninput="document.getElementById('rb-intensity-val').innerText=this.value">
-			</div>
-
-			<div style="width:1px; height:30px; background:#555;"></div>
-
-			<button onclick="previewRbEffect()" style="background:#3498db; border:none; border-radius:4px; color:white; cursor:pointer; padding:5px 10px;" data-i18n="btn_preview">▶ 預覽</button>
-			<button onclick="confirmRbEffect()" style="background:#2ecc71; border:none; border-radius:4px; color:white; cursor:pointer; font-weight:bold; padding:5px 15px;" data-i18n="btn_save">💾 儲存</button>
-			<button onclick="closeRbEditor()" style="background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer; padding:5px 10px;" data-i18n="btn_cancel">✕</button>
+			</label>
+			<label><input type="checkbox" id="rb-shake-inner" checked> <span id="rb-shake-inner-label" data-i18n="lbl_rb_shake_in">內震</span></label>
+			<label><input type="checkbox" id="rb-shake-outer"> <span data-i18n="lbl_rb_shake_out">外震</span></label>
+			<label id="rb-tear-intensity-control" hidden>
+				<span data-i18n="lbl_rb_tear_roughness">撕邊粗糙度</span>
+				<output id="rb-intensity-val" for="rb-intensity">0.7</output>
+				<input type="range" id="rb-intensity" min="0.1" max="1.5" step="0.1" value="0.7" oninput="document.getElementById('rb-intensity-val').value=this.value">
+			</label>
+			<button type="button" onclick="previewRbEffect()" style="background:#3498db" data-i18n="btn_preview">▶ 預覽</button>
+			<button type="button" onclick="confirmRbEffect()" style="background:#2ecc71" data-i18n="btn_save">💾 儲存</button>
+			<button type="button" onclick="closeRbEditor()" style="background:#e74c3c" data-i18n="btn_cancel">✕</button>
 		</div>
 	</div>
 </div>
