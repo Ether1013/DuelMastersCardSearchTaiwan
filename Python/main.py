@@ -2463,7 +2463,7 @@ async def serve_index(): return FileResponse("colorStudy.html")
 async def serve_index(): return FileResponse("colorStudyAFT2.html")
 
 @app.get("/quizzes/Four")
-async def serve_index(): return FileResponse("Four.html")
+async def serve_index(): return FileResponse("four.html")
 
 @app.get("/pop.html")
 async def get_pop_page(request: Request, setCode: Optional[str] = None, deckList: Optional[str] = None, title: Optional[str] = None):
