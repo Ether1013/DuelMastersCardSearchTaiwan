@@ -37,7 +37,7 @@ import zipfile
 
 import hmac
 import secrets
-from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable
+from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable, FailedPrecondition, NotFound
 from google.api_core.retry import Retry
 from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -854,6 +854,7 @@ def load_and_process_caches():
 # ===== 卡圖漸進補齊 =====
 
 IMAGE_COLLECTION = "card_image_backfill"
+IMAGE_FAILURE_COLLECTION = "card_image_search_failures"
 IMAGE_SEARCH_INTERVAL = max(
     1.0, float(os.getenv("IMAGE_SEARCH_INTERVAL", "45"))
 )
@@ -866,7 +867,7 @@ IMAGE_MAX_JOBS = 30
 
 image_url_map = {}               # 原始卡名 -> 官方圖片 URL
 _image_cards = {}
-_image_dirty = {}                # 卡名 -> (版本, URL 或 None=刪除)
+_image_dirty = {}                # (集合, 卡名) -> (版本, URL 或 None=刪除)
 _image_jobs = {}
 _image_failures = {}
 _image_lock = asyncio.Lock()
@@ -913,12 +914,13 @@ def image_card_is_eligible(card):
     )
 
 
-def image_mark_changed(name, url):
+def image_mark_changed(name, url, *, collection=IMAGE_COLLECTION):
     global _image_revision, _image_changed_at
 
     _image_revision += 1
-    _image_dirty[name] = (_image_revision, url)
-    _image_changed_at = time.monotonic()
+    _image_dirty[(collection, name)] = (_image_revision, url)
+    if collection == IMAGE_COLLECTION:
+        _image_changed_at = time.monotonic()
     _image_wakeup.set()
 
 
@@ -957,43 +959,39 @@ async def image_publish_stats():
             console_manager.disconnect(ws)
 
 
-async def image_flush_changes():
+async def image_flush_changes(*, failures_only=False):
     global _image_save_error, _image_last_saved_at
 
     async with _image_save_lock:
-        if not _image_dirty:
+        snapshot = {
+            key: value for key, value in _image_dirty.items()
+            if not failures_only or key[0] == IMAGE_FAILURE_COLLECTION
+        }
+        if not snapshot:
             return True
 
         if db is None:
             _image_save_error = (
-                "Firebase 未連線；補圖仍在記憶體，重啟會遺失"
+                "Firebase 未連線；卡圖變更仍在記憶體，重啟會遺失"
             )
             return False
-
-        snapshot = dict(_image_dirty)
 
         def write_snapshot():
             items = list(snapshot.items())
 
-            # Firestore batch 分批寫入。
             for start in range(0, len(items), 400):
                 batch = db.batch()
-
-                for name, (_, url) in items[start:start + 400]:
-                    doc_id = hashlib.sha256(
-                        name.encode("utf-8")
-                    ).hexdigest()
-
-                    ref = db.collection(
-                        IMAGE_COLLECTION
-                    ).document(doc_id)
+                for (collection, name), (_, url) in items[start:start + 400]:
+                    doc_id = hashlib.sha256(name.encode("utf-8")).hexdigest()
+                    ref = db.collection(collection).document(doc_id)
 
                     if url is None:
                         batch.delete(ref)
                     else:
+                        url_field = "search" if collection == IMAGE_FAILURE_COLLECTION else "url"
                         batch.set(ref, {
                             "name": name,
-                            "url": url,
+                            url_field: url,
                             "updated_at": firestore.SERVER_TIMESTAMP,
                         })
 
@@ -1003,15 +1001,12 @@ async def image_flush_changes():
             await asyncio.to_thread(write_snapshot)
 
             # 寫入途中可能有新變更，只清除本次已保存的版本。
-            for name, versioned_url in snapshot.items():
-                if _image_dirty.get(name) == versioned_url:
-                    del _image_dirty[name]
+            for key, versioned_url in snapshot.items():
+                if _image_dirty.get(key) == versioned_url:
+                    del _image_dirty[key]
 
             _image_save_error = ""
-            _image_last_saved_at = datetime.now(
-                TZ_UTC8
-            ).isoformat()
-
+            _image_last_saved_at = datetime.now(TZ_UTC8).isoformat()
             return True
 
         except Exception as exc:
@@ -1019,9 +1014,7 @@ async def image_flush_changes():
                 "Firebase 保存失敗，稍後重試："
                 f"{type(exc).__name__}"
             )
-            logging.exception(
-                "[Card image] Firebase sync failed"
-            )
+            logging.exception("[Card image] Firebase sync failed")
             return False
 
 
@@ -1031,20 +1024,17 @@ async def image_save_loop():
     while not _image_stopping:
         _image_wakeup.clear()
 
-        if (
-            _image_dirty
-            and time.monotonic() >= retry_at
-            and time.monotonic() - _image_changed_at
-            >= IMAGE_SAVE_IDLE
-        ):
-            ok = await image_flush_changes()
-            retry_at = time.monotonic() + (0 if ok else 60)
-            await image_publish_stats()
+        if _image_dirty and time.monotonic() >= retry_at:
+            failures_only = time.monotonic() - _image_changed_at < IMAGE_SAVE_IDLE
+            if not failures_only or any(
+                collection == IMAGE_FAILURE_COLLECTION for collection, _ in _image_dirty
+            ):
+                ok = await image_flush_changes(failures_only=failures_only)
+                retry_at = time.monotonic() + (0 if ok else 60)
+                await image_publish_stats()
 
         try:
-            await asyncio.wait_for(
-                _image_wakeup.wait(), timeout=1
-            )
+            await asyncio.wait_for(_image_wakeup.wait(), timeout=1)
         except asyncio.TimeoutError:
             pass
 
@@ -1608,7 +1598,11 @@ async def image_lookup_job(name):
                     reason,
                 )
                 _image_last_error = f"{name}：{reason}"
-                
+                search = "https://www.google.com/search?" + urlencode({
+                    "q": f"{name} site:dm.takaratomy.co.jp",
+                })
+                image_mark_changed(name, search, collection=IMAGE_FAILURE_COLLECTION)
+
                 logging.warning(
                     "[Card image] Not found: %s; retry after %s seconds",
                     name, IMAGE_FAILURE_TTL
@@ -1748,7 +1742,68 @@ def image_export_allowed(request, admin):
         )
     )
 
+def read_image_failure_export():
+    path = BASE_DIR / "picsSearchFailure.json"
+    try:
+        previous = json.loads(path.read_text(encoding="utf-8-sig"))
+    except FileNotFoundError:
+        previous = []
 
+    if not isinstance(previous, list):
+        raise ValueError("picsSearchFailure.json must contain an array")
+
+    rows = {}
+    for row in previous:
+        if (
+            not isinstance(row, dict)
+            or not isinstance(row.get("name"), str) or not row["name"]
+            or not isinstance(row.get("search"), str) or not row["search"]
+        ):
+            raise ValueError("Invalid row in picsSearchFailure.json")
+        rows[row["name"]] = {"name": row["name"], "search": row["search"]}
+
+    exported = []
+    collection = db.collection(IMAGE_FAILURE_COLLECTION)
+    for doc in collection.stream(retry=Retry(predicate=lambda _error: False), timeout=15):
+        row = doc.to_dict() or {}
+        name, search = row.get("name"), row.get("search")
+        if not isinstance(name, str) or not name or not isinstance(search, str) or not search:
+            logging.warning("[Card image] Skipped invalid failure record: %s", doc.id)
+            continue
+        rows[name] = {"name": name, "search": search}
+        exported.append(doc)
+
+    return [rows[name] for name in sorted(rows)], exported
+
+
+def delete_exported_image_failures(exported):
+    cleared = 0
+    for start in range(0, len(exported), 400):
+        chunk = exported[start:start + 400]
+        try:
+            batch = db.batch()
+            for doc in chunk:
+                option = db.write_option(last_update_time=doc.update_time)
+                batch.delete(doc.reference, option=option)
+            batch.commit(retry=None, timeout=15)
+            cleared += len(chunk)
+        except (FailedPrecondition, NotFound):
+            # 同一批有紀錄被更新或被清除時，逐筆確認版本再刪除。
+            for doc in chunk:
+                try:
+                    option = db.write_option(last_update_time=doc.update_time)
+                    doc.reference.delete(option=option, retry=None, timeout=15)
+                    cleared += 1
+                except (FailedPrecondition, NotFound):
+                    continue
+                except Exception:
+                    logging.exception("[Card image] Could not clear exported failure")
+                    return cleared
+        except Exception:
+            logging.exception("[Card image] Could not clear exported failures")
+            break
+    return cleared
+    
 @app.post("/api/console/export_carddata")
 async def export_carddata_images(
     request: Request,
@@ -1781,47 +1836,32 @@ async def export_carddata_images(
                 "pic": url,
             })
 
-    def build_export():
+    def build_export(failures):
         files = {
             "update_carddata.json": json.dumps(
-                data,
-                ensure_ascii=False,
-                indent=2,
+                data, ensure_ascii=False, indent=2,
             ).encode("utf-8"),
-
             "patch_update_carddata.json": json.dumps(
-                patch,
-                ensure_ascii=False,
-                indent=2,
+                patch, ensure_ascii=False, indent=2,
+            ).encode("utf-8"),
+            "picsSearchFailure.json": json.dumps(
+                failures, ensure_ascii=False, indent=2,
             ).encode("utf-8"),
         }
 
         temporary_files = []
 
         try:
-            # 先完成兩份暫存檔。
+            # 先完成所有暫存檔。
             for filename, body in files.items():
-                temporary = BASE_DIR / (
-                    "."
-                    + filename
-                    + "."
-                    + uuid.uuid4().hex
-                    + ".tmp"
-                )
-
-                temporary_files.append(
-                    (temporary, BASE_DIR / filename)
-                )
-
+                temporary = BASE_DIR / f".{filename}.{uuid.uuid4().hex}.tmp"
+                temporary_files.append((temporary, BASE_DIR / filename))
                 temporary.write_bytes(body)
 
-            # 兩份下載資料來自同一次快照。
+            # 下載包與本機檔案使用同一份內容。
             buffer = io.BytesIO()
-
             with zipfile.ZipFile(
-                buffer,
-                "w",
-                compression=zipfile.ZIP_DEFLATED,
+                buffer, "w", compression=zipfile.ZIP_DEFLATED,
             ) as archive:
                 for filename, body in files.items():
                     archive.writestr(filename, body)
@@ -1837,28 +1877,33 @@ async def export_carddata_images(
 
     try:
         async with file_write_lock:
-            archive_body = await asyncio.to_thread(
-                build_export
-            )
+            if db is None or not await image_flush_changes():
+                raise HTTPException(
+                    status_code=503,
+                    detail="Firebase 尚未完成同步，請稍後再匯出",
+                )
 
-    except Exception:
-        logging.exception(
-            "[Card image] Export failed"
-        )
+            failures, exported = await asyncio.to_thread(read_image_failure_export)
+            archive_body = await asyncio.to_thread(build_export, failures)
+            cleared = await asyncio.to_thread(delete_exported_image_failures, exported)
 
+    except HTTPException:
+        raise
+    except Exception as error:
+        logging.exception("[Card image] Export failed")
         raise HTTPException(
             status_code=500,
             detail="更新檔輸出失敗，請查看伺服器 log",
-        )
+        ) from error
 
     return Response(
         archive_body,
         media_type="application/zip",
         headers={
-            "Content-Disposition": (
-                'attachment; filename="carddata_updates.zip"'
-            ),
+            "Content-Disposition": 'attachment; filename="carddata_updates.zip"',
             "X-Updated-Count": str(len(patch)),
+            "X-Image-Failure-Count": str(len(exported)),
+            "X-Image-Failure-Cleared": str(cleared),
             "Cache-Control": "no-store",
         },
     )

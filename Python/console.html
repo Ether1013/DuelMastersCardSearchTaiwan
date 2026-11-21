@@ -909,68 +909,59 @@
             ].filter(Boolean).join('；');
         }
 
-                async function exportUpdatedCarddata() {
-            if (!canExportCarddata) return;
+        async function exportUpdatedCarddata() {
+			if (!canExportCarddata) return;
 
-            const button = document.getElementById(
-                'exportCarddataBtn'
-            );
+			const button = document.getElementById('exportCarddataBtn');
+			button.disabled = true;
 
-            button.disabled = true;
+			try {
+				const response = await fetch(
+					`/api/console/export_carddata?${authParam}`,
+					{ method: 'POST' }
+				);
 
-            try {
-                const response = await fetch(
-                    `/api/console/export_carddata?${authParam}`,
-                    { method: 'POST' }
-                );
+				if (!response.ok) {
+					let message = `HTTP ${response.status}`;
+					try {
+						const error = await response.json();
+						message = error.detail || message;
+					} catch {}
+					throw new Error(message);
+				}
 
-                if (!response.ok) {
-                    let message = `HTTP ${response.status}`;
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
 
-                    try {
-                        const error = await response.json();
-                        message = error.detail || message;
-                    } catch {}
+				link.href = url;
+				link.download = 'carddata_updates.zip';
+				document.body.appendChild(link);
+				link.click();
+				link.remove();
 
-                    throw new Error(message);
-                }
+				setTimeout(() => URL.revokeObjectURL(url), 60000);
 
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
+				const count = response.headers.get('X-Updated-Count') || 0;
+				const failureCount = Number(response.headers.get('X-Image-Failure-Count') || 0);
+				const cleared = Number(response.headers.get('X-Image-Failure-Cleared') || 0);
+				const cleanupMessage = cleared === failureCount
+					? `Firebase 已清除本次匯出的 ${cleared} 筆查無卡圖紀錄。`
+					: `Firebase 已確認清除 ${cleared}／${failureCount} 筆。本機檔案已更新，可稍後重新匯出。`;
 
-                link.href = url;
-                link.download = 'carddata_updates.zip';
-
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-
-                setTimeout(
-                    () => URL.revokeObjectURL(url),
-                    60000
-                );
-
-                const count = response.headers.get(
-                    'X-Updated-Count'
-                ) || 0;
-
-                alert(
-                    `已輸出 ${count} 筆補圖，下載包內含：\n`
-                    + 'update_carddata.json：完整卡牌資料\n'
-                    + 'patch_update_carddata.json：本次卡圖欄位補丁（name、pic）\n\n'
-                    + '請人工檢查。原始 carddata.json 與 map 保持不變。'
-                );
-
-            } catch (error) {
-                alert(
-                    `更新檔輸出失敗：${error.message}`
-                );
-
-            } finally {
-                button.disabled = false;
-            }
-        }
+				alert(
+					`已輸出 ${count} 筆補圖，並從 Firebase 匯出 ${failureCount} 筆查無卡圖紀錄。\n`
+					+ 'update_carddata.json：完整卡牌資料\n'
+					+ 'patch_update_carddata.json：本次卡圖欄位補丁（name、pic）\n'
+					+ 'picsSearchFailure.json：累計查無卡圖的卡名與搜尋網址\n\n'
+					+ cleanupMessage
+				);
+			} catch (error) {
+				alert(`更新檔輸出失敗：${error.message}`);
+			} finally {
+				button.disabled = false;
+			}
+		}
 		
         async function updateDashboard(data) {
 			
