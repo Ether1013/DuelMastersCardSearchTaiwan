@@ -27,7 +27,9 @@ from pydantic import BaseModel
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
+from contextlib import contextmanager
+from threading import Lock
 from zoneinfo import ZoneInfo
 from datetime import datetime, timezone, timedelta
 import logging
@@ -83,6 +85,66 @@ SERVER_INSTANCE_ID = str(uuid.uuid4())
 TZ_UTC8 = timezone(timedelta(hours=8))
 SERVER_START_TIME = datetime.now(TZ_UTC8).isoformat()
 last_reset_time = SERVER_START_TIME
+
+SERVER_WORK_ACTIONS = {
+    "push_github": "Push GitHub（標籤）",
+    "script_github_upload": "Push GitHub（劇本）",
+    "view_records": "View Records（寫入 Firestore）",
+    "view_records_snapshot": "View Records（彙整）",
+    "daily_records": "操作紀錄寫回",
+    "card_image_requests": "卡圖 API 請求",
+    "card_image_lookup": "卡圖查找",
+    "card_image_load": "補圖啟動讀取",
+    "card_image_save": "補圖批次寫回",
+    "script_pending_scan": "待發布劇本查詢",
+    "script_pages_probe": "GitHub Pages 劇本檢查",
+}
+server_work_totals = {action: Counter() for action in SERVER_WORK_ACTIONS}
+server_work_lock = Lock()
+
+
+@contextmanager
+def measure_server_work(action, **units):
+    started = time.perf_counter()
+    sample = Counter(units)
+    with server_work_lock:
+        totals = server_work_totals[action]
+        totals["runs"] += 1
+        totals["active"] += 1
+    try:
+        yield sample
+    except asyncio.CancelledError:
+        sample["cancelled"] = 1
+        raise
+    except Exception:
+        sample["errors"] = 1
+        raise
+    finally:
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        with server_work_lock:
+            totals.update(sample)
+            totals["active"] -= 1
+            totals["total_ms"] += elapsed_ms
+            totals["max_ms"] = max(totals["max_ms"], elapsed_ms)
+            totals["last_finished"] = time.time()
+
+
+@app.get("/api/console/server_work")
+async def get_server_work(admin: Optional[str] = Query(None)):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(status_code=404, detail="Not Found")
+    with server_work_lock:
+        actions = [
+            {"label": label, **server_work_totals[action]}
+            for action, label in SERVER_WORK_ACTIONS.items()
+        ]
+    return JSONResponse({
+        "worker_id": SERVER_INSTANCE_ID,
+        "worker_pid": os.getpid(),
+        "started_at": SERVER_START_TIME,
+        "process_cpu_seconds": time.process_time(),
+        "actions": actions,
+    }, headers={"Cache-Control": "no-store"})
 
 carddata_cache = []
 carddata_gzip_cache = b""
@@ -277,17 +339,18 @@ def convert_legacy_hot_cards(legacy_data):
 
 def get_view_records_data(country=None):
     """取得可安全傳送給 API/WebSocket 或寫入 Firestore 的一般 dict。"""
-    result = {}
+    with measure_server_work("view_records_snapshot", items=len(view_records)):
+        result = {}
 
-    for card_name, countries in view_records.items():
-        if country is not None:
-            code = str(country).upper()
-            if code in countries:
-                result[card_name] = {code: countries[code]}
-        else:
-            result[card_name] = dict(countries)
+        for card_name, countries in view_records.items():
+            if country is not None:
+                code = str(country).upper()
+                if code in countries:
+                    result[card_name] = {code: countries[code]}
+            else:
+                result[card_name] = dict(countries)
 
-    return result
+        return result
 
 
 action_details_log = deque(maxlen=50)
@@ -508,22 +571,30 @@ async def push_tags_to_github():
         "User-Agent": "FastAPI-AutoCommit"
     }
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            get_resp = await client.get(url, headers=headers)
-            sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
-            if not TAGS_FILE.exists():
-                return
-            with open(TAGS_FILE, 'r', encoding='utf-8') as f:
-                content_str = f.read()
-            content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
-            payload = {
-                "message": "auto: sync tags.json [skip render] [skip ci]",
-                "content": content_base64,
-                "branch": "main"
-            }
-            if sha:
-                payload["sha"] = sha
-            await client.put(url, headers=headers, json=payload)
+        with measure_server_work("push_github") as work:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                work["http_requests"] += 1
+                get_resp = await client.get(url, headers=headers)
+                if get_resp.status_code not in (200, 404):
+                    work["errors"] = 1
+                sha = get_resp.json().get("sha", "") if get_resp.status_code == 200 else ""
+                if not TAGS_FILE.exists():
+                    return
+                with open(TAGS_FILE, 'r', encoding='utf-8') as f:
+                    content_str = f.read()
+                content_base64 = base64.b64encode(content_str.encode('utf-8')).decode('utf-8')
+                payload = {
+                    "message": "auto: sync tags.json [skip render] [skip ci]",
+                    "content": content_base64,
+                    "branch": "main"
+                }
+                if sha:
+                    payload["sha"] = sha
+                work["http_requests"] += 1
+                work["payload_bytes"] += len(content_base64)
+                response = await client.put(url, headers=headers, json=payload)
+                if not response.is_success:
+                    work["errors"] = 1
     except Exception as e:
         print(f"[Tags GitHub Sync Error]: {e}")
 
@@ -977,25 +1048,28 @@ async def image_flush_changes(*, failures_only=False):
             return False
 
         def write_snapshot():
-            items = list(snapshot.items())
+            with measure_server_work("card_image_save") as work:
+                items = list(snapshot.items())
 
-            for start in range(0, len(items), 400):
-                batch = db.batch()
-                for (collection, name), (_, url) in items[start:start + 400]:
-                    doc_id = hashlib.sha256(name.encode("utf-8")).hexdigest()
-                    ref = db.collection(collection).document(doc_id)
+                for start in range(0, len(items), 400):
+                    chunk = items[start:start + 400]
+                    batch = db.batch()
+                    for (collection, name), (_, url) in chunk:
+                        doc_id = hashlib.sha256(name.encode("utf-8")).hexdigest()
+                        ref = db.collection(collection).document(doc_id)
 
-                    if url is None:
-                        batch.delete(ref)
-                    else:
-                        url_field = "search" if collection == IMAGE_FAILURE_COLLECTION else "url"
-                        batch.set(ref, {
-                            "name": name,
-                            url_field: url,
-                            "updated_at": firestore.SERVER_TIMESTAMP,
-                        })
+                        if url is None:
+                            batch.delete(ref)
+                        else:
+                            url_field = "search" if collection == IMAGE_FAILURE_COLLECTION else "url"
+                            batch.set(ref, {
+                                "name": name,
+                                url_field: url,
+                                "updated_at": firestore.SERVER_TIMESTAMP,
+                            })
 
-                batch.commit(timeout=15)
+                    work["firestore_mutations"] += len(chunk)
+                    batch.commit(timeout=15)
 
         try:
             await asyncio.to_thread(write_snapshot)
@@ -1100,11 +1174,11 @@ async def image_backfill_startup():
 
     if db is not None:
         try:
-            docs = await asyncio.to_thread(
-                lambda: list(
-                    db.collection(IMAGE_COLLECTION).stream(timeout=20)
+            with measure_server_work("card_image_load", firestore_queries=1) as work:
+                docs = await asyncio.to_thread(
+                    lambda: list(db.collection(IMAGE_COLLECTION).stream(timeout=20))
                 )
-            )
+                work["documents_read"] = len(docs)
 
             for doc in docs:
                 data = doc.to_dict() or {}
@@ -1513,45 +1587,50 @@ async def open_official_card(
 # ===== 官方卡庫內容頁連結結束 =====
 
 async def image_find_url(name):
-    async with httpx.AsyncClient(
-        timeout=15,
-        follow_redirects=False,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 "
-                "(compatible; DMCardImageBackfill/1.0)"
-            )
-        },
-    ) as client:
-        page_url = await official_first_page(
-            client, name
-        )
+    with measure_server_work("card_image_lookup") as work:
+        async def count_request(_request):
+            work["http_requests"] += 1
 
-        if page_url is None:
-            logging.warning(
-                "[Card image] No official search result: %s",
+        async with httpx.AsyncClient(
+            event_hooks={"request": [count_request]},
+            timeout=15,
+            follow_redirects=False,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 "
+                    "(compatible; DMCardImageBackfill/1.0)"
+                )
+            },
+        ) as client:
+            page_url = await official_first_page(
+                client, name
+            )
+
+            if page_url is None:
+                logging.warning(
+                    "[Card image] No official search result: %s",
+                    name,
+                )
+                return None
+
+            logging.info(
+                "[Card image] Official result: %s",
+                page_url,
+            )
+
+            await asyncio.sleep(1)
+
+            html = await image_fetch_html(
+                client,
+                page_url,
+                "dm.takaratomy.co.jp",
+            )
+
+            return image_extract_card_url(
+                html,
+                page_url,
                 name,
             )
-            return None
-
-        logging.info(
-            "[Card image] Official result: %s",
-            page_url,
-        )
-
-        await asyncio.sleep(1)
-
-        html = await image_fetch_html(
-            client,
-            page_url,
-            "dm.takaratomy.co.jp",
-        )
-
-        return image_extract_card_url(
-            html,
-            page_url,
-            name,
-        )
 
 async def image_lookup_job(name):
     global _image_next_search_at
@@ -1654,78 +1733,79 @@ class CardImageRequest(BaseModel):
 
 @app.post("/api/card_image")
 async def resolve_card_image(payload: CardImageRequest):
-    if not _image_ready or _image_stopping:
+    with measure_server_work("card_image_requests"):
+        if not _image_ready or _image_stopping:
+            return JSONResponse(
+                {"status": "unavailable"},
+                headers={"Cache-Control": "no-store"},
+            )
+
+        card = _image_cards.get(payload.name)
+
+        if (
+            payload.setCode
+            or not card
+            or not image_card_is_eligible(card)
+        ):
+            result = {"status": "skipped"}
+
+        elif payload.name in image_url_map:
+            result = {
+                "status": "found",
+                "url": image_url_map[payload.name],
+            }
+
+        elif payload.name in _image_jobs:
+            result = {
+                "status": "pending",
+                "retry_after": 4,
+            }
+
+        elif time.monotonic() < _image_blocked_until:
+            result = {
+                "status": "cooldown",
+                "retry_after": max(
+                    1,
+                    int(
+                        _image_blocked_until
+                        - time.monotonic()
+                    ),
+                ),
+            }
+
+        elif (
+            _image_failures.get(
+                payload.name, (0, "")
+            )[0] > time.monotonic()
+        ):
+            until, reason = _image_failures[payload.name]
+            result = {
+                "status": "not_found",
+                "retry_after": max(
+                    1, int(until - time.monotonic())
+                ),
+                "reason": reason,
+            }
+
+        elif len(_image_jobs) >= IMAGE_MAX_JOBS:
+            result = {
+                "status": "busy",
+                "retry_after": 30,
+            }
+
+        else:
+            _image_jobs[payload.name] = asyncio.create_task(
+                image_lookup_job(payload.name)
+            )
+            result = {
+                "status": "pending",
+                "retry_after": 4,
+            }
+
         return JSONResponse(
-            {"status": "unavailable"},
+            result,
             headers={"Cache-Control": "no-store"},
         )
-
-    card = _image_cards.get(payload.name)
-
-    if (
-        payload.setCode
-        or not card
-        or not image_card_is_eligible(card)
-    ):
-        result = {"status": "skipped"}
-
-    elif payload.name in image_url_map:
-        result = {
-            "status": "found",
-            "url": image_url_map[payload.name],
-        }
-
-    elif payload.name in _image_jobs:
-        result = {
-            "status": "pending",
-            "retry_after": 4,
-        }
-
-    elif time.monotonic() < _image_blocked_until:
-        result = {
-            "status": "cooldown",
-            "retry_after": max(
-                1,
-                int(
-                    _image_blocked_until
-                    - time.monotonic()
-                ),
-            ),
-        }
-
-    elif (
-        _image_failures.get(
-            payload.name, (0, "")
-        )[0] > time.monotonic()
-    ):
-        until, reason = _image_failures[payload.name]
-        result = {
-            "status": "not_found",
-            "retry_after": max(
-                1, int(until - time.monotonic())
-            ),
-            "reason": reason,
-        }
-
-    elif len(_image_jobs) >= IMAGE_MAX_JOBS:
-        result = {
-            "status": "busy",
-            "retry_after": 30,
-        }
-
-    else:
-        _image_jobs[payload.name] = asyncio.create_task(
-            image_lookup_job(payload.name)
-        )
-        result = {
-            "status": "pending",
-            "retry_after": 4,
-        }
-
-    return JSONResponse(
-        result,
-        headers={"Cache-Control": "no-store"},
-    )
 
 
 def image_export_allowed(request, admin):
@@ -2153,16 +2233,18 @@ async def write_record_snapshot(date_key, logs, save_views=False):
 
         def write_to_firestore():
             if snapshot is not None:
-                db.collection("daily_records").document(date_key).set({
-                    "logs": snapshot,
-                    "updated_at": firestore.SERVER_TIMESTAMP,
-                }, merge=True)
+                with measure_server_work("daily_records", firestore_mutations=1, items=len(snapshot)):
+                    db.collection("daily_records").document(date_key).set({
+                        "logs": snapshot,
+                        "updated_at": firestore.SERVER_TIMESTAMP,
+                    }, merge=True)
 
             if views is not None:
-                db.collection("analytics").document("view_records").set({
-                    "data": views,
-                    "updated_at": firestore.SERVER_TIMESTAMP,
-                }, merge=True)
+                with measure_server_work("view_records", firestore_mutations=1, items=len(views)):
+                    db.collection("analytics").document("view_records").set({
+                        "data": views,
+                        "updated_at": firestore.SERVER_TIMESTAMP,
+                    }, merge=True)
 
         await asyncio.to_thread(write_to_firestore)
 
@@ -2498,7 +2580,10 @@ SCRIPT_FIELDS = (
 SCRIPT_SCAN_RETRY = Retry(predicate=lambda _error: False)
 SCRIPT_SCAN_TIMEOUT = 10
 SCRIPT_FIRESTORE_TRANSIENT = (ServiceUnavailable, DeadlineExceeded)
+SCRIPT_PUBLISH_RETRY_INTERVAL = 15
+SCRIPT_PUBLISH_RECOVERY_INTERVAL = 5 * 60
 script_publish_task = None
+script_publish_queue = None
 
 
 def script_store():
@@ -2736,21 +2821,25 @@ async def save_cloud_script(script_id: str, request: Request):
     )
 
     try:
-        async with httpx.AsyncClient(timeout=40) as client:
-            response = await client.put(
-                f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}",
-                headers={
-                    "Authorization": f"Bearer {GITHUB_TOKEN}",
-                    "Accept": "application/vnd.github+json",
-                },
-                json={
-                    "message": f"Publish script {script_id} revision {revision + 1} [skip render]",
-                    "content": base64.b64encode(content).decode("ascii"),
-                    "branch": os.getenv("SCRIPT_GITHUB_BRANCH", "main"),
-                },
-            )
-            response.raise_for_status()
-            pending["commitSha"] = response.json()["commit"]["sha"]
+        with measure_server_work("script_github_upload") as work:
+            async with httpx.AsyncClient(timeout=40) as client:
+                encoded_content = base64.b64encode(content).decode("ascii")
+                work["http_requests"] += 1
+                work["payload_bytes"] += len(encoded_content)
+                response = await client.put(
+                    f"https://api.github.com/repos/{GITHUB_REPO}/contents/{path}",
+                    headers={
+                        "Authorization": f"Bearer {GITHUB_TOKEN}",
+                        "Accept": "application/vnd.github+json",
+                    },
+                    json={
+                        "message": f"Publish script {script_id} revision {revision + 1} [skip render]",
+                        "content": encoded_content,
+                        "branch": os.getenv("SCRIPT_GITHUB_BRANCH", "main"),
+                    },
+                )
+                response.raise_for_status()
+                pending["commitSha"] = response.json()["commit"]["sha"]
     except (httpx.HTTPError, ValueError, KeyError) as error:
         await asyncio.to_thread(change_script_upload, db.transaction(), ref, "release", pending)
         raise HTTPException(502, "GitHub 儲存失敗，請稍後重試") from error
@@ -2761,30 +2850,98 @@ async def save_cloud_script(script_id: str, request: Request):
     if not confirmed:
         raise HTTPException(409, "這次上傳已被其他版本取代")
 
+    script_publish_queue.put_nowait((ref, pending))
     return {"state": "pending", "uploadId": upload_id, "revision": revision}
 
 
-async def publish_ready_scripts():
-    query = script_store().where(filter=FieldFilter("publishState", "==", "pending"))
-    snapshots = await asyncio.to_thread(
-        lambda: list(query.stream(retry=SCRIPT_SCAN_RETRY, timeout=SCRIPT_SCAN_TIMEOUT))
-    )
+def load_pending_script_uploads():
+    with measure_server_work("script_pending_scan", firestore_queries=1) as work:
+        query = script_store().where(filter=FieldFilter("publishState", "==", "pending"))
+        uploads = {}
+        for snapshot in query.stream(retry=SCRIPT_SCAN_RETRY, timeout=SCRIPT_SCAN_TIMEOUT):
+            work["documents_read"] += 1
+            pending = snapshot.to_dict().get("pending")
+            if isinstance(pending, dict) and isinstance(pending.get("id"), str):
+                uploads[snapshot.id, pending["id"]] = (snapshot.reference, pending)
+        return uploads
+
+
+async def publish_ready_scripts(client, uploads):
+    for key, (ref, pending) in list(uploads.items()):
+        url = pending.get("url")
+        if not isinstance(url, str) or not re.fullmatch(
+            re.escape(SCRIPT_PAGES) + r"scripts/[a-z0-9-]+\.json", url
+        ):
+            del uploads[key]
+            continue
+
+        try:
+            with measure_server_work("script_pages_probe", http_requests=1) as work:
+                response = await client.head(url)
+                if response.status_code not in (200, 404):
+                    work["errors"] = 1
+        except httpx.HTTPError:
+            continue
+
+        if response.status_code != 200 or response.headers.get("Access-Control-Allow-Origin") != "*":
+            continue
+
+        try:
+            await asyncio.to_thread(
+                change_script_upload, db.transaction(), ref, "publish", pending
+            )
+        except SCRIPT_FIRESTORE_TRANSIENT:
+            raise
+        except Exception:
+            logging.exception("Script publication failed: %s", ref.id)
+            continue
+        # 成功發布或已被別的 worker 處理時，停止重試此版本。
+        del uploads[key]
+
+
+async def run_script_publisher(queue):
+    loop = asyncio.get_running_loop()
+    uploads = {}
+    next_scan = next_probe = 0
+    scan_retry = probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
 
     async with httpx.AsyncClient(timeout=8) as client:
-        for snapshot in snapshots:
-            pending = snapshot.to_dict().get("pending") or {}
-            url = pending.get("url", "")
-            if not re.fullmatch(re.escape(SCRIPT_PAGES) + r"scripts/[a-z0-9-]+\.json", url):
+        while True:
+            if loop.time() >= next_scan:
+                try:
+                    uploads = await asyncio.to_thread(load_pending_script_uploads)
+                except SCRIPT_FIRESTORE_TRANSIENT as error:
+                    if scan_retry == SCRIPT_PUBLISH_RETRY_INTERVAL:
+                        logging.warning("Script publication recovery: Firestore unavailable (%s)", type(error).__name__)
+                    next_scan = loop.time() + scan_retry
+                    scan_retry = min(scan_retry * 2, SCRIPT_PUBLISH_RECOVERY_INTERVAL)
+                except Exception:
+                    logging.exception("Script publication recovery failed")
+                    next_scan = loop.time() + SCRIPT_PUBLISH_RECOVERY_INTERVAL
+                else:
+                    next_scan = loop.time() + SCRIPT_PUBLISH_RECOVERY_INTERVAL
+                    scan_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
+
+            if uploads and loop.time() >= next_probe:
+                try:
+                    await publish_ready_scripts(client, uploads)
+                except SCRIPT_FIRESTORE_TRANSIENT as error:
+                    if probe_retry == SCRIPT_PUBLISH_RETRY_INTERVAL:
+                        logging.warning("Script publication: Firestore unavailable (%s)", type(error).__name__)
+                    probe_retry = min(probe_retry * 2, 120)
+                else:
+                    probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
+                next_probe = loop.time() + probe_retry if uploads else 0
+
+            deadline = min(next_scan, next_probe) if uploads else next_scan
+            timeout = deadline - loop.time()
+            if timeout <= 0:
                 continue
             try:
-                response = await client.head(url)
-            except httpx.HTTPError:
+                ref, pending = await asyncio.wait_for(queue.get(), timeout)
+            except asyncio.TimeoutError:
                 continue
-
-            if response.status_code == 200 and response.headers.get("Access-Control-Allow-Origin") == "*":
-                await asyncio.to_thread(
-                    change_script_upload, db.transaction(), snapshot.reference, "publish", pending
-                )
+            uploads[ref.id, pending["id"]] = (ref, pending)
 
 
 script_cleanup_task = None
@@ -2976,28 +3133,10 @@ async def run_script_cleanup():
 
 @app.on_event("startup")
 async def start_script_publisher():
-    async def run():
-        delay = 15
-        while True:
-            if db is not None:
-                try:
-                    await publish_ready_scripts()
-                except SCRIPT_FIRESTORE_TRANSIENT as error:
-                    if delay == 15:
-                        logging.warning(
-                            "Script publication scan: Firestore unavailable (%s), retrying with backoff",
-                            type(error).__name__,
-                        )
-                    delay = min(delay * 2, 120)
-                except Exception:
-                    logging.exception("Script publication scan failed")
-                    delay = 15
-                else:
-                    delay = 15
-            await asyncio.sleep(delay)
-
-    global script_publish_task, script_cleanup_task
-    script_publish_task = asyncio.create_task(run())
+    global script_publish_task, script_publish_queue, script_cleanup_task
+    if db is not None:
+        script_publish_queue = asyncio.Queue()
+        script_publish_task = asyncio.create_task(run_script_publisher(script_publish_queue))
     script_cleanup_task = asyncio.create_task(run_script_cleanup())
 
 

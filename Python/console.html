@@ -140,6 +140,35 @@
             </div>
         </section>
 
+        <section id="serverWorkPanel" hidden class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-2">
+                <h2 class="text-base font-semibold">伺服器工作量</h2>
+                <button id="serverWorkRefresh" type="button" onclick="refreshServerWork()"
+                        class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg text-sm">
+                    更新
+                </button>
+            </div>
+            <p id="serverWorkStatus" role="status" class="text-xs text-gray-400 mb-2"></p>
+            <p class="text-xs text-gray-400 mb-3">以單一 worker 為單位，重啟後重新計數。耗時包含網路等待，上傳量按 Base64 內容計。</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs whitespace-nowrap">
+                    <thead class="text-gray-400">
+                        <tr class="border-b border-gray-800">
+                            <th scope="col" class="p-2">操作</th>
+                            <th scope="col" class="p-2">啟動／進行中</th>
+                            <th scope="col" class="p-2">失敗／取消</th>
+                            <th scope="col" class="p-2">總耗時／最久</th>
+                            <th scope="col" class="p-2">HTTP</th>
+                            <th scope="col" class="p-2">Firestore 查詢／回傳／寫刪嘗試</th>
+                            <th scope="col" class="p-2">項目數／上傳資料量</th>
+                            <th scope="col" class="p-2">最近完成</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serverWorkRows" class="divide-y divide-gray-800"></tbody>
+                </table>
+            </div>
+        </section>
+
         <div id="dataTransferContainer" class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
@@ -1283,6 +1312,56 @@
 			}
 		}
 
+        async function refreshServerWork() {
+            if (!adminKey) return;
+            const panel = document.getElementById('serverWorkPanel');
+            const button = document.getElementById('serverWorkRefresh');
+            const status = document.getElementById('serverWorkStatus');
+            if (button.disabled) return;
+            panel.hidden = false;
+            button.disabled = true;
+
+            try {
+                const response = await fetch(`/api/console/server_work?${authParam}`, {cache: 'no-store'});
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const number = new Intl.NumberFormat('zh-TW');
+                const date = new Intl.DateTimeFormat('zh-TW', {
+                    timeZone: 'Asia/Taipei', dateStyle: 'short', timeStyle: 'medium',
+                });
+                const count = value => number.format(value || 0);
+                const duration = value => `${((value || 0) / 1000).toFixed(2)} 秒`;
+                const rows = data.actions.map(action => {
+                    const row = document.createElement('tr');
+                    const values = [
+                        action.label,
+                        `${count(action.runs)} / ${count(action.active)}`,
+                        `${count(action.errors)} / ${count(action.cancelled)}`,
+                        `${duration(action.total_ms)} / ${duration(action.max_ms)}`,
+                        count(action.http_requests),
+                        `${count(action.firestore_queries)} / ${count(action.documents_read)} / ${count(action.firestore_mutations)}`,
+                        `${count(action.items)} / ${count(action.payload_bytes)} B`,
+                        action.last_finished ? date.format(action.last_finished * 1000) : '—',
+                    ];
+                    for (const value of values) {
+                        const cell = document.createElement('td');
+                        cell.className = 'p-2';
+                        cell.textContent = value;
+                        row.append(cell);
+                    }
+                    return row;
+                });
+                document.getElementById('serverWorkRows').replaceChildren(...rows);
+                const started = date.format(new Date(data.started_at));
+                status.textContent =
+                    `Worker ${data.worker_id.slice(0, 8)} / PID ${data.worker_pid} · 啟動 ${started} · 程序累計 CPU ${data.process_cpu_seconds.toFixed(2)} 秒`;
+            } catch (error) {
+                status.textContent = `讀取工作量失敗（${error.message}）`;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
         async function fetchInitialData() {
             if (!authParam) return;
             try {
@@ -1706,6 +1785,7 @@
 			}
 			initCharts();
 			fetchInitialData();
+			refreshServerWork();
 			initWebSocket();
 			initUptimeTimer(); 
 		});
