@@ -148,6 +148,18 @@
                     更新
                 </button>
             </div>
+			<div id="scriptPublishControls" hidden class="mb-4 rounded-lg border border-gray-800 p-3">
+				<label class="flex items-center gap-2 font-medium">
+					<input id="scriptPublishToggle" type="checkbox" role="switch"
+						   aria-describedby="scriptPublishHelp scriptPublishStatus" disabled
+						   onchange="syncScriptPublishing(this.checked)">
+					待發布劇本自動檢查
+				</label>
+				<p id="scriptPublishHelp" class="mt-1 text-xs text-gray-400">
+					關閉時暫停待發布補掃、GitHub Pages 檢查及新的雲端上傳。已發布清單仍可查閱。
+				</p>
+				<p id="scriptPublishStatus" role="status" class="mt-1 text-xs text-gray-300"></p>
+			</div>
             <p id="serverWorkStatus" role="status" class="text-xs text-gray-400 mb-2"></p>
             <p class="text-xs text-gray-400 mb-3">以單一 worker 為單位，重啟後重新計數。耗時包含網路等待，上傳量按 Base64 內容計。</p>
             <div class="overflow-x-auto">
@@ -1312,6 +1324,55 @@
 			}
 		}
 
+		let scriptPublishBusy = false;
+
+		async function syncScriptPublishing(enabled) {
+			if (!adminKey || scriptPublishBusy) return;
+
+			const panel = document.getElementById('scriptPublishControls');
+			const toggle = document.getElementById('scriptPublishToggle');
+			const status = document.getElementById('scriptPublishStatus');
+			const saving = typeof enabled === 'boolean';
+			const previous = saving ? !enabled : toggle.checked;
+
+			scriptPublishBusy = true;
+			toggle.disabled = true;
+			status.textContent = saving ? '儲存中…' : '讀取中…';
+
+			try {
+				const headers = { 'X-Console-Admin': encodeURIComponent(adminKey) };
+				if (saving) headers['Content-Type'] = 'application/json';
+
+				const response = await fetch('/api/console/script_publishing', {
+					method: saving ? 'PUT' : 'GET',
+					headers,
+					body: saving ? JSON.stringify({ enabled }) : undefined,
+					cache: 'no-store'
+				});
+
+				if (response.status === 403) {
+					panel.hidden = true;
+					return;
+				}
+
+				const data = await response.json().catch(() => null);
+				if (!response.ok || typeof data?.enabled !== 'boolean') {
+					throw new Error(data?.detail || `HTTP ${response.status}`);
+				}
+
+				panel.hidden = false;
+				toggle.checked = data.enabled;
+				toggle.disabled = false;
+				status.textContent = data.enabled ? '已啟用' : '已暫停';
+			} catch (error) {
+				panel.hidden = false;
+				toggle.checked = previous;
+				status.textContent = `${error.message}。請按「更新」重新讀取狀態。`;
+			} finally {
+				scriptPublishBusy = false;
+			}
+		}
+
         async function refreshServerWork() {
             if (!adminKey) return;
             const panel = document.getElementById('serverWorkPanel');
@@ -1320,6 +1381,7 @@
             if (button.disabled) return;
             panel.hidden = false;
             button.disabled = true;
+			void syncScriptPublishing();
 
             try {
                 const response = await fetch(`/api/console/server_work?${authParam}`, {cache: 'no-store'});

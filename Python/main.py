@@ -23,7 +23,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, Response, Background
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from lzstring import LZString
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictBool
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -39,7 +39,7 @@ import zipfile
 
 import hmac
 import secrets
-from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable, FailedPrecondition, NotFound
+from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable, FailedPrecondition, NotFound, GoogleAPICallError
 from google.api_core.retry import Retry
 from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -1097,20 +1097,30 @@ async def image_save_loop():
 
     while not _image_stopping:
         _image_wakeup.clear()
+        if not _image_dirty:
+            retry_at = 0.0
+            await _image_wakeup.wait()
+            continue
 
-        if _image_dirty and time.monotonic() >= retry_at:
-            failures_only = time.monotonic() - _image_changed_at < IMAGE_SAVE_IDLE
-            if not failures_only or any(
-                collection == IMAGE_FAILURE_COLLECTION for collection, _ in _image_dirty
-            ):
-                ok = await image_flush_changes(failures_only=failures_only)
-                retry_at = time.monotonic() + (0 if ok else 60)
-                await image_publish_stats()
+        now = time.monotonic()
+        save_at = _image_changed_at + IMAGE_SAVE_IDLE
+        failures_only = now < save_at
+        if failures_only and any(
+            collection == IMAGE_FAILURE_COLLECTION for collection, _ in _image_dirty
+        ):
+            save_at = now
 
-        try:
-            await asyncio.wait_for(_image_wakeup.wait(), timeout=1)
-        except asyncio.TimeoutError:
-            pass
+        delay = max(retry_at, save_at) - now
+        if delay > 0:
+            try:
+                await asyncio.wait_for(_image_wakeup.wait(), timeout=delay)
+            except asyncio.TimeoutError:
+                pass
+            continue
+
+        ok = await image_flush_changes(failures_only=failures_only)
+        retry_at = time.monotonic() + (0 if ok else 60)
+        await image_publish_stats()
 
 def merge_carddata_patch(base_cards, patches):
     """頂層欄位合併；陣列整體替換；保護既有非空 pic。"""
@@ -2588,7 +2598,87 @@ script_publish_queue = None
 script_menu_refresh_event = None
 script_menu_last_refresh = float("-inf")
 
+script_publish_enabled = None
+script_publish_setting_time = None
+script_publish_setting_watch = None
 
+
+class ScriptPublishSetting(BaseModel):
+    enabled: StrictBool
+
+
+def script_publish_setting_ref():
+    if db is None:
+        raise HTTPException(503, "Firestore 暫時無法使用")
+    return db.collection("runtime_settings").document("script_publishing")
+
+
+def apply_script_publish_setting(enabled, timestamp):
+    global script_publish_enabled, script_publish_setting_time
+    global script_menu_refresh_event, script_menu_last_refresh
+
+    if hasattr(timestamp, "timestamp_pb"):
+        timestamp = timestamp.timestamp_pb()
+    revision = (timestamp.seconds, timestamp.nanos)
+    if script_publish_setting_time is not None and revision < script_publish_setting_time:
+        return
+
+    script_publish_setting_time = revision
+    if script_publish_enabled == enabled:
+        return
+
+    script_publish_enabled = enabled
+    if enabled and script_publish_queue is not None:
+        script_menu_last_refresh = asyncio.get_running_loop().time()
+        script_menu_refresh_event = asyncio.Event()
+        script_publish_queue.put_nowait((None, script_menu_refresh_event))
+    elif not enabled and script_menu_refresh_event is not None:
+        script_menu_refresh_event.set()
+
+
+async def read_script_publish_setting():
+    ref = script_publish_setting_ref()
+    try:
+        snapshot = await asyncio.to_thread(
+            ref.get, timeout=10, retry=SCRIPT_SCAN_RETRY
+        )
+    except GoogleAPICallError as error:
+        raise HTTPException(503, "無法讀取劇本發布設定") from error
+
+    enabled = (snapshot.to_dict() or {}).get("enabled", True)
+    apply_script_publish_setting(enabled is True, snapshot.read_time)
+
+
+@app.get("/api/console/script_publishing")
+async def get_script_publish_setting(request: Request):
+    if not cloud_deck_admin(unquote(request.headers.get("X-Console-Admin", ""))):
+        raise HTTPException(403, "需要管理員權限")
+
+    await read_script_publish_setting()
+    return JSONResponse(
+        {"enabled": script_publish_enabled}, headers={"Cache-Control": "no-store"}
+    )
+
+
+@app.put("/api/console/script_publishing")
+async def update_script_publish_setting(request: Request, setting: ScriptPublishSetting):
+    if not cloud_deck_admin(unquote(request.headers.get("X-Console-Admin", ""))):
+        raise HTTPException(403, "需要管理員權限")
+
+    ref = script_publish_setting_ref()
+    try:
+        result = await asyncio.to_thread(
+            ref.set, {"enabled": setting.enabled}, merge=True,
+            timeout=10, retry=SCRIPT_SCAN_RETRY,
+        )
+    except GoogleAPICallError as error:
+        raise HTTPException(503, "無法儲存劇本發布設定") from error
+
+    apply_script_publish_setting(setting.enabled, result.update_time)
+    return JSONResponse(
+        {"enabled": script_publish_enabled}, headers={"Cache-Control": "no-store"}
+    )
+    
 def script_store():
     if db is None:
         raise HTTPException(503, "Firebase 暫時無法使用")
@@ -2655,7 +2745,7 @@ def list_scripts():
 async def refresh_script_list():
     global script_menu_refresh_event, script_menu_last_refresh
 
-    if script_publish_queue is not None:
+    if script_publish_enabled is True and script_publish_queue is not None:
         now = asyncio.get_running_loop().time()
         event = script_menu_refresh_event
         if (
@@ -2820,6 +2910,13 @@ async def save_cloud_script(script_id: str, request: Request):
     if not GITHUB_TOKEN or not re.fullmatch(r"[\w.-]+/[\w.-]+", GITHUB_REPO):
         raise HTTPException(503, "GitHub 上傳尚未設定")
 
+    if script_publish_queue is None:
+        raise HTTPException(503, "劇本發布服務尚未啟動")
+    if script_publish_enabled is None:
+        await read_script_publish_setting()
+    if script_publish_enabled is not True:
+        raise HTTPException(503, "劇本雲端發布已暫停，請稍後再試")
+        
     revision, metadata, script = await read_cloud_script(request)
     upload_id = uuid.uuid4().hex
     filename = f"{script_id}-r{revision + 1}-{upload_id}.json"
@@ -2896,6 +2993,10 @@ def load_pending_script_uploads():
 
 async def publish_ready_scripts(client, uploads):
     for key, (ref, pending) in list(uploads.items()):
+        
+        if script_publish_enabled is not True:
+            return
+            
         url = pending.get("url")
         if not isinstance(url, str) or not re.fullmatch(
             re.escape(SCRIPT_PAGES) + r"scripts/[a-z0-9-]+\.json", url
@@ -2913,6 +3014,9 @@ async def publish_ready_scripts(client, uploads):
 
         if response.status_code != 200 or response.headers.get("Access-Control-Allow-Origin") != "*":
             continue
+
+        if script_publish_enabled is not True:
+            return
 
         try:
             await asyncio.to_thread(
@@ -2934,8 +3038,6 @@ async def run_script_publisher(queue):
     probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
 
     async with httpx.AsyncClient(timeout=8) as client:
-        # 每個 worker 啟動時先補掃一次。
-        queue.put_nowait((None, None))
         while True:
             job = None
             if not uploads:
@@ -2948,12 +3050,16 @@ async def run_script_publisher(queue):
                     except asyncio.TimeoutError:
                         pass
 
+            if script_publish_enabled is not True:
+                continue
             refresh_finished = None
             try:
                 if job is not None:
                     ref, pending = job
                     if ref is None:
                         refresh_finished = pending
+                        if refresh_finished is not None and refresh_finished.is_set():
+                            continue
                         try:
                             recovered = await asyncio.to_thread(load_pending_script_uploads)
                         except Exception:
@@ -2965,7 +3071,7 @@ async def run_script_publisher(queue):
                     else:
                         uploads[ref.id, pending["id"]] = (ref, pending)
 
-                if uploads and loop.time() >= next_probe:
+                if script_publish_enabled is True and uploads and loop.time() >= next_probe:
                     try:
                         await publish_ready_scripts(client, uploads)
                     except SCRIPT_FIRESTORE_TRANSIENT as error:
@@ -2981,6 +3087,11 @@ async def run_script_publisher(queue):
             finally:
                 if refresh_finished is not None:
                     refresh_finished.set()
+                    
+        if script_publish_enabled is not True:
+            uploads.clear()
+            next_probe = 0
+            probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
 
 
 script_cleanup_task = None
@@ -3173,17 +3284,46 @@ async def run_script_cleanup():
 @app.on_event("startup")
 async def start_script_publisher():
     global script_publish_task, script_publish_queue, script_cleanup_task
+    global script_publish_setting_watch, script_publish_enabled, script_publish_setting_time
+
     if db is not None:
+        script_publish_enabled = None
+        script_publish_setting_time = None
         script_publish_queue = asyncio.Queue()
-        script_publish_task = asyncio.create_task(run_script_publisher(script_publish_queue))
+        script_publish_task = asyncio.create_task(
+            run_script_publisher(script_publish_queue)
+        )
+        loop = asyncio.get_running_loop()
+
+        def on_setting_change(snapshots, _changes, read_time):
+            data = (snapshots[0].to_dict() or {}) if snapshots else {}
+            loop.call_soon_threadsafe(
+                apply_script_publish_setting, data.get("enabled", True) is True, read_time
+            )
+
+        try:
+            script_publish_setting_watch = script_publish_setting_ref().on_snapshot(
+                on_setting_change
+            )
+        except Exception:
+            logging.exception("Could not watch the script publishing setting")
+
     script_cleanup_task = asyncio.create_task(run_script_cleanup())
 
 
 @app.on_event("shutdown")
 async def stop_script_publisher():
+    global script_publish_queue, script_publish_setting_watch, script_menu_refresh_event
+
+    script_publish_queue = None
+    script_menu_refresh_event = None
+
     tasks = [task for task in (script_publish_task, script_cleanup_task) if task is not None]
     for task in tasks:
         task.cancel()
+    if script_publish_setting_watch is not None:
+        tasks.append(asyncio.to_thread(script_publish_setting_watch.unsubscribe))
+        script_publish_setting_watch = None
     await asyncio.gather(*tasks, return_exceptions=True)
         
 # 提供查卡頁面拆出的 CSS；與 index.html 放在相同資料夾。
