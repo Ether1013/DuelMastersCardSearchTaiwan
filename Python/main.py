@@ -2581,9 +2581,12 @@ SCRIPT_SCAN_RETRY = Retry(predicate=lambda _error: False)
 SCRIPT_SCAN_TIMEOUT = 10
 SCRIPT_FIRESTORE_TRANSIENT = (ServiceUnavailable, DeadlineExceeded)
 SCRIPT_PUBLISH_RETRY_INTERVAL = 15
-SCRIPT_PUBLISH_RECOVERY_INTERVAL = 5 * 60
+SCRIPT_MENU_REFRESH_WAIT = 3
+SCRIPT_MENU_REFRESH_COOLDOWN = 60
 script_publish_task = None
 script_publish_queue = None
+script_menu_refresh_event = None
+script_menu_last_refresh = float("-inf")
 
 
 def script_store():
@@ -2648,7 +2651,32 @@ def list_scripts():
     ))
     return {"scripts": entries}
 
+@app.post("/api/scripts/refresh")
+async def refresh_script_list():
+    global script_menu_refresh_event, script_menu_last_refresh
 
+    if script_publish_queue is not None:
+        now = asyncio.get_running_loop().time()
+        event = script_menu_refresh_event
+        if (
+            (event is None or event.is_set())
+            and now - script_menu_last_refresh >= SCRIPT_MENU_REFRESH_COOLDOWN
+        ):
+            event = script_menu_refresh_event = asyncio.Event()
+            script_menu_last_refresh = now
+            script_publish_queue.put_nowait((None, event))
+
+        if event is not None and not event.is_set():
+            try:
+                await asyncio.wait_for(event.wait(), SCRIPT_MENU_REFRESH_WAIT)
+            except asyncio.TimeoutError:
+                pass
+
+    return JSONResponse(
+        await asyncio.to_thread(list_scripts),
+        headers={"Cache-Control": "no-store"},
+    )
+    
 @app.get("/api/scripts/{script_id}/status")
 def get_script_status(script_id: str, request: Request):
     owner = script_owner(request)
@@ -2902,46 +2930,57 @@ async def publish_ready_scripts(client, uploads):
 async def run_script_publisher(queue):
     loop = asyncio.get_running_loop()
     uploads = {}
-    next_scan = next_probe = 0
-    scan_retry = probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
+    next_probe = 0
+    probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
 
     async with httpx.AsyncClient(timeout=8) as client:
+        # 每個 worker 啟動時先補掃一次。
+        queue.put_nowait((None, None))
         while True:
-            if loop.time() >= next_scan:
-                try:
-                    uploads = await asyncio.to_thread(load_pending_script_uploads)
-                except SCRIPT_FIRESTORE_TRANSIENT as error:
-                    if scan_retry == SCRIPT_PUBLISH_RETRY_INTERVAL:
-                        logging.warning("Script publication recovery: Firestore unavailable (%s)", type(error).__name__)
-                    next_scan = loop.time() + scan_retry
-                    scan_retry = min(scan_retry * 2, SCRIPT_PUBLISH_RECOVERY_INTERVAL)
-                except Exception:
-                    logging.exception("Script publication recovery failed")
-                    next_scan = loop.time() + SCRIPT_PUBLISH_RECOVERY_INTERVAL
-                else:
-                    next_scan = loop.time() + SCRIPT_PUBLISH_RECOVERY_INTERVAL
-                    scan_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
+            job = None
+            if not uploads:
+                job = await queue.get()
+            else:
+                remaining = next_probe - loop.time()
+                if remaining > 0:
+                    try:
+                        job = await asyncio.wait_for(queue.get(), remaining)
+                    except asyncio.TimeoutError:
+                        pass
 
-            if uploads and loop.time() >= next_probe:
-                try:
-                    await publish_ready_scripts(client, uploads)
-                except SCRIPT_FIRESTORE_TRANSIENT as error:
-                    if probe_retry == SCRIPT_PUBLISH_RETRY_INTERVAL:
-                        logging.warning("Script publication: Firestore unavailable (%s)", type(error).__name__)
-                    probe_retry = min(probe_retry * 2, 120)
-                else:
-                    probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
-                next_probe = loop.time() + probe_retry if uploads else 0
-
-            deadline = min(next_scan, next_probe) if uploads else next_scan
-            timeout = deadline - loop.time()
-            if timeout <= 0:
-                continue
+            refresh_finished = None
             try:
-                ref, pending = await asyncio.wait_for(queue.get(), timeout)
-            except asyncio.TimeoutError:
-                continue
-            uploads[ref.id, pending["id"]] = (ref, pending)
+                if job is not None:
+                    ref, pending = job
+                    if ref is None:
+                        refresh_finished = pending
+                        try:
+                            recovered = await asyncio.to_thread(load_pending_script_uploads)
+                        except Exception:
+                            logging.exception("Script publication recovery failed")
+                        else:
+                            uploads.update(recovered)
+                            if recovered:
+                                next_probe = 0
+                    else:
+                        uploads[ref.id, pending["id"]] = (ref, pending)
+
+                if uploads and loop.time() >= next_probe:
+                    try:
+                        await publish_ready_scripts(client, uploads)
+                    except SCRIPT_FIRESTORE_TRANSIENT as error:
+                        if probe_retry == SCRIPT_PUBLISH_RETRY_INTERVAL:
+                            logging.warning(
+                                "Script publication: Firestore unavailable (%s)",
+                                type(error).__name__,
+                            )
+                        probe_retry = min(probe_retry * 2, 120)
+                    else:
+                        probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
+                    next_probe = loop.time() + probe_retry if uploads else 0
+            finally:
+                if refresh_finished is not None:
+                    refresh_finished.set()
 
 
 script_cleanup_task = None

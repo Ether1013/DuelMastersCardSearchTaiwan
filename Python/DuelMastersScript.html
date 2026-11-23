@@ -18970,16 +18970,14 @@
 	// 開啟匯入視窗
 	function openImportModal() {
 		const modal = document.getElementById('import-selector-modal');
-		if(!modal) return;
-		
-		// 每次開啟前重置狀態
-		currentImportType = 'script'; 
-		switchImportTab('script'); // UI 重置為 script tab
+		if (!modal) return;
 
-		// 渲染兩個列表 (劇本列表與牌組列表共用來源，但點擊行為不同)
+		currentImportType = 'script';
+		switchImportTab('script');
 		renderImportList('import-script-list', 'script');
-
+		renderImportList('import-deck-list', 'deck');
 		modal.style.display = 'flex';
+		refreshCloudScriptMenu('import-script-list', 'import-script');
 	}
 
 	// 切換頁籤 (桌機版專用)
@@ -19625,8 +19623,10 @@
 <div id="mobile-card-viewer" onclick="hideMobileCardZoom()"></div>
 <div id="mobile-script-selector">
     <h2 style="color:white; margin:0 0 10px 0;" data-i18n="title_select_script">選擇劇本 (Select Script)</h2>
-    <div class="script-list-container" id="script-list-body">
-        </div>
+    <button type="button" onclick="refreshCloudScriptMenu('script-list-body', 'script-item', this)">
+        載入雲端劇本
+    </button>
+    <div class="script-list-container" id="script-list-body"></div>
     <button id="btn-mobile-start" onclick="confirmMobileScript()" disabled>▶ START</button>
 </div>
 <div id="ending-overlay">
@@ -19968,5 +19968,81 @@
         <p id="cloud-script-status" role="status" aria-live="polite"></p>
     </form>
 </dialog>
+<script>
+    let cloudScriptMenuRequest = null;
+
+    function fetchCloudScriptMenu() {
+        if (!cloudScriptMenuRequest) {
+            cloudScriptMenuRequest = fetch('/api/scripts/refresh', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data.scripts)) throw new Error('Invalid script list');
+                    return data.scripts;
+                })
+                .finally(() => {
+                    cloudScriptMenuRequest = null;
+                });
+        }
+        return cloudScriptMenuRequest;
+    }
+
+    async function refreshCloudScriptMenu(containerId, itemClass, button) {
+        const list = document.getElementById(containerId);
+        if (!list) return;
+        if (button) button.disabled = true;
+
+        list.querySelector('[data-cloud-script-status]')?.remove();
+        const status = document.createElement('div');
+        status.dataset.cloudScriptStatus = '';
+        status.setAttribute('role', 'status');
+        status.style.gridColumn = '1 / -1';
+        status.textContent = '正在更新雲端劇本…';
+        list.prepend(status);
+
+        try {
+            const scripts = await fetchCloudScriptMenu();
+            if (status.parentNode !== list) return;
+
+            const items = document.createDocumentFragment();
+            const isMobile = itemClass === 'script-item';
+            const githubScriptUrl = /^https:\/\/ether1013\.github\.io\/DuelMastersCardSearchTaiwan\/scripts\/[a-z0-9-]+\.json$/;
+            for (const script of scripts) {
+                if (typeof script?.downloadUrl !== 'string' || !githubScriptUrl.test(script.downloadUrl)) continue;
+
+                const row = document.createElement('a');
+                row.dataset.cloudScriptMenu = '';
+                row.className = isMobile ? itemClass : itemClass + '-item';
+                row.href = script.downloadUrl;
+                row.target = '_blank';
+                row.rel = 'noopener noreferrer';
+                row.style.color = 'inherit';
+                row.style.textDecoration = 'none';
+                if (isMobile) row.style.display = 'block';
+                const title = document.createElement('div');
+                title.className = itemClass + '-title';
+                title.textContent = script.title + '（開啟 JSON）';
+                const description = document.createElement('div');
+                description.className = itemClass + '-desc';
+                description.textContent = script.description || '';
+                row.append(title, description);
+                items.appendChild(row);
+            }
+            list.querySelectorAll('[data-cloud-script-menu]').forEach(row => row.remove());
+            if (items.childElementCount) {
+                status.replaceWith(items);
+            } else {
+                status.textContent = '目前沒有可開啟的雲端劇本';
+            }
+        } catch (error) {
+            status.textContent = '雲端劇本清單暫時無法更新';
+            console.error(error);
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
