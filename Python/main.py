@@ -2450,7 +2450,7 @@ async def record_debounce_timer(date_key):
 
             _, logs = record_sync_pending.pop(date_key)
             try:
-                await write_record_snapshot(date_key, logs, save_views=True)
+                await write_record_snapshot(date_key, logs, save_views=date_key is None)
             except Exception:
                 logger.exception("同步操作紀錄或卡牌瀏覽統計失敗: %s", date_key)
                 if date_key is None or date_key >= tracking_cutoff(datetime.now(TZ_UTC8)):
