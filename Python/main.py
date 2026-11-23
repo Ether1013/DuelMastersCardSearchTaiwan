@@ -209,10 +209,14 @@ def install_firestore_egress(client):
 
 @app.get("/api/debug/egress")
 def get_local_egress(request: Request):
-    if (
-        not LOCAL_EGRESS_TRACE or request.client is None
-        or request.client.host not in {"127.0.0.1", "::1"}
-    ):
+    if not LOCAL_EGRESS_TRACE:
+        raise HTTPException(404, "Not Found")
+
+    if os.getenv("RENDER") == "true":
+        key = unquote(request.headers.get("X-Console-Admin", ""))
+        if not cloud_deck_admin(key):
+            raise HTTPException(404, "Not Found")
+    elif request.client is None or request.client.host not in {"127.0.0.1", "::1"}:
         raise HTTPException(404, "Not Found")
 
     with _egress_lock:
@@ -223,6 +227,8 @@ def get_local_egress(request: Request):
     rows.sort(key=lambda row: (-row["request_bytes"], -row["requests"]))
     return JSONResponse({
         "pid": os.getpid(),
+        "worker_id": SERVER_INSTANCE_ID,
+        "started_at": SERVER_START_TIME,
         "firestore_instrumented": _egress_firestore_active,
         "actions": rows,
     }, headers={"Cache-Control": "no-store"})
