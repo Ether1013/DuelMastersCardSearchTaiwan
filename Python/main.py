@@ -516,7 +516,106 @@ def convert_legacy_hot_cards(legacy_data):
 
     return converted
 
+VIEW_RECORD_BUCKET_COUNT = 32
+VIEW_RECORD_BATCH_SIZE = 400
+view_record_deltas = Counter()
+view_record_batches = deque()
+view_record_writer_id = None
+view_record_sequence = 0
+view_records_loaded = False
 
+
+def view_records_root():
+    if db is None:
+        raise RuntimeError("Firestore 尚未連線")
+    return db.collection("analytics").document("view_records_v2")
+
+
+def view_record_bucket(card_name):
+    digest = hashlib.sha256(card_name.encode("utf-8")).digest()
+    shard = int.from_bytes(digest[:4], "big") % VIEW_RECORD_BUCKET_COUNT
+    return f"{shard:02d}"
+
+
+def read_stored_view_records():
+    root = view_records_root()
+    marker = root.get(timeout=10)
+    if not marker.exists:
+        return None
+    if marker.to_dict().get("bucket_count") != VIEW_RECORD_BUCKET_COUNT:
+        raise RuntimeError("view_records_v2 的分桶設定不符")
+
+    data = {}
+    for snapshot in root.collection("buckets").stream(timeout=20):
+        data.update(snapshot.to_dict()["data"])
+    return data
+
+
+def add_stored_view_records(data):
+    global view_records_loaded
+
+    for card_name, countries in data.items():
+        for country, count in countries.items():
+            view_records[card_name][country] += count
+    view_records_loaded = True
+
+
+@trace_firestore_transaction("commit_view_record_batch")
+@firestore.transactional
+def commit_view_record_batch(transaction, root, writer_id, sequence, changes):
+    checkpoint = root.collection("writers").document(writer_id)
+    progress = checkpoint.get(transaction=transaction).to_dict() or {}
+    if progress.get("sequence", 0) >= sequence:
+        return
+
+    updates = {}
+    for (card_name, country), delta in changes:
+        shard = view_record_bucket(card_name)
+        countries = updates.setdefault(shard, {}).setdefault(card_name, {})
+        countries[country] = firestore.Increment(delta)
+
+    buckets = root.collection("buckets")
+    for shard, data in updates.items():
+        transaction.set(buckets.document(shard), {"data": data}, merge=True)
+    transaction.set(checkpoint, {"sequence": sequence})
+
+
+async def flush_view_records():
+    global view_record_writer_id, view_record_sequence
+
+    if db is None:
+        return True
+
+    async with record_write_lock:
+        if not view_record_deltas and not view_record_batches:
+            return True
+        if not view_records_loaded:
+            stored = await asyncio.to_thread(read_stored_view_records)
+            if stored is None:
+                return False
+            add_stored_view_records(stored)
+        if view_record_writer_id is None:
+            view_record_writer_id = uuid.uuid4().hex
+
+        changes = list(view_record_deltas.items())
+        view_record_deltas.clear()
+        for start in range(0, len(changes), VIEW_RECORD_BATCH_SIZE):
+            view_record_sequence += 1
+            view_record_batches.append((
+                view_record_sequence, changes[start:start + VIEW_RECORD_BATCH_SIZE]
+            ))
+
+        root = view_records_root()
+        while view_record_batches:
+            sequence, chunk = view_record_batches[0]
+            with measure_server_work("view_records", items=len(chunk)):
+                await asyncio.to_thread(
+                    commit_view_record_batch, db.transaction(), root,
+                    view_record_writer_id, sequence, chunk,
+                )
+            view_record_batches.popleft()
+        return True
+        
 def get_view_records_data(country=None):
     """取得可安全傳送給 API/WebSocket 或寫入 Firestore 的一般 dict。"""
     with measure_server_work("view_records_snapshot", items=len(view_records)):
@@ -1012,51 +1111,12 @@ def load_and_process_caches():
         # ================= 載入熱門單卡紀錄 =================
         if db:
             try:
-                view_records.clear()
-
-                # 新資料存在時，一律以新資料為準。
-                new_doc_ref = db.collection("analytics").document("view_records")
-                new_doc = new_doc_ref.get()
-
-                if new_doc.exists:
-                    new_data = new_doc.to_dict().get("data", {})
-                    if isinstance(new_data, dict):
-                        for card_name, countries in new_data.items():
-                            if not isinstance(countries, dict):
-                                continue
-                            for country, count in countries.items():
-                                try:
-                                    view_records[str(card_name)][str(country).upper()] = int(count)
-                                except (TypeError, ValueError):
-                                    continue
-
-                    print("✅ 已從 analytics/view_records 載入瀏覽紀錄")
-
-                else:
-                    # 新文件不存在，才讀取舊文件進行一次性遷移。
-                    old_doc_ref = db.collection("analytics").document("hot_cards")
-                    old_doc = old_doc_ref.get()
-
-                    if old_doc.exists:
-                        old_data = old_doc.to_dict().get("data", {})
-                        migrated = convert_legacy_hot_cards(old_data)
-
-                        for card_name, countries in migrated.items():
-                            for country, count in countries.items():
-                                view_records[card_name][country] = count
-
-                        # 寫入新文件，不修改舊的 analytics/hot_cards。
-                        new_doc_ref.set({
-                            "data": get_view_records_data(),
-                            "updated_at": firestore.SERVER_TIMESTAMP
-                        })
-
-                        print("✅ 舊瀏覽紀錄已遷移至 analytics/view_records")
-                    else:
-                        print("ℹ️ 新舊瀏覽紀錄文件皆不存在，從空紀錄開始")
-
-            except Exception as e:
-                print(f"載入 Firebase 瀏覽紀錄失敗: {e}")
+                stored = read_stored_view_records()
+                if stored is not None:
+                    view_records.clear()
+                    add_stored_view_records(stored)
+            except Exception:
+                logger.exception("載入 Firestore 卡牌瀏覽統計失敗")
         # ====================================================
 
 
@@ -2413,28 +2473,19 @@ def get_og_image(
     )
 
 
-async def write_record_snapshot(date_key, logs, save_views=False):
-    if not db:
+async def write_record_snapshot(date_key, logs):
+    if not db or logs is None:
         return
 
     async with record_write_lock:
-        snapshot = copy.deepcopy(logs) if logs is not None else None
-        views = get_view_records_data() if save_views else None
+        snapshot = copy.deepcopy(logs)
 
         def write_to_firestore():
-            if snapshot is not None:
-                with measure_server_work("daily_records", firestore_mutations=1, items=len(snapshot)):
-                    db.collection("daily_records").document(date_key).set({
-                        "logs": snapshot,
-                        "updated_at": firestore.SERVER_TIMESTAMP,
-                    }, merge=True)
-
-            if views is not None:
-                with measure_server_work("view_records", firestore_mutations=1, items=len(views)):
-                    db.collection("analytics").document("view_records").set({
-                        "data": views,
-                        "updated_at": firestore.SERVER_TIMESTAMP,
-                    }, merge=True)
+            with measure_server_work("daily_records", firestore_mutations=1, items=len(snapshot)):
+                db.collection("daily_records").document(date_key).set({
+                    "logs": snapshot,
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }, merge=True)
 
         await asyncio.to_thread(write_to_firestore)
 
@@ -2450,7 +2501,13 @@ async def record_debounce_timer(date_key):
 
             _, logs = record_sync_pending.pop(date_key)
             try:
-                await write_record_snapshot(date_key, logs, save_views=date_key is None)
+                if date_key is None:
+                    if not await flush_view_records():
+                        record_sync_pending.setdefault(
+                            None, (loop.time() + RECORD_SYNC_DELAY, None)
+                        )
+                else:
+                    await write_record_snapshot(date_key, logs)
             except Exception:
                 logger.exception("同步操作紀錄或卡牌瀏覽統計失敗: %s", date_key)
                 if date_key is None or date_key >= tracking_cutoff(datetime.now(TZ_UTC8)):
@@ -4096,8 +4153,11 @@ async def track_card_view(request: Request, payload: CardViewTrackModel):
     if is_localhost:
         return {"status": "skipped", "reason": "localhost environment"}
 
-    country = get_client_country(request)
+    country = get_client_country(request).upper()
     view_records[card_name][country] += 1
+    if db is not None:
+        view_record_deltas[card_name, country] += 1
+        trigger_record_sync()
 
     recent_card_views.insert(0, {
         "card_name": card_name,
@@ -4107,7 +4167,6 @@ async def track_card_view(request: Request, payload: CardViewTrackModel):
     del recent_card_views[RECENT_CARD_VIEW_LIMIT:]
 
     await console_manager.broadcast_recent_card_views()
-    trigger_record_sync()
 
     return {"status": "success"}
 
@@ -4431,6 +4490,10 @@ async def on_shutdown():
     if tracking_rollover_task:
         tracking_rollover_task.cancel()
         await asyncio.gather(tracking_rollover_task, return_exceptions=True)
+    try:
+        await asyncio.wait_for(flush_view_records(), timeout=20)
+    except Exception:
+        logger.exception("關機前寫入卡牌瀏覽統計失敗")
     
 @app.get("/tags.html")
 async def get_tags_page(): 
@@ -4610,7 +4673,10 @@ async def reset_track_stats(admin: Optional[str] = Query(None)):
     clear_tracking_totals()
     action_details_log.clear()
     data_transfer_stats.clear()
-    view_records.clear()
+    async with record_write_lock:
+        view_records.clear()
+        view_record_deltas.clear()
+        view_record_batches.clear()
     last_reset_time = datetime.now(TZ_UTC8).isoformat()
 
     await console_manager.broadcast()
