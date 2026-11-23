@@ -43,6 +43,12 @@ from google.api_core.exceptions import DeadlineExceeded, ServiceUnavailable, Fai
 from google.api_core.retry import Retry
 from google.cloud.firestore_v1.base_query import FieldFilter
 
+import sys
+from contextvars import ContextVar
+from functools import wraps
+
+import grpc
+
 # 👇 Firebase 套件
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -55,6 +61,172 @@ lz_compressor = LZString()
 
 load_dotenv()
 
+LOCAL_EGRESS_TRACE = os.getenv("LOCAL_EGRESS_TRACE") == "1"
+_egress_lock = Lock()
+_egress_rows = defaultdict(Counter)
+_egress_transaction = ContextVar("egress_transaction", default="")
+_egress_firestore_active = False
+
+
+def egress_source(frame):
+    filename = egress_source.__code__.co_filename
+    while frame is not None:
+        if frame.f_code.co_filename == filename:
+            return f"{frame.f_code.co_name}:{frame.f_lineno}"
+        frame = frame.f_back
+    return "Firestore SDK"
+
+
+def count_egress(protocol, source, operation, **values):
+    with _egress_lock:
+        _egress_rows[protocol, source, operation].update(values)
+
+
+def count_http_request(source, request):
+    try:
+        body_bytes = len(request.content)
+        unknown_body = 0
+    except httpx.RequestNotRead:
+        length = request.headers.get("Content-Length", "")
+        known_length = length.isascii() and length.isdecimal() and len(length) <= 18
+        body_bytes = int(length) if known_length else 0
+        unknown_body = int(not known_length)
+
+    metadata_bytes = (
+        len(request.method) + len(request.url.raw_path) + 14
+        + sum(len(key) + len(value) + 4 for key, value in request.headers.raw)
+    )
+    count_egress(
+        "HTTP", source, request.method, requests=1,
+        request_bytes=body_bytes + metadata_bytes,
+        body_bytes=body_bytes, unknown_body=unknown_body,
+    )
+
+
+def count_http_response(source, response):
+    count_egress(
+        "HTTP", source, response.request.method,
+        **{f"status_{response.status_code}": 1},
+    )
+
+
+def add_egress_hooks(options, on_request, on_response):
+    hooks = options.get("event_hooks") or {}
+    options["event_hooks"] = {
+        "request": [*hooks.get("request", ()), on_request],
+        "response": [*hooks.get("response", ()), on_response],
+    }
+
+
+def traced_async_client(**options):
+    if LOCAL_EGRESS_TRACE:
+        source = egress_source(sys._getframe(1))
+
+        async def on_request(request):
+            count_http_request(source, request)
+
+        async def on_response(response):
+            count_http_response(source, response)
+
+        add_egress_hooks(options, on_request, on_response)
+    return httpx.AsyncClient(**options)
+
+
+def traced_sync_client(**options):
+    if LOCAL_EGRESS_TRACE:
+        source = egress_source(sys._getframe(1))
+        add_egress_hooks(
+            options,
+            lambda request: count_http_request(source, request),
+            lambda response: count_http_response(source, response),
+        )
+    return httpx.Client(**options)
+
+
+def trace_firestore_transaction(label):
+    def decorate(function):
+        if not LOCAL_EGRESS_TRACE:
+            return function
+
+        @wraps(function)
+        def run(*args, **kwargs):
+            token = _egress_transaction.set(label)
+            try:
+                return function(*args, **kwargs)
+            finally:
+                _egress_transaction.reset(token)
+
+        return run
+    return decorate
+
+
+def install_firestore_egress(client):
+    global _egress_firestore_active
+
+    class TraceRPC(
+        grpc.UnaryUnaryClientInterceptor,
+        grpc.UnaryStreamClientInterceptor,
+        grpc.StreamStreamClientInterceptor,
+    ):
+        def record(self, source, operation, request):
+            size = (
+                request.ByteSize() if hasattr(request, "ByteSize")
+                else type(request).pb(request).ByteSize()
+            )
+            count_egress("Firestore", source, operation, requests=1, request_bytes=size)
+
+        def intercept_unary_unary(self, continuation, details, request):
+            source = _egress_transaction.get() or egress_source(sys._getframe(1))
+            self.record(source, details.method.rsplit("/", 1)[-1], request)
+            return continuation(details, request)
+
+        intercept_unary_stream = intercept_unary_unary
+
+        def intercept_stream_stream(self, continuation, details, request_iterator):
+            source = _egress_transaction.get() or egress_source(sys._getframe(1))
+            operation = details.method.rsplit("/", 1)[-1]
+
+            def messages():
+                for request in request_iterator:
+                    self.record(source, operation, request)
+                    yield request
+
+            return continuation(details, messages())
+
+    try:
+        api = client._firestore_api
+        channel = grpc.intercept_channel(api.transport.grpc_channel, TraceRPC())
+        transport = type(api.transport)(channel=channel)
+        traced_api = type(api)(transport=transport)
+    except Exception:
+        logging.exception("Could not attach local Firestore egress counters")
+        return
+
+    client._firestore_api_internal = traced_api
+    client._transport = transport
+    _egress_firestore_active = True
+
+
+@app.get("/api/debug/egress")
+def get_local_egress(request: Request):
+    if (
+        not LOCAL_EGRESS_TRACE or request.client is None
+        or request.client.host not in {"127.0.0.1", "::1"}
+    ):
+        raise HTTPException(404, "Not Found")
+
+    with _egress_lock:
+        rows = [
+            {"protocol": protocol, "source": source, "operation": operation, **counters}
+            for (protocol, source, operation), counters in _egress_rows.items()
+        ]
+    rows.sort(key=lambda row: (-row["request_bytes"], -row["requests"]))
+    return JSONResponse({
+        "pid": os.getpid(),
+        "firestore_instrumented": _egress_firestore_active,
+        "actions": rows,
+    }, headers={"Cache-Control": "no-store"})
+
 firebase_cred_path = os.getenv("FIREBASE_CRED_PATH", "firebase-key.json")
 db = None
 try:
@@ -62,6 +234,8 @@ try:
         cred = credentials.Certificate(firebase_cred_path)
         firebase_admin.initialize_app(cred)
     db = firestore.client()
+    if LOCAL_EGRESS_TRACE:
+        install_firestore_egress(db)
     print("✅ Firebase 初始化成功！")
 except Exception as e:
     print(f"❌ Firebase 初始化失敗，請檢查金鑰設定: {e}")
@@ -572,7 +746,7 @@ async def push_tags_to_github():
     }
     try:
         with measure_server_work("push_github") as work:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with traced_async_client(timeout=15.0) as client:
                 work["http_requests"] += 1
                 get_resp = await client.get(url, headers=headers)
                 if get_resp.status_code not in (200, 404):
@@ -1553,7 +1727,7 @@ async def open_official_card(
             )
 
             try:
-                async with httpx.AsyncClient(
+                async with traced_async_client(
                     timeout=15,
                     follow_redirects=False,
                 ) as client:
@@ -1601,7 +1775,7 @@ async def image_find_url(name):
         async def count_request(_request):
             work["http_requests"] += 1
 
-        async with httpx.AsyncClient(
+        async with traced_async_client(
             event_hooks={"request": [count_request]},
             timeout=15,
             follow_redirects=False,
@@ -2031,7 +2205,7 @@ def push_line_message(msg_text: str):
     }
     payload = {"to": user_id, "messages": [{"type": "text", "text": msg_text}]}
     try:
-        with httpx.Client() as client:
+        with traced_sync_client() as client:
             client.post(url, headers=headers, json=payload, timeout=5.0)
     except Exception as e:
         print(f"[LINE Push Error]: {e}")
@@ -2542,7 +2716,8 @@ async def copy_cloud_deck(request: Request):
     return {"id": ref.id, "title": deck["title"], "revision": 1}
 
 
-@firestore.transactional
+# change_script_upload 對應這一行
+@trace_firestore_transaction("change_script_upload")
 def change_cloud_deck(transaction, ref, revision, update, key_hash=None):
     deck = cloud_deck_public(ref.get(transaction=transaction))
     if update is not None and not cloud_deck_owned(deck, key_hash):
@@ -2840,7 +3015,8 @@ async def read_cloud_script(request):
     return revision, metadata, safe_script
 
 
-@firestore.transactional
+# change_script_upload 對應這一行
+@trace_firestore_transaction("change_script_upload")
 def change_script_upload(transaction, ref, action, pending, owner=None, revision=None):
     document = ref.get(transaction=transaction).to_dict()
     current = document or {}
@@ -2947,7 +3123,7 @@ async def save_cloud_script(script_id: str, request: Request):
 
     try:
         with measure_server_work("script_github_upload") as work:
-            async with httpx.AsyncClient(timeout=40) as client:
+            async with traced_async_client(timeout=40) as client:
                 encoded_content = base64.b64encode(content).decode("ascii")
                 work["http_requests"] += 1
                 work["payload_bytes"] += len(encoded_content)
@@ -3037,7 +3213,7 @@ async def run_script_publisher(queue):
     next_probe = 0
     probe_retry = SCRIPT_PUBLISH_RETRY_INTERVAL
 
-    async with httpx.AsyncClient(timeout=8) as client:
+    async with traced_async_client(timeout=8) as client:
         while True:
             job = None
             if not uploads:
@@ -3189,7 +3365,7 @@ async def cleanup_unreferenced_scripts():
     cutoff = datetime.now(timezone.utc) - timedelta(days=3)
     branch = os.getenv("SCRIPT_GITHUB_BRANCH", "main")
     referenced = await asyncio.to_thread(referenced_script_paths)
-    async with httpx.AsyncClient(
+    async with traced_async_client(
         base_url=f"https://api.github.com/repos/{GITHUB_REPO}", timeout=30,
         headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"},
     ) as client:
@@ -3667,7 +3843,7 @@ async def get_english_name(request: Request, name: str = Query(..., description=
     if not jp_name:
         raise HTTPException(status_code=400, detail="請提供日文卡名")
     from_cache = jp_name in english_name_cache
-    async with httpx.AsyncClient(timeout=6.0) as client:
+    async with traced_async_client(timeout=6.0) as client:
         en_name = await fetch_english_name_from_fandom(jp_name, client)
     if en_name and en_name != jp_name:
         return {"status": "success", "jp_name": jp_name, "en_name": en_name, "from_cache": from_cache}
@@ -3684,7 +3860,7 @@ async def export_english_deck(request: Request, payload: ExportDeckRequest):
             await asyncio.sleep(0.15)
             en_name = await fetch_english_name_from_fandom(item.name, client)
             return {"jp_name": item.name, "en_name": en_name, "count": item.count}
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with traced_async_client(timeout=10.0) as client:
         tasks = [fetch_item_with_throttle(item, client) for item in payload.items]
         results = await asyncio.gather(*tasks)
     return {"status": "success", "result": results}
@@ -3753,7 +3929,7 @@ async def proxy_image(request: Request, url: str = Query(...)):
         else:
             del proxy_cache[url]
     try:
-        async with httpx.AsyncClient() as client:
+        async with traced_async_client() as client:
             resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 Chrome/120.0.0.0"}, timeout=8.0)
             if resp.status_code != 200: raise HTTPException(status_code=resp.status_code, detail="Failed to fetch image")
             content_type = resp.headers.get("content-type", "image/jpeg")
@@ -4366,7 +4542,7 @@ async def check_wiki_url(card_name: str = Query(..., description="處理後的�
     }
     result_data = {"target_url": fallback_google_url, "type": "fallback"}
     try:
-        async with httpx.AsyncClient(timeout=2.5, follow_redirects=True) as client:
+        async with traced_async_client(timeout=2.5, follow_redirects=True) as client:
             async with client.stream("GET", direct_url, headers=headers) as resp:
                 if resp.status_code == 200:
                     chunk_text = ""
@@ -4443,7 +4619,7 @@ async def get_wiki_card_details(request: Request, name: str = Query(..., descrip
     if jp_name in wiki_details_cache:
         return {"status": "success", "data": wiki_details_cache[jp_name]}
 
-    async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+    async with traced_async_client(timeout=10.0, follow_redirects=True) as client:
         en_title = await fetch_english_name_from_fandom(jp_name, client)
         if not en_title or en_title == jp_name:
             raise HTTPException(status_code=404, detail="找不到對應的 Fandom 頁面")
