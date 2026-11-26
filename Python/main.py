@@ -4399,24 +4399,47 @@ def find_node(node_list, target_id):
             if found: return found
     return None
 
+
+
 @app.get("/api/console/historical_report")
 async def get_historical_report(
     admin: str = Query(...),
     start_date: str = Query(..., description="開始日期 YYYYMMDD"),
-    end_date: str = Query(..., description="結束日期 YYYYMMDD")
+    end_date: str = Query(..., description="結束日期 YYYYMMDD"),
+    include_details: bool = Query(False)
 ):
     if admin != TRACK_STATS_USER:
-        raise HTTPException(status_code=403, detail="Forbidden")
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden"
+        )
+
     try:
-        start_dt = datetime.strptime(start_date, "%Y%m%d")
-        end_dt = datetime.strptime(end_date, "%Y%m%d")
+        start_dt = datetime.strptime(
+            start_date, "%Y%m%d"
+        )
+
+        end_dt = datetime.strptime(
+            end_date, "%Y%m%d"
+        )
+
     except ValueError:
-        raise HTTPException(status_code=400, detail="日期格式錯誤，請使用 YYYYMMDD")
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYYMMDD"
+        )
 
     if (end_dt - start_dt).days > 60:
-        raise HTTPException(status_code=400, detail="查詢區間不可超過 60 天")
+        raise HTTPException(
+            status_code=400,
+            detail="查詢區間不可超過 60 天"
+        )
+
     if start_dt > end_dt:
-        raise HTTPException(status_code=400, detail="開始日期不可晚於結束日期")
+        raise HTTPException(
+            status_code=400,
+            detail="開始日期不可晚於結束日期"
+        )
 
     aggregated = defaultdict(lambda: {
         "users": set(),
@@ -4425,31 +4448,50 @@ async def get_historical_report(
         "hourly": defaultdict(int)
     })
 
+    # 新增：依側錄行為分組保存明細
+    detail_records = defaultdict(list)
+
     async def fetch_and_process_date(d_str: str):
         logs = []
+
         def _fetch_from_firestore():
             if db:
-                doc = db.collection('daily_records').document(d_str).get()
+                doc = db.collection(
+                    'daily_records'
+                ).document(d_str).get()
+
                 if doc.exists:
                     return doc.to_dict().get("logs", [])
+
             return []
+
         try:
-            logs = await asyncio.to_thread(_fetch_from_firestore)
+            logs = await asyncio.to_thread(
+                _fetch_from_firestore
+            )
+
         except Exception as e:
             print(f"從 Firebase 抓取歷史紀錄 {d_str} 失敗: {e}")
 
         if isinstance(logs, list):
             for log in logs:
                 time_str = log.get("time", "")
+
                 if not time_str or len(time_str) < 13:
                     continue
+
                 user = log.get("user", "Unknown")
                 feat = log.get("feature", "Unknown")
                 raw_country = log.get("country", "Unknown")
+
                 c = str(raw_country).upper()
+
                 if c == "UNKNOWN" and user != "Unknown" and "-" in user:
                     c = user.split("-")[0].upper()
-                local_hour = convert_utc8_str_to_local_hour(time_str, c)
+
+                local_hour = convert_utc8_str_to_local_hour(
+                    time_str, c
+                )
 
                 aggregated[c]["users"].add(user)
                 aggregated[c]["events"] += 1
@@ -4461,29 +4503,76 @@ async def get_historical_report(
                 aggregated["ALL"]["features"][feat] += 1
                 aggregated["ALL"]["hourly"][local_hour] += 1
 
+                # 新增：同步收集側錄明細
+                if include_details:
+                    detail_records[feat].append({
+                        "time": time_str,
+                        "user": user,
+                        "country": c,
+                        "detail": log.get("detail"),
+                        "is_vpn": log.get("is_vpn", False),
+                        "real_ip_country": log.get(
+                            "real_ip_country", "Unknown"
+                        )
+                    })
+
     current_dt = start_dt
     date_list = []
+
     while current_dt <= end_dt:
-        date_list.append(current_dt.strftime("%Y%m%d"))
+        date_list.append(
+            current_dt.strftime("%Y%m%d")
+        )
+
         current_dt += timedelta(days=1)
 
     sem = asyncio.Semaphore(10)
+
     async def bounded_fetch(d):
         async with sem:
             await fetch_and_process_date(d)
-            
-    await asyncio.gather(*(bounded_fetch(d) for d in date_list))
+
+    await asyncio.gather(
+        *(bounded_fetch(d) for d in date_list)
+    )
 
     result = {}
+
     for c, data in aggregated.items():
         result[c] = {
             "total_users": len(data["users"]),
             "total_events": data["events"],
-            "features": dict(sorted(data["features"].items(), key=lambda x: x[1], reverse=True)),
-            "hourly": dict(sorted(data["hourly"].items()))
+            "features": dict(sorted(
+                data["features"].items(),
+                key=lambda x: x[1],
+                reverse=True
+            )),
+            "hourly": dict(sorted(
+                data["hourly"].items()
+            ))
         }
 
-    return {"status": "success", "data": result}
+    response = {
+        "status": "success",
+        "data": result
+    }
+
+    # 新增：依時間由新到舊排序
+    if include_details:
+        for records in detail_records.values():
+            records.sort(
+                key=lambda record: record["time"],
+                reverse=True
+            )
+
+        response["details"] = dict(detail_records)
+
+    return JSONResponse(
+        content=response,
+        headers={"Cache-Control": "no-store"}
+    )
+
+
     
 @app.on_event("shutdown")
 async def on_shutdown():

@@ -401,9 +401,13 @@
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="text-xs text-gray-400 font-semibold">資料視角：</span>
-							<select id="historyCountrySelect" onchange="renderHistoryCharts()" class="bg-gray-800 text-sm font-bold text-cyan-400 border border-gray-700 rounded-lg px-3 py-1">
+							
+							<select id="historyCountrySelect"
+									onchange="renderHistoryCharts(); updateHistoryDetailFeatures();"
+									class="bg-gray-800 text-sm font-bold text-cyan-400 border border-gray-700 rounded-lg px-3 py-1">
 								<option value="ALL">🌍 全世界 (ALL)</option>
 							</select>
+
 						</div>
 					</div>
 					<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -427,9 +431,111 @@
 						</div>
 					</div>
 				</div>
+				
 				<div id="exportBtnContainer" class="flex justify-end hidden">
-					<button id="exportImgBtn" onclick="exportHistoryImage()" class="px-4 py-2 bg-emerald-600/20 text-emerald-300 rounded-lg text-sm border border-emerald-500/30">輸出報表圖片</button>
+					<button id="exportImgBtn" onclick="exportHistoryImage()" class="px-4 py-2 bg-emerald-600/20 text-emerald-300 rounded-lg text-sm border border-emerald-500/30">
+						輸出報表圖片
+					</button>
 				</div>
+
+				<!-- 歷史側錄明細 -->
+				<div id="historyDetailsContainer"
+					 class="hidden bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
+
+					<div class="flex flex-wrap justify-between items-center gap-2">
+						<h4 class="text-base font-semibold text-gray-200 flex items-center gap-2">
+							<i class="fa-solid fa-list text-cyan-400"></i>
+							歷史側錄明細
+						</h4>
+
+						<span id="historyDetailCount"
+							  class="text-xs text-gray-400">
+							共 0 筆紀錄
+						</span>
+					</div>
+
+					<!-- 篩選條件 -->
+					<div class="flex flex-col sm:flex-row gap-3">
+
+						<div class="flex flex-col gap-1 flex-1">
+							<label class="text-xs font-semibold text-gray-400">
+								側錄行為
+							</label>
+
+							<select id="historyDetailFeature"
+									onchange="filterHistoryDetails()"
+									class="w-full bg-gray-950 text-sm text-cyan-400 border border-gray-700 rounded-lg px-3 py-2 outline-none">
+								<option value="">請選擇側錄行為</option>
+							</select>
+						</div>
+
+						<div class="flex flex-col gap-1 flex-1">
+							<label class="text-xs font-semibold text-gray-400">
+								關鍵字搜尋
+							</label>
+
+							<input type="search"
+								   id="historyDetailKeyword"
+								   oninput="filterHistoryDetails()"
+								   placeholder="搜尋 detail、使用者或時間"
+								   class="w-full bg-gray-950 text-sm text-gray-200 border border-gray-700 rounded-lg px-3 py-2 outline-none">
+						</div>
+
+					</div>
+
+					<!-- 側錄明細列表 -->
+					<div id="historyDetailList"
+						 class="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
+
+						<div class="text-gray-500 text-sm text-center py-4">
+							請選擇要查看的側錄行為
+						</div>
+
+					</div>
+
+					<!-- 分頁與匯出 -->
+					<div class="flex flex-wrap justify-between items-center gap-3 border-t border-gray-800 pt-3">
+
+						<div class="flex items-center gap-3">
+
+							<button id="historyDetailPrev"
+									type="button"
+									onclick="changeHistoryDetailPage(-1)"
+									disabled
+									class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-30 text-gray-300 text-xs rounded-lg border border-gray-700">
+								<i class="fa-solid fa-chevron-left"></i>
+								上一頁
+							</button>
+
+							<span id="historyDetailPage"
+								  class="text-xs font-mono text-gray-400">
+								0 / 0
+							</span>
+
+							<button id="historyDetailNext"
+									type="button"
+									onclick="changeHistoryDetailPage(1)"
+									disabled
+									class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-30 text-gray-300 text-xs rounded-lg border border-gray-700">
+								下一頁
+								<i class="fa-solid fa-chevron-right"></i>
+							</button>
+
+						</div>
+
+						<button id="historyDetailCopy"
+								type="button"
+								onclick="copyHistoryDetails()"
+								disabled
+								class="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600 disabled:opacity-30 text-purple-300 hover:text-white text-xs rounded-lg border border-purple-500/30">
+							<i class="fa-solid fa-copy"></i>
+							複製明細 JSON
+						</button>
+
+					</div>
+
+				</div>
+
 			</div>
 		</div>
 	</div>
@@ -1591,72 +1697,155 @@
 		// ==========================================
 		// 📊 歷史報表功能 (Admin 專用)
 		// ==========================================
-		let historyReportData = null; // 存放後端大包的 JSON，供前端瞬間切換
+		let historyReportData = null;
 		let hFeatureChartInstance = null;
 		let hHourlyChartInstance = null;
 
+		// 歷史側錄明細快取
+		let historyDetailsData = {};
+		let historyDetailFiltered = [];
+		let historyDetailCurrentPage = 1;
+
+		const HISTORY_DETAIL_PAGE_SIZE = 50;
+
+
 		function openHistoryModal() { document.getElementById('historyModal').classList.remove('hidden'); }
 		function closeHistoryModal() { document.getElementById('historyModal').classList.add('hidden'); }
+		
 		async function fetchHistoricalReport() {
 			const startDateRaw = document.getElementById('historyStartDate').value;
 			const endDateRaw = document.getElementById('historyEndDate').value;
-			
+
 			if (!startDateRaw || !endDateRaw) {
 				alert("請選擇完整的起訖日期！");
 				return;
 			}
 
-			// 轉換為 YYYYMMDD 給 API
 			const startStr = startDateRaw.replace(/-/g, '');
 			const endStr = endDateRaw.replace(/-/g, '');
-			
+
 			const btn = document.getElementById('btnGenerateHistory');
+
+			if (btn.disabled) return;
+
 			btn.disabled = true;
 			btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 讀取與運算中...`;
 
+			// 清除上一份報表的資料
+			historyReportData = null;
+			historyDetailsData = {};
+			historyDetailFiltered = [];
+			historyDetailCurrentPage = 1;
+
+			document.getElementById('historyDetailKeyword').value = '';
+
+			document.getElementById('reportCaptureArea').classList.add('hidden');
+			document.getElementById('reportCaptureArea').classList.remove('flex');
+			document.getElementById('exportBtnContainer').classList.add('hidden');
+			document.getElementById('historyDetailsContainer').classList.add('hidden');
+
 			try {
-				const response = await fetch(`/api/console/historical_report?admin=${encodeURIComponent(adminKey)}&start_date=${startStr}&end_date=${endStr}`);
+				// 新增 include_details=true
+				const response = await fetch(
+					`/api/console/historical_report?admin=${encodeURIComponent(adminKey)}&start_date=${startStr}&end_date=${endStr}&include_details=true`,
+					{ cache: 'no-store' }
+				);
+
 				const result = await response.json();
-				
-				if (!response.ok) throw new Error(result.detail || '取得報表失敗');
-				
-				historyReportData = result.data;
-				
-				// 顯示區塊
+
+				if (!response.ok) {
+					throw new Error(result.detail || '取得報表失敗');
+				}
+
+				// 保存原本的統計資料
+				historyReportData = result.data || {};
+
+				// 保存所有側錄明細
+				historyDetailsData = result.details || {};
+
+				// 避免空日期區間保留上一份報表數值
+				if (!historyReportData.ALL) {
+					historyReportData.ALL = {
+						total_users: 0,
+						total_events: 0,
+						features: {},
+						hourly: {}
+					};
+				}
+
+				// 顯示報表
 				document.getElementById('reportCaptureArea').classList.remove('hidden');
 				document.getElementById('reportCaptureArea').classList.add('flex');
 				document.getElementById('exportBtnContainer').classList.remove('hidden');
-				
+
 				// 更新標題文字
-				document.getElementById('reportDateRangeText').innerText = `${startDateRaw.replace(/-/g, '/')} ~ ${endDateRaw.replace(/-/g, '/')}`;
-				
+				document.getElementById('reportDateRangeText').innerText =
+					`${startDateRaw.replace(/-/g, '/')} ~ ${endDateRaw.replace(/-/g, '/')}`;
+
 				// 動態更新國籍下拉選單
 				const selectEl = document.getElementById('historyCountrySelect');
-				selectEl.innerHTML = '<option value="ALL">🌍 全世界 (ALL)</option>'; // 預設保留 ALL
-				
-				// 篩選出除了 ALL 以外，資料量 > 0 的國家
-				const countryKeys = Object.keys(historyReportData).filter(k => k !== 'ALL' && historyReportData[k].total_events > 0);
-				// 依照事件總數大到小排序國家
-				countryKeys.sort((a, b) => historyReportData[b].total_events - historyReportData[a].total_events);
-				
+
+				selectEl.replaceChildren(
+					new Option('🌍 全世界 (ALL)', 'ALL')
+				);
+
+				const countryKeys = Object.keys(historyReportData)
+					.filter(k =>
+						k !== 'ALL' &&
+						historyReportData[k].total_events > 0
+					);
+
+				countryKeys.sort((a, b) =>
+					historyReportData[b].total_events -
+					historyReportData[a].total_events
+				);
+
 				countryKeys.forEach(c => {
 					const opt = document.createElement('option');
+
 					opt.value = c;
-					opt.innerText = `${c} (共 ${historyReportData[c].total_events} 次)`;
+					opt.textContent =
+						`${c} (共 ${historyReportData[c].total_events} 次)`;
+
 					selectEl.appendChild(opt);
 				});
 
-				// 切換至預設的 ALL 並渲染圖表
+				// 預設切換至全世界
 				selectEl.value = 'ALL';
+
+				// 渲染原有統計圖表
 				renderHistoryCharts();
 
+				// 確認後端有提供明細功能
+				if (
+					result.details &&
+					typeof result.details === 'object' &&
+					!Array.isArray(result.details)
+				) {
+					document.getElementById('historyDetailsContainer')
+						.classList.remove('hidden');
+
+					updateHistoryDetailFeatures();
+				}
+
 			} catch (err) {
+				historyReportData = null;
+				historyDetailsData = {};
+				historyDetailFiltered = [];
+
+				document.getElementById('reportCaptureArea').classList.add('hidden');
+				document.getElementById('reportCaptureArea').classList.remove('flex');
+				document.getElementById('exportBtnContainer').classList.add('hidden');
+				document.getElementById('historyDetailsContainer').classList.add('hidden');
+
 				alert(`❌ 報表產生失敗：${err.message}`);
+
 			} finally {
 				btn.disabled = false;
 				btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> 產生報表`;
 			}
 		}
+
 
 		function renderHistoryCharts() {
 			if (!historyReportData) return;
@@ -1731,6 +1920,390 @@
 				}
 			});
 		}
+		
+		
+		// ==========================================
+		// 歷史側錄明細功能
+		// ==========================================
+
+		// 將側錄 detail 統一轉為文字
+		function formatHistoryDetail(detail) {
+			if (detail === null || detail === undefined) {
+				return '';
+			}
+
+			if (typeof detail === 'object') {
+				return JSON.stringify(detail, null, 2);
+			}
+
+			return String(detail);
+		}
+
+
+		// 取得指定側錄行為在當前國家視角下的紀錄
+		function getHistoryFeatureRecords(feature) {
+			if (!Object.prototype.hasOwnProperty.call(
+				historyDetailsData, feature
+			)) {
+				return [];
+			}
+
+			const records = historyDetailsData[feature];
+
+			if (!Array.isArray(records)) {
+				return [];
+			}
+
+			const selectedCountry =
+				document.getElementById('historyCountrySelect').value;
+
+			if (selectedCountry === 'ALL') {
+				return records;
+			}
+
+			return records.filter(record =>
+				record.country === selectedCountry
+			);
+		}
+
+
+		// 根據國家視角重新建立側錄行為選單
+		function updateHistoryDetailFeatures() {
+			const selectEl =
+				document.getElementById('historyDetailFeature');
+
+			const previousFeature = selectEl.value;
+
+			selectEl.replaceChildren(
+				new Option('請選擇側錄行為', '')
+			);
+
+			const featureEntries = Object.keys(historyDetailsData)
+				.map(feature => ({
+					feature: feature,
+					count: getHistoryFeatureRecords(feature).length
+				}))
+				.filter(item => item.count > 0)
+				.sort((a, b) =>
+					b.count - a.count ||
+					a.feature.localeCompare(b.feature)
+				);
+
+			featureEntries.forEach(item => {
+				const opt = document.createElement('option');
+
+				opt.value = item.feature;
+				opt.textContent =
+					`${item.feature} (${item.count.toLocaleString()} 筆)`;
+
+				selectEl.appendChild(opt);
+			});
+
+			const availableFeatures =
+				featureEntries.map(item => item.feature);
+
+			// 優先保留使用者原先選擇的側錄行為
+			if (availableFeatures.includes(previousFeature)) {
+				selectEl.value = previousFeature;
+
+			// 如果有「匯入牌組」，預設顯示
+			} else if (availableFeatures.includes('匯入牌組')) {
+				selectEl.value = '匯入牌組';
+
+			} else {
+				selectEl.value = '';
+			}
+
+			selectEl.disabled = featureEntries.length === 0;
+
+			filterHistoryDetails();
+		}
+
+
+		// 側錄行為及關鍵字過濾
+		function filterHistoryDetails() {
+			const feature =
+				document.getElementById('historyDetailFeature').value;
+
+			const keyword =
+				document.getElementById('historyDetailKeyword')
+					.value.trim().toLowerCase();
+
+			const records = feature
+				? getHistoryFeatureRecords(feature)
+				: [];
+
+			historyDetailFiltered = records.filter(record => {
+				if (!keyword) {
+					return true;
+				}
+
+				const searchableText = [
+					record.time || '',
+					record.user || '',
+					record.country || '',
+					formatHistoryDetail(record.detail)
+				].join(' ').toLowerCase();
+
+				return searchableText.includes(keyword);
+			});
+
+			// 每次切換篩選條件時回到第一頁
+			historyDetailCurrentPage = 1;
+
+			renderHistoryDetails();
+		}
+
+
+		// 渲染側錄明細
+		function renderHistoryDetails() {
+			const container =
+				document.getElementById('historyDetailList');
+
+			const featureSelect =
+				document.getElementById('historyDetailFeature');
+
+			const countEl =
+				document.getElementById('historyDetailCount');
+
+			const pageEl =
+				document.getElementById('historyDetailPage');
+
+			const prevBtn =
+				document.getElementById('historyDetailPrev');
+
+			const nextBtn =
+				document.getElementById('historyDetailNext');
+
+			const copyBtn =
+				document.getElementById('historyDetailCopy');
+
+			const feature = featureSelect.value;
+
+			const total = historyDetailFiltered.length;
+
+			const totalPages = Math.ceil(
+				total / HISTORY_DETAIL_PAGE_SIZE
+			);
+
+			historyDetailCurrentPage = Math.max(
+				1,
+				Math.min(historyDetailCurrentPage, totalPages || 1)
+			);
+
+			const startIndex =
+				(historyDetailCurrentPage - 1) *
+				HISTORY_DETAIL_PAGE_SIZE;
+
+			const pageRecords = historyDetailFiltered.slice(
+				startIndex,
+				startIndex + HISTORY_DETAIL_PAGE_SIZE
+			);
+
+			container.replaceChildren();
+
+			// 更新筆數與頁碼
+			countEl.textContent =
+				`共 ${total.toLocaleString()} 筆紀錄`;
+
+			pageEl.textContent = totalPages
+				? `${historyDetailCurrentPage} / ${totalPages}`
+				: '0 / 0';
+
+			prevBtn.disabled =
+				totalPages === 0 ||
+				historyDetailCurrentPage <= 1;
+
+			nextBtn.disabled =
+				totalPages === 0 ||
+				historyDetailCurrentPage >= totalPages;
+
+			copyBtn.disabled = total === 0;
+
+			// 處理沒有符合條件的紀錄
+			if (total === 0) {
+				const empty = document.createElement('div');
+
+				empty.className =
+					'text-gray-500 text-sm text-center py-4';
+
+				if (featureSelect.disabled) {
+					empty.textContent = '此區間或國家沒有側錄紀錄';
+				} else if (!feature) {
+					empty.textContent = '請選擇要查看的側錄行為';
+				} else {
+					empty.textContent = '沒有符合條件的側錄紀錄';
+				}
+
+				container.appendChild(empty);
+				return;
+			}
+
+			const fragment = document.createDocumentFragment();
+
+			pageRecords.forEach(record => {
+
+				// 每筆側錄紀錄外框
+				const card = document.createElement('div');
+
+				card.className =
+					'bg-gray-950/60 border border-gray-800 ' +
+					'rounded-lg p-3 space-y-2';
+
+				// 時間
+				const time = document.createElement('div');
+
+				time.className =
+					'font-mono text-xs text-gray-500';
+
+				time.textContent = record.time || '';
+
+				// 側錄行為、國籍及使用者
+				const meta = document.createElement('div');
+
+				meta.className =
+					'flex flex-wrap items-center gap-2';
+
+				const featureBadge = document.createElement('span');
+
+				featureBadge.className =
+					'px-2 py-0.5 bg-indigo-500/10 ' +
+					'text-indigo-400 rounded text-xs';
+
+				featureBadge.textContent = feature;
+
+				const countryBadge = document.createElement('span');
+
+				countryBadge.className =
+					'px-2 py-0.5 bg-cyan-500/10 ' +
+					'text-cyan-400 rounded text-xs font-mono';
+
+				countryBadge.textContent =
+					record.country || 'Unknown';
+
+				const userBadge = document.createElement('span');
+
+				userBadge.className =
+					'px-2 py-0.5 bg-sky-500/15 ' +
+					'text-sky-400 rounded border ' +
+					'border-sky-500/20 text-xs';
+
+				userBadge.textContent =
+					record.user || 'Unknown';
+
+				meta.append(
+					featureBadge,
+					countryBadge,
+					userBadge
+				);
+
+				// VPN 標記
+				if (record.is_vpn) {
+					const vpnBadge =
+						document.createElement('span');
+
+					vpnBadge.className =
+						'text-[10px] text-yellow-500 ' +
+						'bg-yellow-500/10 px-1 py-0.5 rounded';
+
+					vpnBadge.textContent =
+						`[VPN: ${record.real_ip_country || 'Unknown'}]`;
+
+					meta.appendChild(vpnBadge);
+				}
+
+				// 側錄明細內容
+				const detailBox = document.createElement('div');
+
+				detailBox.className =
+					'bg-gray-950 p-2.5 rounded-lg border ' +
+					'border-gray-800 text-xs font-mono text-emerald-400';
+
+				const detailText = document.createElement('pre');
+
+				detailText.className =
+					'whitespace-pre-wrap break-all';
+
+				const formattedDetail =
+					formatHistoryDetail(record.detail);
+
+				detailText.textContent =
+					formattedDetail || '（無明細內容）';
+
+				detailBox.appendChild(detailText);
+
+				card.append(
+					time,
+					meta,
+					detailBox
+				);
+
+				fragment.appendChild(card);
+			});
+
+			container.appendChild(fragment);
+
+			// 切換頁碼或篩選條件時回到列表頂端
+			container.scrollTop = 0;
+		}
+
+
+		// 切換頁碼
+		function changeHistoryDetailPage(offset) {
+			const totalPages = Math.ceil(
+				historyDetailFiltered.length /
+				HISTORY_DETAIL_PAGE_SIZE
+			);
+
+			if (!totalPages) return;
+
+			const nextPage =
+				historyDetailCurrentPage + offset;
+
+			if (nextPage < 1 || nextPage > totalPages) {
+				return;
+			}
+
+			historyDetailCurrentPage = nextPage;
+
+			renderHistoryDetails();
+		}
+
+
+		// 複製所有符合條件的明細，不限目前頁面
+		async function copyHistoryDetails() {
+			if (!historyDetailFiltered.length) return;
+
+			const feature =
+				document.getElementById('historyDetailFeature').value;
+
+			const records = historyDetailFiltered.map(record => ({
+				feature: feature,
+				...record
+			}));
+
+			const btn =
+				document.getElementById('historyDetailCopy');
+
+			const originalHtml = btn.innerHTML;
+
+			try {
+				await navigator.clipboard.writeText(
+					JSON.stringify(records, null, 2)
+				);
+
+				btn.innerHTML =
+					'<i class="fa-solid fa-check"></i> 已複製';
+
+				setTimeout(() => {
+					btn.innerHTML = originalHtml;
+				}, 1500);
+
+			} catch (err) {
+				alert(`複製失敗：${err.message}`);
+			}
+		}
+
 
 		async function exportHistoryImage() {
 			const captureArea = document.getElementById('reportCaptureArea');
