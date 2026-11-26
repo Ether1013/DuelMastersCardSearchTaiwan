@@ -774,36 +774,21 @@
 	
 	
 	<!-- 作者留言：獨立視窗，不覆蓋系統公告或確認框 -->
-	<dialog id="author-message-dialog"
-			aria-labelledby="author-message-title"
-			style="
-				width:min(90vw,450px);
-				max-height:80vh;
-				border:1px solid #94a3b8;
-				border-radius:12px;
-				padding:16px;
-				box-sizing:border-box;
-			">
-
-		<h3 id="author-message-title">
-			✉️ 作者留言
-		</h3>
-
-		<div id="author-message-content"
-			 style="
-				white-space:pre-wrap;
-				overflow-wrap:anywhere;
-				max-height:55vh;
-				overflow:auto;
-			 ">
+	<dialog id="author-message-dialog" class="modal-card u-max-width-450px"
+			aria-labelledby="author-message-title">
+		<div class="modal-header view-cart-modal-modal-header">
+			<h3 class="modal-title" id="author-message-title">✉️ 作者留言</h3>
 		</div>
 
-		<button type="button"
-				id="author-message-close"
-				style="margin-top:16px;">
-			我知道了
-		</button>
+		<div class="modal-body view-system-notice-modal-modal-body view-system-notice-content"
+			 id="author-message-content" role="region" aria-label="留言內容" tabindex="0"></div>
 
+		<div class="author-message-actions">
+			<button type="button" class="view-btn-notice-understand"
+					id="author-message-close" autofocus>
+				我知道了
+			</button>
+		</div>
 	</dialog>
 
 	
@@ -7007,14 +6992,17 @@
 							existing?.element ||
 							document.createElement('div');
 
-						item.style.padding = '10px 0';
+						item.classList.add('author-message-item');
 
-						item.style.borderBottom =
-							'1px solid #cbd5e1';
+						const date = document.createElement('span');
+						date.className = 'author-message-date';
+						date.textContent = data.created_at || '';
 
-						// 使用 textContent，避免 HTML 注入。
-						item.textContent =
-							`${data.created_at || ''}\n${data.message}`;
+						const message = document.createElement('p');
+						message.className = 'author-message-text';
+						message.textContent = data.message;
+
+						item.replaceChildren(date, message);
 
 						if (!existing) {
 							content.appendChild(item);
