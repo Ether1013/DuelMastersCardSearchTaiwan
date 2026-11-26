@@ -140,14 +140,16 @@
             </div>
         </section>
 
-        <section id="serverWorkPanel" hidden class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <div class="flex flex-wrap justify-between items-center gap-3 mb-2">
-                <h2 class="text-base font-semibold">伺服器工作量</h2>
-                <button id="serverWorkRefresh" type="button" onclick="refreshServerWork()"
-                        class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg text-sm">
-                    更新
-                </button>
-            </div>
+        <details id="serverWorkPanel" hidden
+			class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+			<summary class="cursor-pointer text-base font-semibold">伺服器工作量</summary>
+
+			<div class="mt-3 mb-2 flex justify-end">
+				<button id="serverWorkRefresh" type="button" onclick="refreshServerWork()"
+						class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg text-sm">
+					更新
+				</button>
+			</div>
 			<div id="scriptPublishControls" hidden class="mb-4 rounded-lg border border-gray-800 p-3">
 				<label class="flex items-center gap-2 font-medium">
 					<input id="scriptPublishToggle" type="checkbox" role="switch"
@@ -179,28 +181,30 @@
                     <tbody id="serverWorkRows" class="divide-y divide-gray-800"></tbody>
                 </table>
             </div>
-        </section>
+        </details>
 
-        <div id="dataTransferContainer" class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-base font-semibold text-gray-200 flex items-center gap-2">
-                    <i class="fa-solid fa-server text-emerald-400"></i>資料傳輸狀態(重傳/快取)
-                </h2>
-                <span class="text-xs text-gray-500 font-mono">點擊更新</span>
-            </div>
-            <div id="dataTransferStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-xs">
-                <div class="text-gray-500 col-span-full">載入中...</div>
-            </div>
-        </div>
+        <details id="dataTransferContainer" open
+			class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
+			<summary class="cursor-pointer text-base font-semibold text-gray-200">
+				<i class="fa-solid fa-server mr-1 text-emerald-400" aria-hidden="true"></i>
+				資料傳輸狀態(重傳/快取)
+			</summary>
+			<div id="dataTransferStatsGrid"
+				class="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-xs">
+				<div class="text-gray-500 col-span-full">載入中...</div>
+			</div>
+		</details>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-3 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
                 <h2 class="text-base font-semibold text-gray-200 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-chart-simple text-indigo-400"></i> Feature Trigger Count
                 </h2>
-                <div class="h-64">
-                    <canvas id="featureChart"></canvas>
-                </div>
+                <div class="relative h-80 sm:h-64">
+					<canvas id="featureChart"></canvas>
+				</div>
+				<ul id="featureChartLegend" aria-label="操作類型圖例"
+					class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-200 empty:hidden"></ul>
             </div>
 
             <div class="lg:col-span-1 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm">
@@ -679,9 +683,11 @@
 			}
 
 			// 固定群組內的色塊順序。
+			// 群組內依次數由小到大堆疊，同次數沿用設定順序。
 			const order = Object.values(FEATURE_GROUPS).flat();
 
 			visible.forEach(row => row.parts.sort((a, b) =>
+				a.count - b.count ||
 				order.indexOf(a.name) - order.indexOf(b.name)
 			));
 
@@ -711,15 +717,8 @@
 					},
 
 					plugins: {
-						legend: {
-							position: 'bottom',
-							labels: {
-								color: '#ffffff',
-								boxWidth: 12
-							},
-
-							// 圖例只說明顏色，避免隱藏子項後改變比例。
-							onClick: () => {}
+						legend: { 
+							display: false 
 						},
 
 						datalabels: {
@@ -1065,6 +1064,25 @@
 						}))
 					);
 
+					const legend = document.getElementById('featureChartLegend');
+					const legendItems = featureChart.data.datasets.map(({ label, backgroundColor }) => {
+						const item = document.createElement('li');
+						item.className = 'inline-flex min-w-0 max-w-full items-center gap-1.5';
+
+						const swatch = document.createElement('span');
+						swatch.className = 'h-3 w-3 shrink-0 rounded-sm';
+						swatch.style.backgroundColor = backgroundColor;
+						swatch.setAttribute('aria-hidden', 'true');
+
+						const text = document.createElement('span');
+						text.className = 'min-w-0 break-words';
+						text.textContent = label;
+
+						item.append(swatch, text);
+						return item;
+					});
+
+					legend.replaceChildren(...legendItems);
 					featureChart.update();
 				}
 
@@ -1679,21 +1697,11 @@
 					responsive: true, maintainAspectRatio: false,
 					plugins: { legend: { display: false }, datalabels: { display: false } },
 					scales: { 
-						x: { 
-							// 👇 數值在 X 軸，所以這裡設定為對數刻度
-							type: 'logarithmic',
-							ticks: { 
-								color: '#9ca3af',
-								// 過濾顯示的刻度，保持畫面乾淨
-								callback: function(value, index, ticks) {
-									if (value === 0 || value === 1 || value === 10 || value === 100 || value === 1000 || value === 10000 || value === 100000) {
-										return value;
-									}
-									return null;
-								}
-							}, 
-							grid: { color: '#1f2937' } 
-						}, 
+						x: {
+							stacked: true,
+							ticks: { color: '#9ca3af', maxRotation: 0 },
+							grid: { color: '#1f2937' }
+						},
 						y: { 
 							ticks: { color: '#9ca3af', font: { size: 10 } }, 
 							grid: { display: false } 
