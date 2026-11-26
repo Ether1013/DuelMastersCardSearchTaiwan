@@ -772,6 +772,41 @@
 		</div>
 	</div>
 	
+	
+	<!-- 作者留言：獨立視窗，不覆蓋系統公告或確認框 -->
+	<dialog id="author-message-dialog"
+			aria-labelledby="author-message-title"
+			style="
+				width:min(90vw,450px);
+				max-height:80vh;
+				border:1px solid #94a3b8;
+				border-radius:12px;
+				padding:16px;
+				box-sizing:border-box;
+			">
+
+		<h3 id="author-message-title">
+			✉️ 作者留言
+		</h3>
+
+		<div id="author-message-content"
+			 style="
+				white-space:pre-wrap;
+				overflow-wrap:anywhere;
+				max-height:55vh;
+				overflow:auto;
+			 ">
+		</div>
+
+		<button type="button"
+				id="author-message-close"
+				style="margin-top:16px;">
+			我知道了
+		</button>
+
+	</dialog>
+
+	
 	<!-- 系統公告 / 通用確認對話框 Modal -->
 	<div class="modal-overlay" id="system-notice-modal">
 		<div class="modal-card u-max-width-450px">
@@ -2608,7 +2643,10 @@
 
         async function loadSearchData() {
 			await initHandshake();
-            const loadingOverlay = document.getElementById('loading-overlay');
+
+			initBroadcastListener();
+
+			const loadingOverlay = document.getElementById('loading-overlay');
 			const loadingText = document.getElementById('loading-text');
 
 			// 💡 1. 新增一個狀態標記變數
@@ -6886,69 +6924,387 @@
             trackCardViewWithDwellTime(card.name);
         }
 		
-		// ================= 全站即時廣播接收器 =================
-		function initBroadcastListener() {
-			// 1. 從 LocalStorage 取得目前使用者的 ID 與國籍
-			const clientInfo = JSON.parse(localStorage.getItem('dm_client_info') || '{}');
-			const userId = clientInfo.user_id || 'Unknown';
-			const country = clientInfo.primary_country || 'Unknown';
+		
+		// ================= 全站即時廣播與作者留言接收器 =================
 
-			// 2. 建立正確的 WebSocket 網址，並帶上參數
-			const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-			const wsUrl = `${protocol}//${window.location.host}/ws/broadcast?user_id=${userId}&primary_country=${country}`;
-			
+		let broadcastListenerInitialized = false;
+
+		function initBroadcastListener() {
+
+			// 防止重複建立 WebSocket。
+			if (broadcastListenerInitialized) return;
+
+			broadcastListenerInitialized = true;
+
+			// 1. 從 LocalStorage 取得使用者 ID 與國籍
+			const clientInfo = JSON.parse(
+				localStorage.getItem('dm_client_info') || '{}'
+			);
+
+			const userId =
+				clientInfo.user_id || 'Unknown';
+
+			const country =
+				clientInfo.primary_country || 'Unknown';
+
+			// 2. 建立 WebSocket 網址
+			const protocol =
+				window.location.protocol === 'https:'
+					? 'wss:'
+					: 'ws:';
+
+			const wsUrl =
+				`${protocol}//${window.location.host}/ws/broadcast?user_id=${encodeURIComponent(userId)}&primary_country=${encodeURIComponent(country)}`;
+
 			// 3. 建立一次性連線，不設置心跳與重連
 			const ws = new WebSocket(wsUrl);
 
-			// 接收廣播訊息
+			// 作者留言視窗
+			const dialog = document.getElementById(
+				'author-message-dialog'
+			);
+
+			const content = document.getElementById(
+				'author-message-content'
+			);
+
+			// 已收到但尚未確認顯示的留言。
+			const pending = new Map();
+
+			// 已加入留言視窗的內容。
+			const shown = new Map();
+
+			let framePending = false;
+
+
+			// ==========================================
+			// 顯示作者留言
+			// ==========================================
+
+			function showAuthorMessages() {
+
+				// 網頁處於背景時，不開啟視窗、不送出 ACK。
+				if (
+					!dialog ||
+					!content ||
+					document.visibilityState !== 'visible' ||
+					!pending.size
+				) {
+					return;
+				}
+
+				for (const [id, data] of pending) {
+
+					const existing = shown.get(id);
+
+					// 尚未顯示，或留言版本已更新。
+					if (
+						!existing ||
+						existing.version !== data.version
+					) {
+
+						const item =
+							existing?.element ||
+							document.createElement('div');
+
+						item.style.padding = '10px 0';
+
+						item.style.borderBottom =
+							'1px solid #cbd5e1';
+
+						// 使用 textContent，避免 HTML 注入。
+						item.textContent =
+							`${data.created_at || ''}\n${data.message}`;
+
+						if (!existing) {
+							content.appendChild(item);
+						}
+
+						shown.set(id, {
+							version: data.version,
+							element: item
+						});
+					}
+				}
+
+				// 開啟留言視窗。
+				if (!dialog.open) {
+					dialog.showModal();
+				}
+
+				if (framePending) return;
+
+				framePending = true;
+
+				// 等待畫面更新。
+				// 不依賴「我知道了」按鈕進行接收確認。
+				requestAnimationFrame(() => {
+
+					requestAnimationFrame(() => {
+
+						framePending = false;
+
+						// 確認視窗仍然開啟，
+						// 且目前網頁處於可見狀態。
+						if (
+							!dialog.open ||
+							document.visibilityState !== 'visible' ||
+							!dialog.getClientRects().length
+						) {
+							return;
+						}
+
+						if (
+							ws.readyState !== WebSocket.OPEN
+						) {
+							return;
+						}
+
+						// 向 Python 確認留言視窗已開啟。
+						for (const [id, data] of pending) {
+
+							if (
+								shown.get(id)?.version !==
+								data.version
+							) {
+								continue;
+							}
+
+							ws.send(
+								JSON.stringify({
+									type: 'AUTHOR_MESSAGE_OPENED',
+									message_id: id,
+									version: data.version
+								})
+							);
+
+							pending.delete(id);
+						}
+					});
+				});
+			}
+
+
+			// ==========================================
+			// 作者留言視窗事件
+			// ==========================================
+
+			// 「我知道了」只負責關閉視窗。
+			document.getElementById(
+				'author-message-close'
+			)?.addEventListener('click', () => {
+
+				dialog.close();
+			});
+
+
+			// 留言視窗關閉後清除前端顯示資料。
+			dialog?.addEventListener('close', () => {
+
+				content.replaceChildren();
+
+				shown.clear();
+
+				// 如果尚未完成顯示確認，
+				// 保留留言並嘗試重新開啟視窗。
+				if (pending.size) {
+					showAuthorMessages();
+				}
+			});
+
+
+			// 當使用者從其他頁籤切換回來時，
+			// 檢查是否有尚未顯示的留言。
+			document.addEventListener(
+				'visibilitychange',
+				showAuthorMessages
+			);
+
+
+			// WebSocket 斷線後解除事件監聽。
+			ws.addEventListener('close', () => {
+
+				document.removeEventListener(
+					'visibilitychange',
+					showAuthorMessages
+				);
+			});
+
+
+			// WebSocket 連線成功。
+			ws.addEventListener('open', () => {
+
+				// 通知伺服器：目前前端支援作者留言。
+				if (
+					dialog &&
+					content &&
+					userId !== 'Unknown'
+				) {
+
+					ws.send(
+						JSON.stringify({
+							type: 'AUTHOR_MESSAGE_READY'
+						})
+					);
+				}
+			});
+
+
+			// ==========================================
+			// WebSocket 訊息接收
+			// ==========================================
+
 			ws.onmessage = (event) => {
+
 				try {
 					const data = JSON.parse(event.data);
-					if (data.type === "BROADCAST" && data.message) {
-						const modal = document.getElementById('system-notice-modal');
-						const contentEl = document.getElementById('system-notice-content');
-						
+
+					// ==================================
+					// 管理員取消或修改尚未顯示的留言
+					// ==================================
+
+					if (
+						data.type === 'AUTHOR_MESSAGE_REVOKED'
+					) {
+
+						const queued = pending.get(
+							data.message_id
+						);
+
+						if (
+							queued &&
+							queued.version === data.version
+						) {
+
+							pending.delete(data.message_id);
+
+							const item = shown.get(
+								data.message_id
+							);
+
+							if (
+								item?.version === data.version
+							) {
+
+								item.element.remove();
+
+								shown.delete(data.message_id);
+							}
+
+							// 如果留言內容已全部撤銷，
+							// 同時關閉空白視窗。
+							if (
+								dialog.open &&
+								!shown.size
+							) {
+
+								dialog.close();
+							}
+						}
+
+					// ==================================
+					// 收到作者留言
+					// ==================================
+
+					} else if (
+						data.type === 'AUTHOR_MESSAGE' &&
+						typeof data.message_id === 'string' &&
+						typeof data.message === 'string'
+					) {
+
+						pending.set(
+							data.message_id,
+							data
+						);
+
+						showAuthorMessages();
+
+					// ==================================
+					// 原有廣播功能
+					// ==================================
+
+					} else if (
+						data.type === "BROADCAST" &&
+						data.message
+					) {
+
+						const modal = document.getElementById(
+							'system-notice-modal'
+						);
+
+						const contentEl = document.getElementById(
+							'system-notice-content'
+						);
+
 						if (modal && contentEl) {
-							// 使用 innerText 避免 XSS 攻擊
-							contentEl.innerText = data.message;
+
+							contentEl.innerText =
+								data.message;
+
 							modal.classList.add('active');
 						}
 					}
+
 				} catch (e) {
-					console.error("Broadcast msg parsing error:", e);
+
+					console.error(
+						"Broadcast msg parsing error:",
+						e
+					);
 				}
 			};
 
-			// 若斷線則自然放生，不實作 ws.onclose 重新連線
+			// 保留原本設計：
+			// 不實作心跳，也不實作 WebSocket 自動重連。
 		}
 
+
+		
 		// 綁定現有 Modal 的「我知道了」按鈕關閉事件
 		document.addEventListener('DOMContentLoaded', () => {
-			initBroadcastListener();
-			
-			// 綁定關閉按鈕，點擊後隱藏並不會留存
-			const btnUnderstand = document.getElementById('btn-notice-understand');
-			const noticeModal = document.getElementById('system-notice-modal');
-			
+
+			// 綁定關閉按鈕，點擊後隱藏並不會留存。
+			const btnUnderstand = document.getElementById(
+				'btn-notice-understand'
+			);
+
+			const noticeModal = document.getElementById(
+				'system-notice-modal'
+			);
+
 			if (btnUnderstand && noticeModal) {
+
 				btnUnderstand.addEventListener('click', () => {
+
 					noticeModal.classList.remove('active');
 				});
 			}
-			
-			const cardModal = document.getElementById('card-modal');
+
+			const cardModal = document.getElementById(
+				'card-modal'
+			);
+
 			if (cardModal) {
+
 				cardModal.addEventListener('click', (e) => {
+
 					if (e.target === cardModal) {
-						// 💡 關閉時中斷計時
-						if (cardViewTimer) clearTimeout(cardViewTimer);
-						
+
+						// 關閉時中斷計時。
+						if (cardViewTimer) {
+							clearTimeout(cardViewTimer);
+						}
+
 						cardModal.classList.remove('active');
-						delete cardModal.dataset.uiZIndex; // 💡 還原 z-index
+
+						// 還原 z-index。
+						delete cardModal.dataset.uiZIndex;
 					}
 				});
 			}
+
 		});
+
 		
 		// 💡 將 DataURL 轉換為標準 Blob 檔案
 		function dataURLtoBlob(dataurl) {

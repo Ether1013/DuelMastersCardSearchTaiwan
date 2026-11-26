@@ -772,6 +772,275 @@ class ClientConnectionManager:
 
 client_manager = ClientConnectionManager()
 
+
+# ==========================================
+# 作者留言功能（僅保存在目前 Worker 的 RAM）
+# ==========================================
+
+pending_messages = {}
+message_ready_clients = {}
+message_sent_versions = {}
+message_delivery_lock = asyncio.Lock()
+
+
+class AuthorMessageModel(BaseModel):
+    user_id: str
+    message: str
+
+
+def validate_author_message(payload):
+    user = payload.user_id.strip()
+    message = payload.message.strip()
+
+    if not user or user.upper() == "UNKNOWN" or len(user) > 128:
+        raise HTTPException(400, "使用者 ID 無效")
+
+    if not message or len(message) > 2000:
+        raise HTTPException(400, "留言須為 1～2000 字")
+
+    return user, message
+
+
+async def deliver_author_messages(user):
+    # 序列化派送，避免同一版本同時送到多個頁籤。
+    async with message_delivery_lock:
+
+        for mid, record in list(pending_messages.items()):
+
+            if record["user_id"] != user:
+                continue
+
+            if pending_messages.get(mid) is not record:
+                continue
+
+            version = record["version"]
+
+            # 此版本已經派送至仍在線的頁籤，不重複傳送。
+            if any(
+                sent.get(mid) == version
+                and ws in client_manager.active_connections
+                and ws in message_ready_clients
+                for ws, sent in message_sent_versions.items()
+            ):
+                continue
+
+            for ws, ready_user in list(
+                message_ready_clients.items()
+            ):
+
+                if (
+                    ready_user != user
+                    or ws not in client_manager.active_connections
+                ):
+                    continue
+
+                if pending_messages.get(mid) is not record:
+                    break
+
+                sent = message_sent_versions.setdefault(ws, {})
+                sent[mid] = version
+
+                try:
+                    await asyncio.wait_for(
+                        ws.send_json({
+                            "type": "AUTHOR_MESSAGE",
+                            **record
+                        }),
+                        timeout=5
+                    )
+
+                    break
+
+                except Exception:
+                    message_ready_clients.pop(ws, None)
+                    message_sent_versions.pop(ws, None)
+                    client_manager.disconnect(ws)
+
+
+async def revoke_author_message(mid, record):
+    # 通知尚未顯示留言的前端撤銷舊版本。
+    async with message_delivery_lock:
+
+        for ws, ready_user in list(
+            message_ready_clients.items()
+        ):
+
+            if (
+                ready_user != record["user_id"]
+                or ws not in client_manager.active_connections
+            ):
+                continue
+
+            try:
+                await asyncio.wait_for(
+                    ws.send_json({
+                        "type": "AUTHOR_MESSAGE_REVOKED",
+                        "message_id": mid,
+                        "version": record["version"]
+                    }),
+                    timeout=5
+                )
+
+            except Exception:
+                message_ready_clients.pop(ws, None)
+                message_sent_versions.pop(ws, None)
+                client_manager.disconnect(ws)
+
+
+def forget_message_delivery(mid):
+    for sent in message_sent_versions.values():
+        sent.pop(mid, None)
+
+
+def require_message_admin(admin):
+    if not admin or admin != TRACK_STATS_USER:
+        raise HTTPException(403, "Forbidden")
+
+
+# 查詢待發送留言
+@app.get("/api/console/author_messages")
+async def list_author_messages(
+    admin: Optional[str] = Query(None)
+):
+    require_message_admin(admin)
+
+    return JSONResponse(
+        {
+            "messages": list(pending_messages.values())
+        },
+        headers={
+            "Cache-Control": "no-store"
+        }
+    )
+
+
+# 建立留言
+@app.post("/api/console/author_messages")
+async def create_author_message(
+    payload: AuthorMessageModel,
+    admin: Optional[str] = Query(None)
+):
+    require_message_admin(admin)
+
+    user, message = validate_author_message(payload)
+
+    if (
+        len(pending_messages) >= 1000
+        or sum(
+            r["user_id"] == user
+            for r in pending_messages.values()
+        ) >= 10
+    ):
+        raise HTTPException(
+            409,
+            "待傳送留言已達容量上限"
+        )
+
+    mid = uuid.uuid4().hex
+
+    pending_messages[mid] = {
+        "message_id": mid,
+        "user_id": user,
+        "message": message,
+        "created_at": datetime.now(TZ_UTC8).isoformat(),
+        "version": 1
+    }
+
+    await deliver_author_messages(user)
+
+    return {
+        "status": (
+            "pending"
+            if mid in pending_messages
+            else "opened"
+        ),
+        "message_id": mid
+    }
+
+
+# 修改待發送留言
+@app.put("/api/console/author_messages/{mid}")
+async def edit_author_message(
+    mid: str,
+    payload: AuthorMessageModel,
+    admin: Optional[str] = Query(None)
+):
+    require_message_admin(admin)
+
+    user, message = validate_author_message(payload)
+
+    old = pending_messages.get(mid)
+
+    if old is None:
+        raise HTTPException(
+            404,
+            "留言已開啟或不存在"
+        )
+
+    if (
+        user != old["user_id"]
+        and sum(
+            r["user_id"] == user
+            for r in pending_messages.values()
+        ) >= 10
+    ):
+        raise HTTPException(
+            409,
+            "目標使用者留言已達上限"
+        )
+
+    pending_messages[mid] = {
+        **old,
+        "user_id": user,
+        "message": message,
+        "version": old["version"] + 1
+    }
+
+    forget_message_delivery(mid)
+
+    await revoke_author_message(mid, old)
+
+    await deliver_author_messages(user)
+
+    return {
+        "status": (
+            "pending"
+            if mid in pending_messages
+            else "opened"
+        )
+    }
+
+
+# 刪除待發送留言
+@app.delete("/api/console/author_messages/{mid}")
+async def delete_author_message(
+    mid: str,
+    admin: Optional[str] = Query(None)
+):
+    require_message_admin(admin)
+
+    record = pending_messages.pop(mid, None)
+
+    if record is None:
+        raise HTTPException(
+            404,
+            "留言已開啟或不存在"
+        )
+
+    forget_message_delivery(mid)
+
+    await revoke_author_message(mid, record)
+
+    return {
+        "status": "deleted"
+    }
+
+
+# ==========================================
+# 作者留言功能結束
+# ==========================================
+
+
 class BroadcastModel(BaseModel):
     message: str
     timezone_offset: int = -480  
@@ -4315,14 +4584,81 @@ async def websocket_console(websocket: WebSocket, admin: Optional[str] = Query(N
     except Exception:
         console_manager.disconnect(websocket)
 
+
 @app.websocket("/ws/broadcast")
-async def websocket_broadcast(websocket: WebSocket, user_id: str = Query("Unknown"), primary_country: str = Query("Unknown")):
-    await client_manager.connect(websocket, user_id, primary_country)
+async def websocket_broadcast(
+    websocket: WebSocket,
+    user_id: str = Query("Unknown"),
+    primary_country: str = Query("Unknown")
+):
+    await client_manager.connect(
+        websocket,
+        user_id,
+        primary_country
+    )
+
     try:
         while True:
-            await websocket.receive_text()
+
+            raw = await websocket.receive_text()
+
+            try:
+                data = json.loads(raw)
+
+            except (ValueError, TypeError):
+                continue
+
+            if not isinstance(data, dict):
+                continue
+
+            # 新版前端主動告知支援留言功能。
+            if (
+                data.get("type") == "AUTHOR_MESSAGE_READY"
+                and user_id.upper() != "UNKNOWN"
+            ):
+
+                message_ready_clients[websocket] = user_id
+
+                await deliver_author_messages(user_id)
+
+            # 使用者端確認留言視窗已經開啟。
+            elif data.get("type") == "AUTHOR_MESSAGE_OPENED":
+
+                mid = data.get("message_id")
+
+                if not isinstance(mid, str):
+                    continue
+
+                record = pending_messages.get(mid)
+
+                # 確認使用者、留言版本及實際派送紀錄。
+                if (
+                    record
+                    and record["user_id"] == user_id
+                    and data.get("version") == record["version"]
+                    and message_sent_versions.get(
+                        websocket, {}
+                    ).get(mid) == record["version"]
+                ):
+
+                    pending_messages.pop(mid, None)
+
+                    forget_message_delivery(mid)
+
     except WebSocketDisconnect:
+        pass
+
+    finally:
         client_manager.disconnect(websocket)
+
+        message_ready_clients.pop(websocket, None)
+
+        message_sent_versions.pop(websocket, None)
+
+        # 如果同一使用者還有其他有效連線，
+        # 嘗試將尚未確認開啟的留言傳送至其他頁籤。
+        await deliver_author_messages(user_id)
+
 
 @app.post("/api/console/broadcast")
 async def send_broadcast(payload: BroadcastModel, admin: Optional[str] = Query(None)):

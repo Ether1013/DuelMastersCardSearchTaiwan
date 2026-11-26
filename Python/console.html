@@ -66,6 +66,15 @@
 					</button>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-start sm:justify-end">
+					
+					<button id="authorMessageBtn"
+							type="button"
+							onclick="openAuthorMessageModal()"
+							style="display:none"
+							class="px-3 py-1.5 bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs">
+						<i class="fa-solid fa-envelope"></i> 留言
+					</button>
+
                     <button id="broadcastBtn" onclick="sendBroadcast()" style="display: none;" class="whitespace-nowrap px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs rounded-lg transition border border-emerald-500/30 flex items-center gap-1.5 shadow-lg">
                         <i class="fa-solid fa-bullhorn"></i> 廣播
                     </button>
@@ -368,6 +377,104 @@
 		</div>
 	</div>
 	
+	
+	<!-- 作者留言管理 Modal -->
+	<div id="authorMessageModal"
+		 class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4">
+
+		<div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-5 space-y-4">
+
+			<!-- 標題 -->
+			<div class="flex justify-between items-center">
+				<h3 class="font-bold text-indigo-300">
+					<i class="fa-solid fa-envelope"></i>
+					作者留言
+				</h3>
+
+				<button type="button"
+						onclick="closeAuthorMessageModal()">
+					✕
+				</button>
+			</div>
+
+			<!-- 使用者 ID -->
+			<label class="block text-xs text-gray-400">
+				使用者 ID（可自行輸入）
+
+				<input id="authorMessageUser"
+					   list="authorMessageUsers"
+					   maxlength="128"
+					   autocomplete="off"
+					   class="block w-full bg-gray-950 border border-gray-700 rounded p-2 mt-1 text-sm text-white">
+
+				<datalist id="authorMessageUsers">
+				</datalist>
+			</label>
+
+			<!-- 留言內容 -->
+			<label class="block text-xs text-gray-400">
+				留言內容
+
+				<textarea id="authorMessageText"
+						  maxlength="2000"
+						  rows="4"
+						  class="block w-full bg-gray-950 border border-gray-700 rounded p-2 mt-1 text-sm text-white"></textarea>
+			</label>
+
+			<!-- 注意事項 -->
+			<p class="text-xs text-gray-400">
+				留言視窗開啟後即清除；重啟會遺失。請勿傳送敏感資訊。
+			</p>
+
+			<!-- 留言操作 -->
+			<div class="flex gap-2">
+
+				<button id="authorMessageSave"
+						type="button"
+						onclick="saveAuthorMessage()"
+						class="bg-indigo-600 rounded px-3 py-2 text-sm">
+					送出留言
+				</button>
+
+				<button type="button"
+						onclick="resetAuthorMessageForm()"
+						class="bg-gray-800 rounded px-3 py-2 text-sm">
+					清空／取消編輯
+				</button>
+
+			</div>
+
+			<!-- 操作結果 -->
+			<p id="authorMessageStatus"
+			   role="status"
+			   class="text-xs text-cyan-300">
+			</p>
+
+			<!-- 待發送留言標題 -->
+			<div class="flex justify-between items-center border-t border-gray-700 pt-3">
+
+				<h4 class="font-semibold">
+					待發送留言
+				</h4>
+
+				<button type="button"
+						onclick="refreshAuthorMessages()"
+						class="text-xs text-cyan-300">
+					重新整理
+				</button>
+
+			</div>
+
+			<!-- 待發送留言列表 -->
+			<div id="authorMessageList"
+				 class="space-y-2">
+			</div>
+
+		</div>
+
+	</div>
+
+	
 	<div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-2 sm:p-4">
 		<div class="bg-gray-950 border border-gray-700 rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
 			<div class="flex items-center justify-between border-b border-gray-800 p-4 bg-gray-900/50">
@@ -649,6 +756,344 @@
 				timerInterval = setInterval(updateTimeAndDuration, 1000);
 			}
 		}
+		
+		
+		// ==========================================
+		// 作者留言管理功能
+		// ==========================================
+
+		let authorMessageEditId = null;
+		let authorMessageBusy = false;
+		let authorMessageRefreshSeq = 0;
+
+
+		// 共用留言 API 請求
+		async function authorMessageRequest(
+			path = '',
+			options = {}
+		) {
+			const response = await fetch(
+				`/api/console/author_messages${path}?${authParam}`,
+				{
+					cache: 'no-store',
+					...options
+				}
+			);
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(
+					typeof data.detail === 'string'
+						? data.detail
+						: `HTTP ${response.status}`
+				);
+			}
+
+			return data;
+		}
+
+
+		// 清空留言輸入區，退出編輯模式
+		function resetAuthorMessageForm() {
+			authorMessageEditId = null;
+
+			document.getElementById(
+				'authorMessageUser'
+			).value = '';
+
+			document.getElementById(
+				'authorMessageText'
+			).value = '';
+
+			document.getElementById(
+				'authorMessageSave'
+			).textContent = '送出留言';
+		}
+
+
+		// 關閉留言視窗
+		function closeAuthorMessageModal() {
+			document.getElementById(
+				'authorMessageModal'
+			).classList.add('hidden');
+		}
+
+
+		// 開啟留言視窗
+		function openAuthorMessageModal() {
+			if (!adminKey) return;
+
+			const list = document.getElementById(
+				'authorMessageUsers'
+			);
+
+			list.replaceChildren();
+
+			// 只在開啟留言視窗時，
+			// 從最新 50 筆操作紀錄建立候選清單。
+			const users = [
+				...new Set(
+					currentLogs
+						.slice(0, 50)
+						.map(log => log.user)
+						.filter(user =>
+							typeof user === 'string' &&
+							user &&
+							user.toUpperCase() !== 'UNKNOWN'
+						)
+				)
+			].sort();
+
+			for (const user of users) {
+				list.appendChild(
+					new Option(user, user)
+				);
+			}
+
+			resetAuthorMessageForm();
+
+			document.getElementById(
+				'authorMessageStatus'
+			).textContent = '';
+
+			document.getElementById(
+				'authorMessageModal'
+			).classList.remove('hidden');
+
+			refreshAuthorMessages();
+		}
+
+
+		// 讀取目前所有待發送留言
+		async function refreshAuthorMessages() {
+			const seq = ++authorMessageRefreshSeq;
+
+			const list = document.getElementById(
+				'authorMessageList'
+			);
+
+			try {
+				const data = await authorMessageRequest();
+
+				// 防止較早的請求結果覆蓋較新的結果。
+				if (seq !== authorMessageRefreshSeq) {
+					return;
+				}
+
+				list.replaceChildren();
+
+				if (!data.messages.length) {
+					list.textContent = '目前沒有待發送留言';
+				}
+
+				for (const record of data.messages) {
+
+					// 單筆留言外框
+					const card = document.createElement('div');
+
+					card.className =
+						'border border-gray-700 rounded p-3 space-y-2';
+
+					// 使用者 ID 與建立時間
+					const title = document.createElement('div');
+
+					title.className =
+						'text-xs text-cyan-300 break-all';
+
+					title.textContent =
+						`${record.user_id} ｜ ${record.created_at}`;
+
+					// 留言文字
+					const text = document.createElement('div');
+
+					text.className =
+						'text-sm whitespace-pre-wrap break-all';
+
+					text.textContent = record.message;
+
+					// 修改按鈕
+					const edit = document.createElement('button');
+
+					edit.type = 'button';
+
+					edit.className =
+						'text-xs text-indigo-300 mr-4';
+
+					edit.textContent = '修改';
+
+					edit.onclick = () => {
+						authorMessageEditId =
+							record.message_id;
+
+						document.getElementById(
+							'authorMessageUser'
+						).value = record.user_id;
+
+						document.getElementById(
+							'authorMessageText'
+						).value = record.message;
+
+						document.getElementById(
+							'authorMessageSave'
+						).textContent = '儲存修改';
+					};
+
+					// 刪除按鈕
+					const remove = document.createElement('button');
+
+					remove.type = 'button';
+
+					remove.className =
+						'text-xs text-rose-300';
+
+					remove.textContent = '刪除';
+
+					remove.onclick = () =>
+						deleteAuthorMessage(record.message_id);
+
+					card.append(
+						title,
+						text,
+						edit,
+						remove
+					);
+
+					list.appendChild(card);
+				}
+
+			} catch (error) {
+
+				if (seq === authorMessageRefreshSeq) {
+					list.textContent =
+						`讀取失敗：${error.message}`;
+				}
+			}
+		}
+
+
+		// 新增或儲存修改後的留言
+		async function saveAuthorMessage() {
+			if (authorMessageBusy) return;
+
+			const user_id = document.getElementById(
+				'authorMessageUser'
+			).value.trim();
+
+			const message = document.getElementById(
+				'authorMessageText'
+			).value.trim();
+
+			if (!user_id || !message) {
+				alert('請輸入使用者 ID 與留言');
+				return;
+			}
+
+			const mid = authorMessageEditId;
+
+			const btn = document.getElementById(
+				'authorMessageSave'
+			);
+
+			const status = document.getElementById(
+				'authorMessageStatus'
+			);
+
+			authorMessageBusy = true;
+
+			btn.disabled = true;
+
+			try {
+				const result = await authorMessageRequest(
+					mid
+						? '/' + encodeURIComponent(mid)
+						: '',
+					{
+						method: mid ? 'PUT' : 'POST',
+
+						headers: {
+							'Content-Type': 'application/json'
+						},
+
+						body: JSON.stringify({
+							user_id,
+							message
+						})
+					}
+				);
+
+				status.textContent =
+					result.status === 'opened'
+						? '留言視窗已開啟'
+						: '已儲存，等待使用者端開啟留言視窗';
+
+				resetAuthorMessageForm();
+
+			} catch (error) {
+
+				status.textContent =
+					`操作失敗：${error.message}`;
+
+			} finally {
+
+				authorMessageBusy = false;
+
+				btn.disabled = false;
+
+				await refreshAuthorMessages();
+			}
+		}
+
+
+		// 刪除指定的待發送留言
+		async function deleteAuthorMessage(mid) {
+			if (
+				authorMessageBusy ||
+				!confirm('確定刪除這筆待發送留言？')
+			) {
+				return;
+			}
+
+			authorMessageBusy = true;
+
+			const status = document.getElementById(
+				'authorMessageStatus'
+			);
+
+			try {
+				await authorMessageRequest(
+					'/' + encodeURIComponent(mid),
+					{
+						method: 'DELETE'
+					}
+				);
+
+				// 如果正在編輯的留言被刪除，
+				// 同時清空編輯狀態。
+				if (authorMessageEditId === mid) {
+					resetAuthorMessageForm();
+				}
+
+				status.textContent =
+					'已刪除待發送留言';
+
+			} catch (error) {
+
+				status.textContent =
+					`刪除失敗：${error.message}`;
+
+			} finally {
+
+				authorMessageBusy = false;
+
+				await refreshAuthorMessages();
+			}
+		}
+
+		// ==========================================
+		// 作者留言管理功能結束
+		// ==========================================
+
 		
 		async function sendBroadcast() {
 			try {
@@ -2412,26 +2857,57 @@
             menu.classList.toggle('flex');
         }
 
+		
 		window.addEventListener('DOMContentLoaded', () => {
-			if (!authParam) { alert('未提供認證參數'); return; }
+
+			if (!authParam) {
+				alert('未提供認證參數');
+				return;
+			}
+
 			if (adminKey) {
-				['generateTokenBtn', 'resetStatsBtn', 'broadcastBtn', 'historyReportBtn'].forEach(id => {
-					document.getElementById(id).style.display = 'flex';
+				[
+					'generateTokenBtn',
+					'resetStatsBtn',
+					'broadcastBtn',
+					'historyReportBtn',
+					'authorMessageBtn'
+				].forEach(id => {
+					document.getElementById(
+						id
+					).style.display = 'flex';
 				});
 			}
+
 			if (countryKey) {
-				document.querySelector('h1').innerHTML = `API Track Console - <span class="text-sky-400 font-mono">${countryKey.toUpperCase()} 專屬視角</span>`;
-				['countryChart', 'userChart', 'dataTransferContainer', 'detailFiltersContainer', 'detailTableContainer'].forEach(id => {
+
+				document.querySelector('h1').innerHTML =
+					`API Track Console - <span class="text-sky-400 font-mono">${countryKey.toUpperCase()} 專屬視角</span>`;
+
+				[
+					'countryChart',
+					'userChart',
+					'dataTransferContainer',
+					'detailFiltersContainer',
+					'detailTableContainer'
+				].forEach(id => {
+
 					const el = document.getElementById(id);
-					if (el) el.style.display = 'none';
+
+					if (el) {
+						el.style.display = 'none';
+					}
 				});
 			}
+
 			initCharts();
 			fetchInitialData();
 			refreshServerWork();
 			initWebSocket();
-			initUptimeTimer(); 
+			initUptimeTimer();
+
 		});
+
     </script>
 	<dialog id="deck-admin-dialog" class="w-[95vw] max-w-5xl rounded-xl bg-gray-900 p-5 text-gray-100"
 			oncancel="if (deckAdminBusy) event.preventDefault()">
